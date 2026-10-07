@@ -1,0 +1,109 @@
+import {
+  parseReport,
+  parseTicketKey,
+  resolveStatus,
+  type Actor,
+  type ParsedReportBlock,
+  type ReportInput,
+  type ReportPreview,
+  type ReportPreviewItem,
+  type ReportResult,
+} from '@tracker/shared';
+import type { Db, StatusRow } from '../db/schema';
+import { AppError } from '../errors';
+import { inTransaction, notify, type ServiceContext } from './context';
+import {
+  findTicketRef,
+  loadTicketScope,
+  ticketKeyOf,
+  type TicketRef,
+  type TicketScope,
+} from './lookups';
+import { enterStatus, eventEntry, writeTicket, type ActivityEntry } from './ticketWrites';
+
+interface ResolvedBlock {
+  block: ParsedReportBlock;
+  scope: TicketScope | null;
+  target: StatusRow | null;
+}
+
+async function resolveBlock(
+  db: Db,
+  block: ParsedReportBlock,
+  ticketKey: string | undefined,
+): Promise<ResolvedBlock> {
+  const key = block.key ?? ticketKey;
+  const ref = key ? await findTicketRef(db, key) : null;
+  if (!ref) return { block, scope: null, target: null };
+  const scope = await loadTicketScope(db, ref);
+  const next = block.category ? resolveStatus(scope.statuses, block.category) : null;
+  return { block, scope, target: next && next.id !== scope.status.id ? next : null };
+}
+
+const previewItem = ({ block, scope, target }: ResolvedBlock): ReportPreviewItem => ({
+  key: block.key,
+  matched: scope !== null,
+  ticketKey: scope ? ticketKeyOf(scope) : null,
+  ticketTitle: scope?.ticket.title ?? null,
+  fromStatusName: scope?.status.name ?? null,
+  toStatusName: target?.name ?? null,
+});
+
+export async function previewReport(
+  ctx: ServiceContext,
+  input: ReportInput,
+): Promise<ReportPreview> {
+  const items: ReportPreviewItem[] = [];
+  for (const block of parseReport(input.text)) {
+    items.push(previewItem(await resolveBlock(ctx.db, block, input.ticketKey)));
+  }
+  return { items, matchedCount: items.filter((item) => item.matched).length };
+}
+
+async function applyBlock(
+  trx: Db,
+  ctx: ServiceContext,
+  actor: Actor,
+  { block, scope, target }: ResolvedBlock & { scope: TicketScope },
+): Promise<TicketRef> {
+  const entries: ActivityEntry[] = [{ type: 'report', text: block.text }];
+  if (target)
+    entries.push(eventEntry(`changed status to ${target.name} from a Claude Code report`));
+  const changes = target ? await enterStatus(trx, actor, target) : {};
+  const written = await writeTicket(trx, ctx.now, {
+    ticket: scope.ticket,
+    actor,
+    changes,
+    entries,
+  });
+  return { ticket: written.ticket, project: scope.project };
+}
+
+function noMatch(ticketKey: string | undefined): AppError {
+  const example = `${parseTicketKey(ticketKey ?? '')?.projectKey ?? 'KEY'}-1`;
+  return new AppError(
+    'no_match',
+    `No matching ticket found. The report needs a line like “TICKET: ${example}”.`,
+  );
+}
+
+export async function applyReport(
+  ctx: ServiceContext,
+  actor: Actor,
+  input: ReportInput,
+): Promise<ReportResult> {
+  const updated = await inTransaction(ctx, async (trx) => {
+    const refs: TicketRef[] = [];
+    for (const block of parseReport(input.text)) {
+      // Resolved one at a time so a ticket named twice sees its own earlier change.
+      const resolved = await resolveBlock(trx, block, input.ticketKey);
+      if (resolved.scope)
+        refs.push(await applyBlock(trx, ctx, actor, { ...resolved, scope: resolved.scope }));
+    }
+    if (refs.length === 0) throw noMatch(input.ticketKey);
+    return refs;
+  });
+  const unique = new Map(updated.map((ref) => [ref.ticket.id, ref]));
+  for (const ref of unique.values()) notify(ctx, ref.project.id, ref.ticket.id);
+  return { updatedTicketKeys: [...unique.values()].map(ticketKeyOf) };
+}
