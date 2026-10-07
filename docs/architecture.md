@@ -124,7 +124,8 @@ Status changes made by the dropdown, a report, sending, claiming, submitting or 
 
 - **MCP server** (`tracker-mcp`, stdio): tools `list_projects`, `list_statuses`, `list_tickets`, `get_ticket`, `create_ticket`, `update_ticket`, `move_ticket`, `add_comment`, `claim_next_ticket`, `claim_ticket`, `submit_for_review`, `review_ticket`; prompts `work` and `review` that appear as slash commands in Claude Code. Config by env: `TRACKER_URL`, `TRACKER_TOKEN`, `TRACKER_AGENT_NAME`.
 - **CLI** (`tracker`): the same operations for shells and agents without MCP.
-- Register with Claude Code: `claude mcp add tracker --env TRACKER_URL=http://localhost:4100 -- node <repo>/apps/agent/dist/mcp.js`.
+- Register with Claude Code for every project: `claude mcp add tracker -s user --env TRACKER_URL=http://localhost:4100 --env TRACKER_AGENT_NAME=Claude -- node <repo>/apps/agent/dist/mcp.js`.
+- `move_ticket` uses `PATCH /tickets/:key { statusId }` (top of the new group). In agent-facing text the person is called "User".
 
 ## 5. Web app structure (`apps/web/src`)
 

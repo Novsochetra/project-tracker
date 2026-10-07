@@ -1,0 +1,145 @@
+import { addComment } from '../tools/addComment';
+import { claimNextTicket } from '../tools/claimNextTicket';
+import { claimTicket } from '../tools/claimTicket';
+import { createTicket } from '../tools/createTicket';
+import { TICKET_KEY } from '../tools/fields';
+import { getTicket } from '../tools/getTicket';
+import { listProjects } from '../tools/listProjects';
+import { listStatuses } from '../tools/listStatuses';
+import { listTickets } from '../tools/listTickets';
+import { moveTicket } from '../tools/moveTicket';
+import { reviewTicket } from '../tools/reviewTicket';
+import { submitForReview } from '../tools/submitForReview';
+import type { Tool } from '../tools/tool';
+import { updateTicket } from '../tools/updateTicket';
+import type { CommandOption, CommandValues } from './options';
+
+export interface Plan {
+  tool: Tool;
+  input: Record<string, unknown>;
+}
+
+export interface Command {
+  name: string;
+  usage: string;
+  summary: string;
+  args: readonly string[];
+  // The last argument takes every remaining word, so multi-word names need no quotes.
+  rest?: boolean;
+  options: readonly CommandOption[];
+  required?: readonly CommandOption[];
+  plan(args: readonly string[], options: CommandValues): Plan;
+}
+
+const toNumber = (value: string | undefined): number | undefined =>
+  value === undefined ? undefined : Number(value);
+
+export const COMMANDS: readonly Command[] = [
+  {
+    name: 'projects',
+    usage: 'projects',
+    summary: 'List projects with their keys and ticket counts.',
+    args: [],
+    options: [],
+    plan: () => ({ tool: listProjects, input: {} }),
+  },
+  {
+    name: 'statuses',
+    usage: 'statuses <PROJECT>',
+    summary: "List a project's statuses and their categories.",
+    args: ['PROJECT'],
+    options: [],
+    plan: ([project]) => ({ tool: listStatuses, input: { project } }),
+  },
+  {
+    name: 'tickets',
+    usage: 'tickets <PROJECT> [--status NAME] [--category CAT] [--query Q]',
+    summary: "List a project's tickets, optionally filtered.",
+    args: ['PROJECT'],
+    options: ['status', 'category', 'query'],
+    plan: ([project], options) => ({ tool: listTickets, input: { project, ...options } }),
+  },
+  {
+    name: 'show',
+    usage: 'show <KEY>',
+    summary: 'Show a ticket in full with its activity.',
+    args: ['KEY'],
+    options: [],
+    plan: ([ticket]) => ({ tool: getTicket, input: { ticket } }),
+  },
+  {
+    name: 'create',
+    usage:
+      'create <PROJECT> --title T [--description D] [--priority high|medium|low] [--status NAME]',
+    summary: 'Create a ticket.',
+    args: ['PROJECT'],
+    options: ['title', 'description', 'priority', 'status'],
+    required: ['title'],
+    plan: ([project], options) => ({ tool: createTicket, input: { project, ...options } }),
+  },
+  {
+    name: 'update',
+    usage:
+      'update <KEY> [--title T] [--description D] [--priority P] [--assignee NAME] [--due YYYY-MM-DD]',
+    summary: 'Edit ticket fields. An empty --assignee or --due clears it.',
+    args: ['KEY'],
+    options: ['title', 'description', 'priority', 'assignee', 'due'],
+    plan: ([ticket], options) => ({ tool: updateTicket, input: { ticket, ...options } }),
+  },
+  {
+    name: 'move',
+    usage: 'move <KEY> <STATUS NAME…>',
+    summary: 'Move a ticket to a status (not Done: only a person does that).',
+    args: ['KEY', 'STATUS NAME'],
+    rest: true,
+    options: [],
+    plan: ([ticket, ...status]) => ({
+      tool: moveTicket,
+      input: { ticket, status: status.join(' ') },
+    }),
+  },
+  {
+    name: 'comment',
+    usage: 'comment <KEY> <TEXT…>',
+    summary: 'Add a comment to a ticket.',
+    args: ['KEY', 'TEXT'],
+    rest: true,
+    options: [],
+    plan: ([ticket, ...text]) => ({ tool: addComment, input: { ticket, text: text.join(' ') } }),
+  },
+  {
+    name: 'claim',
+    usage: 'claim <PROJECT|KEY>',
+    summary: 'Claim the next To do ticket in a project, or one ticket, and move it to In progress.',
+    args: ['PROJECT|KEY'],
+    options: [],
+    plan: ([target = '']) =>
+      TICKET_KEY.test(target.trim())
+        ? { tool: claimTicket, input: { ticket: target } }
+        : { tool: claimNextTicket, input: { project: target } },
+  },
+  {
+    name: 'submit',
+    usage: 'submit <KEY> --summary S [--files F] [--next N]',
+    summary: 'Submit finished work for review.',
+    args: ['KEY'],
+    options: ['summary', 'files', 'next'],
+    required: ['summary'],
+    plan: ([ticket], options) => ({ tool: submitForReview, input: { ticket, ...options } }),
+  },
+  {
+    name: 'review',
+    usage: 'review <KEY> --verdict approved|changes_requested --rating 1-5 --summary S',
+    summary: 'Review a ticket in Need review.',
+    args: ['KEY'],
+    options: ['verdict', 'rating', 'summary'],
+    required: ['verdict', 'rating', 'summary'],
+    plan: ([ticket], options) => ({
+      tool: reviewTicket,
+      input: { ticket, ...options, rating: toNumber(options.rating) },
+    }),
+  },
+];
+
+export const findCommand = (name: string): Command | undefined =>
+  COMMANDS.find((command) => command.name === name);
