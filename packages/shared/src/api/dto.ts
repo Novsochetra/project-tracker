@@ -48,3 +48,16 @@ export interface ReportResult {
 export interface ErrorBody {
   error: { code: string; message: string };
 }
+
+export interface ServerMeta {
+  version: string;
+  repoRoot: string;
+  mcpEntry: string;
+  cliEntry: string;
+  authRequired: boolean;
+}
+
+export interface SessionState {
+  authRequired: boolean;
+  authenticated: boolean;
+}

@@ -27,7 +27,7 @@ export default tseslint.config(
     languageOptions: {
       parserOptions: {
         projectService: {
-          allowDefaultProject: ['*.js', '*.mjs', '*.ts'],
+          allowDefaultProject: ['*.js', '*.mjs'],
         },
         tsconfigRootDir: import.meta.dirname,
       },
@@ -67,6 +67,7 @@ export default tseslint.config(
   },
   {
     files: ['apps/web/**/*.{ts,tsx}'],
+    ignores: ['apps/web/e2e/**'],
     plugins: { 'react-hooks': reactHooks, 'react-refresh': reactRefresh },
     rules: {
       ...reactHooks.configs['recommended-latest'].rules,

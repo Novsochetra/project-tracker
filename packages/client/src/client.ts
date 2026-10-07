@@ -17,6 +17,8 @@ import type {
   ReportPreview,
   ReportResult,
   ReviewInput,
+  ServerMeta,
+  SessionState,
   Status,
   SubmitWorkInput,
   Ticket,
@@ -151,6 +153,13 @@ export class TrackerClient {
     });
 
   listPeople = () => this.http.request<string[]>('GET', '/api/people');
+
+  getMeta = () => this.http.request<ServerMeta>('GET', '/api/meta');
+
+  getSession = () => this.http.request<SessionState>('GET', '/api/session');
+
+  login = (token: string) =>
+    this.http.request<SessionState>('POST', '/api/session', { body: { token } });
 
   eventsUrl = () => this.http.url('/api/events');
 }

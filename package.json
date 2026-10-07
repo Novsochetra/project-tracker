@@ -13,7 +13,7 @@
     "dev": "concurrently -k -n server,web -c blue,magenta \"npm run dev -w @tracker/server\" \"npm run dev -w @tracker/web\"",
     "build": "npm run build -w @tracker/web && npm run build -w @tracker/server && npm run build -w @tracker/agent",
     "start": "npm run start -w @tracker/server",
-    "typecheck": "npm run typecheck --workspaces --if-present",
+    "typecheck": "tsc -p tsconfig.json && npm run typecheck --workspaces --if-present",
     "lint": "eslint . --max-warnings=0",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
@@ -22,7 +22,8 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "verify": "npm run format:check && npm run lint && npm run typecheck && npm run test",
-    "prepare": "husky"
+    "prepare": "husky",
+    "seed": "tsx scripts/seed.ts"
   },
   "lint-staged": {
     "*.{ts,tsx,js,mjs,cjs}": [
