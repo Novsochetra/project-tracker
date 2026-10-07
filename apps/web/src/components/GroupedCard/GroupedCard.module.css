@@ -1,0 +1,18 @@
+.card {
+  --row-gap: 12px;
+  --row-pad: 14px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-group);
+  background: var(--surface);
+}
+
+.card > :not(:first-child) {
+  border-top: 1px solid var(--line);
+}
+
+/* The ticket side panel is narrower, so its rows sit tighter (Main.dc.html). */
+.dense {
+  --row-gap: 10px;
+  --row-pad: 12px;
+}

@@ -1,0 +1,38 @@
+.avatar {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-full);
+  color: var(--text-inverse);
+  font-family: var(--font-sans);
+  font-weight: var(--weight-semibold);
+  line-height: 1;
+  user-select: none;
+}
+
+.medium {
+  width: 24px;
+  height: 24px;
+  font-size: var(--size-avatar);
+}
+
+.small {
+  width: 20px;
+  height: 20px;
+  font-size: var(--size-avatar-sm);
+}
+
+.empty {
+  border: 1.5px dashed var(--dashed);
+  background: transparent;
+}
+
+.agent {
+  border-radius: var(--radius-tile);
+  background: var(--ink);
+}
+
+.you {
+  background: var(--ink);
+}

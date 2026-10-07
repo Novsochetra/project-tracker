@@ -1,0 +1,123 @@
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: var(--control-height);
+  padding: 0 12px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-control);
+  font-family: var(--font-sans);
+  font-size: var(--size-secondary);
+  font-weight: var(--weight-medium);
+  line-height: 1.25;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    transform var(--duration-press) ease-out,
+    background-color var(--duration-fast) ease-out,
+    color var(--duration-fast) ease-out;
+}
+
+.button:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.primary {
+  background: var(--ink);
+  color: var(--text-inverse);
+}
+
+.secondary {
+  border-color: var(--control-line);
+  background: var(--surface);
+  color: var(--ink);
+}
+
+.danger {
+  background: var(--danger);
+  color: var(--text-inverse);
+}
+
+.text {
+  padding: 0 10px;
+  background: transparent;
+  color: var(--ink);
+  font-weight: var(--weight-regular);
+}
+
+.dangerTone {
+  color: var(--danger);
+}
+
+@media (hover: hover) {
+  .primary:hover:not(:disabled) {
+    background: var(--ink-hover);
+  }
+
+  .secondary:hover:not(:disabled),
+  .text:hover:not(:disabled) {
+    background: var(--fill);
+  }
+}
+
+.sm {
+  min-height: 30px;
+  padding: 0 10px;
+}
+
+.lg {
+  gap: 8px;
+  min-height: 36px;
+  padding: 0 16px;
+}
+
+.header {
+  min-height: 32px;
+  padding: 0 14px;
+  font-size: var(--size-body);
+}
+
+.bar {
+  gap: 8px;
+  min-height: var(--bar-button);
+  padding: 0 16px;
+  border-radius: var(--radius-group);
+  font-size: var(--size-headline);
+}
+
+.header.primary,
+.bar.primary {
+  font-weight: var(--weight-semibold);
+}
+
+.fullWidth {
+  display: flex;
+  width: 100%;
+}
+
+@media (max-width: 767px) {
+  .sm,
+  .md,
+  .lg {
+    min-height: var(--touch-target);
+  }
+
+  .header {
+    min-height: 34px;
+    font-size: var(--size-headline);
+  }
+
+  .text {
+    font-size: var(--size-input);
+  }
+
+  .header.text {
+    min-height: var(--touch-target);
+  }
+}

@@ -1,0 +1,78 @@
+.track {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(var(--count), minmax(0, 1fr));
+  gap: 2px;
+  width: 100%;
+  max-width: 300px;
+  min-width: 0;
+  padding: 2px;
+  border-radius: var(--radius-container);
+  background: var(--fill-2);
+}
+
+.thumb {
+  position: absolute;
+  top: 2px;
+  bottom: 2px;
+  left: 2px;
+  width: calc((100% - 4px - (var(--count) - 1) * 2px) / var(--count));
+  border-radius: var(--radius-control);
+  background: var(--surface);
+  box-shadow: var(--shadow-raised);
+  transform: translateX(calc(var(--index) * (100% + 2px)));
+  transition: transform var(--duration-spring) var(--ease-spring);
+}
+
+.segment {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 0;
+  min-height: 30px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: var(--radius-control);
+  background: transparent;
+  color: var(--muted);
+  font-family: var(--font-sans);
+  font-size: var(--size-secondary);
+  font-weight: var(--weight-medium);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: color var(--duration-fast) ease-out;
+}
+
+.segment[aria-pressed='true'] {
+  color: var(--ink);
+}
+
+.segment:focus-visible {
+  outline-offset: -2px;
+}
+
+@media (hover: hover) {
+  .segment:hover {
+    color: var(--ink);
+  }
+}
+
+.count {
+  color: var(--subtle);
+  font-size: var(--size-caption);
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 767px) {
+  .track {
+    max-width: none;
+  }
+
+  .segment {
+    min-height: 34px;
+    font-size: var(--size-body);
+  }
+}

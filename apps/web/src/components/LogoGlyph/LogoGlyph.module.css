@@ -1,0 +1,14 @@
+.tile {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: var(--radius-tile);
+  background: var(--ink);
+}
+
+.tile rect {
+  fill: var(--text-inverse);
+}

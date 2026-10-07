@@ -1,0 +1,173 @@
+.row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--row-gap, 12px);
+  width: 100%;
+  min-height: var(--property-row);
+  margin: 0;
+  padding: 0 calc(var(--row-pad, 14px) - 2px) 0 var(--row-pad, 14px);
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: var(--size-body);
+  line-height: 1.5;
+  text-align: left;
+  cursor: pointer;
+}
+
+@media (hover: hover) {
+  .row:hover {
+    background: var(--row-hover);
+  }
+}
+
+.row:disabled {
+  cursor: default;
+}
+
+.field {
+  padding: 0 var(--row-pad, 14px);
+  cursor: text;
+}
+
+.icon {
+  flex: none;
+  display: inline-flex;
+  justify-content: center;
+  width: 20px;
+}
+
+.label {
+  flex: 1 0 auto;
+}
+
+.fieldLabel {
+  flex: none;
+}
+
+.value {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chevron {
+  color: var(--faint);
+}
+
+.input {
+  flex: 1;
+  min-width: 0;
+  height: 40px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: var(--size-body);
+  text-align: right;
+}
+
+/* Chromium reserves room for a datalist arrow that pushes the value off the right edge;
+   its UA rule is !important, so this one has to be too. */
+.input::-webkit-calendar-picker-indicator {
+  display: none !important;
+}
+
+.mono {
+  font-family: var(--font-mono);
+  font-size: var(--size-secondary);
+}
+
+.dateInput {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  opacity: 0;
+  font-size: var(--size-input);
+  cursor: pointer;
+}
+
+.clear {
+  position: relative;
+  z-index: 2;
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-full);
+  background: var(--fill-2);
+  color: var(--muted);
+  cursor: pointer;
+  transition: transform var(--duration-press) ease-out;
+}
+
+.clear:active {
+  transform: scale(0.97);
+}
+
+.set {
+  color: var(--muted-2);
+}
+
+.unset {
+  color: var(--placeholder);
+}
+
+.overdue {
+  color: var(--danger);
+}
+
+.mutedIcon {
+  color: var(--muted);
+}
+
+.info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 40px;
+  padding: 0 12px;
+  font-size: var(--size-secondary);
+}
+
+.infoLabel {
+  flex: none;
+  color: var(--muted);
+}
+
+.infoValue {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 767px) {
+  .row,
+  .input {
+    font-size: var(--size-input);
+  }
+
+  /* The clear button keeps its 24px look but gets a 44px touch target. */
+  .clear::before {
+    content: '';
+    position: absolute;
+    inset: -10px;
+  }
+}

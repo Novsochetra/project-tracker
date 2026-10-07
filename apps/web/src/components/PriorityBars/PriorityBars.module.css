@@ -1,0 +1,11 @@
+.bars {
+  flex: none;
+}
+
+.on {
+  fill: var(--muted-2);
+}
+
+.off {
+  fill: var(--bar-off);
+}

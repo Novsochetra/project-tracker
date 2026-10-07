@@ -1,0 +1,25 @@
+.spinner {
+  display: inline-flex;
+  color: var(--muted);
+}
+
+.svg {
+  animation: spin var(--duration-spin) linear infinite;
+}
+
+.track {
+  opacity: 0.25;
+}
+
+/* The global reduced-motion rule shortens animations to 1ms, which would make an endless spin flicker. */
+@media (prefers-reduced-motion: reduce) {
+  .svg {
+    animation: none;
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

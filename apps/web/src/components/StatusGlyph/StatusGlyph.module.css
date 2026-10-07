@@ -1,0 +1,36 @@
+.glyph {
+  flex: none;
+}
+
+.check {
+  stroke: var(--text-inverse);
+}
+
+.animated .disc {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: pop var(--duration-spring) var(--ease-spring) both;
+}
+
+.animated .check {
+  stroke-dasharray: 10;
+  animation: draw var(--duration-spring) var(--delay-check) var(--ease-out) both;
+}
+
+@keyframes pop {
+  from {
+    transform: scale(0.55);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+
+@keyframes draw {
+  from {
+    stroke-dashoffset: 10;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}

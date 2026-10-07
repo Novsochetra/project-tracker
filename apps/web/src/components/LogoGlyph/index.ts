@@ -1,0 +1,1 @@
+export { LogoGlyph } from './LogoGlyph';

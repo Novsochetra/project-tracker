@@ -1,0 +1,15 @@
+.stars {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.on {
+  color: var(--star);
+  fill: currentColor;
+}
+
+.off {
+  color: var(--bar-off);
+  fill: currentColor;
+}

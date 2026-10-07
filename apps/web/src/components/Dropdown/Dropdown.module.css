@@ -1,0 +1,113 @@
+.catch {
+  position: fixed;
+  inset: 0;
+  z-index: calc(var(--z-dropdown) - 1);
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: default;
+}
+
+.catch:focus-visible {
+  outline: none;
+}
+
+.menu {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: var(--z-dropdown);
+  width: var(--dropdown-width);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 4px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-container);
+  background: var(--surface);
+  box-shadow: var(--shadow-floating);
+  transform-origin: top right;
+  animation: menu-in var(--duration-fast) var(--ease-out) both;
+}
+
+.menu[data-up='true'] {
+  animation-name: menu-in-up;
+}
+
+.menu:focus-visible {
+  outline: none;
+}
+
+.option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: var(--dropdown-item);
+  margin: 0;
+  padding: 0 10px;
+  border: 0;
+  border-radius: var(--radius-control);
+  background: transparent;
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: var(--size-body);
+  text-align: left;
+  cursor: pointer;
+}
+
+.option[aria-selected='true'] {
+  background: var(--fill);
+}
+
+@media (hover: hover) {
+  .option:hover {
+    background: var(--fill);
+  }
+}
+
+.optionIcon {
+  flex: none;
+  display: inline-flex;
+  width: 16px;
+}
+
+.optionLabel {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.check {
+  color: var(--accent);
+}
+
+@media (max-width: 767px) {
+  .option {
+    font-size: var(--size-input);
+  }
+}
+
+@keyframes menu-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes menu-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(4px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}

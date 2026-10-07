@@ -1,0 +1,49 @@
+.card {
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-container);
+  background: var(--surface);
+}
+
+.card > :not(:first-child) {
+  border-top: 1px solid var(--line);
+}
+
+.group {
+  border-radius: var(--radius-group);
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: var(--row-height);
+  margin: 0;
+  padding: 8px 16px;
+  border: 0;
+  background: var(--surface);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: var(--size-body);
+  line-height: 1.4;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color var(--duration-fast) ease-out;
+}
+
+.row:active {
+  background: var(--fill);
+}
+
+@media (hover: hover) {
+  .row:hover {
+    background: var(--fill);
+  }
+}
+
+@media (max-width: 767px) {
+  .card {
+    border-radius: var(--radius-group);
+  }
+}
