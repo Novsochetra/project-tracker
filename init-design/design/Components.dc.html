@@ -1,0 +1,993 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Design System: Components</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&amp;family=Geist+Mono:wght@400;500&amp;display=swap">
+<style>
+body{margin:0;background:#FFFFFF}
+a{color:#4A4AC4}a:hover{color:#3A3AA8}
+button,input,select,textarea{font-family:inherit}
+::placeholder{color:#9A9AA3;opacity:1}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,a:focus-visible{outline:2px solid #5B5BD6;outline-offset:2px}
+.pm-row:hover{background-color:#F7F7F8 !important}
+.pm-icon:hover{background-color:#EFEFF1 !important;color:#1B1B1F !important}
+.pm-textbtn:hover{background-color:#F7F7F8 !important}
+.pm-secondary:hover{background-color:#F7F7F8 !important}
+.pm-primary:hover{background-color:#33333A !important}
+.pm-primary:disabled{opacity:.35;cursor:default}
+.pm-primary:disabled:hover{background-color:#1B1B1F !important}
+.pm-seg:hover{color:#1B1B1F !important}
+.ds-chip:hover{background-color:#F7F7F8 !important}
+.pm-handle{transition:opacity 120ms ease-out,color 120ms ease-out;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+.pm-trow:hover .pm-handle,.pm-handle:focus-visible{opacity:1 !important}
+.pm-handle:hover{color:#6B6B76 !important;background-color:#EFEFF1 !important}
+.pm-handle:focus-visible{outline:2px solid #5B5BD6;outline-offset:-2px}
+.pm-dragging,.pm-dragging *{cursor:grabbing !important;user-select:none !important;-webkit-user-select:none !important}
+.pm-ghead{transition:background-color 160ms ease-out}
+.pm-ghost{animation:pm-lift 160ms cubic-bezier(.22,1,.36,1) both;transform-origin:center}
+@keyframes pm-lift{from{transform:scale(1);box-shadow:0 0 0 rgba(20,20,26,0)}to{transform:scale(1.02);box-shadow:0 12px 32px rgba(20,20,26,.18)}}
+@keyframes pm-fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.pm-fade-in{animation:pm-fade 200ms cubic-bezier(.22,1,.36,1) both}
+@media (hover: none){.pm-handle{opacity:1 !important}}
+.pm-ring{position:relative}
+.pm-ring::after{content:"";position:absolute;inset:3px;border-radius:8px;box-shadow:0 0 0 2px #5B5BD6;opacity:0;pointer-events:none;z-index:3}
+.pm-ring:focus-visible{outline:none}
+.pm-ring:focus-visible::after{opacity:1}
+.pm-seg:focus-visible{outline-offset:-2px}
+.pm-search:focus-within{border-color:#5B5BD6 !important;box-shadow:0 0 0 1px #5B5BD6}
+.pm-search input:focus-visible{outline:none}
+.pm-press{transition:transform 100ms ease-out,background-color 160ms ease-out}
+.pm-press:active{transform:scale(.97)}
+.pm-press:disabled:active{transform:none}
+.pm-thumb{transition:transform 260ms cubic-bezier(.34,1.36,.64,1)}
+.pm-track{transition:background-color 160ms ease-out}
+.pm-knob{transition:transform 240ms cubic-bezier(.34,1.36,.64,1)}
+.pm-seg{transition:color 160ms ease-out}
+@keyframes ds-rise-a{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@keyframes ds-rise-b{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@keyframes ds-sheet-a{from{transform:translateY(100%)}to{transform:none}}
+@keyframes ds-sheet-b{from{transform:translateY(100%)}to{transform:none}}
+@keyframes ds-scrim-a{from{opacity:0}to{opacity:1}}
+@keyframes ds-scrim-b{from{opacity:0}to{opacity:1}}
+@keyframes ds-toast-a{from{opacity:0;transform:translateY(14px) scale(.96)}to{opacity:1;transform:none}}
+@keyframes ds-toast-b{from{opacity:0;transform:translateY(14px) scale(.96)}to{opacity:1;transform:none}}
+@keyframes ds-flash-a{from{background-color:#E4E4FA}to{background-color:rgba(228,228,250,0)}}
+@keyframes ds-flash-b{from{background-color:#E4E4FA}to{background-color:rgba(228,228,250,0)}}
+@keyframes ds-check-a{from{stroke-dashoffset:10}to{stroke-dashoffset:0}}
+@keyframes ds-check-b{from{stroke-dashoffset:10}to{stroke-dashoffset:0}}
+@keyframes ds-pop-a{from{transform:scale(.55)}to{transform:scale(1)}}
+@keyframes ds-pop-b{from{transform:scale(.55)}to{transform:scale(1)}}
+@keyframes ds-push-a{from{opacity:0;transform:translateX(28px)}to{opacity:1;transform:none}}
+@keyframes ds-push-b{from{opacity:0;transform:translateX(28px)}to{opacity:1;transform:none}}
+.ds-rise{animation-duration:300ms;animation-timing-function:cubic-bezier(.22,1,.36,1);animation-fill-mode:both}
+.ds-glyph circle{transform-box:fill-box;transform-origin:center}
+.ds-glyph path{stroke-dasharray:10}
+@media (max-width: 767px){
+  .ds-pad{padding-left:16px !important;padding-right:16px !important}
+  .ds-h1{font-size:32px !important}
+  .ds-stack{flex-direction:column !important;align-items:stretch !important}
+}
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation-duration:1ms !important;animation-delay:0ms !important;transition-duration:1ms !important}
+}
+</style>
+</helmet>
+<div class="{{ rootClass }}" style="min-height: 100vh; background: #FFFFFF; color: #1B1B1F; font-family: 'Geist', 'Helvetica Neue', system-ui, sans-serif; font-size: 14px; line-height: 1.5; -webkit-font-smoothing: antialiased">
+  <div class="ds-pad" style="max-width: 1120px; margin: 0 auto; padding: 56px 40px 112px; box-sizing: border-box; display: flex; flex-direction: column; gap: 80px">
+
+    <header style="display: flex; flex-direction: column; gap: 14px">
+      <div style="display: flex; align-items: center; gap: 10px">
+        <span style="flex: none; width: 22px; height: 22px; border-radius: 6px; background: #1B1B1F; display: inline-flex; align-items: center; justify-content: center">
+          <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><rect x="1" y="1" width="4" height="4" rx="1" fill="#FFFFFF"></rect><rect x="7" y="1" width="4" height="4" rx="1" fill="#FFFFFF" opacity="0.55"></rect><rect x="1" y="7" width="4" height="4" rx="1" fill="#FFFFFF" opacity="0.55"></rect><rect x="7" y="7" width="4" height="4" rx="1" fill="#FFFFFF"></rect></svg>
+        </span>
+        <span style="font-size: 14px; font-weight: 600">Tracker</span>
+      </div>
+      <h1 class="ds-h1" style="margin: 0; font-size: 44px; line-height: 1.08; font-weight: 700; letter-spacing: -0.03em">Components and motion</h1>
+      <p style="margin: 0; max-width: 620px; font-size: 16px; line-height: 1.55; color: #6B6B76; text-wrap: pretty">Every component in the Project Tracker app, its states, and how it moves. Built from the same markup as the app.</p>
+      <nav aria-label="Sections" style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px">
+        <a class="ds-chip" href="DesignSystem.dc.html" style="display: inline-flex; align-items: center; gap: 6px; min-height: 32px; padding: 0 14px; border: 1px solid #DEDEE3; border-radius: 999px; color: #1B1B1F; font-size: 13px; font-weight: 500; text-decoration: none"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5"></path><path d="m12 19-7-7 7-7"></path></svg> Foundations and icons</a>
+        <a class="ds-chip" href="#components" style="display: inline-flex; align-items: center; min-height: 32px; padding: 0 14px; border: 1px solid #DEDEE3; border-radius: 999px; color: #1B1B1F; font-size: 13px; font-weight: 500; text-decoration: none">Components</a>
+        <a class="ds-chip" href="#motion" style="display: inline-flex; align-items: center; min-height: 32px; padding: 0 14px; border: 1px solid #DEDEE3; border-radius: 999px; color: #1B1B1F; font-size: 13px; font-weight: 500; text-decoration: none">Motion</a>
+      </nav>
+    </header>
+
+    <section id="components" aria-labelledby="ds-components" style="display: flex; flex-direction: column; gap: 32px">
+      <div style="display: flex; flex-direction: column; gap: 6px; padding-bottom: 16px; border-bottom: 1px solid #EBEBEE">
+        <span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 12px; color: #8E8E99">01</span>
+        <h2 id="ds-components" style="margin: 0; font-size: 28px; line-height: 1.2; font-weight: 600; letter-spacing: -0.02em">Components</h2>
+        <p style="margin: 4px 0 0; max-width: 640px; font-size: 14px; color: #6B6B76; text-wrap: pretty">Built from the same markup as the app. On phones, controls grow to 44px and inputs to 16px text.</p>
+      </div>
+
+      <div style="display: flex; flex-direction: column; border: 1px solid #EBEBEE; border-radius: 12px; overflow: hidden">
+        <div style="display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 16px; padding: 14px 20px; border-bottom: 1px solid #EBEBEE">
+          <span style="font-size: 14px; font-weight: 600">Buttons</span>
+          <span style="font-size: 12px; color: #6B6B76">One primary per screen. Every button scales to 0.97 while pressed.</span>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 24px; padding: 24px 20px; background: #FBFBFC">
+          <div style="display: flex; flex-direction: column; gap: 10px">
+            <span style="font-size: 12px; font-weight: 500; color: #6B6B76">Desktop · 32</span>
+            <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 10px">
+              <button class="pm-primary pm-press" style="display: inline-flex; align-items: center; gap: 6px; min-height: 32px; padding: 0 12px; border: 0; border-radius: 8px; background: #1B1B1F; color: #FFFFFF; font-size: 13px; font-weight: 500; cursor: pointer"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"></path><path d="M12 5v14"></path></svg>New ticket</button>
+              <button class="pm-secondary pm-press" style="display: inline-flex; align-items: center; gap: 6px; min-height: 32px; padding: 0 12px; border: 1px solid #DEDEE3; border-radius: 8px; background: #FFFFFF; color: #1B1B1F; font-size: 13px; font-weight: 500; cursor: pointer"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="2" width="8" height="4" rx="1"></rect><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><path d="m9 14 2 2 4-4"></path></svg>Paste report</button>
+              <button class="pm-textbtn pm-press" style="min-height: 32px; padding: 0 10px; border: 0; border-radius: 8px; background: transparent; color: #1B1B1F; font-size: 13px; cursor: pointer">Cancel</button>
+              <button class="pm-press" style="min-height: 32px; padding: 0 12px; border: 0; border-radius: 8px; background: #B42318; color: #FFFFFF; font-size: 13px; font-weight: 500; cursor: pointer">Delete</button>
+              <button class="pm-icon pm-press" aria-label="More" style="display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border: 0; border-radius: 8px; background: transparent; color: #6B6B76; cursor: pointer"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="5" cy="12" r="1"></circle><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle></svg></button>
+              <button class="pm-primary" disabled="{{ disabledDemo }}" style="min-height: 32px; padding: 0 14px; border: 0; border-radius: 8px; background: #1B1B1F; color: #FFFFFF; font-size: 13px; font-weight: 600; cursor: pointer">Create</button>
+              <span style="font-size: 12px; color: #8E8E99">Primary · Secondary · Text · Destructive · Icon · Disabled</span>
+            </div>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 10px">
+            <span style="font-size: 12px; font-weight: 500; color: #6B6B76">Phone · 44 and 48</span>
+            <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 10px">
+              <button class="pm-primary pm-press" style="display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; padding: 0 18px; border: 0; border-radius: 12px; background: #1B1B1F; color: #FFFFFF; font-size: 15px; font-weight: 600; cursor: pointer"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m4 17 6-6-6-6"></path><path d="M12 19h8"></path></svg>Send to Claude</button>
+              <button class="pm-secondary pm-press" style="display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; padding: 0 18px; border: 1px solid #DEDEE3; border-radius: 12px; background: #FFFFFF; color: #1B1B1F; font-size: 15px; font-weight: 500; cursor: pointer"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="2" width="8" height="4" rx="1"></rect><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><path d="m9 14 2 2 4-4"></path></svg>Paste report</button>
+              <button class="pm-icon pm-press" aria-label="New ticket" style="display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border: 0; border-radius: 22px; background: transparent; color: #1B1B1F; cursor: pointer"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"></path><path d="M12 5v14"></path></svg></button>
+              <button class="pm-primary pm-press" style="min-height: 34px; padding: 0 14px; border: 0; border-radius: 8px; background: #1B1B1F; color: #FFFFFF; font-size: 15px; font-weight: 600; cursor: pointer">Create</button>
+              <span style="font-size: 12px; color: #8E8E99">Bar primary · Bar secondary · Nav icon · Sheet action</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(460px, 100%), 1fr)); gap: 24px">
+        <div style="display: flex; flex-direction: column; border: 1px solid #EBEBEE; border-radius: 12px; overflow: hidden">
+          <div style="display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 16px; padding: 14px 20px; border-bottom: 1px solid #EBEBEE">
+            <span style="font-size: 14px; font-weight: 600">Segmented control</span>
+            <span style="font-size: 12px; color: #6B6B76">Only for filtering lists. Try it.</span>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 20px; padding: 24px 20px; background: #FBFBFC">
+            <div role="group" aria-label="Filter demo" style="position: relative; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 2px; max-width: 300px; padding: 2px; border-radius: 10px; background: #EFEFF1">
+              <span class="pm-thumb" aria-hidden="true" style="position: absolute; top: 2px; bottom: 2px; left: 2px; width: calc((100% - 8px) / 3); border-radius: 8px; background: #FFFFFF; box-shadow: 0 1px 2px rgba(20, 20, 26, 0.12), 0 0 0 0.5px rgba(20, 20, 26, 0.06); transform: translateX(calc({{ filterIdx }} * (100% + 2px)))"></span>
+              <sc-for list="{{ filterTabs }}" as="ft" hint-placeholder-count="3">
+                <button class="pm-seg" onClick="{{ ft.pick }}" aria-pressed="{{ ft.pressed }}" style="position: relative; z-index: 1; display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 30px; padding: 0 8px; border: 0; border-radius: 8px; background: transparent; color: {{ ft.fg }}; font-size: 13px; font-weight: 500; white-space: nowrap; cursor: pointer">{{ ft.label }} <span style="font-size: 12px; color: #8E8E99">{{ ft.n }}</span></button>
+              </sc-for>
+            </div>
+            <span style="font-size: 12px; color: #6B6B76">Track Fill 2 · thumb Surface with Raised shadow · inner radius 8, outer 10, 2px inset. Values you set on a ticket, like status, use a dropdown instead.</span>
+          </div>
+        </div>
+
+        <div style="display: flex; flex-direction: column; border: 1px solid #EBEBEE; border-radius: 12px; overflow: hidden">
+          <div style="display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 16px; padding: 14px 20px; border-bottom: 1px solid #EBEBEE">
+            <span style="font-size: 14px; font-weight: 600">Fields</span>
+            <span style="font-size: 12px; color: #6B6B76">Search, switch and comment box.</span>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 16px; padding: 24px 20px; background: #FBFBFC">
+            <label class="pm-search" style="display: flex; align-items: center; gap: 8px; max-width: 280px; min-height: 34px; padding: 0 10px; border: 1px solid #DEDEE3; border-radius: 8px; box-sizing: border-box; background: #FFFFFF; color: #8E8E99">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7.5"></circle><path d="m20.5 20.5-4-4"></path></svg>
+              <input placeholder="Search tickets · desktop" aria-label="Search tickets, desktop style" style="flex: 1; min-width: 0; border: 0; padding: 6px 0; background: transparent; color: #1B1B1F; font-size: 13px">
+            </label>
+            <label class="pm-search" style="display: flex; align-items: center; gap: 8px; max-width: 340px; min-height: 40px; border: 1px solid transparent; padding: 0 10px; border-radius: 8px; box-sizing: border-box; background: #EFEFF1; color: #8E8E99">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7.5"></circle><path d="m20.5 20.5-4-4"></path></svg>
+              <input placeholder="Search tickets · phone" aria-label="Search tickets, phone style" style="flex: 1; min-width: 0; border: 0; padding: 8px 0; background: transparent; color: #1B1B1F; font-size: 16px">
+            </label>
+            <div style="display: flex; align-items: center; gap: 12px; max-width: 340px; min-height: 48px; padding: 0 12px 0 14px; border: 1px solid #EBEBEE; border-radius: 12px; background: #FFFFFF; font-size: 14px">
+              <span style="flex: 1">Move MOB-3 to In progress</span>
+              <button type="button" role="switch" class="pm-track" aria-checked="{{ switchOnStr }}" aria-label="Switch demo" onClick="{{ toggleSwitch }}" style="position: relative; flex: none; width: 44px; height: 26px; padding: 0; border: 0; border-radius: 13px; background: {{ switchBg }}; cursor: pointer">
+                <span class="pm-knob" style="position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 10px; background: #FFFFFF; box-shadow: 0 1px 3px rgba(20, 20, 26, 0.25); transform: translateX({{ knobX }}px)"></span>
+              </button>
+            </div>
+            <div style="max-width: 420px; border: 1px solid #DEDEE3; border-radius: 12px; background: #FFFFFF; display: flex; flex-direction: column">
+              <span style="padding: 12px 14px 4px; min-height: 40px; font-size: 14px; color: #9A9AA3">Leave a comment…</span>
+              <div style="display: flex; justify-content: flex-end; padding: 6px 8px 8px">
+                <button class="pm-secondary pm-press" style="min-height: 30px; padding: 0 12px; border: 1px solid #DEDEE3; border-radius: 8px; background: #FFFFFF; color: #1B1B1F; font-size: 13px; font-weight: 500; cursor: pointer">Comment</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(460px, 100%), 1fr)); gap: 24px">
+        <div style="display: flex; flex-direction: column; border: 1px solid #EBEBEE; border-radius: 12px; overflow: hidden">
+          <div style="display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 16px; padding: 14px 20px; border-bottom: 1px solid #EBEBEE">
+            <span style="font-size: 14px; font-weight: 600">Property rows and dropdown</span>
+            <span style="font-size: 12px; color: #6B6B76">Status and priority open a dropdown; due date opens the date picker.</span>
+          </div>
+          <div style="padding: 24px 20px; background: #FBFBFC">
+            <div style="border: 1px solid #EBEBEE; border-radius: 12px; overflow: hidden; background: #FFFFFF">
+              <div style="position: relative; display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 0 12px 0 14px; font-size: 14px">
+                <span aria-hidden="true" style="position: absolute; inset: 3px; border-radius: 8px; box-shadow: 0 0 0 2px #5B5BD6; pointer-events: none"></span>
+                <span style="flex: none; width: 20px; display: inline-flex; justify-content: center"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.25" fill="none" stroke="#C26A06" stroke-width="1.5"></circle><path d="M8 4.5a3.5 3.5 0 0 1 0 7z" fill="#C26A06"></path></svg></span>
+                <span style="flex: 1">Status</span><span style="color: #6B6B76">In progress</span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#B4B4BC" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg>
+              </div>
+              <div style="display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 0 12px 0 14px; border-top: 1px solid #EBEBEE; font-size: 14px">
+                <span style="flex: none; width: 20px; display: inline-flex; justify-content: center"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><rect x="2" y="9" width="3" height="5" rx="1" fill="#55555F"></rect><rect x="6.5" y="6" width="3" height="8" rx="1" fill="#55555F"></rect><rect x="11" y="3" width="3" height="11" rx="1" fill="#55555F"></rect></svg></span>
+                <span style="flex: 1">Priority</span><span style="color: #6B6B76">High</span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#B4B4BC" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg>
+              </div>
+              <div style="display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 0 14px; border-top: 1px solid #EBEBEE; font-size: 14px">
+                <span style="flex: none; width: 20px; display: inline-flex; justify-content: center"><span style="width: 20px; height: 20px; border-radius: 50%; background: #5B5BD6; color: #FFFFFF; display: inline-flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 600">D</span></span>
+                <span style="flex: 1">Assignee</span><span>Dara</span>
+              </div>
+              <div style="display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 0 12px 0 14px; border-top: 1px solid #EBEBEE; font-size: 14px">
+                <span style="flex: none; width: 20px; display: inline-flex; justify-content: center; color: #B42318"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"></rect><path d="M16 2v4"></path><path d="M8 2v4"></path><path d="M3 10h18"></path></svg></span>
+                <span style="flex: 1">Due date</span><span style="color: #B42318">Mon, Oct 5</span>
+                <span style="flex: none; display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 12px; background: #EFEFF1; color: #6B6B76"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg></span>
+              </div>
+            </div>
+            <div style="display: flex; justify-content: flex-end; margin-top: 4px">
+              <div role="listbox" aria-label="Status menu example" style="width: 220px; box-sizing: border-box; padding: 4px; background: #FFFFFF; border: 1px solid #EBEBEE; border-radius: 10px; box-shadow: 0 8px 24px rgba(20, 20, 26, 0.12)">
+                <div role="option" aria-selected="false" style="display: flex; align-items: center; gap: 10px; min-height: 36px; padding: 0 10px; border-radius: 8px; font-size: 14px"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.25" fill="none" stroke="#8E8E99" stroke-width="1.5"></circle></svg><span style="flex: 1">To do</span></div>
+                <div role="option" aria-selected="true" style="display: flex; align-items: center; gap: 10px; min-height: 36px; padding: 0 10px; border-radius: 8px; background: #F7F7F8; font-size: 14px"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.25" fill="none" stroke="#C26A06" stroke-width="1.5"></circle><path d="M8 4.5a3.5 3.5 0 0 1 0 7z" fill="#C26A06"></path></svg><span style="flex: 1">In progress</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#5B5BD6" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg></div>
+                <div role="option" aria-selected="false" style="display: flex; align-items: center; gap: 10px; min-height: 36px; padding: 0 10px; border-radius: 8px; font-size: 14px"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="7" fill="#5B5BD6"></circle><path d="m5 8.25 2 2 4-4.25" fill="none" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg><span style="flex: 1">Done</span></div>
+              </div>
+            </div>
+            <p style="margin: 12px 4px 0; font-size: 12px; line-height: 1.5; color: #6B6B76">Leading icon in a 20px column · label · value in Muted · chevron-down in Faint. The dropdown is 220 wide (240 on phones), lines up with the right edge of its row and flips above it near the bottom of the screen. Options show their icon, and the current one has a check on a Fill background. Arrow keys move through it, Escape closes it.</p>
+          </div>
+        </div>
+
+        <div style="display: flex; flex-direction: column; border: 1px solid #EBEBEE; border-radius: 12px; overflow: hidden">
+          <div style="display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 16px; padding: 14px 20px; border-bottom: 1px solid #EBEBEE">
+            <span style="font-size: 14px; font-weight: 600">Lists</span>
+            <span style="font-size: 12px; color: #6B6B76">One card per status. Long groups show 5 rows and a centered Show more.</span>
+          </div>
+          <div style="padding: 24px 20px; background: #FBFBFC">
+            <div style="border: 1px solid #EBEBEE; border-radius: 12px; overflow: hidden; background: #FFFFFF">
+              <div style="display: flex; align-items: center; gap: 8px; min-height: 40px; padding: 0 8px 0 16px; background: #F7F7F8; border-bottom: 1px solid #EBEBEE; font-size: 13px">
+                <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" style="flex: none"><circle cx="8" cy="8" r="6.25" fill="none" stroke="#8E8E99" stroke-width="1.5"></circle></svg>
+                <span style="font-weight: 500">To do</span><span style="color: #8E8E99">8</span><span style="flex: 1"></span>
+                <span style="display: inline-flex; width: 28px; height: 28px; align-items: center; justify-content: center; color: #6B6B76"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"></path><path d="M12 5v14"></path></svg></span>
+              </div>
+              <div style="display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 8px 16px 8px 36px; font-size: 14px">
+                <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" style="flex: none"><rect x="2" y="9" width="3" height="5" rx="1" fill="#55555F"></rect><rect x="6.5" y="6" width="3" height="8" rx="1" fill="#55555F"></rect><rect x="11" y="3" width="3" height="11" rx="1" fill="#55555F"></rect></svg>
+                <span style="flex: none; width: 52px; font-family: 'Geist Mono', ui-monospace, monospace; font-size: 12px; color: #6B6B76">MOB-3</span>
+                <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" style="flex: none"><circle cx="8" cy="8" r="6.25" fill="none" stroke="#8E8E99" stroke-width="1.5"></circle></svg>
+                <span style="flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap">Crash when rotating the profile screen</span>
+                <span style="flex: none; width: 24px; height: 24px; border-radius: 50%; background: #5B5BD6; color: #FFFFFF; display: inline-flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 600">D</span>
+              </div>
+              <div style="display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 8px 16px 8px 36px; border-top: 1px solid #EBEBEE; font-size: 14px">
+                <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" style="flex: none"><rect x="2" y="9" width="3" height="5" rx="1" fill="#55555F"></rect><rect x="6.5" y="6" width="3" height="8" rx="1" fill="#55555F"></rect><rect x="11" y="3" width="3" height="11" rx="1" fill="#D9D9DE"></rect></svg>
+                <span style="flex: none; width: 52px; font-family: 'Geist Mono', ui-monospace, monospace; font-size: 12px; color: #6B6B76">MOB-4</span>
+                <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" style="flex: none"><circle cx="8" cy="8" r="6.25" fill="none" stroke="#8E8E99" stroke-width="1.5"></circle></svg>
+                <span style="flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap">Dark mode colors for Settings</span>
+                <span style="flex: none; width: 24px; height: 24px; box-sizing: border-box; border-radius: 50%; border: 1.5px dashed #C4C4CC"></span>
+              </div>
+              <div style="display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 8px 16px 8px 36px; border-top: 1px solid #EBEBEE; font-size: 14px">
+                <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" style="flex: none"><rect x="2" y="9" width="3" height="5" rx="1" fill="#55555F"></rect><rect x="6.5" y="6" width="3" height="8" rx="1" fill="#55555F"></rect><rect x="11" y="3" width="3" height="11" rx="1" fill="#D9D9DE"></rect></svg>
+                <span style="flex: none; width: 52px; font-family: 'Geist Mono', ui-monospace, monospace; font-size: 12px; color: #6B6B76">MOB-7</span>
+                <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" style="flex: none"><circle cx="8" cy="8" r="6.25" fill="none" stroke="#8E8E99" stroke-width="1.5"></circle></svg>
+                <span style="flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap">Offline banner when the network drops</span>
+                <span style="flex: none; width: 24px; height: 24px; border-radius: 50%; background: #18794E; color: #FFFFFF; display: inline-flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 600">S</span>
+              </div>
+              <div style="display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 8px 16px 8px 36px; border-top: 1px solid #EBEBEE; font-size: 14px">
+                <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" style="flex: none"><rect x="2" y="9" width="3" height="5" rx="1" fill="#55555F"></rect><rect x="6.5" y="6" width="3" height="8" rx="1" fill="#D9D9DE"></rect><rect x="11" y="3" width="3" height="11" rx="1" fill="#D9D9DE"></rect></svg>
+                <span style="flex: none; width: 52px; font-family: 'Geist Mono', ui-monospace, monospace; font-size: 12px; color: #6B6B76">MOB-5</span>
+                <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" style="flex: none"><circle cx="8" cy="8" r="6.25" fill="none" stroke="#8E8E99" stroke-width="1.5"></circle></svg>
+                <span style="flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap">Update App Store screenshots</span>
+                <span style="flex: none; width: 24px; height: 24px; box-sizing: border-box; border-radius: 50%; border: 1.5px dashed #C4C4CC"></span>
+              </div>
+              <div style="display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 8px 16px 8px 36px; border-top: 1px solid #EBEBEE; font-size: 14px">
+                <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" style="flex: none"><rect x="2" y="9" width="3" height="5" rx="1" fill="#55555F"></rect><rect x="6.5" y="6" width="3" height="8" rx="1" fill="#D9D9DE"></rect><rect x="11" y="3" width="3" height="11" rx="1" fill="#D9D9DE"></rect></svg>
+                <span style="flex: none; width: 52px; font-family: 'Geist Mono', ui-monospace, monospace; font-size: 12px; color: #6B6B76">MOB-8</span>
+                <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" style="flex: none"><circle cx="8" cy="8" r="6.25" fill="none" stroke="#8E8E99" stroke-width="1.5"></circle></svg>
+                <span style="flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap">Add a haptic tap to the main buttons</span>
+                <span style="flex: none; width: 24px; height: 24px; box-sizing: border-box; border-radius: 50%; border: 1.5px dashed #C4C4CC"></span>
+              </div>
+              <div style="display: flex; align-items: center; justify-content: center; gap: 6px; min-height: 40px; border-top: 1px solid #EBEBEE; color: #6B6B76; font-size: 13px; font-weight: 500">Show 3 more <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg></div>
+            </div>
+            <div style="margin-top: 12px; border: 1px solid #EBEBEE; border-radius: 12px; overflow: hidden; background: #FFFFFF">
+              <div style="display: flex; align-items: center; gap: 12px; min-height: 60px; padding: 10px 16px; font-size: 14px">
+                <span style="flex: none; width: 10px; height: 10px; border-radius: 3px; background: #5B5BD6"></span>
+                <span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px">
+                  <span style="display: flex; align-items: baseline; gap: 8px"><span style="font-weight: 500">Mobile app</span><span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 12px; color: #8E8E99">MOB</span></span>
+                  <span style="font-size: 13px; color: #6B6B76; overflow: hidden; text-overflow: ellipsis; white-space: nowrap">iOS and Android app for the next release.</span>
+                </span>
+                <span style="font-size: 13px">4</span>
+                <span style="flex: none; color: #B4B4BC"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"></path></svg></span>
+              </div>
+            </div>
+            <p style="margin: 12px 4px 0; font-size: 12px; line-height: 1.5; color: #6B6B76">Cards are 16px apart with a 12px radius. Rows keep a 36px left gutter for the drag handle. A group with more than 6 tickets shows 5, then a centered Show N more row with a chevron that turns over when expanded. Search always shows every match.</p>
+          </div>
+        </div>
+      </div>
+
+      <div style="display: flex; flex-direction: column; border: 1px solid #EBEBEE; border-radius: 12px; overflow: hidden">
+        <div style="display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 16px; padding: 14px 20px; border-bottom: 1px solid #EBEBEE">
+          <span style="font-size: 14px; font-weight: 600">Drag and drop</span>
+          <span style="font-size: 12px; color: #6B6B76">Reorder tickets, or drag one into another status. Try it.</span>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(420px, 100%), 1fr)); gap: 24px; padding: 24px 20px; background: #FBFBFC">
+          <div style="display: flex; flex-direction: column; gap: 10px">
+            <div style="display: flex; flex-direction: column; gap: 12px">
+              <sc-for list="{{ dndGroups }}" as="dg" hint-placeholder-count="3">
+                <section aria-label="{{ dg.label }}" data-ds-group="{{ dg.status }}" style="border: 1px solid #EBEBEE; border-radius: 12px; overflow: hidden; background: #FFFFFF">
+                  <div class="pm-ghead" style="display: flex; align-items: center; gap: 8px; min-height: 40px; padding: 0 12px 0 16px; background: {{ dg.headBg }}; border-bottom: 1px solid #EBEBEE; font-size: 13px">
+                    <span style="flex: none; display: inline-flex">
+                      <sc-if value="{{ dg.isTodo }}" hint-placeholder-val="{{ true }}"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.25" fill="none" stroke="#8E8E99" stroke-width="1.5"></circle></svg></sc-if>
+                      <sc-if value="{{ dg.isDoing }}" hint-placeholder-val="{{ false }}"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.25" fill="none" stroke="#C26A06" stroke-width="1.5"></circle><path d="M8 4.5a3.5 3.5 0 0 1 0 7z" fill="#C26A06"></path></svg></sc-if>
+                      <sc-if value="{{ dg.isDone }}" hint-placeholder-val="{{ false }}"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="7" fill="#5B5BD6"></circle><path d="m5 8.25 2 2 4-4.25" fill="none" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg></sc-if>
+                    </span>
+                    <span style="font-weight: 500">{{ dg.label }}</span>
+                    <span style="color: #8E8E99; font-variant-numeric: tabular-nums">{{ dg.count }}</span>
+                  </div>
+                  <sc-if value="{{ dg.showZone }}" hint-placeholder-val="{{ false }}">
+                    <div style="padding: 8px 12px">
+                      <div class="pm-fade-in" style="display: flex; align-items: center; justify-content: center; min-height: 40px; border: 1.5px dashed {{ dg.zoneBorder }}; border-radius: 10px; background: {{ dg.zoneBg }}; color: {{ dg.zoneFg }}; font-size: 13px; font-weight: 500">Drop here to move to {{ dg.label }}</div>
+                    </div>
+                  </sc-if>
+                  <sc-if value="{{ dg.showEmpty }}" hint-placeholder-val="{{ false }}">
+                    <div style="padding: 10px 16px; font-size: 13px; color: #9A9AA3">No tickets</div>
+                  </sc-if>
+                  <sc-for list="{{ dg.items }}" as="di" hint-placeholder-count="2">
+                    <div class="pm-trow" data-ds-row="{{ di.id }}" onPointerDown="{{ di.rowDown }}" onPointerMove="{{ dndMoveH }}" onPointerUp="{{ dndUpH }}" onPointerCancel="{{ dndCancelH }}" style="position: relative; display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 8px 16px 8px 36px; border-top: {{ di.sep }}; background: #FFFFFF; font-size: 14px; cursor: default">
+                      <button type="button" class="pm-handle" data-ds-handle="{{ di.id }}" aria-label="{{ di.handleLabel }}" onPointerDown="{{ di.handleDown }}" onPointerMove="{{ dndMoveH }}" onPointerUp="{{ dndUpH }}" onPointerCancel="{{ dndCancelH }}" onKeyDown="{{ di.handleKey }}" style="position: absolute; top: 0; bottom: 0; left: 6px; z-index: 2; width: 24px; display: flex; align-items: center; justify-content: center; margin: 0; padding: 0; border: 0; border-radius: 6px; background: transparent; color: #B4B4BC; cursor: grab; touch-action: none; opacity: 0">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="12" r="1"></circle><circle cx="9" cy="5" r="1"></circle><circle cx="9" cy="19" r="1"></circle><circle cx="15" cy="12" r="1"></circle><circle cx="15" cy="5" r="1"></circle><circle cx="15" cy="19" r="1"></circle></svg>
+                      </button>
+                      <span style="flex: 1; min-width: 0; display: flex; align-items: center; gap: 12px; opacity: {{ di.opacity }}; transition: opacity 160ms ease-out">
+                        <span style="flex: none; width: 48px; font-family: 'Geist Mono', ui-monospace, monospace; font-size: 12px; color: #6B6B76">{{ di.key }}</span>
+                        <span style="flex: none; display: inline-flex">
+                          <sc-if value="{{ di.isTodo }}" hint-placeholder-val="{{ true }}"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.25" fill="none" stroke="#8E8E99" stroke-width="1.5"></circle></svg></sc-if>
+                          <sc-if value="{{ di.isDoing }}" hint-placeholder-val="{{ false }}"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.25" fill="none" stroke="#C26A06" stroke-width="1.5"></circle><path d="M8 4.5a3.5 3.5 0 0 1 0 7z" fill="#C26A06"></path></svg></sc-if>
+                          <sc-if value="{{ di.isDone }}" hint-placeholder-val="{{ false }}"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="7" fill="#5B5BD6"></circle><path d="m5 8.25 2 2 4-4.25" fill="none" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg></sc-if>
+                        </span>
+                        <span style="flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap">{{ di.title }}</span>
+                      </span>
+                      <sc-if value="{{ di.isNew }}" hint-placeholder-val="{{ false }}">
+                        <span aria-hidden="true" style="position: absolute; inset: 0; pointer-events: none; mix-blend-mode: multiply; animation: {{ di.flashAnim }} 1400ms cubic-bezier(0.22, 1, 0.36, 1) both"></span>
+                      </sc-if>
+                      <sc-if value="{{ di.dropBefore }}" hint-placeholder-val="{{ false }}"><span aria-hidden="true" style="position: absolute; left: 12px; right: 12px; top: 0; z-index: 4; height: 2px; border-radius: 1px; background: #5B5BD6; pointer-events: none"><span style="position: absolute; left: -5px; top: -3px; width: 4px; height: 4px; border: 2px solid #5B5BD6; border-radius: 50%; background: #FFFFFF"></span></span></sc-if>
+                      <sc-if value="{{ di.dropAfter }}" hint-placeholder-val="{{ false }}"><span aria-hidden="true" style="position: absolute; left: 12px; right: 12px; bottom: 0; z-index: 4; height: 2px; border-radius: 1px; background: #5B5BD6; pointer-events: none"><span style="position: absolute; left: -5px; top: -3px; width: 4px; height: 4px; border: 2px solid #5B5BD6; border-radius: 50%; background: #FFFFFF"></span></span></sc-if>
+                    </div>
+                  </sc-for>
+                </section>
+              </sc-for>
+            </div>
+            <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px">
+              <span style="font-size: 12px; line-height: 1.5; color: #6B6B76">Grab the handle (on desktop you can also drag the row). With the handle focused, the arrow keys move a ticket one slot, and across groups.</span>
+              <button class="pm-textbtn pm-press" onClick="{{ dndReset }}" style="min-height: 32px; padding: 0 10px; border: 0; border-radius: 8px; background: transparent; color: #1B1B1F; font-size: 13px; cursor: pointer">Reset</button>
+            </div>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 18px">
+            <div style="display: flex; flex-direction: column; gap: 8px">
+              <span style="font-size: 12px; font-weight: 600">Handle</span>
+              <div style="border: 1px solid #EBEBEE; border-radius: 12px; overflow: hidden; background: #F7F7F8">
+                <div style="position: relative; display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 0 16px 0 34px; font-size: 14px">
+                  <span style="position: absolute; top: 10px; bottom: 10px; left: 4px; width: 24px; display: flex; align-items: center; justify-content: center; border-radius: 6px; background: #EFEFF1; color: #6B6B76"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="12" r="1"></circle><circle cx="9" cy="5" r="1"></circle><circle cx="9" cy="19" r="1"></circle><circle cx="15" cy="12" r="1"></circle><circle cx="15" cy="5" r="1"></circle><circle cx="15" cy="19" r="1"></circle></svg></span>
+                  <span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 12px; color: #6B6B76">MOB-3</span>
+                  <span style="flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap">Crash when rotating the profile screen</span>
+                </div>
+              </div>
+              <span style="font-size: 12px; line-height: 1.5; color: #6B6B76">grip-vertical 16 in Faint, Muted on hover. 24px wide (34 on phones). Shows on row hover and keyboard focus, and always on touch screens.</span>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 8px">
+              <span style="font-size: 12px; font-weight: 600">Lifted</span>
+              <div style="position: relative; height: 96px">
+                <div style="display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 0 16px 0 34px; border: 1px solid #EBEBEE; border-radius: 12px; background: #FFFFFF; font-size: 14px">
+                  <span style="display: flex; align-items: center; gap: 12px; opacity: 0.35"><span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 12px; color: #6B6B76">MOB-3</span><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.25" fill="none" stroke="#8E8E99" stroke-width="1.5"></circle></svg><span>Crash when rotating the profile screen</span></span>
+                </div>
+                <div style="position: absolute; left: 22px; right: -6px; top: 34px; display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 0 16px 0 8px; box-sizing: border-box; border: 1px solid #EBEBEE; border-radius: 10px; background: #FFFFFF; box-shadow: 0 12px 32px rgba(20, 20, 26, 0.18); transform: scale(1.02); font-size: 14px">
+                  <span style="flex: none; width: 20px; display: inline-flex; justify-content: center; color: #6B6B76"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="12" r="1"></circle><circle cx="9" cy="5" r="1"></circle><circle cx="9" cy="19" r="1"></circle><circle cx="15" cy="12" r="1"></circle><circle cx="15" cy="5" r="1"></circle><circle cx="15" cy="19" r="1"></circle></svg></span>
+                  <span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 12px; color: #6B6B76">MOB-3</span><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.25" fill="none" stroke="#8E8E99" stroke-width="1.5"></circle></svg>
+                  <span style="flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500">Crash when rotating the profile screen</span>
+                </div>
+              </div>
+              <span style="font-size: 12px; line-height: 1.5; color: #6B6B76">The card follows the pointer at 102% with the Lifted shadow. The row it came from stays in place at 35% so the list doesn’t jump.</span>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 8px">
+              <span style="font-size: 12px; font-weight: 600">Drop target</span>
+              <div style="border: 1px solid #EBEBEE; border-radius: 12px; overflow: hidden; background: #FFFFFF">
+                <div style="display: flex; align-items: center; gap: 8px; min-height: 36px; padding: 0 16px; background: #EEEEFC; border-bottom: 1px solid #EBEBEE; font-size: 13px"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.25" fill="none" stroke="#C26A06" stroke-width="1.5"></circle><path d="M8 4.5a3.5 3.5 0 0 1 0 7z" fill="#C26A06"></path></svg><span style="font-weight: 500">In progress</span><span style="color: #8E8E99">1</span></div>
+                <div style="position: relative; display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 0 16px 0 34px; font-size: 14px">
+                  <span aria-hidden="true" style="position: absolute; left: 12px; right: 12px; top: 0; z-index: 4; height: 2px; border-radius: 1px; background: #5B5BD6; pointer-events: none"><span style="position: absolute; left: -5px; top: -3px; width: 4px; height: 4px; border: 2px solid #5B5BD6; border-radius: 50%; background: #FFFFFF"></span></span>
+                  <span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 12px; color: #6B6B76">MOB-2</span><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.25" fill="none" stroke="#C26A06" stroke-width="1.5"></circle><path d="M8 4.5a3.5 3.5 0 0 1 0 7z" fill="#C26A06"></path></svg><span style="flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap">Show an error when the password is wrong</span>
+                </div>
+              </div>
+              <span style="font-size: 12px; line-height: 1.5; color: #6B6B76">A 2px Accent line marks the slot. The group header tints #EEEEFC when the drop will change the ticket’s status.</span>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 8px">
+              <span style="font-size: 12px; font-weight: 600">Empty group</span>
+              <div style="display: flex; align-items: center; justify-content: center; min-height: 40px; border: 1.5px dashed #5B5BD6; border-radius: 10px; background: #F7F7FE; color: #4A4AC4; font-size: 13px; font-weight: 500">Drop here to move to Done</div>
+              <span style="font-size: 12px; line-height: 1.5; color: #6B6B76">Empty groups appear only while dragging, as a dashed zone that turns Accent when it’s the target. Dropping in another status adds a history entry and a toast.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display: flex; flex-direction: column; border: 1px solid #EBEBEE; border-radius: 12px; overflow: hidden">
+        <div style="display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 16px; padding: 14px 20px; border-bottom: 1px solid #EBEBEE">
+          <span style="font-size: 14px; font-weight: 600">Phone navigation</span>
+          <span style="font-size: 12px; color: #6B6B76">Nav bar 52 · bottom bar with two actions · no sidebar on phones</span>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr)); gap: 16px; padding: 24px 20px; background: #FBFBFC">
+          <div style="display: flex; flex-direction: column; gap: 8px">
+            <span style="font-size: 12px; font-weight: 500; color: #6B6B76">Root</span>
+            <div style="border: 1px solid #EBEBEE; border-radius: 12px; overflow: hidden; background: #FFFFFF">
+              <div style="display: flex; align-items: center; min-height: 52px; padding: 4px 6px; border-bottom: 1px solid #EBEBEE">
+                <span style="flex: 1"></span>
+                <span style="display: inline-flex; width: 44px; height: 44px; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"></path><path d="M12 5v14"></path></svg></span>
+              </div>
+              <div style="padding: 20px 16px 16px; font-size: 30px; line-height: 1.15; font-weight: 700; letter-spacing: -0.02em">Projects</div>
+            </div>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 8px">
+            <span style="font-size: 12px; font-weight: 500; color: #6B6B76">Project</span>
+            <div style="border: 1px solid #EBEBEE; border-radius: 12px; overflow: hidden; background: #FFFFFF">
+              <div style="display: flex; align-items: center; gap: 4px; min-height: 52px; padding: 4px 6px; border-bottom: 1px solid #EBEBEE">
+                <span style="flex: 1 1 0; display: inline-flex; align-items: center; min-width: 0; font-size: 16px"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none"><path d="m15 18-6-6 6-6"></path></svg>Projects</span>
+                <span style="flex: 0 1 auto; font-size: 15px; font-weight: 600; white-space: nowrap">Mobile app</span>
+                <span style="flex: 1 1 0; display: flex; justify-content: flex-end">
+                  <span style="display: inline-flex; width: 40px; height: 44px; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="5" cy="12" r="1"></circle><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle></svg></span>
+                  <span style="display: inline-flex; width: 40px; height: 44px; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"></path><path d="M12 5v14"></path></svg></span>
+                </span>
+              </div>
+              <div style="display: flex; gap: 10px; padding: 10px 12px; background: #FFFFFF">
+                <span style="flex: 1 1 0; display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 44px; border: 1px solid #DEDEE3; border-radius: 12px; font-size: 14px; font-weight: 500; white-space: nowrap">Paste report</span>
+                <span style="flex: 1.35 1 0; display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 44px; border-radius: 12px; background: #1B1B1F; color: #FFFFFF; font-size: 14px; font-weight: 600; white-space: nowrap">Send open tickets</span>
+              </div>
+            </div>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 8px">
+            <span style="font-size: 12px; font-weight: 500; color: #6B6B76">Ticket</span>
+            <div style="border: 1px solid #EBEBEE; border-radius: 12px; overflow: hidden; background: #FFFFFF">
+              <div style="display: flex; align-items: center; gap: 4px; min-height: 52px; padding: 4px 6px; border-bottom: 1px solid #EBEBEE">
+                <span style="flex: 1 1 0; display: inline-flex; align-items: center; min-width: 0; font-size: 16px"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none"><path d="m15 18-6-6 6-6"></path></svg>Mobile app</span>
+                <span style="flex: 0 1 auto; font-family: 'Geist Mono', ui-monospace, monospace; font-size: 15px; font-weight: 600">MOB-3</span>
+                <span style="flex: 1 1 0"></span>
+              </div>
+              <div style="padding: 16px; font-size: 22px; line-height: 1.3; font-weight: 600; letter-spacing: -0.015em">Crash when rotating the profile screen</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(460px, 100%), 1fr)); gap: 24px">
+        <div style="display: flex; flex-direction: column; border: 1px solid #EBEBEE; border-radius: 12px; overflow: hidden">
+          <div style="display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 16px; padding: 14px 20px; border-bottom: 1px solid #EBEBEE">
+            <span style="font-size: 14px; font-weight: 600">Sheet</span>
+            <span style="font-size: 12px; color: #6B6B76">Bottom sheet on phones, centered dialog on desktop.</span>
+          </div>
+          <div style="display: flex; justify-content: center; padding: 24px 20px 0; background: rgba(20, 20, 26, 0.36)">
+            <div style="width: 100%; max-width: 390px; border-radius: 14px 14px 0 0; background: #FFFFFF; box-shadow: 0 24px 64px rgba(20, 20, 26, 0.2); display: flex; flex-direction: column">
+              <div style="display: flex; justify-content: center; padding-top: 6px"><span style="width: 36px; height: 5px; border-radius: 3px; background: #DEDEE3"></span></div>
+              <div style="display: flex; align-items: center; gap: 8px; min-height: 56px; padding: 6px 10px; border-bottom: 1px solid #EBEBEE">
+                <span style="flex: 1 1 0; padding: 0 10px; font-size: 16px">Cancel</span>
+                <span style="flex: 0 1 auto; display: flex; flex-direction: column; align-items: center">
+                  <span style="font-size: 15px; font-weight: 600; line-height: 1.25">New ticket</span>
+                  <span style="display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: #6B6B76"><span style="width: 8px; height: 8px; border-radius: 2px; background: #5B5BD6"></span>Mobile app</span>
+                </span>
+                <span style="flex: 1 1 0; display: flex; justify-content: flex-end"><span style="display: inline-flex; align-items: center; min-height: 34px; padding: 0 14px; border-radius: 8px; background: #1B1B1F; color: #FFFFFF; font-size: 15px; font-weight: 600; opacity: 0.35">Create</span></span>
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 2px; padding: 18px 20px 20px">
+                <span style="font-size: 20px; font-weight: 600; letter-spacing: -0.01em; color: #9A9AA3">Ticket title</span>
+                <span style="min-height: 44px; font-size: 16px; color: #9A9AA3">Add details, steps or acceptance criteria…</span>
+              </div>
+              <div style="padding: 0 16px 20px">
+                <div style="border: 1px solid #EBEBEE; border-radius: 12px; overflow: hidden">
+                  <div style="display: flex; align-items: center; gap: 12px; min-height: 50px; padding: 0 12px 0 14px; font-size: 16px"><span style="flex: none; width: 20px; display: inline-flex; justify-content: center"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.25" fill="none" stroke="#8E8E99" stroke-width="1.5"></circle></svg></span><span style="flex: 1">Status</span><span style="color: #6B6B76">To do</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#B4B4BC" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg></div>
+                  <div style="display: flex; align-items: center; gap: 12px; min-height: 50px; padding: 0 12px 0 14px; border-top: 1px solid #EBEBEE; font-size: 16px"><span style="flex: none; width: 20px; display: inline-flex; justify-content: center"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><rect x="2" y="9" width="3" height="5" rx="1" fill="#55555F"></rect><rect x="6.5" y="6" width="3" height="8" rx="1" fill="#55555F"></rect><rect x="11" y="3" width="3" height="11" rx="1" fill="#D9D9DE"></rect></svg></span><span style="flex: 1">Priority</span><span style="color: #6B6B76">Medium</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#B4B4BC" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <p style="margin: 0; padding: 14px 20px; border-top: 1px solid #EBEBEE; font-size: 12px; line-height: 1.5; color: #6B6B76">Grabber · Cancel / title + context / primary action · name field · property rows (status and priority are dropdowns). The primary stays disabled until the sheet is valid; Escape or tapping the scrim closes it.</p>
+        </div>
+
+        <div style="display: flex; flex-direction: column; border: 1px solid #EBEBEE; border-radius: 12px; overflow: hidden">
+          <div style="display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 16px; padding: 14px 20px; border-bottom: 1px solid #EBEBEE">
+            <span style="font-size: 14px; font-weight: 600">Action sheet and toast</span>
+            <span style="font-size: 12px; color: #6B6B76">Phone menus and confirmations.</span>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 16px; padding: 24px 20px; background: rgba(20, 20, 26, 0.36)">
+            <div style="display: flex; flex-direction: column; gap: 8px; max-width: 390px; width: 100%; margin: 0 auto">
+              <div style="display: flex; flex-direction: column; border-radius: 14px; overflow: hidden; background: #FFFFFF">
+                <div style="padding: 14px 16px 12px; text-align: center; font-size: 13px; color: #6B6B76">Mobile app</div>
+                <div style="display: flex; align-items: center; justify-content: center; min-height: 56px; border-top: 1px solid #EBEBEE; font-size: 17px">Edit project</div>
+                <div style="display: flex; align-items: center; justify-content: center; min-height: 56px; border-top: 1px solid #EBEBEE; font-size: 17px; color: #B42318">Delete project</div>
+              </div>
+              <div style="display: flex; align-items: center; justify-content: center; min-height: 56px; border-radius: 14px; background: #FFFFFF; font-size: 17px; font-weight: 600">Cancel</div>
+            </div>
+            <div style="display: flex; justify-content: center">
+              <div role="status" style="display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px 10px 12px; border-radius: 12px; background: #1B1B1F; color: #FFFFFF; font-size: 14px; font-weight: 500; box-shadow: 0 8px 24px rgba(20, 20, 26, 0.18)">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="m9 12 2 2 4-4"></path></svg>
+                MOB-6 created
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(460px, 100%), 1fr)); gap: 24px">
+        <div style="display: flex; flex-direction: column; border: 1px solid #EBEBEE; border-radius: 12px; overflow: hidden">
+          <div style="display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 16px; padding: 14px 20px; border-bottom: 1px solid #EBEBEE">
+            <span style="font-size: 14px; font-weight: 600">Activity</span>
+            <span style="font-size: 12px; color: #6B6B76">Event, comment, Claude Code report.</span>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 6px; padding: 24px 20px; background: #FBFBFC">
+            <div style="display: flex; align-items: flex-start; gap: 10px; min-height: 26px; font-size: 13px; color: #6B6B76">
+              <span style="flex: none; width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center"><span style="width: 6px; height: 6px; border-radius: 50%; background: #C4C4CC"></span></span>
+              <span style="padding-top: 1px"><span style="color: #1B1B1F; font-weight: 500">You</span> sent the ticket to Claude Code <span style="color: #9A9AA3">· 2h ago</span></span>
+            </div>
+            <div style="margin: 4px 0; padding: 12px 14px; border: 1px solid #EBEBEE; border-radius: 12px; background: #FFFFFF; display: flex; flex-direction: column; gap: 6px">
+              <div style="display: flex; align-items: center; gap: 8px; font-size: 13px">
+                <span style="flex: none; width: 20px; height: 20px; border-radius: 50%; background: #1B1B1F; color: #FFFFFF; display: inline-flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 600">Y</span>
+                <span style="font-weight: 500">You</span><span style="color: #9A9AA3">1h ago</span>
+              </div>
+              <p style="margin: 0; font-size: 14px; color: #2A2A30">Only happens on Android 14.</p>
+            </div>
+            <div style="margin: 4px 0; padding: 12px 14px; border: 1px solid #E3E3F8; border-radius: 12px; background: #F7F7FE; display: flex; flex-direction: column; gap: 6px">
+              <div style="display: flex; align-items: center; gap: 8px; font-size: 13px">
+                <span style="flex: none; width: 20px; height: 20px; border-radius: 6px; background: #1B1B1F; color: #FFFFFF; display: inline-flex; align-items: center; justify-content: center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m4 17 6-6-6-6"></path><path d="M12 19h8"></path></svg></span>
+                <span style="font-weight: 500">Claude Code report</span><span style="color: #9A9AA3">just now</span>
+              </div>
+              <p style="margin: 0; font-family: 'Geist Mono', ui-monospace, monospace; font-size: 12.5px; line-height: 1.6; white-space: pre-wrap; color: #2A2A30">{{ reportSample }}</p>
+            </div>
+          </div>
+        </div>
+
+        <div style="display: flex; flex-direction: column; border: 1px solid #EBEBEE; border-radius: 12px; overflow: hidden">
+          <div style="display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 16px; padding: 14px 20px; border-bottom: 1px solid #EBEBEE">
+            <span style="font-size: 14px; font-weight: 600">Empty and confirm states</span>
+            <span style="font-size: 12px; color: #6B6B76">Short copy, one action.</span>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 16px; padding: 24px 20px; background: #FBFBFC">
+            <div style="display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 32px 20px; border: 1px solid #EBEBEE; border-radius: 12px; background: #FFFFFF; text-align: center">
+              <span style="width: 44px; height: 44px; border-radius: 12px; background: #F7F7F8; color: #6B6B76; display: inline-flex; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"></path><path d="M12 5v14"></path></svg></span>
+              <span style="font-size: 15px; font-weight: 600">No tickets yet</span>
+              <span style="font-size: 13px; color: #6B6B76">Create the first ticket for Mobile app.</span>
+              <button class="pm-primary pm-press" style="min-height: 32px; margin-top: 4px; padding: 0 14px; border: 0; border-radius: 8px; background: #1B1B1F; color: #FFFFFF; font-size: 13px; font-weight: 500; cursor: pointer">New ticket</button>
+            </div>
+            <div role="alert" style="display: flex; flex-direction: column; gap: 10px; padding: 12px; border: 1px solid #F4CFCA; border-radius: 12px; background: #FFFFFF">
+              <span style="font-size: 13px">Delete MOB-3? This can't be undone.</span>
+              <div style="display: flex; gap: 8px">
+                <button class="pm-secondary pm-press" style="min-height: 32px; padding: 0 12px; border: 1px solid #DEDEE3; border-radius: 8px; background: #FFFFFF; color: #1B1B1F; font-size: 13px; cursor: pointer">Cancel</button>
+                <button class="pm-press" style="min-height: 32px; padding: 0 12px; border: 0; border-radius: 8px; background: #B42318; color: #FFFFFF; font-size: 13px; font-weight: 500; cursor: pointer">Delete</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="motion" aria-labelledby="ds-motion" style="display: flex; flex-direction: column; gap: 32px">
+      <div style="display: flex; flex-direction: column; gap: 6px; padding-bottom: 16px; border-bottom: 1px solid #EBEBEE">
+        <span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 12px; color: #8E8E99">02</span>
+        <h2 id="ds-motion" style="margin: 0; font-size: 28px; line-height: 1.2; font-weight: 600; letter-spacing: -0.02em">Motion</h2>
+        <p style="margin: 4px 0 0; max-width: 640px; font-size: 14px; color: #6B6B76; text-wrap: pretty">Short, physical and always tied to a cause: things that enter ease out, things that leave ease in, selections spring. When the phone asks for reduced motion, everything snaps into place instead.</p>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr)); gap: 24px">
+        <div style="display: flex; flex-direction: column; gap: 12px">
+          <h3 style="margin: 0; font-size: 16px; font-weight: 600">Durations</h3>
+          <div style="border: 1px solid #EBEBEE; border-radius: 12px; overflow: hidden">
+            <sc-for list="{{ durations }}" as="du" hint-placeholder-count="5">
+              <div style="display: flex; flex-direction: column; gap: 2px; padding: 12px 14px; border-top: {{ du.sep }}">
+                <span style="display: flex; justify-content: space-between; gap: 12px"><span style="font-size: 13px; font-weight: 600">{{ du.name }}</span><span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 12px; color: #1B1B1F">{{ du.value }}</span></span>
+                <span style="font-size: 12px; color: #6B6B76">{{ du.use }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 12px">
+          <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px">
+            <h3 style="margin: 0; font-size: 16px; font-weight: 600">Easing</h3>
+            <button class="pm-secondary pm-press" onClick="{{ playEasing }}" style="display: inline-flex; align-items: center; gap: 6px; min-height: 32px; padding: 0 12px; border: 1px solid #DEDEE3; border-radius: 8px; background: #FFFFFF; color: #1B1B1F; font-size: 13px; font-weight: 500; cursor: pointer">{{ playLabel }}</button>
+          </div>
+          <div style="border: 1px solid #EBEBEE; border-radius: 12px; overflow: hidden">
+            <sc-for list="{{ easings }}" as="ez" hint-placeholder-count="3">
+              <div style="display: flex; flex-direction: column; gap: 10px; padding: 14px; border-top: {{ ez.sep }}">
+                <span style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px"><span style="font-size: 13px; font-weight: 600">{{ ez.name }}</span><span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 12px; color: #1B1B1F">{{ ez.css }}</span></span>
+                <span style="position: relative; display: block; height: 16px; border-radius: 8px; background: #EFEFF1">
+                  <span style="position: absolute; top: 0; left: {{ dotLeft }}; width: 16px; height: 16px; border-radius: 8px; background: #5B5BD6; transition: left 900ms {{ ez.css }}"></span>
+                </span>
+                <span style="font-size: 12px; color: #6B6B76">{{ ez.use }}</span>
+              </div>
+            </sc-for>
+          </div>
+          <span style="font-size: 12px; color: #8E8E99">Slowed to 900ms so the curves are easy to compare.</span>
+        </div>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 12px">
+        <h3 style="margin: 0; font-size: 16px; font-weight: 600">Where motion is used</h3>
+        <div style="border: 1px solid #EBEBEE; border-radius: 12px; overflow: hidden">
+          <div class="ds-stack" style="display: flex; gap: 16px; padding: 10px 16px; background: #F7F7F8; border-bottom: 1px solid #EBEBEE; font-size: 12px; font-weight: 500; color: #6B6B76">
+            <span style="flex: 0 0 160px">Pattern</span><span style="flex: 1 1 0">When</span><span style="flex: 1.4 1 0">Spec</span>
+          </div>
+          <sc-for list="{{ patterns }}" as="pt" hint-placeholder-count="6">
+            <div class="ds-stack" style="display: flex; gap: 4px 16px; padding: 12px 16px; border-top: {{ pt.sep }}; font-size: 13px">
+              <span style="flex: 0 0 160px; font-weight: 600">{{ pt.name }}</span>
+              <span style="flex: 1 1 0; color: #6B6B76">{{ pt.when }}</span>
+              <span style="flex: 1.4 1 0; font-family: 'Geist Mono', ui-monospace, monospace; font-size: 12px; color: #1B1B1F">{{ pt.spec }}</span>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 12px">
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px">
+          <h3 style="margin: 0; font-size: 16px; font-weight: 600">Live examples</h3>
+          <button class="pm-primary pm-press" onClick="{{ replayAll }}" style="display: inline-flex; align-items: center; gap: 6px; min-height: 32px; padding: 0 12px; border: 0; border-radius: 8px; background: #1B1B1F; color: #FFFFFF; font-size: 13px; font-weight: 500; cursor: pointer">Replay all</button>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr)); gap: 16px">
+
+          <div style="display: flex; flex-direction: column; border: 1px solid #EBEBEE; border-radius: 12px; overflow: hidden">
+            <div style="position: relative; height: 200px; overflow: hidden; background: #FBFBFC">
+              <div style="position: absolute; inset: 16px; display: flex; flex-direction: column; border: 1px solid #EBEBEE; border-radius: 10px; background: #FFFFFF; overflow: hidden; animation: {{ pushAnim }} 240ms cubic-bezier(0.22, 1, 0.36, 1) both">
+                <div style="display: flex; align-items: center; gap: 6px; min-height: 36px; padding: 0 10px; border-bottom: 1px solid #EBEBEE; font-size: 12px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg>Projects<span style="flex: 1; text-align: center; font-weight: 600; margin-right: 52px">Mobile app</span></div>
+                <div style="padding: 10px; display: flex; flex-direction: column; gap: 8px">
+                  <span style="height: 8px; width: 70%; border-radius: 4px; background: #EFEFF1"></span>
+                  <span style="height: 8px; width: 55%; border-radius: 4px; background: #EFEFF1"></span>
+                  <span style="height: 8px; width: 62%; border-radius: 4px; background: #EFEFF1"></span>
+                </div>
+              </div>
+            </div>
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 10px 12px 10px 14px; border-top: 1px solid #EBEBEE">
+              <span style="font-size: 13px; font-weight: 600">Screen push</span>
+              <button class="pm-textbtn pm-press" onClick="{{ replayPush }}" style="min-height: 32px; padding: 0 10px; border: 0; border-radius: 8px; background: transparent; color: #1B1B1F; font-size: 13px; cursor: pointer">Replay</button>
+            </div>
+          </div>
+
+          <div style="display: flex; flex-direction: column; border: 1px solid #EBEBEE; border-radius: 12px; overflow: hidden">
+            <div style="position: relative; height: 200px; overflow: hidden; background: #FFFFFF">
+              <div style="padding: 14px 16px; display: flex; flex-direction: column; gap: 8px">
+                <span style="height: 8px; width: 60%; border-radius: 4px; background: #EFEFF1"></span>
+                <span style="height: 8px; width: 45%; border-radius: 4px; background: #EFEFF1"></span>
+              </div>
+              <div style="position: absolute; inset: 0; background: rgba(20, 20, 26, 0.36); animation: {{ scrimAnim }} 240ms cubic-bezier(0.22, 1, 0.36, 1) both"></div>
+              <div style="position: absolute; left: 0; right: 0; bottom: 0; height: 132px; border-radius: 14px 14px 0 0; background: #FFFFFF; animation: {{ sheetAnim }} 340ms cubic-bezier(0.22, 1, 0.36, 1) both">
+                <div style="display: flex; justify-content: center; padding-top: 6px"><span style="width: 36px; height: 5px; border-radius: 3px; background: #DEDEE3"></span></div>
+                <div style="display: flex; align-items: center; justify-content: space-between; padding: 8px 14px; border-bottom: 1px solid #EBEBEE; font-size: 12px"><span>Cancel</span><span style="font-weight: 600">New ticket</span><span style="padding: 3px 8px; border-radius: 6px; background: #1B1B1F; color: #FFFFFF; font-weight: 600">Create</span></div>
+                <div style="padding: 12px 14px; font-size: 15px; font-weight: 600; color: #9A9AA3">Ticket title</div>
+              </div>
+            </div>
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 10px 12px 10px 14px; border-top: 1px solid #EBEBEE">
+              <span style="font-size: 13px; font-weight: 600">Sheet and scrim</span>
+              <button class="pm-textbtn pm-press" onClick="{{ replaySheet }}" style="min-height: 32px; padding: 0 10px; border: 0; border-radius: 8px; background: transparent; color: #1B1B1F; font-size: 13px; cursor: pointer">Replay</button>
+            </div>
+          </div>
+
+          <div style="display: flex; flex-direction: column; border: 1px solid #EBEBEE; border-radius: 12px; overflow: hidden">
+            <div style="height: 200px; overflow: hidden; background: #FFFFFF">
+              <sc-for list="{{ riseRows }}" as="rr" hint-placeholder-count="4">
+                <div class="ds-rise" style="position: relative; display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 0 14px; border-bottom: 1px solid #EBEBEE; font-size: 13px; animation-name: {{ riseAnim }}; animation-delay: {{ rr.delay }}ms">
+                  <span style="flex: none; display: inline-flex">
+                    <sc-if value="{{ rr.isDone }}" hint-placeholder-val="{{ false }}"><svg class="ds-glyph" width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="7" fill="#5B5BD6" style="animation: {{ popAnim }} 260ms cubic-bezier(0.34, 1.36, 0.64, 1) {{ rr.delay }}ms both"></circle><path d="m5 8.25 2 2 4-4.25" fill="none" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="animation: {{ checkAnim }} 260ms cubic-bezier(0.22, 1, 0.36, 1) {{ rr.checkDelay }}ms both"></path></svg></sc-if>
+                    <sc-if value="{{ rr.notDone }}" hint-placeholder-val="{{ true }}"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.25" fill="none" stroke="#8E8E99" stroke-width="1.5"></circle></svg></sc-if>
+                  </span>
+                  <span style="flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap">{{ rr.title }}</span>
+                  <sc-if value="{{ rr.isNew }}" hint-placeholder-val="{{ false }}">
+                    <span aria-hidden="true" style="position: absolute; inset: 0; pointer-events: none; mix-blend-mode: multiply; animation: {{ flashAnim }} 1400ms cubic-bezier(0.22, 1, 0.36, 1) 300ms both"></span>
+                  </sc-if>
+                </div>
+              </sc-for>
+            </div>
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 10px 12px 10px 14px; border-top: 1px solid #EBEBEE">
+              <span style="font-size: 13px; font-weight: 600">List rise, new row, done check</span>
+              <button class="pm-textbtn pm-press" onClick="{{ replayList }}" style="min-height: 32px; padding: 0 10px; border: 0; border-radius: 8px; background: transparent; color: #1B1B1F; font-size: 13px; cursor: pointer">Replay</button>
+            </div>
+          </div>
+
+          <div style="display: flex; flex-direction: column; border: 1px solid #EBEBEE; border-radius: 12px; overflow: hidden">
+            <div style="position: relative; height: 200px; overflow: hidden; background: #FBFBFC; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 24px; box-sizing: border-box">
+              <div role="status" style="display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px 10px 12px; border-radius: 12px; background: #1B1B1F; color: #FFFFFF; font-size: 14px; font-weight: 500; box-shadow: 0 8px 24px rgba(20, 20, 26, 0.18); animation: {{ toastAnim }} 240ms cubic-bezier(0.22, 1, 0.36, 1) both">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="m9 12 2 2 4-4"></path></svg>
+                Prompt copied
+              </div>
+            </div>
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 10px 12px 10px 14px; border-top: 1px solid #EBEBEE">
+              <span style="font-size: 13px; font-weight: 600">Toast</span>
+              <button class="pm-textbtn pm-press" onClick="{{ replayToast }}" style="min-height: 32px; padding: 0 10px; border: 0; border-radius: 8px; background: transparent; color: #1B1B1F; font-size: 13px; cursor: pointer">Replay</button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <sc-if value="{{ dndDragging }}" hint-placeholder-val="{{ false }}">
+    <div class="pm-ghost" aria-hidden="true" style="position: fixed; left: {{ dndGhostX }}px; top: {{ dndGhostY }}px; width: {{ dndGhostW }}px; z-index: 95; pointer-events: none; display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 8px 16px 8px 8px; box-sizing: border-box; background: #FFFFFF; border: 1px solid #EBEBEE; border-radius: 10px; color: #1B1B1F; font-size: 14px">
+      <span style="flex: none; width: 20px; display: inline-flex; justify-content: center; color: #6B6B76"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="12" r="1"></circle><circle cx="9" cy="5" r="1"></circle><circle cx="9" cy="19" r="1"></circle><circle cx="15" cy="12" r="1"></circle><circle cx="15" cy="5" r="1"></circle><circle cx="15" cy="19" r="1"></circle></svg></span>
+      <span style="flex: none; font-family: 'Geist Mono', ui-monospace, monospace; font-size: 12px; color: #6B6B76">{{ dndGh.key }}</span>
+      <span style="flex: none; display: inline-flex">
+        <sc-if value="{{ dndGh.isTodo }}" hint-placeholder-val="{{ true }}"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.25" fill="none" stroke="#8E8E99" stroke-width="1.5"></circle></svg></sc-if>
+        <sc-if value="{{ dndGh.isDoing }}" hint-placeholder-val="{{ false }}"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.25" fill="none" stroke="#C26A06" stroke-width="1.5"></circle><path d="M8 4.5a3.5 3.5 0 0 1 0 7z" fill="#C26A06"></path></svg></sc-if>
+        <sc-if value="{{ dndGh.isDone }}" hint-placeholder-val="{{ false }}"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="7" fill="#5B5BD6"></circle><path d="m5 8.25 2 2 4-4.25" fill="none" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg></sc-if>
+      </span>
+      <span style="flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500">{{ dndGh.title }}</span>
+    </div>
+  </sc-if>
+  <div role="status" aria-live="polite" style="position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0">{{ dndMsg }}</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":5800}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { filter: 1, switchOn: true, played: false, push: 0, sheet: 0, list: 0, toast: 0, dndItems: this.dndSeed(), dndDrag: null, dndFlash: null, dndMsg: '' };
+  }
+
+  componentWillUnmount() { clearInterval(this.dndScrollTimer); clearTimeout(this.dndFocusTimer); }
+
+  dndSeed() {
+    return [
+      { id: 'd1', key: 'MOB-2', title: 'Show an error when the password is wrong', status: 'doing' },
+      { id: 'd2', key: 'MOB-3', title: 'Crash when rotating the profile screen', status: 'todo' },
+      { id: 'd3', key: 'MOB-4', title: 'Dark mode colors for Settings', status: 'todo' },
+      { id: 'd4', key: 'MOB-5', title: 'Update App Store screenshots', status: 'todo' }
+    ];
+  }
+
+  // Same interaction as the app: handle drags on any pointer, the row drags with a mouse after 6px.
+  dndDown(e, it, fromHandle) {
+    if (!e || (e.button !== undefined && e.button !== 0)) return;
+    if (fromHandle && e.stopPropagation) e.stopPropagation();
+    const touchy = !!e.pointerType && e.pointerType !== 'mouse';
+    if (!fromHandle && touchy) return;
+    if (fromHandle && e.preventDefault) e.preventDefault();
+    const el = e.currentTarget;
+    try { if (el && el.setPointerCapture) el.setPointerCapture(e.pointerId); } catch (err) {}
+    let rowEl = null;
+    try { rowEl = el && el.closest ? el.closest('[data-ds-row]') : null; } catch (err) {}
+    this.dndArm = { id: it.id, from: it.status, x0: e.clientX, y0: e.clientY, rowEl, started: false, touch: touchy };
+    if (fromHandle && touchy) this.dndStart(e.clientX, e.clientY);
+  }
+
+  dndStart(x, y) {
+    const a = this.dndArm;
+    if (!a || a.started) return;
+    a.started = true;
+    let r = { left: x - 24, top: y - 22, width: 420 };
+    try { if (a.rowEl) r = a.rowEl.getBoundingClientRect(); } catch (e) {}
+    a.offX = x - r.left;
+    a.offY = y - r.top;
+    try { if (window.getSelection) window.getSelection().removeAllRanges(); } catch (e) {}
+    this.dndPointer = { x, y };
+    this.setState({ dndDrag: { id: a.id, from: a.from, x: Math.round(r.left), y: Math.round(r.top), w: Math.round(r.width), target: null } });
+    clearInterval(this.dndScrollTimer);
+    this.dndScrollTimer = setInterval(() => {
+      const p = this.dndPointer;
+      if (!p || !this.state.dndDrag) return;
+      let vh = 800;
+      try { vh = window.innerHeight || vh; } catch (e) {}
+      let dy = 0;
+      if (p.y < 72) dy = -Math.ceil((72 - p.y) / 5);
+      else if (p.y > vh - 40) dy = Math.ceil((p.y - (vh - 40)) / 5);
+      if (dy) { try { window.scrollBy(0, dy); } catch (e) {} this.dndSchedule(); }
+    }, 16);
+  }
+
+  dndMove(e) {
+    const a = this.dndArm;
+    if (!a || !e) return;
+    if (e.stopPropagation) e.stopPropagation();
+    const x = e.clientX, y = e.clientY;
+    if (!a.started) {
+      if (Math.abs(x - a.x0) + Math.abs(y - a.y0) < 6) return;
+      this.dndStart(x, y);
+    }
+    if (e.preventDefault) e.preventDefault();
+    this.dndPointer = { x, y };
+    this.dndSchedule();
+  }
+
+  dndUp(e) {
+    const a = this.dndArm;
+    if (e && e.stopPropagation) e.stopPropagation();
+    try { if (e && e.currentTarget && e.currentTarget.releasePointerCapture) e.currentTarget.releasePointerCapture(e.pointerId); } catch (err) {}
+    this.dndArm = null;
+    if (!a || !a.started) return;
+    const p = this.dndPointer || { x: e.clientX, y: e.clientY };
+    const target = this.dndTarget(p.x, p.y, a.id);
+    this.dndEnd();
+    if (target) this.dndDrop(a.id, target);
+  }
+
+  dndCancel() {
+    const a = this.dndArm;
+    this.dndArm = null;
+    if (a && a.started) this.dndEnd();
+  }
+
+  dndEnd() {
+    clearInterval(this.dndScrollTimer);
+    this.dndPointer = null;
+    if (this.state.dndDrag) this.setState({ dndDrag: null });
+  }
+
+  dndSchedule() {
+    if (this.dndFrameOn) return;
+    this.dndFrameOn = true;
+    const run = () => {
+      this.dndFrameOn = false;
+      const a = this.dndArm, p = this.dndPointer;
+      if (!a || !a.started || !p || !this.state.dndDrag) return;
+      const target = this.dndTarget(p.x, p.y, a.id);
+      this.setState({ dndDrag: Object.assign({}, this.state.dndDrag, { x: Math.round(p.x - a.offX), y: Math.round(p.y - a.offY), target }) });
+    };
+    try { if (window.requestAnimationFrame) { window.requestAnimationFrame(run); return; } } catch (e) {}
+    setTimeout(run, 16);
+  }
+
+  dndTarget(x, y, id) {
+    let sections = [];
+    try { sections = Array.prototype.slice.call(document.querySelectorAll('[data-ds-group]')); } catch (e) { return null; }
+    if (!sections.length) return null;
+    let sec = null;
+    for (let i = 0; i < sections.length; i++) {
+      const r = sections[i].getBoundingClientRect();
+      if (y >= r.top && y <= r.bottom) { sec = sections[i]; break; }
+    }
+    if (!sec) {
+      let best = Infinity;
+      sections.forEach(el => { const r = el.getBoundingClientRect(); const dist = y < r.top ? r.top - y : y - r.bottom; if (dist < best) { best = dist; sec = el; } });
+    }
+    const status = sec.getAttribute('data-ds-group');
+    const rows = Array.prototype.slice.call(sec.querySelectorAll('[data-ds-row]')).filter(el => el.getAttribute('data-ds-row') !== id);
+    let index = rows.length;
+    for (let i = 0; i < rows.length; i++) {
+      const r = rows[i].getBoundingClientRect();
+      if (y < r.top + r.height / 2) { index = i; break; }
+    }
+    return { status, beforeId: rows[index] ? rows[index].getAttribute('data-ds-row') : null, afterId: index > 0 ? rows[index - 1].getAttribute('data-ds-row') : null };
+  }
+
+  dndDrop(id, target) {
+    const SL = { todo: 'To do', doing: 'In progress', done: 'Done' };
+    const items = this.state.dndItems.slice();
+    const i = items.findIndex(x => x.id === id);
+    if (i < 0 || !target) return;
+    const it = items[i];
+    const same = it.status === target.status;
+    const group = items.filter(x => x.status === it.status);
+    const gi = group.findIndex(x => x.id === id);
+    if (same && (target.afterId || null) === (gi > 0 ? group[gi - 1].id : null) && (target.beforeId || null) === (gi < group.length - 1 ? group[gi + 1].id : null)) return;
+    items.splice(i, 1);
+    const moved = Object.assign({}, it, { status: target.status });
+    let at = items.length;
+    if (target.beforeId) at = items.findIndex(x => x.id === target.beforeId);
+    else if (target.afterId) at = items.findIndex(x => x.id === target.afterId) + 1;
+    if (at < 0) at = items.length;
+    items.splice(at, 0, moved);
+    const n = (this.state.dndFlash ? this.state.dndFlash.n : 0) + 1;
+    this.setState({ dndItems: items, dndFlash: { id, n }, dndMsg: same ? it.key + ' moved' : it.key + ' moved to ' + SL[target.status] });
+  }
+
+  dndKey(e, id) {
+    const k = e && e.key;
+    if (k !== 'ArrowUp' && k !== 'ArrowDown') return;
+    if (e.preventDefault) e.preventDefault();
+    const ORDER = ['doing', 'todo', 'done'];
+    const items = this.state.dndItems;
+    const it = items.find(x => x.id === id);
+    if (!it) return;
+    const own = items.filter(x => x.status === it.status);
+    const grp = (st) => items.filter(x => x.status === st && x.id !== id);
+    const i = own.findIndex(x => x.id === id);
+    const si = ORDER.indexOf(it.status);
+    let target = null;
+    if (k === 'ArrowUp') {
+      if (i > 0) target = { status: it.status, beforeId: own[i - 1].id, afterId: i > 1 ? own[i - 2].id : null };
+      else if (si > 0) { const st = ORDER[si - 1]; const g = grp(st); target = { status: st, beforeId: null, afterId: g.length ? g[g.length - 1].id : null }; }
+    } else {
+      if (i < own.length - 1) target = { status: it.status, beforeId: i + 2 < own.length ? own[i + 2].id : null, afterId: own[i + 1].id };
+      else if (si < ORDER.length - 1) { const st = ORDER[si + 1]; const g = grp(st); target = { status: st, beforeId: g.length ? g[0].id : null, afterId: null }; }
+    }
+    if (!target) return;
+    this.dndDrop(id, target);
+    clearTimeout(this.dndFocusTimer);
+    this.dndFocusTimer = setTimeout(() => {
+      try { const el = document.querySelector('[data-ds-handle="' + id + '"]'); if (el) el.focus(); } catch (err) {}
+    }, 40);
+  }
+
+  renderVals() {
+    const s = this.state;
+    const sep = (i) => (i === 0 ? '0' : '1px solid #EBEBEE');
+    const ab = (n) => (n % 2 ? 'a' : 'b');
+    const withSep = (arr) => arr.map((x, i) => Object.assign({}, x, { sep: sep(i) }));
+
+    const FILTERS = [['All', 5], ['Active', 4], ['Done', 1]];
+    const filterTabs = FILTERS.map(([label, n], i) => ({ label, n, pressed: s.filter === i ? 'true' : 'false', fg: s.filter === i ? '#1B1B1F' : '#6B6B76', pick: () => this.setState({ filter: i }) }));
+
+    const durations = withSep([
+      { name: 'Press', value: '100ms', use: 'Buttons scale to 0.97 while held' },
+      { name: 'Fast', value: '160ms', use: 'Exits, menus, hover and color changes' },
+      { name: 'Base', value: '240ms', use: 'Screen push and pop, dialogs, toasts' },
+      { name: 'Sheet', value: '340ms in · 220ms out', use: 'Phone sheets and the bottom bar' },
+      { name: 'Stagger', value: '18ms per row · max 12 rows', use: 'Lists rising in' }
+    ]);
+    const easings = withSep([
+      { name: 'Ease out', css: 'cubic-bezier(0.22, 1, 0.36, 1)', use: 'Everything that enters' },
+      { name: 'Ease in', css: 'cubic-bezier(0.4, 0, 1, 1)', use: 'Everything that leaves' },
+      { name: 'Spring', css: 'cubic-bezier(0.34, 1.36, 0.64, 1)', use: 'Selections: filter thumb, switch, done check' }
+    ]);
+    const patterns = withSep([
+      { name: 'Screen push', when: 'Opening a project or ticket', spec: '240ms · ease out · x +28px, fade' },
+      { name: 'Screen pop', when: 'Going back', spec: '240ms · ease out · x −28px, fade' },
+      { name: 'Sheet', when: 'New ticket, prompt, report, menus on phones', spec: '340ms ease out in · 220ms ease in out · y 100%' },
+      { name: 'Dialog', when: 'The same sheets on desktop', spec: '240ms in · 160ms out · scale 0.97, y +10px' },
+      { name: 'Scrim', when: 'Behind every sheet', spec: 'fade 240ms in · 160ms out · ink at 36%' },
+      { name: 'Menu and dropdown', when: 'Desktop ••• menu, status and priority', spec: '160ms · ease out · scale 0.96 from the anchor corner' },
+      { name: 'Segmented thumb', when: 'Filter tabs', spec: '260ms · spring' },
+      { name: 'Switch', when: 'Options in sheets', spec: 'knob 240ms spring · track 160ms' },
+      { name: 'List rise', when: 'A list appears or the filter changes', spec: '300ms · ease out · y +6px · 18ms stagger' },
+      { name: 'New row', when: 'Ticket created or updated by a report', spec: '1400ms · #E4E4FA fades to clear' },
+      { name: 'Done check', when: 'A ticket turns Done', spec: 'circle 260ms spring · check draws 260ms' },
+      { name: 'Toast', when: 'Created, copied, applied, deleted', spec: '240ms in · 2.2s on screen · 160ms out' },
+      { name: 'Show more', when: 'Expanding a long group', spec: 'new rows rise · 18ms stagger · chevron turns 180° in 200ms' },
+      { name: 'Lift', when: 'A drag starts', spec: '160ms · ease out · scale 1.02 · Lifted shadow' },
+      { name: 'Drop line', when: 'While dragging', spec: 'follows the pointer every frame · header tint 160ms' },
+      { name: 'Drop', when: 'Release', spec: 'row lands with the New row tint · toast on status change' },
+      { name: 'Auto-scroll', when: 'Dragging near the top or bottom', spec: 'within 72px of the edge · faster the further in' },
+      { name: 'Press', when: 'Every button', spec: 'scale 0.97 · 100ms' }
+    ]);
+    const SLD = { todo: 'To do', doing: 'In progress', done: 'Done' };
+    const dg0 = s.dndDrag, dtg = dg0 && dg0.target;
+    const dndGroups = ['doing', 'todo', 'done'].map((st, gi) => {
+      const list = s.dndItems.filter(x => x.status === st);
+      const items = list.map((x, i) => Object.assign({}, x, {
+        sep: i === 0 ? '0' : '1px solid #EBEBEE',
+        isTodo: st === 'todo', isDoing: st === 'doing', isDone: st === 'done',
+        handleLabel: 'Move ' + x.key + '. Drag, or use the arrow keys.',
+        handleDown: (e) => this.dndDown(e, x, true),
+        rowDown: (e) => this.dndDown(e, x, false),
+        handleKey: (e) => this.dndKey(e, x.id),
+        opacity: dg0 && dg0.id === x.id ? 0.35 : 1,
+        dropBefore: !!(dtg && dtg.status === st && dtg.beforeId === x.id),
+        dropAfter: !!(dtg && dtg.status === st && !dtg.beforeId && dtg.afterId === x.id),
+        isNew: !!(s.dndFlash && s.dndFlash.id === x.id),
+        flashAnim: 'ds-flash-' + (s.dndFlash && s.dndFlash.n % 2 ? 'a' : 'b')
+      }));
+      const here = !!(dtg && dtg.status === st);
+      return {
+        status: st, label: SLD[st], count: items.length, items,
+        isTodo: st === 'todo', isDoing: st === 'doing', isDone: st === 'done',
+        sep: gi === 0 ? '0' : '1px solid #EBEBEE',
+        headBg: here && dg0.from !== st ? '#EEEEFC' : '#F7F7F8',
+        showZone: !!dg0 && items.length === 0,
+        showEmpty: !dg0 && items.length === 0,
+        zoneBorder: here ? '#5B5BD6' : '#C4C4CC', zoneBg: here ? '#F7F7FE' : 'transparent', zoneFg: here ? '#4A4AC4' : '#6B6B76'
+      };
+    });
+    const ghostItem = dg0 ? s.dndItems.find(x => x.id === dg0.id) : null;
+    const dndGh = ghostItem
+      ? Object.assign({}, ghostItem, { isTodo: ghostItem.status === 'todo', isDoing: ghostItem.status === 'doing', isDone: ghostItem.status === 'done' })
+      : { key: '', title: '', isTodo: true, isDoing: false, isDone: false };
+    const RISE = [['Set up push notifications', true, false], ['Show an error when the password is wrong', false, false], ['Crash when rotating the profile screen', false, false], ['Add biometric login', false, true]];
+    const riseRows = RISE.map(([title, done, isNew], i) => ({ title, isDone: done, notDone: !done, isNew, delay: i * 18, checkDelay: i * 18 + 90 }));
+
+    return {
+      disabledDemo: true,
+      filterTabs, filterIdx: s.filter,
+      switchOnStr: s.switchOn ? 'true' : 'false', switchBg: s.switchOn ? '#5B5BD6' : '#DEDEE3', knobX: s.switchOn ? 18 : 0,
+      toggleSwitch: () => this.setState({ switchOn: !this.state.switchOn }),
+      reportSample: 'TICKET: MOB-3\nSTATUS: done\nSUMMARY: Kept the profile state across rotation.\nFILES: lib/profile/profile_page.dart\nNEXT: none',
+      durations, easings, patterns,
+      dotLeft: s.played ? 'calc(100% - 16px)' : '0px',
+      playLabel: s.played ? 'Play back' : 'Play',
+      playEasing: () => this.setState({ played: !this.state.played }),
+      pushAnim: 'ds-push-' + ab(s.push),
+      scrimAnim: 'ds-scrim-' + ab(s.sheet),
+      sheetAnim: 'ds-sheet-' + ab(s.sheet),
+      riseAnim: 'ds-rise-' + ab(s.list),
+      popAnim: 'ds-pop-' + ab(s.list),
+      checkAnim: 'ds-check-' + ab(s.list),
+      flashAnim: 'ds-flash-' + ab(s.list),
+      toastAnim: 'ds-toast-' + ab(s.toast),
+      riseRows,
+      dndGroups, dndGh, dndDragging: !!dg0,
+      dndGhostX: dg0 ? dg0.x : 0, dndGhostY: dg0 ? dg0.y : 0, dndGhostW: dg0 ? dg0.w : 0,
+      dndMoveH: (e) => this.dndMove(e), dndUpH: (e) => this.dndUp(e), dndCancelH: () => this.dndCancel(),
+      dndReset: () => this.setState({ dndItems: this.dndSeed(), dndFlash: null, dndMsg: 'Demo reset' }),
+      dndMsg: s.dndMsg,
+      rootClass: dg0 ? 'pm-dragging' : '',
+      replayPush: () => this.setState({ push: this.state.push + 1 }),
+      replaySheet: () => this.setState({ sheet: this.state.sheet + 1 }),
+      replayList: () => this.setState({ list: this.state.list + 1 }),
+      replayToast: () => this.setState({ toast: this.state.toast + 1 }),
+      replayAll: () => this.setState({ push: this.state.push + 1, sheet: this.state.sheet + 1, list: this.state.list + 1, toast: this.state.toast + 1 })
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,9 @@
+node_modules
+dist
+coverage
+data
+init-design
+playwright-report
+test-results
+package-lock.json
+*.dc.html

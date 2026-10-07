@@ -1,0 +1,2052 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Project Tracker</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&amp;family=Geist+Mono:wght@400;500&amp;display=swap">
+<style>
+body{margin:0;background:#FFFFFF}
+a{color:#4A4AC4}a:hover{color:#3A3AA8}
+button,input,select,textarea{font-family:inherit}
+::placeholder{color:#9A9AA3;opacity:1}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid #5B5BD6;outline-offset:2px}
+.pm-row:hover{background-color:#F7F7F8 !important}
+.pm-nav:hover{background-color:#EFEFF1 !important}
+.pm-icon:hover{background-color:#EFEFF1 !important;color:#1B1B1F !important}
+.pm-textbtn:hover{background-color:#F7F7F8 !important}
+.pm-secondary:hover{background-color:#F7F7F8 !important}
+.pm-primary:hover{background-color:#33333A !important}
+.pm-primary:disabled,.pm-secondary:disabled{opacity:.35;cursor:default}
+.pm-primary:disabled:hover{background-color:#1B1B1F !important}
+.pm-secondary:disabled:hover{background-color:#FFFFFF !important}
+.pm-crumb:hover{color:#1B1B1F !important;background-color:#F7F7F8 !important}
+.pm-seg:hover{color:#1B1B1F !important}
+.pm-edit:hover{border-color:#DEDEE3 !important}
+.pm-edit:focus{border-color:#5B5BD6 !important;outline:none}
+.pm-prow:hover{background-color:#FAFAFB}
+/* Focus is never clipped: rows and items inside lists, groups and menus draw the ring 3px inside themselves;
+   fields with a border turn the border Accent; standalone buttons keep a 2px ring 2px outside. */
+.pm-ring,.pm-prow{position:relative}
+.pm-ring::after,.pm-prow::after{content:"";position:absolute;inset:3px;border-radius:8px;box-shadow:0 0 0 2px #5B5BD6;opacity:0;pointer-events:none;z-index:3}
+.pm-ring:focus-visible,.pm-prow:focus-visible{outline:none}
+.pm-ring:focus-visible::after,.pm-prow:focus-visible::after,.pm-prow:has(:focus-visible)::after{opacity:1}
+.pm-nav:focus-visible,.pm-seg:focus-visible{outline-offset:-2px}
+.pm-input:focus-visible{outline:none;border-color:#5B5BD6 !important;box-shadow:0 0 0 1px #5B5BD6}
+.pm-search:focus-within{border-color:#5B5BD6 !important;box-shadow:0 0 0 1px #5B5BD6}
+.pm-search input:focus-visible{outline:none}
+.pm-scrim:focus-visible,.pm-catch:focus-visible{outline:none}
+.pm-ddi:hover{background-color:#F7F7F8 !important}
+/* Drag and drop */
+.pm-handle{transition:opacity 120ms ease-out,color 120ms ease-out;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+.pm-trow:hover .pm-handle,.pm-handle:focus-visible{opacity:1 !important}
+.pm-handle:hover{color:#6B6B76 !important;background-color:#EFEFF1 !important}
+.pm-handle:focus-visible{outline:2px solid #5B5BD6;outline-offset:-2px}
+.pm-handle:active{cursor:grabbing}
+.pm-dragging,.pm-dragging *{cursor:grabbing !important;user-select:none !important;-webkit-user-select:none !important}
+.pm-ghead{transition:background-color 160ms ease-out}
+.pm-chev{transition:transform 200ms cubic-bezier(.22,1,.36,1)}
+.pm-more:hover{color:#1B1B1F !important}
+.pm-rowmain{transition:opacity 160ms ease-out}
+.pm-ghost{animation:pm-lift 160ms cubic-bezier(.22,1,.36,1) both;transform-origin:center}
+.pm-prow select:focus-visible,.pm-prow input:focus-visible,.pm-prow button:focus-visible{outline:none}
+.pm-composer:focus-within{border-color:#5B5BD6 !important;box-shadow:0 0 0 1px #5B5BD6}
+.pm-composer textarea:focus-visible{outline:none}
+.pm-mob{display:none !important}
+.pm-tgrid{display:grid;grid-template-columns:minmax(0,1fr) 300px;grid-template-rows:auto 1fr;grid-template-areas:"main side" "act side"}
+.pm-a-main{grid-area:main}.pm-a-side{grid-area:side}.pm-a-act{grid-area:act}
+
+/* Motion tokens: fast 160ms · base 240ms · sheet 340ms
+   ease-out cubic-bezier(.22,1,.36,1) · ease-in cubic-bezier(.4,0,1,1) · spring cubic-bezier(.34,1.36,.64,1) */
+@keyframes pm-push{from{opacity:0;transform:translateX(28px)}to{opacity:1;transform:none}}
+@keyframes pm-push-b{from{opacity:0;transform:translateX(28px)}to{opacity:1;transform:none}}
+@keyframes pm-pop{from{opacity:0;transform:translateX(-28px)}to{opacity:1;transform:none}}
+@keyframes pm-fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@keyframes pm-fade-x{from{opacity:0;transform:translateX(8px)}to{opacity:1;transform:none}}
+@keyframes pm-title-0{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+@keyframes pm-title-1{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+@keyframes pm-title-2{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+@keyframes pm-rise-0{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@keyframes pm-rise-1{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@keyframes pm-rise-2{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@keyframes pm-scrim-in{from{opacity:0}to{opacity:1}}
+@keyframes pm-scrim-out{from{opacity:1}to{opacity:0}}
+@keyframes pm-dialog-in{from{opacity:0;transform:translateY(10px) scale(.97)}to{opacity:1;transform:none}}
+@keyframes pm-dialog-out{from{opacity:1;transform:none}to{opacity:0;transform:translateY(6px) scale(.98)}}
+@keyframes pm-sheet-in{from{transform:translateY(100%)}to{transform:none}}
+@keyframes pm-sheet-out{from{transform:none}to{transform:translateY(100%)}}
+@keyframes pm-menu-in{from{opacity:0;transform:translateY(-4px) scale(.96)}to{opacity:1;transform:none}}
+@keyframes pm-menu-in-up{from{opacity:0;transform:translateY(4px) scale(.96)}to{opacity:1;transform:none}}
+@keyframes pm-bar-up{from{transform:translateY(100%)}to{transform:none}}
+@keyframes pm-flash{from{background-color:#E4E4FA}to{background-color:rgba(228,228,250,0)}}
+@keyframes pm-toast-in{from{opacity:0;transform:translate(-50%,14px) scale(.96)}to{opacity:1;transform:translate(-50%,0)}}
+@keyframes pm-toast-out{from{opacity:1;transform:translate(-50%,0)}to{opacity:0;transform:translate(-50%,8px) scale(.98)}}
+@keyframes pm-lift{from{transform:scale(1);box-shadow:0 0 0 rgba(20,20,26,0)}to{transform:scale(1.02);box-shadow:0 12px 32px rgba(20,20,26,.18)}}
+@keyframes pm-grow{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+@keyframes pm-check{from{stroke-dashoffset:10}to{stroke-dashoffset:0}}
+@keyframes pm-pop-in{from{transform:scale(.55)}to{transform:scale(1)}}
+.pm-view-push{animation:pm-push 240ms cubic-bezier(.22,1,.36,1) both}
+.pm-view-pushb{animation:pm-push-b 240ms cubic-bezier(.22,1,.36,1) both}
+.pm-view-pop{animation:pm-pop 240ms cubic-bezier(.22,1,.36,1) both}
+.pm-view-fade{animation:pm-fade 240ms cubic-bezier(.22,1,.36,1) both}
+.pm-back{animation:pm-fade-x 240ms cubic-bezier(.22,1,.36,1) both}
+.pm-fade-in{animation:pm-fade 200ms cubic-bezier(.22,1,.36,1) both}
+.pm-rise{animation-duration:300ms;animation-timing-function:cubic-bezier(.22,1,.36,1);animation-fill-mode:both}
+.pm-scrim{animation:pm-scrim-in 240ms cubic-bezier(.22,1,.36,1) both}
+.pm-closing .pm-scrim{animation:pm-scrim-out 160ms cubic-bezier(.4,0,1,1) both}
+.pm-sheet{animation:pm-dialog-in 240ms cubic-bezier(.22,1,.36,1) both}
+.pm-closing .pm-sheet{animation:pm-dialog-out 160ms cubic-bezier(.4,0,1,1) both}
+.pm-menu-pop{animation:pm-menu-in 160ms cubic-bezier(.22,1,.36,1) both;transform-origin:top right}
+.pm-dd{animation:pm-menu-in 160ms cubic-bezier(.22,1,.36,1) both;transform-origin:top right}
+.pm-dd.pm-dd-up{animation-name:pm-menu-in-up;transform-origin:bottom right}
+.pm-bar-in{animation:pm-bar-up 340ms cubic-bezier(.22,1,.36,1) both}
+.pm-flash{animation:pm-flash 1400ms cubic-bezier(.22,1,.36,1) both}
+.pm-toast{animation:pm-toast-in 240ms cubic-bezier(.22,1,.36,1) both}
+.pm-toast.pm-leaving{animation:pm-toast-out 160ms cubic-bezier(.4,0,1,1) both}
+.pm-grow{animation:pm-grow 700ms cubic-bezier(.22,1,.36,1) both;transform-origin:left center}
+.pm-press{transition:transform 100ms ease-out,background-color 160ms ease-out}
+.pm-press:active{transform:scale(.97)}
+.pm-press:disabled:active{transform:none}
+.pm-thumb{transition:transform 260ms cubic-bezier(.34,1.36,.64,1)}
+.pm-track{transition:background-color 160ms ease-out}
+.pm-knob{transition:transform 240ms cubic-bezier(.34,1.36,.64,1)}
+.pm-seg{transition:color 160ms ease-out}
+.pm-done-glyph circle{transform-box:fill-box;transform-origin:center;animation:pm-pop-in 260ms cubic-bezier(.34,1.36,.64,1) both}
+.pm-done-glyph path{stroke-dasharray:10;animation:pm-check 260ms 90ms cubic-bezier(.22,1,.36,1) both}
+
+@media (max-width: 767px){
+  .pm-tgrid{grid-template-columns:minmax(0,1fr);grid-template-rows:auto;grid-template-areas:"main" "side" "act"}
+  .pm-desk{display:none !important}
+  .pm-mob{display:flex !important}
+  .pm-pad{padding-left:16px !important;padding-right:16px !important}
+  .pm-large{font-size:30px !important;line-height:1.15 !important;font-weight:700 !important;letter-spacing:-0.02em !important}
+  .pm-title{white-space:normal !important}
+  .pm-row{min-height:52px !important}
+  .pm-hide-sm{display:none !important}
+  .pm-btn{min-height:44px !important}
+  .pm-icon{width:44px !important;height:44px !important}
+  .pm-field{font-size:16px !important}
+  .pm-prow{min-height:50px !important;font-size:16px !important}
+  .pm-prow input{font-size:16px !important}
+  .pm-search{flex:1 1 100% !important;min-height:40px !important;background:#EFEFF1;border-color:transparent !important}
+  .pm-segctl{flex:1 1 100% !important}
+  .pm-segbtn{min-height:34px !important;font-size:14px !important}
+  .pm-list{border-radius:12px !important}
+  .pm-props{border-left:0 !important;border-top:1px solid #EBEBEE !important;border-bottom:1px solid #EBEBEE !important}
+  .pm-act{padding-bottom:120px !important}
+  .pm-overlay{align-items:flex-end !important;padding:0 !important}
+  .pm-overlay.pm-overlay-bottom{align-items:stretch !important;padding:8px 8px calc(8px + env(safe-area-inset-bottom)) !important}
+  .pm-sheet{max-width:none !important;border-radius:14px 14px 0 0 !important;max-height:calc(100vh - 32px);overflow-y:auto;padding-bottom:env(safe-area-inset-bottom);animation:pm-sheet-in 340ms cubic-bezier(.22,1,.36,1) both}
+  .pm-closing .pm-sheet{animation:pm-sheet-out 220ms cubic-bezier(.4,0,1,1) both}
+  .pm-sheet.pm-actions{border-radius:0 !important;max-height:none;overflow:visible;padding-bottom:0}
+  .pm-textbtn{font-size:16px !important}
+  .pm-ddi{min-height:44px !important;font-size:16px !important}
+  .pm-rowmain{padding-left:40px !important}
+  .pm-more{min-height:48px !important}
+  .pm-handle{left:2px !important;width:34px !important;opacity:1 !important}
+  .pm-head-btn{min-height:34px !important;font-size:15px !important}
+  .pm-foot-btn{flex:1 1 auto !important;min-height:48px !important;border-radius:12px !important;font-size:15px !important}
+  .pm-toast.pm-toast-raise{bottom:calc(88px + env(safe-area-inset-bottom)) !important}
+}
+@media (hover: none){
+  .pm-handle{opacity:1 !important}
+}
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation-duration:1ms !important;animation-delay:0ms !important;transition-duration:1ms !important}
+}
+</style>
+</helmet>
+<div class="{{ rootClass }}" style="display: flex; min-height: 100vh; background: #FFFFFF; color: #1B1B1F; font-family: 'Geist', 'Helvetica Neue', system-ui, sans-serif; font-size: 14px; line-height: 1.5; -webkit-font-smoothing: antialiased">
+
+  <aside class="pm-desk" aria-label="Projects" style="display: flex; flex-direction: column; gap: 20px; width: 240px; flex: none; box-sizing: border-box; background: #F7F7F8; border-right: 1px solid #EBEBEE; padding: 12px 8px">
+    <div style="display: flex; align-items: center; gap: 10px; padding: 0 8px; min-height: 36px">
+      <span style="flex: none; width: 22px; height: 22px; border-radius: 6px; background: #1B1B1F; display: inline-flex; align-items: center; justify-content: center">
+        <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><rect x="1" y="1" width="4" height="4" rx="1" fill="#FFFFFF"></rect><rect x="7" y="1" width="4" height="4" rx="1" fill="#FFFFFF" opacity="0.55"></rect><rect x="1" y="7" width="4" height="4" rx="1" fill="#FFFFFF" opacity="0.55"></rect><rect x="7" y="7" width="4" height="4" rx="1" fill="#FFFFFF"></rect></svg>
+      </span>
+      <span style="flex: 1; font-size: 14px; font-weight: 600">Tracker</span>
+    </div>
+
+    <nav aria-label="Main" style="display: flex; flex-direction: column; gap: 2px">
+      <button class="pm-nav" onClick="{{ goHome }}" style="display: flex; align-items: center; gap: 10px; width: 100%; min-height: 32px; padding: 0 8px; border: 0; border-radius: 8px; background: {{ homeNavBg }}; color: #1B1B1F; font-size: 13px; font-weight: 500; text-align: left; cursor: pointer">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6B6B76" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"></rect><rect x="14" y="3" width="7" height="7" rx="1.5"></rect><rect x="14" y="14" width="7" height="7" rx="1.5"></rect><rect x="3" y="14" width="7" height="7" rx="1.5"></rect></svg>
+        All projects
+      </button>
+    </nav>
+
+    <div style="display: flex; flex-direction: column; gap: 2px">
+      <div style="display: flex; align-items: center; justify-content: space-between; padding: 0 4px 0 8px; min-height: 28px">
+        <span style="font-size: 12px; font-weight: 500; color: #6B6B76">Projects</span>
+        <button class="pm-icon" onClick="{{ openNewProject }}" aria-label="New project" style="display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border: 0; border-radius: 8px; background: transparent; color: #6B6B76; cursor: pointer">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"></path><path d="M12 5v14"></path></svg>
+        </button>
+      </div>
+      <sc-for list="{{ projects }}" as="p" hint-placeholder-count="3">
+        <button class="pm-nav" onClick="{{ p.open }}" style="display: flex; align-items: center; gap: 10px; width: 100%; min-height: 32px; padding: 0 8px; border: 0; border-radius: 8px; background: {{ p.navBg }}; color: #1B1B1F; font-size: 13px; text-align: left; cursor: pointer">
+          <span style="flex: none; width: 10px; height: 10px; border-radius: 3px; background: {{ p.color }}"></span>
+          <span style="flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap">{{ p.name }}</span>
+          <span style="font-size: 12px; color: #8E8E99; font-variant-numeric: tabular-nums">{{ p.openCount }}</span>
+        </button>
+      </sc-for>
+    </div>
+  </aside>
+
+  <div style="flex: 1; min-width: 0; display: flex; flex-direction: column">
+
+    <header class="pm-mob" style="position: sticky; top: 0; z-index: 30; align-items: center; gap: 4px; min-height: 52px; padding: 4px 6px; box-sizing: border-box; background: rgba(255, 255, 255, 0.9); backdrop-filter: saturate(180%) blur(16px); -webkit-backdrop-filter: saturate(180%) blur(16px); border-bottom: 1px solid #EBEBEE">
+      <div style="flex: 1 1 0; min-width: 0; display: flex; align-items: center">
+        <sc-if value="{{ isProject }}" hint-placeholder-val="{{ false }}">
+          <button class="pm-back" onClick="{{ goHome }}" style="display: inline-flex; align-items: center; min-width: 0; min-height: 44px; padding: 0 8px 0 2px; border: 0; background: transparent; color: #1B1B1F; font-size: 16px; cursor: pointer">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none"><path d="m15 18-6-6 6-6"></path></svg>
+            <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap">Projects</span>
+          </button>
+        </sc-if>
+        <sc-if value="{{ isTicket }}" hint-placeholder-val="{{ false }}">
+          <button class="pm-back" onClick="{{ backToProject }}" style="display: inline-flex; align-items: center; min-width: 0; max-width: 100%; min-height: 44px; padding: 0 8px 0 2px; border: 0; background: transparent; color: #1B1B1F; font-size: 16px; cursor: pointer">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none"><path d="m15 18-6-6 6-6"></path></svg>
+            <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap">{{ ctProject.name }}</span>
+          </button>
+        </sc-if>
+      </div>
+      <div style="flex: 0 1 auto; min-width: 0; font-size: 15px; font-weight: 600; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-family: {{ mobTitleFont }}; animation: {{ titleAnim }} 260ms cubic-bezier(0.22, 1, 0.36, 1) both">{{ mobTitle }}</div>
+      <div style="flex: 1 1 0; min-width: 0; display: flex; align-items: center; justify-content: flex-end">
+        <sc-if value="{{ isProjects }}" hint-placeholder-val="{{ true }}">
+          <button class="pm-icon pm-press" onClick="{{ openNewProject }}" aria-label="New project" style="display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border: 0; border-radius: 22px; background: transparent; color: #1B1B1F; cursor: pointer">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"></path><path d="M12 5v14"></path></svg>
+          </button>
+        </sc-if>
+        <sc-if value="{{ isProject }}" hint-placeholder-val="{{ false }}">
+          <button class="pm-icon pm-press" onClick="{{ toggleMenu }}" aria-label="Project options" style="display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border: 0; border-radius: 22px; background: transparent; color: #1B1B1F; cursor: pointer">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="5" cy="12" r="1"></circle><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle></svg>
+          </button>
+          <button class="pm-icon pm-press" onClick="{{ openNewTicketTodo }}" aria-label="New ticket" style="display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border: 0; border-radius: 22px; background: transparent; color: #1B1B1F; cursor: pointer">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"></path><path d="M12 5v14"></path></svg>
+          </button>
+        </sc-if>
+        <sc-if value="{{ isTicket }}" hint-placeholder-val="{{ false }}">
+          <span style="width: 44px; height: 44px"></span>
+        </sc-if>
+      </div>
+    </header>
+
+    <header class="pm-desk" style="display: flex; align-items: center; gap: 8px; min-height: 52px; padding: 6px 16px 6px 20px; box-sizing: border-box; border-bottom: 1px solid #EBEBEE; background: #FFFFFF">
+      <nav aria-label="Breadcrumb" style="flex: 1; min-width: 0; display: flex; align-items: center; gap: 4px; font-size: 13px; white-space: nowrap; overflow: hidden">
+        <sc-if value="{{ isProjects }}" hint-placeholder-val="{{ true }}">
+          <span style="font-weight: 500; padding: 0 2px">Projects</span>
+        </sc-if>
+        <sc-if value="{{ isProject }}" hint-placeholder-val="{{ false }}">
+          <button class="pm-crumb" onClick="{{ goHome }}" style="min-height: 28px; padding: 0 6px; border: 0; border-radius: 8px; background: transparent; color: #6B6B76; font-size: 13px; cursor: pointer">Projects</button>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#B4B4BC" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"></path></svg>
+          <span style="display: inline-flex; align-items: center; gap: 8px; padding: 0 6px; min-width: 0; font-weight: 500">
+            <span style="flex: none; width: 10px; height: 10px; border-radius: 3px; background: {{ cp.color }}"></span>
+            <span style="overflow: hidden; text-overflow: ellipsis">{{ cp.name }}</span>
+          </span>
+        </sc-if>
+        <sc-if value="{{ isTicket }}" hint-placeholder-val="{{ false }}">
+          <button class="pm-crumb" onClick="{{ goHome }}" style="min-height: 28px; padding: 0 6px; border: 0; border-radius: 8px; background: transparent; color: #6B6B76; font-size: 13px; cursor: pointer">Projects</button>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#B4B4BC" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"></path></svg>
+          <button class="pm-crumb" onClick="{{ backToProject }}" style="display: inline-flex; align-items: center; gap: 8px; min-width: 0; min-height: 28px; padding: 0 6px; border: 0; border-radius: 8px; background: transparent; color: #6B6B76; font-size: 13px; cursor: pointer">
+            <span style="flex: none; width: 10px; height: 10px; border-radius: 3px; background: {{ ctProject.color }}"></span>
+            <span style="overflow: hidden; text-overflow: ellipsis">{{ ctProject.name }}</span>
+          </button>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#B4B4BC" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"></path></svg>
+          <span style="padding: 0 6px; font-family: 'Geist Mono', ui-monospace, monospace; font-size: 12px; font-weight: 500">{{ ct.key }}</span>
+        </sc-if>
+      </nav>
+
+      <sc-if value="{{ isProjects }}" hint-placeholder-val="{{ true }}">
+        <button class="pm-primary pm-press" onClick="{{ openNewProject }}" style="display: inline-flex; align-items: center; gap: 6px; min-height: 32px; padding: 0 12px; border: 0; border-radius: 8px; background: #1B1B1F; color: #FFFFFF; font-size: 13px; font-weight: 500; cursor: pointer; white-space: nowrap">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"></path><path d="M12 5v14"></path></svg>
+          New project
+        </button>
+      </sc-if>
+      <sc-if value="{{ isProject }}" hint-placeholder-val="{{ false }}">
+        <div style="display: flex; align-items: center; gap: 6px">
+          <button class="pm-primary pm-press" onClick="{{ openNewTicketTodo }}" style="display: inline-flex; align-items: center; gap: 6px; min-height: 32px; padding: 0 12px; border: 0; border-radius: 8px; background: #1B1B1F; color: #FFFFFF; font-size: 13px; font-weight: 500; cursor: pointer; white-space: nowrap">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"></path><path d="M12 5v14"></path></svg>
+            New ticket
+          </button>
+          <div style="position: relative">
+            <button class="pm-icon" onClick="{{ toggleMenu }}" aria-label="Project options" aria-expanded="{{ menuExpanded }}" style="display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border: 0; border-radius: 8px; background: transparent; color: #6B6B76; cursor: pointer">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="5" cy="12" r="1"></circle><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle></svg>
+            </button>
+            <sc-if value="{{ menuOpen }}" hint-placeholder-val="{{ false }}">
+              <button type="button" tabindex="-1" class="pm-catch" aria-label="Close menu" onClick="{{ closeMenu }}" style="position: fixed; inset: 0; z-index: 29; margin: 0; padding: 0; border: 0; background: transparent; cursor: default"></button>
+              <div class="pm-menu-pop" style="position: absolute; right: 0; top: calc(100% + 6px); z-index: 30; width: 260px; box-sizing: border-box; background: #FFFFFF; border: 1px solid #EBEBEE; border-radius: 10px; box-shadow: 0 8px 24px rgba(20, 20, 26, 0.12); padding: 4px">
+                <sc-if value="{{ notConfirmDel }}" hint-placeholder-val="{{ true }}">
+                  <button class="pm-row pm-ring" onClick="{{ openEditProject }}" style="display: flex; align-items: center; gap: 8px; width: 100%; min-height: 34px; padding: 0 10px; border: 0; border-radius: 8px; background: transparent; color: #1B1B1F; font-size: 13px; text-align: left; cursor: pointer">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>
+                    Edit project
+                  </button>
+                  <button class="pm-row pm-ring" onClick="{{ askDelete }}" style="display: flex; align-items: center; gap: 8px; width: 100%; min-height: 34px; padding: 0 10px; border: 0; border-radius: 8px; background: transparent; color: #B42318; font-size: 13px; text-align: left; cursor: pointer">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><path d="M10 11v6"></path><path d="M14 11v6"></path></svg>
+                    Delete project
+                  </button>
+                </sc-if>
+                <sc-if value="{{ confirmDel }}" hint-placeholder-val="{{ false }}">
+                  <div class="pm-fade-in" style="display: flex; flex-direction: column; gap: 10px; padding: 8px">
+                    <span style="font-size: 13px; color: #1B1B1F; white-space: normal">Delete this project and its {{ counts.all }} tickets? This can't be undone.</span>
+                    <div style="display: flex; gap: 6px; justify-content: flex-end">
+                      <button class="pm-secondary pm-press" onClick="{{ cancelDelete }}" style="min-height: 30px; padding: 0 10px; border: 1px solid #DEDEE3; border-radius: 8px; background: #FFFFFF; color: #1B1B1F; font-size: 13px; cursor: pointer">Cancel</button>
+                      <button class="pm-press" onClick="{{ deleteProject }}" style="min-height: 30px; padding: 0 10px; border: 0; border-radius: 8px; background: #B42318; color: #FFFFFF; font-size: 13px; font-weight: 500; cursor: pointer">Delete</button>
+                    </div>
+                  </div>
+                </sc-if>
+              </div>
+            </sc-if>
+          </div>
+        </div>
+      </sc-if>
+    </header>
+
+    <main style="flex: 1; min-width: 0; display: flex; flex-direction: column; overflow-x: clip">
+
+      <sc-if value="{{ isProjects }}" hint-placeholder-val="{{ true }}">
+        <div class="pm-pad {{ viewClass }}" style="padding: 28px 32px 48px">
+          <div style="max-width: 1040px; display: flex; flex-direction: column; gap: 16px">
+            <div style="display: flex; align-items: baseline; gap: 10px">
+              <h1 class="pm-large" style="margin: 0; font-size: 20px; line-height: 1.3; font-weight: 600; letter-spacing: -0.015em">Projects</h1>
+              <span style="color: #8E8E99; font-size: 13px; font-variant-numeric: tabular-nums">{{ projectCount }}</span>
+            </div>
+
+            <sc-if value="{{ noProjects }}" hint-placeholder-val="{{ false }}">
+              <div class="pm-fade-in" style="display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 56px 24px; border: 1px solid #EBEBEE; border-radius: 12px; text-align: center">
+                <span style="width: 44px; height: 44px; border-radius: 12px; background: #F7F7F8; color: #6B6B76; display: inline-flex; align-items: center; justify-content: center">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"></path></svg>
+                </span>
+                <span style="font-size: 15px; font-weight: 600">No projects yet</span>
+                <span style="max-width: 280px; font-size: 13px; color: #6B6B76; text-wrap: pretty">Projects hold your tickets. Create one to get started.</span>
+                <button class="pm-btn pm-primary pm-press" onClick="{{ openNewProject }}" style="min-height: 32px; margin-top: 4px; padding: 0 14px; border: 0; border-radius: 8px; background: #1B1B1F; color: #FFFFFF; font-size: 13px; font-weight: 500; cursor: pointer">New project</button>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ hasProjects }}" hint-placeholder-val="{{ true }}">
+              <div class="pm-list" style="border: 1px solid #EBEBEE; border-radius: 10px; overflow: hidden">
+                <div class="pm-desk" style="display: flex; align-items: center; gap: 16px; min-height: 36px; padding: 0 16px; background: #F7F7F8; border-bottom: 1px solid #EBEBEE; font-size: 12px; color: #6B6B76">
+                  <span style="flex: 1">Name</span>
+                  <span style="width: 168px; flex: none">Progress</span>
+                  <span style="width: 56px; flex: none; text-align: right">Open</span>
+                  <span style="width: 96px; flex: none; text-align: right">Updated</span>
+                </div>
+                <sc-for list="{{ projects }}" as="p" hint-placeholder-count="3">
+                  <button class="pm-row pm-ring pm-rise" onClick="{{ p.open }}" style="display: flex; align-items: center; gap: 16px; width: 100%; min-height: 60px; padding: 10px 16px; border: 0; border-top: {{ p.sep }}; background: #FFFFFF; color: #1B1B1F; font-size: 14px; text-align: left; cursor: pointer; animation-name: pm-rise-0; animation-delay: {{ p.delay }}ms">
+                    <span style="flex: 1; min-width: 0; display: flex; align-items: center; gap: 12px">
+                      <span style="flex: none; width: 10px; height: 10px; border-radius: 3px; background: {{ p.color }}"></span>
+                      <span style="min-width: 0; display: flex; flex-direction: column; gap: 1px">
+                        <span style="display: flex; align-items: baseline; gap: 8px; min-width: 0">
+                          <span style="font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap">{{ p.name }}</span>
+                          <span style="flex: none; font-family: 'Geist Mono', ui-monospace, monospace; font-size: 12px; color: #8E8E99">{{ p.key }}</span>
+                        </span>
+                        <span style="font-size: 13px; color: #6B6B76; overflow: hidden; text-overflow: ellipsis; white-space: nowrap">{{ p.descShown }}</span>
+                      </span>
+                    </span>
+                    <span class="pm-hide-sm" style="width: 168px; flex: none; display: flex; align-items: center; gap: 10px">
+                      <span style="flex: 1; height: 4px; border-radius: 2px; background: #EFEFF1; overflow: hidden"><span class="pm-grow" style="display: block; height: 4px; width: {{ p.pct }}%; border-radius: 2px; background: #5B5BD6"></span></span>
+                      <span style="width: 36px; text-align: right; font-size: 12px; color: #6B6B76; font-variant-numeric: tabular-nums">{{ p.pct }}%</span>
+                    </span>
+                    <span style="width: 56px; flex: none; text-align: right; font-size: 13px; font-variant-numeric: tabular-nums">{{ p.openCount }}</span>
+                    <span class="pm-hide-sm" style="width: 96px; flex: none; text-align: right; font-size: 13px; color: #6B6B76">{{ p.updatedLabel }}</span>
+                    <span class="pm-mob" style="flex: none; margin-left: -8px; color: #B4B4BC">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"></path></svg>
+                    </span>
+                  </button>
+                </sc-for>
+              </div>
+            </sc-if>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isProject }}" hint-placeholder-val="{{ false }}">
+        <div class="{{ viewClass }}" style="display: flex; flex-direction: column; padding-bottom: 96px">
+          <div class="pm-pad pm-desk" style="padding: 16px 32px 0">
+            <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px">
+              <sc-if value="{{ cp.hasRepo }}" hint-placeholder-val="{{ false }}">
+                <span style="display: inline-flex; align-items: center; gap: 6px; min-width: 0; max-width: 100%; margin-right: 4px; font-family: 'Geist Mono', ui-monospace, monospace; font-size: 12px; color: #55555F">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"></path></svg>
+                  <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap">{{ cp.repo }}</span>
+                </span>
+              </sc-if>
+              <button class="pm-secondary pm-press" onClick="{{ openProjectPrompt }}" style="display: inline-flex; align-items: center; gap: 6px; min-height: 30px; padding: 0 10px; border: 1px solid #DEDEE3; border-radius: 8px; background: #FFFFFF; color: #1B1B1F; font-size: 13px; font-weight: 500; cursor: pointer; white-space: nowrap">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m4 17 6-6-6-6"></path><path d="M12 19h8"></path></svg>
+                Send open tickets to Claude Code
+              </button>
+              <button class="pm-secondary pm-press" onClick="{{ openReportProject }}" style="display: inline-flex; align-items: center; gap: 6px; min-height: 30px; padding: 0 10px; border: 1px solid #DEDEE3; border-radius: 8px; background: #FFFFFF; color: #1B1B1F; font-size: 13px; font-weight: 500; cursor: pointer; white-space: nowrap">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="2" width="8" height="4" rx="1"></rect><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><path d="m9 14 2 2 4-4"></path></svg>
+                Paste report
+              </button>
+            </div>
+          </div>
+
+          <div class="pm-pad" style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px; padding: 14px 32px 16px">
+            <div class="pm-segctl" role="group" aria-label="Filter tickets" style="position: relative; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 2px; flex: 0 1 300px; min-width: 0; padding: 2px; border-radius: 10px; background: #EFEFF1">
+              <span class="pm-thumb" aria-hidden="true" style="position: absolute; top: 2px; bottom: 2px; left: 2px; width: calc((100% - 8px) / 3); border-radius: 8px; background: #FFFFFF; box-shadow: 0 1px 2px rgba(20, 20, 26, 0.12), 0 0 0 0.5px rgba(20, 20, 26, 0.06); transform: translateX(calc({{ tabIdx }} * (100% + 2px)))"></span>
+              <sc-for list="{{ tabs }}" as="tab" hint-placeholder-count="3">
+                <button class="pm-seg pm-segbtn" onClick="{{ tab.pick }}" aria-pressed="{{ tab.pressed }}" style="position: relative; z-index: 1; display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-width: 0; min-height: 30px; padding: 0 8px; border: 0; border-radius: 8px; background: transparent; color: {{ tab.fg }}; font-size: 13px; font-weight: 500; white-space: nowrap; cursor: pointer">
+                  {{ tab.label }}
+                  <span style="font-size: 12px; color: #8E8E99; font-variant-numeric: tabular-nums">{{ tab.n }}</span>
+                </button>
+              </sc-for>
+            </div>
+            <label class="pm-search" style="display: flex; align-items: center; gap: 8px; flex: 0 1 240px; min-width: 160px; min-height: 34px; padding: 0 10px; border: 1px solid #DEDEE3; border-radius: 8px; box-sizing: border-box; color: #8E8E99">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7.5"></circle><path d="m20.5 20.5-4-4"></path></svg>
+              <input class="pm-field" value="{{ q }}" onChange="{{ setQ }}" placeholder="Search tickets" aria-label="Search tickets" style="flex: 1; min-width: 0; border: 0; outline-offset: 4px; padding: 6px 0; background: transparent; color: #1B1B1F; font-size: 13px">
+            </label>
+          </div>
+
+          <sc-if value="{{ noTicketsAtAll }}" hint-placeholder-val="{{ false }}">
+            <div class="pm-fade-in" style="padding: 64px 24px; display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center">
+              <span style="width: 44px; height: 44px; border-radius: 12px; background: #F7F7F8; color: #6B6B76; display: inline-flex; align-items: center; justify-content: center">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"></path><path d="M12 5v14"></path></svg>
+              </span>
+              <span style="font-size: 15px; font-weight: 600">No tickets yet</span>
+              <span style="max-width: 280px; font-size: 13px; color: #6B6B76">Create the first ticket for {{ cp.name }}.</span>
+              <button class="pm-btn pm-primary pm-press" onClick="{{ openNewTicketTodo }}" style="min-height: 32px; margin-top: 4px; padding: 0 14px; border: 0; border-radius: 8px; background: #1B1B1F; color: #FFFFFF; font-size: 13px; font-weight: 500; cursor: pointer">New ticket</button>
+            </div>
+          </sc-if>
+          <sc-if value="{{ noMatches }}" hint-placeholder-val="{{ false }}">
+            <div class="pm-fade-in" style="padding: 48px 24px; text-align: center; color: #6B6B76; font-size: 13px">No tickets match.</div>
+          </sc-if>
+
+          <div class="pm-pad" style="display: flex; flex-direction: column; gap: 16px; padding: 0 32px 24px">
+          <sc-for list="{{ groups }}" as="g" hint-placeholder-count="2">
+            <section class="pm-rise" aria-label="{{ g.label }}" data-drop-group="{{ g.status }}" style="border: 1px solid #EBEBEE; border-radius: 12px; overflow: hidden; background: #FFFFFF; animation-name: {{ riseName }}; animation-delay: {{ g.delay }}ms">
+              <div class="pm-ghead" style="display: flex; align-items: center; gap: 8px; min-height: 40px; padding: 0 8px 0 16px; background: {{ g.headBg }}; border-bottom: 1px solid #EBEBEE; font-size: 13px">
+                <span style="flex: none; display: inline-flex">
+                  <sc-if value="{{ g.isTodo }}" hint-placeholder-val="{{ true }}"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.25" fill="none" stroke="#8E8E99" stroke-width="1.5"></circle></svg></sc-if>
+                  <sc-if value="{{ g.isDoing }}" hint-placeholder-val="{{ false }}"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.25" fill="none" stroke="#C26A06" stroke-width="1.5"></circle><path d="M8 4.5a3.5 3.5 0 0 1 0 7z" fill="#C26A06"></path></svg></sc-if>
+                  <sc-if value="{{ g.isDone }}" hint-placeholder-val="{{ false }}"><svg class="pm-done-glyph" width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="7" fill="#5B5BD6"></circle><path d="m5 8.25 2 2 4-4.25" fill="none" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg></sc-if>
+                </span>
+                <span style="font-weight: 500">{{ g.label }}</span>
+                <span style="color: #8E8E99; font-variant-numeric: tabular-nums">{{ g.count }}</span>
+                <span style="flex: 1"></span>
+                <button class="pm-icon pm-press" onClick="{{ g.add }}" aria-label="{{ g.addLabel }}" style="display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border: 0; border-radius: 8px; background: transparent; color: #6B6B76; cursor: pointer">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"></path><path d="M12 5v14"></path></svg>
+                </button>
+              </div>
+              <sc-if value="{{ g.showZone }}" hint-placeholder-val="{{ false }}">
+                <div style="padding: 10px 12px">
+                  <div class="pm-fade-in" style="display: flex; align-items: center; justify-content: center; min-height: 44px; border: 1.5px dashed {{ g.zoneBorder }}; border-radius: 10px; background: {{ g.zoneBg }}; color: {{ g.zoneFg }}; font-size: 13px; font-weight: 500">Drop here to move to {{ g.label }}</div>
+                </div>
+              </sc-if>
+              <sc-for list="{{ g.items }}" as="t" hint-placeholder-count="3">
+                <div class="pm-trow pm-rise" data-drop-row="{{ t.id }}" style="position: relative; border-top: {{ t.sep }}; background: #FFFFFF; animation-name: {{ t.anim }}; animation-delay: {{ t.delay }}ms">
+                  <button type="button" class="pm-handle" data-handle="{{ t.id }}" aria-label="{{ t.handleLabel }}" onPointerDown="{{ t.handleDown }}" onPointerMove="{{ dragMove }}" onPointerUp="{{ dragUp }}" onPointerCancel="{{ dragCancel }}" onKeyDown="{{ t.handleKey }}" style="position: absolute; top: 0; bottom: 0; left: 6px; z-index: 2; width: 24px; display: flex; align-items: center; justify-content: center; margin: 0; padding: 0; border: 0; border-radius: 6px; background: transparent; color: #B4B4BC; cursor: grab; touch-action: none; opacity: {{ t.handleOpacity }}">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="12" r="1"></circle><circle cx="9" cy="5" r="1"></circle><circle cx="9" cy="19" r="1"></circle><circle cx="15" cy="12" r="1"></circle><circle cx="15" cy="5" r="1"></circle><circle cx="15" cy="19" r="1"></circle></svg>
+                  </button>
+                  <button class="pm-row pm-ring pm-rowmain" onClick="{{ t.open }}" onPointerDown="{{ t.rowDown }}" onPointerMove="{{ dragMove }}" onPointerUp="{{ dragUp }}" onPointerCancel="{{ dragCancel }}" style="position: relative; display: flex; align-items: center; gap: 12px; width: 100%; min-height: 44px; padding: 8px 16px 8px 36px; border: 0; background: transparent; color: #1B1B1F; font-size: 14px; text-align: left; cursor: pointer; opacity: {{ t.opacity }}">
+                    <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" style="flex: none"><rect x="2" y="9" width="3" height="5" rx="1" fill="{{ t.b1 }}"></rect><rect x="6.5" y="6" width="3" height="8" rx="1" fill="{{ t.b2 }}"></rect><rect x="11" y="3" width="3" height="11" rx="1" fill="{{ t.b3 }}"></rect></svg>
+                    <span style="flex: none; width: 64px; font-family: 'Geist Mono', ui-monospace, monospace; font-size: 12px; color: #6B6B76">{{ t.key }}</span>
+                    <span style="flex: none; display: inline-flex">
+                      <sc-if value="{{ t.isTodo }}" hint-placeholder-val="{{ true }}"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.25" fill="none" stroke="#8E8E99" stroke-width="1.5"></circle></svg></sc-if>
+                      <sc-if value="{{ t.isDoing }}" hint-placeholder-val="{{ false }}"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.25" fill="none" stroke="#C26A06" stroke-width="1.5"></circle><path d="M8 4.5a3.5 3.5 0 0 1 0 7z" fill="#C26A06"></path></svg></sc-if>
+                      <sc-if value="{{ t.isDone }}" hint-placeholder-val="{{ false }}"><svg class="pm-done-glyph" width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="7" fill="#5B5BD6"></circle><path d="m5 8.25 2 2 4-4.25" fill="none" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg></sc-if>
+                    </span>
+                    <span class="pm-title" style="flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; line-height: 1.4; color: {{ t.titleColor }}">{{ t.titleShown }}</span>
+                    <sc-if value="{{ t.hasDue }}" hint-placeholder-val="{{ false }}">
+                      <span class="pm-hide-sm" style="flex: none; display: inline-flex; align-items: center; gap: 5px; font-size: 12px; color: {{ t.dueFg }}">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"></rect><path d="M16 2v4"></path><path d="M8 2v4"></path><path d="M3 10h18"></path></svg>
+                        {{ t.dueLabel }}
+                      </span>
+                    </sc-if>
+                    <span title="{{ t.assigneeName }}" style="flex: none; width: 24px; height: 24px; box-sizing: border-box; border-radius: 50%; background: {{ t.avatarBg }}; border: {{ t.avatarBorder }}; color: #FFFFFF; display: inline-flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 600">{{ t.initials }}</span>
+                  </button>
+                  <sc-if value="{{ t.isNew }}" hint-placeholder-val="{{ false }}">
+                    <span class="pm-flash" aria-hidden="true" style="position: absolute; inset: 0; pointer-events: none; mix-blend-mode: multiply"></span>
+                  </sc-if>
+                  <sc-if value="{{ t.dropBefore }}" hint-placeholder-val="{{ false }}">
+                    <span aria-hidden="true" style="position: absolute; left: 12px; right: 12px; top: 0; z-index: 4; height: 2px; border-radius: 1px; background: #5B5BD6; pointer-events: none"><span style="position: absolute; left: -5px; top: -3px; width: 4px; height: 4px; border: 2px solid #5B5BD6; border-radius: 50%; background: #FFFFFF"></span></span>
+                  </sc-if>
+                  <sc-if value="{{ t.dropAfter }}" hint-placeholder-val="{{ false }}">
+                    <span aria-hidden="true" style="position: absolute; left: 12px; right: 12px; bottom: 0; z-index: 4; height: 2px; border-radius: 1px; background: #5B5BD6; pointer-events: none"><span style="position: absolute; left: -5px; top: -3px; width: 4px; height: 4px; border: 2px solid #5B5BD6; border-radius: 50%; background: #FFFFFF"></span></span>
+                  </sc-if>
+                </div>
+              </sc-for>
+              <sc-if value="{{ g.hasMore }}" hint-placeholder-val="{{ false }}">
+                <button type="button" class="pm-row pm-ring pm-more" onClick="{{ g.toggleMore }}" aria-expanded="{{ g.moreExpanded }}" style="display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; min-height: 40px; padding: 0 16px; border: 0; border-top: 1px solid #EBEBEE; background: #FFFFFF; color: #6B6B76; font-size: 13px; font-weight: 500; cursor: pointer">
+                  {{ g.moreLabel }}
+                  <svg class="pm-chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none; transform: rotate({{ g.chevRot }}deg)"><path d="m6 9 6 6 6-6"></path></svg>
+                </button>
+              </sc-if>
+            </section>
+          </sc-for>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isTicket }}" hint-placeholder-val="{{ false }}">
+        <div class="pm-tgrid {{ viewClass }}" style="flex: 1">
+          <div class="pm-a-main pm-pad" style="min-width: 0; box-sizing: border-box; padding: 28px 40px 8px">
+            <div style="max-width: 760px; display: flex; flex-direction: column; gap: 8px">
+              <span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 12px; color: #6B6B76">{{ ct.key }}</span>
+              <textarea class="pm-edit" aria-label="Title" value="{{ ct.title }}" onChange="{{ setTitle }}" rows="1" placeholder="Ticket title" style="field-sizing: content; resize: none; overflow: hidden; width: calc(100% + 14px); margin: 0 0 0 -7px; padding: 4px 6px; box-sizing: border-box; border: 1px solid transparent; border-radius: 8px; background: transparent; color: #1B1B1F; font-size: 22px; font-weight: 600; line-height: 1.3; letter-spacing: -0.015em"></textarea>
+              <textarea class="pm-edit pm-field" aria-label="Description" value="{{ ct.desc }}" onChange="{{ setDesc }}" rows="4" placeholder="Add details, steps or acceptance criteria…" style="field-sizing: content; min-height: 96px; resize: none; width: calc(100% + 14px); margin: 0 0 0 -7px; padding: 6px; box-sizing: border-box; border: 1px solid transparent; border-radius: 8px; background: transparent; color: #2A2A30; font-size: 14px; line-height: 1.65"></textarea>
+            </div>
+          </div>
+
+          <aside class="pm-a-side pm-props pm-pad" aria-label="Ticket details" style="min-width: 0; box-sizing: border-box; padding: 24px 20px 40px; border-left: 1px solid #EBEBEE; background: #FBFBFC; display: flex; flex-direction: column; gap: 20px">
+            <div class="pm-desk" style="display: flex; flex-direction: column; gap: 8px">
+              <span style="font-size: 12px; font-weight: 500; color: #6B6B76">Claude Code</span>
+              <button class="pm-primary pm-press" onClick="{{ openTicketPrompt }}" style="display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; min-height: 36px; padding: 0 12px; border: 0; border-radius: 8px; background: #1B1B1F; color: #FFFFFF; font-size: 13px; font-weight: 500; cursor: pointer">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m4 17 6-6-6-6"></path><path d="M12 19h8"></path></svg>
+                Send to Claude Code
+              </button>
+              <button class="pm-secondary pm-press" onClick="{{ openReportTicket }}" style="display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; min-height: 36px; padding: 0 12px; border: 1px solid #DEDEE3; border-radius: 8px; background: #FFFFFF; color: #1B1B1F; font-size: 13px; font-weight: 500; cursor: pointer">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="2" width="8" height="4" rx="1"></rect><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><path d="m9 14 2 2 4-4"></path></svg>
+                Paste report
+              </button>
+              <sc-if value="{{ ct.hasReport }}" hint-placeholder-val="{{ false }}">
+                <span style="font-size: 12px; color: #6B6B76">Last report {{ ct.lastReportWhen }}</span>
+              </sc-if>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 8px">
+              <span style="font-size: 12px; font-weight: 500; color: #6B6B76">Details</span>
+              <div style="background: #FFFFFF; border: 1px solid #EBEBEE; border-radius: 12px; overflow: hidden">
+                <button type="button" class="pm-prow" aria-haspopup="listbox" aria-expanded="{{ ctStatusExpanded }}" onClick="{{ openCtStatus }}" style="position: relative; display: flex; align-items: center; gap: 10px; width: 100%; min-height: 44px; padding: 0 10px 0 12px; border: 0; background: transparent; color: #1B1B1F; font-size: 14px; text-align: left; cursor: pointer">
+                  <span style="flex: none; width: 20px; display: inline-flex; justify-content: center">
+                    <sc-if value="{{ ct.isTodo }}" hint-placeholder-val="{{ true }}"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.25" fill="none" stroke="#8E8E99" stroke-width="1.5"></circle></svg></sc-if>
+                    <sc-if value="{{ ct.isDoing }}" hint-placeholder-val="{{ false }}"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.25" fill="none" stroke="#C26A06" stroke-width="1.5"></circle><path d="M8 4.5a3.5 3.5 0 0 1 0 7z" fill="#C26A06"></path></svg></sc-if>
+                    <sc-if value="{{ ct.isDone }}" hint-placeholder-val="{{ false }}"><svg class="pm-done-glyph" width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="7" fill="#5B5BD6"></circle><path d="m5 8.25 2 2 4-4.25" fill="none" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg></sc-if>
+                  </span>
+                  <span style="flex: 1; min-width: 0">Status</span>
+                  <span style="color: #6B6B76">{{ ct.statusLabel }}</span>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#B4B4BC" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none"><path d="m6 9 6 6 6-6"></path></svg>
+                </button>
+                <button type="button" class="pm-prow" aria-haspopup="listbox" aria-expanded="{{ ctPrioExpanded }}" onClick="{{ openCtPriority }}" style="position: relative; display: flex; align-items: center; gap: 10px; width: 100%; min-height: 44px; padding: 0 10px 0 12px; border: 0; border-top: 1px solid #EBEBEE; background: transparent; color: #1B1B1F; font-size: 14px; text-align: left; cursor: pointer">
+                  <span style="flex: none; width: 20px; display: inline-flex; justify-content: center">
+                    <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><rect x="2" y="9" width="3" height="5" rx="1" fill="{{ ct.b1 }}"></rect><rect x="6.5" y="6" width="3" height="8" rx="1" fill="{{ ct.b2 }}"></rect><rect x="11" y="3" width="3" height="11" rx="1" fill="{{ ct.b3 }}"></rect></svg>
+                  </span>
+                  <span style="flex: 1; min-width: 0">Priority</span>
+                  <span style="color: #6B6B76">{{ ct.prioLabel }}</span>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#B4B4BC" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none"><path d="m6 9 6 6 6-6"></path></svg>
+                </button>
+                <label class="pm-prow" style="position: relative; display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 0 12px; border-top: 1px solid #EBEBEE; font-size: 14px; cursor: text">
+                  <span style="flex: none; width: 20px; display: inline-flex; justify-content: center">
+                    <span style="width: 20px; height: 20px; box-sizing: border-box; border-radius: 50%; background: {{ ct.avatarBg }}; border: {{ ct.avatarBorder }}; color: #FFFFFF; display: inline-flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 600">{{ ct.initials }}</span>
+                  </span>
+                  <span style="flex: none">Assignee</span>
+                  <input list="pm-people" value="{{ ct.assignee }}" onChange="{{ setAssignee }}" onFocus="{{ focusAssignee }}" onBlur="{{ blurAssignee }}" placeholder="Unassigned" aria-label="Assignee" style="flex: 1; min-width: 0; height: 40px; padding: 0; border: 0; background: transparent; color: #1B1B1F; font-size: 14px; text-align: right">
+                </label>
+                <label class="pm-prow" style="position: relative; display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 0 10px 0 12px; border-top: 1px solid #EBEBEE; font-size: 14px; cursor: pointer">
+                  <span style="flex: none; width: 20px; display: inline-flex; justify-content: center; color: {{ ct.dueFg }}">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"></rect><path d="M16 2v4"></path><path d="M8 2v4"></path><path d="M3 10h18"></path></svg>
+                  </span>
+                  <span style="flex: 1; min-width: 0">Due date</span>
+                  <span style="color: {{ ct.dueFg }}">{{ ct.dueLong }}</span>
+                  <sc-if value="{{ ct.hasDue }}" hint-placeholder-val="{{ false }}">
+                    <button type="button" class="pm-press" onClick="{{ clearDue }}" aria-label="Clear due date" style="position: relative; z-index: 2; flex: none; display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border: 0; border-radius: 12px; background: #EFEFF1; color: #6B6B76; cursor: pointer">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
+                    </button>
+                  </sc-if>
+                  <sc-if value="{{ ct.noDue }}" hint-placeholder-val="{{ true }}">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#B4B4BC" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none"><path d="m6 9 6 6 6-6"></path></svg>
+                  </sc-if>
+                  <input type="date" aria-label="Due date" value="{{ ct.due }}" onChange="{{ setDue }}" onClick="{{ openPicker }}" style="position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; border: 0; font-size: 16px; cursor: pointer">
+                </label>
+              </div>
+            </div>
+
+            <div style="background: #FFFFFF; border: 1px solid #EBEBEE; border-radius: 12px; overflow: hidden; font-size: 13px">
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 40px; padding: 0 12px">
+                <span style="color: #6B6B76">Project</span>
+                <span style="display: inline-flex; align-items: center; gap: 8px; min-width: 0"><span style="flex: none; width: 10px; height: 10px; border-radius: 3px; background: {{ ctProject.color }}"></span><span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap">{{ ctProject.name }}</span></span>
+              </div>
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 40px; padding: 0 12px; border-top: 1px solid #EBEBEE">
+                <span style="color: #6B6B76">Created</span>
+                <span>{{ ct.createdLabel }}</span>
+              </div>
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 40px; padding: 0 12px; border-top: 1px solid #EBEBEE">
+                <span style="color: #6B6B76">Updated</span>
+                <span>{{ ct.updatedLabel }}</span>
+              </div>
+            </div>
+
+            <sc-if value="{{ notConfirmDel }}" hint-placeholder-val="{{ true }}">
+              <button class="pm-textbtn pm-btn" onClick="{{ askDelete }}" style="display: inline-flex; align-items: center; gap: 8px; align-self: flex-start; min-height: 32px; padding: 0 8px; margin-left: -8px; border: 0; border-radius: 8px; background: transparent; color: #B42318; font-size: 13px; font-weight: 500; cursor: pointer">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><path d="M10 11v6"></path><path d="M14 11v6"></path></svg>
+                Delete ticket
+              </button>
+            </sc-if>
+            <sc-if value="{{ confirmDel }}" hint-placeholder-val="{{ false }}">
+              <div role="alert" class="pm-fade-in" style="display: flex; flex-direction: column; gap: 10px; padding: 12px; border: 1px solid #F4CFCA; border-radius: 12px; background: #FFFFFF">
+                <span style="font-size: 13px">Delete {{ ct.key }}? This can't be undone.</span>
+                <div style="display: flex; gap: 8px">
+                  <button class="pm-btn pm-secondary pm-press" onClick="{{ cancelDelete }}" style="min-height: 32px; padding: 0 12px; border: 1px solid #DEDEE3; border-radius: 8px; background: #FFFFFF; color: #1B1B1F; font-size: 13px; cursor: pointer">Cancel</button>
+                  <button class="pm-btn pm-press" onClick="{{ deleteTicket }}" style="min-height: 32px; padding: 0 12px; border: 0; border-radius: 8px; background: #B42318; color: #FFFFFF; font-size: 13px; font-weight: 500; cursor: pointer">Delete</button>
+                </div>
+              </div>
+            </sc-if>
+          </aside>
+
+          <section class="pm-a-act pm-pad pm-act" aria-label="Activity" style="min-width: 0; box-sizing: border-box; padding: 8px 40px 56px">
+            <div style="max-width: 760px; display: flex; flex-direction: column; gap: 6px; padding-top: 20px; border-top: 1px solid #EBEBEE">
+              <h2 style="margin: 0 0 6px; font-size: 14px; font-weight: 600">Activity</h2>
+              <sc-for list="{{ activity }}" as="a" hint-placeholder-count="3">
+                <sc-if value="{{ a.isEvent }}" hint-placeholder-val="{{ true }}">
+                  <div class="pm-rise" style="display: flex; align-items: flex-start; gap: 10px; min-height: 26px; font-size: 13px; color: #6B6B76; animation-name: pm-rise-0; animation-delay: {{ a.delay }}ms">
+                    <span style="flex: none; width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center"><span style="width: 6px; height: 6px; border-radius: 50%; background: #C4C4CC"></span></span>
+                    <span style="padding-top: 1px"><span style="color: #1B1B1F; font-weight: 500">You</span> {{ a.text }} <span style="color: #9A9AA3">· {{ a.when }}</span></span>
+                  </div>
+                </sc-if>
+                <sc-if value="{{ a.isComment }}" hint-placeholder-val="{{ false }}">
+                  <div class="pm-rise" style="margin: 4px 0; padding: 12px 14px; border: 1px solid #EBEBEE; border-radius: 12px; background: #FFFFFF; display: flex; flex-direction: column; gap: 6px; animation-name: pm-rise-0; animation-delay: {{ a.delay }}ms">
+                    <div style="display: flex; align-items: center; gap: 8px; font-size: 13px">
+                      <span style="flex: none; width: 20px; height: 20px; border-radius: 50%; background: #1B1B1F; color: #FFFFFF; display: inline-flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 600">Y</span>
+                      <span style="font-weight: 500">You</span>
+                      <span style="color: #9A9AA3">{{ a.when }}</span>
+                    </div>
+                    <p style="margin: 0; font-size: 14px; white-space: pre-wrap; color: #2A2A30">{{ a.text }}</p>
+                  </div>
+                </sc-if>
+                <sc-if value="{{ a.isReport }}" hint-placeholder-val="{{ false }}">
+                  <div class="pm-rise" style="margin: 4px 0; padding: 12px 14px; border: 1px solid #E3E3F8; border-radius: 12px; background: #F7F7FE; display: flex; flex-direction: column; gap: 6px; animation-name: pm-rise-0; animation-delay: {{ a.delay }}ms">
+                    <div style="display: flex; align-items: center; gap: 8px; font-size: 13px">
+                      <span style="flex: none; width: 20px; height: 20px; border-radius: 6px; background: #1B1B1F; color: #FFFFFF; display: inline-flex; align-items: center; justify-content: center">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m4 17 6-6-6-6"></path><path d="M12 19h8"></path></svg>
+                      </span>
+                      <span style="font-weight: 500">Claude Code report</span>
+                      <span style="color: #9A9AA3">{{ a.when }}</span>
+                    </div>
+                    <p style="margin: 0; font-family: 'Geist Mono', ui-monospace, monospace; font-size: 12.5px; line-height: 1.6; white-space: pre-wrap; overflow-wrap: anywhere; color: #2A2A30">{{ a.text }}</p>
+                  </div>
+                </sc-if>
+              </sc-for>
+              <form class="pm-composer" onSubmit="{{ addComment }}" style="margin-top: 8px; border: 1px solid #DEDEE3; border-radius: 12px; background: #FFFFFF; display: flex; flex-direction: column">
+                <textarea class="pm-field" aria-label="Comment" value="{{ comment }}" onChange="{{ setComment }}" rows="2" placeholder="Leave a comment…" style="field-sizing: content; min-height: 64px; width: 100%; box-sizing: border-box; padding: 12px 14px 4px; border: 0; border-radius: 12px; resize: none; background: transparent; color: #1B1B1F; font-size: 14px; line-height: 1.55"></textarea>
+                <div style="display: flex; justify-content: flex-end; padding: 6px 8px 8px">
+                  <button type="submit" class="pm-btn pm-secondary pm-press" disabled="{{ commentInvalid }}" style="min-height: 30px; padding: 0 12px; border: 1px solid #DEDEE3; border-radius: 8px; background: #FFFFFF; color: #1B1B1F; font-size: 13px; font-weight: 500; cursor: pointer">Comment</button>
+                </div>
+              </form>
+            </div>
+          </section>
+        </div>
+      </sc-if>
+    </main>
+  </div>
+
+  <datalist id="pm-people">
+    <sc-for list="{{ people }}" as="person" hint-placeholder-count="2">
+      <option value="{{ person.name }}"></option>
+    </sc-for>
+  </datalist>
+
+  <sc-if value="{{ showMobBar }}" hint-placeholder-val="{{ false }}">
+    <div class="pm-mob pm-bar-in" style="position: fixed; left: 0; right: 0; bottom: 0; z-index: 25; gap: 10px; padding: 10px 16px calc(10px + env(safe-area-inset-bottom)); box-sizing: border-box; background: rgba(255, 255, 255, 0.92); backdrop-filter: saturate(180%) blur(16px); -webkit-backdrop-filter: saturate(180%) blur(16px); border-top: 1px solid #EBEBEE">
+      <button class="pm-secondary pm-press" onClick="{{ mobReport }}" style="flex: 1 1 0; display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; padding: 0 12px; border: 1px solid #DEDEE3; border-radius: 12px; background: #FFFFFF; color: #1B1B1F; font-size: 15px; font-weight: 500; cursor: pointer; white-space: nowrap">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="2" width="8" height="4" rx="1"></rect><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><path d="m9 14 2 2 4-4"></path></svg>
+        Paste report
+      </button>
+      <button class="pm-primary pm-press" onClick="{{ mobSend }}" style="flex: 1.35 1 0; display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; padding: 0 12px; border: 0; border-radius: 12px; background: #1B1B1F; color: #FFFFFF; font-size: 15px; font-weight: 600; cursor: pointer; white-space: nowrap">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m4 17 6-6-6-6"></path><path d="M12 19h8"></path></svg>
+        {{ mobSendLabel }}
+      </button>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ mobSheet }}" hint-placeholder-val="{{ false }}">
+    <div class="pm-mob pm-overlay pm-overlay-bottom {{ closingClass }}" style="position: fixed; inset: 0; z-index: 70; flex-direction: column; justify-content: flex-end; box-sizing: border-box">
+      <button type="button" tabindex="-1" class="pm-scrim" aria-label="Close" onClick="{{ closeMenuSheet }}" style="position: fixed; inset: 0; margin: 0; padding: 0; border: 0; background: rgba(20, 20, 26, 0.36); cursor: default"></button>
+      <div class="pm-sheet pm-actions" role="dialog" aria-modal="true" aria-label="Project options" style="position: relative; display: flex; flex-direction: column; gap: 8px">
+        <div style="display: flex; flex-direction: column; border-radius: 14px; overflow: hidden; background: #FFFFFF">
+          <sc-if value="{{ notConfirmDel }}" hint-placeholder-val="{{ true }}">
+            <div style="padding: 14px 16px 12px; text-align: center; font-size: 13px; color: #6B6B76">{{ cp.name }}</div>
+            <button class="pm-textbtn pm-ring" onClick="{{ openEditProject }}" style="min-height: 56px; border: 0; border-top: 1px solid #EBEBEE; background: #FFFFFF; color: #1B1B1F; font-size: 17px; cursor: pointer">Edit project</button>
+            <button class="pm-textbtn pm-ring" onClick="{{ askDelete }}" style="min-height: 56px; border: 0; border-top: 1px solid #EBEBEE; background: #FFFFFF; color: #B42318; font-size: 17px; cursor: pointer">Delete project</button>
+          </sc-if>
+          <sc-if value="{{ confirmDel }}" hint-placeholder-val="{{ false }}">
+            <div class="pm-fade-in" style="padding: 16px; text-align: center; font-size: 14px; color: #55555F; text-wrap: pretty">Delete “{{ cp.name }}” and its {{ counts.all }} tickets? This can't be undone.</div>
+            <button class="pm-textbtn pm-ring" onClick="{{ deleteProject }}" style="min-height: 56px; border: 0; border-top: 1px solid #EBEBEE; background: #FFFFFF; color: #B42318; font-size: 17px; font-weight: 600; cursor: pointer">Delete project</button>
+          </sc-if>
+        </div>
+        <button class="pm-press" onClick="{{ closeMenuSheet }}" style="min-height: 56px; border: 0; border-radius: 14px; background: #FFFFFF; color: #1B1B1F; font-size: 17px; font-weight: 600; cursor: pointer">Cancel</button>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ dialogTicket }}" hint-placeholder-val="{{ false }}">
+    <div class="pm-overlay {{ closingClass }}" style="position: fixed; inset: 0; z-index: 60; display: flex; align-items: flex-start; justify-content: center; padding: 10vh 16px 24px; box-sizing: border-box; overflow-y: auto">
+      <button type="button" tabindex="-1" class="pm-scrim" aria-label="Close" onClick="{{ closeDialog }}" style="position: fixed; inset: 0; margin: 0; padding: 0; border: 0; background: rgba(20, 20, 26, 0.36); cursor: default"></button>
+      <form class="pm-sheet" role="dialog" aria-modal="true" aria-label="New ticket" onSubmit="{{ createTicket }}" onKeyDown="{{ sheetKey }}" style="position: relative; width: 100%; max-width: 540px; box-sizing: border-box; background: #FFFFFF; border-radius: 14px; box-shadow: 0 24px 64px rgba(20, 20, 26, 0.2); display: flex; flex-direction: column">
+        <div class="pm-mob" style="justify-content: center; padding-top: 6px"><span style="width: 36px; height: 5px; border-radius: 3px; background: #DEDEE3"></span></div>
+        <div style="display: flex; align-items: center; gap: 8px; min-height: 56px; padding: 6px 10px; box-sizing: border-box; border-bottom: 1px solid #EBEBEE">
+          <div style="flex: 1 1 0; display: flex; justify-content: flex-start">
+            <button type="button" class="pm-textbtn pm-btn" onClick="{{ closeDialog }}" style="min-height: 40px; padding: 0 10px; border: 0; border-radius: 8px; background: transparent; color: #1B1B1F; font-size: 14px; cursor: pointer">Cancel</button>
+          </div>
+          <div style="flex: 0 1 auto; min-width: 0; display: flex; flex-direction: column; align-items: center; text-align: center">
+            <span style="font-size: 15px; font-weight: 600; line-height: 1.25">New ticket</span>
+            <span style="display: inline-flex; align-items: center; gap: 6px; max-width: 100%; font-size: 12px; color: #6B6B76">
+              <span style="flex: none; width: 8px; height: 8px; border-radius: 2px; background: {{ cp.color }}"></span>
+              <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap">{{ cp.name }}</span>
+            </span>
+          </div>
+          <div style="flex: 1 1 0; display: flex; justify-content: flex-end">
+            <button type="submit" class="pm-primary pm-press pm-head-btn" disabled="{{ ntInvalid }}" style="min-height: 32px; padding: 0 14px; border: 0; border-radius: 8px; background: #1B1B1F; color: #FFFFFF; font-size: 14px; font-weight: 600; cursor: pointer">Create</button>
+          </div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 2px; padding: 18px 20px 6px">
+          <input id="pm-nt-title" aria-label="Ticket title" value="{{ ntv.title }}" onChange="{{ setNtTitle }}" placeholder="Ticket title" style="width: 100%; box-sizing: border-box; padding: 4px 0; border: 0; outline: none; background: transparent; color: #1B1B1F; font-size: 20px; font-weight: 600; letter-spacing: -0.01em">
+          <textarea class="pm-field" aria-label="Description" value="{{ ntv.desc }}" onChange="{{ setNtDesc }}" rows="3" placeholder="Add details, steps or acceptance criteria…" style="field-sizing: content; min-height: 72px; max-height: 40vh; width: 100%; box-sizing: border-box; padding: 4px 0; border: 0; outline: none; resize: none; background: transparent; color: #2A2A30; font-size: 15px; line-height: 1.55"></textarea>
+        </div>
+        <div style="padding: 8px 16px 18px">
+          <div style="border: 1px solid #EBEBEE; border-radius: 12px; overflow: hidden; background: #FFFFFF">
+            <button type="button" class="pm-prow" aria-haspopup="listbox" aria-expanded="{{ ntStatusExpanded }}" onClick="{{ openNtStatus }}" style="position: relative; display: flex; align-items: center; gap: 12px; width: 100%; min-height: 44px; padding: 0 12px 0 14px; border: 0; background: transparent; color: #1B1B1F; font-size: 14px; text-align: left; cursor: pointer">
+              <span style="flex: none; width: 20px; display: inline-flex; justify-content: center">
+                <sc-if value="{{ ntv.isTodo }}" hint-placeholder-val="{{ true }}"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.25" fill="none" stroke="#8E8E99" stroke-width="1.5"></circle></svg></sc-if>
+                <sc-if value="{{ ntv.isDoing }}" hint-placeholder-val="{{ false }}"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.25" fill="none" stroke="#C26A06" stroke-width="1.5"></circle><path d="M8 4.5a3.5 3.5 0 0 1 0 7z" fill="#C26A06"></path></svg></sc-if>
+                <sc-if value="{{ ntv.isDone }}" hint-placeholder-val="{{ false }}"><svg class="pm-done-glyph" width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="7" fill="#5B5BD6"></circle><path d="m5 8.25 2 2 4-4.25" fill="none" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg></sc-if>
+              </span>
+              <span style="flex: 1; min-width: 0">Status</span>
+              <span style="color: #6B6B76">{{ ntv.statusLabel }}</span>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#B4B4BC" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none"><path d="m6 9 6 6 6-6"></path></svg>
+            </button>
+            <button type="button" class="pm-prow" aria-haspopup="listbox" aria-expanded="{{ ntPrioExpanded }}" onClick="{{ openNtPriority }}" style="position: relative; display: flex; align-items: center; gap: 12px; width: 100%; min-height: 44px; padding: 0 12px 0 14px; border: 0; border-top: 1px solid #EBEBEE; background: transparent; color: #1B1B1F; font-size: 14px; text-align: left; cursor: pointer">
+              <span style="flex: none; width: 20px; display: inline-flex; justify-content: center">
+                <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><rect x="2" y="9" width="3" height="5" rx="1" fill="{{ ntv.b1 }}"></rect><rect x="6.5" y="6" width="3" height="8" rx="1" fill="{{ ntv.b2 }}"></rect><rect x="11" y="3" width="3" height="11" rx="1" fill="{{ ntv.b3 }}"></rect></svg>
+              </span>
+              <span style="flex: 1; min-width: 0">Priority</span>
+              <span style="color: #6B6B76">{{ ntv.prioLabel }}</span>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#B4B4BC" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none"><path d="m6 9 6 6 6-6"></path></svg>
+            </button>
+            <label class="pm-prow" style="position: relative; display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 0 14px; border-top: 1px solid #EBEBEE; font-size: 14px; cursor: text">
+              <span style="flex: none; width: 20px; display: inline-flex; justify-content: center">
+                <span style="width: 20px; height: 20px; box-sizing: border-box; border-radius: 50%; background: {{ ntv.avatarBg }}; border: {{ ntv.avatarBorder }}; color: #FFFFFF; display: inline-flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 600">{{ ntv.initials }}</span>
+              </span>
+              <span style="flex: none">Assignee</span>
+              <input list="pm-people" aria-label="Assignee" value="{{ ntv.assignee }}" onChange="{{ setNtAssignee }}" placeholder="Unassigned" style="flex: 1; min-width: 0; height: 40px; padding: 0; border: 0; background: transparent; color: #1B1B1F; font-size: 14px; text-align: right">
+            </label>
+            <label class="pm-prow" style="position: relative; display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 0 12px 0 14px; border-top: 1px solid #EBEBEE; font-size: 14px; cursor: pointer">
+              <span style="flex: none; width: 20px; display: inline-flex; justify-content: center; color: {{ ntv.dueIconFg }}">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"></rect><path d="M16 2v4"></path><path d="M8 2v4"></path><path d="M3 10h18"></path></svg>
+              </span>
+              <span style="flex: 1; min-width: 0">Due date</span>
+              <span style="color: {{ ntv.dueFg }}">{{ ntv.dueLong }}</span>
+              <sc-if value="{{ ntv.hasDue }}" hint-placeholder-val="{{ false }}">
+                <button type="button" class="pm-press" onClick="{{ clearNtDue }}" aria-label="Clear due date" style="position: relative; z-index: 2; flex: none; display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border: 0; border-radius: 12px; background: #EFEFF1; color: #6B6B76; cursor: pointer">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
+                </button>
+              </sc-if>
+              <sc-if value="{{ ntv.noDue }}" hint-placeholder-val="{{ true }}">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#B4B4BC" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none"><path d="m6 9 6 6 6-6"></path></svg>
+              </sc-if>
+              <input type="date" aria-label="Due date" value="{{ ntv.due }}" onChange="{{ setNtDue }}" onClick="{{ openPicker }}" style="position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; border: 0; font-size: 16px; cursor: pointer">
+            </label>
+          </div>
+          <sc-if value="{{ hasError }}" hint-placeholder-val="{{ false }}">
+            <p role="alert" class="pm-fade-in" style="margin: 10px 4px 0; font-size: 13px; color: #B42318">{{ formError }}</p>
+          </sc-if>
+        </div>
+      </form>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ dialogProject }}" hint-placeholder-val="{{ false }}">
+    <div class="pm-overlay {{ closingClass }}" style="position: fixed; inset: 0; z-index: 60; display: flex; align-items: flex-start; justify-content: center; padding: 10vh 16px 24px; box-sizing: border-box; overflow-y: auto">
+      <button type="button" tabindex="-1" class="pm-scrim" aria-label="Close" onClick="{{ closeDialog }}" style="position: fixed; inset: 0; margin: 0; padding: 0; border: 0; background: rgba(20, 20, 26, 0.36); cursor: default"></button>
+      <form class="pm-sheet" role="dialog" aria-modal="true" aria-label="{{ projectDialogTitle }}" onSubmit="{{ createProject }}" onKeyDown="{{ sheetKey }}" style="position: relative; width: 100%; max-width: 540px; box-sizing: border-box; background: #FFFFFF; border-radius: 14px; box-shadow: 0 24px 64px rgba(20, 20, 26, 0.2); display: flex; flex-direction: column">
+        <div class="pm-mob" style="justify-content: center; padding-top: 6px"><span style="width: 36px; height: 5px; border-radius: 3px; background: #DEDEE3"></span></div>
+        <div style="display: flex; align-items: center; gap: 8px; min-height: 56px; padding: 6px 10px; box-sizing: border-box; border-bottom: 1px solid #EBEBEE">
+          <div style="flex: 1 1 0; display: flex; justify-content: flex-start">
+            <button type="button" class="pm-textbtn pm-btn" onClick="{{ closeDialog }}" style="min-height: 40px; padding: 0 10px; border: 0; border-radius: 8px; background: transparent; color: #1B1B1F; font-size: 14px; cursor: pointer">Cancel</button>
+          </div>
+          <span style="flex: 0 1 auto; min-width: 0; font-size: 15px; font-weight: 600; text-align: center; white-space: nowrap">{{ projectDialogTitle }}</span>
+          <div style="flex: 1 1 0; display: flex; justify-content: flex-end">
+            <button type="submit" class="pm-primary pm-press pm-head-btn" disabled="{{ npInvalid }}" style="min-height: 32px; padding: 0 14px; border: 0; border-radius: 8px; background: #1B1B1F; color: #FFFFFF; font-size: 14px; font-weight: 600; cursor: pointer">{{ projectSubmitLabel }}</button>
+          </div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 2px; padding: 18px 20px 6px">
+          <input id="pm-np-name" aria-label="Project name" value="{{ np.name }}" onChange="{{ setNpName }}" placeholder="Project name" style="width: 100%; box-sizing: border-box; padding: 4px 0; border: 0; outline: none; background: transparent; color: #1B1B1F; font-size: 20px; font-weight: 600; letter-spacing: -0.01em">
+          <textarea class="pm-field" aria-label="Description" value="{{ np.desc }}" onChange="{{ setNpDesc }}" rows="2" placeholder="What is this project about?" style="field-sizing: content; min-height: 52px; max-height: 30vh; width: 100%; box-sizing: border-box; padding: 4px 0; border: 0; outline: none; resize: none; background: transparent; color: #2A2A30; font-size: 15px; line-height: 1.55"></textarea>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 8px; padding: 8px 16px 18px">
+          <div style="border: 1px solid #EBEBEE; border-radius: 12px; overflow: hidden; background: #FFFFFF">
+            <label class="pm-prow" style="position: relative; display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 0 14px; font-size: 14px; cursor: text">
+              <span style="flex: none; width: 20px; display: inline-flex; justify-content: center; color: #6B6B76">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"></path></svg>
+              </span>
+              <span style="flex: none">Repository</span>
+              <input aria-label="Repository or folder" value="{{ np.repo }}" onChange="{{ setNpRepo }}" placeholder="~/code/my-app" style="flex: 1; min-width: 0; height: 40px; padding: 0; border: 0; background: transparent; color: #1B1B1F; font-family: 'Geist Mono', ui-monospace, monospace; font-size: 13px; text-align: right">
+            </label>
+            <sc-if value="{{ isNewProject }}" hint-placeholder-val="{{ true }}">
+              <label class="pm-prow" style="position: relative; display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 0 14px; border-top: 1px solid #EBEBEE; font-size: 14px; cursor: text">
+                <span style="flex: none; width: 20px; display: inline-flex; justify-content: center; color: #6B6B76">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9h16"></path><path d="M4 15h16"></path><path d="M10 3 8 21"></path><path d="m16 3-2 18"></path></svg>
+                </span>
+                <span style="flex: none">Ticket prefix</span>
+                <input aria-label="Ticket prefix" value="{{ np.key }}" onChange="{{ setNpKey }}" placeholder="{{ keyHint }}" style="flex: 1; min-width: 0; height: 40px; padding: 0; border: 0; background: transparent; color: #1B1B1F; font-family: 'Geist Mono', ui-monospace, monospace; font-size: 13px; text-align: right; text-transform: uppercase">
+              </label>
+            </sc-if>
+          </div>
+          <p style="margin: 0 4px; font-size: 12px; line-height: 1.5; color: #6B6B76">{{ projectHint }}</p>
+          <sc-if value="{{ hasError }}" hint-placeholder-val="{{ false }}">
+            <p role="alert" class="pm-fade-in" style="margin: 2px 4px 0; font-size: 13px; color: #B42318">{{ formError }}</p>
+          </sc-if>
+        </div>
+      </form>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ dialogPrompt }}" hint-placeholder-val="{{ false }}">
+    <div class="pm-overlay {{ closingClass }}" style="position: fixed; inset: 0; z-index: 60; display: flex; align-items: flex-start; justify-content: center; padding: 8vh 16px 24px; box-sizing: border-box; overflow-y: auto">
+      <button type="button" tabindex="-1" class="pm-scrim" aria-label="Close" onClick="{{ closeDialog }}" style="position: fixed; inset: 0; margin: 0; padding: 0; border: 0; background: rgba(20, 20, 26, 0.36); cursor: default"></button>
+      <div class="pm-sheet" role="dialog" aria-modal="true" aria-label="Send to Claude Code" onKeyDown="{{ sheetKey }}" style="position: relative; width: 100%; max-width: 620px; box-sizing: border-box; background: #FFFFFF; border-radius: 14px; box-shadow: 0 24px 64px rgba(20, 20, 26, 0.2); display: flex; flex-direction: column">
+        <div class="pm-mob" style="justify-content: center; padding-top: 6px"><span style="width: 36px; height: 5px; border-radius: 3px; background: #DEDEE3"></span></div>
+        <div style="display: flex; align-items: center; gap: 8px; min-height: 56px; padding: 6px 10px; box-sizing: border-box; border-bottom: 1px solid #EBEBEE">
+          <div style="flex: 1 1 0; display: flex; justify-content: flex-start">
+            <button type="button" class="pm-textbtn pm-btn" onClick="{{ closeDialog }}" style="min-height: 40px; padding: 0 10px; border: 0; border-radius: 8px; background: transparent; color: #1B1B1F; font-size: 14px; cursor: pointer">Close</button>
+          </div>
+          <div style="flex: 0 1 auto; min-width: 0; display: flex; flex-direction: column; align-items: center; text-align: center">
+            <span style="font-size: 15px; font-weight: 600; line-height: 1.25">Send to Claude Code</span>
+            <span style="max-width: 100%; font-size: 12px; color: #6B6B76; overflow: hidden; text-overflow: ellipsis; white-space: nowrap">{{ promptSub }}</span>
+          </div>
+          <div style="flex: 1 1 0; display: flex; justify-content: flex-end">
+            <sc-if value="{{ canShare }}" hint-placeholder-val="{{ false }}">
+              <button type="button" class="pm-icon pm-press" onClick="{{ sharePrompt }}" aria-label="Share prompt" style="display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; border: 0; border-radius: 8px; background: transparent; color: #1B1B1F; cursor: pointer">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path><path d="m16 6-4-4-4 4"></path><path d="M12 2v13"></path></svg>
+              </button>
+            </sc-if>
+          </div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 12px; padding: 16px 20px">
+          <p style="margin: 0; font-size: 13px; line-height: 1.55; color: #6B6B76; text-wrap: pretty">{{ promptHelp }}</p>
+          <sc-if value="{{ hasPromptText }}" hint-placeholder-val="{{ true }}">
+            <textarea id="pm-prompt-text" class="pm-input" aria-label="Prompt for Claude Code" value="{{ promptText }}" onChange="{{ setPromptText }}" rows="12" style="width: 100%; box-sizing: border-box; padding: 12px 14px; border: 1px solid #EBEBEE; border-radius: 12px; background: #F7F7F8; color: #2A2A30; font-family: 'Geist Mono', ui-monospace, monospace; font-size: 12px; line-height: 1.6; resize: vertical"></textarea>
+          </sc-if>
+          <sc-if value="{{ showStartToggle }}" hint-placeholder-val="{{ false }}">
+            <div style="border: 1px solid #EBEBEE; border-radius: 12px; overflow: hidden">
+              <div class="pm-prow" style="display: flex; align-items: center; gap: 12px; min-height: 48px; padding: 0 12px 0 14px; font-size: 14px">
+                <span style="flex: 1; min-width: 0">Move {{ ct.key }} to In progress</span>
+                <button type="button" role="switch" class="pm-track" aria-checked="{{ startOnCopyStr }}" aria-label="Move to In progress when sent" onClick="{{ toggleStart }}" style="position: relative; flex: none; width: 44px; height: 26px; padding: 0; border: 0; border-radius: 13px; background: {{ switchBg }}; cursor: pointer">
+                  <span class="pm-knob" style="position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 10px; background: #FFFFFF; box-shadow: 0 1px 3px rgba(20, 20, 26, 0.25); transform: translateX({{ knobX }}px)"></span>
+                </button>
+              </div>
+            </div>
+          </sc-if>
+          <sc-if value="{{ copyFailed }}" hint-placeholder-val="{{ false }}">
+            <p role="alert" class="pm-fade-in" style="margin: 0; font-size: 13px; color: #B42318">Copying was blocked here. Select the text above and copy it yourself.</p>
+          </sc-if>
+        </div>
+        <sc-if value="{{ hasPromptText }}" hint-placeholder-val="{{ true }}">
+          <div style="display: flex; justify-content: flex-end; gap: 10px; padding: 12px 16px 16px; border-top: 1px solid #EBEBEE">
+            <button type="button" class="pm-primary pm-press pm-foot-btn" onClick="{{ copyPrompt }}" style="display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 36px; padding: 0 16px; border: 0; border-radius: 8px; background: #1B1B1F; color: #FFFFFF; font-size: 14px; font-weight: 600; cursor: pointer">
+              <sc-if value="{{ notCopied }}" hint-placeholder-val="{{ true }}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="8" width="14" height="14" rx="2"></rect><path d="M4 16a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2"></path></svg></sc-if>
+              <sc-if value="{{ copied }}" hint-placeholder-val="{{ false }}"><svg class="pm-fade-in" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg></sc-if>
+              {{ copyLabel }}
+            </button>
+          </div>
+        </sc-if>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ dialogReport }}" hint-placeholder-val="{{ false }}">
+    <div class="pm-overlay {{ closingClass }}" style="position: fixed; inset: 0; z-index: 60; display: flex; align-items: flex-start; justify-content: center; padding: 8vh 16px 24px; box-sizing: border-box; overflow-y: auto">
+      <button type="button" tabindex="-1" class="pm-scrim" aria-label="Close" onClick="{{ closeDialog }}" style="position: fixed; inset: 0; margin: 0; padding: 0; border: 0; background: rgba(20, 20, 26, 0.36); cursor: default"></button>
+      <form class="pm-sheet" role="dialog" aria-modal="true" aria-label="Paste Claude Code report" onSubmit="{{ applyReport }}" onKeyDown="{{ sheetKey }}" style="position: relative; width: 100%; max-width: 600px; box-sizing: border-box; background: #FFFFFF; border-radius: 14px; box-shadow: 0 24px 64px rgba(20, 20, 26, 0.2); display: flex; flex-direction: column">
+        <div class="pm-mob" style="justify-content: center; padding-top: 6px"><span style="width: 36px; height: 5px; border-radius: 3px; background: #DEDEE3"></span></div>
+        <div style="display: flex; align-items: center; gap: 8px; min-height: 56px; padding: 6px 10px; box-sizing: border-box; border-bottom: 1px solid #EBEBEE">
+          <div style="flex: 1 1 0; display: flex; justify-content: flex-start">
+            <button type="button" class="pm-textbtn pm-btn" onClick="{{ closeDialog }}" style="min-height: 40px; padding: 0 10px; border: 0; border-radius: 8px; background: transparent; color: #1B1B1F; font-size: 14px; cursor: pointer">Cancel</button>
+          </div>
+          <div style="flex: 0 1 auto; min-width: 0; display: flex; flex-direction: column; align-items: center; text-align: center">
+            <span style="font-size: 15px; font-weight: 600; line-height: 1.25">Paste report</span>
+            <span style="max-width: 100%; font-size: 12px; color: #6B6B76; overflow: hidden; text-overflow: ellipsis; white-space: nowrap">{{ reportSub }}</span>
+          </div>
+          <div style="flex: 1 1 0; display: flex; justify-content: flex-end">
+            <button type="submit" class="pm-primary pm-press pm-head-btn" disabled="{{ reportInvalid }}" style="min-height: 32px; padding: 0 14px; border: 0; border-radius: 8px; background: #1B1B1F; color: #FFFFFF; font-size: 14px; font-weight: 600; cursor: pointer">Apply</button>
+          </div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 12px; padding: 16px 20px 20px">
+          <p style="margin: 0; font-size: 13px; line-height: 1.55; color: #6B6B76; text-wrap: pretty">{{ reportHelp }}</p>
+          <button type="button" class="pm-btn pm-secondary pm-press" onClick="{{ pasteClipboard }}" style="align-self: flex-start; display: inline-flex; align-items: center; gap: 8px; min-height: 32px; padding: 0 12px; border: 1px solid #DEDEE3; border-radius: 8px; background: #FFFFFF; color: #1B1B1F; font-size: 13px; font-weight: 500; cursor: pointer">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="2" width="8" height="4" rx="1"></rect><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><path d="m9 14 2 2 4-4"></path></svg>
+            Paste from clipboard
+          </button>
+          <textarea class="pm-field pm-input" aria-label="Report" value="{{ reportText }}" onChange="{{ setReportText }}" rows="8" placeholder="TICKET: MOB-3&#10;STATUS: done&#10;SUMMARY: …&#10;FILES: …&#10;NEXT: none" style="width: 100%; box-sizing: border-box; padding: 12px 14px; border: 1px solid #DEDEE3; border-radius: 12px; background: #FFFFFF; color: #1B1B1F; font-family: 'Geist Mono', ui-monospace, monospace; font-size: 12.5px; line-height: 1.6; resize: vertical"></textarea>
+          <sc-if value="{{ hasReportPreview }}" hint-placeholder-val="{{ false }}">
+            <div class="pm-fade-in" style="display: flex; flex-direction: column; gap: 8px">
+              <span style="font-size: 12px; font-weight: 500; color: #6B6B76">Changes</span>
+              <div style="border: 1px solid #EBEBEE; border-radius: 12px; overflow: hidden">
+                <sc-for list="{{ reportPreview }}" as="r" hint-placeholder-count="2">
+                  <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; min-height: 44px; padding: 6px 14px; border-top: {{ r.sep }}; font-size: 13px">
+                    <span style="flex: none; font-family: 'Geist Mono', ui-monospace, monospace; font-size: 12px; color: #55555F">{{ r.keyLabel }}</span>
+                    <span style="flex: 1 1 160px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap">{{ r.title }}</span>
+                    <span style="flex: none; font-weight: 500; color: {{ r.outcomeFg }}">{{ r.outcome }}</span>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </sc-if>
+          <sc-if value="{{ hasError }}" hint-placeholder-val="{{ false }}">
+            <p role="alert" class="pm-fade-in" style="margin: 0; font-size: 13px; color: #B42318">{{ formError }}</p>
+          </sc-if>
+        </div>
+      </form>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ dragging }}" hint-placeholder-val="{{ false }}">
+    <div class="pm-ghost" aria-hidden="true" style="position: fixed; left: {{ ghostX }}px; top: {{ ghostY }}px; width: {{ ghostW }}px; z-index: 95; pointer-events: none; display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 8px 16px 8px 8px; box-sizing: border-box; background: #FFFFFF; border: 1px solid #EBEBEE; border-radius: 10px; color: #1B1B1F; font-size: 14px">
+      <span style="flex: none; width: 20px; display: inline-flex; justify-content: center; color: #6B6B76"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="12" r="1"></circle><circle cx="9" cy="5" r="1"></circle><circle cx="9" cy="19" r="1"></circle><circle cx="15" cy="12" r="1"></circle><circle cx="15" cy="5" r="1"></circle><circle cx="15" cy="19" r="1"></circle></svg></span>
+      <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" style="flex: none"><rect x="2" y="9" width="3" height="5" rx="1" fill="{{ gh.b1 }}"></rect><rect x="6.5" y="6" width="3" height="8" rx="1" fill="{{ gh.b2 }}"></rect><rect x="11" y="3" width="3" height="11" rx="1" fill="{{ gh.b3 }}"></rect></svg>
+      <span style="flex: none; font-family: 'Geist Mono', ui-monospace, monospace; font-size: 12px; color: #6B6B76">{{ gh.key }}</span>
+      <span style="flex: none; display: inline-flex">
+        <sc-if value="{{ gh.isTodo }}" hint-placeholder-val="{{ true }}"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.25" fill="none" stroke="#8E8E99" stroke-width="1.5"></circle></svg></sc-if>
+        <sc-if value="{{ gh.isDoing }}" hint-placeholder-val="{{ false }}"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.25" fill="none" stroke="#C26A06" stroke-width="1.5"></circle><path d="M8 4.5a3.5 3.5 0 0 1 0 7z" fill="#C26A06"></path></svg></sc-if>
+        <sc-if value="{{ gh.isDone }}" hint-placeholder-val="{{ false }}"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="7" fill="#5B5BD6"></circle><path d="m5 8.25 2 2 4-4.25" fill="none" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg></sc-if>
+      </span>
+      <span style="flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500">{{ gh.titleShown }}</span>
+      <span style="flex: none; width: 24px; height: 24px; box-sizing: border-box; border-radius: 50%; background: {{ gh.avatarBg }}; border: {{ gh.avatarBorder }}; color: #FFFFFF; display: inline-flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 600">{{ gh.initials }}</span>
+    </div>
+  </sc-if>
+  <div role="status" aria-live="polite" style="position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0">{{ liveMsg }}</div>
+
+  <sc-if value="{{ ddOpen }}" hint-placeholder-val="{{ false }}">
+    <button type="button" tabindex="-1" class="pm-catch" aria-label="Close menu" onClick="{{ closeDd }}" style="position: fixed; inset: 0; z-index: 84; margin: 0; padding: 0; border: 0; background: transparent; cursor: default"></button>
+    <div class="pm-dd {{ ddClass }}" role="listbox" aria-label="{{ ddLabel }}" onKeyDown="{{ ddKey }}" style="position: fixed; top: {{ ddTop }}px; left: {{ ddLeft }}px; z-index: 85; width: {{ ddWidth }}px; box-sizing: border-box; padding: 4px; background: #FFFFFF; border: 1px solid #EBEBEE; border-radius: 10px; box-shadow: 0 8px 24px rgba(20, 20, 26, 0.12)">
+      <sc-for list="{{ ddItems }}" as="it" hint-placeholder-count="3">
+        <button type="button" id="{{ it.domId }}" role="option" aria-selected="{{ it.selected }}" class="pm-ddi pm-ring" onClick="{{ it.pick }}" style="display: flex; align-items: center; gap: 10px; width: 100%; min-height: 36px; padding: 0 10px; border: 0; border-radius: 8px; background: {{ it.bg }}; color: #1B1B1F; font-size: 14px; text-align: left; cursor: pointer">
+          <span style="flex: none; width: 16px; display: inline-flex">
+            <sc-if value="{{ it.isTodo }}" hint-placeholder-val="{{ true }}"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.25" fill="none" stroke="#8E8E99" stroke-width="1.5"></circle></svg></sc-if>
+            <sc-if value="{{ it.isDoing }}" hint-placeholder-val="{{ false }}"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.25" fill="none" stroke="#C26A06" stroke-width="1.5"></circle><path d="M8 4.5a3.5 3.5 0 0 1 0 7z" fill="#C26A06"></path></svg></sc-if>
+            <sc-if value="{{ it.isDone }}" hint-placeholder-val="{{ false }}"><svg class="pm-done-glyph" width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="7" fill="#5B5BD6"></circle><path d="m5 8.25 2 2 4-4.25" fill="none" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg></sc-if>
+            <sc-if value="{{ it.isPrio }}" hint-placeholder-val="{{ false }}"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><rect x="2" y="9" width="3" height="5" rx="1" fill="{{ it.b1 }}"></rect><rect x="6.5" y="6" width="3" height="8" rx="1" fill="{{ it.b2 }}"></rect><rect x="11" y="3" width="3" height="11" rx="1" fill="{{ it.b3 }}"></rect></svg></sc-if>
+          </span>
+          <span style="flex: 1; min-width: 0">{{ it.label }}</span>
+          <sc-if value="{{ it.isSelected }}" hint-placeholder-val="{{ false }}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#5B5BD6" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none"><path d="M20 6 9 17l-5-5"></path></svg></sc-if>
+        </button>
+      </sc-for>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ hasToast }}" hint-placeholder-val="{{ false }}">
+    <div class="pm-toast {{ toastClass }}" role="status" style="position: fixed; left: 50%; bottom: 24px; z-index: 90; display: flex; align-items: center; gap: 8px; max-width: calc(100vw - 32px); box-sizing: border-box; padding: 10px 16px 10px 12px; border-radius: 12px; background: #1B1B1F; color: #FFFFFF; font-size: 14px; font-weight: 500; white-space: nowrap; box-shadow: 0 8px 24px rgba(20, 20, 26, 0.18); transform: translateX(-50%)">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none"><circle cx="12" cy="12" r="10"></circle><path d="m9 12 2 2 4-4"></path></svg>
+      <span style="overflow: hidden; text-overflow: ellipsis">{{ toastText }}</span>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":900}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.timers = {};
+    this.state = {
+      data: this.seed(),
+      view: 'projects',
+      navDir: 'fade',
+      projectId: null,
+      ticketId: null,
+      dialog: null,
+      closing: false,
+      np: { name: '', key: '', desc: '', repo: '' },
+      nt: this.blankTicket('todo'),
+      filter: 'all',
+      q: '',
+      comment: '',
+      menuOpen: false,
+      confirmDel: false,
+      formError: '',
+      assigneeAtFocus: null,
+      editingProjectId: null,
+      promptText: '',
+      promptKind: null,
+      promptTicketId: null,
+      promptSub: '',
+      startOnCopy: true,
+      copyState: '',
+      promptLogged: false,
+      reportText: '',
+      reportScope: 'project',
+      toast: null,
+      flashIds: [],
+      dd: null,
+      drag: null,
+      liveMsg: '',
+      expanded: {}
+    };
+  }
+
+  componentDidMount() {
+    this.onViewportScroll = () => {
+      if (this.state.dd && Date.now() - (this.ddOpenedAt || 0) > 300) this.setState({ dd: null });
+    };
+    try { window.addEventListener('scroll', this.onViewportScroll, true); } catch (e) {}
+    try {
+      const raw = window.localStorage.getItem('pm-tracker-v2');
+      if (raw) {
+        const d = JSON.parse(raw);
+        if (d && Array.isArray(d.projects) && Array.isArray(d.tickets)) { this.setState({ data: this.withRanks(d) }); return; }
+      }
+      const old = window.localStorage.getItem('pm-tracker-v1');
+      if (old) {
+        const d = JSON.parse(old);
+        if (d && Array.isArray(d.projects) && Array.isArray(d.tickets)) {
+          const PAL = this.palette();
+          const projects = d.projects.map((p, i) => Object.assign({}, p, { color: PAL[i % PAL.length] }));
+          const tickets = d.tickets.map(t => Object.assign({}, t, {
+            activity: [{ id: 'a-' + t.id, type: 'event', text: 'created the ticket', at: t.createdAt || Date.now() }]
+              .concat((t.comments || []).map(c => ({ id: c.id, type: 'comment', text: c.text, at: c.at })))
+          }));
+          this.save(this.withRanks({ projects, tickets }));
+        }
+      }
+    } catch (e) {}
+  }
+
+  componentDidUpdate(prevProps, prevState) {
+    const s = this.state;
+    if (prevState && s.dd && !prevState.dd) {
+      this.later('ddFocus', 20, () => {
+        try {
+          const el = document.getElementById('pm-dd-sel');
+          if (el) el.focus({ preventScroll: true });
+        } catch (e) {}
+      });
+    }
+    if (prevState && s.dialog !== prevState.dialog && (s.dialog === 'ticket' || s.dialog === 'project')) {
+      const id = s.dialog === 'ticket' ? 'pm-nt-title' : 'pm-np-name';
+      this.later('focus', 60, () => {
+        try {
+          if (window.matchMedia && window.matchMedia('(min-width: 768px)').matches) {
+            const el = document.getElementById(id);
+            if (el) el.focus();
+          }
+        } catch (e) {}
+      });
+    }
+  }
+
+  componentWillUnmount() {
+    Object.keys(this.timers).forEach(k => clearTimeout(this.timers[k]));
+    try { window.removeEventListener('scroll', this.onViewportScroll, true); } catch (e) {}
+    clearInterval(this.autoScrollTimer);
+  }
+
+  later(name, ms, fn) {
+    clearTimeout(this.timers[name]);
+    this.timers[name] = setTimeout(fn, ms);
+  }
+
+  // ---------- formatting ----------
+  fmtDay(ds) {
+    try {
+      const dt = new Date(ds + 'T00:00:00');
+      const o = { month: 'short', day: 'numeric' };
+      if (dt.getFullYear() !== new Date().getFullYear()) o.year = 'numeric';
+      return dt.toLocaleDateString('en-US', o);
+    } catch (e) { return ds; }
+  }
+
+  fmtDayLong(ds) {
+    try {
+      const dt = new Date(ds + 'T00:00:00');
+      const o = { weekday: 'short', month: 'short', day: 'numeric' };
+      if (dt.getFullYear() !== new Date().getFullYear()) o.year = 'numeric';
+      return dt.toLocaleDateString('en-US', o);
+    } catch (e) { return ds; }
+  }
+
+  // ---------- Claude Code prompts & reports ----------
+  replyFormat(key) {
+    return [
+      '```',
+      'TICKET: ' + key,
+      'STATUS: done | in progress | blocked',
+      'SUMMARY: what you changed, in 1-3 sentences',
+      'FILES: files you created or edited',
+      'NEXT: anything I still need to do, or "none"',
+      '```'
+    ].join('\n');
+  }
+
+  ticketBlock(t, p, heading) {
+    const SL = { todo: 'To do', doing: 'In progress', done: 'Done' };
+    const PL = { low: 'Low', medium: 'Medium', high: 'High' };
+    const key = p.key + '-' + t.num;
+    const meta = ['Priority: ' + (PL[t.priority] || 'Medium'), 'Status: ' + (SL[t.status] || 'To do')];
+    if (t.due) meta.push('Due: ' + this.fmtDay(t.due));
+    if (t.assignee) meta.push('Assignee: ' + t.assignee);
+    const out = [heading + ' ' + key + ': ' + (t.title || 'Untitled'), meta.join(' · '), '', (t.desc || '').trim() || '(No description.)'];
+    const notes = (t.activity || []).filter(a => a.type === 'comment');
+    if (notes.length) { out.push('', 'Notes:'); notes.forEach(c => out.push('- ' + c.text.replace(/\s*\n+\s*/g, ' '))); }
+    const reports = (t.activity || []).filter(a => a.type === 'report');
+    if (reports.length) out.push('', 'Your last report on this ticket:', reports[reports.length - 1].text);
+    return out.join('\n');
+  }
+
+  buildTicketPrompt(t, p) {
+    const key = p.key + '-' + t.num;
+    const lines = ['Please work on ticket ' + key + ' from my "' + p.name + '" project.'];
+    if (p.repo) lines.push('Repository / folder: ' + p.repo);
+    lines.push('', this.ticketBlock(t, p, '##'), '', '## When you finish', 'End your reply with this block, filled in, so I can paste it back into my tracker:', '', this.replyFormat(key));
+    return lines.join('\n');
+  }
+
+  buildProjectPrompt(p, tickets) {
+    const lines = ['Here are the open tickets for my "' + p.name + '" project. Work through them in order, highest priority first, and check with me before large or risky changes.'];
+    if (p.repo) lines.push('Repository / folder: ' + p.repo);
+    tickets.forEach(t => lines.push('', '---', '', this.ticketBlock(t, p, '###')));
+    lines.push('', '---', '', '## When you finish', 'For each ticket you worked on, end your reply with one block like this, filled in, so I can paste it back into my tracker:', '', this.replyFormat(p.key + '-<number>'));
+    return lines.join('\n');
+  }
+
+  parseReport(text, fallbackTicketId) {
+    const d = this.state.data;
+    const norm = (raw) => {
+      const v = (raw || '').toLowerCase();
+      if (/\b(done|complete|completed|fixed|finished|resolved)\b/.test(v)) return 'done';
+      if (/not started/.test(v)) return 'todo';
+      if (/(progress|partial|blocked|wip|started|ongoing)/.test(v)) return 'doing';
+      if (/to ?do/.test(v)) return 'todo';
+      return null;
+    };
+    const lines = (text || '').replace(/\r/g, '').split('\n').filter(l => !/^\s*```/.test(l));
+    const blocks = [];
+    let cur = null;
+    lines.forEach(line => {
+      const m = line.match(/^[\s>*_`#-]*TICKET[\s*_`]*[:：]\s*[*_`]*\s*([A-Za-z0-9]+-\d+)/i);
+      if (m) { cur = { key: m[1].toUpperCase(), lines: [line.replace(/[*_`]/g, '').trim()] }; blocks.push(cur); return; }
+      if (!cur) { cur = { key: null, lines: [] }; blocks.push(cur); }
+      cur.lines.push(line);
+    });
+    let use = blocks.filter(b => b.key);
+    if (!use.length) use = blocks.filter(b => b.lines.join('').trim());
+    return use.map(b => {
+      const body = b.lines.join('\n').trim();
+      const sm = body.match(/STATUS[\s*_`]*[:：]\s*(.+)/i);
+      let t = null;
+      if (b.key) {
+        const dash = b.key.lastIndexOf('-');
+        const pk = b.key.slice(0, dash);
+        const num = parseInt(b.key.slice(dash + 1), 10);
+        const p = d.projects.find(x => (x.key || '').toUpperCase() === pk);
+        if (p) t = d.tickets.find(x => x.projectId === p.id && x.num === num) || null;
+      } else if (fallbackTicketId) {
+        t = d.tickets.find(x => x.id === fallbackTicketId) || null;
+      }
+      return { key: b.key, ticket: t, status: sm ? norm(sm[1]) : null, text: body };
+    });
+  }
+
+  markSent() {
+    const s = this.state;
+    if (s.promptKind !== 'ticket' || s.promptLogged) return;
+    const t = s.data.tickets.find(x => x.id === s.promptTicketId);
+    if (!t) return;
+    if (s.startOnCopy && t.status === 'todo') this.updateTicket(t.id, { status: 'doing' }, 'sent the ticket to Claude Code and moved it to In progress');
+    else this.updateTicket(t.id, {}, 'sent the ticket to Claude Code');
+    this.setState({ promptLogged: true });
+  }
+
+  copyPromptText() {
+    const text = this.state.promptText;
+    const done = (ok) => {
+      this.setState({ copyState: ok ? 'copied' : 'failed' });
+      if (ok) { this.toast('Prompt copied'); this.markSent(); this.later('copied', 2000, () => this.setState({ copyState: '' })); }
+    };
+    const fallback = () => {
+      let ok = false;
+      try {
+        const el = document.getElementById('pm-prompt-text');
+        if (el) { el.focus(); el.select(); ok = document.execCommand('copy'); }
+      } catch (e) {}
+      done(ok);
+    };
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(text).then(() => done(true), fallback); return; }
+    } catch (e) {}
+    fallback();
+  }
+
+  // ---------- data ----------
+  blankTicket(status) {
+    return { title: '', desc: '', status: status || 'todo', priority: 'medium', assignee: '', due: '' };
+  }
+
+  palette() { return ['#5B5BD6', '#D97706', '#12A594', '#E5484D', '#8E4EC6', '#0091FF']; }
+
+  uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+
+  dayOffset(n) {
+    const d = new Date();
+    d.setDate(d.getDate() + n);
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  }
+
+  seed() {
+    const now = Date.now();
+    const H = 3600000;
+    const P = (id, name, key, desc, color, nextNum) => ({ id, name, key, desc, color, nextNum, createdAt: now - 20 * 24 * H });
+    const T = (projectId, num, title, desc, status, priority, assignee, due, ageH) => {
+      const createdAt = now - ageH * H;
+      const activity = [{ id: projectId + num + 'c', type: 'event', text: 'created the ticket', at: createdAt }];
+      if (status !== 'todo') activity.push({ id: projectId + num + 's', type: 'event', text: 'changed status to ' + (status === 'done' ? 'Done' : 'In progress'), at: createdAt + Math.round(ageH * 0.5) * H });
+      return { id: projectId + '-' + num, projectId, num, title, desc, status, priority, assignee, due: due === null ? '' : this.dayOffset(due), createdAt, updatedAt: activity[activity.length - 1].at, activity };
+    };
+    const projects = [
+      P('p1', 'Mobile app', 'MOB', 'iOS and Android app for the next release.', '#5B5BD6', 6),
+      P('p2', 'Website', 'WEB', 'Marketing site and pricing page.', '#D97706', 4)
+    ];
+    const tickets = [
+      T('p1', 1, 'Set up push notifications', 'Configure FCM and APNs. Ask for permission after onboarding, not on first launch.', 'done', 'high', 'Dara', -3, 140),
+      T('p1', 2, 'Show an error when the password is wrong', 'Inline error under the password field. Keep the email filled in.', 'doing', 'high', 'Sophea', 2, 50),
+      T('p1', 3, 'Crash when rotating the profile screen', 'Steps: open Profile, rotate the device twice.', 'todo', 'high', 'Dara', 1, 20),
+      T('p1', 4, 'Dark mode colors for Settings', '', 'todo', 'medium', '', 7, 30),
+      T('p1', 5, 'Update App Store screenshots', '', 'todo', 'low', '', null, 8),
+      T('p2', 1, 'Pricing page layout', 'Three plans side by side on desktop, stacked on phones.', 'doing', 'medium', 'Vanna', 4, 70),
+      T('p2', 2, 'Compress hero images', '', 'done', 'low', 'Vanna', null, 96),
+      T('p2', 3, 'Spam protection on the contact form', '', 'todo', 'medium', '', 10, 12)
+    ];
+    tickets[1].activity.push({ id: 'cm1', type: 'comment', text: 'Design is approved. Starting on this today.', at: now - 20 * H });
+    return this.withRanks({ projects, tickets });
+  }
+
+  save(data, extra) {
+    this.setState(Object.assign({ data }, extra || {}));
+    try { window.localStorage.setItem('pm-tracker-v2', JSON.stringify(data)); } catch (e) {}
+  }
+
+  deriveKey(name) {
+    const words = (name || '').toUpperCase().replace(/[^A-Z0-9 ]/g, ' ').trim().split(/\s+/).filter(Boolean);
+    if (!words.length) return 'PRJ';
+    if (words.length === 1) return words[0].slice(0, 3);
+    return words.map(w => w[0]).join('').slice(0, 4);
+  }
+
+  updateTicket(id, patch, eventText) {
+    const d = this.state.data;
+    const now = Date.now();
+    const cur = d.tickets.find(t => t.id === id);
+    const p = Object.assign({}, patch);
+    if (cur && p.status && p.status !== cur.status && p.rank === undefined) p.rank = this.topRank(d.tickets, cur.projectId, p.status, id);
+    const tickets = d.tickets.map(t => {
+      if (t.id !== id) return t;
+      const next = Object.assign({}, t, p, { updatedAt: now });
+      if (eventText) next.activity = (t.activity || []).concat([{ id: this.uid(), type: 'event', text: eventText, at: now }]);
+      return next;
+    });
+    this.save(Object.assign({}, d, { tickets }));
+  }
+
+  // ---------- manual order ----------
+  byRank(a, b) {
+    const ra = typeof a.rank === 'number' ? a.rank : 0;
+    const rb = typeof b.rank === 'number' ? b.rank : 0;
+    return (ra - rb) || (b.num - a.num);
+  }
+
+  withRanks(d) {
+    if (!d || !Array.isArray(d.tickets) || !d.tickets.some(t => typeof t.rank !== 'number')) return d;
+    const PR = { high: 0, medium: 1, low: 2 };
+    const tickets = d.tickets.map(t => Object.assign({}, t));
+    const groups = {};
+    tickets.forEach(t => { const k = t.projectId + '|' + t.status; (groups[k] = groups[k] || []).push(t); });
+    Object.keys(groups).forEach(k => {
+      const g = groups[k];
+      if (!g.some(t => typeof t.rank !== 'number')) return;
+      g.sort((a, b) => {
+        const ha = typeof a.rank === 'number', hb = typeof b.rank === 'number';
+        if (ha && hb) return a.rank - b.rank;
+        if (ha !== hb) return ha ? -1 : 1;
+        const pa = PR[a.priority] !== undefined ? PR[a.priority] : 1, pb = PR[b.priority] !== undefined ? PR[b.priority] : 1;
+        return (pa - pb) || (b.num - a.num);
+      });
+      g.forEach((t, i) => { t.rank = i * 1000; });
+    });
+    return Object.assign({}, d, { tickets });
+  }
+
+  topRank(tickets, projectId, status, excludeId) {
+    const ranks = tickets.filter(t => t.projectId === projectId && t.status === status && t.id !== excludeId && typeof t.rank === 'number').map(t => t.rank);
+    return ranks.length ? Math.min.apply(null, ranks) - 1000 : 0;
+  }
+
+  visibleStatuses() {
+    const f = this.state.filter;
+    return f === 'active' ? ['doing', 'todo'] : f === 'done' ? ['done'] : ['doing', 'todo', 'done'];
+  }
+
+  // Moves a ticket into `target` = { status, beforeId, afterId } (beforeId: the ticket it lands above).
+  dropTicket(tid, target) {
+    const d = this.state.data;
+    const t = d.tickets.find(x => x.id === tid);
+    if (!t || !target) return;
+    const SL = { todo: 'To do', doing: 'In progress', done: 'Done' };
+    const proj = d.projects.find(x => x.id === t.projectId) || { key: '' };
+    const key = proj.key + '-' + t.num;
+    const same = target.status === t.status;
+    const group = d.tickets.filter(x => x.projectId === t.projectId && x.status === target.status && x.id !== tid).sort((a, b) => this.byRank(a, b));
+    let idx = group.length;
+    if (target.beforeId) idx = group.findIndex(x => x.id === target.beforeId);
+    else if (target.afterId) { const ai = group.findIndex(x => x.id === target.afterId); idx = ai >= 0 ? ai + 1 : group.length; }
+    if (idx < 0) idx = group.length;
+    const order = group.slice(0, idx).concat([t], group.slice(idx));
+    if (same) {
+      const own = d.tickets.filter(x => x.projectId === t.projectId && x.status === t.status).sort((a, b) => this.byRank(a, b));
+      if (own.map(x => x.id).join() === order.map(x => x.id).join()) return;
+    }
+    const rankOf = {};
+    order.forEach((x, i) => { rankOf[x.id] = i * 1000; });
+    const now = Date.now();
+    const tickets = d.tickets.map(x => {
+      if (x.id === tid) {
+        const next = Object.assign({}, x, { rank: rankOf[x.id], status: target.status, updatedAt: now });
+        if (!same) next.activity = (x.activity || []).concat([{ id: this.uid(), type: 'event', text: 'changed status to ' + SL[target.status], at: now }]);
+        return next;
+      }
+      return rankOf[x.id] !== undefined ? Object.assign({}, x, { rank: rankOf[x.id] }) : x;
+    });
+    this.save(Object.assign({}, d, { tickets }), { liveMsg: same ? key + ' moved' : key + ' moved to ' + SL[target.status] });
+    this.flash([tid]);
+    if (!same) this.toast(key + ' moved to ' + SL[target.status]);
+  }
+
+  // ---------- drag and drop ----------
+  dragDown(e, t, fromHandle) {
+    if (!e || (e.button !== undefined && e.button !== 0)) return;
+    const touchy = !!e.pointerType && e.pointerType !== 'mouse';
+    if (!fromHandle && touchy) return;            // on touch, only the handle drags; the row scrolls and taps
+    if (fromHandle && e.preventDefault) e.preventDefault();
+    const el = e.currentTarget;
+    try { if (el && el.setPointerCapture) el.setPointerCapture(e.pointerId); } catch (err) {}
+    let rowEl = null;
+    try { rowEl = el && el.closest ? el.closest('[data-drop-row]') : null; } catch (err) {}
+    this.dragArm = { tid: t.id, from: t.status, x0: e.clientX, y0: e.clientY, rowEl, started: false, touch: touchy };
+    if (fromHandle && touchy) this.startDrag(e.clientX, e.clientY);
+  }
+
+  startDrag(x, y) {
+    const a = this.dragArm;
+    if (!a || a.started) return;
+    a.started = true;
+    let r = { left: x - 24, top: y - 22, width: 360 };
+    try { if (a.rowEl) r = a.rowEl.getBoundingClientRect(); } catch (e) {}
+    a.offX = x - r.left;
+    a.offY = y - r.top;
+    try { if (window.getSelection) window.getSelection().removeAllRanges(); } catch (e) {}
+    try { if (a.touch && navigator.vibrate) navigator.vibrate(8); } catch (e) {}
+    this.dragPointer = { x, y };
+    this.setState({ drag: { tid: a.tid, from: a.from, x: Math.round(r.left), y: Math.round(r.top), w: Math.round(r.width), target: null }, dd: null, menuOpen: false });
+    this.startAutoScroll();
+  }
+
+  dragMoveEv(e) {
+    const a = this.dragArm;
+    if (!a || !e) return;
+    const x = e.clientX, y = e.clientY;
+    if (!a.started) {
+      if (Math.abs(x - a.x0) + Math.abs(y - a.y0) < 6) return;
+      this.startDrag(x, y);
+    }
+    if (e.preventDefault) e.preventDefault();
+    this.dragPointer = { x, y };
+    this.scheduleDragFrame();
+  }
+
+  dragUpEv(e) {
+    const a = this.dragArm;
+    try { if (e && e.currentTarget && e.currentTarget.releasePointerCapture) e.currentTarget.releasePointerCapture(e.pointerId); } catch (err) {}
+    this.dragArm = null;
+    if (!a || !a.started) return;               // a plain click or tap: onClick handles it
+    this.suppressClickAt = Date.now();
+    const p = this.dragPointer || { x: e.clientX, y: e.clientY };
+    const target = this.computeDropTarget(p.x, p.y, a.tid);
+    this.endDragUi();
+    if (target) this.dropTicket(a.tid, target);
+  }
+
+  dragCancelEv() {
+    const a = this.dragArm;
+    this.dragArm = null;
+    if (a && a.started) this.endDragUi();
+  }
+
+  endDragUi() {
+    clearInterval(this.autoScrollTimer);
+    this.autoScrollTimer = null;
+    this.dragPointer = null;
+    if (this.state.drag) this.setState({ drag: null });
+  }
+
+  scheduleDragFrame() {
+    if (this.dragFrameOn) return;
+    this.dragFrameOn = true;
+    const run = () => { this.dragFrameOn = false; this.updateDrag(); };
+    try { if (window.requestAnimationFrame) { window.requestAnimationFrame(run); return; } } catch (e) {}
+    setTimeout(run, 16);
+  }
+
+  updateDrag() {
+    const a = this.dragArm, p = this.dragPointer;
+    if (!a || !a.started || !p || !this.state.drag) return;
+    const target = this.computeDropTarget(p.x, p.y, a.tid);
+    this.setState({ drag: Object.assign({}, this.state.drag, { x: Math.round(p.x - a.offX), y: Math.round(p.y - a.offY), target }) });
+  }
+
+  computeDropTarget(x, y, tid) {
+    let sections = [];
+    try { sections = Array.prototype.slice.call(document.querySelectorAll('[data-drop-group]')); } catch (e) { return null; }
+    if (!sections.length) return null;
+    let sec = null;
+    for (let i = 0; i < sections.length; i++) {
+      const r = sections[i].getBoundingClientRect();
+      if (y >= r.top && y <= r.bottom) { sec = sections[i]; break; }
+    }
+    if (!sec) {                                   // above, below or between groups: use the nearest one
+      let best = Infinity;
+      sections.forEach(el => { const r = el.getBoundingClientRect(); const dist = y < r.top ? r.top - y : y - r.bottom; if (dist < best) { best = dist; sec = el; } });
+    }
+    const status = sec.getAttribute('data-drop-group');
+    const rows = Array.prototype.slice.call(sec.querySelectorAll('[data-drop-row]')).filter(el => el.getAttribute('data-drop-row') !== tid);
+    let index = rows.length;
+    for (let i = 0; i < rows.length; i++) {
+      const r = rows[i].getBoundingClientRect();
+      if (y < r.top + r.height / 2) { index = i; break; }
+    }
+    return {
+      status,
+      beforeId: rows[index] ? rows[index].getAttribute('data-drop-row') : null,
+      afterId: index > 0 ? rows[index - 1].getAttribute('data-drop-row') : null
+    };
+  }
+
+  startAutoScroll() {
+    clearInterval(this.autoScrollTimer);
+    this.autoScrollTimer = setInterval(() => {
+      const p = this.dragPointer;
+      if (!p || !this.state.drag) return;
+      let vh = 800;
+      try { vh = window.innerHeight || vh; } catch (e) {}
+      const top = 72, bottom = vh - (this.isPhone() ? 96 : 40);
+      let dy = 0;
+      if (p.y < top) dy = -Math.ceil((top - p.y) / 5);
+      else if (p.y > bottom) dy = Math.ceil((p.y - bottom) / 5);
+      if (dy) { try { window.scrollBy(0, dy); } catch (e) {} this.scheduleDragFrame(); }
+    }, 16);
+  }
+
+  // Arrow keys on a handle move the ticket one slot; past the edge of a group it changes status.
+  handleKey(e, tid) {
+    const k = e && e.key;
+    if (k !== 'ArrowUp' && k !== 'ArrowDown') return;
+    if (e.preventDefault) e.preventDefault();
+    const d = this.state.data;
+    const t = d.tickets.find(x => x.id === tid);
+    if (!t) return;
+    const ORDER = this.visibleStatuses();
+    const grp = (st) => d.tickets.filter(x => x.projectId === t.projectId && x.status === st && x.id !== tid).sort((a, b) => this.byRank(a, b));
+    const own = d.tickets.filter(x => x.projectId === t.projectId && x.status === t.status).sort((a, b) => this.byRank(a, b));
+    const i = own.findIndex(x => x.id === tid);
+    const si = ORDER.indexOf(t.status);
+    let target = null;
+    if (k === 'ArrowUp') {
+      if (i > 0) target = { status: t.status, beforeId: own[i - 1].id, afterId: i > 1 ? own[i - 2].id : null };
+      else if (si > 0) { const st = ORDER[si - 1]; const g = grp(st); target = { status: st, beforeId: null, afterId: g.length ? g[g.length - 1].id : null }; }
+    } else {
+      if (i >= 0 && i < own.length - 1) target = { status: t.status, beforeId: i + 2 < own.length ? own[i + 2].id : null, afterId: own[i + 1].id };
+      else if (si >= 0 && si < ORDER.length - 1) { const st = ORDER[si + 1]; const g = grp(st); target = { status: st, beforeId: g.length ? g[0].id : null, afterId: null }; }
+    }
+    if (!target) return;
+    this.dropTicket(tid, target);
+    this.setState({ expanded: Object.assign({}, this.state.expanded, { [t.projectId + '|' + target.status]: true }) });
+    this.later('handleFocus', 40, () => {
+      try { const el = document.querySelector('[data-handle="' + tid + '"]'); if (el) el.focus(); } catch (err) {}
+    });
+  }
+
+  // ---------- navigation, sheets, feedback ----------
+  top() { try { window.scrollTo(0, 0); } catch (e) {} }
+
+  isPhone() { try { return !!(window.matchMedia && window.matchMedia('(max-width: 767px)').matches); } catch (e) { return false; } }
+
+  go(view, extra, dir) {
+    let navDir = dir || 'push';
+    if (view === this.state.view && navDir === 'push') navDir = this.state.navDir === 'push' ? 'pushb' : 'push';
+    this.setState(Object.assign({ view, navDir, menuOpen: false, confirmDel: false, dd: null }, extra || {}));
+    this.top();
+  }
+
+  openProject(id, dir) { this.go('project', { projectId: id, filter: 'all', q: '' }, dir || 'push'); }
+
+  openTicket(id) { this.go('ticket', { ticketId: id, comment: '' }, 'push'); }
+
+  openDialog(name, extra) {
+    clearTimeout(this.timers.close);
+    this.setState(Object.assign({ dialog: name, closing: false, formError: '', menuOpen: false, confirmDel: false, dd: null }, extra || {}));
+  }
+
+  openNewTicket(status) { this.openDialog('ticket', { nt: this.blankTicket(status) }); }
+
+  closeSheet(extra) {
+    const s = this.state;
+    if (!s.dialog && !s.menuOpen) return;
+    this.setState({ closing: true, dd: null });
+    this.later('close', 220, () => this.setState(Object.assign({ dialog: null, menuOpen: false, confirmDel: false, closing: false, formError: '' }, extra || {})));
+  }
+
+  // ---------- dropdown (status / priority) ----------
+  openDd(kind, target, el) {
+    let r = null;
+    try { r = el && el.getBoundingClientRect ? el.getBoundingClientRect() : null; } catch (e) {}
+    this.ddTrigger = el || null;
+    const phone = this.isPhone();
+    const itemH = phone ? 44 : 36;
+    const h = 3 * itemH + 10;
+    const width = phone ? 240 : 220;
+    let vw = 1024, vh = 768;
+    try { vw = window.innerWidth || vw; vh = window.innerHeight || vh; } catch (e) {}
+    let left = r ? r.right - width - 6 : 16;
+    left = Math.max(8, Math.min(left, vw - width - 8));
+    let top = r ? r.bottom + 4 : 96;
+    let up = false;
+    if (r && top + h > vh - 8 && r.top - 4 - h >= 8) { top = r.top - 4 - h; up = true; }
+    this.ddOpenedAt = Date.now();
+    this.setState({ dd: { kind, target, top: Math.round(top), left: Math.round(left), width, up } });
+  }
+
+  closeDd(refocus) {
+    this.setState({ dd: null });
+    if (refocus && this.ddTrigger) { try { this.ddTrigger.focus({ preventScroll: true }); } catch (e) {} }
+  }
+
+  pickDd(v) {
+    const dd = this.state.dd;
+    if (!dd) return;
+    const SL = { todo: 'To do', doing: 'In progress', done: 'Done' };
+    const PL = { low: 'Low', medium: 'Medium', high: 'High' };
+    if (dd.target === 'new') {
+      this.setState({ nt: Object.assign({}, this.state.nt, { [dd.kind]: v }), formError: '' });
+    } else {
+      const t = this.state.data.tickets.find(x => x.id === this.state.ticketId);
+      if (t && t[dd.kind] !== v) this.updateTicket(t.id, { [dd.kind]: v }, dd.kind === 'status' ? 'changed status to ' + SL[v] : 'set priority to ' + PL[v]);
+    }
+    this.closeDd(true);
+  }
+
+  toast(text) {
+    this.setState({ toast: { id: Date.now(), text, leaving: false } });
+    this.later('toast', 2200, () => {
+      const t = this.state.toast;
+      if (!t) return;
+      this.setState({ toast: Object.assign({}, t, { leaving: true }) });
+      this.later('toastEnd', 180, () => this.setState({ toast: null }));
+    });
+  }
+
+  flash(ids) {
+    this.setState({ flashIds: ids });
+    this.later('flash', 1600, () => this.setState({ flashIds: [] }));
+  }
+
+  renderVals() {
+    const s = this.state;
+    const d = s.data;
+    const SL = { todo: 'To do', doing: 'In progress', done: 'Done' };
+    const PL = { low: 'Low', medium: 'Medium', high: 'High' };
+    const PR = { high: 0, medium: 1, low: 2 };
+    const ON = '#55555F', OFF = '#D9D9DE';
+    const BARS = { low: [ON, OFF, OFF], medium: [ON, ON, OFF], high: [ON, ON, ON] };
+    const AV = ['#5B5BD6', '#B4540A', '#18794E', '#C2298A', '#0B68CB', '#6E56CF'];
+    const DASHED = '1.5px dashed #C4C4CC';
+    const today = this.dayOffset(0);
+    const fmtFull = (ts) => { try { return new Date(ts).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }); } catch (e) { return ''; } };
+    const rel = (ts) => {
+      const sec = Math.max(0, Math.round((Date.now() - ts) / 1000));
+      if (sec < 60) return 'just now';
+      const m = Math.round(sec / 60); if (m < 60) return m + 'm ago';
+      const h = Math.round(m / 60); if (h < 24) return h + 'h ago';
+      const dd = Math.round(h / 24); if (dd < 7) return dd + 'd ago';
+      return fmtFull(ts);
+    };
+    const initials = (n) => (n || '').trim().split(/\s+/).filter(Boolean).map(w => w[0]).join('').slice(0, 2).toUpperCase();
+    const hue = (n) => { let h = 0; for (let i = 0; i < n.length; i++) h = (h + n.charCodeAt(i)) % AV.length; return AV[h]; };
+    const avatar = (name) => {
+      const who = (name || '').trim();
+      return { initials: who ? initials(who) : '', avatarBg: who ? hue(who) : 'transparent', avatarBorder: who ? '0' : DASHED };
+    };
+    const dueInfo = (due, status) => {
+      const overdue = !!due && due < today && status !== 'done';
+      return {
+        hasDue: !!due, noDue: !due, overdue,
+        dueLabel: due ? this.fmtDay(due) : '',
+        dueLong: due ? this.fmtDayLong(due) : 'None',
+        dueFg: overdue ? '#B42318' : (due ? '#55555F' : '#9A9AA3'),
+        dueIconFg: overdue ? '#B42318' : '#6B6B76'
+      };
+    };
+
+    const decorate = (t, p) => {
+      const bars = BARS[t.priority] || BARS.medium;
+      return Object.assign({}, t, avatar(t.assignee), dueInfo(t.due, t.status), {
+        key: p.key + '-' + t.num,
+        titleShown: t.title || 'Untitled',
+        titleColor: t.status === 'done' ? '#6B6B76' : '#1B1B1F',
+        isTodo: t.status === 'todo', isDoing: t.status === 'doing', isDone: t.status === 'done',
+        statusLabel: SL[t.status] || 'To do',
+        prioLabel: PL[t.priority] || 'Medium',
+        b1: bars[0], b2: bars[1], b3: bars[2],
+        assigneeName: (t.assignee || '').trim() || 'Unassigned',
+        createdLabel: fmtFull(t.createdAt),
+        updatedLabel: rel(t.updatedAt || t.createdAt),
+        isNew: s.flashIds.indexOf(t.id) >= 0,
+        open: () => { if (Date.now() - (this.suppressClickAt || 0) < 400) return; this.openTicket(t.id); }
+      });
+    };
+
+    const ct0 = d.tickets.find(t => t.id === s.ticketId) || null;
+    const ctProj0 = ct0 ? d.projects.find(p => p.id === ct0.projectId) : null;
+    const cp0 = d.projects.find(p => p.id === s.projectId) || null;
+    let view = s.view;
+    if (view === 'ticket' && !(ct0 && ctProj0)) view = cp0 ? 'project' : 'projects';
+    if (view === 'project' && !cp0) view = 'projects';
+    const activeProjectId = view === 'project' ? s.projectId : (view === 'ticket' && ct0 ? ct0.projectId : null);
+
+    const projects = d.projects.map((p, i) => {
+      const ts = d.tickets.filter(t => t.projectId === p.id);
+      const done = ts.filter(t => t.status === 'done').length;
+      const last = ts.reduce((m, t) => Math.max(m, t.updatedAt || t.createdAt || 0), p.createdAt || 0);
+      return Object.assign({}, p, {
+        openCount: ts.length - done,
+        pct: ts.length ? Math.round(done / ts.length * 100) : 0,
+        descShown: p.desc || 'No description',
+        updatedLabel: rel(last),
+        navBg: p.id === activeProjectId ? '#EFEFF1' : 'transparent',
+        sep: i === 0 ? '0' : '1px solid #EBEBEE',
+        delay: Math.min(i, 12) * 24,
+        open: () => this.openProject(p.id, 'push')
+      });
+    });
+
+    // ---- project view
+    const FILTERS = ['all', 'active', 'done'];
+    const filterIdx = Math.max(0, FILTERS.indexOf(s.filter));
+    const pTickets = cp0 ? d.tickets.filter(t => t.projectId === cp0.id) : [];
+    const counts = { all: pTickets.length, active: pTickets.filter(t => t.status !== 'done').length, done: pTickets.filter(t => t.status === 'done').length };
+    const q = (s.q || '').trim().toLowerCase();
+    let base = pTickets.filter(t => !q || (t.title || '').toLowerCase().indexOf(q) >= 0 || (cp0.key + '-' + t.num).toLowerCase().indexOf(q) >= 0);
+    if (s.filter === 'active') base = base.filter(t => t.status !== 'done');
+    if (s.filter === 'done') base = base.filter(t => t.status === 'done');
+    let ri = 0;
+    const LIMIT = 5;
+    const drag = s.drag;
+    const tgt = drag && drag.target;
+    const VIS = this.visibleStatuses();
+    const groups = ['doing', 'todo', 'done'].map(st => {
+      const raw = base.filter(t => t.status === st).sort((a, b) => this.byRank(a, b));
+      if (!raw.length && !(drag && VIS.indexOf(st) >= 0)) return null;
+      const gkey = cp0.id + '|' + st;
+      const long = raw.length > LIMIT + 1;
+      const expanded = !long || !!q || !!(s.expanded && s.expanded[gkey]);
+      const shown = expanded ? raw : raw.slice(0, LIMIT);
+      const delay = Math.min(ri++, 12) * 40;
+      const items = shown.map((t, i) => Object.assign(decorate(t, cp0), {
+        sep: i === 0 ? '0' : '1px solid #EBEBEE',
+        anim: long && i >= LIMIT ? 'pm-rise-0' : 'none',
+        delay: long && i >= LIMIT ? Math.min(i - LIMIT, 12) * 18 : 0,
+        handleLabel: 'Move ' + cp0.key + '-' + t.num + '. Drag, or use the arrow keys.',
+        handleDown: (e) => this.dragDown(e, t, true),
+        rowDown: (e) => this.dragDown(e, t, false),
+        handleKey: (e) => this.handleKey(e, t.id),
+        handleOpacity: 0,
+        opacity: drag && drag.tid === t.id ? 0.35 : 1,
+        dropBefore: !!(tgt && tgt.status === st && tgt.beforeId === t.id),
+        dropAfter: !!(tgt && tgt.status === st && !tgt.beforeId && tgt.afterId === t.id)
+      }));
+      const here = !!(tgt && tgt.status === st);
+      return {
+        status: st, label: SL[st], count: raw.length, items, delay,
+        headBg: here && drag.from !== st ? '#EEEEFC' : '#F7F7F8',
+        hasMore: long && !q,
+        moreLabel: expanded ? 'Show less' : 'Show ' + (raw.length - LIMIT) + ' more',
+        moreExpanded: expanded ? 'true' : 'false',
+        chevRot: expanded ? 180 : 0,
+        toggleMore: () => this.setState({ expanded: Object.assign({}, this.state.expanded, { [gkey]: !(this.state.expanded || {})[gkey] }) }),
+        showZone: !!drag && raw.length === 0,
+        zoneBorder: here ? '#5B5BD6' : '#C4C4CC', zoneBg: here ? '#F7F7FE' : 'transparent', zoneFg: here ? '#4A4AC4' : '#6B6B76',
+        isTodo: st === 'todo', isDoing: st === 'doing', isDone: st === 'done',
+        addLabel: 'New ticket in ' + SL[st],
+        add: () => this.openNewTicket(st)
+      };
+    }).filter(Boolean);
+
+    const tabs = [['all', 'All', counts.all], ['active', 'Active', counts.active], ['done', 'Done', counts.done]].map(([id, label, n]) => {
+      const on = s.filter === id;
+      return { id, label, n, pressed: on ? 'true' : 'false', fg: on ? '#1B1B1F' : '#6B6B76', pick: () => this.setState({ filter: id }) };
+    });
+    const openTickets = cp0 ? pTickets.filter(t => t.status !== 'done').sort((a, b) => ((a.status === 'doing' ? 0 : 1) - (b.status === 'doing' ? 0 : 1)) || (PR[a.priority] - PR[b.priority]) || (a.num - b.num)) : [];
+
+    // ---- ticket view
+    const blankCt = Object.assign({ key: '', title: '', titleShown: '', desc: '', status: 'todo', statusLabel: 'To do', priority: 'medium', assignee: '', due: '', isTodo: true, isDoing: false, isDone: false, b1: OFF, b2: OFF, b3: OFF, prioLabel: 'Medium', createdLabel: '', updatedLabel: '' }, avatar(''), dueInfo('', 'todo'));
+    const ct = ct0 && ctProj0 ? decorate(ct0, ctProj0) : blankCt;
+    const ghT = drag ? d.tickets.find(t => t.id === drag.tid) : null;
+    const gh = ghT && cp0 ? decorate(ghT, cp0) : blankCt;
+    const actRaw = ct0 ? (ct0.activity || []).slice().sort((a, b) => a.at - b.at) : [];
+    const activity = actRaw.map((a, i) => Object.assign({}, a, { isEvent: a.type === 'event', isComment: a.type === 'comment', isReport: a.type === 'report', when: rel(a.at), delay: Math.min(i, 10) * 16 }));
+    const reportsOnCt = actRaw.filter(a => a.type === 'report');
+    ct.hasReport = reportsOnCt.length > 0;
+    ct.lastReportWhen = reportsOnCt.length ? rel(reportsOnCt[reportsOnCt.length - 1].at) : '';
+    const STATUSES = ['todo', 'doing', 'done'];
+
+    // ---- new ticket sheet
+    const ntBars = BARS[s.nt.priority] || BARS.medium;
+    const ntv = Object.assign({}, s.nt, avatar(s.nt.assignee), dueInfo(s.nt.due, s.nt.status), {
+      statusLabel: SL[s.nt.status] || 'To do', prioLabel: PL[s.nt.priority] || 'Medium',
+      isTodo: s.nt.status === 'todo', isDoing: s.nt.status === 'doing', isDone: s.nt.status === 'done',
+      b1: ntBars[0], b2: ntBars[1], b3: ntBars[2]
+    });
+    let ddItems = [];
+    if (s.dd) {
+      const src = s.dd.target === 'new' ? s.nt : ct0;
+      const cur = src ? src[s.dd.kind] : null;
+      const isStatus = s.dd.kind === 'status';
+      ddItems = (isStatus ? STATUSES : ['high', 'medium', 'low']).map(v => {
+        const sel = v === cur;
+        const bars = BARS[v] || BARS.medium;
+        return {
+          label: isStatus ? SL[v] : PL[v],
+          isTodo: isStatus && v === 'todo', isDoing: isStatus && v === 'doing', isDone: isStatus && v === 'done', isPrio: !isStatus,
+          b1: bars[0], b2: bars[1], b3: bars[2],
+          isSelected: sel, selected: sel ? 'true' : 'false', bg: sel ? '#F7F7F8' : 'transparent', domId: sel ? 'pm-dd-sel' : '',
+          pick: () => this.pickDd(v)
+        };
+      });
+    }
+    const ddFor = (kind, target) => (e) => this.openDd(kind, target, e && e.currentTarget);
+    const ddIs = (kind, target) => (s.dd && s.dd.kind === kind && s.dd.target === target ? 'true' : 'false');
+    const peopleSet = {};
+    d.tickets.forEach(t => { const n = (t.assignee || '').trim(); if (n) peopleSet[n] = true; });
+    const people = Object.keys(peopleSet).sort().map(name => ({ name }));
+
+    // ---- report sheet
+    let reportPreview = [];
+    let reportValid = 0;
+    if (s.dialog === 'report' && (s.reportText || '').trim()) {
+      reportPreview = this.parseReport(s.reportText, s.reportScope === 'ticket' ? s.ticketId : null).map((i, k) => {
+        const sep = k === 0 ? '0' : '1px solid #EBEBEE';
+        if (!i.ticket) return { sep, keyLabel: i.key || '—', title: i.key ? 'No ticket with this ID' : 'No TICKET line found', outcome: 'Skipped', outcomeFg: '#B42318' };
+        reportValid++;
+        const p = d.projects.find(x => x.id === i.ticket.projectId) || { key: '?' };
+        return {
+          sep, keyLabel: p.key + '-' + i.ticket.num, title: i.ticket.title || 'Untitled',
+          outcome: i.status && i.status !== i.ticket.status ? SL[i.ticket.status] + ' → ' + SL[i.status] : 'Add report',
+          outcomeFg: '#1B1B1F'
+        };
+      });
+    }
+
+    const canShare = (() => { try { return typeof navigator !== 'undefined' && typeof navigator.share === 'function'; } catch (e) { return false; } })();
+    const bind = (obj, field) => (e) => this.setState({ [obj]: Object.assign({}, this.state[obj], { [field]: e.target.value }), formError: '' });
+    const keyHint = this.deriveKey(s.np.name);
+    const keyShown = (s.np.key || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 5) || keyHint;
+    const tid = s.ticketId;
+    const showMobBar = view === 'project' || view === 'ticket';
+    const ticketPromptState = () => ({ dialog: 'prompt', promptKind: 'ticket', promptTicketId: ct0.id, promptSub: ct.key + ' · ' + ctProj0.name, promptText: this.buildTicketPrompt(ct0, ctProj0), copyState: '', promptLogged: false, startOnCopy: true });
+    const projectPromptState = () => {
+      const n = openTickets.length;
+      return { dialog: 'prompt', promptKind: 'project', promptTicketId: null, promptSub: n + ' open ticket' + (n === 1 ? '' : 's') + ' · ' + cp0.name, promptText: n ? this.buildProjectPrompt(cp0, openTickets) : '', copyState: '', promptLogged: false };
+    };
+
+    return {
+      // layout & motion
+      viewClass: 'pm-view-' + s.navDir,
+      titleAnim: 'pm-title-' + (view === 'projects' ? 0 : view === 'project' ? 1 : 2),
+      riseName: 'pm-rise-' + filterIdx,
+      closingClass: s.closing ? 'pm-closing' : '',
+      isProjects: view === 'projects', isProject: view === 'project', isTicket: view === 'ticket',
+      homeNavBg: view === 'projects' ? '#EFEFF1' : 'transparent',
+      mobTitle: view === 'ticket' ? ct.key : (view === 'project' && cp0 ? cp0.name : ''),
+      mobTitleFont: view === 'ticket' ? "'Geist Mono', ui-monospace, monospace" : 'inherit',
+      goHome: () => this.go('projects', {}, 'pop'),
+      backToProject: () => { if (ct0) this.openProject(ct0.projectId, 'pop'); },
+
+      // projects
+      projects, projectCount: projects.length, noProjects: projects.length === 0, hasProjects: projects.length > 0,
+
+      // project
+      cp: cp0 ? Object.assign({}, cp0, { hasRepo: !!cp0.repo, repo: cp0.repo || '' }) : { name: '', key: '', color: '#B4B4BC', hasRepo: false, repo: '' },
+      counts, tabs, tabIdx: filterIdx, groups,
+      noTicketsAtAll: !!cp0 && pTickets.length === 0,
+      noMatches: pTickets.length > 0 && groups.length === 0,
+      q: s.q, setQ: (e) => this.setState({ q: e.target.value }),
+      openNewTicketTodo: () => this.openNewTicket('todo'),
+      menuOpen: s.menuOpen, menuExpanded: s.menuOpen ? 'true' : 'false',
+      mobSheet: s.menuOpen && view === 'project',
+      toggleMenu: () => {
+        if (!this.state.menuOpen) { clearTimeout(this.timers.close); this.setState({ menuOpen: true, closing: false, confirmDel: false }); }
+        else if (this.isPhone()) this.closeSheet();
+        else this.setState({ menuOpen: false, confirmDel: false });
+      },
+      closeMenu: () => this.setState({ menuOpen: false, confirmDel: false }),
+      closeMenuSheet: () => this.closeSheet(),
+      confirmDel: s.confirmDel, notConfirmDel: !s.confirmDel,
+      askDelete: () => this.setState({ confirmDel: true }),
+      cancelDelete: () => {
+        if (!this.state.menuOpen) this.setState({ confirmDel: false });
+        else if (this.isPhone()) this.closeSheet();
+        else this.setState({ menuOpen: false, confirmDel: false });
+      },
+      deleteProject: () => {
+        const dd = this.state.data; const id = this.state.projectId;
+        const name = (dd.projects.find(p => p.id === id) || {}).name || 'Project';
+        this.save({ projects: dd.projects.filter(p => p.id !== id), tickets: dd.tickets.filter(t => t.projectId !== id) });
+        this.setState({ menuOpen: false, confirmDel: false, closing: false });
+        this.go('projects', { projectId: null }, 'pop');
+        this.toast('“' + name + '” deleted');
+      },
+
+      // ticket
+      ct, ctProject: ctProj0 || { name: '', color: '#B4B4BC' }, activity,
+      openCtStatus: ddFor('status', 'ticket'), openCtPriority: ddFor('priority', 'ticket'),
+      ctStatusExpanded: ddIs('status', 'ticket'), ctPrioExpanded: ddIs('priority', 'ticket'),
+      people,
+      setTitle: (e) => this.updateTicket(tid, { title: e.target.value }),
+      setDesc: (e) => this.updateTicket(tid, { desc: e.target.value }),
+      setAssignee: (e) => this.updateTicket(tid, { assignee: e.target.value }),
+      focusAssignee: () => this.setState({ assigneeAtFocus: ct0 ? (ct0.assignee || '') : '' }),
+      blurAssignee: () => {
+        const t = this.state.data.tickets.find(x => x.id === tid);
+        if (!t) return;
+        const now = (t.assignee || '').trim();
+        const before = (this.state.assigneeAtFocus || '').trim();
+        if (now !== before) this.updateTicket(tid, { assignee: now }, now ? 'assigned the ticket to ' + now : 'removed the assignee');
+      },
+      setDue: (e) => { const v = e.target.value; if (ct0 && v !== (ct0.due || '')) this.updateTicket(tid, { due: v }, v ? 'set the due date to ' + this.fmtDay(v) : 'removed the due date'); },
+      clearDue: (e) => { if (e && e.preventDefault) e.preventDefault(); if (ct0 && ct0.due) this.updateTicket(tid, { due: '' }, 'removed the due date'); },
+      openPicker: (e) => { try { if (e && e.target && typeof e.target.showPicker === 'function') e.target.showPicker(); } catch (err) {} },
+      comment: s.comment, commentInvalid: !(s.comment || '').trim(),
+      setComment: (e) => this.setState({ comment: e.target.value }),
+      addComment: (e) => {
+        if (e && e.preventDefault) e.preventDefault();
+        const text = (this.state.comment || '').trim();
+        if (!text) return;
+        const dd = this.state.data;
+        const now = Date.now();
+        const tickets = dd.tickets.map(t => t.id === tid ? Object.assign({}, t, { updatedAt: now, activity: (t.activity || []).concat([{ id: this.uid(), type: 'comment', text, at: now }]) }) : t);
+        this.save(Object.assign({}, dd, { tickets }), { comment: '' });
+      },
+      deleteTicket: () => {
+        const dd = this.state.data;
+        const pid = ct0 ? ct0.projectId : this.state.projectId;
+        const key = ct.key;
+        this.save(Object.assign({}, dd, { tickets: dd.tickets.filter(t => t.id !== tid) }));
+        this.go('project', { projectId: pid, ticketId: null }, 'pop');
+        this.toast(key + ' deleted');
+      },
+
+      // sheets (shared)
+      dialogTicket: s.dialog === 'ticket', dialogProject: s.dialog === 'project', dialogPrompt: s.dialog === 'prompt', dialogReport: s.dialog === 'report',
+      closeDialog: () => this.closeSheet(),
+      sheetKey: (e) => { if (e && e.key === 'Escape') { if (e.stopPropagation) e.stopPropagation(); if (this.state.dd) this.closeDd(true); else this.closeSheet(); } },
+      hasError: !!s.formError, formError: s.formError,
+
+      // new ticket
+      ntv, ntInvalid: !(s.nt.title || '').trim(),
+      openNtStatus: ddFor('status', 'new'), openNtPriority: ddFor('priority', 'new'),
+      ntStatusExpanded: ddIs('status', 'new'), ntPrioExpanded: ddIs('priority', 'new'),
+      setNtTitle: bind('nt', 'title'), setNtDesc: bind('nt', 'desc'), setNtAssignee: bind('nt', 'assignee'), setNtDue: bind('nt', 'due'),
+      clearNtDue: (e) => { if (e && e.preventDefault) e.preventDefault(); this.setState({ nt: Object.assign({}, this.state.nt, { due: '' }) }); },
+      createTicket: (e) => {
+        if (e && e.preventDefault) e.preventDefault();
+        const st = this.state;
+        if (st.closing) return;
+        const nt = st.nt;
+        const title = (nt.title || '').trim();
+        if (!title) { this.setState({ formError: 'Add a title to create the ticket.' }); return; }
+        const dd = st.data;
+        const proj = dd.projects.find(p => p.id === st.projectId);
+        if (!proj) return;
+        const num = proj.nextNum || 1;
+        const now = Date.now();
+        const t = { id: this.uid(), projectId: proj.id, num, rank: this.topRank(dd.tickets, proj.id, nt.status), title, desc: (nt.desc || '').trim(), status: nt.status, priority: nt.priority, assignee: (nt.assignee || '').trim(), due: nt.due, createdAt: now, updatedAt: now, activity: [{ id: this.uid(), type: 'event', text: 'created the ticket', at: now }] };
+        const projectsNext = dd.projects.map(p => p.id === proj.id ? Object.assign({}, p, { nextNum: num + 1 }) : p);
+        const hidden = (st.filter === 'done' && t.status !== 'done') || (st.filter === 'active' && t.status === 'done');
+        this.save({ projects: projectsNext, tickets: dd.tickets.concat([t]) }, hidden || st.q ? { filter: 'all', q: '' } : {});
+        this.closeSheet({ nt: this.blankTicket('todo') });
+        this.flash([t.id]);
+        this.toast(proj.key + '-' + num + ' created');
+      },
+
+      // project sheet
+      np: s.np, keyHint,
+      setNpName: bind('np', 'name'), setNpKey: bind('np', 'key'), setNpDesc: bind('np', 'desc'), setNpRepo: bind('np', 'repo'),
+      isNewProject: !s.editingProjectId,
+      npInvalid: !(s.np.name || '').trim(),
+      projectDialogTitle: s.editingProjectId ? 'Edit project' : 'New project',
+      projectSubmitLabel: s.editingProjectId ? 'Save' : 'Create',
+      projectHint: s.editingProjectId
+        ? 'The repository is added to every Claude Code prompt for this project.'
+        : ((s.np.name || '').trim() || (s.np.key || '').trim()
+          ? 'Tickets will be numbered ' + keyShown + '-1, ' + keyShown + '-2 and so on. The repository is added to every Claude Code prompt.'
+          : 'Tickets are numbered with a short prefix, like MOB-1. The repository is added to every Claude Code prompt.'),
+      openNewProject: () => this.openDialog('project', { editingProjectId: null, np: { name: '', key: '', desc: '', repo: '' } }),
+      openEditProject: () => {
+        if (!cp0) return;
+        this.openDialog('project', { editingProjectId: cp0.id, np: { name: cp0.name, key: cp0.key, desc: cp0.desc || '', repo: cp0.repo || '' } });
+      },
+      createProject: (e) => {
+        if (e && e.preventDefault) e.preventDefault();
+        const st = this.state;
+        if (st.closing) return;
+        const np = st.np;
+        const name = (np.name || '').trim();
+        if (!name) { this.setState({ formError: 'Add a name to create the project.' }); return; }
+        const dd = st.data;
+        const editId = st.editingProjectId;
+        if (editId) {
+          const projects = dd.projects.map(p => p.id === editId ? Object.assign({}, p, { name, desc: (np.desc || '').trim(), repo: (np.repo || '').trim() }) : p);
+          this.save(Object.assign({}, dd, { projects }));
+          this.closeSheet({ editingProjectId: null });
+          this.toast('Project updated');
+          return;
+        }
+        let key = ((np.key || '').trim() || this.deriveKey(name)).toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 5) || 'PRJ';
+        const baseKey = key; let i = 2;
+        while (dd.projects.some(p => p.key === key)) { key = baseKey.slice(0, 4) + i; i++; }
+        const PAL = this.palette();
+        const p = { id: this.uid(), name, key, desc: (np.desc || '').trim(), repo: (np.repo || '').trim(), color: PAL[dd.projects.length % PAL.length], nextNum: 1, createdAt: Date.now() };
+        this.save(Object.assign({}, dd, { projects: dd.projects.concat([p]) }));
+        this.closeSheet();
+        this.openProject(p.id, 'push');
+        this.toast('“' + name + '” created');
+      },
+
+      // prompt sheet
+      promptSub: s.promptSub, promptText: s.promptText, hasPromptText: !!s.promptText,
+      promptHelp: s.promptText
+        ? 'Paste this into Claude Code. It asks Claude to end with a short report you can bring back here with Paste report. You can edit the text first.'
+        : 'There are no open tickets in this project.',
+      setPromptText: (e) => this.setState({ promptText: e.target.value }),
+      showStartToggle: s.promptKind === 'ticket' && !!ct0 && ct0.status === 'todo' && !s.promptLogged,
+      startOnCopyStr: s.startOnCopy ? 'true' : 'false',
+      switchBg: s.startOnCopy ? '#5B5BD6' : '#DEDEE3',
+      knobX: s.startOnCopy ? 18 : 0,
+      toggleStart: () => this.setState({ startOnCopy: !this.state.startOnCopy }),
+      copied: s.copyState === 'copied', notCopied: s.copyState !== 'copied',
+      copyLabel: s.copyState === 'copied' ? 'Copied' : 'Copy prompt',
+      copyFailed: s.copyState === 'failed',
+      copyPrompt: () => this.copyPromptText(),
+      canShare,
+      sharePrompt: () => {
+        try {
+          navigator.share({ title: 'Prompt for Claude Code', text: this.state.promptText })
+            .then(() => { this.setState({ copyState: 'shared' }); this.markSent(); }, () => {});
+        } catch (e) {}
+      },
+      openTicketPrompt: () => { if (ct0 && ctProj0) this.openDialog('prompt', ticketPromptState()); },
+      openProjectPrompt: () => { if (cp0) this.openDialog('prompt', projectPromptState()); },
+
+      // report sheet
+      reportText: s.reportText,
+      reportSub: s.reportScope === 'ticket' ? (ct.key || '') : (cp0 ? cp0.name : ''),
+      reportHelp: s.reportScope === 'ticket'
+        ? 'Paste Claude Code’s reply. Its TICKET / STATUS block updates the ticket, and the report is saved to the activity. With no TICKET line, it’s added to ' + (ct.key || 'this ticket') + '.'
+        : 'Paste Claude Code’s reply. Each block that starts with “TICKET: KEY-123” updates that ticket’s status and is saved to its activity.',
+      setReportText: (e) => this.setState({ reportText: e.target.value, formError: '' }),
+      reportPreview, hasReportPreview: reportPreview.length > 0, reportInvalid: reportValid === 0,
+      pasteClipboard: () => {
+        const fail = (msg) => this.setState({ formError: msg });
+        try {
+          if (navigator.clipboard && navigator.clipboard.readText) {
+            navigator.clipboard.readText().then(
+              (txt) => { if (txt && txt.trim()) this.setState({ reportText: txt, formError: '' }); else fail('The clipboard is empty.'); },
+              () => fail('Clipboard access was blocked. Paste into the box instead.')
+            );
+            return;
+          }
+        } catch (err) {}
+        fail('Clipboard access isn’t available here. Paste into the box instead.');
+      },
+      openReportProject: () => this.openDialog('report', { reportScope: 'project', reportText: '' }),
+      openReportTicket: () => this.openDialog('report', { reportScope: 'ticket', reportText: '' }),
+      applyReport: (e) => {
+        if (e && e.preventDefault) e.preventDefault();
+        const st = this.state;
+        if (st.closing) return;
+        const items = this.parseReport(st.reportText, st.reportScope === 'ticket' ? st.ticketId : null).filter(i => i.ticket);
+        if (!items.length) { this.setState({ formError: 'No matching ticket found. The report needs a line like “TICKET: ' + ((cp0 || ctProj0 || { key: 'MOB' }).key) + '-1”.' }); return; }
+        const dd = st.data;
+        const now = Date.now();
+        const touched = {};
+        const tickets = dd.tickets.map(t => {
+          const mine = items.filter(i => i.ticket.id === t.id);
+          if (!mine.length) return t;
+          touched[t.id] = true;
+          const next = Object.assign({}, t, { updatedAt: now, activity: (t.activity || []).slice() });
+          mine.forEach((i, k) => {
+            next.activity.push({ id: this.uid(), type: 'report', text: i.text, at: now + k * 2 });
+            if (i.status && i.status !== next.status) {
+              next.activity.push({ id: this.uid(), type: 'event', text: 'changed status to ' + SL[i.status] + ' from a Claude Code report', at: now + k * 2 + 1 });
+              next.rank = this.topRank(dd.tickets, t.projectId, i.status, t.id);
+              next.status = i.status;
+            }
+          });
+          return next;
+        });
+        const ids = Object.keys(touched);
+        this.save(Object.assign({}, dd, { tickets }));
+        this.closeSheet({ reportText: '' });
+        this.flash(ids);
+        this.toast('Report applied to ' + ids.length + ' ticket' + (ids.length === 1 ? '' : 's'));
+      },
+
+      // mobile bars
+      showMobBar,
+      mobSendLabel: view === 'ticket' ? 'Send to Claude' : 'Send open tickets',
+      mobSend: () => {
+        if (this.state.view === 'ticket') { if (ct0 && ctProj0) this.openDialog('prompt', ticketPromptState()); }
+        else if (cp0) this.openDialog('prompt', projectPromptState());
+      },
+      mobReport: () => this.openDialog('report', { reportScope: view === 'ticket' ? 'ticket' : 'project', reportText: '' }),
+
+      // drag and drop
+      dragging: !!drag, gh,
+      ghostX: drag ? drag.x : 0, ghostY: drag ? drag.y : 0, ghostW: drag ? drag.w : 0,
+      dragMove: (e) => this.dragMoveEv(e),
+      dragUp: (e) => this.dragUpEv(e),
+      dragCancel: () => this.dragCancelEv(),
+      rootClass: drag ? 'pm-dragging' : '',
+      liveMsg: s.liveMsg || '',
+
+      // dropdown
+      ddOpen: !!s.dd, ddItems,
+      ddTop: s.dd ? s.dd.top : 0, ddLeft: s.dd ? s.dd.left : 0, ddWidth: s.dd ? s.dd.width : 220,
+      ddClass: s.dd && s.dd.up ? 'pm-dd-up' : '',
+      ddLabel: s.dd ? (s.dd.kind === 'status' ? 'Status' : 'Priority') : '',
+      closeDd: () => this.closeDd(true),
+      ddKey: (e) => {
+        const k = e && e.key;
+        if (k === 'Escape' || k === 'Tab') {
+          if (k === 'Escape' && e.preventDefault) e.preventDefault();
+          if (e.stopPropagation) e.stopPropagation();
+          this.closeDd(true);
+          return;
+        }
+        if (k === 'ArrowDown' || k === 'ArrowUp' || k === 'Home' || k === 'End') {
+          if (e.preventDefault) e.preventDefault();
+          try {
+            const opts = Array.prototype.slice.call(e.currentTarget.querySelectorAll('[role="option"]'));
+            const i = opts.indexOf(document.activeElement);
+            let n = k === 'ArrowDown' ? i + 1 : k === 'ArrowUp' ? i - 1 : k === 'Home' ? 0 : opts.length - 1;
+            if (n < 0) n = opts.length - 1;
+            if (n >= opts.length) n = 0;
+            if (opts[n]) opts[n].focus({ preventScroll: true });
+          } catch (err) {}
+        }
+      },
+
+      // toast
+      hasToast: !!s.toast,
+      toastText: s.toast ? s.toast.text : '',
+      toastClass: (s.toast && s.toast.leaving ? 'pm-leaving' : '') + (showMobBar ? ' pm-toast-raise' : '')
+    };
+  }
+}
+</script>
+</body>
+</html>

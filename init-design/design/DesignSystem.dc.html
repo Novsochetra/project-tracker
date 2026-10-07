@@ -1,0 +1,433 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Design System: Foundations</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&amp;family=Geist+Mono:wght@400;500&amp;display=swap">
+<style>
+body{margin:0;background:#FFFFFF}
+a{color:#4A4AC4}a:hover{color:#3A3AA8}
+button,input,select,textarea{font-family:inherit}
+::placeholder{color:#9A9AA3;opacity:1}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,a:focus-visible{outline:2px solid #5B5BD6;outline-offset:2px}
+.pm-row:hover{background-color:#F7F7F8 !important}
+.pm-icon:hover{background-color:#EFEFF1 !important;color:#1B1B1F !important}
+.pm-textbtn:hover{background-color:#F7F7F8 !important}
+.pm-secondary:hover{background-color:#F7F7F8 !important}
+.pm-primary:hover{background-color:#33333A !important}
+.pm-primary:disabled{opacity:.35;cursor:default}
+.pm-primary:disabled:hover{background-color:#1B1B1F !important}
+.pm-seg:hover{color:#1B1B1F !important}
+.ds-chip:hover{background-color:#F7F7F8 !important}
+.pm-ring{position:relative}
+.pm-ring::after{content:"";position:absolute;inset:3px;border-radius:8px;box-shadow:0 0 0 2px #5B5BD6;opacity:0;pointer-events:none;z-index:3}
+.pm-ring:focus-visible{outline:none}
+.pm-ring:focus-visible::after{opacity:1}
+.pm-seg:focus-visible{outline-offset:-2px}
+.pm-search:focus-within{border-color:#5B5BD6 !important;box-shadow:0 0 0 1px #5B5BD6}
+.pm-search input:focus-visible{outline:none}
+.pm-press{transition:transform 100ms ease-out,background-color 160ms ease-out}
+.pm-press:active{transform:scale(.97)}
+.pm-press:disabled:active{transform:none}
+.pm-thumb{transition:transform 260ms cubic-bezier(.34,1.36,.64,1)}
+.pm-track{transition:background-color 160ms ease-out}
+.pm-knob{transition:transform 240ms cubic-bezier(.34,1.36,.64,1)}
+.pm-seg{transition:color 160ms ease-out}
+@keyframes ds-rise-a{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@keyframes ds-rise-b{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@keyframes ds-sheet-a{from{transform:translateY(100%)}to{transform:none}}
+@keyframes ds-sheet-b{from{transform:translateY(100%)}to{transform:none}}
+@keyframes ds-scrim-a{from{opacity:0}to{opacity:1}}
+@keyframes ds-scrim-b{from{opacity:0}to{opacity:1}}
+@keyframes ds-toast-a{from{opacity:0;transform:translateY(14px) scale(.96)}to{opacity:1;transform:none}}
+@keyframes ds-toast-b{from{opacity:0;transform:translateY(14px) scale(.96)}to{opacity:1;transform:none}}
+@keyframes ds-flash-a{from{background-color:#E4E4FA}to{background-color:rgba(228,228,250,0)}}
+@keyframes ds-flash-b{from{background-color:#E4E4FA}to{background-color:rgba(228,228,250,0)}}
+@keyframes ds-check-a{from{stroke-dashoffset:10}to{stroke-dashoffset:0}}
+@keyframes ds-check-b{from{stroke-dashoffset:10}to{stroke-dashoffset:0}}
+@keyframes ds-pop-a{from{transform:scale(.55)}to{transform:scale(1)}}
+@keyframes ds-pop-b{from{transform:scale(.55)}to{transform:scale(1)}}
+@keyframes ds-push-a{from{opacity:0;transform:translateX(28px)}to{opacity:1;transform:none}}
+@keyframes ds-push-b{from{opacity:0;transform:translateX(28px)}to{opacity:1;transform:none}}
+.ds-rise{animation-duration:300ms;animation-timing-function:cubic-bezier(.22,1,.36,1);animation-fill-mode:both}
+.ds-glyph circle{transform-box:fill-box;transform-origin:center}
+.ds-glyph path{stroke-dasharray:10}
+@media (max-width: 767px){
+  .ds-pad{padding-left:16px !important;padding-right:16px !important}
+  .ds-h1{font-size:32px !important}
+  .ds-stack{flex-direction:column !important;align-items:stretch !important}
+}
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation-duration:1ms !important;animation-delay:0ms !important;transition-duration:1ms !important}
+}
+</style>
+</helmet>
+<div style="min-height: 100vh; background: #FFFFFF; color: #1B1B1F; font-family: 'Geist', 'Helvetica Neue', system-ui, sans-serif; font-size: 14px; line-height: 1.5; -webkit-font-smoothing: antialiased">
+  <div class="ds-pad" style="max-width: 1120px; margin: 0 auto; padding: 56px 40px 112px; box-sizing: border-box; display: flex; flex-direction: column; gap: 80px">
+
+    <header style="display: flex; flex-direction: column; gap: 14px">
+      <div style="display: flex; align-items: center; gap: 10px">
+        <span style="flex: none; width: 22px; height: 22px; border-radius: 6px; background: #1B1B1F; display: inline-flex; align-items: center; justify-content: center">
+          <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><rect x="1" y="1" width="4" height="4" rx="1" fill="#FFFFFF"></rect><rect x="7" y="1" width="4" height="4" rx="1" fill="#FFFFFF" opacity="0.55"></rect><rect x="1" y="7" width="4" height="4" rx="1" fill="#FFFFFF" opacity="0.55"></rect><rect x="7" y="7" width="4" height="4" rx="1" fill="#FFFFFF"></rect></svg>
+        </span>
+        <span style="font-size: 14px; font-weight: 600">Tracker</span>
+      </div>
+      <h1 class="ds-h1" style="margin: 0; font-size: 44px; line-height: 1.08; font-weight: 700; letter-spacing: -0.03em">Foundations and icons</h1>
+      <p style="margin: 0; max-width: 620px; font-size: 16px; line-height: 1.55; color: #6B6B76; text-wrap: pretty">The tokens and icons behind the Project Tracker app. Every value here is the one the app uses. Components and motion are on the next board.</p>
+      <nav aria-label="Sections" style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px">
+        <a class="ds-chip" href="#foundations" style="display: inline-flex; align-items: center; min-height: 32px; padding: 0 14px; border: 1px solid #DEDEE3; border-radius: 999px; color: #1B1B1F; font-size: 13px; font-weight: 500; text-decoration: none">Foundations</a>
+        <a class="ds-chip" href="#icons" style="display: inline-flex; align-items: center; min-height: 32px; padding: 0 14px; border: 1px solid #DEDEE3; border-radius: 999px; color: #1B1B1F; font-size: 13px; font-weight: 500; text-decoration: none">Icons</a>
+        <a class="ds-chip" href="Components.dc.html" style="display: inline-flex; align-items: center; gap: 6px; min-height: 32px; padding: 0 14px; border: 1px solid #DEDEE3; border-radius: 999px; color: #1B1B1F; font-size: 13px; font-weight: 500; text-decoration: none">Components and motion <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg></a>
+      </nav>
+    </header>
+
+    <section id="foundations" aria-labelledby="ds-foundations" style="display: flex; flex-direction: column; gap: 40px">
+      <div style="display: flex; flex-direction: column; gap: 6px; padding-bottom: 16px; border-bottom: 1px solid #EBEBEE">
+        <span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 12px; color: #8E8E99">01</span>
+        <h2 id="ds-foundations" style="margin: 0; font-size: 28px; line-height: 1.2; font-weight: 600; letter-spacing: -0.02em">Foundations</h2>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 16px">
+        <div style="display: flex; flex-direction: column; gap: 4px">
+          <h3 style="margin: 0; font-size: 16px; font-weight: 600">Neutrals</h3>
+          <p style="margin: 0; font-size: 13px; color: #6B6B76">Cool greys carry almost the whole interface. Color is saved for status.</p>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(min(160px, 100%), 1fr)); gap: 12px">
+          <sc-for list="{{ neutrals }}" as="c" hint-placeholder-count="6">
+            <div style="display: flex; flex-direction: column; border: 1px solid #EBEBEE; border-radius: 12px; overflow: hidden; background: #FFFFFF">
+              <div style="height: 64px; background: {{ c.hex }}; border-bottom: 1px solid #EBEBEE"></div>
+              <div style="display: flex; flex-direction: column; gap: 2px; padding: 10px 12px 12px">
+                <span style="font-size: 13px; font-weight: 600">{{ c.name }}</span>
+                <span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 12px; color: #6B6B76">{{ c.hex }}</span>
+                <span style="margin-top: 2px; font-size: 12px; line-height: 1.45; color: #6B6B76">{{ c.use }}</span>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 16px">
+        <div style="display: flex; flex-direction: column; gap: 4px">
+          <h3 style="margin: 0; font-size: 16px; font-weight: 600">Status and surfaces</h3>
+          <p style="margin: 0; font-size: 13px; color: #6B6B76">Done and In progress also differ in lightness, so they read without color.</p>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(min(160px, 100%), 1fr)); gap: 12px">
+          <sc-for list="{{ semantic }}" as="c" hint-placeholder-count="5">
+            <div style="display: flex; flex-direction: column; border: 1px solid #EBEBEE; border-radius: 12px; overflow: hidden; background: #FFFFFF">
+              <div style="height: 64px; background: {{ c.hex }}; border-bottom: 1px solid #EBEBEE"></div>
+              <div style="display: flex; flex-direction: column; gap: 2px; padding: 10px 12px 12px">
+                <span style="font-size: 13px; font-weight: 600">{{ c.name }}</span>
+                <span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 12px; color: #6B6B76">{{ c.hex }}</span>
+                <span style="margin-top: 2px; font-size: 12px; line-height: 1.45; color: #6B6B76">{{ c.use }}</span>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(420px, 100%), 1fr)); gap: 24px">
+        <div style="display: flex; flex-direction: column; gap: 12px">
+          <div style="display: flex; flex-direction: column; gap: 4px">
+            <h3 style="margin: 0; font-size: 16px; font-weight: 600">Project colors</h3>
+            <p style="margin: 0; font-size: 13px; color: #6B6B76">Assigned in order to new projects. Only used as a 10px square beside the name.</p>
+          </div>
+          <div style="display: flex; flex-wrap: wrap; gap: 12px">
+            <sc-for list="{{ projectColors }}" as="pc" hint-placeholder-count="6">
+              <div style="display: flex; flex-direction: column; align-items: center; gap: 6px">
+                <span style="width: 40px; height: 40px; border-radius: 10px; background: {{ pc.hex }}"></span>
+                <span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 11px; color: #6B6B76">{{ pc.hex }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 12px">
+          <div style="display: flex; flex-direction: column; gap: 4px">
+            <h3 style="margin: 0; font-size: 16px; font-weight: 600">Avatar colors</h3>
+            <p style="margin: 0; font-size: 13px; color: #6B6B76">Picked from the assignee’s name, always with white initials.</p>
+          </div>
+          <div style="display: flex; flex-wrap: wrap; gap: 12px">
+            <sc-for list="{{ avatarColors }}" as="ac" hint-placeholder-count="6">
+              <div style="display: flex; flex-direction: column; align-items: center; gap: 6px">
+                <span style="width: 40px; height: 40px; border-radius: 50%; background: {{ ac.hex }}; color: #FFFFFF; display: inline-flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 600">{{ ac.initials }}</span>
+                <span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 11px; color: #6B6B76">{{ ac.hex }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 16px">
+        <div style="display: flex; flex-direction: column; gap: 4px">
+          <h3 style="margin: 0; font-size: 16px; font-weight: 600">Type</h3>
+          <p style="margin: 0; font-size: 13px; color: #6B6B76">Geist for everything, Geist Mono for IDs and anything you paste into Claude Code.</p>
+        </div>
+        <div style="border: 1px solid #EBEBEE; border-radius: 12px; overflow: hidden">
+          <sc-for list="{{ typeScale }}" as="ts" hint-placeholder-count="6">
+            <div class="ds-stack" style="display: flex; align-items: center; gap: 12px 24px; padding: 16px 20px; border-top: {{ ts.sep }}">
+              <span style="flex: 1 1 0; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: {{ ts.family }}; font-size: {{ ts.size }}px; font-weight: {{ ts.weight }}; letter-spacing: {{ ts.track }}; line-height: {{ ts.lh }}; color: {{ ts.color }}">{{ ts.sample }}</span>
+              <span style="flex: 0 0 280px; display: flex; flex-direction: column; gap: 2px">
+                <span style="font-size: 13px; font-weight: 600">{{ ts.name }}</span>
+                <span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 12px; color: #6B6B76">{{ ts.spec }}</span>
+                <span style="font-size: 12px; color: #6B6B76">{{ ts.use }}</span>
+              </span>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr)); gap: 24px">
+        <div style="display: flex; flex-direction: column; gap: 16px">
+          <h3 style="margin: 0; font-size: 16px; font-weight: 600">Spacing</h3>
+          <div style="display: flex; flex-direction: column; gap: 10px">
+            <sc-for list="{{ spacing }}" as="sp" hint-placeholder-count="7">
+              <div style="display: flex; align-items: center; gap: 12px">
+                <span style="flex: none; width: 28px; font-family: 'Geist Mono', ui-monospace, monospace; font-size: 12px; color: #6B6B76; text-align: right">{{ sp.px }}</span>
+                <span style="flex: none; width: 64px; display: flex"><span style="height: 12px; width: {{ sp.px }}px; border-radius: 3px; background: #5B5BD6"></span></span>
+                <span style="font-size: 12px; color: #6B6B76">{{ sp.use }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 16px">
+          <h3 style="margin: 0; font-size: 16px; font-weight: 600">Corner radius</h3>
+          <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 12px">
+            <sc-for list="{{ radii }}" as="rd" hint-placeholder-count="5">
+              <div style="display: flex; flex-direction: column; gap: 6px">
+                <span style="height: 56px; border: 1px solid #DEDEE3; border-radius: {{ rd.css }}; background: #F7F7F8"></span>
+                <span style="font-size: 12px; font-weight: 600">{{ rd.name }} · {{ rd.label }}</span>
+                <span style="font-size: 12px; line-height: 1.45; color: #6B6B76">{{ rd.use }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr)); gap: 24px">
+        <div style="display: flex; flex-direction: column; gap: 16px">
+          <h3 style="margin: 0; font-size: 16px; font-weight: 600">Lines and elevation</h3>
+          <div style="display: flex; flex-direction: column; gap: 10px">
+            <div style="display: flex; align-items: center; gap: 14px; min-height: 40px">
+              <span style="flex: none; width: 64px; height: 0; border-top: 1px solid #EBEBEE"></span>
+              <span style="font-size: 13px"><span style="font-weight: 600">Line</span> <span style="color: #6B6B76">· 1px #EBEBEE · dividers, cards, lists</span></span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 14px; min-height: 40px">
+              <span style="flex: none; width: 64px; height: 0; border-top: 1px solid #DEDEE3"></span>
+              <span style="font-size: 13px"><span style="font-weight: 600">Control</span> <span style="color: #6B6B76">· 1px #DEDEE3 · inputs, secondary buttons</span></span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 14px; min-height: 40px">
+              <span style="flex: none; width: 64px; display: flex; justify-content: center"><span style="width: 24px; height: 24px; box-sizing: border-box; border-radius: 50%; border: 1.5px dashed #C4C4CC"></span></span>
+              <span style="font-size: 13px"><span style="font-weight: 600">Dashed</span> <span style="color: #6B6B76">· 1.5px #C4C4CC · unassigned avatar, empty drop zones</span></span>
+            </div>
+          </div>
+          <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px 12px; padding: 20px; border-radius: 12px; background: #F7F7F8">
+            <sc-for list="{{ elevation }}" as="el" hint-placeholder-count="3">
+              <div style="display: flex; flex-direction: column; gap: 8px">
+                <span style="height: 56px; border-radius: 10px; background: #FFFFFF; box-shadow: {{ el.css }}"></span>
+                <span style="font-size: 12px; font-weight: 600">{{ el.name }}</span>
+                <span style="font-size: 12px; line-height: 1.45; color: #6B6B76">{{ el.use }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 16px">
+          <h3 style="margin: 0; font-size: 16px; font-weight: 600">Sizes</h3>
+          <div style="border: 1px solid #EBEBEE; border-radius: 12px; overflow: hidden">
+            <sc-for list="{{ sizes }}" as="sz" hint-placeholder-count="6">
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 40px; padding: 0 14px; border-top: {{ sz.sep }}; font-size: 13px">
+                <span>{{ sz.name }}</span>
+                <span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 12px; color: #6B6B76; text-align: right">{{ sz.value }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 16px">
+        <div style="display: flex; flex-direction: column; gap: 4px">
+          <h3 style="margin: 0; font-size: 16px; font-weight: 600">Focus</h3>
+          <p style="margin: 0; max-width: 680px; font-size: 13px; color: #6B6B76; text-wrap: pretty">One 2px Accent ring, always placed where nothing can clip it. It shows for keyboard focus and while typing.</p>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr)); gap: 16px">
+          <div style="display: flex; flex-direction: column; gap: 14px; padding: 20px; border: 1px solid #EBEBEE; border-radius: 12px">
+            <span style="font-size: 13px; font-weight: 600">Standalone controls</span>
+            <div style="display: flex; align-items: center; min-height: 56px; padding: 0 8px">
+              <span style="display: inline-flex; align-items: center; min-height: 32px; padding: 0 12px; border-radius: 8px; background: #1B1B1F; color: #FFFFFF; font-size: 13px; font-weight: 500; outline: 2px solid #5B5BD6; outline-offset: 2px">New ticket</span>
+            </div>
+            <span style="font-size: 12px; line-height: 1.5; color: #6B6B76">Ring 2px outside the button, following its corners. Used for buttons that have room around them.</span>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 14px; padding: 20px; border: 1px solid #EBEBEE; border-radius: 12px">
+            <span style="font-size: 13px; font-weight: 600">Rows and menu items</span>
+            <div style="border: 1px solid #EBEBEE; border-radius: 12px; overflow: hidden; background: #FFFFFF">
+              <div style="position: relative; display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 0 14px; font-size: 14px">
+                <span aria-hidden="true" style="position: absolute; inset: 3px; border-radius: 8px; box-shadow: 0 0 0 2px #5B5BD6; pointer-events: none"></span>
+                <span style="flex: 1">Due date</span><span style="color: #55555F">Thu, Oct 8</span>
+              </div>
+              <div style="display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 0 14px; border-top: 1px solid #EBEBEE; font-size: 14px"><span style="flex: 1">Assignee</span><span>Dara</span></div>
+            </div>
+            <span style="font-size: 12px; line-height: 1.5; color: #6B6B76">Ring 3px inside the row with 8px corners, so rounded groups, lists and menus never cut it off.</span>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 14px; padding: 20px; border: 1px solid #EBEBEE; border-radius: 12px">
+            <span style="font-size: 13px; font-weight: 600">Fields with a border</span>
+            <div style="display: flex; align-items: center; min-height: 56px">
+              <span style="display: flex; align-items: center; gap: 8px; width: 100%; min-height: 34px; padding: 0 10px; box-sizing: border-box; border: 1px solid #5B5BD6; border-radius: 8px; box-shadow: 0 0 0 1px #5B5BD6; color: #1B1B1F; font-size: 13px">dark mode<span style="width: 1px; height: 16px; background: #1B1B1F"></span></span>
+            </div>
+            <span style="font-size: 12px; line-height: 1.5; color: #6B6B76">The field’s own border turns Accent and thickens to 2px. Search, comment box, prompt and report fields.</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="icons" aria-labelledby="ds-icons" style="display: flex; flex-direction: column; gap: 32px">
+      <div style="display: flex; flex-direction: column; gap: 6px; padding-bottom: 16px; border-bottom: 1px solid #EBEBEE">
+        <span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 12px; color: #8E8E99">02</span>
+        <h2 id="ds-icons" style="margin: 0; font-size: 28px; line-height: 1.2; font-weight: 600; letter-spacing: -0.02em">Icons</h2>
+        <p style="margin: 4px 0 0; max-width: 640px; font-size: 14px; color: #6B6B76; text-wrap: pretty">Lucide geometry on a 24px grid, 1.75 stroke, round caps and joins, always <span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 13px">currentColor</span>. Three sizes: 14 beside small text, 16 on desktop, 20 in phone bars and sheets.</p>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 10px; color: #1B1B1F">
+        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; min-height: 88px; border: 1px solid #EBEBEE; border-radius: 12px"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"></path><path d="M12 5v14"></path></svg><span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 11px; color: #6B6B76">plus</span></div>
+        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; min-height: 88px; border: 1px solid #EBEBEE; border-radius: 12px"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg><span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 11px; color: #6B6B76">chevron-left</span></div>
+        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; min-height: 88px; border: 1px solid #EBEBEE; border-radius: 12px"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"></path></svg><span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 11px; color: #6B6B76">chevron-right</span></div>
+        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; min-height: 88px; border: 1px solid #EBEBEE; border-radius: 12px"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg><span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 11px; color: #6B6B76">chevron-down</span></div>
+        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; min-height: 88px; border: 1px solid #EBEBEE; border-radius: 12px"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg><span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 11px; color: #6B6B76">x</span></div>
+        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; min-height: 88px; border: 1px solid #EBEBEE; border-radius: 12px"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="5" cy="12" r="1"></circle><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle></svg><span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 11px; color: #6B6B76">ellipsis</span></div>
+        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; min-height: 88px; border: 1px solid #EBEBEE; border-radius: 12px"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7.5"></circle><path d="m20.5 20.5-4-4"></path></svg><span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 11px; color: #6B6B76">search</span></div>
+        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; min-height: 88px; border: 1px solid #EBEBEE; border-radius: 12px"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m4 17 6-6-6-6"></path><path d="M12 19h8"></path></svg><span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 11px; color: #6B6B76">terminal</span></div>
+        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; min-height: 88px; border: 1px solid #EBEBEE; border-radius: 12px"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="2" width="8" height="4" rx="1"></rect><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><path d="m9 14 2 2 4-4"></path></svg><span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 11px; color: #6B6B76">clipboard-check</span></div>
+        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; min-height: 88px; border: 1px solid #EBEBEE; border-radius: 12px"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="8" width="14" height="14" rx="2"></rect><path d="M4 16a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2"></path></svg><span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 11px; color: #6B6B76">copy</span></div>
+        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; min-height: 88px; border: 1px solid #EBEBEE; border-radius: 12px"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg><span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 11px; color: #6B6B76">check</span></div>
+        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; min-height: 88px; border: 1px solid #EBEBEE; border-radius: 12px"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="m9 12 2 2 4-4"></path></svg><span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 11px; color: #6B6B76">circle-check</span></div>
+        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; min-height: 88px; border: 1px solid #EBEBEE; border-radius: 12px"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path><path d="m16 6-4-4-4 4"></path><path d="M12 2v13"></path></svg><span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 11px; color: #6B6B76">share</span></div>
+        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; min-height: 88px; border: 1px solid #EBEBEE; border-radius: 12px"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg><span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 11px; color: #6B6B76">pencil-line</span></div>
+        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; min-height: 88px; border: 1px solid #EBEBEE; border-radius: 12px"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><path d="M10 11v6"></path><path d="M14 11v6"></path></svg><span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 11px; color: #6B6B76">trash-2</span></div>
+        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; min-height: 88px; border: 1px solid #EBEBEE; border-radius: 12px"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"></rect><path d="M16 2v4"></path><path d="M8 2v4"></path><path d="M3 10h18"></path></svg><span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 11px; color: #6B6B76">calendar</span></div>
+        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; min-height: 88px; border: 1px solid #EBEBEE; border-radius: 12px"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"></path></svg><span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 11px; color: #6B6B76">folder</span></div>
+        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; min-height: 88px; border: 1px solid #EBEBEE; border-radius: 12px"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9h16"></path><path d="M4 15h16"></path><path d="M10 3 8 21"></path><path d="m16 3-2 18"></path></svg><span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 11px; color: #6B6B76">hash</span></div>
+        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; min-height: 88px; border: 1px solid #EBEBEE; border-radius: 12px"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="12" r="1"></circle><circle cx="9" cy="5" r="1"></circle><circle cx="9" cy="19" r="1"></circle><circle cx="15" cy="12" r="1"></circle><circle cx="15" cy="5" r="1"></circle><circle cx="15" cy="19" r="1"></circle></svg><span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 11px; color: #6B6B76">grip-vertical</span></div>
+        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; min-height: 88px; border: 1px solid #EBEBEE; border-radius: 12px"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"></rect><rect x="14" y="3" width="7" height="7" rx="1.5"></rect><rect x="14" y="14" width="7" height="7" rx="1.5"></rect><rect x="3" y="14" width="7" height="7" rx="1.5"></rect></svg><span style="font-family: 'Geist Mono', ui-monospace, monospace; font-size: 11px; color: #6B6B76">layout-grid</span></div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr)); gap: 16px">
+        <div style="display: flex; flex-direction: column; gap: 14px; padding: 20px; border: 1px solid #EBEBEE; border-radius: 12px">
+          <span style="font-size: 13px; font-weight: 600">Status</span>
+          <div style="display: flex; flex-direction: column; gap: 12px; font-size: 14px">
+            <span style="display: flex; align-items: center; gap: 10px"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.25" fill="none" stroke="#8E8E99" stroke-width="1.5"></circle></svg>To do <span style="margin-left: auto; font-size: 12px; color: #6B6B76">ring · Subtle</span></span>
+            <span style="display: flex; align-items: center; gap: 10px"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.25" fill="none" stroke="#C26A06" stroke-width="1.5"></circle><path d="M8 4.5a3.5 3.5 0 0 1 0 7z" fill="#C26A06"></path></svg>In progress <span style="margin-left: auto; font-size: 12px; color: #6B6B76">half fill</span></span>
+            <span style="display: flex; align-items: center; gap: 10px"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="7" fill="#5B5BD6"></circle><path d="m5 8.25 2 2 4-4.25" fill="none" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg>Done <span style="margin-left: auto; font-size: 12px; color: #6B6B76">solid + check</span></span>
+          </div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 14px; padding: 20px; border: 1px solid #EBEBEE; border-radius: 12px">
+          <span style="font-size: 13px; font-weight: 600">Priority</span>
+          <div style="display: flex; flex-direction: column; gap: 12px; font-size: 14px">
+            <span style="display: flex; align-items: center; gap: 10px"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><rect x="2" y="9" width="3" height="5" rx="1" fill="#55555F"></rect><rect x="6.5" y="6" width="3" height="8" rx="1" fill="#55555F"></rect><rect x="11" y="3" width="3" height="11" rx="1" fill="#55555F"></rect></svg>High</span>
+            <span style="display: flex; align-items: center; gap: 10px"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><rect x="2" y="9" width="3" height="5" rx="1" fill="#55555F"></rect><rect x="6.5" y="6" width="3" height="8" rx="1" fill="#55555F"></rect><rect x="11" y="3" width="3" height="11" rx="1" fill="#D9D9DE"></rect></svg>Medium</span>
+            <span style="display: flex; align-items: center; gap: 10px"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><rect x="2" y="9" width="3" height="5" rx="1" fill="#55555F"></rect><rect x="6.5" y="6" width="3" height="8" rx="1" fill="#D9D9DE"></rect><rect x="11" y="3" width="3" height="11" rx="1" fill="#D9D9DE"></rect></svg>Low</span>
+          </div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 14px; padding: 20px; border: 1px solid #EBEBEE; border-radius: 12px">
+          <span style="font-size: 13px; font-weight: 600">Avatars</span>
+          <div style="display: flex; flex-direction: column; gap: 12px; font-size: 14px">
+            <span style="display: flex; align-items: center; gap: 10px"><span style="width: 24px; height: 24px; border-radius: 50%; background: #18794E; color: #FFFFFF; display: inline-flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 600">S</span>Assigned · 24 in lists</span>
+            <span style="display: flex; align-items: center; gap: 10px"><span style="width: 20px; height: 20px; margin: 0 2px; border-radius: 50%; background: #5B5BD6; color: #FFFFFF; display: inline-flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 600">D</span>Assigned · 20 in rows</span>
+            <span style="display: flex; align-items: center; gap: 10px"><span style="width: 24px; height: 24px; box-sizing: border-box; border-radius: 50%; border: 1.5px dashed #C4C4CC"></span>Unassigned</span>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":4200}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = {};
+  }
+
+  renderVals() {
+    const s = this.state;
+    const sep = (i) => (i === 0 ? '0' : '1px solid #EBEBEE');
+        const withSep = (arr) => arr.map((x, i) => Object.assign({}, x, { sep: sep(i) }));
+
+    const neutrals = [
+      { name: 'Ink', hex: '#1B1B1F', use: 'Primary text, primary buttons, toasts' },
+      { name: 'Ink 2', hex: '#2A2A30', use: 'Long text: descriptions, comments' },
+      { name: 'Muted', hex: '#6B6B76', use: 'Secondary text, labels, values' },
+      { name: 'Subtle', hex: '#8E8E99', use: 'Counts, the To do ring' },
+      { name: 'Placeholder', hex: '#9A9AA3', use: 'Placeholders, timestamps' },
+      { name: 'Faint', hex: '#B4B4BC', use: 'Chevrons, breadcrumb separators' },
+      { name: 'Control line', hex: '#DEDEE3', use: 'Inputs, secondary buttons, grabber' },
+      { name: 'Line', hex: '#EBEBEE', use: 'Dividers, cards, list borders' },
+      { name: 'Fill 2', hex: '#EFEFF1', use: 'Segmented track, phone search, hover' },
+      { name: 'Fill', hex: '#F7F7F8', use: 'Sidebar, group headers, code blocks' },
+      { name: 'Panel', hex: '#FBFBFC', use: 'Ticket details panel' },
+      { name: 'Surface', hex: '#FFFFFF', use: 'Page, cards, sheets' }
+    ];
+    const semantic = [
+      { name: 'Accent · Done', hex: '#5B5BD6', use: 'Done glyph, progress, switch, focus ring' },
+      { name: 'In progress', hex: '#C26A06', use: 'In progress glyph' },
+      { name: 'Danger', hex: '#B42318', use: 'Delete, errors, overdue dates' },
+      { name: 'Danger line', hex: '#F4CFCA', use: 'Border of delete confirmations' },
+      { name: 'Report', hex: '#F7F7FE', use: 'Claude Code report card, line #E3E3F8' },
+      { name: 'New row', hex: '#E4E4FA', use: 'Highlight that fades on new rows' }
+    ];
+    const projectColors = ['#5B5BD6', '#D97706', '#12A594', '#E5484D', '#8E4EC6', '#0091FF'].map(hex => ({ hex }));
+    const avatarColors = [['#5B5BD6', 'D'], ['#B4540A', 'V'], ['#18794E', 'S'], ['#C2298A', 'K'], ['#0B68CB', 'M'], ['#6E56CF', 'R']].map(([hex, initials]) => ({ hex, initials }));
+    const SANS = "'Geist', system-ui, sans-serif";
+    const MONO = "'Geist Mono', ui-monospace, monospace";
+    const typeScale = withSep([
+      { name: 'Large title', spec: '30 / 34 · Bold · −0.02em', use: 'Phone page titles', sample: 'Projects', size: 30, weight: 700, track: '-0.02em', lh: 1.15, family: SANS, color: '#1B1B1F' },
+      { name: 'Title', spec: '22 / 29 · Semibold · −0.015em', use: 'Ticket title', sample: 'Crash when rotating the profile screen', size: 22, weight: 600, track: '-0.015em', lh: 1.3, family: SANS, color: '#1B1B1F' },
+      { name: 'Heading', spec: '20 / 26 · Semibold · −0.015em', use: 'Desktop page titles, name fields in sheets', sample: 'New ticket title', size: 20, weight: 600, track: '-0.015em', lh: 1.3, family: SANS, color: '#1B1B1F' },
+      { name: 'Headline', spec: '15 / 19 · Semibold', use: 'Nav bar and sheet titles', sample: 'Mobile app', size: 15, weight: 600, track: '0', lh: 1.25, family: SANS, color: '#1B1B1F' },
+      { name: 'Body', spec: '14 / 21 · Regular · 16 in phone inputs', use: 'Rows, fields, comments', sample: 'Show an error when the password is wrong', size: 14, weight: 400, track: '0', lh: 1.5, family: SANS, color: '#1B1B1F' },
+      { name: 'Secondary', spec: '13 / 19 · Regular', use: 'Meta, desktop buttons, help text', sample: 'Paste Claude Code’s reply to update the ticket.', size: 13, weight: 400, track: '0', lh: 1.5, family: SANS, color: '#6B6B76' },
+      { name: 'Caption', spec: '12 / 16 · Medium', use: 'Section labels, counts', sample: 'Details', size: 12, weight: 500, track: '0', lh: 1.35, family: SANS, color: '#6B6B76' },
+      { name: 'Mono', spec: 'Geist Mono 12 · Regular', use: 'Ticket IDs, prompts, reports', sample: 'MOB-3', size: 12, weight: 400, track: '0', lh: 1.5, family: MONO, color: '#1B1B1F' }
+    ]);
+    const spacing = [
+      { px: 4, use: 'Tight pairs: icon and its count' },
+      { px: 8, use: 'Toolbar gaps, button icon to label' },
+      { px: 12, use: 'Row content gap, card gaps' },
+      { px: 16, use: 'Phone side margins' },
+      { px: 20, use: 'Panel and sheet padding' },
+      { px: 24, use: 'Between groups of controls' },
+      { px: 32, use: 'Desktop side margins' }
+    ];
+    const radii = [
+      { name: 'Control', label: '8', css: '8px', use: 'Buttons, inputs, menu items' },
+      { name: 'Container', label: '10', css: '10px', use: 'Lists, menus, segmented track' },
+      { name: 'Group', label: '12', css: '12px', use: 'Grouped rows, cards, phone buttons' },
+      { name: 'Sheet', label: '14', css: '14px', use: 'Dialogs, sheets, action sheets' },
+      { name: 'Full', label: '999', css: '999px', use: 'Avatars, pills, switch' }
+    ];
+    const elevation = [
+      { name: 'Raised', css: '0 1px 2px rgba(20, 20, 26, 0.12), 0 0 0 0.5px rgba(20, 20, 26, 0.06)', use: 'Segmented thumb, switch knob' },
+      { name: 'Floating', css: '0 8px 24px rgba(20, 20, 26, 0.12)', use: 'Menus, toasts' },
+      { name: 'Lifted', css: '0 12px 32px rgba(20, 20, 26, 0.18)', use: 'A ticket being dragged' },
+      { name: 'Overlay', css: '0 24px 64px rgba(20, 20, 26, 0.2)', use: 'Sheets and dialogs over a 36% scrim' }
+    ];
+    const sizes = withSep([
+      { name: 'Control height', value: '32 desktop · 44 phone' },
+      { name: 'Primary in phone bar', value: '48' },
+      { name: 'List row', value: '44 desktop · 52 phone' },
+      { name: 'Property row', value: '44 desktop · 50 phone' },
+      { name: 'Nav bar', value: '52' },
+      { name: 'Icon button', value: '32 desktop · 44 phone' },
+      { name: 'Avatar', value: '20 in rows · 24 in lists' },
+      { name: 'Dropdown item · width', value: '36 · 220 desktop, 44 · 240 phone' },
+      { name: 'Drag handle', value: '24 wide · 34 on phones' },
+      { name: 'Sidebar · ticket panel', value: '240 · 300' }
+    ]);
+
+    return { neutrals, semantic, projectColors, avatarColors, typeScale, spacing, radii, elevation, sizes };
+  }
+}
+</script>
+</body>
+</html>

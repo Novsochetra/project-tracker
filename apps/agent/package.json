@@ -1,0 +1,25 @@
+{
+  "name": "@tracker/agent",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "tracker": "./dist/cli.js",
+    "tracker-mcp": "./dist/mcp.js"
+  },
+  "scripts": {
+    "build": "tsup",
+    "mcp": "tsx src/mcp.ts",
+    "cli": "tsx src/cli.ts",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.32.1",
+    "@tracker/client": "*",
+    "@tracker/shared": "*",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "tsup": "^8.5.1"
+  }
+}
