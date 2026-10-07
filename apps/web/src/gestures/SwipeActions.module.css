@@ -1,0 +1,78 @@
+.root {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.content {
+  position: relative;
+  z-index: 2;
+  background: var(--surface);
+  touch-action: pan-y;
+}
+
+.strip {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+
+.action {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 100%;
+  overflow: hidden;
+  padding: 0;
+  border: 0;
+  color: var(--surface);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.leading .action {
+  right: 100%;
+}
+
+.trailing .action {
+  left: 100%;
+}
+
+.action:focus-visible {
+  outline: 2px solid var(--surface);
+  outline-offset: -4px;
+}
+
+.label {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
+  width: var(--swipe-action-width);
+  white-space: nowrap;
+}
+
+.leading .label {
+  right: 0;
+}
+
+.trailing .label {
+  left: 0;
+}
+
+.accent {
+  background: var(--accent);
+}
+
+.neutral {
+  background: var(--muted);
+}
+
+.danger {
+  background: var(--danger);
+}

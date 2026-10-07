@@ -1,0 +1,6 @@
+:root {
+  --viewer-bg: #000000;
+  --viewer-fg: #ffffff;
+  --viewer-control: rgba(255, 255, 255, 0.16);
+  --viewer-control-hover: rgba(255, 255, 255, 0.26);
+}

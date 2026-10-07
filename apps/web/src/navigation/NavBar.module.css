@@ -1,0 +1,88 @@
+.bar {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-sticky);
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-height: calc(var(--nav-height) + var(--safe-top));
+  padding: calc(var(--space-1) + var(--safe-top)) calc(6px + var(--safe-right)) var(--space-1)
+    calc(6px + var(--safe-left));
+  background: var(--nav-bg);
+  -webkit-backdrop-filter: var(--glass-filter);
+  backdrop-filter: var(--glass-filter);
+  border-bottom: 1px solid var(--line);
+  transition: border-color var(--duration-fast) var(--ease-out);
+}
+
+.bar[data-expanded] {
+  border-bottom-color: transparent;
+}
+
+.side {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+}
+
+.end {
+  justify-content: flex-end;
+}
+
+.titleSlot {
+  flex: 0 1 auto;
+  min-width: 0;
+  display: flex;
+  justify-content: center;
+  transition: opacity var(--duration-fast) var(--ease-out);
+}
+
+.bar[data-expanded] .titleSlot {
+  opacity: 0;
+}
+
+.title {
+  min-width: 0;
+  overflow: hidden;
+  font: var(--text-headline);
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  animation: fade-up-small var(--duration-spring) var(--ease-out) both;
+}
+
+.mono {
+  font-family: var(--font-mono);
+}
+
+.back {
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
+  max-width: 100%;
+  min-height: var(--touch-target);
+  padding: 0 var(--space-2) 0 2px;
+  border: 0;
+  border-radius: var(--radius-control);
+  background: transparent;
+  color: var(--ink);
+  font-size: 16px;
+  cursor: pointer;
+  animation: fade-in-x var(--duration-base) var(--ease-out) both;
+  transition: opacity var(--duration-press) ease-out;
+}
+
+.back:active {
+  opacity: 0.5;
+}
+
+.chevron {
+  flex: none;
+}
+
+.backLabel {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

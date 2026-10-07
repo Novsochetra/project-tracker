@@ -1,0 +1,31 @@
+.button {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: var(--touch-target);
+  height: var(--touch-target);
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-full);
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.button:hover,
+.button:active {
+  background: var(--fill-2);
+}
+
+@media (hover: none) {
+  .button:hover:not(:active) {
+    background: transparent;
+  }
+}
+
+.spacer {
+  flex: none;
+  width: var(--touch-target);
+  height: var(--touch-target);
+}

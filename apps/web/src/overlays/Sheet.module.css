@@ -1,0 +1,187 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-sheet);
+  display: flex;
+  justify-content: center;
+}
+
+.overlay[inert] {
+  pointer-events: none;
+}
+
+.desktop {
+  align-items: flex-start;
+  padding: 10vh var(--space-4) var(--space-6);
+  overflow-y: auto;
+}
+
+.desktop.prompt,
+.desktop.report {
+  padding-top: 8vh;
+}
+
+.phone {
+  align-items: flex-end;
+}
+
+.scrim {
+  position: fixed;
+  inset: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: var(--scrim);
+  cursor: default;
+  touch-action: none;
+}
+
+.scrim:focus-visible {
+  outline: none;
+}
+
+.panel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  background: var(--surface);
+  box-shadow: var(--shadow-overlay);
+  outline: none;
+}
+
+.desktop .panel {
+  max-width: 540px;
+  border-radius: var(--radius-sheet);
+}
+
+.desktop.prompt .panel {
+  max-width: 620px;
+}
+
+.desktop.report .panel {
+  max-width: 600px;
+}
+
+.phone .panel {
+  max-height: calc(var(--sheet-viewport, 100vh) - 32px);
+  margin-bottom: var(--sheet-keyboard, 0px);
+  padding-bottom: var(--safe-bottom);
+  border-radius: var(--radius-sheet) var(--radius-sheet) 0 0;
+}
+
+/* Fills the gap under the sheet when it is stretched upward. */
+.phone .panel::after {
+  content: '';
+  position: absolute;
+  top: calc(100% - 1px);
+  right: 0;
+  left: 0;
+  height: 160px;
+  background: var(--surface);
+  pointer-events: none;
+}
+
+.form {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.handle {
+  flex: none;
+}
+
+.phone .handle {
+  touch-action: none;
+}
+
+.grabber {
+  display: flex;
+  justify-content: center;
+  padding-top: 6px;
+}
+
+.grabber span {
+  width: 36px;
+  height: 5px;
+  border-radius: 3px;
+  background: var(--control-line);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 56px;
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--line);
+}
+
+.start,
+.end {
+  display: flex;
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.start {
+  justify-content: flex-start;
+}
+
+.end {
+  justify-content: flex-end;
+}
+
+.heading {
+  display: flex;
+  flex: 0 1 auto;
+  flex-direction: column;
+  align-items: center;
+  min-width: 0;
+  text-align: center;
+}
+
+.title,
+.subtitle {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.title {
+  font: var(--text-headline);
+}
+
+.subtitle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.body {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.phone .body {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.footer {
+  display: flex;
+  flex: none;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 12px var(--space-4) var(--space-4);
+  border-top: 1px solid var(--line);
+}
+
+.phone .footer > * {
+  flex: 1 1 auto;
+}

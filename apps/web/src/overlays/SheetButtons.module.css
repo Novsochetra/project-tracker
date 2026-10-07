@@ -1,0 +1,55 @@
+.text {
+  min-height: 40px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: var(--radius-control);
+  background: transparent;
+  color: var(--ink);
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.text:hover {
+  background: var(--fill);
+}
+
+.action {
+  position: relative;
+  min-height: 32px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: var(--radius-control);
+  background: var(--ink);
+  color: var(--surface);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.action:hover:not(:disabled) {
+  background: var(--ink-hover);
+}
+
+.action:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+@media (max-width: 767px) {
+  .text {
+    min-height: var(--touch-target);
+    font-size: 16px;
+  }
+
+  .action {
+    min-height: 34px;
+    font-size: 15px;
+  }
+
+  /* Keeps the 34px look with a 44px touch target. */
+  .action::before {
+    content: '';
+    position: absolute;
+    inset: -5px 0;
+  }
+}

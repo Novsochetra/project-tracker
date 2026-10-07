@@ -1,0 +1,4 @@
+:root {
+  --stack-edge-shadow: linear-gradient(to left, rgba(20, 20, 26, 0.16), rgba(20, 20, 26, 0));
+  --z-stack-overlay: 40;
+}

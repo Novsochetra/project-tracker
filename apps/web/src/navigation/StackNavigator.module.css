@@ -1,0 +1,46 @@
+.root {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  isolation: isolate;
+  overscroll-behavior: none;
+  touch-action: pan-y pinch-zoom;
+}
+
+.layer {
+  position: absolute;
+  inset: 0;
+  background: var(--surface);
+}
+
+.scroller {
+  position: absolute;
+  inset: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  outline: none;
+  touch-action: pan-y pinch-zoom;
+}
+
+.dim,
+.shadow {
+  position: absolute;
+  z-index: var(--z-stack-overlay);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.dim {
+  inset: 0;
+  background: var(--scrim);
+}
+
+.shadow {
+  top: 0;
+  bottom: 0;
+  right: 100%;
+  width: 24px;
+  background: var(--stack-edge-shadow);
+}

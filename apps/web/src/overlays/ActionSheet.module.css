@@ -1,0 +1,95 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-action-sheet);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: var(--space-2) calc(var(--space-2) + var(--safe-right))
+    calc(var(--space-2) + var(--safe-bottom)) calc(var(--space-2) + var(--safe-left));
+}
+
+.overlay[inert] {
+  pointer-events: none;
+}
+
+.scrim {
+  position: fixed;
+  inset: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: var(--scrim);
+  cursor: default;
+  touch-action: none;
+}
+
+.scrim:focus-visible {
+  outline: none;
+}
+
+.sheet {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  width: 100%;
+  max-width: 440px;
+  margin: 0 auto;
+  outline: none;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: var(--radius-sheet);
+  background: var(--surface);
+}
+
+.caption {
+  padding: 14px var(--space-4) var(--space-3);
+  color: var(--muted);
+  font-size: 13px;
+  text-align: center;
+  text-wrap: pretty;
+  animation: fade-up var(--duration-fade) var(--ease-out) both;
+}
+
+.row,
+.cancel {
+  min-height: 56px;
+  padding: 0 var(--space-4);
+  border: 0;
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 17px;
+  cursor: pointer;
+  transition: background-color var(--duration-fast) var(--ease-out);
+}
+
+.row:active,
+.cancel:active {
+  background: var(--fill-2);
+}
+
+.caption + .row,
+.row + .row {
+  border-top: 1px solid var(--line);
+}
+
+.danger {
+  color: var(--danger);
+}
+
+.bold,
+.cancel {
+  font-weight: 600;
+}
+
+.cancel {
+  border-radius: var(--radius-sheet);
+}

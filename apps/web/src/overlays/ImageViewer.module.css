@@ -1,0 +1,148 @@
+.viewer {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-viewer);
+  overflow: hidden;
+  color: var(--viewer-fg);
+  outline: none;
+  overscroll-behavior: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+.viewer[inert] {
+  pointer-events: none;
+}
+
+.backdrop {
+  position: absolute;
+  inset: 0;
+  background: var(--viewer-bg);
+}
+
+.stage {
+  position: absolute;
+  inset: 0;
+  touch-action: none;
+}
+
+.track {
+  position: absolute;
+  inset: 0;
+}
+
+.slide {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.image {
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+  -webkit-user-drag: none;
+}
+
+.chrome {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.controls {
+  position: absolute;
+  inset: 0;
+  transition: opacity var(--duration-fade) var(--ease-out);
+}
+
+.controls[data-hidden]:not(:focus-within) {
+  opacity: 0;
+}
+
+.controls[data-hidden]:not(:focus-within) > * {
+  pointer-events: none;
+}
+
+.close,
+.prev,
+.next {
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--touch-target);
+  height: var(--touch-target);
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-full);
+  background: var(--viewer-control);
+  color: var(--viewer-fg);
+  cursor: pointer;
+  pointer-events: auto;
+  -webkit-backdrop-filter: var(--glass-filter);
+  backdrop-filter: var(--glass-filter);
+}
+
+.close:hover,
+.prev:hover:not(:disabled),
+.next:hover:not(:disabled) {
+  background: var(--viewer-control-hover);
+}
+
+.close:focus-visible,
+.prev:focus-visible,
+.next:focus-visible {
+  outline-color: var(--viewer-fg);
+}
+
+.close {
+  top: calc(var(--safe-top) + var(--space-2));
+  left: calc(var(--safe-left) + var(--space-2));
+}
+
+.counter {
+  position: absolute;
+  top: calc(var(--safe-top) + var(--space-2));
+  left: 50%;
+  display: flex;
+  align-items: center;
+  height: var(--touch-target);
+  transform: translateX(-50%);
+  font: var(--text-headline);
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+}
+
+.prev,
+.next {
+  top: 50%;
+  margin-top: calc(var(--touch-target) / -2);
+}
+
+.prev {
+  left: calc(var(--safe-left) + var(--space-3));
+}
+
+.next {
+  right: calc(var(--safe-right) + var(--space-3));
+}
+
+.prev:disabled,
+.next:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+@media (hover: none) {
+  .prev,
+  .next {
+    display: none;
+  }
+}

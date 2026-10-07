@@ -1,0 +1,22 @@
+.bar {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: var(--z-bar);
+  display: flex;
+  gap: 10px;
+  padding: 10px calc(var(--space-4) + var(--safe-right)) calc(10px + var(--safe-bottom))
+    calc(var(--space-4) + var(--safe-left));
+  background: var(--bar-bg);
+  -webkit-backdrop-filter: var(--glass-filter);
+  backdrop-filter: var(--glass-filter);
+  border-top: 1px solid var(--line);
+  animation: bar-up var(--duration-sheet-in) var(--ease-out) backwards;
+  transition: transform var(--duration-sheet-in) var(--ease-out);
+}
+
+.bar[data-hidden] {
+  transform: translateY(100%);
+  transition: transform var(--duration-sheet-out) var(--ease-in);
+}
