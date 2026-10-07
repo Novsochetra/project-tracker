@@ -12,9 +12,9 @@ export function initials(name: string): string {
     .trim()
     .split(/\s+/)
     .filter(Boolean)
+    .slice(0, 2)
     .map((word) => [...word][0] ?? '')
     .join('')
-    .slice(0, 2)
     .toUpperCase();
 }
 

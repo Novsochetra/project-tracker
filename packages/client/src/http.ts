@@ -26,8 +26,26 @@ export interface RequestOptions {
   allowEmpty?: boolean;
 }
 
-const isErrorBody = (value: unknown): value is ErrorBody =>
-  typeof value === 'object' && value !== null && 'error' in value;
+const isErrorBody = (value: unknown): value is ErrorBody => {
+  const error = (value as Partial<ErrorBody> | null)?.error;
+  return typeof error?.code === 'string' && typeof error.message === 'string';
+};
+
+function parseJson(text: string): unknown {
+  try {
+    return JSON.parse(text);
+  } catch {
+    return null;
+  }
+}
+
+function toApiError(response: Response, text: string): ApiError {
+  const data = parseJson(text);
+  const { code, message } = isErrorBody(data)
+    ? data.error
+    : { code: 'http_error', message: response.statusText };
+  return new ApiError(response.status, code, message);
+}
 
 function buildQuery(query: Query | undefined): string {
   const params = new URLSearchParams();
@@ -87,13 +105,7 @@ export class Http {
       return undefined as T;
     }
     const text = await response.text();
-    const data: unknown = text ? JSON.parse(text) : null;
-    if (!response.ok) {
-      const error = isErrorBody(data)
-        ? data.error
-        : { code: 'http_error', message: response.statusText };
-      throw new ApiError(response.status, error.code, error.message);
-    }
-    return data as T;
+    if (!response.ok) throw toApiError(response, text);
+    return (text ? JSON.parse(text) : null) as T;
   }
 }

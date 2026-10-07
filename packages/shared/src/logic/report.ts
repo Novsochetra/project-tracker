@@ -6,7 +6,7 @@ export interface ParsedReportBlock {
   text: string;
 }
 
-const TICKET_LINE = /^[\s>*_`#-]*TICKET[\s*_`]*[:：]\s*[*_`]*\s*([A-Za-z0-9]+-\d+)/i;
+const TICKET_LINE = /^[\s>*_`#-]*TICKET[\s*_`]*[:：][\s*_`]*([A-Za-z0-9]+-\d+)/i;
 const STATUS_LINE = /STATUS[\s*_`]*[:：]\s*(.+)/i;
 const FENCE_LINE = /^\s*```/;
 

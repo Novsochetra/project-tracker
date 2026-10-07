@@ -1,4 +1,4 @@
-import type { Status, StatusCategory } from '../domain/status';
+import { isDoneCategory, type Status, type StatusCategory } from '../domain/status';
 
 export const sortStatuses = <T extends Pick<Status, 'position' | 'createdAt'>>(
   statuses: readonly T[],
@@ -8,7 +8,7 @@ const FALLBACKS: Record<StatusCategory, readonly StatusCategory[]> = {
   todo: ['todo'],
   in_progress: ['in_progress', 'todo'],
   in_review: ['in_review', 'reviewed', 'in_progress'],
-  reviewed: ['reviewed', 'in_review', 'done'],
+  reviewed: ['reviewed', 'in_review', 'in_progress'],
   done: ['done'],
 };
 
@@ -27,9 +27,11 @@ export function resolveStatus<T extends Status>(
     const found = findStatusByCategory(statuses, candidate);
     if (found) return found;
   }
-  const first = sortStatuses(statuses)[0];
-  if (!first) throw new Error('A project always has at least one status.');
-  return first;
+  const sorted = sortStatuses(statuses);
+  // Reports and agents must never move a ticket to Done, so the last resort skips done statuses.
+  const fallback = sorted.find((status) => !isDoneCategory(status.category)) ?? sorted[0];
+  if (!fallback) throw new Error('A project always has at least one status.');
+  return fallback;
 }
 
 export function findStatusByName<T extends Status>(

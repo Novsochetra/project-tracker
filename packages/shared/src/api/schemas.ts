@@ -2,9 +2,17 @@ import { z } from 'zod';
 import { REVIEW_VERDICTS } from '../domain/activity';
 import { PRIORITIES } from '../domain/priority';
 import { STATUS_CATEGORIES } from '../domain/status';
+import { toYmd } from '../logic/format';
 
 const hexColor = z.string().regex(/^#[0-9A-Fa-f]{6}$/, 'Use a hex color like #5B5BD6');
-const dueDate = z.union([z.literal(''), z.string().regex(/^\d{4}-\d{2}-\d{2}$/)]);
+const isRealDay = (ymd: string): boolean => toYmd(new Date(`${ymd}T00:00:00`)) === ymd;
+const dueDate = z.union([
+  z.literal(''),
+  z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/)
+    .refine(isRealDay, 'Use a real date like 2026-10-09'),
+]);
 const id = z.string().min(1).max(64);
 const attachmentIds = z.array(id).max(20);
 

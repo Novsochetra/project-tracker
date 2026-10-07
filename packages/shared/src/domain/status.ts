@@ -5,7 +5,7 @@ export type StatusCategory = (typeof STATUS_CATEGORIES)[number];
 export const STATUS_CATEGORY_LABELS: Record<StatusCategory, string> = {
   todo: 'To do',
   in_progress: 'In progress',
-  in_review: 'Needs review',
+  in_review: 'Need review',
   reviewed: 'Reviewed',
   done: 'Done',
 };
