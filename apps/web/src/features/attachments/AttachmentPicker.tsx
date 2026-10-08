@@ -1,7 +1,7 @@
 import type { Attachment } from '@tracker/shared';
 import clsx from 'clsx';
 import { Paperclip } from 'lucide-react';
-import { useEffect, useId, useRef, type FocusEvent } from 'react';
+import { useEffect, useId, useRef, type FocusEvent, type Ref } from 'react';
 import { Button, pastFold, ShowMoreButton, useFold } from '../../components';
 import styles from './AttachmentPicker.module.css';
 import { FileInput } from './FileInput';
@@ -10,6 +10,7 @@ import { measureRows } from './foldRows';
 import { AddTile, ThumbnailGrid } from './ThumbnailGrid';
 import type { FileNotice } from './fileNotice';
 import type { AttachmentUploads } from './useAttachmentUploads';
+import { useToastIfUnseen } from './useToastIfUnseen';
 
 export interface AttachmentPickerProps {
   attachments: readonly Attachment[];
@@ -24,9 +25,16 @@ export interface AttachmentPickerProps {
   className?: string | undefined;
 }
 
-function AddFilesButton({ onClick }: { onClick: () => void }) {
+function AddFilesButton({ onClick, ref }: { onClick: () => void; ref: Ref<HTMLButtonElement> }) {
   return (
-    <Button variant="text" size="sm" icon={Paperclip} className={styles.attach} onClick={onClick}>
+    <Button
+      ref={ref}
+      variant="text"
+      size="sm"
+      icon={Paperclip}
+      className={styles.attach}
+      onClick={onClick}
+    >
       Add files
     </Button>
   );
@@ -35,12 +43,14 @@ function AddFilesButton({ onClick }: { onClick: () => void }) {
 interface NoteProps {
   notice: FileNotice | null;
   onDismiss: () => void;
+  // Add files: both notes answer a pick, so a key press on Dismiss leaves focus where files are added.
+  focusTo: () => HTMLElement | null;
 }
 
 // What a pick left out tops the file area, where Add files was, so a big pick doesn't push it below
 // the fold. A pick from the Add tile under many files can leave that top out of sight, so it is
 // brought into view: it answers the pick just made.
-function PickNote({ notice, onDismiss }: NoteProps) {
+function PickNote({ notice, onDismiss, focusTo }: NoteProps) {
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
     // At once: WebKit keeps what is on screen in place when the note lands above it, and that
@@ -53,6 +63,7 @@ function PickNote({ notice, onDismiss }: NoteProps) {
       ref={ref}
       notice={notice}
       onDismiss={onDismiss}
+      focusTo={focusTo}
       className={clsx(styles.note, styles.pickNote)}
     />
   );
@@ -60,13 +71,17 @@ function PickNote({ notice, onDismiss }: NoteProps) {
 
 // An upload fails later, while the person may be anywhere, and Safari keeps no scroll anchor: a
 // note above the files would push down every tile on screen, or land unseen above them. Below the
-// files it moves only what is under it, and shows where the person picked from the Add tile.
-function LateNote({ notice, onDismiss }: NoteProps) {
+// files it moves only what is under it; where that is out of sight, a toast says it too.
+function LateNote({ notice, onDismiss, focusTo }: NoteProps) {
+  const ref = useRef<HTMLDivElement>(null);
+  useToastIfUnseen(ref, notice);
   if (!notice) return null;
   return (
     <FileNote
+      ref={ref}
       notice={notice}
       onDismiss={onDismiss}
+      focusTo={focusTo}
       className={clsx(styles.note, styles.lateNote)}
     />
   );
@@ -85,9 +100,11 @@ export function AttachmentPicker({
 }: AttachmentPickerProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const filesRef = useRef<HTMLDivElement>(null);
+  const addRef = useRef<HTMLButtonElement>(null);
+  const focusAdd = () => addRef.current;
   const filesId = useId();
   const pick = () => inputRef.current?.click();
-  const empty = attachments.length === 0 && uploads.uploading.length === 0;
+  const empty = attachments.length === 0 && uploads.tiles.length === 0;
   const fold = useFold(filesRef, foldRows && !empty, attachments.length, measureRows);
   // Files added while folded (a drop, a paste) land past the fold, so it opens for good.
   if (fold.folded && uploads.uploading.length > 0) fold.expand();
@@ -99,9 +116,10 @@ export function AttachmentPicker({
       <PickNote
         notice={uploads.notices.refused}
         onDismiss={() => uploads.dismissNotice('refused')}
+        focusTo={focusAdd}
       />
       {empty ? (
-        <AddFilesButton onClick={pick} />
+        <AddFilesButton ref={addRef} onClick={pick} />
       ) : (
         <div
           ref={filesRef}
@@ -112,14 +130,14 @@ export function AttachmentPicker({
         >
           <ThumbnailGrid
             attachments={attachments}
-            uploading={uploads.uploading}
+            uploading={uploads.tiles}
             onOpen={onOpen}
             onRemove={onRemove}
             onCancel={uploads.cancel}
             markedId={markedId}
             size={size}
           >
-            {!fold.folded && <AddTile onClick={pick} data-add-tile="" />}
+            {!fold.folded && <AddTile ref={addRef} onClick={pick} data-add-tile="" />}
           </ThumbnailGrid>
         </div>
       )}
@@ -131,10 +149,14 @@ export function AttachmentPicker({
             moreLabel={`Show all ${attachments.length} files`}
             onClick={(event) => fold.toggle(event.currentTarget)}
           />
-          {fold.folded && <AddFilesButton onClick={pick} />}
+          {fold.folded && <AddFilesButton ref={addRef} onClick={pick} />}
         </div>
       )}
-      <LateNote notice={uploads.notices.failed} onDismiss={() => uploads.dismissNotice('failed')} />
+      <LateNote
+        notice={uploads.notices.failed}
+        onDismiss={() => uploads.dismissNotice('failed')}
+        focusTo={focusAdd}
+      />
       <FileInput ref={inputRef} label={inputLabel} onFiles={uploads.add} />
     </div>
   );

@@ -1,4 +1,4 @@
-import { act, screen, waitFor, within } from '@testing-library/react';
+import { act, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { UNSUPPORTED_ATTACHMENT_MESSAGE } from '@tracker/shared';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -40,8 +40,7 @@ describe.each(SURFACES)('a refused file in $name', (surface) => {
     expect(shown.client.uploadAttachment).not.toHaveBeenCalled();
 
     await user.click(within(note).getByRole('button', { name: 'Dismiss' }));
-    // It keeps its place, hidden, while a double tap's second tap may come (PT-72 review).
-    await waitFor(() => expect(within(shown!.area()).queryByRole('alert')).not.toBeInTheDocument());
+    expect(within(shown.area()).queryByRole('alert')).not.toBeInTheDocument();
   });
 
   it('outlasts a toast and gives way to the next pick', async () => {

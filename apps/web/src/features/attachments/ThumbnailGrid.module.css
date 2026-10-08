@@ -72,6 +72,11 @@
   }
 }
 
+/* A file that didn't upload: its tile stays until it or the note that says why goes. */
+.failed .frame {
+  border-color: var(--danger);
+}
+
 /* The attachment a removal is being confirmed for. */
 .marked .frame {
   outline: 2px solid var(--danger);

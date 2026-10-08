@@ -1,20 +1,14 @@
-import type { Attachment, AttachmentKind } from '@tracker/shared';
-import { useEffect, useRef, useState } from 'react';
+import type { Attachment } from '@tracker/shared';
+import { useEffect, useRef } from 'react';
 import { useDeleteAttachment, useUploadAttachment } from '../../api';
 import { useLatest } from '../../lib/useLatest';
 import { admitFiles, roomFor, type AdmittedFile, type FileLimit } from './attachmentFiles';
 import type { FileNotice, Notices } from './fileNotice';
 import { useFileNotice } from './useFileNotice';
 import { usePickedOrder } from './usePickedOrder';
+import { useUploadingList, type UploadingFile } from './useUploadingList';
 
-export interface UploadingFile {
-  key: string;
-  name: string;
-  kind: AttachmentKind;
-  size: number;
-  progress: number;
-  preview: string | null;
-}
+export type { UploadingFile } from './useUploadingList';
 
 export interface AttachmentUploadOptions {
   ticketKey?: string | undefined;
@@ -27,6 +21,9 @@ export interface AttachmentUploadOptions {
 }
 
 export interface AttachmentUploads {
+  // A tile for each file still uploading and each that failed since the last pick, as picked.
+  tiles: UploadingFile[];
+  // Those still going, which Create and Comment wait for.
   uploading: UploadingFile[];
   notices: Notices;
   add: (files: Iterable<File>) => void;
@@ -34,8 +31,6 @@ export interface AttachmentUploads {
   cancelAll: () => void;
   dismissNotice: (problem?: FileNotice['problem']) => void;
 }
-
-const PERCENT = 100;
 
 function previewOf({ file, kind }: AdmittedFile): string | null {
   if (kind !== 'image' && kind !== 'video') return null;
@@ -45,6 +40,7 @@ function previewOf({ file, kind }: AdmittedFile): string | null {
 interface Finished {
   item: UploadingFile;
   attachment: Attachment | null;
+  failed: boolean;
 }
 
 const toUploading = (key: string, entry: AdmittedFile): UploadingFile => ({
@@ -54,23 +50,32 @@ const toUploading = (key: string, entry: AdmittedFile): UploadingFile => ({
   size: entry.file.size,
   progress: 0,
   preview: previewOf(entry),
+  failed: false,
 });
 
-function useUploadingList() {
-  const [uploading, setUploading] = useState<UploadingFile[]>([]);
-  const setProgress = (key: string, fraction: number) => {
-    // Whole percents, so a fast upload doesn't render on every progress event.
-    const progress = Math.round(fraction * PERCENT) / PERCENT;
-    setUploading((current) =>
-      current.some((item) => item.key === key && item.progress !== progress)
-        ? current.map((item) => (item.key === key ? { ...item, progress } : item))
-        : current,
-    );
-  };
-  const drop = (key: string) =>
-    setUploading((current) => current.filter((item) => item.key !== key));
-  return { uploading, setUploading, setProgress, drop };
+interface UploadEnds {
+  forget: (attachment: Attachment) => void;
+  fail: (item: UploadingFile, error: unknown) => void;
 }
+
+// How an upload ends: in its attachment, stopped, or failed.
+const ends = (item: UploadingFile, signal: AbortSignal, { forget, fail }: UploadEnds) =>
+  [
+    (attachment: Attachment): Finished => {
+      if (!signal.aborted) return { item, attachment, failed: false };
+      // It got there before the stop did, so it goes again.
+      forget(attachment);
+      return { item, attachment: null, failed: false };
+    },
+    (error: unknown): Finished => {
+      if (signal.aborted) return { item, attachment: null, failed: false };
+      fail(item, error);
+      return { item, attachment: null, failed: true };
+    },
+  ] as const;
+
+const byKey = (key: string) => (item: UploadingFile) => item.key === key;
+const isFailed = (item: UploadingFile) => item.failed;
 
 export function useAttachmentUploads(options: AttachmentUploadOptions = {}): AttachmentUploads {
   const { ticketKey, limit } = options;
@@ -78,16 +83,24 @@ export function useAttachmentUploads(options: AttachmentUploadOptions = {}): Att
   const deleteAttachment = useDeleteAttachment();
   const notices = useFileNotice();
   const list = useUploadingList();
+  const uploading = list.tiles.filter((item) => !item.failed);
   const onUploadedRef = useLatest(options.onUploaded);
   const controllers = useRef(new Map<string, AbortController>());
   const counter = useRef(0);
-  const order = usePickedOrder<Finished>(options.inPickedOrder ?? false, ({ item, attachment }) => {
-    list.drop(item.key);
+  const order = usePickedOrder<Finished>(options.inPickedOrder ?? false, (finished) => {
+    const { item, attachment, failed } = finished;
+    // An upload that fails late may have its note out of sight, so its tile stays and says so.
+    if (failed) return;
+    list.drop(byKey(item.key));
     if (item.preview) URL.revokeObjectURL(item.preview);
     if (attachment) onUploadedRef.current?.(attachment);
   });
   const forget = (attachment: Attachment) =>
     deleteAttachment.mutate({ attachmentId: attachment.id, ticketKey });
+  const fail = (item: UploadingFile, error: unknown) => {
+    notices.failed(item.name, error);
+    list.fail(item.key);
+  };
 
   // Files waiting for a form that is gone have no home; ones for a ticket still belong to it.
   useEffect(() => {
@@ -103,7 +116,7 @@ export function useAttachmentUploads(options: AttachmentUploadOptions = {}): Att
     const controller = new AbortController();
     controllers.current.set(item.key, controller);
     order.pick(item.key);
-    list.setUploading((current) => [...current, item]);
+    list.add(item);
     // mutateAsync, because callbacks passed to mutate only run for the latest call.
     void upload
       .mutateAsync({
@@ -112,33 +125,23 @@ export function useAttachmentUploads(options: AttachmentUploadOptions = {}): Att
         signal: controller.signal,
         onProgress: (fraction) => list.setProgress(item.key, fraction),
       })
-      .then(
-        (attachment) => {
-          if (!controller.signal.aborted) return attachment;
-          // It got there before the stop did, so it goes again.
-          forget(attachment);
-          return null;
-        },
-        (error: unknown) => {
-          if (!controller.signal.aborted) notices.failed(item.name, error);
-          return null;
-        },
-      )
-      .then((attachment) => {
+      .then(...ends(item, controller.signal, { forget, fail }))
+      .then((finished) => {
         controllers.current.delete(item.key);
-        order.settle(item.key, { item, attachment });
+        order.settle(item.key, finished);
       });
   };
 
   const add = (files: Iterable<File>) => {
-    const { admitted, refused } = admitFiles(files, roomFor(limit, list.uploading.length));
+    const { admitted, refused } = admitFiles(files, roomFor(limit, uploading.length));
     notices.picked(refused);
+    list.drop(isFailed);
     admitted.forEach(start);
   };
 
   const cancel = (key: string) => {
     controllers.current.get(key)?.abort();
-    list.drop(key);
+    list.drop(byKey(key));
     const waiting = order.waiting(key);
     if (waiting?.attachment) {
       forget(waiting.attachment);
@@ -152,15 +155,22 @@ export function useAttachmentUploads(options: AttachmentUploadOptions = {}): Att
       if (attachment) forget(attachment);
       if (item.preview) URL.revokeObjectURL(item.preview);
     });
-    list.setUploading([]);
+    list.drop(() => true);
+  };
+
+  // A failed tile goes with the note that says why.
+  const dismissNotice = (problem?: FileNotice['problem']) => {
+    notices.dismiss(problem);
+    if (problem !== 'refused') list.drop(isFailed);
   };
 
   return {
-    uploading: list.uploading,
+    tiles: list.tiles,
+    uploading,
     notices: notices.notices,
     add,
     cancel,
     cancelAll,
-    dismissNotice: notices.dismiss,
+    dismissNotice,
   };
 }

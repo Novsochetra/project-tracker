@@ -1,9 +1,9 @@
-import { screen, waitFor, within } from '@testing-library/react';
+import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { attachment } from '../../src/api/test/fixtures';
 import { CLICK_SHIELD_MS } from '../../src/lib/clickShield';
-import { skipAnimations } from '../../src/overlays/testing';
+import { skipAnimations, tap } from '../../src/overlays/testing';
 import {
   CAPTURE,
   COMMENT_BOX,
@@ -12,7 +12,7 @@ import {
   type ShownSurface,
   type Surface,
 } from './attachmentSurfaces';
-import { doubleClick, GAPS } from './doubleClick';
+import { GAPS, hitTest } from './doubleClick';
 
 const NAMES = ['a.txt', 'b.txt', 'c.txt', 'd.txt'];
 
@@ -69,13 +69,16 @@ const UNDER = new Map<Surface, () => HTMLElement>([
 // WebKit at 320×568: a double tap on the note's Dismiss removed a draft file (New ticket, quick
 // capture), asked to remove a file (the ticket screen) or sent the comment (the comment box), as
 // what lay under the note slid under the finger for the second tap. jsdom has no layout, so the
-// second tap goes to what the browser finds there: the note while it keeps its place, else what
+// second tap goes to what the browser finds there: the note while it is in the page, else what
 // slid up.
 describe.each([NEW_TICKET, CAPTURE, TICKET_SCREEN, COMMENT_BOX])('the note in $name', (surface) => {
   it.each(GAPS)('takes a double tap on Dismiss as one (%i ms apart)', async (gap) => {
     const user = await pickWithRefusal(surface);
     const under = UNDER.get(surface)!();
-    await doubleClick(user, dismiss(), under, gap);
+    const spot = dismiss();
+    await tap(user, spot);
+    if (gap > 0) await wait(gap);
+    await tap(user, hitTest(spot, under));
 
     await wait(CLICK_SHIELD_MS);
     expect(area().queryByRole('alert')).not.toBeInTheDocument();
@@ -91,10 +94,12 @@ describe.each([NEW_TICKET, CAPTURE, TICKET_SCREEN, COMMENT_BOX])('the note in $n
     expect(area().queryByRole('alert')).not.toBeInTheDocument();
   });
 
-  it('stays for the next pick that leaves a file out, even while the last one goes', async () => {
+  // A drop or a paste picks without a press, so the presses held back after the tap don't stop it.
+  it('stays for the next pick that leaves a file out, right after the last one went', async () => {
     const user = await pickWithRefusal(surface);
     await user.click(dismiss());
-    await user.upload(shown!.input(), new File(['zip'], 'logs.zip', { type: 'application/zip' }));
+    const zip = new File(['zip'], 'logs.zip', { type: 'application/zip' });
+    fireEvent.change(shown!.input(), { target: { files: [zip] } });
     await wait(CLICK_SHIELD_MS);
     expect(area().getByRole('alert')).toHaveTextContent("logs.zip can't be attached.");
   });

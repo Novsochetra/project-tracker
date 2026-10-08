@@ -42,10 +42,3 @@
     margin: -12px -12px -12px 0;
   }
 }
-
-/* Gone from sight and from taps at once on Dismiss, its place kept while a double tap's second tap
-   may still come (FileNote). */
-.gone {
-  opacity: 0;
-  transition: opacity var(--duration-fast) var(--ease-out);
-}

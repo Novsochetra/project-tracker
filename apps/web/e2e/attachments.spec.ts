@@ -92,6 +92,21 @@ const spotOf = async (locator: Locator) => {
   return { x: box.x + box.width / 2, y: box.y + box.height / 2 };
 };
 
+// Seen: its middle is on the screen and nothing, such as a sheet's header or the bottom bar,
+// covers it.
+const isSeen = (element: Element) => {
+  const box = element.getBoundingClientRect();
+  const hit = document.elementFromPoint(box.x + box.width / 2, box.y + box.height / 2);
+  return hit !== null && element.contains(hit);
+};
+
+// The name of the control a tap at the spot would press, if any.
+const controlAt = (page: Page, spot: { x: number; y: number }) =>
+  page.evaluate(({ x, y }) => {
+    const control = document.elementFromPoint(x, y)?.closest('button, textarea, input, a');
+    return control ? (control.getAttribute('aria-label') ?? control.textContent) : null;
+  }, spot);
+
 async function swipeDown(page: Page): Promise<void> {
   const { width, height } = page.viewportSize() ?? { width: 375, height: 812 };
   await page.mouse.move(width / 2, height / 2);
@@ -227,6 +242,8 @@ test.describe('attachments', () => {
     await expect(note).toBeVisible();
     await note.getByRole('button', { name: 'Dismiss' }).tap();
     await expect(note).toBeHidden();
+    // The sheet takes no taps for a moment while what was under the note settles.
+    await page.waitForTimeout(500);
 
     const logs = Array.from({ length: 21 }, (_, index) => ({
       name: `crash-report-${index + 1}.log`,
@@ -267,6 +284,8 @@ test.describe('attachments', () => {
       // From the Add tile under 19 files the top of the file area is out of sight.
       await note.getByRole('button', { name: 'Dismiss' }).tap();
       await expect(note).toBeHidden();
+      // The sheet takes no taps for a moment while what was under the note settles.
+      await page.waitForTimeout(500);
       await sheet.getByRole('button', { name: 'Remove crash-report-20.log' }).tap();
       const addTile = sheet.locator('[data-add-tile]');
       await addTile.scrollIntoViewIfNeeded();
@@ -336,8 +355,17 @@ test.describe('attachments', () => {
     await expect(removes).toHaveCount(1);
   });
 
+  // Each where the bug shows: what lay under the note slides under the finger as it goes. Two
+  // can't show it. The comment box ends the ticket screen, which at 375×812 is scrolled to its end
+  // with the note in view, so the files above slide down instead, and no file's x reaches the
+  // Dismiss spot at 375; nor does one at 320 on the ticket screen, three tiles to a row.
+  const cantShow = (area: string, viewport: typeof PHONE) =>
+    (area === 'the comment box' && viewport === PHONE) ||
+    (area === 'the ticket screen' && viewport === SMALL_PHONE);
   for (const [surface, size] of FILE_AREAS.flatMap((area) =>
-    [PHONE, SMALL_PHONE].map((viewport) => [area, viewport] as const),
+    [PHONE, SMALL_PHONE]
+      .filter((viewport) => !cantShow(area.name, viewport))
+      .map((viewport) => [area, viewport] as const),
   )) {
     test(`phone ${size.width}: a double tap on the note's Dismiss in ${surface.name} only dismisses it`, async ({
       page,
@@ -356,6 +384,8 @@ test.describe('attachments', () => {
       let chooser = 0;
       page.on('filechooser', () => (chooser += 1));
       const note = area.getByRole('alert').filter({ hasText: "can't be attached" });
+      // The photo picker closes the keyboard, so no field has focus when the note comes.
+      await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
 
       for (const gap of [0, 60, 120, 200]) {
         await input.setInputFiles([SVG]);
@@ -369,43 +399,104 @@ test.describe('attachments', () => {
         await page.touchscreen.tap(spot.x, spot.y);
         await page.waitForTimeout(700);
         await expect(note).toHaveCount(0);
-        // Nothing that lay under the note took the second tap: no file removed or asked about,
-        // no comment sent (it would take the files along), no file picker.
+        // Nothing that slid under the finger took the second tap: no file removed or asked about,
+        // no comment sent (it would take the files along), no file picker, no field focused for
+        // the keyboard.
         await expect(removes).toHaveCount(8);
         await expect(page.getByRole('dialog', { name: /^Remove/ })).toHaveCount(0);
         expect(chooser).toBe(0);
+        expect(await page.evaluate(() => document.activeElement?.matches('textarea, input'))).toBe(
+          false,
+        );
+        // Though there was something to press: a file's x or Comment, slid up from below, or in
+        // a sheet that fits the screen, a field slid down from above as the sheet shrank.
+        expect(await controlAt(page, spot)).toMatch(
+          /^(Remove image \d|Comment|Description|Ticket title)$/,
+        );
       }
     });
   }
 
-  for (const surface of NEW_TICKET_SHEETS) {
-    test(`small phone: an upload that fails late in ${surface.name} is said in view without moving the files`, async ({
+  for (const size of [PHONE, SMALL_PHONE]) {
+    test(`phone ${size.width}: a tap aimed at a file's x just after Dismiss on the ticket screen acts on that file`, async ({
+      page,
+      api,
+    }, info) => {
+      test.skip(!isPhone(info.project.name), 'A tap on a phone.');
+      await page.setViewportSize(size);
+      await seedProject(api, 'Mobile app', 'MOB', [{ title: 'Existing ticket' }]);
+      await page.goto('/p/MOB/1');
+      await page.getByLabel('Add files to ticket').setInputFiles([...images(8), SVG]);
+      await expect(page.getByRole('progressbar')).toHaveCount(0);
+      const dismiss = page.getByRole('alert').getByRole('button', { name: 'Dismiss' });
+      await dismiss.evaluate((button) => button.scrollIntoView({ block: 'center' }));
+      await page.waitForTimeout(400);
+      const firstX = page.getByRole('button', { name: 'Remove image 1' });
+      const before = await spotOf(firstX);
+
+      const spot = await spotOf(dismiss);
+      await page.touchscreen.tap(spot.x, spot.y);
+      await page.waitForTimeout(250);
+      // Where image 1's x shows a moment after the tap: where a person aims for it.
+      const aimed = await spotOf(firstX);
+      await page.waitForTimeout(350);
+      await page.touchscreen.tap(aimed.x, aimed.y);
+      await expect(page.getByRole('dialog', { name: /^Remove/ })).toContainText('Remove image 1?');
+      // The files moved up into the note's place with the tap, and not again later.
+      const settled = await spotOf(firstX);
+      expect(before.y - settled.y).toBeGreaterThan(40);
+      expect(Math.abs(settled.y - aimed.y)).toBeLessThan(1);
+    });
+  }
+
+  // Where a person may be when an upload fails: at the Add tile they picked from, at the bottom
+  // of the screen, or back in the middle of the files.
+  const LATE_SCROLLS = [
+    { name: 'the Add tile', scroll: (area: Locator) => area.locator('[data-add-tile]') },
+    {
+      name: 'mid-grid',
+      scroll: (area: Locator) => area.getByRole('button', { name: 'Remove image 8' }),
+    },
+  ];
+  for (const [surface, where] of FILE_AREAS.filter(
+    (area) => area.name !== 'the comment box',
+  ).flatMap((area) => LATE_SCROLLS.map((scroll) => [area, scroll] as const))) {
+    test(`small phone: an upload that fails late in ${surface.name}, scrolled to ${where.name}, is seen without moving the files`, async ({
       page,
       api,
     }, info) => {
       test.skip(!isPhone(info.project.name), 'The fold of a 320×568 phone.');
       await page.setViewportSize(SMALL_PHONE);
       await seedProject(api, 'Mobile app', 'MOB', [{ title: 'Existing ticket' }]);
-      await page.route('**/api/attachments', async (route) => {
+      await page.route('**/api/attachments*', async (route) => {
         if (route.request().headers()[FILE_NAME_HEADER] !== 'late.png') return route.continue();
         await new Promise((resolve) => setTimeout(resolve, 2500));
         return route.fulfill({ status: 500, contentType: 'application/json', body: '{}' });
       });
       await surface.open(page);
-      const sheet = newTicketSheet(page);
-      await sheet
-        .getByLabel('Add files to ticket')
+      const area = surface.area(page);
+      await area
+        .getByLabel(surface.input)
         .setInputFiles([...images(15), { ...images(1)[0]!, name: 'late.png' }]);
-      await expect(sheet.getByRole('progressbar')).toHaveCount(1);
-      await sheet.locator('[data-add-tile]').scrollIntoViewIfNeeded();
-      const tile = sheet.getByRole('button', { name: 'Remove image 10' });
-      const before = (await tile.boundingBox())!.y;
+      await expect(area.getByRole('progressbar')).toHaveCount(1);
+      await where.scroll(area).evaluate((element) => element.scrollIntoView({ block: 'center' }));
+      await page.waitForTimeout(300);
+      const tile = area.getByRole('button', { name: 'Remove image 10' });
+      const lateX = area.getByRole('button', { name: 'Remove late.png' });
+      const before = { tile: (await tile.boundingBox())!.y, late: (await lateX.boundingBox())!.y };
 
-      const note = sheet.getByRole('alert');
-      await expect(note).toContainText("late.png didn't upload.", { timeout: 8000 });
-      await page.waitForTimeout(500);
-      expect(Math.abs((await tile.boundingBox())!.y - before)).toBeLessThan(1);
-      await expect(note).toBeInViewport({ ratio: 1 });
+      const failed = area.getByRole('img', { name: "late.png didn't upload" });
+      await expect(failed).toBeAttached({ timeout: 8000 });
+      await page.waitForTimeout(300);
+      // Its tile stays where it was and says so: nothing on screen moves.
+      expect(Math.abs((await tile.boundingBox())!.y - before.tile)).toBeLessThan(1);
+      expect(Math.abs((await lateX.boundingBox())!.y - before.late)).toBeLessThan(1);
+      // The note that says why is below the files; out of sight, a toast says it too.
+      const note = area.getByRole('alert').filter({ hasText: "late.png didn't upload." });
+      const told = page.getByRole('status').getByText("late.png didn't upload.", { exact: true });
+      const noteSeen = await note.evaluate(isSeen);
+      await expect(told).toHaveCount(noteSeen ? 0 : 1);
+      if (!noteSeen) await expect(told).toBeInViewport();
     });
   }
 

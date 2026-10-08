@@ -126,6 +126,15 @@
   transition: stroke-dashoffset var(--duration-fast) linear;
 }
 
+/* A file that didn't upload shows this in place of its ring. */
+.failed {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  color: var(--danger);
+}
+
 /* Over a photo or a video frame: the picture dims and the ring turns white. */
 .overMedia {
   position: absolute;

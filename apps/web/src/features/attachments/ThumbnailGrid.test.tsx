@@ -21,6 +21,7 @@ const uploading = (overrides: Partial<UploadingFile> = {}): UploadingFile => ({
   size: 4096,
   progress: 0.4,
   preview: null,
+  failed: false,
   ...overrides,
 });
 
@@ -142,6 +143,29 @@ describe('ThumbnailGrid', () => {
     );
     const tile = screen.getByRole('progressbar', { name: 'Uploading shot.png' }).closest('.tile');
     expect(tile?.querySelector('img')).toHaveAttribute('src', 'blob:local-shot');
+  });
+
+  it("keeps a file that didn't upload in its tile, saying so, with its x", async () => {
+    const onCancel = vi.fn();
+    const user = userEvent.setup();
+    render(
+      <ThumbnailGrid
+        attachments={[]}
+        uploading={[
+          uploading({ name: 'shot.png', kind: 'image', preview: 'blob:shot', failed: true }),
+          uploading({ key: 'upload-2', name: 'log.txt', kind: 'text', failed: true }),
+        ]}
+        onCancel={onCancel}
+      />,
+    );
+    expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
+    const shot = screen.getByRole('img', { name: "shot.png didn't upload" }).closest('.tile');
+    expect(shot).toHaveClass('failed');
+    expect(shot?.querySelector('img')).toHaveAttribute('src', 'blob:shot');
+    const log = screen.getByRole('img', { name: "log.txt didn't upload" }).closest('.tile');
+    expect(within(log as HTMLElement).getByText('log.txt')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Remove log.txt' }));
+    expect(onCancel).toHaveBeenCalledWith('upload-2');
   });
 
   it('adds extra tiles at the end', async () => {
