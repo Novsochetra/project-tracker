@@ -46,7 +46,7 @@ The server listens on `127.0.0.1` by default. To reach it from your phone:
 2. Open `http://<your-computer's-LAN-IP>:4100` on the phone and enter the token once.
 3. Add it to the home screen (Safari: Share → Add to Home Screen). It opens full screen like an app.
 
-For HTTPS (needed for offline support and the clipboard API), the easiest route is [Tailscale](https://tailscale.com): `tailscale serve --bg 4100`, then open the `https://…ts.net` address on your phone.
+For HTTPS (needed for offline support and the clipboard API), the easiest route is [Tailscale](https://tailscale.com): `tailscale serve --bg 4100`, then open the `https://…ts.net` address on your phone. Start the server with `PUBLIC_URL=https://<your-machine>.ts.net` so Connect Claude Code shows that address.
 
 ## Connect Claude Code
 

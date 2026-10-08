@@ -1,84 +1,15 @@
 import { screen } from '@testing-library/react';
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { makeTicketDetail, project, statuses } from '../../src/api/test/fixtures';
 import { PromptSheet } from '../../src/features/claude/PromptSheet';
 import { ReportSheet } from '../../src/features/claude/ReportSheet';
 import { renderWithApi, sheetTestSetup } from '../../src/features/claude/test/renderWithApi';
+import { phoneStyle } from './phoneCss';
 
-const SRC = join(import.meta.dirname, '../../src');
-const PHONE_MEDIA = '@media (max-width: 767px)';
-
-interface Rule {
-  selector: string;
-  body: string;
-  media: string;
-}
-
-const readCss = (path: string): string =>
-  readFileSync(join(SRC, path), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
-
-function rulesOf(css: string): Rule[] {
-  const rules: Rule[] = [];
-  const preludes: string[] = [];
-  let start = 0;
-  for (let index = 0; index < css.length; index += 1) {
-    if (css[index] !== '{' && css[index] !== '}') continue;
-    if (css[index] === '{') preludes.push(css.slice(start, index).trim());
-    else {
-      const selector = preludes.pop() ?? '';
-      const media = preludes.join(' ');
-      if (!selector.startsWith('@')) rules.push({ selector, body: css.slice(start, index), media });
-    }
-    start = index + 1;
-  }
-  return rules;
-}
-
-const appliesOnPhones = (rule: Rule): boolean => rule.media === '' || rule.media === PHONE_MEDIA;
-
-function declarations(rule: Rule): [string, string][] {
-  return rule.body
-    .split(';')
-    .map((line) => line.split(':').map((part) => part.trim()))
-    .flatMap(([name, ...value]) => (name ? [[name, value.join(':')] as [string, string]] : []));
-}
-
-function phoneTokens(): Map<string, string> {
-  const rules = rulesOf(readCss('design/tokens.css'));
-  const roots = rules.filter((rule) => rule.selector === ':root' && appliesOnPhones(rule));
-  return new Map(roots.flatMap(declarations).filter(([name]) => name.startsWith('--')));
-}
-
-function resolve(value: string, tokens: Map<string, string>): string {
-  const next = value.replace(
-    /var\((--[\w-]+)\)/g,
-    (_match, name: string) => tokens.get(name) ?? '',
-  );
-  return next === value ? value : resolve(next, tokens);
-}
-
-const styles = (selector: string, element: Element): boolean =>
-  selector.split(',').some((part) => {
-    const match = /^[a-z]*\.([\w-]+)$/.exec(part.trim());
-    return match !== null && element.classList.contains(match[1]!);
-  });
-
-// A small cascade is enough: these modules style their boxes with plain class rules, so the last
-// matching declaration at phone width wins.
 function phoneFontSize(element: Element, cssModule: string): string | undefined {
-  const tokens = phoneTokens();
-  let size: string | undefined;
-  for (const rule of rulesOf(readCss(cssModule))) {
-    if (!appliesOnPhones(rule) || !styles(rule.selector, element)) continue;
-    for (const [name, value] of declarations(rule)) {
-      const resolved = resolve(value, tokens);
-      if (name === 'font-size') size = resolved;
-      if (name === 'font') size = /(\d+(?:\.\d+)?px)/.exec(resolved)?.[1];
-    }
-  }
-  return size;
+  const style = phoneStyle(element, cssModule);
+  const font = style.get('font');
+  return style.get('font-size') ?? (font ? /(\d+(?:\.\d+)?px)/.exec(font)?.[1] : undefined);
 }
 
 let restore: () => void;
