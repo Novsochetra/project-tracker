@@ -36,6 +36,28 @@ describe('linkParts', () => {
     expect(links(`(see ${swift})`)).toEqual([swift]);
   });
 
+  it('ends a link at CJK punctuation but keeps CJK letters in it', () => {
+    expect(links('请看https://x.dev/a。谢谢')).toEqual(['https://x.dev/a']);
+    expect(links('链接：https://x.dev/b，然后https://x.dev/c、完成！')).toEqual([
+      'https://x.dev/b',
+      'https://x.dev/c',
+    ]);
+    expect(links('（https://x.dev/d）「https://x.dev/e」【https://x.dev/f】')).toEqual([
+      'https://x.dev/d',
+      'https://x.dev/e',
+      'https://x.dev/f',
+    ]);
+    expect(links('見てhttps://ja.wikipedia.org/wiki/東京？')).toEqual([
+      'https://ja.wikipedia.org/wiki/東京',
+    ]);
+  });
+
+  it('keeps an apostrophe inside a link and leaves a closing quote out', () => {
+    const guide = "https://en.wikipedia.org/wiki/The_Hitchhiker's_Guide_to_the_Galaxy";
+    expect(links(`Read ${guide}.`)).toEqual([guide]);
+    expect(links("It's at 'https://x.dev/g'.")).toEqual(['https://x.dev/g']);
+  });
+
   it('keeps ports, query strings and fragments', () => {
     expect(links('http://localhost:4100/p/MOB/3?tab=1&x=y#activity')).toEqual([
       'http://localhost:4100/p/MOB/3?tab=1&x=y#activity',

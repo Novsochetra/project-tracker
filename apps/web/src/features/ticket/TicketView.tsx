@@ -23,7 +23,12 @@ export function TicketView({ detail }: { detail: TicketDetail }) {
       <NavBar title={ticket.key} mono backLabel={project.name} right={<NavBarSpacer />} />
       <div className={styles.grid}>
         <TicketMain detail={detail} done={done} className={styles.main} />
-        <TicketSidePanel ref={panelRef} detail={detail} className={styles.side} />
+        <TicketSidePanel
+          ref={panelRef}
+          detail={detail}
+          offersDone={done !== null}
+          className={styles.side}
+        />
         <ActivitySection detail={detail} className={styles.activity} />
       </div>
       <TicketBottomBar ticketKey={ticket.key} projectKey={project.key} done={done} />

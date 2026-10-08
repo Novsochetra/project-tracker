@@ -41,6 +41,8 @@ export function TicketMain({ detail, done, className }: TicketMainProps) {
           onKeyDown={keepOneLine}
           onSave={(title) => update({ title })}
         />
+        {/* Above the description, which often runs long enough to push it below a phone's fold. */}
+        <LatestReview detail={detail} done={done} />
         <AutosaveTextarea
           label="Description"
           target={{ ticketKey: ticket.key, field: 'description' }}
@@ -52,7 +54,6 @@ export function TicketMain({ detail, done, className }: TicketMainProps) {
           onSave={(description) => update({ description })}
         />
         <TicketImages ticketKey={ticket.key} images={images} uploads={uploads} />
-        <LatestReview detail={detail} done={done} />
       </div>
       {drop.active && <DropOverlay />}
     </div>

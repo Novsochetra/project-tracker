@@ -11,16 +11,17 @@ import styles from './SidePanel.module.css';
 
 export interface TicketSidePanelProps {
   detail: TicketDetail;
+  offersDone: boolean;
   className?: string | undefined;
   ref?: Ref<HTMLElement>;
 }
 
-export function TicketSidePanel({ detail, className, ref }: TicketSidePanelProps) {
+export function TicketSidePanel({ detail, offersDone, className, ref }: TicketSidePanelProps) {
   const isPhone = useIsPhone();
   const now = useNow();
   return (
     <aside ref={ref} aria-label="Ticket details" className={clsx(styles.panel, className)}>
-      {!isPhone && <ClaudeSection detail={detail} now={now} />}
+      {!isPhone && <ClaudeSection detail={detail} now={now} offersDone={offersDone} />}
       <DetailsCard detail={detail} />
       <InfoCard detail={detail} now={now} />
       <DeleteTicket ticketKey={detail.ticket.key} />

@@ -6,7 +6,14 @@ import { lastReportAt } from '../activity/activityItems';
 import { promptSheet, reportSheet } from '../ticketSheets';
 import styles from './SidePanel.module.css';
 
-export function ClaudeSection({ detail, now }: { detail: TicketDetail; now: number }) {
+export interface ClaudeSectionProps {
+  detail: TicketDetail;
+  now: number;
+  offersDone: boolean;
+}
+
+// Reviewed work goes to Done next, so Move to Done stays the screen's only primary button.
+export function ClaudeSection({ detail, now, offersDone }: ClaudeSectionProps) {
   const sheets = useSheets();
   const { ticket, project } = detail;
   const reportAt = lastReportAt(detail.activity);
@@ -14,7 +21,7 @@ export function ClaudeSection({ detail, now }: { detail: TicketDetail; now: numb
     <div className={styles.section}>
       <span className={styles.label}>Claude Code</span>
       <Button
-        variant="primary"
+        variant={offersDone ? 'secondary' : 'primary'}
         size="lg"
         fullWidth
         icon={Terminal}

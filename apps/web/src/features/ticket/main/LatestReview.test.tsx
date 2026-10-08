@@ -67,7 +67,7 @@ const follows = (first: Element, second: Element) =>
   (first.compareDocumentPosition(second) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0;
 
 describe('latest review on the ticket screen', () => {
-  it('shows a reviewed ticket’s latest review right under the description', () => {
+  it('shows a reviewed ticket’s latest review right under the title', () => {
     setup(STATUS.reviewed, [report, approval]);
     expect(latest()).toHaveTextContent('Claude (reviewer) reviewed');
     expect(latest()).toHaveTextContent('1m ago');
@@ -76,7 +76,8 @@ describe('latest review on the ticket screen', () => {
     const reviewedColor = statuses.find((status) => status.category === 'reviewed')?.color;
     const chip = within(latest()).getByText('Approved').closest<HTMLElement>('[data-verdict]');
     expect(chip?.style.getPropertyValue('--verdict')).toBe(reviewedColor);
-    expect(follows(screen.getByLabelText('Description'), latest())).toBe(true);
+    expect(follows(screen.getByLabelText('Title'), latest())).toBe(true);
+    expect(follows(latest(), screen.getByLabelText('Description'))).toBe(true);
     const details = screen.getByRole('complementary', { name: 'Ticket details' });
     expect(follows(latest(), details)).toBe(true);
     expect(within(log()).getByText('Fix is correct; the new test covers rotation.')).toBeVisible();

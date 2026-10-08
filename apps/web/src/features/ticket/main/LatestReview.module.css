@@ -1,5 +1,5 @@
 .latest {
-  padding-top: var(--space-2);
+  padding: var(--space-2) 0;
 }
 
 .latest .done {

@@ -1,21 +1,36 @@
 export type LinkPart =
   { kind: 'text'; text: string } | { kind: 'link'; text: string; href: string };
 
-const CANDIDATE = /\bhttps?:\/\/[^\s<>"'`]+/gi;
-const TRAILING = /[.,;:!?*'"’”…]+$/;
+// CJK punctuation ends a link like a space does, because CJK text has no spaces around it
+// ("请看https://x.dev/a。谢谢"). CJK letters stay, as in https://ja.wikipedia.org/wiki/東京.
+const CANDIDATE = /\bhttps?:\/\/[^\s<>"`、。，．：；！？（）「」『』【】〈〉《》〔〕｡｢｣､]+/gi;
 const HAS_HOST = /^https?:\/\/[^/?#.]/i;
-const OPENERS: Record<string, string> = { ')': '(', ']': '[', '}': '{' };
+const TRAILING = new Set('.,;:!?*\'"’”…');
+const BRACKETS = [
+  ['(', ')'],
+  ['[', ']'],
+  ['{', '}'],
+] as const;
 
 const count = (text: string, char: string): number => text.split(char).length - 1;
 
+const unopenedClosers = (link: string): Map<string, number> =>
+  new Map(BRACKETS.map(([open, close]) => [close, count(link, close) - count(link, open)]));
+
 // Punctuation after a link ends the sentence, not the link. A closing bracket stays only when the
-// link opened it, like Wikipedia's "Swift_(programming_language)".
+// link opened it, like Wikipedia's "Swift_(programming_language)". One pass from the end with the
+// bracket counts taken once, so text of any length trims in linear time.
 function trimLink(candidate: string): string {
-  const link = candidate.replace(TRAILING, '');
-  const last = link.at(-1) ?? '';
-  const opener = OPENERS[last];
-  if (opener && count(link, last) > count(link, opener)) return trimLink(link.slice(0, -1));
-  return link;
+  const unopened = unopenedClosers(candidate);
+  let end = candidate.length;
+  while (end > 0) {
+    const char = candidate.charAt(end - 1);
+    const closers = unopened.get(char) ?? 0;
+    if (closers > 0) unopened.set(char, closers - 1);
+    else if (!TRAILING.has(char)) break;
+    end -= 1;
+  }
+  return candidate.slice(0, end);
 }
 
 // Splits plain text into text and http(s) links, so the text can be shown as React nodes and
