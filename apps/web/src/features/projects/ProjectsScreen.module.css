@@ -9,6 +9,14 @@
   max-width: 1040px;
 }
 
+.titleRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
 .emptyAction {
   padding: 0 14px;
 }
@@ -29,8 +37,9 @@
 }
 
 @media (max-width: 767px) {
+  /* The bottom padding clears the New ticket bar. */
   .page {
-    padding: 28px calc(var(--space-4) + var(--safe-right)) calc(48px + var(--safe-bottom))
+    padding: 28px calc(var(--space-4) + var(--safe-right)) calc(96px + var(--safe-bottom))
       calc(var(--space-4) + var(--safe-left));
   }
 }

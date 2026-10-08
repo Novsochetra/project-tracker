@@ -9,6 +9,7 @@ export type SheetRequest =
   | { type: 'newProject' }
   | { type: 'editProject'; projectKey: string }
   | { type: 'newTicket'; projectKey: string; statusId?: string }
+  | { type: 'capture' }
   | { type: 'prompt'; scope: PromptScope }
   | { type: 'report'; scope: ReportScope }
   | { type: 'statuses'; projectKey: string }

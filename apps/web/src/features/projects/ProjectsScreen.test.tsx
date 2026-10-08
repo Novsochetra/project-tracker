@@ -98,6 +98,59 @@ describe('ProjectsScreen', () => {
     expect(screen.queryByText('Progress')).not.toBeInTheDocument();
   });
 
+  it('opens quick capture from the New ticket button, which shows its C shortcut', async () => {
+    const user = userEvent.setup();
+    const { sheets } = renderProjects(() => Promise.resolve([projectSummary()]));
+    const button = await screen.findByRole('button', { name: 'New ticket' });
+    expect(button).toHaveAttribute('aria-keyshortcuts', 'C');
+    await user.click(button);
+    expect(sheets.open).toHaveBeenCalledWith({ type: 'capture' });
+    expect(document.querySelector('[data-bottom-bar]')).toBeNull();
+  });
+
+  it('puts New ticket in a bottom bar on phones', async () => {
+    restore.push(mockPhone(true));
+    const user = userEvent.setup();
+    const { sheets } = renderProjects(() => Promise.resolve([projectSummary()]));
+    await screen.findByRole('button', { name: /^Mobile app/ });
+    const bar = document.querySelector('[data-bottom-bar]');
+    expect(bar).not.toBeNull();
+    await user.click(within(bar as HTMLElement).getByRole('button', { name: 'New ticket' }));
+    expect(sheets.open).toHaveBeenCalledWith({ type: 'capture' });
+  });
+
+  it('offers no New ticket before there is a project to put it in', async () => {
+    restore.push(mockPhone(true));
+    renderProjects(() => Promise.resolve([]));
+    expect(await screen.findByText('No projects yet')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'New ticket' })).not.toBeInTheDocument();
+    expect(document.querySelector('[data-bottom-bar]')).toBeNull();
+  });
+
+  it('offers New ticket offline, before the list loads, when a project was used before', async () => {
+    restore.push(mockPhone(true));
+    window.localStorage.setItem(
+      'tracker.capture.project',
+      JSON.stringify({ key: 'MOB', name: 'Mobile app', color: '#5B5BD6' }),
+    );
+    restore.push(() => window.localStorage.clear());
+    renderProjects(() => new Promise<ProjectSummary[]>(() => undefined));
+    expect(await screen.findByRole('button', { name: 'New ticket' })).toBeInTheDocument();
+  });
+
+  it('shows how many captures wait on this device to sync', async () => {
+    window.localStorage.setItem(
+      'tracker.capture.queue',
+      JSON.stringify({
+        items: ['a', 'b'].map((id) => ({ id, projectKey: 'MOB', title: id, capturedAt: 1 })),
+        created: [],
+      }),
+    );
+    restore.push(() => window.localStorage.clear());
+    renderProjects(() => Promise.resolve([projectSummary()]));
+    expect(await screen.findByText('2 waiting to sync')).toBeInTheDocument();
+  });
+
   it('explains a failed load and tries again', async () => {
     const user = userEvent.setup();
     const listProjects = vi

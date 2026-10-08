@@ -1,0 +1,76 @@
+import { createTicketInput, type CreateTicketInput, type Priority } from '@tracker/shared';
+import type { QueuedCapture } from './captureQueue';
+
+export interface CaptureValues {
+  title: string;
+  description: string;
+  priority: Priority;
+}
+
+export const BLANK_CAPTURE: CaptureValues = { title: '', description: '', priority: 'medium' };
+
+export const CAPTURE_DRAFT_ID = 'capture';
+/** Long enough for a slow but working connection; after it the capture waits on the phone. */
+export const CAPTURE_TIMEOUT_MS = 8_000;
+
+export const TITLE_MAX_LENGTH = createTicketInput.shape.title.maxLength ?? undefined;
+export const DESCRIPTION_MAX_LENGTH =
+  createTicketInput.shape.description.unwrap().maxLength ?? undefined;
+
+export const TITLE_REQUIRED = 'Add a title to create the ticket.';
+export const NO_PROJECTS = 'Create a project first.';
+export const PHOTOS_NEED_CONNECTION =
+  "Photos need a connection. Try again once you're online, or remove them to save the text on this phone.";
+export const SAVED_ON_PHONE = "Saved on this phone. It will be added when you're back online.";
+
+export const createdToast = (ticketKey: string): string => `${ticketKey} created`;
+
+export const addedToast = (count: number): string =>
+  `${count} ${count === 1 ? 'ticket' : 'tickets'} added`;
+
+export const droppedToast = (title: string, reason: string): string =>
+  `Couldn't add “${title}”. ${reason}`;
+
+export const hasContent = (values: CaptureValues, photoCount: number): boolean =>
+  values.title.trim() !== '' || values.description.trim() !== '' || photoCount > 0;
+
+export interface NewCapture {
+  id: string;
+  projectKey: string;
+  values: CaptureValues;
+  capturedAt: number;
+}
+
+export const toQueuedCapture = ({
+  id,
+  projectKey,
+  values,
+  capturedAt,
+}: NewCapture): QueuedCapture => ({
+  id,
+  projectKey,
+  title: values.title.trim(),
+  description: values.description.trim(),
+  priority: values.priority,
+  capturedAt,
+  attempted: false,
+});
+
+// No statusId: the server puts a new ticket in the project's first status.
+export const createInputOf = (
+  capture: Pick<QueuedCapture, 'title' | 'description' | 'priority'>,
+  attachmentIds: readonly string[] = [],
+): CreateTicketInput => ({
+  title: capture.title,
+  description: capture.description,
+  priority: capture.priority,
+  ...(attachmentIds.length > 0 ? { attachmentIds: [...attachmentIds] } : {}),
+});
+
+const hex = (byte: number): string => byte.toString(16).padStart(2, '0');
+
+// randomUUID needs a secure context, which a phone reaching the dev server over plain http lacks.
+export function newCaptureId(): string {
+  if (typeof crypto.randomUUID === 'function') return crypto.randomUUID();
+  return Array.from(crypto.getRandomValues(new Uint8Array(16)), hex).join('');
+}

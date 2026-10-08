@@ -1,6 +1,7 @@
 import clsx from 'clsx';
 import { useLiveUpdates } from '../api';
 import { useToastRaise } from '../components';
+import { QuickCapture } from '../features/capture';
 import { useIsPhone } from '../lib/media';
 import { StackNavigator, useBottomBarVisible } from '../navigation';
 import { DesktopHeader } from './DesktopHeader';
@@ -10,13 +11,14 @@ import { renderScreen } from './renderScreen';
 import { RouteFallback } from './RouteFallback';
 import styles from './Shell.module.css';
 import { Sidebar } from './Sidebar';
-import { useApiUnreachable } from './useApiUnreachable';
+import { useApiUnreachable, useReachability } from './useApiUnreachable';
 
 export function Shell() {
   useLiveUpdates();
   useToastRaise(useBottomBarVisible());
   const isPhone = useIsPhone();
-  const unreachable = useApiUnreachable();
+  const reachability = useReachability();
+  const unreachable = useApiUnreachable(reachability);
   return (
     <div className={styles.shell}>
       {!isPhone && <Sidebar />}
@@ -29,6 +31,7 @@ export function Shell() {
       </div>
       <RouteFallback />
       <LiveRegion />
+      <QuickCapture reachability={reachability} />
     </div>
   );
 }

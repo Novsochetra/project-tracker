@@ -32,6 +32,15 @@ export default defineConfig({
             purpose: 'maskable',
           },
         ],
+        shortcuts: [
+          {
+            name: 'New ticket',
+            short_name: 'New ticket',
+            description: 'Capture a ticket in seconds',
+            url: '/?capture',
+            icons: [{ src: '/icon-192.png', sizes: '192x192', type: 'image/png' }],
+          },
+        ],
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,woff2}'],

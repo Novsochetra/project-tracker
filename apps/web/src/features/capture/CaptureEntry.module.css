@@ -1,0 +1,31 @@
+.key {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  margin-left: 2px;
+  padding: 0 4px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-square);
+  background: var(--fill);
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: var(--size-caption);
+  line-height: 1;
+}
+
+.waiting {
+  display: inline-flex;
+  align-self: flex-start;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  padding: var(--space-1) 10px;
+  border-radius: var(--radius-full);
+  background: var(--fill-2);
+  color: var(--muted-2);
+  font-size: var(--size-secondary);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.5;
+}

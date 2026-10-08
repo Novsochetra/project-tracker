@@ -1,3 +1,4 @@
+import { CaptureSheet } from '../../features/capture/CaptureSheet';
 import { PromptSheet } from '../../features/claude/PromptSheet';
 import { ReportSheet } from '../../features/claude/ReportSheet';
 import { ConnectSheet } from '../../features/connect/ConnectSheet';
@@ -22,6 +23,8 @@ export function SheetHost({ request, open, onClose }: Props) {
       return (
         <NewTicketSheet {...sheet} projectKey={request.projectKey} statusId={request.statusId} />
       );
+    case 'capture':
+      return <CaptureSheet {...sheet} />;
     case 'prompt':
       return <PromptSheet {...sheet} scope={request.scope} />;
     case 'report':

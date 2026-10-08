@@ -4,15 +4,20 @@ import { errorMessage, useProjects, type TrackerQuery } from '../../api';
 import { useSheets } from '../../app/sheets/context';
 import { Button, EmptyState, Icon } from '../../components';
 import { PullToRefresh } from '../../gestures';
+import { useIsPhone } from '../../lib/media';
 import { LargeTitle, NavBar, NavBarButton, useScreen } from '../../navigation';
+import { CaptureBar, CaptureButton, canCapture, WaitingToSync } from '../capture';
 import { ProjectList } from './ProjectList';
 import styles from './ProjectsScreen.module.css';
 
 export function ProjectsScreen() {
   const projects = useProjects();
   const sheets = useSheets();
+  const isPhone = useIsPhone();
   const { scrollRef } = useScreen();
   const openNew = () => sheets.open({ type: 'newProject' });
+  const openCapture = () => sheets.open({ type: 'capture' });
+  const capture = canCapture(projects.data);
   return (
     <>
       <NavBar
@@ -26,11 +31,16 @@ export function ProjectsScreen() {
       <PullToRefresh onRefresh={() => projects.refetch()} scrollRef={scrollRef}>
         <div className={styles.page}>
           <div className={styles.content}>
-            <LargeTitle aside={projects.data?.length}>Projects</LargeTitle>
+            <div className={styles.titleRow}>
+              <LargeTitle aside={projects.data?.length}>Projects</LargeTitle>
+              {capture && !isPhone && <CaptureButton onClick={openCapture} />}
+            </div>
+            <WaitingToSync />
             <ProjectsBody query={projects} onNew={openNew} />
           </div>
         </div>
       </PullToRefresh>
+      {capture && <CaptureBar onClick={openCapture} />}
     </>
   );
 }
