@@ -25,6 +25,8 @@ export const NO_PROJECTS = 'Create a project first.';
 export const FILES_NEED_CONNECTION =
   "Files need a connection. Try again once you're online, or remove them to save the text on this phone.";
 export const SAVED_ON_PHONE = "Saved offline. It'll sync later.";
+export const textNotSaved = (ticketKey: string): string =>
+  `${ticketKey} was created with your earlier text, and this text couldn't be saved to it. Try again.`;
 
 export const createdToast = (ticketKey: string): string => `${ticketKey} created`;
 

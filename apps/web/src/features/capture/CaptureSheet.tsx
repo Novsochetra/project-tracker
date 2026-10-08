@@ -25,7 +25,10 @@ export function CaptureSheet({ open, onClose }: SheetProps) {
   const [values, setValues] = useState<CaptureValues>(kept.values);
   const project = useCaptureProject(kept.projectKey);
   const files = useCaptureFiles();
-  const captureId = useCaptureId(kept.clientId);
+  // A file still uploading counts too: the person chose it.
+  const fileCount = files.items.length + files.uploading.length;
+  const dirty = hasContent(values, fileCount);
+  const captureId = useCaptureId(kept.clientId, !dirty);
   const finish = () => {
     forgetKeptCapture();
     onClose();
@@ -35,13 +38,10 @@ export function CaptureSheet({ open, onClose }: SheetProps) {
     project: project.current,
     attachments: files.items,
     uploading: files.uploading.length,
-    captureId: captureId.take,
+    captureId: () => captureId.take({ values, projectKey: project.chosenKey }),
     onDone: finish,
   });
   const drop = useFileDrop(files.add);
-  // A file still uploading counts too: the person chose it.
-  const fileCount = files.items.length + files.uploading.length;
-  const dirty = hasContent(values, fileCount);
   useFocusWhenOpen(titleRef, open);
   useKeepCapture({ values, projectKey: project.chosenKey, clientId: captureId.clientId }, open);
   // The text is kept for the next opening, but files are not, so a reload would lose them.

@@ -1,4 +1,4 @@
-import type { Ticket } from '@tracker/shared';
+import type { CreateTicketInput, Ticket } from '@tracker/shared';
 import { cleanup, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -17,21 +17,24 @@ const PROJECTS = [
 ];
 const IDEA = 'Captured idea before iOS stops the app';
 
-const ticketIn = (projectKey: string, title: string): Ticket => {
+// Like the tracker, the answer has the text that was sent.
+const ticketIn = (projectKey: string, input: CreateTicketInput): Ticket => {
   const {
     commentCount: _c,
     attachmentCount: _a,
     ...ticket
   } = listItem(1, STATUS.todo, 0, {
     key: `${projectKey}-1`,
-    title,
+    title: input.title,
+    description: input.description ?? '',
+    priority: input.priority ?? 'medium',
   });
   return ticket;
 };
 
 const creates = () =>
-  vi.fn((projectKey: string, input: { title: string }) =>
-    Promise.resolve(ticketIn(projectKey, input.title)),
+  vi.fn((projectKey: string, input: CreateTicketInput) =>
+    Promise.resolve(ticketIn(projectKey, input)),
   );
 
 function Opener() {

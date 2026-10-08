@@ -49,23 +49,41 @@ describe('useKeepCapture', () => {
 });
 
 describe('useCaptureId', () => {
+  const capture = { values: IDEA, projectKey: null };
+
   it('makes an id at the first take, keeps it with the text at once and gives it every time', () => {
-    keepSheetDraft(CAPTURE_DRAFT_ID, { ...IDEA, projectKey: null, clientId: null });
-    const { result } = renderHook(() => useCaptureId(null));
+    const { result } = renderHook(() => useCaptureId(null, false));
     expect(result.current.clientId).toBeNull();
 
     let first = '';
     act(() => {
-      first = result.current.take();
+      // Nothing kept yet, as when Enter comes right after the last keystroke.
+      first = result.current.take(capture);
       expect(sheetDraft(CAPTURE_DRAFT_ID)).toEqual({ ...IDEA, projectKey: null, clientId: first });
     });
     expect(first).not.toBe('');
     expect(result.current.clientId).toBe(first);
-    expect(result.current.take()).toBe(first);
+    expect(result.current.take(capture)).toBe(first);
   });
 
   it('gives the kept id of a capture whose Create had no answer', () => {
-    const { result } = renderHook(() => useCaptureId('c1'));
-    expect(result.current.take()).toBe('c1');
+    const { result } = renderHook(() => useCaptureId('c1', false));
+    expect(result.current.take(capture)).toBe('c1');
+  });
+
+  it('lets the id go once the capture is emptied, so what is typed next is a new capture', () => {
+    const { result, rerender } = renderHook((props) => useCaptureId('c1', props.empty), {
+      initialProps: { empty: false },
+    });
+    rerender({ empty: true });
+    expect(result.current.clientId).toBeNull();
+    rerender({ empty: false });
+
+    let next = '';
+    act(() => {
+      next = result.current.take(capture);
+    });
+    expect(next).not.toBe('c1');
+    expect(sheetDraft(CAPTURE_DRAFT_ID)).toEqual({ ...IDEA, projectKey: null, clientId: next });
   });
 });

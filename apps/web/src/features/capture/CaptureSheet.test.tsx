@@ -1,5 +1,5 @@
 import { ApiError } from '@tracker/client';
-import type { Ticket } from '@tracker/shared';
+import type { CreateTicketInput, Ticket } from '@tracker/shared';
 import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -24,14 +24,17 @@ const PROJECTS = [
 ];
 const NETWORK_DOWN = new TypeError('Failed to fetch');
 
-const ticketIn = (projectKey: string, num: number, title: string): Ticket => {
+// Like the tracker, the answer has the text that was sent.
+const ticketIn = (projectKey: string, num: number, input: CreateTicketInput): Ticket => {
   const {
     commentCount: _c,
     attachmentCount: _a,
     ...ticket
   } = listItem(num, STATUS.todo, 0, {
     key: `${projectKey}-${num}`,
-    title,
+    title: input.title,
+    description: input.description ?? '',
+    priority: input.priority ?? 'medium',
   });
   return ticket;
 };
@@ -46,8 +49,8 @@ function Opener() {
 }
 
 function renderCapture(client: HarnessOptions['client'] = {}, projects = PROJECTS) {
-  const createTicket = vi.fn((projectKey: string, input: { title: string }) =>
-    Promise.resolve(ticketIn(projectKey, 1, input.title)),
+  const createTicket = vi.fn((projectKey: string, input: CreateTicketInput) =>
+    Promise.resolve(ticketIn(projectKey, 1, input)),
   );
   const app = renderWithApp(
     <SheetsProvider>

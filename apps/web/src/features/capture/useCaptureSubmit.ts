@@ -1,6 +1,11 @@
 import type { Attachment, Ticket } from '@tracker/shared';
 import { useRef, useState } from 'react';
-import { useCreateTicket, type CreateTicketVariables } from '../../api';
+import {
+  useCreateTicket,
+  useUpdateTicket,
+  type CreateTicketVariables,
+  type UpdateTicketVariables,
+} from '../../api';
 import { flashRows } from '../../app/flash';
 import { useToast, type ToastApi } from '../../components';
 import {
@@ -18,6 +23,7 @@ import { rememberProject, type ProjectChoice } from './captureProjects';
 import { addCapture, markCreated } from './captureQueue';
 import { updateQueue } from './queueStore';
 import { trackSending } from './syncRunner';
+import { sendCapture } from './sendCapture';
 import { submitCapture, type SubmitDeps, type SubmitOutcome } from './submitCapture';
 
 export interface CaptureSubmitInput {
@@ -37,13 +43,19 @@ export interface CaptureSubmit {
   clearError: () => void;
 }
 
-function submitDeps(
-  create: (variables: CreateTicketVariables) => Promise<Ticket>,
-  show: ToastApi['show'],
-): SubmitDeps {
+interface Writes {
+  create: (variables: CreateTicketVariables) => Promise<Ticket>;
+  update: (variables: UpdateTicketVariables) => Promise<Ticket>;
+}
+
+function submitDeps({ create, update }: Writes, show: ToastApi['show']): SubmitDeps {
   return {
     create: ({ capture, attachmentIds }) =>
-      create({ projectKey: capture.projectKey, input: createInputOf(capture, attachmentIds) }),
+      sendCapture(capture, {
+        create: () =>
+          create({ projectKey: capture.projectKey, input: createInputOf(capture, attachmentIds) }),
+        update: (ticketKey, input) => update({ ticketKey, input }),
+      }),
     save: (capture) => updateQueue((queue) => addCapture(queue, capture)),
     track: trackSending,
     onLateResult: (capture, ticket) => {
@@ -57,7 +69,8 @@ function submitDeps(
 
 export function useCaptureSubmit(input: CaptureSubmitInput): CaptureSubmit {
   const { values, project, attachments, uploading, captureId, onDone } = input;
-  const { mutateAsync } = useCreateTicket();
+  const { mutateAsync: create } = useCreateTicket();
+  const { mutateAsync: update } = useUpdateTicket();
   const { show } = useToast();
   const [pending, setPending] = useState(false);
   const [error, setError] = useState('');
@@ -94,7 +107,7 @@ export function useCaptureSubmit(input: CaptureSubmitInput): CaptureSubmit {
       capturedAt: Date.now(),
     });
     const draft = { capture, attachmentIds: attachments.map((attachment) => attachment.id) };
-    void submitCapture(draft, submitDeps(mutateAsync, show)).then((outcome) =>
+    void submitCapture(draft, submitDeps({ create, update }, show)).then((outcome) =>
       finish(outcome, project),
     );
   };

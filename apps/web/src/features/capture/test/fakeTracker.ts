@@ -1,4 +1,9 @@
-import type { CreateTicketInput, ListTicketsQuery, Ticket } from '@tracker/shared';
+import type {
+  CreateTicketInput,
+  ListTicketsQuery,
+  Ticket,
+  UpdateTicketInput,
+} from '@tracker/shared';
 import { listItem, STATUS } from '../../../api/test/fixtures';
 
 interface Made {
@@ -29,9 +34,17 @@ export function fakeTracker() {
       key: `${projectKey}-${num}`,
       title: input.title,
       description: input.description ?? '',
+      priority: input.priority ?? 'medium',
     });
     made.push({ projectKey, clientId: input.clientId, ticket });
     return ticket;
+  };
+
+  const update = (ticketKey: string, input: UpdateTicketInput): Ticket => {
+    const entry = made.find((item) => item.ticket.key === ticketKey);
+    if (!entry) throw new Error(`${ticketKey} was not made.`);
+    entry.ticket = { ...entry.ticket, ...input };
+    return entry.ticket;
   };
 
   const search = (projectKey: string, query: ListTicketsQuery = {}): Ticket[] => {
@@ -42,5 +55,5 @@ export function fakeTracker() {
       .filter((ticket) => ticket.title.toLowerCase().includes(text));
   };
 
-  return { create, search, titles: () => made.map((entry) => entry.ticket.title) };
+  return { create, update, search, titles: () => made.map((entry) => entry.ticket.title) };
 }

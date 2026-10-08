@@ -25,39 +25,39 @@ export function keptCapture(): KeptCapture {
 
 export const forgetKeptCapture = (): void => forgetSheetDraft(CAPTURE_DRAFT_ID);
 
+const keepCapture = ({ values, projectKey, clientId }: KeptCapture): void =>
+  keepSheetDraft(CAPTURE_DRAFT_ID, { ...values, projectKey, clientId });
+
 // Only an open sheet with text writes: closing it forgets the text, but a reload or a crash
 // closes nothing, so it is still there when quick capture opens again.
 export function useKeepCapture({ values, projectKey, clientId }: KeptCapture, open: boolean): void {
   useEffect(() => {
     if (!open) return;
     if (hasContent(values, 0)) {
-      keepSheetDraft(CAPTURE_DRAFT_ID, { ...values, projectKey, clientId });
+      keepCapture({ values, projectKey, clientId });
     } else {
       forgetKeptCapture();
     }
   }, [values, projectKey, clientId, open]);
 }
 
-// Stored before the request goes out, since the tab can be stopped any moment after it.
-function keepCaptureId(clientId: string): void {
-  const kept = sheetDraft(CAPTURE_DRAFT_ID);
-  if (kept) keepSheetDraft(CAPTURE_DRAFT_ID, { ...kept, clientId });
-}
-
 export interface CaptureId {
   clientId: string | null;
-  take: () => string;
+  take: (capture: Omit<KeptCapture, 'clientId'>) => string;
 }
 
 // A capture's first Create gives it an id that every later Create sends, until it is created or
 // waits offline and the kept capture is forgotten. The tracker answers a repeat with the ticket
 // the first request made, so Create after a lost answer, a reload or a crash makes no second one.
-export function useCaptureId(kept: string | null): CaptureId {
+// Emptied of text and files, the capture is over: what is typed next is a new one, with a new id.
+export function useCaptureId(kept: string | null, empty: boolean): CaptureId {
   const [clientId, setClientId] = useState(kept);
-  const take = () => {
+  if (empty && clientId !== null) setClientId(null);
+  const take = (capture: Omit<KeptCapture, 'clientId'>) => {
     if (clientId) return clientId;
     const made = newCaptureId();
-    keepCaptureId(made);
+    // Stored before the request goes out, since the tab can be stopped any moment after it.
+    keepCapture({ ...capture, clientId: made });
     setClientId(made);
     return made;
   };

@@ -7,13 +7,18 @@ import { useToast, type ToastApi } from '../../components';
 import { addedToast, createInputOf, droppedToast } from './captureForm';
 import type { QueuedCapture } from './captureQueue';
 import { queueStore } from './queueStore';
+import { sendCapture } from './sendCapture';
 import { syncCaptures, type SyncReport } from './syncCaptures';
 import { claimCapture, runCaptureSync } from './syncRunner';
 
 // Through the mutation cache, so an app update waits for the write and reachability hears of it.
 const sendWith = (queryClient: QueryClient, client: TrackerClient) => (capture: QueuedCapture) =>
   new MutationObserver(queryClient, {
-    mutationFn: () => client.createTicket(capture.projectKey, createInputOf(capture)),
+    mutationFn: () =>
+      sendCapture(capture, {
+        create: () => client.createTicket(capture.projectKey, createInputOf(capture)),
+        update: client.updateTicket,
+      }),
   }).mutate();
 
 function refreshAfter(queryClient: QueryClient, report: SyncReport): void {
