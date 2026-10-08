@@ -3,6 +3,7 @@ export { AttachmentViewerProvider } from './AttachmentViewerProvider';
 export { DropOverlay, type DropOverlayProps } from './DropOverlay';
 export { FileInput, type FileInputProps } from './FileInput';
 export { FileNote, FileNotes, type FileNoteProps, type FileNotesProps } from './FileNote';
+export { readableFiles, ticketFiles } from './readableFiles';
 export { thumbnailLabels } from './thumbnailLabels';
 export { ThumbnailGrid, type ThumbnailGridProps } from './ThumbnailGrid';
 export { useAttachmentList, type AttachmentList } from './useAttachmentList';

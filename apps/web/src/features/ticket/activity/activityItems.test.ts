@@ -1,7 +1,7 @@
 import { HUMAN, type Activity, type Actor } from '@tracker/shared';
 import { describe, expect, it } from 'vitest';
 import { attachment, comment } from '../../../api/test/fixtures';
-import { activityItems, lastReportAt, reportTitle, rowKeys } from './activityItems';
+import { activityItems, lastReportAt, reportTitle } from './activityItems';
 
 const CLAUDE = { kind: 'agent', name: 'Claude' } as const;
 
@@ -118,11 +118,17 @@ describe('lastReportAt', () => {
   });
 });
 
-describe('rowKeys', () => {
-  it('keys rows by id, and numbers those without one among themselves', () => {
+describe('row keys', () => {
+  it('keys rows by id, and numbers those without one or with a repeated one among themselves', () => {
     const noId = { ...entry('x', 'event', 2), id: undefined } as unknown as Activity;
     const nullId = { ...entry('x', 'event', 4), id: null } as unknown as Activity;
-    const items = activityItems([entry('a', 'event', 1), noId, entry('b', 'event', 3), nullId]);
-    expect(rowKeys(items)).toEqual(['a', 'no-id-0', 'b', 'no-id-1']);
+    const items = activityItems([
+      entry('a', 'event', 1),
+      noId,
+      entry('b', 'event', 3),
+      nullId,
+      entry('a', 'event', 5),
+    ]);
+    expect(items.map((item) => item.key)).toEqual(['a', 'spare-0', 'b', 'spare-1', 'spare-2']);
   });
 });

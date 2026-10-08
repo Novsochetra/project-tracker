@@ -1,9 +1,14 @@
 import type { TicketDetail } from '@tracker/shared';
 import clsx from 'clsx';
 import type { KeyboardEvent } from 'react';
-import { readableEntries } from '../../../lib/entries';
 import { useIsPhone } from '../../../lib/media';
-import { DropOverlay, pasteFiles, useAttachmentUploads, useFileDrop } from '../../attachments';
+import {
+  DropOverlay,
+  pasteFiles,
+  ticketFiles,
+  useAttachmentUploads,
+  useFileDrop,
+} from '../../attachments';
 import { DetailChips } from '../details/DetailChips';
 import { AutosaveTextarea } from '../fields/AutosaveTextarea';
 import { TITLE_MAX_LENGTH } from '../fields/limits';
@@ -31,11 +36,9 @@ export function TicketMain({ detail, done, className }: TicketMainProps) {
   const update = useTicketUpdate(ticket.key);
   const uploads = useAttachmentUploads({ ticketKey: ticket.key });
   const drop = useFileDrop(uploads.add);
-  // This runs outside the error boundaries, so a file entry this app can't read, such as null, is
-  // left out instead of failing the whole screen.
-  const attachments = readableEntries(detail.attachments).filter(
-    (attachment) => attachment.activityId === null,
-  );
+  // This runs outside the error boundaries, so a file entry this app can't read, such as null or
+  // one without a type, is left out instead of failing the whole screen.
+  const attachments = ticketFiles(detail.attachments);
   return (
     <div className={clsx(styles.main, className)} {...drop.handlers}>
       <div className={styles.inner}>

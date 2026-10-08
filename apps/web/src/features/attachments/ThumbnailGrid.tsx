@@ -3,6 +3,7 @@ import clsx from 'clsx';
 import { Plus } from 'lucide-react';
 import type { ComponentProps, ReactNode } from 'react';
 import { Icon } from '../../components';
+import { uniqueKeys } from '../../lib/uniqueKeys';
 import { SavedThumbnail } from './SavedThumbnail';
 import styles from './ThumbnailGrid.module.css';
 import { thumbnailLabels } from './thumbnailLabels';
@@ -38,6 +39,7 @@ export function ThumbnailGrid({
   className,
 }: ThumbnailGridProps) {
   const labels = thumbnailLabels(attachments);
+  const keys = uniqueKeys(attachments.map((attachment) => attachment.id));
   const removable = onRemove !== undefined || (onCancel !== undefined && uploading.length > 0);
   const shield = useRemoveShield();
   return (
@@ -48,7 +50,7 @@ export function ThumbnailGrid({
     >
       {attachments.map((attachment, index) => (
         <SavedThumbnail
-          key={attachment.id}
+          key={keys[index]}
           attachment={attachment}
           label={labels[index] ?? attachment.fileName}
           marked={attachment.id === markedId}

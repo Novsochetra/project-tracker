@@ -5,6 +5,7 @@ import { clamp } from '../gestures/math';
 import { useViewportSize } from '../gestures/useViewportSize';
 import { fitSize, type Size } from '../gestures/zoomMath';
 import { usePrefersReducedMotion } from '../lib/media';
+import { uniqueKeys } from '../lib/uniqueKeys';
 import styles from './ImageViewer.module.css';
 import './tokens.css';
 import { useOverlayBehavior } from './useOverlayBehavior';
@@ -29,6 +30,7 @@ function fittedSize(image: ViewerImage | undefined, natural: Record<string, Size
 function ViewerPanel(props: ImageViewerProps & { onExited: () => void }) {
   const { images, open, onClose, onIndexChange, onExited } = props;
   const count = images.length;
+  const keys = uniqueKeys(images.map((image) => image.id));
   const index = clamp(props.index, 0, Math.max(0, count - 1));
   const reducedMotion = usePrefersReducedMotion();
   const viewport = useViewportSize();
@@ -87,7 +89,7 @@ function ViewerPanel(props: ImageViewerProps & { onExited: () => void }) {
         <motion.div className={styles.track} style={{ x: values.track }}>
           {images.map((image, i) => (
             <ViewerSlide
-              key={image.id}
+              key={keys[i]}
               image={image}
               left={i * stride}
               width={viewport.width}

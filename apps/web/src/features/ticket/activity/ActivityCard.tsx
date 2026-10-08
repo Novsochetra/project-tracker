@@ -2,7 +2,7 @@ import type { Actor, Attachment } from '@tracker/shared';
 import clsx from 'clsx';
 import type { CSSProperties, ReactNode } from 'react';
 import { AgentAvatar, Avatar, YouAvatar } from '../../../components';
-import { ThumbnailGrid, useAttachmentViewer } from '../../attachments';
+import { readableFiles, ThumbnailGrid, useAttachmentViewer } from '../../attachments';
 import styles from './ActivityCard.module.css';
 
 export interface RiseProps {
@@ -58,13 +58,15 @@ export function ActorAvatar({ actor }: { actor: Actor | null }) {
   return actor.name ? <Avatar name={actor.name} size={20} decorative /> : <YouAvatar />;
 }
 
+// A file entry this app can't read, such as null, is left out, so it can't fail the whole card.
 export function CardAttachments({ attachments }: { attachments: Attachment[] }) {
   const viewer = useAttachmentViewer();
-  if (attachments.length === 0) return null;
+  const files = readableFiles(attachments);
+  if (files.length === 0) return null;
   return (
     <ThumbnailGrid
-      attachments={attachments}
-      onOpen={(index) => viewer.open(attachments, index)}
+      attachments={files}
+      onOpen={(index) => viewer.open(files, index)}
       className={styles.attachments}
     />
   );

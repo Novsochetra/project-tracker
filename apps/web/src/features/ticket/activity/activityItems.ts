@@ -8,9 +8,12 @@ import {
 } from '@tracker/shared';
 import { isTemporaryId } from '../../../api';
 import { readableEntries } from '../../../lib/entries';
+import { uniqueKeys } from '../../../lib/uniqueKeys';
 
 interface ItemBase {
   id: string;
+  // The row's React key: its id, unless the tracker sent it without one or twice (`uniqueKeys`).
+  key: string;
   actor: Actor | null;
   author: string;
   text: string;
@@ -43,10 +46,11 @@ const isDraftId = (id: unknown): boolean => typeof id === 'string' && isTemporar
 // Items are built outside the cards' error boundaries, so one activity the tracker sent in a shape
 // this app doesn't expect must not fail here: an actor it can't read is "Someone", and a type it
 // doesn't know (from a newer tracker) shows as plain text.
-function toItem(activity: Activity): ActivityItem {
+function toItem(activity: Activity, key: string): ActivityItem {
   const actor = isActor(activity.actor) ? activity.actor : null;
   const base: ItemBase = {
     id: activity.id,
+    key,
     actor,
     author: actor ? actorLabel(actor) : 'Someone',
     text: activity.text,
@@ -74,10 +78,11 @@ const order = (activity: Activity): number =>
 
 // Like toItem, this runs outside the cards' boundaries: an entry that isn't an object, such as
 // null, has nothing to show and is left out.
-export const activityItems = (activity: readonly Activity[]): ActivityItem[] =>
-  readableEntries(activity)
-    .sort((a, b) => order(a) - order(b))
-    .map(toItem);
+export function activityItems(activity: readonly Activity[]): ActivityItem[] {
+  const sorted = readableEntries(activity).sort((a, b) => order(a) - order(b));
+  const keys = uniqueKeys(sorted.map((item) => item.id));
+  return sorted.map((item, index) => toItem(item, keys[index] ?? item.id));
+}
 
 export function lastReportAt(activity: readonly Activity[]): number | null {
   const times = readableEntries(activity)
@@ -87,10 +92,3 @@ export function lastReportAt(activity: readonly Activity[]): number | null {
 }
 
 export const isDraftItem = (item: ActivityItem): boolean => item.kind === 'comment' && item.draft;
-
-// An activity the tracker sent without an id still needs a row key of its own. They are numbered
-// only among themselves, so every other row keeps its id as its key while they come and go.
-export function rowKeys(items: readonly ActivityItem[]): string[] {
-  let unread = 0;
-  return items.map((item) => (typeof item.id === 'string' ? item.id : `no-id-${unread++}`));
-}
