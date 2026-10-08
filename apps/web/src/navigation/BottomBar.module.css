@@ -12,7 +12,7 @@
   -webkit-backdrop-filter: var(--glass-filter);
   backdrop-filter: var(--glass-filter);
   border-top: 1px solid var(--line);
-  animation: bar-up var(--duration-sheet-in) var(--ease-out) backwards;
+  animation: global(bar-up) var(--duration-sheet-in) var(--ease-out) backwards;
   transition: transform var(--duration-sheet-in) var(--ease-out);
 }
 

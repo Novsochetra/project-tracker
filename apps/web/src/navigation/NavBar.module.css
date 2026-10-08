@@ -49,7 +49,7 @@
   text-align: center;
   text-overflow: ellipsis;
   white-space: nowrap;
-  animation: fade-up-small var(--duration-spring) var(--ease-out) both;
+  animation: global(fade-up-small) var(--duration-spring) var(--ease-out) both;
 }
 
 .mono {
@@ -69,7 +69,7 @@
   color: var(--ink);
   font-size: 16px;
   cursor: pointer;
-  animation: fade-in-x var(--duration-base) var(--ease-out) both;
+  animation: global(fade-in-x) var(--duration-base) var(--ease-out) both;
   transition: opacity var(--duration-press) ease-out;
 }
 

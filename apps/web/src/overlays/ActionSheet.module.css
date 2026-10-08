@@ -56,7 +56,7 @@
   font-size: 13px;
   text-align: center;
   text-wrap: pretty;
-  animation: fade-up var(--duration-fade) var(--ease-out) both;
+  animation: global(fade-up) var(--duration-fade) var(--ease-out) both;
 }
 
 .row,

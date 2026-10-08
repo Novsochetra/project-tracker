@@ -114,7 +114,7 @@
 }
 
 .rise {
-  animation: rise var(--duration-rise) var(--ease-out) both;
+  animation: rise var(--duration-rise) var(--ease-out) backwards;
 }
 
 .flash {
