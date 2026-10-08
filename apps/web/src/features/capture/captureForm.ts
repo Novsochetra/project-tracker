@@ -13,7 +13,8 @@ export const BLANK_CAPTURE: CaptureValues = { title: '', description: '', priori
 export const CAPTURE_DRAFT_ID = 'capture';
 // Long enough for a slow but working connection; after it the capture waits on the phone.
 export const CAPTURE_TIMEOUT_MS = 8_000;
-// Toasts stay on one line (SPEC §5.6); with the title clipped to this width one fits at 375px.
+// Toasts can wrap, but a short one is read at a glance: clipped to this width it fits one line
+// at 375px.
 const DROPPED_TITLE_WIDTH = 24;
 
 export const DESCRIPTION_MAX_LENGTH =
