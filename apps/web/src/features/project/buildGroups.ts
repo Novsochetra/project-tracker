@@ -1,0 +1,59 @@
+import {
+  byRank,
+  GROUP_LIMIT,
+  matchesSearch,
+  sortStatuses,
+  visibleStatuses,
+  type Status,
+  type TicketFilter,
+  type TicketListItem,
+} from '@tracker/shared';
+
+export interface TicketGroupData {
+  status: Status;
+  tickets: TicketListItem[];
+}
+
+export interface GroupsInput {
+  statuses: readonly Status[];
+  tickets: readonly TicketListItem[];
+  filter: TicketFilter;
+  query: string;
+  dragging: boolean;
+}
+
+/** One group per status the filter shows, in status order; empty ones only while dragging. */
+export function buildGroups({
+  statuses,
+  tickets,
+  filter,
+  query,
+  dragging,
+}: GroupsInput): TicketGroupData[] {
+  const matching = tickets.filter((ticket) => matchesSearch(ticket, query));
+  return visibleStatuses(statuses, filter)
+    .map((status) => ({
+      status,
+      tickets: matching.filter((ticket) => ticket.statusId === status.id).sort(byRank),
+    }))
+    .filter((group) => dragging || group.tickets.length > 0);
+}
+
+export function nextStatus(statuses: readonly Status[], statusId: string): Status | null {
+  const ordered = sortStatuses(statuses);
+  const index = ordered.findIndex((status) => status.id === statusId);
+  return index < 0 ? null : (ordered[index + 1] ?? null);
+}
+
+const GROUP_RISE_MS = 40;
+const ROW_RISE_MS = 18;
+const MAX_STAGGER = 12;
+
+export const groupRiseDelay = (index: number): number =>
+  Math.min(index, MAX_STAGGER) * GROUP_RISE_MS;
+
+/** Rows past the first five of a long group rise in when "Show more" reveals them. */
+export function revealedRowDelay(index: number, groupSize: number): number | null {
+  if (groupSize <= GROUP_LIMIT + 1 || index < GROUP_LIMIT) return null;
+  return Math.min(index - GROUP_LIMIT, MAX_STAGGER) * ROW_RISE_MS;
+}

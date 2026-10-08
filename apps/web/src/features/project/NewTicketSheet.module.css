@@ -1,0 +1,75 @@
+.text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 18px 20px 6px;
+}
+
+.title {
+  width: 100%;
+  margin: 0;
+  padding: 4px 0;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: var(--size-heading);
+  font-weight: var(--weight-semibold);
+  letter-spacing: -0.01em;
+}
+
+.title:focus-visible {
+  outline: none;
+}
+
+.description {
+  min-height: 72px;
+  max-height: 40vh;
+  padding: 4px 0;
+  overflow-y: auto;
+  color: var(--ink-2);
+  font-size: var(--size-headline);
+  line-height: 1.55;
+}
+
+.details {
+  padding: 8px 16px 18px;
+}
+
+.error {
+  margin: 10px 4px 0;
+  color: var(--danger);
+  font-size: var(--size-secondary);
+  animation: fade-up var(--duration-fade) var(--ease-out) both;
+}
+
+.square {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-square);
+}
+
+.projectName {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 767px) {
+  .description {
+    font-size: var(--size-input);
+  }
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}

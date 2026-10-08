@@ -1,0 +1,62 @@
+.ghost {
+  position: fixed;
+  z-index: var(--z-ghost);
+  pointer-events: none;
+  will-change: transform;
+}
+
+.card {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: 44px;
+  padding: 8px 16px 8px 8px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-container);
+  background: var(--surface);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: var(--size-body);
+  animation: lift var(--duration-fast) var(--ease-out) both;
+}
+
+.grip {
+  flex: none;
+  display: inline-flex;
+  justify-content: center;
+  width: 20px;
+  color: var(--muted);
+}
+
+.key {
+  flex: none;
+  color: var(--muted);
+  font: var(--text-mono);
+}
+
+.title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  font-weight: var(--weight-medium);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+:global(html[data-ticket-drag]),
+:global(html[data-ticket-drag] *) {
+  cursor: grabbing !important;
+  user-select: none !important;
+  -webkit-user-select: none !important;
+}
+
+@keyframes lift {
+  from {
+    transform: scale(1);
+    box-shadow: none;
+  }
+  to {
+    transform: scale(1.02);
+    box-shadow: var(--shadow-lifted);
+  }
+}

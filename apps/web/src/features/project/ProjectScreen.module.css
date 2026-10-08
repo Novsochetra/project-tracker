@@ -1,0 +1,92 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 96px;
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 16px 32px 0;
+}
+
+.repo {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  max-width: 100%;
+  margin-right: var(--space-1);
+  color: var(--muted-2);
+  font: var(--text-mono);
+}
+
+.repo svg {
+  flex: none;
+}
+
+.repoPath {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 16px;
+  padding: 14px 32px 16px;
+}
+
+.groups {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: 0 32px 24px;
+}
+
+.noMatches {
+  margin: 0;
+  padding: 48px 24px;
+  color: var(--muted);
+  font-size: var(--size-secondary);
+  text-align: center;
+  animation: fade-up var(--duration-fade) var(--ease-out) both;
+}
+
+.emptyAction {
+  padding: 0 14px;
+}
+
+.barReport,
+.barSend {
+  flex: 1 1 0;
+  padding: 0 12px;
+}
+
+.barSend {
+  flex-grow: 1.35;
+}
+
+@media (max-width: 767px) {
+  .filters,
+  .groups {
+    padding-right: var(--space-4);
+    padding-left: var(--space-4);
+  }
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
