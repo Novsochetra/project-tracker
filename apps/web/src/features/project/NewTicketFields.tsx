@@ -1,5 +1,5 @@
 import { isDoneCategory, isOverdue, type Status } from '@tracker/shared';
-import { useLayoutEffect, type RefObject } from 'react';
+import type { ClipboardEvent, ReactNode, RefObject } from 'react';
 import { usePeople } from '../../api';
 import {
   AutoTextarea,
@@ -10,6 +10,7 @@ import {
   SelectRow,
   TitleField,
 } from '../../components';
+import { pasteFiles } from '../attachments';
 import { PRIORITY_OPTIONS, statusOptions } from './fieldOptions';
 import styles from './NewTicketSheet.module.css';
 import { TITLE_MAX_LENGTH, type NewTicketForm } from './newTicketForm';
@@ -22,18 +23,17 @@ export interface NewTicketFieldsProps {
   titleRef: RefObject<HTMLTextAreaElement | null>;
   onChange: (patch: Partial<NewTicketForm>) => void;
   onEnter: () => void;
+  onFiles: (files: File[]) => void;
+  /** Shown under the description: its files and the way to attach more. */
+  attachments: ReactNode;
 }
 
 export function NewTicketFields(props: NewTicketFieldsProps) {
-  const { form, statuses, statusId, error, titleRef, onChange, onEnter } = props;
+  const { form, statuses, statusId, error, titleRef, onChange, onEnter, onFiles } = props;
+  const onPaste = (event: ClipboardEvent<HTMLElement>) => pasteFiles(event, onFiles);
   const people = usePeople().data;
   const status = statuses.find((candidate) => candidate.id === statusId);
   const isDone = status ? isDoneCategory(status.category) : false;
-  // Before the sheet focuses the title on desktop, so typing goes on after a kept title.
-  useLayoutEffect(() => {
-    const field = titleRef.current;
-    field?.setSelectionRange(field.value.length, field.value.length);
-  }, [titleRef]);
   return (
     <>
       <div className={styles.text}>
@@ -45,6 +45,7 @@ export function NewTicketFields(props: NewTicketFieldsProps) {
           value={form.title}
           onChange={(title) => onChange({ title })}
           onEnter={onEnter}
+          onPaste={onPaste}
         />
         <AutoTextarea
           className={styles.description}
@@ -53,8 +54,10 @@ export function NewTicketFields(props: NewTicketFieldsProps) {
           rows={3}
           value={form.description}
           onChange={(event) => onChange({ description: event.currentTarget.value })}
+          onPaste={onPaste}
         />
       </div>
+      {props.attachments}
       <div className={styles.details}>
         <GroupedCard>
           <SelectRow

@@ -1,5 +1,5 @@
 import type { ActivityItem } from './activityItems';
-import { ActivityCard, ActorAvatar, CardImages, type RiseProps } from './ActivityCard';
+import { ActivityCard, ActorAvatar, CardAttachments, type RiseProps } from './ActivityCard';
 import styles from './ActivityCard.module.css';
 import { ItemMenu } from './ItemMenu';
 import { LinkedText } from './LinkedText';
@@ -31,7 +31,7 @@ export function ReviewCard({ item, now, actions, rise, approvedColor }: ReviewCa
           <LinkedText text={item.text} />
         </p>
       )}
-      <CardImages images={item.images} />
+      <CardAttachments attachments={item.attachments} />
     </ActivityCard>
   );
 }

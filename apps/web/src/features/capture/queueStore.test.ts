@@ -16,7 +16,6 @@ const capture = (id: string): QueuedCapture => ({
   description: '',
   priority: 'medium',
   capturedAt: 1,
-  attempted: false,
 });
 
 afterEach(() => {

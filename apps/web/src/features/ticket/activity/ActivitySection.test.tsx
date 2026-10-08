@@ -1,6 +1,6 @@
 import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { HUMAN, type Activity } from '@tracker/shared';
+import { HUMAN, UNSUPPORTED_ATTACHMENT_MESSAGE, type Activity } from '@tracker/shared';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { attachment, comment, makeTicketDetail } from '../../../api/test/fixtures';
 import { deferred } from '../../../api/test/deferred';
@@ -269,15 +269,17 @@ describe('comments', () => {
     const user = userEvent.setup();
     const { client } = setup([], { client: { uploadAttachment, addComment } });
     const file = new File(['png'], 'shot.png', { type: 'image/png' });
-    await user.upload(screen.getByLabelText('Attach images to comment'), file);
-    expect(await screen.findByText('Uploading image')).toBeInTheDocument();
+    await user.upload(screen.getByLabelText('Attach files to comment'), file);
+    expect(
+      await screen.findByRole('progressbar', { name: 'Uploading shot.png' }),
+    ).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Comment' })).toBeDisabled();
     expect(vi.mocked(client.uploadAttachment).mock.calls[0]?.[2]).toBeUndefined();
 
     upload.resolve(attachment('shot', { ticketId: null }));
     const send = screen.getByRole('button', { name: 'Comment' });
     await waitFor(() => expect(send).toBeEnabled());
-    expect(screen.getByRole('img', { name: 'Attachment 1' })).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: 'Image 1' })).toBeInTheDocument();
     await user.click(send);
     expect(client.addComment).toHaveBeenCalledWith('MOB-1', { text: '', attachmentIds: ['shot'] });
     expect(within(log()).getByRole('button', { name: 'Open image 1' })).toBeInTheDocument();
@@ -289,20 +291,37 @@ describe('comments', () => {
     const user = userEvent.setup();
     const { client } = setup([], { client: { uploadAttachment, deleteAttachment } });
     const file = new File(['png'], 'shot.png', { type: 'image/png' });
-    await user.upload(screen.getByLabelText('Attach images to comment'), file);
+    await user.upload(screen.getByLabelText('Attach files to comment'), file);
     await user.click(await screen.findByRole('button', { name: 'Remove image 1' }));
     expect(client.deleteAttachment).toHaveBeenCalledWith('shot');
     expect(screen.getByRole('button', { name: 'Comment' })).toBeDisabled();
   });
 
-  it('refuses files that are not images', async () => {
+  it('refuses files the tracker does not store', async () => {
     const user = userEvent.setup({ applyAccept: false });
     const { client } = setup([]);
-    const file = new File(['%PDF'], 'notes.pdf', { type: 'application/pdf' });
-    await user.upload(screen.getByLabelText('Attach images to comment'), file);
-    expect(
-      screen.getByText('Only PNG, JPEG, GIF, WebP and HEIC images can be attached.'),
-    ).toBeInTheDocument();
+    const file = new File(['<svg/>'], 'logo.svg', { type: 'image/svg+xml' });
+    await user.upload(screen.getByLabelText('Attach files to comment'), file);
+    expect(screen.getByText(UNSUPPORTED_ATTACHMENT_MESSAGE)).toBeInTheDocument();
     expect(client.uploadAttachment).not.toHaveBeenCalled();
+  });
+
+  it('attaches a text file to a comment', async () => {
+    const notes = attachment('notes', {
+      ticketId: null,
+      fileName: 'notes.txt',
+      mimeType: 'text/plain',
+    });
+    const uploadAttachment = vi.fn().mockResolvedValue(notes);
+    const addComment = vi.fn().mockReturnValue(new Promise(() => undefined));
+    const user = userEvent.setup();
+    const { client } = setup([], { client: { uploadAttachment, addComment } });
+    const file = new File(['steps'], 'notes.txt', { type: 'text/plain' });
+    await user.upload(screen.getByLabelText('Attach files to comment'), file);
+    const send = screen.getByRole('button', { name: 'Comment' });
+    await waitFor(() => expect(send).toBeEnabled());
+    await user.click(send);
+    expect(client.addComment).toHaveBeenCalledWith('MOB-1', { text: '', attachmentIds: ['notes'] });
+    expect(within(log()).getByRole('button', { name: 'Open notes.txt' })).toBeInTheDocument();
   });
 });

@@ -35,7 +35,7 @@ test.describe('comments', () => {
   test('attaches an image to a comment and opens the viewer', async ({ page, api }) => {
     await seedProject(api, 'Mobile app', 'MOB', [{ title: 'Screenshot bug' }]);
     await page.goto('/p/MOB/1');
-    await page.getByLabel('Attach images to comment').setInputFiles({
+    await page.getByLabel('Attach files to comment').setInputFiles({
       name: 'shot.png',
       mimeType: 'image/png',
       buffer: PNG_1X1,

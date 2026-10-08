@@ -1,7 +1,7 @@
 import { formatFullDate } from '@tracker/shared';
 import { useEffect, useRef } from 'react';
 import type { ActivityItem } from './activityItems';
-import { ActivityCard, ActorAvatar, CardImages, type RiseProps } from './ActivityCard';
+import { ActivityCard, ActorAvatar, CardAttachments, type RiseProps } from './ActivityCard';
 import styles from './ActivityCard.module.css';
 import { CommentEditor } from './CommentEditor';
 import { ItemMenu } from './ItemMenu';
@@ -65,7 +65,7 @@ export function CommentCard({ item, now, actions, rise }: CommentCardProps) {
           </p>
         )
       )}
-      <CardImages images={item.images} />
+      <CardAttachments attachments={item.attachments} />
     </ActivityCard>
   );
 }

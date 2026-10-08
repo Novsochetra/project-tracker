@@ -1,5 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { reloadOnPreloadError } from './reloadOnPreloadError';
+import {
+  CHUNK_RELOAD_KEY,
+  CHUNK_RELOAD_WINDOW_MS,
+  reloadOnPreloadError,
+} from './reloadOnPreloadError';
 
 let stop: () => void = () => undefined;
 
@@ -19,7 +23,9 @@ beforeEach(() => {
 afterEach(() => {
   stop();
   vi.useRealTimers();
+  vi.restoreAllMocks();
   document.body.replaceChildren();
+  window.sessionStorage.clear();
 });
 
 describe('reloadOnPreloadError', () => {
@@ -50,6 +56,46 @@ describe('reloadOnPreloadError', () => {
     const event = new Event('vite:preloadError', { cancelable: true });
     window.dispatchEvent(event);
     expect(event.defaultPrevented).toBe(false);
+  });
+
+  it('remembers the reload, and after one only logs until the window has passed', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    const reload = vi.fn();
+    stop = reloadOnPreloadError(reload);
+    failChunk();
+    expect(window.sessionStorage.getItem(CHUNK_RELOAD_KEY)).toBe(String(Date.now()));
+    stop();
+
+    vi.advanceTimersByTime(CHUNK_RELOAD_WINDOW_MS - 1);
+    stop = reloadOnPreloadError(reload);
+    failChunk();
+    failChunk();
+    expect(reload).toHaveBeenCalledTimes(1);
+    expect(warn).toHaveBeenCalledTimes(1);
+    stop();
+
+    vi.advanceTimersByTime(1);
+    stop = reloadOnPreloadError(reload);
+    failChunk();
+    expect(reload).toHaveBeenCalledTimes(2);
+  });
+
+  it('reloads despite an unreadable record, and never without storage to remember it', () => {
+    vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    const reload = vi.fn();
+    window.sessionStorage.setItem(CHUNK_RELOAD_KEY, 'soon');
+    stop = reloadOnPreloadError(reload);
+    failChunk();
+    expect(reload).toHaveBeenCalledTimes(1);
+    stop();
+
+    window.sessionStorage.clear();
+    vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
+      throw new DOMException('Blocked', 'SecurityError');
+    });
+    stop = reloadOnPreloadError(reload);
+    failChunk();
+    expect(reload).toHaveBeenCalledTimes(1);
   });
 
   it('stops listening when stopped', () => {

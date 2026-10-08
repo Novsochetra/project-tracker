@@ -1,6 +1,6 @@
 import type { Attachment } from '@tracker/shared';
 import { useState } from 'react';
-import { errorMessage, useAddComment, useDeleteAttachment } from '../../../api';
+import { errorMessage, useAddComment } from '../../../api';
 import { useToast } from '../../../components';
 import {
   draftIdOf,
@@ -9,18 +9,17 @@ import {
   storedDraft,
   type DraftTarget,
 } from '../../../lib/storedDrafts';
-import { useImageUploads, type ImageUploads } from '../../attachments';
+import { useAttachmentList, type AttachmentList } from '../../attachments';
 import { useDraftMark } from '../../../lib/useDraftMark';
 import { canSendComment } from './commentRules';
 
 export interface ComposerState {
   text: string;
   setText: (text: string) => void;
-  images: Attachment[];
-  uploads: ImageUploads;
+  attachments: Attachment[];
+  files: AttachmentList;
   canSubmit: boolean;
   submit: () => void;
-  removeImage: (attachmentId: string) => void;
 }
 
 // Unsent text is kept in the drafts store until it is sent or emptied; it is never sent for
@@ -49,37 +48,29 @@ function useComposerText(ticketKey: string) {
 
 export function useComposer(ticketKey: string): ComposerState {
   const composer = useComposerText(ticketKey);
-  const [images, setImages] = useState<Attachment[]>([]);
-  const uploads = useImageUploads({
-    onUploaded: (image) => setImages((current) => [...current, image]),
-  });
+  const [attachments, setAttachments] = useState<Attachment[]>([]);
+  const files = useAttachmentList(setAttachments);
   const addComment = useAddComment();
-  const deleteAttachment = useDeleteAttachment();
   const { show } = useToast();
   const { text } = composer;
-  const canSubmit = canSendComment(text, images.length, uploads.uploading);
-  // Typed text outlives a reload in the drafts store; pending images only live here.
-  useDraftMark(`comment:${ticketKey}`, images.length > 0);
+  const uploading = files.uploading.length;
+  const canSubmit = canSendComment(text, attachments.length, uploading);
+  // Typed text outlives a reload in the drafts store; pending files only live here.
+  useDraftMark(`comment:${ticketKey}`, attachments.length + uploading > 0);
 
   const submit = () => {
     if (!canSubmit) return;
-    const sent = { text: text.trim(), images };
+    const sent = { text: text.trim(), attachments };
     composer.change('');
-    setImages([]);
+    setAttachments([]);
     void addComment
-      .mutateAsync({ ticketKey, text: sent.text, attachments: sent.images })
+      .mutateAsync({ ticketKey, text: sent.text, attachments: sent.attachments })
       .catch((error: unknown) => {
-        show(errorMessage(error));
+        show(errorMessage(error), { kind: 'error' });
         composer.handBack(sent.text);
-        setImages((current) => [...sent.images, ...current]);
+        setAttachments((current) => [...sent.attachments, ...current]);
       });
   };
 
-  const removeImage = (attachmentId: string) => {
-    setImages((current) => current.filter((image) => image.id !== attachmentId));
-    // Pending uploads expire on the server anyway, so a failed cleanup needs no message.
-    deleteAttachment.mutate({ attachmentId });
-  };
-
-  return { text, setText: composer.change, images, uploads, canSubmit, submit, removeImage };
+  return { text, setText: composer.change, attachments, files, canSubmit, submit };
 }

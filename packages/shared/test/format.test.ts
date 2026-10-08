@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  formatBytes,
   formatFullDate,
   formatLongDay,
   formatRelative,
@@ -146,5 +147,15 @@ describe('isOverdue', () => {
   it('compares with the current local day by default', () => {
     expect(isOverdue('2000-01-01', false)).toBe(true);
     expect(isOverdue('2999-01-01', false)).toBe(false);
+  });
+});
+
+describe('formatBytes', () => {
+  it('uses B, KB and MB', () => {
+    expect(formatBytes(800)).toBe('800 B');
+    expect(formatBytes(1024)).toBe('1 KB');
+    expect(formatBytes(348_160)).toBe('340 KB');
+    expect(formatBytes(1.5 * 1024 * 1024)).toBe('1.5 MB');
+    expect(formatBytes(1_258_291)).toBe('1.2 MB');
   });
 });

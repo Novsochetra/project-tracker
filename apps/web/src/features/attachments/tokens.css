@@ -1,0 +1,7 @@
+:root {
+  /* Badges and progress drawn over a photo or a video frame. */
+  --media-badge: rgba(20, 20, 26, 0.56);
+  --media-track: rgba(255, 255, 255, 0.38);
+  /* A video's length on its thumbnail, small enough to stay clear of the play badge. */
+  --size-badge: 11px;
+}

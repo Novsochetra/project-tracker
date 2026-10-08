@@ -16,14 +16,13 @@ export const CAPTURE_TIMEOUT_MS = 8_000;
 // Toasts stay on one line (SPEC §5.6); with the title clipped to this width one fits at 375px.
 const DROPPED_TITLE_WIDTH = 24;
 
-export const TITLE_MAX_LENGTH = createTicketInput.shape.title.maxLength ?? undefined;
 export const DESCRIPTION_MAX_LENGTH =
   createTicketInput.shape.description.unwrap().maxLength ?? undefined;
 
 export const TITLE_REQUIRED = 'Add a title to create the ticket.';
 export const NO_PROJECTS = 'Create a project first.';
-export const PHOTOS_NEED_CONNECTION =
-  "Photos need a connection. Try again once you're online, or remove them to save the text on this phone.";
+export const FILES_NEED_CONNECTION =
+  "Files need a connection. Try again once you're online, or remove them to save the text on this phone.";
 export const SAVED_ON_PHONE = "Saved offline. It'll sync later.";
 
 export const createdToast = (ticketKey: string): string => `${ticketKey} created`;
@@ -34,8 +33,8 @@ export const addedToast = (count: number): string =>
 export const droppedToast = (title: string): string =>
   `Couldn't add “${clipTitle(title, DROPPED_TITLE_WIDTH)}”`;
 
-export const hasContent = (values: CaptureValues, photoCount: number): boolean =>
-  values.title.trim() !== '' || values.description.trim() !== '' || photoCount > 0;
+export const hasContent = (values: CaptureValues, fileCount: number): boolean =>
+  values.title.trim() !== '' || values.description.trim() !== '' || fileCount > 0;
 
 export interface NewCapture {
   id: string;
@@ -56,18 +55,19 @@ export const toQueuedCapture = ({
   description: values.description.trim(),
   priority: values.priority,
   capturedAt,
-  attempted: false,
 });
 
-// No statusId: the server puts a new ticket in the project's first status.
+// No statusId: the server puts a new ticket in the project's first status. Every request for a
+// capture carries its id, so the tracker makes one ticket of it however often it is sent.
 export const createInputOf = (
-  capture: Pick<QueuedCapture, 'title' | 'description' | 'priority'>,
+  capture: Pick<QueuedCapture, 'id' | 'title' | 'description' | 'priority'>,
   attachmentIds: readonly string[] = [],
 ): CreateTicketInput => ({
   title: capture.title,
   description: capture.description,
   priority: capture.priority,
   ...(attachmentIds.length > 0 ? { attachmentIds: [...attachmentIds] } : {}),
+  clientId: capture.id,
 });
 
 const hex = (byte: number): string => byte.toString(16).padStart(2, '0');

@@ -42,7 +42,7 @@ export function DeleteTicket({ ticketKey }: { ticketKey: string }) {
         back();
         show(`${ticketKey} deleted`);
       },
-      (error: unknown) => show(errorMessage(error)),
+      (error: unknown) => show(errorMessage(error), { kind: 'error' }),
     );
   };
   return (

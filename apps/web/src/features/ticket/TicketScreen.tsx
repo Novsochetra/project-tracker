@@ -4,6 +4,7 @@ import { errorMessage, isNotFound, useProject, useTicket } from '../../api';
 import { Button, EmptyState, Spinner } from '../../components';
 import { forgetTicketDrafts } from '../../lib/storedDrafts';
 import { NavBar, NavBarSpacer, useNavigation } from '../../navigation';
+import { useTicketOnScreen } from './drafts/liveDrafts';
 import styles from './TicketScreen.module.css';
 import { TicketView } from './TicketView';
 
@@ -15,6 +16,7 @@ export interface TicketScreenProps {
 export function TicketScreen({ projectKey, num }: TicketScreenProps) {
   const ticketKey = `${projectKey}-${num}`.toUpperCase();
   const query = useTicket(ticketKey);
+  useTicketOnScreen(ticketKey);
   useLeaveWhenMissing(query.error, ticketKey, projectKey);
   if (query.data) return <TicketView detail={query.data} />;
   return (

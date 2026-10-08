@@ -30,24 +30,8 @@
   line-height: 1.65;
 }
 
-.images {
+.attachments {
   padding-top: var(--space-1);
-}
-
-.addRow {
-  display: flex;
-}
-
-.inner .addImages {
-  margin-left: calc(-1 * var(--space-2));
-  padding: 0 var(--space-2);
-  color: var(--muted);
-}
-
-@media (hover: hover) {
-  .inner .addImages:hover {
-    color: var(--ink);
-  }
 }
 
 @media (max-width: 767px) {

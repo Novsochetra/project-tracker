@@ -2,10 +2,11 @@ import { act, renderHook, waitFor } from '@testing-library/react';
 import { ApiError } from '@tracker/client';
 import type { ProjectDetail, Ticket } from '@tracker/shared';
 import { describe, expect, it, vi } from 'vitest';
+import { markWritten } from '../freshReads';
 import { refreshForChange } from '../live/refreshForChange';
 import { queryKeys } from '../queryKeys';
 import { deferred } from '../test/deferred';
-import { listItem, project, STATUS, statuses, summaryOf } from '../test/fixtures';
+import { listItem, makeTicketDetail, project, STATUS, statuses, summaryOf } from '../test/fixtures';
 import {
   boardTicket,
   cachedBoard,
@@ -14,6 +15,7 @@ import {
   seedTicket,
   setupApi,
 } from '../test/render';
+import { useUpdateTicket } from './ticketEdits';
 import { useDeleteTicket, useMarkSent, useTicket, useCreateTicket } from './tickets';
 
 const ticketOf = (num: number, statusId: string, rank: number): Ticket => {
@@ -106,5 +108,66 @@ describe('useMarkSent', () => {
     });
     expect(cachedTicket(queryClient).status.id).toBe(STATUS.progress);
     expect(isInvalidated(queryClient, queryKeys.ticket('MOB-1'))).toBe(true);
+  });
+});
+
+describe('useTicket', () => {
+  // The copy the service worker saved before the write would otherwise put the old text back on
+  // screen when the read is slow.
+  it('reads the ticket from the tracker itself after a write, until such a read lands', async () => {
+    const detail = makeTicketDetail();
+    const getTicket = vi.fn().mockResolvedValue(detail);
+    const { queryClient, wrapper } = setupApi({
+      getTicket,
+      updateTicket: vi.fn().mockResolvedValue(detail.ticket),
+    });
+    seedTicket(queryClient, detail);
+    const { result } = renderHook(
+      () => ({ ticket: useTicket('MOB-1'), update: useUpdateTicket() }),
+      { wrapper },
+    );
+
+    await act(() =>
+      result.current.update.mutateAsync({ ticketKey: 'MOB-1', input: { description: 'Steps' } }),
+    );
+    await waitFor(() => expect(getTicket).toHaveBeenCalledTimes(1));
+    expect(getTicket).toHaveBeenLastCalledWith('MOB-1', { fresh: true });
+
+    await act(() => queryClient.invalidateQueries({ queryKey: queryKeys.ticket('MOB-1') }));
+    expect(getTicket).toHaveBeenCalledTimes(2);
+    expect(getTicket).toHaveBeenLastCalledWith('MOB-1');
+  });
+
+  it('reads a written ticket it has no copy of as usual, so a saved copy can still show', async () => {
+    const detail = makeTicketDetail();
+    const getTicket = vi.fn().mockResolvedValue(detail);
+    const { queryClient, wrapper } = setupApi({ getTicket });
+    markWritten(queryClient, 'MOB-1');
+    const { result } = renderHook(() => useTicket('MOB-1'), { wrapper });
+    await waitFor(() => expect(result.current.data).toEqual(detail));
+    expect(getTicket).toHaveBeenCalledWith('MOB-1');
+  });
+
+  it('keeps reading fresh after a write while those reads fail', async () => {
+    const detail = makeTicketDetail();
+    const getTicket = vi.fn().mockRejectedValueOnce(new TypeError('Failed to fetch'));
+    getTicket.mockResolvedValue(detail);
+    const { queryClient, wrapper } = setupApi({
+      getTicket,
+      updateTicket: vi.fn().mockResolvedValue(detail.ticket),
+    });
+    seedTicket(queryClient, detail);
+    const { result } = renderHook(
+      () => ({ ticket: useTicket('MOB-1'), update: useUpdateTicket() }),
+      { wrapper },
+    );
+
+    await act(() =>
+      result.current.update.mutateAsync({ ticketKey: 'MOB-1', input: { description: 'Steps' } }),
+    );
+    await waitFor(() => expect(result.current.ticket.isError).toBe(true));
+    expect(result.current.ticket.data?.ticket.description).toBe('Steps');
+    await act(() => result.current.ticket.refetch());
+    expect(getTicket).toHaveBeenLastCalledWith('MOB-1', { fresh: true });
   });
 });

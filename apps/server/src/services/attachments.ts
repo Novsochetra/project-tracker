@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { imageSize } from 'image-size';
 import {
   MAX_ATTACHMENT_BYTES,
+  PENDING_ATTACHMENT_TTL_MS,
   checkAttachment,
   storedExtension,
   type Attachment,
@@ -25,7 +26,7 @@ export const TOO_LARGE_MESSAGE = `Files can be up to ${MAX_ATTACHMENT_BYTES / (1
 
 const NOT_FOUND_MESSAGE = 'Attachment was not found.';
 
-export const PENDING_TTL_MS = 24 * 60 * 60 * 1000;
+export const PENDING_TTL_MS = PENDING_ATTACHMENT_TTL_MS;
 
 const MAX_NAME_LENGTH = 200;
 

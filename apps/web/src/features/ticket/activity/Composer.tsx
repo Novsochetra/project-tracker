@@ -1,7 +1,7 @@
-import { ImagePlus } from 'lucide-react';
+import { Paperclip } from 'lucide-react';
 import { useRef } from 'react';
 import { AutoTextarea, Button, IconButton } from '../../../components';
-import { ImageFileInput, pasteImages, ThumbnailGrid, useImageDrop } from '../../attachments';
+import { FileInput, pasteFiles, ThumbnailGrid, useFileDrop } from '../../attachments';
 import { COMMENT_MAX_LENGTH } from '../fields/limits';
 import styles from './Composer.module.css';
 import { isSubmitShortcut } from './commentRules';
@@ -9,8 +9,8 @@ import { useComposer } from './useComposer';
 
 export function Composer({ ticketKey }: { ticketKey: string }) {
   const composer = useComposer(ticketKey);
-  const { images, uploads } = composer;
-  const drop = useImageDrop(uploads.add);
+  const { attachments, files } = composer;
+  const drop = useFileDrop(files.add);
   const inputRef = useRef<HTMLInputElement>(null);
   return (
     <form
@@ -30,31 +30,32 @@ export function Composer({ ticketKey }: { ticketKey: string }) {
         maxLength={COMMENT_MAX_LENGTH}
         value={composer.text}
         onChange={(event) => composer.setText(event.currentTarget.value)}
-        onPaste={(event) => pasteImages(event, uploads.add)}
+        onPaste={(event) => pasteFiles(event, files.add)}
         onKeyDown={(event) => {
           if (!isSubmitShortcut(event)) return;
           event.preventDefault();
           composer.submit();
         }}
       />
-      {(images.length > 0 || uploads.uploading > 0) && (
+      {(attachments.length > 0 || files.uploading.length > 0) && (
         <ThumbnailGrid
           size="sm"
-          images={images}
-          uploading={uploads.uploading}
-          onRemove={composer.removeImage}
+          attachments={attachments}
+          uploading={files.uploading}
+          onRemove={files.remove}
+          onCancel={files.cancel}
           className={styles.pending}
         />
       )}
       <div className={styles.footer}>
         <IconButton
-          aria-label="Attach images"
-          icon={ImagePlus}
+          aria-label="Attach files"
+          icon={Paperclip}
           size="sm"
           className={styles.attach}
           onClick={() => inputRef.current?.click()}
         />
-        <ImageFileInput ref={inputRef} label="Attach images to comment" onFiles={uploads.add} />
+        <FileInput ref={inputRef} label="Attach files to comment" onFiles={files.add} />
         <Button type="submit" size="sm" disabled={!composer.canSubmit}>
           Comment
         </Button>

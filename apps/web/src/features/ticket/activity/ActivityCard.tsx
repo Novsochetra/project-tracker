@@ -2,7 +2,7 @@ import type { Actor, Attachment } from '@tracker/shared';
 import clsx from 'clsx';
 import type { CSSProperties, ReactNode } from 'react';
 import { AgentAvatar, Avatar, YouAvatar } from '../../../components';
-import { ThumbnailGrid, toViewerImages, useImageViewer } from '../../attachments';
+import { ThumbnailGrid, useAttachmentViewer } from '../../attachments';
 import styles from './ActivityCard.module.css';
 
 export interface RiseProps {
@@ -57,14 +57,14 @@ export function ActorAvatar({ actor }: { actor: Actor }) {
   return actor.name ? <Avatar name={actor.name} size={20} decorative /> : <YouAvatar />;
 }
 
-export function CardImages({ images }: { images: Attachment[] }) {
-  const viewer = useImageViewer();
-  if (images.length === 0) return null;
+export function CardAttachments({ attachments }: { attachments: Attachment[] }) {
+  const viewer = useAttachmentViewer();
+  if (attachments.length === 0) return null;
   return (
     <ThumbnailGrid
-      images={images}
-      onOpen={(index) => viewer.open(toViewerImages(images), index)}
-      className={styles.images}
+      attachments={attachments}
+      onOpen={(index) => viewer.open(attachments, index)}
+      className={styles.attachments}
     />
   );
 }

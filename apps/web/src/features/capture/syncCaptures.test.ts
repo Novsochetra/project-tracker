@@ -2,7 +2,7 @@ import { ApiError } from '@tracker/client';
 import type { Ticket } from '@tracker/shared';
 import { describe, expect, it, vi } from 'vitest';
 import { deferred } from '../../api/test/deferred';
-import { addCapture, markAttempted, type CaptureQueue, type QueuedCapture } from './captureQueue';
+import { addCapture, type CaptureQueue, type QueuedCapture } from './captureQueue';
 import type { QueueAccess } from './queueStore';
 import { syncCaptures, type SyncDeps } from './syncCaptures';
 
@@ -13,7 +13,6 @@ const capture = (id: string, capturedAt: number, overrides: Partial<QueuedCaptur
   description: '',
   priority: 'medium' as const,
   capturedAt,
-  attempted: false,
   ...overrides,
 });
 
@@ -62,7 +61,6 @@ function deps(queue: QueueAccess, overrides: Partial<SyncDeps> = {}): SyncDeps {
   return {
     queue,
     send: vi.fn((item: QueuedCapture) => Promise.resolve(ticketFor(item))),
-    exists: vi.fn(() => Promise.resolve(false)),
     claim: claimsExcept(),
     ...overrides,
   };
@@ -108,10 +106,7 @@ describe('syncCaptures', () => {
 
     expect(report).toEqual({ added: [], dropped: [], stopped: true });
     expect(sentIds(sync.send)).toEqual(['a']);
-    expect(store.current().items.map(({ id, attempted }) => [id, attempted])).toEqual([
-      ['a', true],
-      ['b', false],
-    ]);
+    expect(store.current().items.map(({ id }) => id)).toEqual(['a', 'b']);
   });
 
   it('keeps what is left after a partial success', async () => {
@@ -139,27 +134,12 @@ describe('syncCaptures', () => {
     expect(sentIds(sync.send)).toEqual(['b']);
   });
 
-  it('looks for the ticket before sending a capture whose answer may have been lost', async () => {
-    const lost = capture('a', 1, { attempted: true });
-    const store = memoryQueue([lost, capture('b', 2)]);
-    const exists = vi.fn((item: QueuedCapture) => Promise.resolve(item.id === 'a'));
-    const sync = deps(store.access, { exists });
-
-    const report = await syncCaptures(sync);
-
-    expect(exists).toHaveBeenCalledTimes(1);
-    expect(sentIds(sync.send)).toEqual(['b']);
-    expect(report.added.map(({ id }) => id)).toEqual(['a', 'b']);
-    expect(store.current().items).toEqual([]);
-  });
-
   it('leaves captures alone while a request in any tab holds their lock', async () => {
-    const store = memoryQueue([capture('a', 1, { attempted: true }), capture('b', 2)]);
+    const store = memoryQueue([capture('a', 1), capture('b', 2)]);
     const sync = deps(store.access, { claim: claimsExcept(new Set(['a'])) });
 
     const report = await syncCaptures(sync);
 
-    expect(sync.exists).not.toHaveBeenCalled();
     expect(sentIds(sync.send)).toEqual(['b']);
     expect(report).toMatchObject({ stopped: false });
     expect(store.current().items.map(({ id }) => id)).toEqual(['a']);
@@ -171,7 +151,7 @@ describe('syncCaptures', () => {
     const send = vi.fn((item: QueuedCapture) => {
       if (item.id === 'a') {
         sending.add('late');
-        store.access.update((queue) => addCapture(queue, capture('late', 2, { attempted: true })));
+        store.access.update((queue) => addCapture(queue, capture('late', 2)));
       }
       return Promise.resolve(ticketFor(item));
     });
@@ -203,50 +183,16 @@ describe('syncCaptures', () => {
   it('reads a capture again once its lock is taken, since another tab may have sent it', async () => {
     const store = memoryQueue([capture('a', 1), capture('b', 2)]);
     const claim = vi.fn((id: string) => {
-      // While this run waited for the lock, another tab tried 'a' and created 'b'.
-      if (id === 'a') store.access.update((queue) => markAttempted(queue, 'a'));
+      // While this run waited for the lock, another tab created 'b'.
       if (id === 'b') store.access.update((queue) => ({ ...queue, created: ['b'] }));
       return Promise.resolve(() => undefined);
     });
-    const exists = vi.fn(() => Promise.resolve(true));
-    const sync = deps(store.access, { claim, exists });
+    const sync = deps(store.access, { claim });
 
     const report = await syncCaptures(sync);
 
-    expect(exists).toHaveBeenCalledWith(capture('a', 1, { attempted: true }));
-    expect(sync.send).not.toHaveBeenCalled();
+    expect(sentIds(sync.send)).toEqual(['a']);
     expect(report.added.map(({ id }) => id)).toEqual(['a']);
-  });
-
-  it.each([
-    ['refused', new ApiError(400, 'validation_error', 'Invalid query.')],
-    ['answered with a server error', new ApiError(503, 'http_error', 'Unavailable')],
-    ['cut off', NETWORK_DOWN],
-  ])('stops and keeps the capture when the lookup is %s', async (_how, error) => {
-    const store = memoryQueue([capture('a', 1, { attempted: true }), capture('b', 2)]);
-    const sync = deps(store.access, { exists: vi.fn(() => Promise.reject(error)) });
-
-    const report = await syncCaptures(sync);
-
-    expect(report).toEqual({ added: [], dropped: [], stopped: true });
-    expect(sync.send).not.toHaveBeenCalled();
-    expect(store.current().items.map(({ id }) => id)).toEqual(['a', 'b']);
-  });
-
-  it('leaves it to the create when the lookup finds no project, and drops it on the refusal', async () => {
-    const gone = capture('gone', 1, { attempted: true, projectKey: 'OLD' });
-    const store = memoryQueue([gone]);
-    const notFound = new ApiError(404, 'not_found', 'Project OLD was not found.');
-    const sync = deps(store.access, {
-      exists: vi.fn(() => Promise.reject(notFound)),
-      send: vi.fn(() => Promise.reject(notFound)),
-    });
-
-    const report = await syncCaptures(sync);
-
-    expect(sentIds(sync.send)).toEqual(['gone']);
-    expect(report.dropped).toEqual([gone]);
-    expect(store.current().items).toEqual([]);
   });
 
   it('drops a capture the server refuses for good and goes on with the rest', async () => {
@@ -274,31 +220,27 @@ describe('syncCaptures', () => {
     expect(store.current().items).toHaveLength(1);
   });
 
-  it('stops without sending when storage can no longer be written', async () => {
-    const store = memoryQueue([capture('a', 1)]);
+  it('stops at a capture whose result storage cannot record, keeping the rest', async () => {
+    const store = memoryQueue([capture('a', 1), capture('b', 2)]);
     store.failWrites();
     const sync = deps(store.access);
 
     const report = await syncCaptures(sync);
 
     expect(report.stopped).toBe(true);
-    expect(sync.send).not.toHaveBeenCalled();
+    expect(sentIds(sync.send)).toEqual(['a']);
+    expect(store.current().items.map(({ id }) => id)).toEqual(['a', 'b']);
   });
 
-  it('sends nothing twice in one run, even when the result cannot be saved', async () => {
+  it('sends nothing twice in one run, even when its result does not stick', async () => {
     const store = memoryQueue([capture('a', 1)]);
-    let writes = 0;
-    const access: QueueAccess = {
-      read: store.access.read,
-      // The attempted mark is saved; the created mark after sending is not.
-      update: (change) => (writes++ === 0 ? store.access.update(change) : false),
-    };
+    // Another tab writes its older copy of the queue over the created mark.
+    const access: QueueAccess = { read: store.access.read, update: () => true };
     const sync = deps(access);
 
-    const report = await syncCaptures(sync);
+    await syncCaptures(sync);
 
     expect(sentIds(sync.send)).toEqual(['a']);
-    expect(report).toMatchObject({ stopped: true });
   });
 
   it('picks up a capture added while the run is going', async () => {

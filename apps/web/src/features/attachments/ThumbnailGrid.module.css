@@ -6,10 +6,13 @@
 
 .md {
   --thumb-size: 72px;
+  --file-name-lines: 2;
 }
 
+/* Small thumbnails have room for one line of a file's name. */
 .sm {
   --thumb-size: 56px;
+  --file-name-lines: 1;
 }
 
 .tile {
@@ -19,8 +22,16 @@
   height: var(--thumb-size);
 }
 
+/* Files show their name and size, so they take two thumbnails and the gap between them. */
+.wide {
+  width: calc(var(--thumb-size) * 2 + var(--space-2));
+}
+
 .frame {
-  display: block;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   width: 100%;
   height: 100%;
   margin: 0;
@@ -29,32 +40,37 @@
   border: 1px solid var(--line);
   border-radius: var(--radius-container);
   background: var(--fill);
-  object-fit: cover;
+  color: var(--ink);
+  font: inherit;
+  text-align: left;
+  text-decoration: none;
+}
+
+.file {
+  justify-content: flex-start;
 }
 
 .open {
-  cursor: zoom-in;
+  cursor: pointer;
   transition: transform var(--duration-press) ease-out;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .open:active {
   transform: scale(0.97);
 }
 
-.open img {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+.zoom {
+  cursor: zoom-in;
 }
 
-.busy {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+@media (hover: hover) {
+  .open.file:hover {
+    background: var(--fill-2);
+  }
 }
 
-/* The image a removal is being confirmed for. */
+/* The attachment a removal is being confirmed for. */
 .marked .frame {
   outline: 2px solid var(--danger);
   outline-offset: 2px;

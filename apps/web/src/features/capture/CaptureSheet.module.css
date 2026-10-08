@@ -9,22 +9,6 @@
   padding: 18px var(--space-5) 6px;
 }
 
-.title {
-  width: 100%;
-  margin: 0;
-  padding: var(--space-1) 0;
-  border: 0;
-  background: transparent;
-  color: var(--ink);
-  font: var(--text-heading);
-  letter-spacing: -0.01em;
-}
-
-/* Borderless like the design: the caret shows focus. */
-.title:focus-visible {
-  outline: none;
-}
-
 .text .description {
   min-height: 52px;
   max-height: 30vh;
@@ -35,21 +19,8 @@
   line-height: 1.55;
 }
 
-.photos {
-  display: flex;
+.attachments {
   padding: 0 var(--space-5) var(--space-1);
-}
-
-.photos .addPhotos {
-  margin-left: calc(-1 * var(--space-2));
-  padding: 0 var(--space-2);
-  color: var(--muted);
-}
-
-@media (hover: hover) {
-  .photos .addPhotos:hover {
-    color: var(--ink);
-  }
 }
 
 .details {

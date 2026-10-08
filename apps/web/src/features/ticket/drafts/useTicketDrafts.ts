@@ -39,7 +39,10 @@ function useDraftSync(): () => void {
     runDraftSync(async () => {
       if (navigator.onLine === false) return;
       const changed = firstNewChange(await syncDrafts(deps.current));
-      if (changed) show(`Your edit to ${changed.ticketKey} isn't saved: it changed elsewhere.`);
+      if (!changed) return;
+      show(`Your edit to ${changed.ticketKey} isn't saved: it changed elsewhere.`, {
+        kind: 'error',
+      });
     });
   }, [deps, show]);
 }

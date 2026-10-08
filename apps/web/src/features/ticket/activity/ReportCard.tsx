@@ -1,7 +1,7 @@
 import type { Status } from '@tracker/shared';
 import { AgentAvatar } from '../../../components';
 import type { ActivityItem } from './activityItems';
-import { ActivityCard, CardImages, type RiseProps } from './ActivityCard';
+import { ActivityCard, CardAttachments, type RiseProps } from './ActivityCard';
 import { ItemMenu } from './ItemMenu';
 import { ReportBody } from './ReportBody';
 import { TimeAgo } from './TimeAgo';
@@ -26,7 +26,7 @@ export function ReportCard({ item, now, actions, rise, statuses }: ReportCardPro
       {...rise}
     >
       <ReportBody text={item.text} statuses={statuses} />
-      <CardImages images={item.images} />
+      <CardAttachments attachments={item.attachments} />
     </ActivityCard>
   );
 }

@@ -1,7 +1,7 @@
 import type { TicketDetail } from '@tracker/shared';
 import { useRef } from 'react';
 import { NavBar, NavBarSpacer } from '../../navigation';
-import { ImageViewerProvider } from '../attachments';
+import { AttachmentViewerProvider } from '../attachments';
 import { ActivitySection } from './activity/ActivitySection';
 import { TicketMain } from './main/TicketMain';
 import { TicketSidePanel } from './side/TicketSidePanel';
@@ -19,7 +19,7 @@ export function TicketView({ detail }: { detail: TicketDetail }) {
   const panelRef = useRef<HTMLElement>(null);
   const done = useMoveToDone(detail, () => focusStatus(panelRef.current));
   return (
-    <ImageViewerProvider>
+    <AttachmentViewerProvider>
       <NavBar title={ticket.key} mono backLabel={project.name} right={<NavBarSpacer />} />
       <div className={styles.grid}>
         <TicketMain detail={detail} done={done} className={styles.main} />
@@ -32,6 +32,6 @@ export function TicketView({ detail }: { detail: TicketDetail }) {
         <ActivitySection detail={detail} className={styles.activity} />
       </div>
       <TicketBottomBar ticketKey={ticket.key} projectKey={project.key} done={done} />
-    </ImageViewerProvider>
+    </AttachmentViewerProvider>
   );
 }

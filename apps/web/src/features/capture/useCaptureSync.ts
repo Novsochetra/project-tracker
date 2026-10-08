@@ -5,7 +5,6 @@ import { queryKeys, useApi } from '../../api';
 import type { Reachability } from '../../app/reachability';
 import { useToast, type ToastApi } from '../../components';
 import { addedToast, createInputOf, droppedToast } from './captureForm';
-import { matchesCapture, searchTextFor } from './captureLookup';
 import type { QueuedCapture } from './captureQueue';
 import { queueStore } from './queueStore';
 import { syncCaptures, type SyncReport } from './syncCaptures';
@@ -16,12 +15,6 @@ const sendWith = (queryClient: QueryClient, client: TrackerClient) => (capture: 
   new MutationObserver(queryClient, {
     mutationFn: () => client.createTicket(capture.projectKey, createInputOf(capture)),
   }).mutate();
-
-const existsWith = (client: TrackerClient) => async (capture: QueuedCapture) => {
-  const q = searchTextFor(capture.title);
-  const tickets = await client.listTickets(capture.projectKey, { q });
-  return tickets.some((ticket) => matchesCapture(ticket, capture));
-};
 
 function refreshAfter(queryClient: QueryClient, report: SyncReport): void {
   const settled = [...report.added, ...report.dropped];
@@ -34,7 +27,7 @@ function refreshAfter(queryClient: QueryClient, report: SyncReport): void {
 
 function announce(report: SyncReport, show: ToastApi['show']): void {
   const [dropped] = report.dropped;
-  if (dropped) show(droppedToast(dropped.title));
+  if (dropped) show(droppedToast(dropped.title), { kind: 'error' });
   else if (report.added.length > 0) show(addedToast(report.added.length));
 }
 
@@ -49,7 +42,6 @@ function useSyncCaptures(): () => Promise<void> {
       const report = await syncCaptures({
         queue: queueStore,
         send: sendWith(queryClient, client),
-        exists: existsWith(client),
         claim: claimCapture,
       });
       refreshAfter(queryClient, report);

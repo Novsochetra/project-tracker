@@ -4,6 +4,9 @@ const parseDay = (ymd: string): Date => new Date(`${ymd}T00:00:00`);
 
 const pad = (value: number): string => String(value).padStart(2, '0');
 
+const KB = 1024;
+const MB = 1024 * 1024;
+
 export const toYmd = (date: Date): string =>
   `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
 
@@ -45,3 +48,9 @@ export const formatLongDay = (ymd: string, now: Date = new Date()): string =>
 
 export const isOverdue = (due: string, isDone: boolean, today: string = todayYmd()): boolean =>
   Boolean(due) && due < today && !isDone;
+
+export function formatBytes(bytes: number): string {
+  if (bytes < KB) return `${bytes} B`;
+  if (bytes < MB) return `${Math.round(bytes / KB)} KB`;
+  return `${(bytes / MB).toFixed(1)} MB`;
+}

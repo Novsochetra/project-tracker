@@ -2,8 +2,23 @@ import { useEffect } from 'react';
 import { useLatest } from '../../../lib/useLatest';
 
 const live = new Map<string, { retry: () => void }>();
+const openTickets = new Map<string, number>();
 
-export const isLiveDraft = (id: string): boolean => live.has(id);
+// The drafts of a ticket whose screen is open are left to its fields, also while it is still
+// loading: the app-wide sync saving one as its field opens and retries it would save it twice.
+export const isLeftToScreen = (id: string, ticketKey: string): boolean =>
+  live.has(id) || openTickets.has(ticketKey);
+
+export function useTicketOnScreen(ticketKey: string): void {
+  useEffect(() => {
+    openTickets.set(ticketKey, (openTickets.get(ticketKey) ?? 0) + 1);
+    return () => {
+      const left = (openTickets.get(ticketKey) ?? 1) - 1;
+      if (left > 0) openTickets.set(ticketKey, left);
+      else openTickets.delete(ticketKey);
+    };
+  }, [ticketKey]);
+}
 
 export function retryLiveDrafts(): void {
   live.forEach((holder) => holder.retry());

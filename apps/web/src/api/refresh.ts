@@ -1,5 +1,6 @@
 import type { QueryClient, QueryKey } from '@tanstack/react-query';
 import { isDeleted } from './deleted';
+import { markWritten } from './freshReads';
 import { busyKeys, targetsOf, type BusyKeys } from './pending';
 import { projectOfQuery, queryKeys, rootOf, scopeOf } from './queryKeys';
 
@@ -55,6 +56,7 @@ export function settleMutation(
 ): void {
   const { projectKey, ticketKey } = targetsOf(variables);
   const busy = busyKeys(queryClient, variables);
+  if (ticketKey) markWritten(queryClient, ticketKey);
   if (ticketKey && !busy.ticketKeys.has(ticketKey) && !isDeleted(queryClient, ticketKey)) {
     void queryClient.invalidateQueries({ queryKey: queryKeys.ticket(ticketKey) });
   }

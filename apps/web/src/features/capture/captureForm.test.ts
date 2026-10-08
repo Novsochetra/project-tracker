@@ -24,18 +24,23 @@ describe('capture form', () => {
       description: 'On iOS',
       priority: 'high',
       capturedAt: 42,
-      attempted: false,
     });
   });
 
   it('leaves the status to the server, which uses the first status', () => {
-    const input = createInputOf({ title: 'Idea', description: '', priority: 'medium' });
-    expect(input).toEqual({ title: 'Idea', description: '', priority: 'medium' });
+    const input = createInputOf({ id: 'c-1', title: 'Idea', description: '', priority: 'medium' });
+    expect(input).toEqual({ title: 'Idea', description: '', priority: 'medium', clientId: 'c-1' });
+  });
+
+  it("sends the capture's id, so the tracker makes one ticket however often it is sent", () => {
+    const capture = { id: 'c-1', title: 'Idea', description: '', priority: 'low' } as const;
+    expect(createInputOf(capture).clientId).toBe('c-1');
+    expect(createInputOf(capture, ['img-1']).clientId).toBe('c-1');
   });
 
   it('attaches uploaded photos', () => {
-    const input = createInputOf({ title: 'Idea', description: '', priority: 'low' }, ['img-1']);
-    expect(input.attachmentIds).toEqual(['img-1']);
+    const capture = { id: 'c-1', title: 'Idea', description: '', priority: 'low' } as const;
+    expect(createInputOf(capture, ['img-1']).attachmentIds).toEqual(['img-1']);
   });
 
   it('counts tickets added in words', () => {

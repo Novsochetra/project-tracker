@@ -137,7 +137,11 @@ function movePage(state: GestureState, ctx: ViewerGestureContext, dx: number): v
   ctx.values.track.set(state.startTrack + offset);
 }
 
-function moveDismiss(ctx: ViewerGestureContext, dx: number, dy: number): void {
+export function moveDismiss(
+  ctx: Pick<ViewerGestureContext, 'values' | 'viewport'>,
+  dx: number,
+  dy: number,
+): void {
   const { values, viewport } = ctx;
   const progress = dismissProgress(Math.max(0, dy), viewport.height);
   values.x.set(dx * 0.8);

@@ -160,7 +160,7 @@ describe('TicketScreen info and images', () => {
     await waitFor(() =>
       expect(screen.queryByRole('button', { name: 'Open image 1' })).not.toBeInTheDocument(),
     );
-    expect(screen.getByRole('button', { name: 'Add images' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Add files' })).toBeInTheDocument();
   });
 
   it('keeps the image when its removal fails', async () => {
@@ -184,7 +184,7 @@ describe('TicketScreen info and images', () => {
     const user = userEvent.setup();
     const { client } = setup({ client: { uploadAttachment } });
     const file = new File(['png'], 'shot.png', { type: 'image/png' });
-    await user.upload(screen.getByLabelText('Add images to ticket'), file);
+    await user.upload(screen.getByLabelText('Add files to ticket'), file);
     await waitFor(() => expect(client.uploadAttachment).toHaveBeenCalled());
     expect(vi.mocked(client.uploadAttachment).mock.calls[0]?.[2]).toBe('MOB-1');
     expect(await screen.findByRole('button', { name: 'Open image 1' })).toBeInTheDocument();

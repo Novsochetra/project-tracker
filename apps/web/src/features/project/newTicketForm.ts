@@ -2,10 +2,12 @@ import {
   createTicketInput,
   PRIORITIES,
   sortStatuses,
+  type Attachment,
   type CreateTicketInput,
   type Priority,
   type Status,
 } from '@tracker/shared';
+import { keptAttachments } from './keptAttachments';
 
 export interface NewTicketForm {
   title: string;
@@ -15,6 +17,8 @@ export interface NewTicketForm {
   priority: Priority;
   assignee: string;
   due: string;
+  /** Uploaded and waiting for the ticket to be created with them. */
+  attachments: Attachment[];
 }
 
 export const TITLE_REQUIRED = 'Add a title to create the ticket.';
@@ -28,6 +32,7 @@ export const blankForm = (): NewTicketForm => ({
   priority: 'medium',
   assignee: '',
   due: '',
+  attachments: [],
 });
 
 export const newTicketDraftId = (projectKey: string): string => `new-ticket:${projectKey}`;
@@ -40,6 +45,7 @@ const isPriority = (value: unknown): value is Priority =>
 // Kept fields come from storage, which an older build or another tab may have written.
 export function formFromDraft(
   values: Readonly<Record<string, unknown>> | undefined,
+  now: number = Date.now(),
 ): NewTicketForm {
   const blank = blankForm();
   if (!values) return blank;
@@ -50,6 +56,7 @@ export function formFromDraft(
     priority: isPriority(values.priority) ? values.priority : blank.priority,
     assignee: textOf(values.assignee),
     due: textOf(values.due),
+    attachments: keptAttachments(values.attachments, now),
   };
 }
 
@@ -58,6 +65,7 @@ const hasText = (value: string): boolean => value.trim() !== '';
 export function hasChanges(form: NewTicketForm, defaultStatus: string | undefined): boolean {
   const blank = blankForm();
   if (hasText(form.title) || hasText(form.description) || hasText(form.assignee)) return true;
+  if (form.attachments.length > 0) return true;
   const statusPicked = form.statusId !== null && form.statusId !== defaultStatus;
   return statusPicked || form.priority !== blank.priority || form.due !== blank.due;
 }
@@ -82,6 +90,14 @@ export function chosenStatusId(
   return defaultStatusId(statuses, requested);
 }
 
+// Once the statuses are known, a kept one deleted since goes: the sheet shows the default status
+// then, and an untouched-looking sheet must not count as changed.
+export function withoutGoneStatus(form: NewTicketForm, statuses: readonly Status[]): NewTicketForm {
+  const { statusId } = form;
+  if (statusId === null || statuses.some((status) => status.id === statusId)) return form;
+  return { ...form, statusId: null };
+}
+
 export function toCreateInput(
   form: NewTicketForm,
   statusId: string | undefined,
@@ -93,5 +109,8 @@ export function toCreateInput(
     assignee: form.assignee.trim(),
     due: form.due,
     ...(statusId ? { statusId } : {}),
+    ...(form.attachments.length > 0
+      ? { attachmentIds: form.attachments.map((attachment) => attachment.id) }
+      : {}),
   };
 }

@@ -4,7 +4,6 @@ import {
   dropCapture,
   EMPTY_QUEUE,
   findWaiting,
-  markAttempted,
   markCreated,
   nextCapture,
   parseQueue,
@@ -20,7 +19,6 @@ const capture = (id: string, capturedAt: number, overrides: Partial<QueuedCaptur
   description: '',
   priority: 'medium' as const,
   capturedAt,
-  attempted: false,
   ...overrides,
 });
 
@@ -57,18 +55,10 @@ describe('capture queue', () => {
   });
 
   it('finds a capture by id only while it still waits', () => {
-    const queue = {
-      items: [capture('a', 1), capture('b', 2, { attempted: true })],
-      created: ['a'],
-    };
-    expect(findWaiting(queue, 'b')).toEqual(capture('b', 2, { attempted: true }));
+    const queue = { items: [capture('a', 1), capture('b', 2)], created: ['a'] };
+    expect(findWaiting(queue, 'b')).toEqual(capture('b', 2));
     expect(findWaiting(queue, 'a')).toBeUndefined();
     expect(findWaiting(queue, 'gone')).toBeUndefined();
-  });
-
-  it('marks a capture as attempted without touching the others', () => {
-    const queue = markAttempted({ items: [capture('a', 1), capture('b', 2)], created: [] }, 'b');
-    expect(queue.items.map(({ attempted }) => attempted)).toEqual([false, true]);
   });
 
   it('remembers created ids, keeping only the most recent ones', () => {
@@ -90,8 +80,13 @@ describe('capture queue', () => {
 
 describe('parseQueue', () => {
   it('reads what was stored', () => {
-    const stored = { items: [capture('a', 1, { attempted: true })], created: ['z'] };
+    const stored = { items: [capture('a', 1)], created: ['z'] };
     expect(parseQueue(JSON.stringify(stored))).toEqual(stored);
+  });
+
+  it('leaves out the attempted mark that older builds stored', () => {
+    const stored = { items: [{ ...capture('a', 1), attempted: true }], created: [] };
+    expect(parseQueue(JSON.stringify(stored))).toEqual({ items: [capture('a', 1)], created: [] });
   });
 
   it('starts empty from nothing, broken text or the wrong shape', () => {

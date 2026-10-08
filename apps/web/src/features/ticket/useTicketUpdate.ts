@@ -11,7 +11,7 @@ export function useTicketUpdate(ticketKey: string): (input: UpdateTicketInput) =
     update.mutateAsync({ ticketKey, input }).then(
       () => true,
       (error: unknown) => {
-        show(errorMessage(error));
+        show(errorMessage(error), { kind: 'error' });
         return false;
       },
     );

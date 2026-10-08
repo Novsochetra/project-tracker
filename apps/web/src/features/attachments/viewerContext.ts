@@ -1,23 +1,27 @@
 import type { Attachment } from '@tracker/shared';
 import { createContext, use } from 'react';
 import type { ViewerImage } from '../../overlays';
+import { capitalized, thumbnailLabels } from './thumbnailLabels';
 
-export interface ImageViewerApi {
-  open: (images: ViewerImage[], index: number) => void;
+export interface AttachmentViewerApi {
+  /** Opens the attachment at index the way its kind opens (viewerTarget). */
+  open: (attachments: readonly Attachment[], index: number) => void;
 }
 
-export const ImageViewerContext = createContext<ImageViewerApi | null>(null);
+export const AttachmentViewerContext = createContext<AttachmentViewerApi | null>(null);
 
-export function useImageViewer(): ImageViewerApi {
-  const api = use(ImageViewerContext);
-  if (!api) throw new Error('useImageViewer needs an <ImageViewerProvider> above it.');
+export function useAttachmentViewer(): AttachmentViewerApi {
+  const api = use(AttachmentViewerContext);
+  if (!api) throw new Error('useAttachmentViewer needs an <AttachmentViewerProvider> above it.');
   return api;
 }
 
-export const toViewerImages = (images: readonly Attachment[]): ViewerImage[] =>
-  images.map((image, index) => ({
+export const toViewerImages = (images: readonly Attachment[]): ViewerImage[] => {
+  const labels = thumbnailLabels(images);
+  return images.map((image, index) => ({
     id: image.id,
     url: image.url,
-    alt: `Attachment ${index + 1}`,
+    alt: capitalized(labels[index] ?? image.fileName),
     ...(image.width && image.height ? { width: image.width, height: image.height } : {}),
   }));
+};

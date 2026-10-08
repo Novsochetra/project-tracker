@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { carriesFiles } from './imageFiles';
+import { carriesFiles } from './attachmentFiles';
 
 // A file dropped where no drop zone takes it would open in the browser and leave the app, losing
 // unsent text. Drop zones cancel their own events first, so only unclaimed file drags get here.

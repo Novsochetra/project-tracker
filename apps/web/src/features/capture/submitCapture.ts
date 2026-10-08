@@ -22,7 +22,6 @@ export interface SubmitDeps {
   // A request that outlived the timeout settled: its ticket, or null when it failed.
   onLateResult: (capture: QueuedCapture, ticket: Ticket | null) => void;
   timeoutMs: number;
-  isOffline: () => boolean;
 }
 
 type Settled = { kind: 'created'; ticket: Ticket } | { kind: 'error'; error: unknown };
@@ -46,11 +45,9 @@ function afterSettled(draft: CaptureDraft, settled: Settled, deps: SubmitDeps): 
   if (settled.kind === 'created') return settled;
   const { error } = settled;
   if (!isNetworkError(error)) return { kind: 'failed', message: errorMessage(error) };
-  // Photos only live on the server, so a capture with photos can't wait on the phone.
+  // Attachments only live on the server, so a capture with them can't wait on the phone.
   if (draft.attachmentIds.length > 0) return { kind: 'needsConnection' };
-  // Offline the request never left; otherwise the answer may be what got lost.
-  const capture = { ...draft.capture, attempted: !deps.isOffline() };
-  return deps.save(capture)
+  return deps.save(draft.capture)
     ? { kind: 'saved' }
     : { kind: 'failed', message: NETWORK_ERROR_MESSAGE };
 }
@@ -62,7 +59,7 @@ async function keepSending(
   untrack: () => void,
 ): Promise<SubmitOutcome> {
   const { capture } = draft;
-  if (!deps.save({ ...capture, attempted: true })) {
+  if (!deps.save(capture)) {
     const settled = await settle(request);
     untrack();
     return afterSettled(draft, settled, deps);

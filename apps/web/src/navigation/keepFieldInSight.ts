@@ -8,22 +8,42 @@ export interface Edges {
 }
 
 const GAP_ABOVE_BAR = 8;
+// A sent comment shows at once, before the tracker answers. What lands later, such as an agent's
+// report, pushes the box down like any other content.
+const FOLLOW_SENT_MS = 1000;
 
-/** How far to scroll up so `field` ends above a bar `barHeight` tall at the screen's bottom. */
-export function scrollToClearBar(field: Edges, screenBottom: number, barHeight: number): number {
-  const limit = screenBottom - barHeight - GAP_ABOVE_BAR;
-  if (field.top >= screenBottom || field.bottom <= limit) return 0;
-  return Math.ceil(field.bottom - limit);
+type Plan = (box: Edges, view: Edges, barHeight: number) => number;
+
+/**
+ * How far to scroll up so `box` ends 8px above a bar `barHeight` tall at the bottom of `view`.
+ * A box taller than the room between `view`'s top and the bar stays where it is: its end would
+ * only come up by pushing the part just edited off the top.
+ */
+export const scrollToClearBar: Plan = (box, view, barHeight) => {
+  const limit = view.bottom - barHeight - GAP_ABOVE_BAR;
+  const fits = box.bottom - box.top <= limit - view.top;
+  return fits && box.bottom > limit ? Math.ceil(box.bottom - limit) : 0;
+};
+
+/** The same once editing ends, except for a field scrolled below the screen meanwhile. */
+export const scrollAfterEditing: Plan = (box, view, barHeight) =>
+  box.top >= view.bottom ? 0 : scrollToClearBar(box, view, barHeight);
+
+// The screen's nav bar sticks over the top of its scroller.
+function viewOf(scroller: HTMLElement): Edges {
+  const { top, bottom } = scroller.getBoundingClientRect();
+  const navBar = scroller.querySelector('[data-navbar]');
+  return { top: navBar ? navBar.getBoundingClientRect().bottom : top, bottom };
 }
 
-function keepInSight(field: HTMLElement, bar: HTMLElement, scroller: HTMLElement): void {
-  if (!scroller.contains(field)) return;
-  // A field's actions, such as the comment box's Comment button, sit in its form below it.
-  const box = (field.closest('form') ?? field).getBoundingClientRect();
-  const top = scrollToClearBar(box, scroller.getBoundingClientRect().bottom, bar.offsetHeight);
+function keepInSight(box: HTMLElement, bar: HTMLElement, scroller: HTMLElement, plan: Plan): void {
+  const top = plan(box.getBoundingClientRect(), viewOf(scroller), bar.offsetHeight);
   if (top > 0)
     scroller.scrollBy({ top, behavior: prefersReducedMotionNow() ? 'instant' : 'smooth' });
 }
+
+// A field's actions, such as the comment box's Comment button, sit in its form below it.
+const boxOf = (field: HTMLElement): HTMLElement => field.closest('form') ?? field;
 
 /** When the bar comes back after editing, the field that was edited ends up above it. */
 export function useKeepFieldInSight(
@@ -37,21 +57,66 @@ export function useKeepFieldInSight(
     wasEditing.current = editing;
     const element = bar.current;
     if (!back || !element) return;
-    const keep = () => {
-      const field = lastEditedField();
-      if (field && scroller?.current) keepInSight(field, element, scroller.current);
-    };
-    const slidIn = (event: TransitionEvent) => {
-      if (event.target === element) keep();
-    };
     // Not before the next frame: a tap that ended editing is still landing in this task, and
-    // content moving under it would take its click. Once more when the bar is in, because what
-    // ended editing can still move the field: a sent comment appears above the box.
-    const frame = requestAnimationFrame(keep);
-    element.addEventListener('transitionend', slidIn);
-    return () => {
-      cancelAnimationFrame(frame);
-      element.removeEventListener('transitionend', slidIn);
-    };
+    // content moving under it would take its click. Only once: a second scroll would pull back a
+    // user who scrolled meanwhile; what a sent form adds is followed by useKeepSentFormInSight.
+    const frame = requestAnimationFrame(() => {
+      const field = lastEditedField();
+      const view = scroller?.current;
+      if (field && view?.contains(field))
+        keepInSight(boxOf(field), element, view, scrollAfterEditing);
+    });
+    return () => cancelAnimationFrame(frame);
   }, [bar, scroller, editing]);
+}
+
+// For a moment after it is sent, and until the user touches or scrolls the screen, `form` is kept
+// above the bar each time the content around it changes size, also when that pushed it below the
+// screen.
+function holdInSight(form: HTMLElement, bar: HTMLElement, scroller: HTMLElement): () => void {
+  if (typeof ResizeObserver === 'undefined') return () => undefined;
+  const observer = new ResizeObserver(() => {
+    // A comment edit's form goes away once it is saved.
+    if (form.isConnected) keepInSight(form, bar, scroller, scrollToClearBar);
+    else release();
+  });
+  for (let node: HTMLElement | null = form; node && node !== scroller; node = node.parentElement)
+    observer.observe(node);
+  const timer = setTimeout(release, FOLLOW_SENT_MS);
+  function release() {
+    clearTimeout(timer);
+    observer.disconnect();
+    scroller.removeEventListener('pointerdown', release, true);
+    scroller.removeEventListener('wheel', release, true);
+  }
+  scroller.addEventListener('pointerdown', release, true);
+  scroller.addEventListener('wheel', release, { capture: true, passive: true });
+  return release;
+}
+
+/**
+ * A form sent on the screen stays above the bar while what it sent lands above it, such as the new
+ * comment above the comment box, also when the keyboard closed long before the send.
+ */
+export function useKeepSentFormInSight(
+  bar: RefObject<HTMLElement | null>,
+  scroller: RefObject<HTMLElement | null> | undefined,
+  shown: boolean,
+): void {
+  useEffect(() => {
+    const element = bar.current;
+    const view = scroller?.current;
+    if (!shown || !element || !view) return;
+    let release: () => void = () => undefined;
+    const sent = (event: SubmitEvent) => {
+      release();
+      if (event.target instanceof HTMLFormElement)
+        release = holdInSight(event.target, element, view);
+    };
+    view.addEventListener('submit', sent);
+    return () => {
+      view.removeEventListener('submit', sent);
+      release();
+    };
+  }, [bar, scroller, shown]);
 }

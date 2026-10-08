@@ -1,11 +1,9 @@
 import { ApiError } from '@tracker/client';
 import type { Ticket } from '@tracker/shared';
-import { isNotFound } from '../../api';
 import type { Release } from './captureLocks';
 import {
   dropCapture,
   findWaiting,
-  markAttempted,
   markCreated,
   nextCapture,
   type QueuedCapture,
@@ -15,8 +13,6 @@ import type { QueueAccess } from './queueStore';
 export interface SyncDeps {
   queue: QueueAccess;
   send: (capture: QueuedCapture) => Promise<Ticket>;
-  // Whether the ticket for this capture already exists, for captures sent before.
-  exists: (capture: QueuedCapture) => Promise<boolean>;
   // Takes the capture's lock for sending it; null while a request in any tab holds it.
   claim: (id: string) => Promise<Release | null>;
 }
@@ -39,23 +35,9 @@ const isRefused = (error: unknown): boolean =>
 
 type Step = 'added' | 'dropped' | 'stop';
 
-// Only the create's own answer drops a capture: a lookup that fails keeps it for a later run.
-// A 404 means its project is gone, so no ticket can exist and the create is left to say so.
-async function alreadyCreated(capture: QueuedCapture, deps: SyncDeps): Promise<boolean | null> {
-  if (!capture.attempted) return false;
-  try {
-    return await deps.exists(capture);
-  } catch (error) {
-    return isNotFound(error) ? false : null;
-  }
-}
-
+// A capture an earlier request may have created is simply sent again: its client id gets the
+// ticket that request made.
 async function syncOne(capture: QueuedCapture, deps: SyncDeps): Promise<Step> {
-  const created = await alreadyCreated(capture, deps);
-  if (created === null) return 'stop';
-  if (created) return 'added';
-  // Written before sending, so a reload mid-request still checks before sending again.
-  if (!deps.queue.update((queue) => markAttempted(queue, capture.id))) return 'stop';
   try {
     await deps.send(capture);
     return 'added';
@@ -72,7 +54,7 @@ function settle(capture: QueuedCapture, step: Step, deps: SyncDeps, report: Sync
 }
 
 // Sent only while this run holds the capture's lock, and read again once it does: until then
-// another tab may have sent it or marked it attempted.
+// another tab may have sent it.
 async function syncClaimed(id: string, deps: SyncDeps, report: SyncReport): Promise<boolean> {
   const release = await deps.claim(id);
   if (!release) return true;

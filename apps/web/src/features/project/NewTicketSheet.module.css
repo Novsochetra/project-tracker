@@ -1,3 +1,7 @@
+.body {
+  position: relative;
+}
+
 .text {
   display: flex;
   flex-direction: column;
@@ -13,6 +17,10 @@
   color: var(--ink-2);
   font-size: var(--size-headline);
   line-height: 1.55;
+}
+
+.attachments {
+  padding: 2px 20px 4px;
 }
 
 .details {

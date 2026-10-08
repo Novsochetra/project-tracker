@@ -23,7 +23,6 @@ const queued = (id: string, capturedAt: number, overrides: Partial<QueuedCapture
   description: '',
   priority: 'medium' as const,
   capturedAt,
-  attempted: false,
   ...overrides,
 });
 
@@ -96,7 +95,7 @@ describe('QuickCapture sync', () => {
     expect(readQueue().items).toEqual([]);
   });
 
-  it('tries again when the tracker can be reached again, without a duplicate', async () => {
+  it('tries again when the tracker can be reached again, with the same client id', async () => {
     storeQueue([queued('a', 10)]);
     const createTicket = vi
       .fn()
@@ -104,9 +103,11 @@ describe('QuickCapture sync', () => {
       .mockImplementation((projectKey: string, input: { title: string }) =>
         Promise.resolve(ticketFor(projectKey, input)),
       );
-    const listTickets = vi.fn().mockResolvedValue([]);
-    const { reachability } = renderQuickCapture({ createTicket, listTickets });
-    await waitFor(() => expect(readQueue().items[0]?.attempted).toBe(true));
+    const { reachability } = renderQuickCapture({ createTicket });
+    await waitFor(() => expect(createTicket).toHaveBeenCalledTimes(1));
+    await act(async () => {
+      for (let turn = 0; turn < 5; turn += 1) await new Promise((resolve) => setTimeout(resolve));
+    });
 
     act(() => {
       reachability.setUnreachable(true);
@@ -114,8 +115,10 @@ describe('QuickCapture sync', () => {
     });
 
     expect(await screen.findByText('1 ticket added')).toBeInTheDocument();
-    expect(listTickets).toHaveBeenCalledWith('MOB', { q: 'Idea a' });
-    expect(createTicket).toHaveBeenCalledTimes(2);
+    const clientIds = createTicket.mock.calls.map(
+      ([, input]) => (input as { clientId?: string }).clientId,
+    );
+    expect(clientIds).toEqual(['a', 'a']);
     expect(readQueue().items).toEqual([]);
   });
 

@@ -7,6 +7,7 @@ import {
   formFromDraft,
   newTicketDraftId,
   toCreateInput,
+  withoutGoneStatus,
 } from './newTicketForm';
 
 describe('defaultStatusId', () => {
@@ -41,6 +42,17 @@ describe('chosenStatusId', () => {
   });
 });
 
+describe('withoutGoneStatus', () => {
+  it('drops a picked status that no longer exists, and keeps the form otherwise', () => {
+    const gone = { ...blankForm(), title: 'Idea', statusId: 'deleted-status' };
+    expect(withoutGoneStatus(gone, statuses)).toEqual({ ...gone, statusId: null });
+    const picked = { ...blankForm(), statusId: STATUS.done };
+    expect(withoutGoneStatus(picked, statuses)).toBe(picked);
+    const unpicked = blankForm();
+    expect(withoutGoneStatus(unpicked, statuses)).toBe(unpicked);
+  });
+});
+
 describe('new ticket drafts', () => {
   it('are kept per project', () => {
     expect(newTicketDraftId('MOB')).toBe('new-ticket:MOB');
@@ -55,6 +67,7 @@ describe('new ticket drafts', () => {
       priority: 'high' as const,
       assignee: 'Dara',
       due: '2026-10-09',
+      attachments: [],
     };
     expect(formFromDraft({ ...form })).toEqual(form);
   });

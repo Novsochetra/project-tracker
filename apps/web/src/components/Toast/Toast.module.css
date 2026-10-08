@@ -5,9 +5,16 @@
   left: 0;
   z-index: var(--z-toast);
   display: flex;
+  align-items: flex-end;
   justify-content: center;
   padding: 0 16px;
   pointer-events: none;
+}
+
+/* Catches the second tap of a double tap on Undo where the button was. */
+.shielded {
+  min-height: var(--touch-target);
+  pointer-events: auto;
 }
 
 .toast {
@@ -28,13 +35,73 @@
   animation: toast-in var(--duration-base) var(--ease-out) backwards;
 }
 
+.withAction {
+  pointer-events: auto;
+}
+
 .leaving {
   animation: toast-out var(--duration-fast) var(--ease-in) both;
+}
+
+.icon {
+  flex: none;
+}
+
+.errorIcon {
+  color: var(--danger-inverse);
 }
 
 .text {
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.undo {
+  position: relative;
+  isolation: isolate;
+  flex: none;
+  min-width: var(--touch-target);
+  min-height: var(--touch-target);
+  /* The 44px target reaches into the toast's padding instead of making the toast taller, and
+     its slim sides leave "MOB-2 moved to In progress" room to fit at 320px. */
+  margin: calc((1.5em - var(--touch-target)) / 2) -4px calc((1.5em - var(--touch-target)) / 2) -2px;
+  padding: 0 4px;
+  border: 0;
+  background: transparent;
+  color: var(--accent-inverse);
+  font-size: inherit;
+  font-weight: var(--weight-semibold);
+  line-height: inherit;
+  cursor: pointer;
+  transition: transform var(--duration-press) ease-out;
+}
+
+/* The pill that shows hover and focus stays inside the toast, which is shorter than the target. */
+.undo::before {
+  content: '';
+  position: absolute;
+  inset: 6px 0;
+  z-index: -1;
+  border-radius: var(--radius-control);
+  transition: background-color var(--duration-fast) ease-out;
+}
+
+.undo:active {
+  transform: scale(0.97);
+}
+
+.undo:focus-visible {
+  outline: none;
+}
+
+.undo:focus-visible::before {
+  box-shadow: 0 0 0 2px var(--accent-inverse);
+}
+
+@media (hover: hover) {
+  .undo:hover::before {
+    background: var(--ink-hover);
+  }
 }
 
 @media (max-width: 767px) {

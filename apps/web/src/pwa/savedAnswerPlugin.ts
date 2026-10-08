@@ -9,9 +9,17 @@ export const savedAnswerPlugin = {
       ? Promise.reject(new Error(`No answer from the API (${response.status})`))
       : Promise.resolve(response);
   },
-  // NetworkFirst reads its cache only when the network failed or took too long.
-  cachedResponseWillBeUsed: ({ cachedResponse }: { cachedResponse?: Response }) => {
-    if (!cachedResponse) return Promise.resolve(null);
+  // NetworkFirst reads its cache only when the network failed or took too long. A fresh read
+  // (FRESH_READ_HEADER in @tracker/client) gets nothing from it, so it waits for the tracker or
+  // fails, while its answer still refreshes the cache.
+  cachedResponseWillBeUsed: ({
+    request,
+    cachedResponse,
+  }: {
+    request?: Request;
+    cachedResponse?: Response;
+  }) => {
+    if (!cachedResponse || request?.headers.has('x-tracker-fresh')) return Promise.resolve(null);
     const headers = new Headers(cachedResponse.headers);
     headers.set('x-tracker-saved', '1');
     const { status, statusText } = cachedResponse;

@@ -1,10 +1,10 @@
 import clsx from 'clsx';
-import { CircleCheck } from 'lucide-react';
 import { useEffect, useState, useSyncExternalStore, type ReactNode } from 'react';
-import { Icon } from '../Icon';
 import { ToastContext } from './context';
 import styles from './Toast.module.css';
-import { createToastStore, type ToastStore } from './toastStore';
+import { ToastCard } from './ToastCard';
+import { createToastStore, type ToastMessage, type ToastStore } from './toastStore';
+import { isUndoShortcut } from './undoShortcut';
 
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [store] = useState(createToastStore);
@@ -17,16 +17,31 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   );
 }
 
+// The toast sits after everything else on the page, too far to Tab to in time, so ⌘Z reaches
+// its Undo from wherever the keyboard is.
+function useUndoShortcut(store: ToastStore, toast: ToastMessage | null): void {
+  const id = toast?.undo ? toast.id : null;
+  useEffect(() => {
+    if (id === null) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (!isUndoShortcut(event, document.activeElement)) return;
+      event.preventDefault();
+      store.undo(id);
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [store, id]);
+}
+
 function ToastViewport({ store }: { store: ToastStore }) {
-  const { toast, raised } = useSyncExternalStore(store.subscribe, store.getSnapshot);
+  const { toast, raised, shielded } = useSyncExternalStore(store.subscribe, store.getSnapshot);
+  useUndoShortcut(store, toast);
   return (
-    <div role="status" className={clsx(styles.region, raised > 0 && styles.raised)}>
-      {toast && (
-        <div key={toast.id} className={clsx(styles.toast, toast.leaving && styles.leaving)}>
-          <Icon icon={CircleCheck} />
-          <span className={styles.text}>{toast.text}</span>
-        </div>
-      )}
+    <div
+      role="status"
+      className={clsx(styles.region, raised > 0 && styles.raised, shielded && styles.shielded)}
+    >
+      {toast && <ToastCard key={toast.id} toast={toast} store={store} />}
     </div>
   );
 }

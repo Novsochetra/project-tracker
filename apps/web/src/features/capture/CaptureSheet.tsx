@@ -1,62 +1,67 @@
-import { useEffect, useLayoutEffect, useRef, useState, type RefObject } from 'react';
+import { useLayoutEffect, useRef, useState, type RefObject } from 'react';
 import type { SheetProps } from '../../app/sheets/types';
-import { clearDraft, markDraft } from '../../lib/drafts';
+import { useDraftMark } from '../../lib/useDraftMark';
 import { Sheet, SheetActionButton, SheetCancelButton } from '../../overlays';
-import { DropOverlay, useImageDrop } from '../attachments';
-import { BLANK_CAPTURE, CAPTURE_DRAFT_ID, hasContent, type CaptureValues } from './captureForm';
+import { AttachmentPicker, DropOverlay, useFileDrop } from '../attachments';
+import { CAPTURE_DRAFT_ID, hasContent, type CaptureValues } from './captureForm';
 import { CaptureDetails, CaptureText } from './CaptureFields';
-import { CapturePhotoRow } from './CapturePhotoRow';
 import styles from './CaptureSheet.module.css';
-import { useCapturePhotos } from './useCapturePhotos';
+import { forgetKeptCapture, keptCapture, useKeepCapture } from './keptCapture';
+import { useCaptureFiles } from './useCaptureFiles';
 import { useCaptureProject } from './useCaptureProject';
 import { useCaptureSubmit } from './useCaptureSubmit';
 
 // Sheets leave focus alone on phones so the keyboard doesn't jump up; capture wants it up at once,
 // and since it opens from a tap iOS raises it. Runs after the sheet's own focus, so it wins.
-function useFocusWhenOpen(ref: RefObject<HTMLInputElement | null>, open: boolean): void {
+function useFocusWhenOpen(ref: RefObject<HTMLTextAreaElement | null>, open: boolean): void {
   useLayoutEffect(() => {
     if (open) ref.current?.focus({ preventScroll: true });
   }, [ref, open]);
 }
 
-function useCaptureDraft(active: boolean): void {
-  useEffect(() => {
-    if (!active) return;
-    markDraft(CAPTURE_DRAFT_ID);
-    return () => clearDraft(CAPTURE_DRAFT_ID);
-  }, [active]);
-}
-
 // Quick capture: a title is enough; the project defaults to the last one used.
 export function CaptureSheet({ open, onClose }: SheetProps) {
-  const titleRef = useRef<HTMLInputElement>(null);
-  const [values, setValues] = useState<CaptureValues>(BLANK_CAPTURE);
-  const project = useCaptureProject();
-  const photos = useCapturePhotos();
+  const titleRef = useRef<HTMLTextAreaElement>(null);
+  const [kept] = useState(keptCapture);
+  const [values, setValues] = useState<CaptureValues>(kept.values);
+  const project = useCaptureProject(kept.projectKey);
+  const files = useCaptureFiles();
+  const finish = () => {
+    forgetKeptCapture();
+    onClose();
+  };
   const flow = useCaptureSubmit({
     values,
     project: project.current,
-    photos: photos.items,
-    uploading: photos.uploading,
-    onDone: onClose,
+    attachments: files.items,
+    uploading: files.uploading.length,
+    onDone: finish,
   });
-  const drop = useImageDrop(photos.add);
-  // A photo still uploading counts too: the person chose it.
-  const dirty = hasContent(values, photos.items.length + photos.uploading);
+  const drop = useFileDrop(files.add);
+  // A file still uploading counts too: the person chose it.
+  const fileCount = files.items.length + files.uploading.length;
+  const dirty = hasContent(values, fileCount);
   useFocusWhenOpen(titleRef, open);
-  useCaptureDraft(open && dirty);
+  useKeepCapture({ values, projectKey: project.chosenKey }, open);
+  // The text is kept for the next opening, but files are not, so a reload would lose them.
+  useDraftMark(CAPTURE_DRAFT_ID, open && fileCount > 0);
   const update = (patch: Partial<CaptureValues>) => {
     setValues((current) => ({ ...current, ...patch }));
     flow.clearError();
   };
-  const removePhoto = (attachmentId: string) => {
-    photos.remove(attachmentId);
+  const removeFile = (attachmentId: string) => {
+    files.remove(attachmentId);
     flow.clearError();
+  };
+  // Closed without creating: the uploads have no ticket to wait for.
+  const close = () => {
+    files.discard(files.items);
+    finish();
   };
   return (
     <Sheet
       open={open}
-      onClose={onClose}
+      onClose={close}
       label="New ticket"
       title="New ticket"
       dirty={dirty}
@@ -78,9 +83,16 @@ export function CaptureSheet({ open, onClose }: SheetProps) {
           titleRef={titleRef}
           onChange={update}
           onEnter={flow.submit}
-          onImages={photos.add}
+          onFiles={files.add}
         />
-        <CapturePhotoRow photos={{ ...photos, remove: removePhoto }} />
+        <AttachmentPicker
+          size="sm"
+          attachments={files.items}
+          uploads={files}
+          inputLabel="Add files to ticket"
+          onRemove={removeFile}
+          className={styles.attachments}
+        />
         <CaptureDetails
           values={values}
           project={project}

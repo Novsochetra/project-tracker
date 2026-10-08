@@ -4,7 +4,18 @@ import { activity, seedProject } from './helpers';
 
 // The phone bottom bar slides away while a text field has focus. It came back over the comment
 // box's Comment button: mid-tap (the release landed on "Send to Claude") and when the keyboard
-// closed with the box at the bottom of the screen.
+// closed with the box at the bottom of the screen. Keeping the edited field above the bar then
+// scrolled a long description to its end, pulled back a scroll made right after the keyboard
+// closed, and missed a comment sent after the keyboard had closed.
+
+// About as long as PT-48's 1,013 characters, which run past the room between the nav bar and the
+// bar at 375×812.
+const LONG_DESCRIPTION = Array.from(
+  { length: 14 },
+  (_, line) =>
+    `Step ${line + 1}: open the ticket, change a word in its description, close the keyboard.`,
+).join('\n');
+const ROOM_AT_375 = 812 - 53 - 69 - 8;
 
 const screenOf = (page: Page) => page.locator('[data-stack-path="/p/MOB/1"]');
 const bar = (page: Page) => screenOf(page).locator('[data-bottom-bar]');
@@ -57,6 +68,15 @@ const hitAtCenter = (target: Locator) =>
     const box = element.getBoundingClientRect();
     const hit = document.elementFromPoint(box.left + box.width / 2, box.top + box.height / 2);
     return hit !== null && element.contains(hit);
+  });
+
+const scrollTop = (page: Page) => scroller(page).evaluate((element) => element.scrollTop);
+
+// From the bottom of the comment box to the top of the bar.
+const gapAboveBar = (page: Page) =>
+  commentField(page).evaluate((field) => {
+    const bar = document.querySelector('[data-bottom-bar]')!.getBoundingClientRect();
+    return bar.top - field.closest('form')!.getBoundingClientRect().bottom;
   });
 
 const PHONE_ONLY = 'The bottom bar is phone only';
@@ -121,5 +141,72 @@ test.describe('phone bottom bar and the comment box', () => {
     await expect
       .poll(() => bar(page).evaluate((element) => element.getBoundingClientRect().top))
       .toBeGreaterThanOrEqual(812);
+  });
+
+  test('closing the keyboard after editing a long description leaves the screen where it is', async ({
+    page,
+    api,
+  }, info) => {
+    test.skip(!isPhone(info.project.name), PHONE_ONLY);
+    await seedProject(api, 'Mobile app', 'MOB', [
+      { title: 'Login error', description: LONG_DESCRIPTION },
+    ]);
+    await page.goto('/p/MOB/1');
+    const description = page.getByLabel('Description', { exact: true });
+    await expect(description).toHaveValue(LONG_DESCRIPTION);
+    await settle(page);
+    const box = (await description.boundingBox())!;
+    expect(box.height, 'taller than the room above the bar').toBeGreaterThan(ROOM_AT_375);
+
+    await page.touchscreen.tap(box.x + 24, box.y + 12);
+    await page.keyboard.type('x');
+    await expect(bar(page)).toHaveAttribute('data-hidden');
+    await settle(page);
+    const editing = await scrollTop(page);
+    await description.blur();
+    await expect(bar(page)).not.toHaveAttribute('data-hidden');
+    await settle(page);
+    expect(await scrollTop(page)).toBe(editing);
+    expect(await hitAtCenter(page.getByLabel('Title', { exact: true }))).toBe(true);
+  });
+
+  test('a comment sent after the keyboard closed leaves the empty box above the bar', async ({
+    page,
+    api,
+  }, info) => {
+    test.skip(!isPhone(info.project.name), PHONE_ONLY);
+    await openTicket(page, api);
+    await boxAtScreenBottom(page);
+    await typeComment(page, 'Sent after the keyboard closed');
+    await commentField(page).blur();
+    await expect(bar(page)).not.toHaveAttribute('data-hidden');
+    await settle(page);
+
+    await commentButton(page).tap();
+    await expect(activity(page)).toContainText('Sent after the keyboard closed');
+    await expect(commentField(page)).toHaveValue('');
+    await settle(page);
+    expect(await gapAboveBar(page)).toBeGreaterThanOrEqual(8);
+    expect(await hitAtCenter(commentButton(page))).toBe(true);
+    expect(await hitAtCenter(commentField(page))).toBe(true);
+  });
+
+  test('a scroll right after the keyboard closes stays where it was left', async ({
+    page,
+    api,
+  }, info) => {
+    test.skip(!isPhone(info.project.name), PHONE_ONLY);
+    await openTicket(page, api);
+    await boxAtScreenBottom(page);
+    await typeComment(page, 'Scrolled away');
+    await commentField(page).blur();
+    await page.waitForTimeout(120);
+    // Mobile WebKit has no wheel, and Playwright no touch drag.
+    const left = await scroller(page).evaluate((element) => {
+      element.scrollBy({ top: -200 });
+      return element.scrollTop;
+    });
+    await settle(page);
+    expect(await scrollTop(page)).toBe(left);
   });
 });

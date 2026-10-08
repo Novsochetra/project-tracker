@@ -1,3 +1,4 @@
+import { FRESH_READ_HEADER } from '@tracker/client';
 import { describe, expect, it } from 'vitest';
 import { savedAnswerPlugin } from './savedAnswerPlugin';
 import { isSavedAnswer } from './savedAnswers';
@@ -19,6 +20,13 @@ describe('savedAnswerPlugin', () => {
 
   it('leaves a cache miss a miss', async () => {
     expect(await cachedResponseWillBeUsed({})).toBeNull();
+  });
+
+  it('never answers a fresh read from the cache', async () => {
+    const request = new Request('http://localhost:5173/api/tickets/MOB-1', {
+      headers: { [FRESH_READ_HEADER]: '1' },
+    });
+    expect(await cachedResponseWillBeUsed({ request, cachedResponse: answer('{}') })).toBeNull();
   });
 
   it('turns a bare 5xx from a proxy in front of a stopped API into a failed request', async () => {

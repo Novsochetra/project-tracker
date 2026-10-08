@@ -130,8 +130,8 @@ describe('regression: quick capture threw typed text away on a swipe or a tap ou
       deleteAttachment: vi.fn(),
     });
     const photo = new File(['png'], 'shot.png', { type: 'image/png' });
-    await user.upload(within(capture()).getByLabelText('Add photos to ticket'), photo);
-    expect(await within(capture()).findByRole('img', { name: 'Attachment 1' })).toBeVisible();
+    await user.upload(within(capture()).getByLabelText('Add files to ticket'), photo);
+    expect(await within(capture()).findByRole('img', { name: 'Image 1' })).toBeVisible();
     swipeDown(capture());
 
     expect(await screen.findByRole('dialog', { name: 'Discard changes?' })).toBeInTheDocument();

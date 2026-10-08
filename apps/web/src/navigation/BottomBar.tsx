@@ -2,7 +2,7 @@ import { useRef, type ReactNode } from 'react';
 import { useIsPhone } from '../lib/media';
 import styles from './BottomBar.module.css';
 import { useRegisterBottomBar } from './bottomBarStore';
-import { useKeepFieldInSight } from './keepFieldInSight';
+import { useKeepFieldInSight, useKeepSentFormInSight } from './keepFieldInSight';
 import { useOptionalScreen } from './ScreenContext';
 import { useEditingText } from './useEditingText';
 
@@ -19,6 +19,7 @@ export function BottomBar({ children }: BottomBarProps) {
   const barRef = useRef<HTMLDivElement>(null);
   useRegisterBottomBar(isPhone && isTop && !editing);
   useKeepFieldInSight(barRef, screen?.scrollRef, editing);
+  useKeepSentFormInSight(barRef, screen?.scrollRef, isPhone && isTop);
   if (!isPhone) return null;
   return (
     <div

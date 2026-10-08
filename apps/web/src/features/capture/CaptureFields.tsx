@@ -1,45 +1,33 @@
 import clsx from 'clsx';
-import type { ClipboardEvent, KeyboardEvent, RefObject } from 'react';
-import { AutoTextarea, GroupedCard, SelectRow } from '../../components';
-import { pasteImages } from '../attachments';
-import {
-  DESCRIPTION_MAX_LENGTH,
-  NO_PROJECTS,
-  TITLE_MAX_LENGTH,
-  type CaptureValues,
-} from './captureForm';
+import type { ClipboardEvent, RefObject } from 'react';
+import { AutoTextarea, GroupedCard, SelectRow, TitleField } from '../../components';
+import { pasteFiles } from '../attachments';
+import { TITLE_MAX_LENGTH } from '../project/newTicketForm';
+import { DESCRIPTION_MAX_LENGTH, NO_PROJECTS, type CaptureValues } from './captureForm';
 import { PRIORITY_OPTIONS, projectOptions } from './captureOptions';
 import styles from './CaptureSheet.module.css';
 import type { CaptureProject } from './useCaptureProject';
 
 export interface CaptureTextProps {
   values: CaptureValues;
-  titleRef: RefObject<HTMLInputElement | null>;
+  titleRef: RefObject<HTMLTextAreaElement | null>;
   onChange: (patch: Partial<CaptureValues>) => void;
   onEnter: () => void;
-  onImages: (files: File[]) => void;
+  onFiles: (files: File[]) => void;
 }
 
-export function CaptureText({ values, titleRef, onChange, onEnter, onImages }: CaptureTextProps) {
-  // Enter must reach the validation even while Create is disabled, which blocks implicit submit.
-  const onTitleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
-    if (event.key !== 'Enter' || event.nativeEvent.isComposing) return;
-    event.preventDefault();
-    onEnter();
-  };
-  const onPaste = (event: ClipboardEvent<HTMLElement>) => pasteImages(event, onImages);
+export function CaptureText({ values, titleRef, onChange, onEnter, onFiles }: CaptureTextProps) {
+  const onPaste = (event: ClipboardEvent<HTMLElement>) => pasteFiles(event, onFiles);
   return (
     <div className={styles.text}>
-      <input
+      <TitleField
         ref={titleRef}
-        className={styles.title}
         aria-label="Ticket title"
         placeholder="Ticket title"
-        enterKeyHint="done"
         maxLength={TITLE_MAX_LENGTH}
         value={values.title}
-        onChange={(event) => onChange({ title: event.currentTarget.value })}
-        onKeyDown={onTitleKeyDown}
+        onChange={(title) => onChange({ title })}
+        onEnter={onEnter}
         onPaste={onPaste}
       />
       <AutoTextarea

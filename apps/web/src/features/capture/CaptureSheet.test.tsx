@@ -14,7 +14,7 @@ import {
 } from '../../app/test/harness';
 import { hasDrafts } from '../../lib/drafts';
 import { mockPhone, skipAnimations } from '../../overlays/testing';
-import { PHOTOS_NEED_CONNECTION, SAVED_ON_PHONE } from './captureForm';
+import { FILES_NEED_CONNECTION, SAVED_ON_PHONE } from './captureForm';
 import { LAST_PROJECT_STORAGE_KEY } from './captureProjects';
 import { readQueue } from './queueStore';
 
@@ -111,6 +111,7 @@ describe('CaptureSheet', () => {
       title: 'Idea from the bus',
       description: 'Try it on iOS.',
       priority: 'medium',
+      clientId: expect.any(String),
     });
     expect(await toast('WEB-1 created')).toBeInTheDocument();
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
@@ -173,12 +174,12 @@ describe('CaptureSheet', () => {
     await openCapture(user);
     await user.type(titleField(), 'With a photo');
     const photo = new File(['png'], 'shot.png', { type: 'image/png' });
-    await user.upload(within(dialog()).getByLabelText('Add photos to ticket'), photo);
-    expect(await within(dialog()).findByRole('img', { name: 'Attachment 1' })).toBeInTheDocument();
+    await user.upload(within(dialog()).getByLabelText('Add files to ticket'), photo);
+    expect(await within(dialog()).findByRole('img', { name: 'Image 1' })).toBeInTheDocument();
 
     await user.click(createButton());
 
-    expect(await within(dialog()).findByRole('alert')).toHaveTextContent(PHOTOS_NEED_CONNECTION);
+    expect(await within(dialog()).findByRole('alert')).toHaveTextContent(FILES_NEED_CONNECTION);
     expect(createTicket).toHaveBeenCalledWith(
       'WEB',
       expect.objectContaining({ attachmentIds: ['shot'] }),
@@ -203,11 +204,14 @@ describe('CaptureSheet', () => {
     expect(readQueue().items).toEqual([]);
   });
 
-  it('marks typed text as a draft until the sheet closes', async () => {
-    const { user } = renderCapture();
+  it('keeps typed text for the next opening, and marks files as a draft until it closes', async () => {
+    const uploadAttachment = vi.fn().mockResolvedValue(attachment('shot', { ticketId: null }));
+    const { user } = renderCapture({ uploadAttachment, deleteAttachment: vi.fn() });
     await openCapture(user);
-    expect(hasDrafts()).toBe(false);
     await user.type(titleField(), 'Half a thought');
+    expect(hasDrafts()).toBe(false);
+    const photo = new File(['png'], 'shot.png', { type: 'image/png' });
+    await user.upload(within(dialog()).getByLabelText('Add files to ticket'), photo);
     expect(hasDrafts()).toBe(true);
     await user.click(within(dialog()).getByRole('button', { name: 'Cancel' }));
     expect(hasDrafts()).toBe(false);

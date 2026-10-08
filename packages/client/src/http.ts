@@ -1,4 +1,5 @@
 import type { Actor, ErrorBody } from '@tracker/shared';
+import { canReportProgress, postWithProgress, type Answer, type UploadOptions } from './upload';
 
 export class ApiError extends Error {
   constructor(
@@ -33,6 +34,7 @@ export interface RequestOptions extends ReadOptions {
   body?: unknown;
   query?: Query;
   allowEmpty?: boolean;
+  signal?: AbortSignal | undefined;
 }
 
 const isErrorBody = (value: unknown): value is ErrorBody => {
@@ -48,12 +50,18 @@ function parseJson(text: string): unknown {
   }
 }
 
-function toApiError(response: Response, text: string): ApiError {
+function toApiError({ status, statusText, text }: Answer): ApiError {
   const data = parseJson(text);
   const { code, message } = isErrorBody(data)
     ? data.error
-    : { code: 'http_error', message: response.statusText };
-  return new ApiError(response.status, code, message);
+    : { code: 'http_error', message: statusText };
+  return new ApiError(status, code, message);
+}
+
+function parseAnswer<T>(answer: Answer, allowEmpty: boolean): T {
+  if (answer.status === 204) return (allowEmpty ? null : undefined) as T;
+  if (answer.status < 200 || answer.status > 299) throw toApiError(answer);
+  return (answer.text ? JSON.parse(answer.text) : null) as T;
 }
 
 function buildQuery(query: Query | undefined): string {
@@ -101,8 +109,17 @@ export class Http {
           ? JSON.stringify(options.body)
           : undefined,
       ...(options.fresh ? { cache: 'no-store' as const } : {}),
+      ...(options.signal ? { signal: options.signal } : {}),
     });
     return this.read<T>(response, options.allowEmpty ?? false);
+  }
+
+  async upload<T>(path: string, form: FormData, options: UploadOptions = {}): Promise<T> {
+    if (!options.onProgress || !canReportProgress()) {
+      return this.request<T>('POST', path, { body: form, signal: options.signal });
+    }
+    const answer = await postWithProgress(this.url(path), this.headers(false), form, options);
+    return parseAnswer<T>(answer, false);
   }
 
   async raw(path: string): Promise<Response> {
@@ -112,12 +129,8 @@ export class Http {
   }
 
   private async read<T>(response: Response, allowEmpty: boolean): Promise<T> {
-    if (response.status === 204) {
-      if (allowEmpty) return null as T;
-      return undefined as T;
-    }
-    const text = await response.text();
-    if (!response.ok) throw toApiError(response, text);
-    return (text ? JSON.parse(text) : null) as T;
+    const { status, statusText } = response;
+    const text = status === 204 ? '' : await response.text();
+    return parseAnswer<T>({ status, statusText, text }, allowEmpty);
   }
 }

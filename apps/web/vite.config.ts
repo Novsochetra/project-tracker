@@ -2,6 +2,7 @@ import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 import { isSavedApiRead } from './src/pwa/apiReadRoute.ts';
+import { attachmentCachePlugin, isCachedAttachmentFile } from './src/pwa/attachmentFileRoute.ts';
 import { savedAnswerPlugin } from './src/pwa/savedAnswerPlugin.ts';
 
 const apiTarget = process.env.TRACKER_API_URL ?? 'http://localhost:4100';
@@ -55,8 +56,7 @@ export default defineConfig({
         // Routes only match GET, so writes always go straight to the network.
         runtimeCaching: [
           {
-            urlPattern: ({ url, sameOrigin }) =>
-              sameOrigin && /^\/api\/attachments\/[^/]+\/file$/.test(url.pathname),
+            urlPattern: isCachedAttachmentFile,
             handler: 'CacheFirst',
             options: {
               cacheName: 'attachments',
@@ -66,6 +66,7 @@ export default defineConfig({
                 maxAgeSeconds: 30 * DAY_SECONDS,
                 purgeOnQuotaError: true,
               },
+              plugins: [attachmentCachePlugin],
             },
           },
           {

@@ -68,6 +68,10 @@ const TEXT_ON: Record<string, Record<string, string>> = {
     '--ink': 'primary buttons, toasts',
     '--danger': 'danger buttons',
   },
+  '--accent-inverse': {
+    '--ink': 'Undo in a toast',
+    '--ink-hover': 'a hovered Undo',
+  },
   '--surface': {
     '--ink': 'sheet bar buttons',
     '--accent': 'the swipe action that moves a ticket on',

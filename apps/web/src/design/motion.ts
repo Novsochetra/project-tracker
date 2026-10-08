@@ -12,6 +12,7 @@ export const DURATION = {
   grow: 700,
   flash: 1400,
   toast: 2200,
+  toastUndo: 4000,
 } as const;
 
 export const EASE = {

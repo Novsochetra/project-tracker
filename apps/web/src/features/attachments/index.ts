@@ -1,21 +1,16 @@
+export { AttachmentPicker, type AttachmentPickerProps } from './AttachmentPicker';
+export { AttachmentViewerProvider } from './AttachmentViewerProvider';
 export { DropOverlay, type DropOverlayProps } from './DropOverlay';
-export { ImageFileInput, type ImageFileInputProps } from './ImageFileInput';
+export { FileInput, type FileInputProps } from './FileInput';
+export { thumbnailLabels } from './thumbnailLabels';
+export { ThumbnailGrid, type ThumbnailGridProps } from './ThumbnailGrid';
+export { useAttachmentList, type AttachmentList } from './useAttachmentList';
 export {
-  carriesFiles,
-  filesOf,
-  isImageFile,
-  partitionImages,
-  UNSUPPORTED_IMAGE_MESSAGE,
-} from './imageFiles';
-export { ImageViewerProvider } from './ImageViewerProvider';
-export {
-  AddImageTile,
-  ThumbnailGrid,
-  type AddImageTileProps,
-  type ThumbnailGridProps,
-  type ThumbnailImage,
-} from './ThumbnailGrid';
+  useAttachmentUploads,
+  type AttachmentUploadOptions,
+  type AttachmentUploads,
+  type UploadingFile,
+} from './useAttachmentUploads';
+export { pasteFiles, useFileDrop, type FileDrop, type FileDropHandlers } from './useFileDrop';
 export { useFileDropGuard } from './useFileDropGuard';
-export { pasteImages, useImageDrop, type ImageDrop, type ImageDropHandlers } from './useImageDrop';
-export { useImageUploads, type ImageUploadOptions, type ImageUploads } from './useImageUploads';
-export { toViewerImages, useImageViewer, type ImageViewerApi } from './viewerContext';
+export { useAttachmentViewer, type AttachmentViewerApi } from './viewerContext';

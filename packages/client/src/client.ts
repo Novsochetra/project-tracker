@@ -30,6 +30,7 @@ import type {
   UpdateTicketInput,
 } from '@tracker/shared';
 import { Http, type HttpOptions, type ReadOptions } from './http';
+import type { UploadOptions } from './upload';
 
 const segment = (value: string): string => encodeURIComponent(value);
 
@@ -130,11 +131,16 @@ export class TrackerClient {
   deleteActivity = (activityId: string) =>
     this.http.request<void>('DELETE', `/api/activity/${segment(activityId)}`);
 
-  uploadAttachment = (file: Blob, fileName: string, ticketKey?: string) => {
+  uploadAttachment = (
+    file: Blob,
+    fileName: string,
+    ticketKey?: string,
+    options: UploadOptions = {},
+  ) => {
     const form = new FormData();
     form.set('file', file, fileName);
     if (ticketKey) form.set('ticketKey', ticketKey);
-    return this.http.request<Attachment>('POST', '/api/attachments', { body: form });
+    return this.http.upload<Attachment>('/api/attachments', form, options);
   };
 
   deleteAttachment = (attachmentId: string) =>

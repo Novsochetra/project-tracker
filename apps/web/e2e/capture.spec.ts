@@ -147,22 +147,38 @@ test.describe('quick capture', () => {
     expect((await api.listTickets('MOB')).map((ticket) => ticket.title)).toEqual(['Slow idea']);
   });
 
-  test('a long title survives the lookup before it is sent again', async ({ page, api }) => {
+  test('a capture whose answer was lost is one ticket after it is sent again', async ({
+    page,
+    api,
+  }) => {
     await seedProject(api, 'Mobile app', 'MOB');
     await page.goto('/');
     await waitForProjects(page);
-    await page.route('**/api/projects/*/tickets', (route) =>
-      isCreate(route.request()) ? route.abort('connectionrefused') : route.continue(),
-    );
-    const title = `Long idea ${'x'.repeat(240)} end`;
+    // The first create reaches the tracker, but its answer never comes back. Later ones wait until
+    // the test has seen the capture kept on the device.
+    const clientIds: unknown[] = [];
+    let release: () => void = () => undefined;
+    const kept = new Promise<void>((resolve) => (release = resolve));
+    await page.route('**/api/projects/*/tickets', async (route) => {
+      if (!isCreate(route.request())) return route.continue();
+      clientIds.push((route.request().postDataJSON() as { clientId?: string }).clientId);
+      if (clientIds.length > 1) return kept.then(() => route.continue());
+      await route.fetch();
+      await route.abort('connectionreset');
+    });
+    const titles = async () => (await api.listTickets('MOB')).map((ticket) => ticket.title);
 
-    await capture(page, title);
+    await capture(page, 'Idea on a bad connection');
     await expect(toast(page, SAVED_ON_PHONE)).toBeVisible();
-    await page.unroute('**/api/projects/*/tickets');
+    await expect(page.getByText('1 waiting to sync')).toBeVisible();
+    expect(await titles()).toEqual(['Idea on a bad connection']);
+    release();
     await syncNow(page);
 
     await expect(toast(page, '1 ticket added')).toBeVisible();
-    expect((await api.listTickets('MOB')).map((ticket) => ticket.title)).toEqual([title]);
+    await expect(page.getByText('1 waiting to sync')).toBeHidden();
+    expect(await titles()).toEqual(['Idea on a bad connection']);
+    expect(clientIds).toEqual([expect.any(String), clientIds[0]]);
   });
 
   test('desktop: C leaves an open menu alone', async ({ page, api }, info) => {

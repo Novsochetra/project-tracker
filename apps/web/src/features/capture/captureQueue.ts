@@ -1,15 +1,14 @@
 import { PRIORITIES, type Priority } from '@tracker/shared';
 
 export interface QueuedCapture {
-  // Client id: once the ticket for it exists, the capture is never sent again.
+  // Client id, sent with every request for the capture: the tracker makes one ticket per id, so
+  // sending it again is harmless. Once the ticket exists, the capture is never sent again.
   id: string;
   projectKey: string;
   title: string;
   description: string;
   priority: Priority;
   capturedAt: number;
-  // A request for it may have reached the server, so look for the ticket before sending again.
-  attempted: boolean;
 }
 
 export interface CaptureQueue {
@@ -46,11 +45,6 @@ export const nextCapture = (
 export const findWaiting = (queue: CaptureQueue, id: string): QueuedCapture | undefined =>
   queue.created.includes(id) ? undefined : queue.items.find((item) => item.id === id);
 
-export function markAttempted(queue: CaptureQueue, id: string): CaptureQueue {
-  const items = queue.items.map((item) => (item.id === id ? { ...item, attempted: true } : item));
-  return { ...queue, items };
-}
-
 export function markCreated(queue: CaptureQueue, id: string): CaptureQueue {
   const created = queue.created.includes(id) ? queue.created : [...queue.created, id];
   return {
@@ -71,7 +65,7 @@ const isPriority = (value: unknown): value is Priority =>
 
 function toCapture(value: unknown): QueuedCapture[] {
   if (!isRecord(value)) return [];
-  const { id, projectKey, title, description, priority, capturedAt, attempted } = value;
+  const { id, projectKey, title, description, priority, capturedAt } = value;
   if (typeof id !== 'string' || typeof projectKey !== 'string' || typeof title !== 'string') {
     return [];
   }
@@ -83,7 +77,6 @@ function toCapture(value: unknown): QueuedCapture[] {
       description: typeof description === 'string' ? description : '',
       priority: isPriority(priority) ? priority : 'medium',
       capturedAt: typeof capturedAt === 'number' ? capturedAt : 0,
-      attempted: attempted === true,
     },
   ];
 }

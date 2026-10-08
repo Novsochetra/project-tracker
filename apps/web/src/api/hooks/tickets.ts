@@ -1,4 +1,5 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query';
+import type { TrackerClient } from '@tracker/client';
 import type {
   CreateTicketInput,
   MarkSentInput,
@@ -13,6 +14,7 @@ import { withTicket } from '../cache/ticketDetail';
 import { boardChanges, ticketChange } from '../cacheChanges';
 import { useApi } from '../context';
 import { markDeleted } from '../deleted';
+import { markRead, writesBefore } from '../freshReads';
 import { applyOptimistic, cacheChange, patchCaches, rollbackOnError } from '../optimistic';
 import { queryKeys } from '../queryKeys';
 import { refreshPeople, settleMutation } from '../refresh';
@@ -32,11 +34,24 @@ export interface MarkSentVariables {
   input: MarkSentInput;
 }
 
+// Only a copy on screen can be newer than the service worker's; without one, its saved copy still
+// beats nothing while the tracker can't be reached.
+async function readTicket(client: TrackerClient, queryClient: QueryClient, ticketKey: string) {
+  const key = ticketKey.toUpperCase();
+  const writes = writesBefore(queryClient, key);
+  const shown = queryClient.getQueryData(queryKeys.ticket(key)) !== undefined;
+  if (writes === undefined || !shown) return client.getTicket(ticketKey);
+  const detail = await client.getTicket(ticketKey, { fresh: true });
+  markRead(queryClient, key, writes);
+  return detail;
+}
+
 export function useTicket(ticketKey: string): TrackerQuery<TicketDetail> {
   const client = useApi();
+  const queryClient = useQueryClient();
   return useQuery({
     queryKey: queryKeys.ticket(ticketKey),
-    queryFn: () => client.getTicket(ticketKey),
+    queryFn: () => readTicket(client, queryClient, ticketKey),
   });
 }
 

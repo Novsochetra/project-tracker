@@ -31,7 +31,6 @@ const slow: QueuedCapture = {
   description: '',
   priority: 'medium',
   capturedAt: Date.now(),
-  attempted: true,
 };
 
 const ticket = (title: string): Ticket => {
@@ -72,14 +71,13 @@ function renderTabB() {
   const createTicket = vi.fn((_key: string, input: { title: string }) =>
     Promise.resolve(ticket(input.title)),
   );
-  const listTickets = vi.fn().mockResolvedValue([]);
   renderWithApp(
     <SheetsProvider>
       <QuickCapture reachability={createReachability()} />
     </SheetsProvider>,
-    { projects: [projectSummary()], client: { createTicket, listTickets } },
+    { projects: [projectSummary()], client: { createTicket } },
   );
-  return { createTicket, listTickets };
+  return { createTicket };
 }
 
 // The sync runs on promises alone here, so a few turns of the event loop let a run finish.
@@ -102,9 +100,8 @@ describe.each([
   it('leaves the capture to that tab instead of sending it again', async () => {
     storeQueue([slow]);
     const tabA = otherTab('slow');
-    const { createTicket, listTickets } = renderTabB();
+    const { createTicket } = renderTabB();
     await finishRuns();
-    expect(listTickets).not.toHaveBeenCalled();
     expect(createTicket).not.toHaveBeenCalled();
 
     // Tab A's request lands: A records the ticket, then lets go.
@@ -116,18 +113,18 @@ describe.each([
     expect(readQueue().items).toEqual([]);
   });
 
-  it("sends it once that tab's request failed after all, looking it up first", async () => {
+  it("sends it once that tab's request failed after all, with the capture's client id", async () => {
     storeQueue([slow]);
     const tabA = otherTab('slow');
-    const { createTicket, listTickets } = renderTabB();
+    const { createTicket } = renderTabB();
     await finishRuns();
 
     tabA.release();
     await syncAgain();
 
     expect(await screen.findByText('1 ticket added')).toBeInTheDocument();
-    expect(listTickets).toHaveBeenCalledTimes(1);
     expect(createTicket).toHaveBeenCalledTimes(1);
+    expect(createTicket).toHaveBeenCalledWith('MOB', expect.objectContaining({ clientId: 'slow' }));
     expect(readQueue().items).toEqual([]);
   });
 });

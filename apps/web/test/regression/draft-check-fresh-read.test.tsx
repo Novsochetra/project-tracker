@@ -7,6 +7,7 @@ import { renderTicket } from '../../src/features/ticket/test/renderTicket';
 import { keepDraft, storedDraft } from '../../src/lib/storedDrafts';
 import { skipAnimations } from '../../src/overlays/testing';
 import { isSavedApiRead } from '../../src/pwa/apiReadRoute';
+import { savedAnswerPlugin } from '../../src/pwa/savedAnswerPlugin';
 
 const ORIGIN = 'http://localhost:5173';
 const BEFORE = makeTicketDetail(listItem(1, STATUS.todo, 0, { description: 'Original desc' }));
@@ -43,7 +44,11 @@ function slowTracker() {
     const url = new URL(request.url);
     const route = { url, request, sameOrigin: url.origin === ORIGIN };
     if (request.method === 'GET' && isSavedApiRead(route)) {
-      return Response.json(BEFORE, { headers: { 'x-tracker-saved': '1' } });
+      const saved = await savedAnswerPlugin.cachedResponseWillBeUsed({
+        request,
+        cachedResponse: Response.json(BEFORE),
+      });
+      if (saved) return saved;
     }
     if (request.method === 'PATCH') {
       writes.push(`${request.method} ${url.pathname}`);

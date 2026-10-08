@@ -3,6 +3,7 @@ import { useRef, useState } from 'react';
 import { useBoard } from '../../api';
 import type { SheetProps } from '../../app/sheets/types';
 import { Sheet, SheetActionButton, SheetCancelButton } from '../../overlays';
+import { AttachmentPicker, DropOverlay, useFileDrop } from '../attachments';
 import { forgetKeptForm, keptForm, useKeepForm } from './keptForm';
 import { NewTicketFields } from './NewTicketFields';
 import styles from './NewTicketSheet.module.css';
@@ -12,9 +13,11 @@ import {
   hasChanges,
   TITLE_REQUIRED,
   toCreateInput,
+  withoutGoneStatus,
   type NewTicketForm,
 } from './newTicketForm';
 import { useCreateTicketFlow } from './useCreateTicketFlow';
+import { useNewTicketFiles } from './useNewTicketFiles';
 
 export interface NewTicketSheetProps extends SheetProps {
   projectKey: string;
@@ -38,30 +41,32 @@ export function NewTicketSheet({ open, onClose, projectKey, statusId }: NewTicke
   const titleRef = useRef<HTMLTextAreaElement>(null);
   const [form, setForm] = useState(() => keptForm(projectKey));
   const [error, setError] = useState('');
-  // The host keeps this sheet mounted between openings: each opening starts from the kept fields.
-  const [openedAs, setOpenedAs] = useState(open);
-  if (open !== openedAs) {
-    setOpenedAs(open);
-    if (open) {
-      setForm(keptForm(projectKey));
-      setError('');
-    }
-  }
+  const known = board ? withoutGoneStatus(form, board.statuses) : form;
+  if (known !== form) setForm(known);
+  const files = useNewTicketFiles(setForm, projectKey, open);
+  const drop = useFileDrop(files.add);
+  const uploading = files.uploading.length > 0;
   const changed = hasChanges(form, defaultStatusId(statuses, statusId));
   useKeepForm({ projectKey, form, open, changed });
-  const close = () => {
+  const created = () => {
     forgetKeptForm(projectKey);
     onClose();
   };
-  const flow = useCreateTicketFlow({ projectKey, statuses, onCreated: close, onError: setError });
+  // Closed without creating: the uploads have no ticket to wait for.
+  const close = () => {
+    files.discard(form.attachments);
+    created();
+  };
+  const flow = useCreateTicketFlow({ projectKey, statuses, onCreated: created, onError: setError });
   const status = chosenStatusId(form, statuses, statusId);
   const update = (patch: Partial<NewTicketForm>) => {
     setForm((current) => ({ ...current, ...patch }));
     setError('');
   };
+  // Create waits for the files on their way, as its disabled button shows.
   const submit = () => {
     if (!form.title.trim()) setError(TITLE_REQUIRED);
-    else flow.submit(toCreateInput(form, status));
+    else if (!uploading) flow.submit(toCreateInput(form, status));
   };
   return (
     <Sheet
@@ -72,7 +77,7 @@ export function NewTicketSheet({ open, onClose, projectKey, statusId }: NewTicke
       subtitle={board && <ProjectSubtitle project={board.project} />}
       left={<SheetCancelButton />}
       right={
-        <SheetActionButton type="submit" disabled={!form.title.trim() || flow.pending}>
+        <SheetActionButton type="submit" disabled={!form.title.trim() || flow.pending || uploading}>
           Create
         </SheetActionButton>
       }
@@ -81,17 +86,31 @@ export function NewTicketSheet({ open, onClose, projectKey, statusId }: NewTicke
         event.preventDefault();
         submit();
       }}
-      dirty={changed}
+      dirty={changed || uploading}
     >
-      <NewTicketFields
-        form={form}
-        statuses={statuses}
-        statusId={status}
-        error={error}
-        titleRef={titleRef}
-        onChange={update}
-        onEnter={submit}
-      />
+      <div className={styles.body} {...drop.handlers}>
+        <NewTicketFields
+          form={form}
+          statuses={statuses}
+          statusId={status}
+          error={error}
+          titleRef={titleRef}
+          onChange={update}
+          onEnter={submit}
+          onFiles={files.add}
+          attachments={
+            <AttachmentPicker
+              size="sm"
+              attachments={form.attachments}
+              uploads={files}
+              inputLabel="Add files to ticket"
+              onRemove={files.remove}
+              className={styles.attachments}
+            />
+          }
+        />
+        {drop.active && <DropOverlay />}
+      </div>
     </Sheet>
   );
 }

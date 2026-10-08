@@ -9,7 +9,7 @@ import {
   type StoredDraft,
 } from '../../../lib/storedDrafts';
 import { checkDraft, serverText } from './draftCheck';
-import { isLiveDraft, retryLiveDrafts } from './liveDrafts';
+import { isLeftToScreen, retryLiveDrafts } from './liveDrafts';
 
 export interface DraftSyncDeps {
   // A fresh read: an answer saved before someone else's change would let the sync save over it.
@@ -33,7 +33,7 @@ interface Run {
 function closedTicketDrafts(): Map<string, Entry[]> {
   const byTicket = new Map<string, Entry[]>();
   for (const [id, draft] of storedDrafts()) {
-    if (isLiveDraft(id)) continue;
+    if (isLeftToScreen(id, draft.ticketKey)) continue;
     byTicket.set(draft.ticketKey, [...(byTicket.get(draft.ticketKey) ?? []), [id, draft]]);
   }
   return byTicket;
@@ -75,7 +75,8 @@ async function syncDraft(entry: Entry, detail: TicketDetail, run: Run): Promise<
     draftSaved(id, draft.text);
     return true;
   }
-  if (!isSentForUser(draft)) return true;
+  // The ticket may have opened while it was read.
+  if (!isSentForUser(draft) || isLeftToScreen(id, draft.ticketKey)) return true;
   if (check === 'changed') {
     run.report.changed.push(entry);
     return true;

@@ -455,6 +455,175 @@ describe('uploadAttachment', () => {
 
     expect(headersOf(last()).has('content-type')).toBe(false);
   });
+
+  it('passes an abort signal to fetch', async () => {
+    const { client, last } = setup(() => json({ id: 'f1' }, 201));
+    const controller = new AbortController();
+
+    await client.uploadAttachment(image(), 'shot.png', undefined, { signal: controller.signal });
+
+    expect(last().init.signal).toBe(controller.signal);
+  });
+});
+
+// Only XMLHttpRequest reports how much of a request body has gone out; fetch can't.
+describe('uploadAttachment with progress', () => {
+  interface Sent {
+    method: string;
+    url: string;
+    headers: Record<string, string>;
+    body: unknown;
+  }
+
+  class FakeXhr {
+    static sent: Sent[] = [];
+    static latest: FakeXhr | null = null;
+    upload: { onprogress: ((event: ProgressEvent) => void) | null } = { onprogress: null };
+    onload: (() => void) | null = null;
+    onerror: (() => void) | null = null;
+    onabort: (() => void) | null = null;
+    status = 0;
+    statusText = '';
+    responseText = '';
+    private request: Sent = { method: '', url: '', headers: {}, body: null };
+
+    open(method: string, url: string) {
+      this.request = { ...this.request, method, url };
+    }
+
+    setRequestHeader(name: string, value: string) {
+      this.request.headers[name] = value;
+    }
+
+    send(body: unknown) {
+      FakeXhr.sent.push({ ...this.request, body });
+      FakeXhr.latest = this;
+    }
+
+    abort() {
+      this.onabort?.();
+    }
+
+    progress(loaded: number, total: number) {
+      this.upload.onprogress?.({ lengthComputable: true, loaded, total } as ProgressEvent);
+    }
+
+    answer(status: number, body: unknown) {
+      this.status = status;
+      this.responseText = JSON.stringify(body);
+      this.onload?.();
+    }
+  }
+
+  const image = () => new Blob(['png-bytes'], { type: 'image/png' });
+  const latest = () => FakeXhr.latest!;
+
+  function setupXhr(options: Partial<HttpOptions> = {}) {
+    FakeXhr.sent = [];
+    FakeXhr.latest = null;
+    vi.stubGlobal('XMLHttpRequest', FakeXhr);
+    const fetch = vi.fn();
+    const client = new TrackerClient({ baseUrl: `${BASE}/`, fetch, ...options });
+    return { client, fetch };
+  }
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it('reports how much of the file has gone out, then returns the attachment', async () => {
+    const { client, fetch } = setupXhr({
+      token: 'secret',
+      actor: { kind: 'agent', name: 'Cláude' },
+    });
+    const onProgress = vi.fn();
+
+    const uploaded = client.uploadAttachment(image(), 'shot.png', 'MOB-3', { onProgress });
+    latest().progress(4, 9);
+    latest().progress(9, 9);
+    latest().answer(201, { id: 'f1' });
+
+    await expect(uploaded).resolves.toEqual({ id: 'f1' });
+    expect(onProgress.mock.calls).toEqual([
+      [4, 9],
+      [9, 9],
+    ]);
+    const [sent] = FakeXhr.sent;
+    expect(sent?.method).toBe('POST');
+    expect(sent?.url).toBe(`${BASE}/api/attachments`);
+    expect(sent?.headers).toEqual({
+      authorization: 'Bearer secret',
+      'x-actor-kind': 'agent',
+      'x-actor-name': 'Cl%C3%A1ude',
+    });
+    const body = sent?.body as FormData;
+    expect((body.get('file') as File).name).toBe('shot.png');
+    expect(body.get('ticketKey')).toBe('MOB-3');
+    expect(fetch).not.toHaveBeenCalled();
+  });
+
+  it('throws the API error the server answers with', async () => {
+    const { client } = setupXhr();
+
+    const uploaded = client.uploadAttachment(image(), 'big.mov', undefined, {
+      onProgress: vi.fn(),
+    });
+    latest().answer(400, {
+      error: { code: 'invalid_input', message: 'Videos can be up to 100 MB.' },
+    });
+
+    await expect(uploaded).rejects.toEqual(
+      new ApiError(400, 'invalid_input', 'Videos can be up to 100 MB.'),
+    );
+  });
+
+  it('fails like fetch when the network does', async () => {
+    const { client } = setupXhr();
+
+    const uploaded = client.uploadAttachment(image(), 'shot.png', undefined, {
+      onProgress: vi.fn(),
+    });
+    latest().onerror?.();
+
+    await expect(uploaded).rejects.toBeInstanceOf(TypeError);
+  });
+
+  it('stops the upload when its signal aborts', async () => {
+    const { client } = setupXhr();
+    const controller = new AbortController();
+
+    const uploaded = client.uploadAttachment(image(), 'shot.png', undefined, {
+      onProgress: vi.fn(),
+      signal: controller.signal,
+    });
+    controller.abort();
+
+    await expect(uploaded).rejects.toMatchObject({ name: 'AbortError' });
+  });
+
+  it('never sends when the signal has already aborted', async () => {
+    const { client } = setupXhr();
+    const controller = new AbortController();
+    controller.abort();
+
+    const uploaded = client.uploadAttachment(image(), 'shot.png', undefined, {
+      onProgress: vi.fn(),
+      signal: controller.signal,
+    });
+
+    await expect(uploaded).rejects.toMatchObject({ name: 'AbortError' });
+    expect(FakeXhr.sent).toEqual([]);
+  });
+
+  it('falls back to fetch where XMLHttpRequest does not exist', async () => {
+    vi.stubGlobal('XMLHttpRequest', undefined);
+    const { client, last } = setup(() => json({ id: 'f1' }, 201));
+
+    await expect(
+      client.uploadAttachment(image(), 'shot.png', undefined, { onProgress: vi.fn() }),
+    ).resolves.toEqual({ id: 'f1' });
+    expect(pathOf(last())).toBe('/api/attachments');
+  });
 });
 
 describe('responses', () => {

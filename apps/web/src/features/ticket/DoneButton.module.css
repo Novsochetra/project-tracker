@@ -9,3 +9,8 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+/* The label shrinks for a long name; the check icon beside it keeps its size. */
+.button svg {
+  flex: none;
+}

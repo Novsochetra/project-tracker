@@ -20,7 +20,7 @@ import {
   syncDraft,
   type FieldDraft,
 } from './fieldDraft';
-import { useFieldSave, type FieldSave, type FieldTarget, type SaveField } from './useFieldSave';
+import { useFieldSave, type FieldSave, type FieldSaver, type FieldTarget } from './useFieldSave';
 
 export interface FieldDraftState {
   value: string;
@@ -50,28 +50,31 @@ interface RetryInput {
   ticketKey: string;
   draft: FieldDraft;
   setDraft: Dispatch<SetStateAction<FieldDraft>>;
-  save: SaveField;
+  saver: FieldSaver;
 }
 
 // The user's Retry says when the tracker can't be reached. Retries the app starts on its own
 // stay quiet, also when their save fails: the field's note already says it isn't saved.
 type RetryBy = 'user' | 'app';
 
-function useFieldRetry({ id, ticketKey, draft, setDraft, save }: RetryInput) {
+function useFieldRetry({ id, ticketKey, draft, setDraft, saver }: RetryInput) {
   const check = useDraftCheck(ticketKey);
   const checkingRef = useRef(false);
   const { show } = useToast();
   return (by: RetryBy) => {
-    if (!draft.failed || draft.conflict || draft.saving > 0 || checkingRef.current) return;
+    // The saver knows at once that a retry's save went out; the draft only once the screen shows
+    // it, and the app-wide sync can ask again before that.
+    if (!draft.failed || draft.conflict || saver.sending() || checkingRef.current) return;
     checkingRef.current = true;
     const shown = draft.value;
     void check(id).then((result) => {
       checkingRef.current = false;
-      if (result === 'unreachable' && by === 'user') show(NETWORK_ERROR_MESSAGE);
+      if (result === 'unreachable' && by === 'user') show(NETWORK_ERROR_MESSAGE, { kind: 'error' });
       // Saves the newest typed text; none is kept when the user dropped it while this ran.
       const kept = storedDraft(id);
-      if (result === 'unchanged' && kept) save(kept.text, { checked: true, quiet: by === 'app' });
-      else if (result === 'gone') forgetDraft(id);
+      if (result === 'unchanged' && kept) {
+        void saver.save(kept.text, { checked: true, quiet: by === 'app' });
+      } else if (result === 'gone') forgetDraft(id);
       else if (result === 'saved') draftSaved(id, shown);
       if (result === 'saved' || result === 'changed') {
         setDraft((current) => checkedDraft(current, shown, result));
@@ -92,8 +95,9 @@ export function useFieldDraft(
   const [focused, setFocused] = useState(false);
   const synced = syncDraft(draft, server, focused);
   if (synced !== draft) setDraft(synced);
-  const save = useFieldSave({ target, server, setDraft, onSave });
-  const retry = useFieldRetry({ id, ticketKey: target.ticketKey, draft: synced, setDraft, save });
+  const saver = useFieldSave({ target, server, setDraft, onSave });
+  const { save } = saver;
+  const retry = useFieldRetry({ id, ticketKey: target.ticketKey, draft: synced, setDraft, saver });
   useLiveDraft(id, () => retry('app'));
 
   return {
@@ -107,12 +111,12 @@ export function useFieldDraft(
     },
     focus: () => setFocused(true),
     blur: () => setFocused(false),
-    save: (value) => save(value),
+    save: (value) => void save(value),
     retry: () => retry('user'),
     saveMine: () => {
       rebaseDraft(id, server);
       setDraft(keepMine);
-      save(synced.value, { checked: true });
+      void save(synced.value, { checked: true });
     },
     discardMine: () => {
       forgetDraft(id);

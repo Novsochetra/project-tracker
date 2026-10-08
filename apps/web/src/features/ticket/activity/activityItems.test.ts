@@ -42,7 +42,12 @@ describe('activityItems', () => {
       entry('v', 'review', 4, { actor: CLAUDE, review: { verdict: 'approved', rating: 4 } }),
     ]);
     expect(event).toMatchObject({ kind: 'event', text: 'event e', at: 1 });
-    expect(edited).toMatchObject({ kind: 'comment', editedAt: 5, draft: false, images: [image] });
+    expect(edited).toMatchObject({
+      kind: 'comment',
+      editedAt: 5,
+      draft: false,
+      attachments: [image],
+    });
     expect(report).toMatchObject({ kind: 'report', title: 'Claude report', text: 'report r' });
     expect(review).toMatchObject({ kind: 'review', review: { verdict: 'approved', rating: 4 } });
   });

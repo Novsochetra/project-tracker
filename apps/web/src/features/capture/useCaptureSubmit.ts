@@ -9,7 +9,7 @@ import {
   createdToast,
   createInputOf,
   newCaptureId,
-  PHOTOS_NEED_CONNECTION,
+  FILES_NEED_CONNECTION,
   SAVED_ON_PHONE,
   TITLE_REQUIRED,
   toQueuedCapture,
@@ -24,7 +24,7 @@ import { submitCapture, type SubmitDeps, type SubmitOutcome } from './submitCapt
 export interface CaptureSubmitInput {
   values: CaptureValues;
   project: ProjectChoice | undefined;
-  photos: readonly Attachment[];
+  attachments: readonly Attachment[];
   uploading: number;
   onDone: () => void;
 }
@@ -52,12 +52,11 @@ function submitDeps(
       show(addedToast(1));
     },
     timeoutMs: CAPTURE_TIMEOUT_MS,
-    isOffline: () => navigator.onLine === false,
   };
 }
 
 export function useCaptureSubmit(input: CaptureSubmitInput): CaptureSubmit {
-  const { values, project, photos, uploading, onDone } = input;
+  const { values, project, attachments, uploading, onDone } = input;
   const { mutateAsync } = useCreateTicket();
   const { show } = useToast();
   const [pending, setPending] = useState(false);
@@ -71,7 +70,7 @@ export function useCaptureSubmit(input: CaptureSubmitInput): CaptureSubmit {
     busy.current = false;
     setPending(false);
     if (outcome.kind === 'needsConnection' || outcome.kind === 'failed') {
-      setError(outcome.kind === 'failed' ? outcome.message : PHOTOS_NEED_CONNECTION);
+      setError(outcome.kind === 'failed' ? outcome.message : FILES_NEED_CONNECTION);
       return;
     }
     rememberProject(chosen);
@@ -95,7 +94,7 @@ export function useCaptureSubmit(input: CaptureSubmitInput): CaptureSubmit {
       values,
       capturedAt: Date.now(),
     });
-    const draft = { capture, attachmentIds: photos.map((photo) => photo.id) };
+    const draft = { capture, attachmentIds: attachments.map((attachment) => attachment.id) };
     void submitCapture(draft, submitDeps(mutateAsync, show)).then((outcome) =>
       finish(outcome, project),
     );

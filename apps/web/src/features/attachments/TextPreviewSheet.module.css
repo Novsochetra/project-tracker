@@ -1,0 +1,58 @@
+.body {
+  padding: var(--space-4) var(--space-5) var(--space-5);
+}
+
+.text {
+  margin: 0;
+  color: var(--ink-2);
+  font-family: var(--font-mono);
+  font-size: var(--size-report);
+  line-height: 1.6;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  tab-size: 4;
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+.state {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-3);
+  min-height: 96px;
+}
+
+.error {
+  margin: 0;
+  color: var(--danger);
+  font-size: var(--size-secondary);
+}
+
+.cut {
+  margin: var(--space-4) 0 0;
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: var(--size-secondary);
+}
+
+.link {
+  color: var(--link);
+}
+
+@media (hover: hover) {
+  .link:hover {
+    color: var(--link-hover);
+  }
+}
+
+/* The page behind the dialog scrolls on desktop, so long text scrolls inside it instead and the
+   header stays in view. */
+@media (min-width: 768px) {
+  .body {
+    max-height: 70vh;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+}

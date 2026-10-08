@@ -3,6 +3,7 @@ import { useId } from 'react';
 import { DateRow, GroupedCard, SelectRow } from '../../../components';
 import { FieldNote } from '../fields/FieldNote';
 import { useFieldDraft } from '../fields/useFieldDraft';
+import { useStatusMove } from '../useStatusMove';
 import { useTicketUpdate } from '../useTicketUpdate';
 import { AssigneeRow } from './AssigneeRow';
 import { PRIORITY_OPTIONS, statusOptions } from './detailOptions';
@@ -11,6 +12,7 @@ import styles from './SidePanel.module.css';
 export function DetailsCard({ detail }: { detail: TicketDetail }) {
   const { ticket } = detail;
   const update = useTicketUpdate(ticket.key);
+  const moveTo = useStatusMove(detail);
   const done = isDoneCategory(detail.status.category);
   const assignee = useFieldDraft(
     ticket.assignee,
@@ -27,7 +29,8 @@ export function DetailsCard({ detail }: { detail: TicketDetail }) {
           options={statusOptions(detail.statuses)}
           value={ticket.statusId}
           onChange={(statusId) => {
-            if (statusId !== ticket.statusId) void update({ statusId });
+            const status = detail.statuses.find((candidate) => candidate.id === statusId);
+            if (status) moveTo(status);
           }}
         />
         <SelectRow

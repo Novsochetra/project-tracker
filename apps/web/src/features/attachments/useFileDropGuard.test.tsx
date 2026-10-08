@@ -1,7 +1,7 @@
 import { render, renderHook, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { useFileDropGuard } from './useFileDropGuard';
-import { useImageDrop } from './useImageDrop';
+import { useFileDrop } from './useFileDrop';
 
 interface FakeTransfer {
   types: string[];
@@ -18,7 +18,7 @@ function drag(type: 'dragover' | 'drop', types = ['Files']) {
 }
 
 function Zone({ onFiles }: { onFiles: (files: File[]) => void }) {
-  const drop = useImageDrop(onFiles);
+  const drop = useFileDrop(onFiles);
   return <div data-testid="zone" {...drop.handlers} />;
 }
 

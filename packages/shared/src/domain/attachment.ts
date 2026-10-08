@@ -56,9 +56,8 @@ export const MAX_ATTACHMENT_BYTES = Math.max(
   ...Object.values(ATTACHMENT_KINDS).map((kind) => kind.maxBytes),
 );
 
-export const IMAGE_MIME_TYPES: readonly string[] = Object.entries(ATTACHMENT_TYPES)
-  .filter(([, type]) => type.kind === 'image')
-  .map(([type]) => type);
+/** How long an upload waits for a ticket or comment to use it before the server deletes it. */
+export const PENDING_ATTACHMENT_TTL_MS = 24 * 60 * 60 * 1000;
 
 /** For file inputs: every type and extension, since some systems give .log or .md no type. */
 export const ATTACHMENT_ACCEPT = [

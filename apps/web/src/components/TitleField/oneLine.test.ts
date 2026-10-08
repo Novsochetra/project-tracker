@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { keepOneLine, oneLine } from './oneLine';
+import { keepOneLine, oneLine, oneLineInsert } from './oneLine';
 
 function textarea(value: string, caret: number): HTMLTextAreaElement {
   const field = document.createElement('textarea');
@@ -16,6 +16,25 @@ describe('oneLine', () => {
 
   it('leaves text without line breaks alone, spaces included', () => {
     expect(oneLine('  Two  spaces\tand a tab ')).toBe('  Two  spaces\tand a tab ');
+  });
+});
+
+describe('oneLineInsert', () => {
+  it('turns breaks between words into spaces', () => {
+    expect(oneLineInsert(' the\r\n\r\n login', 'Fix', ' crash')).toBe(' the login');
+    expect(oneLineInsert('\n', 'Fix', '')).toBe(' ');
+    expect(oneLineInsert('login\n', 'Fix the ', '')).toBe('login ');
+  });
+
+  it('adds no space at the start of the field or beside a space already there', () => {
+    expect(oneLineInsert('\nLeading break', '', '')).toBe('Leading break');
+    expect(oneLineInsert('\n', 'Fix ', 'crash')).toBe('');
+    expect(oneLineInsert(' the login \n', 'Fix', ' crash')).toBe(' the login');
+    expect(oneLineInsert('\n\n', 'Fix', ' crash')).toBe('');
+  });
+
+  it('leaves spaces that are not beside a break alone', () => {
+    expect(oneLineInsert(' the  login ', 'Fix ', ' crash')).toBe(' the  login ');
   });
 });
 

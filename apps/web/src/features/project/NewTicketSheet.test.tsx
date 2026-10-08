@@ -25,14 +25,23 @@ interface HarnessProps {
   onClose?: () => void;
 }
 
+// Like SheetsProvider, each opening mounts a new sheet.
 function Harness({ statusId, onClose = () => undefined }: HarnessProps) {
   const [open, setOpen] = useState(true);
+  const [opening, setOpening] = useState(0);
   return (
     <>
-      <button type="button" onClick={() => setOpen(true)}>
+      <button
+        type="button"
+        onClick={() => {
+          setOpen(true);
+          setOpening((count) => count + 1);
+        }}
+      >
         Open sheet
       </button>
       <NewTicketSheet
+        key={opening}
         open={open}
         projectKey="MOB"
         statusId={statusId}

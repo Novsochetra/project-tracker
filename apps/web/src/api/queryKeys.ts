@@ -17,6 +17,7 @@ export const queryKeys = {
     ['reportPreview', ticketKey ? canonical(ticketKey) : '', text] as const,
   session: () => ['session'] as const,
   meta: () => ['meta'] as const,
+  attachmentText: (attachmentId: string) => ['attachmentText', attachmentId] as const,
 };
 
 export const rootOf = (queryKey: QueryKey): unknown => queryKey[0];

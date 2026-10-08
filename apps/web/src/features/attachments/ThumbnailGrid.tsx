@@ -1,110 +1,82 @@
+import type { Attachment } from '@tracker/shared';
 import clsx from 'clsx';
-import { ImagePlus, X } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import type { ComponentProps, ReactNode } from 'react';
-import { Icon, Spinner } from '../../components';
+import { Icon } from '../../components';
+import { SavedThumbnail } from './SavedThumbnail';
 import styles from './ThumbnailGrid.module.css';
-
-export interface ThumbnailImage {
-  id: string;
-  url: string;
-}
+import { thumbnailLabels } from './thumbnailLabels';
+import './tokens.css';
+import { UploadThumbnail } from './UploadThumbnail';
+import type { UploadingFile } from './useAttachmentUploads';
 
 export interface ThumbnailGridProps {
-  images: readonly ThumbnailImage[];
-  // Makes each thumbnail a button named "Open image {n}".
+  attachments: readonly Attachment[];
+  uploading?: readonly UploadingFile[] | undefined;
+  // Makes each thumbnail open its file: "Open image 1", "Play video 1", "Open notes.txt". PDFs
+  // are links that open in a new tab.
   onOpen?: ((index: number) => void) | undefined;
-  // Adds a small x named "Remove image {n}".
+  // Adds a small x named "Remove image 1" or "Remove notes.txt".
   onRemove?: ((id: string, index: number) => void) | undefined;
-  // The image a removal is being confirmed for, so it is clear which one goes.
+  // Adds the x to files still uploading, which stops them.
+  onCancel?: ((key: string) => void) | undefined;
+  // The attachment a removal is being confirmed for, so it is clear which one goes.
   markedId?: string | null | undefined;
-  uploading?: number;
   size?: 'md' | 'sm';
   children?: ReactNode;
   className?: string | undefined;
 }
 
+const NOTHING_UPLOADING: readonly UploadingFile[] = [];
+
 export function ThumbnailGrid({
-  images,
+  attachments,
+  uploading = NOTHING_UPLOADING,
   onOpen,
   onRemove,
+  onCancel,
   markedId,
-  uploading = 0,
   size = 'md',
   children,
   className,
 }: ThumbnailGridProps) {
+  const labels = thumbnailLabels(attachments);
+  const removable = onRemove !== undefined || (onCancel !== undefined && uploading.length > 0);
   return (
-    <div className={clsx(styles.grid, styles[size], onRemove && styles.removable, className)}>
-      {images.map((image, index) => (
-        <div key={image.id} className={clsx(styles.tile, image.id === markedId && styles.marked)}>
-          <Thumbnail image={image} number={index + 1} onOpen={onOpen && (() => onOpen(index))} />
-          {onRemove && (
-            <button
-              type="button"
-              className={styles.remove}
-              aria-label={`Remove image ${index + 1}`}
-              onClick={(event) => {
-                // Safari doesn't focus a tapped button, and a confirm hands focus back to what
-                // had it when it opened.
-                event.currentTarget.focus({ preventScroll: true });
-                onRemove(image.id, index);
-              }}
-            >
-              <Icon icon={X} size={14} />
-            </button>
-          )}
-        </div>
+    <div className={clsx(styles.grid, styles[size], removable && styles.removable, className)}>
+      {attachments.map((attachment, index) => (
+        <SavedThumbnail
+          key={attachment.id}
+          attachment={attachment}
+          label={labels[index] ?? attachment.fileName}
+          marked={attachment.id === markedId}
+          onOpen={onOpen && (() => onOpen(index))}
+          onRemove={onRemove && (() => onRemove(attachment.id, index))}
+        />
       ))}
-      {Array.from({ length: uploading }, (_, index) => (
-        <div key={`uploading-${index}`} className={clsx(styles.tile, styles.frame, styles.busy)}>
-          <Spinner label="Uploading image" />
-        </div>
+      {uploading.map((file) => (
+        <UploadThumbnail
+          key={file.key}
+          file={file}
+          onCancel={onCancel && (() => onCancel(file.key))}
+        />
       ))}
       {children}
     </div>
   );
 }
 
-interface ThumbnailProps {
-  image: ThumbnailImage;
-  number: number;
-  onOpen: (() => void) | undefined;
-}
+export type AddTileProps = Omit<ComponentProps<'button'>, 'children'>;
 
-function Thumbnail({ image, number, onOpen }: ThumbnailProps) {
-  if (!onOpen) {
-    return (
-      <img
-        className={styles.frame}
-        src={image.url}
-        alt={`Attachment ${number}`}
-        draggable={false}
-      />
-    );
-  }
+export function AddTile({ className, ...rest }: AddTileProps) {
   return (
     <button
       type="button"
-      className={clsx(styles.frame, styles.open)}
-      aria-label={`Open image ${number}`}
-      onClick={onOpen}
-    >
-      <img src={image.url} alt="" loading="lazy" decoding="async" draggable={false} />
-    </button>
-  );
-}
-
-export type AddImageTileProps = Omit<ComponentProps<'button'>, 'children'>;
-
-export function AddImageTile({ className, ...rest }: AddImageTileProps) {
-  return (
-    <button
-      type="button"
-      aria-label="Add images"
+      aria-label="Add files"
       className={clsx(styles.tile, styles.add, className)}
       {...rest}
     >
-      <Icon icon={ImagePlus} size={20} />
+      <Icon icon={Plus} size={20} />
     </button>
   );
 }

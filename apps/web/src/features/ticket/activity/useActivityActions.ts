@@ -13,7 +13,7 @@ export function useActivityActions(ticketKey: string): ActivityActions {
   const updateComment = useUpdateComment();
   const deleteActivity = useDeleteActivity();
   const { show } = useToast();
-  const fail = (error: unknown) => show(errorMessage(error));
+  const fail = (error: unknown) => show(errorMessage(error), { kind: 'error' });
   return {
     ticketKey,
     editComment: (activityId, text) =>

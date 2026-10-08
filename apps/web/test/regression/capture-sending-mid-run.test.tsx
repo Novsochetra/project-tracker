@@ -15,14 +15,13 @@ import { trackSending } from '../../src/features/capture/syncRunner';
 // capture joins the queue while its request is out; when a run was already going, the run sent
 // it as well and the ticket was created twice.
 
-const capture = (id: string, title: string, attempted: boolean): QueuedCapture => ({
+const capture = (id: string, title: string): QueuedCapture => ({
   id,
   projectKey: 'MOB',
   title,
   description: '',
   priority: 'medium',
   capturedAt: 1,
-  attempted,
 });
 
 const ticket = (title: string): Ticket => {
@@ -38,7 +37,7 @@ describe('regression: a capture that starts sending mid-run is sent once', () =>
   it('leaves the slow capture to its own request', async () => {
     window.localStorage.setItem(
       QUEUE_STORAGE_KEY,
-      JSON.stringify({ items: [capture('a', 'Queued idea', false)], created: [] }),
+      JSON.stringify({ items: [capture('a', 'Queued idea')], created: [] }),
     );
     const first = deferred<Ticket>();
     const createTicket = vi.fn((_key: string, input: { title: string }) =>
@@ -50,14 +49,14 @@ describe('regression: a capture that starts sending mid-run is sent once', () =>
       </SheetsProvider>,
       {
         projects: [projectSummary()],
-        client: { createTicket, listTickets: vi.fn().mockResolvedValue([]) },
+        client: { createTicket },
       },
     );
     await waitFor(() => expect(createTicket).toHaveBeenCalledTimes(1));
 
     const untrack = trackSending('slow');
     act(() => {
-      updateQueue((queue) => addCapture(queue, capture('slow', 'Slow idea', true)));
+      updateQueue((queue) => addCapture(queue, capture('slow', 'Slow idea')));
     });
     first.resolve(ticket('Queued idea'));
 

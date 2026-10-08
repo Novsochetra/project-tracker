@@ -2,14 +2,7 @@ import type { Actor } from '@tracker/shared';
 
 export const SEP = ' · ';
 
-const KB = 1024;
-const MB = 1024 * 1024;
-
-export function formatBytes(bytes: number): string {
-  if (bytes < KB) return `${bytes} B`;
-  if (bytes < MB) return `${Math.round(bytes / KB)} KB`;
-  return `${(bytes / MB).toFixed(1)} MB`;
-}
+export { formatBytes } from '@tracker/shared';
 
 const pad = (value: number): string => String(value).padStart(2, '0');
 

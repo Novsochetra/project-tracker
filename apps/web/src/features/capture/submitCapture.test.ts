@@ -13,7 +13,6 @@ const capture: QueuedCapture = {
   description: '',
   priority: 'medium',
   capturedAt: 1,
-  attempted: false,
 };
 
 const ticket = { key: 'MOB-7' } as Ticket;
@@ -30,7 +29,6 @@ function deps(create: SubmitDeps['create'], overrides: Partial<SubmitDeps> = {})
     track: vi.fn(() => untrack),
     onLateResult: vi.fn(),
     timeoutMs: TIMEOUT_MS,
-    isOffline: () => false,
     ...overrides,
   } satisfies SubmitDeps;
   return { ...result, untrack };
@@ -53,16 +51,10 @@ describe('submitCapture', () => {
   });
 
   it('saves the text on the device when the tracker cannot be reached', async () => {
-    const sent = deps(() => Promise.reject(NETWORK_DOWN), { isOffline: () => true });
-    await expect(submitCapture(draft(), sent)).resolves.toEqual({ kind: 'saved' });
-    // Offline, the request never left, so nothing needs checking before it is sent again.
-    expect(sent.save).toHaveBeenCalledWith({ ...capture, attempted: false });
-  });
-
-  it('marks a capture as attempted when the answer may have been lost on the way back', async () => {
     const sent = deps(() => Promise.reject(NETWORK_DOWN));
-    await submitCapture(draft(), sent);
-    expect(sent.save).toHaveBeenCalledWith({ ...capture, attempted: true });
+    await expect(submitCapture(draft(), sent)).resolves.toEqual({ kind: 'saved' });
+    // Whether or not the request reached the tracker, the queued copy keeps the capture's id.
+    expect(sent.save).toHaveBeenCalledWith(capture);
   });
 
   it('keeps a capture with photos in the sheet, since photos need a connection', async () => {
@@ -101,7 +93,7 @@ describe('submitCapture', () => {
     await vi.advanceTimersByTimeAsync(TIMEOUT_MS);
 
     await expect(outcome).resolves.toEqual({ kind: 'saved' });
-    expect(sent.save).toHaveBeenCalledWith({ ...capture, attempted: true });
+    expect(sent.save).toHaveBeenCalledWith(capture);
     expect(sent.untrack).not.toHaveBeenCalled();
 
     answer.resolve(ticket);

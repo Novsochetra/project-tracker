@@ -24,11 +24,16 @@
   --surface: #ffffff;
 
   --accent: #5b5bd6;
+  /* Accent is 3.2:1 on Ink, too faint for the toast's Undo, so it takes a lighter tint of it. */
+  --accent-inverse: #a3a3f2;
   --link: #4a4ac4;
   --link-hover: #3a3aa8;
   --doing: #c26a06;
   --danger: #b42318;
   --danger-line: #f4cfca;
+  /* Danger is 2.6:1 on Ink, so the error toast's icon takes a lighter red that keeps 3:1
+     (WCAG 1.4.11) on the toast. */
+  --danger-inverse: #f97066;
   --report-bg: #f7f7fe;
   --report-line: #e3e3f8;
   --flash: #e4e4fa;

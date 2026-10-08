@@ -30,7 +30,9 @@ function persist(key: string, drafts: DraftMap<unknown>): boolean {
   }
 }
 
-// Drafts by id as one JSON object in localStorage, read again whenever another tab changed it.
+// Drafts are read often (each keystroke that keeps a field, each check before an update), so
+// they are parsed again only when the stored text changed, which is also how another tab's
+// writes show up.
 export function draftStorage<T>(
   key: string,
   isDraft: (value: unknown) => value is T,

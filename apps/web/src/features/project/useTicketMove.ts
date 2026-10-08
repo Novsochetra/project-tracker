@@ -5,13 +5,12 @@ import { errorMessage, useMoveTicket } from '../../api';
 import { announce } from '../../app/announce';
 import { flashRows } from '../../app/flash';
 import { useToast } from '../../components';
+import { moveMessage } from './moveMessage';
+import { useMoveToast, wasSaved } from './undo/useMoveToast';
 import { useBoardReader } from './useBoardReader';
 
 /** Null when nothing moves; otherwise resolves once the move is over and the board shows how. */
 export type MoveTicket = (ticketId: string, target: DropTarget) => Promise<void> | null;
-
-export const moveMessage = (ticketKey: string, statusName: string | null): string =>
-  statusName ? `${ticketKey} moved to ${statusName}` : `${ticketKey} moved`;
 
 // React Query hands cache changes to React in batches it schedules, so a refused move's rollback
 // still waits in one when the move settles. A batch scheduled now runs after it, and React
@@ -26,6 +25,7 @@ export function useTicketMove(projectKey: string): MoveTicket {
   const readBoard = useBoardReader(projectKey);
   const { mutateAsync } = useMoveTicket();
   const { show } = useToast();
+  const showMove = useMoveToast();
   return useCallback<MoveTicket>(
     (ticketId, target) => {
       const board = readBoard();
@@ -40,14 +40,14 @@ export function useTicketMove(projectKey: string): MoveTicket {
       };
       const request = mutateAsync(
         { ticketKey: ticket.key, input },
-        { onError: (error) => show(errorMessage(error)) },
+        { onError: (error) => show(errorMessage(error), { kind: 'error' }) },
       );
       flashRows([ticket.key]);
       // The toast is a polite status region too: announcing it twice would read the move twice.
-      if (plan.statusChanged) show(moveMessage(ticket.key, status.name));
+      if (plan.statusChanged) showMove(ticket, status, wasSaved(request));
       else announce(moveMessage(ticket.key, null));
       return request.then(boardShown, boardShown);
     },
-    [readBoard, mutateAsync, show],
+    [readBoard, mutateAsync, show, showMove],
   );
 }

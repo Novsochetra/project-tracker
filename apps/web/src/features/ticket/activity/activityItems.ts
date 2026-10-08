@@ -13,7 +13,7 @@ interface ItemBase {
   author: string;
   text: string;
   at: number;
-  images: Attachment[];
+  attachments: Attachment[];
 }
 
 export type ActivityItem =
@@ -32,7 +32,7 @@ function toItem(activity: Activity): ActivityItem {
     author: actorLabel(activity.actor),
     text: activity.text,
     at: activity.createdAt,
-    images: activity.attachments,
+    attachments: activity.attachments,
   };
   switch (activity.type) {
     case 'event':

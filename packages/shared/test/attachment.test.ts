@@ -3,8 +3,8 @@ import {
   ATTACHMENT_ACCEPT,
   ATTACHMENT_KINDS,
   ATTACHMENT_TYPES,
-  IMAGE_MIME_TYPES,
   MAX_ATTACHMENT_BYTES,
+  PENDING_ATTACHMENT_TTL_MS,
   UNSUPPORTED_ATTACHMENT_MESSAGE,
   attachmentKind,
   checkAttachment,
@@ -55,15 +55,8 @@ describe('the attachment table', () => {
     }
   });
 
-  it('still lists the image types for the photo pickers', () => {
-    expect(IMAGE_MIME_TYPES).toEqual([
-      'image/png',
-      'image/jpeg',
-      'image/gif',
-      'image/webp',
-      'image/heic',
-      'image/heif',
-    ]);
+  it('keeps an upload that no ticket or comment uses for a day', () => {
+    expect(PENDING_ATTACHMENT_TTL_MS).toBe(24 * 60 * 60 * 1000);
   });
 });
 

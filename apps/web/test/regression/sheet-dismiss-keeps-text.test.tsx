@@ -60,14 +60,22 @@ const scrimOf = (dialog: HTMLElement) =>
     .getAllByRole('button', { name: 'Close' })
     .find((button) => !dialog.contains(button))!;
 
+// Like SheetsProvider, each opening mounts a new sheet.
 function NewTicketHarness() {
   const [open, setOpen] = useState(false);
+  const [opening, setOpening] = useState(0);
   return (
     <>
-      <button type="button" onClick={() => setOpen(true)}>
+      <button
+        type="button"
+        onClick={() => {
+          setOpen(true);
+          setOpening((count) => count + 1);
+        }}
+      >
         Open sheet
       </button>
-      <NewTicketSheet open={open} projectKey="MOB" onClose={() => setOpen(false)} />
+      <NewTicketSheet key={opening} open={open} projectKey="MOB" onClose={() => setOpen(false)} />
     </>
   );
 }
