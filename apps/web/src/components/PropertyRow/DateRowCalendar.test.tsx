@@ -94,6 +94,13 @@ describe('DateRow on desktop', () => {
     expect(within(calendar()).queryAllByRole('button', { pressed: true })).toEqual([]);
   });
 
+  it('is read once: the button names itself with the text beside it, which readers skip', () => {
+    setup('2026-10-20');
+    expect(trigger()).toHaveAccessibleName('Due date Tue, Oct 20');
+    expect(screen.getByText('Due date')).toHaveAttribute('aria-hidden', 'true');
+    expect(screen.getByText('Tue, Oct 20')).toHaveAttribute('aria-hidden', 'true');
+  });
+
   it('opens on the chosen day, pressed, with the days around the month muted', async () => {
     const { user } = setup('2026-12-24');
     expect(trigger()).toHaveAccessibleName('Due date Thu, Dec 24');

@@ -1,4 +1,4 @@
-import { act, render, screen } from '@testing-library/react';
+import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useState } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -112,6 +112,16 @@ describe('Dropdown', () => {
     await user.click(screen.getByRole('button', { name: 'Close menu' }));
     expect(screen.queryByRole('listbox')).not.toBeInTheDocument();
     expect(trigger).toHaveFocus();
+  });
+
+  it('goes with the menu motion: hidden at once, gone after', async () => {
+    const { user } = await openMenu();
+    await user.click(screen.getByRole('option', { name: 'Done' }));
+    const leaving = document.querySelector('[role="listbox"][data-leaving]');
+    expect(leaving).toHaveAttribute('aria-hidden', 'true');
+    expect(leaving).toHaveAttribute('inert');
+    expect(screen.queryByRole('listbox')).not.toBeInTheDocument();
+    await waitFor(() => expect(document.querySelector('[role="listbox"]')).toBeNull());
   });
 
   it('closes when the page scrolls, but not in the first 300ms', async () => {

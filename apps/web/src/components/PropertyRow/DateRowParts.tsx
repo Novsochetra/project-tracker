@@ -18,21 +18,23 @@ interface DateFaceProps {
   label: string;
   overdue: boolean;
   mutedIcon: boolean;
-  labelId?: string;
-  valueId?: string;
+  nameOf?: { labelId: string; valueId: string };
 }
 
-export function DateFace({ value, label, overdue, mutedIcon, labelId, valueId }: DateFaceProps) {
+// A button named by the label and value (nameOf) reads them itself, so screen readers skip the
+// text here; otherwise browse mode reads the date twice.
+export function DateFace({ value, label, overdue, mutedIcon, nameOf }: DateFaceProps) {
   const tone = overdue ? styles.overdue : value ? styles.set : styles.unset;
+  const hidden = nameOf ? true : undefined;
   return (
     <>
       <span className={clsx(styles.icon, mutedIcon && !overdue ? styles.mutedIcon : tone)}>
         <Icon icon={Calendar} />
       </span>
-      <span id={labelId} className={styles.label}>
+      <span id={nameOf?.labelId} aria-hidden={hidden} className={styles.label}>
         {label}
       </span>
-      <span id={valueId} className={clsx(styles.value, tone)}>
+      <span id={nameOf?.valueId} aria-hidden={hidden} className={clsx(styles.value, tone)}>
         {value ? formatLongDay(value) : 'None'}
       </span>
     </>

@@ -1,8 +1,6 @@
-export interface MenuRect {
-  top: number;
-  right: number;
-  bottom: number;
-}
+import { placeFloating, type AnchorRect } from '../FloatingPanel';
+
+export type MenuRect = AnchorRect;
 
 export interface PlaceMenuInput {
   triggerRect: MenuRect;
@@ -20,14 +18,10 @@ export interface MenuPlacement {
   originX: number;
 }
 
-const EDGE = 8;
-const GAP = 4;
-const INSET = 6;
 const CHROME = 10;
 
-const clamp = (value: number, min: number, max: number): number =>
-  Math.max(min, Math.min(value, max));
-
+// The SPEC estimates the menu's height from its items; with many statuses neither side may fit,
+// so the menu takes the roomier side and scrolls.
 export function placeMenu({
   triggerRect,
   viewport,
@@ -36,23 +30,11 @@ export function placeMenu({
 }: PlaceMenuInput): MenuPlacement {
   const width = isPhone ? 240 : 220;
   const itemHeight = isPhone ? 44 : 36;
-  const height = itemCount * itemHeight + CHROME;
-  const left = clamp(triggerRect.right - width - INSET, EDGE, viewport.width - width - EDGE);
-  const spaceBelow = viewport.height - EDGE - (triggerRect.bottom + GAP);
-  const spaceAbove = triggerRect.top - GAP - EDGE;
-  const fitsBelow = height <= spaceBelow;
-  // The SPEC opens upward only when the menu fits above; with many statuses neither side may
-  // fit, so the roomier side wins and the menu scrolls.
-  const up = !fitsBelow && (height <= spaceAbove || spaceAbove > spaceBelow);
-  const room = up ? spaceAbove : spaceBelow;
-  const maxHeight = Math.max(itemHeight + CHROME, Math.min(height, room));
-  const top = up ? triggerRect.top - GAP - maxHeight : triggerRect.bottom + GAP;
-  return {
-    top: Math.round(top),
-    left: Math.round(left),
-    width,
-    maxHeight: Math.round(maxHeight),
-    up,
-    originX: Math.round(clamp(triggerRect.right - left, 0, width)),
-  };
+  const { top, left, height, up, originX } = placeFloating({
+    anchor: triggerRect,
+    size: { width, height: itemCount * itemHeight + CHROME },
+    viewport,
+    minHeight: itemHeight + CHROME,
+  });
+  return { top, left, width, maxHeight: height, up, originX };
 }

@@ -1,15 +1,15 @@
 import clsx from 'clsx';
 import { Check } from 'lucide-react';
 import {
-  useEffect,
+  useCallback,
   useLayoutEffect,
   useRef,
   type KeyboardEvent,
   type ReactNode,
   type RefObject,
 } from 'react';
-import { createPortal } from 'react-dom';
 import { isPhoneNow } from '../../lib/media';
+import { FloatingPanel, FloatingPortal, type PlaceFloating } from '../FloatingPanel';
 import { Icon } from '../Icon';
 import styles from './Dropdown.module.css';
 import { placeMenu } from './placeMenu';
@@ -30,14 +30,16 @@ export interface DropdownProps<T extends string = string> {
   onClose: () => void;
 }
 
-const SCROLL_GRACE_MS = 300;
-
 export function Dropdown<T extends string>(props: DropdownProps<T>) {
-  if (!props.open) return null;
-  return createPortal(<Menu {...props} />, document.body);
+  return (
+    <FloatingPortal open={props.open}>
+      <Menu {...props} />
+    </FloatingPortal>
+  );
 }
 
 function Menu<T extends string>({
+  open,
   anchorRef,
   label,
   options,
@@ -46,20 +48,17 @@ function Menu<T extends string>({
   onClose,
 }: DropdownProps<T>) {
   const menuRef = useRef<HTMLDivElement>(null);
-  const openedAt = useRef(0);
+  const itemCount = options.length;
+  const place = useCallback<PlaceFloating>(
+    (anchor, menu) => position(menu, anchor, itemCount),
+    [itemCount],
+  );
 
   useLayoutEffect(() => {
-    const menu = menuRef.current;
-    const anchor = anchorRef.current;
-    if (!menu || !anchor) return;
-    position(menu, anchor, options.length);
-    const buttons = optionButtons(menu);
+    const buttons = menuRef.current ? optionButtons(menuRef.current) : [];
     const selected = buttons.find((button) => button.getAttribute('aria-selected') === 'true');
     (selected ?? buttons[0])?.focus();
-    openedAt.current = performance.now();
-  }, [anchorRef, options.length]);
-
-  useCloseOnScroll(menuRef, openedAt, onClose);
+  }, []);
 
   const close = () => {
     anchorRef.current?.focus({ preventScroll: true });
@@ -92,72 +91,48 @@ function Menu<T extends string>({
   };
 
   return (
-    <>
-      <button
-        type="button"
-        tabIndex={-1}
-        aria-label="Close menu"
-        className={styles.catch}
-        onClick={close}
-      />
-      <div
-        ref={menuRef}
-        role="listbox"
-        aria-label={label}
-        tabIndex={-1}
-        data-dropdown=""
-        className={styles.menu}
-        onKeyDown={onKeyDown}
-      >
-        {options.map((option) => (
-          <button
-            key={option.value}
-            type="button"
-            role="option"
-            aria-selected={option.value === value}
-            tabIndex={-1}
-            className={clsx('ring-inside', styles.option)}
-            onClick={() => choose(option.value)}
-          >
-            {option.icon !== undefined && <span className={styles.optionIcon}>{option.icon}</span>}
-            <span className={styles.optionLabel}>{option.label}</span>
-            {option.value === value && <Icon icon={Check} className={styles.check} />}
-          </button>
-        ))}
-      </div>
-    </>
+    <FloatingPanel
+      open={open}
+      anchorRef={anchorRef}
+      panelRef={menuRef}
+      closeLabel="Close menu"
+      place={place}
+      onClose={close}
+      role="listbox"
+      aria-label={label}
+      data-dropdown=""
+      className={styles.menu}
+      onKeyDown={onKeyDown}
+    >
+      {options.map((option) => (
+        <button
+          key={option.value}
+          type="button"
+          role="option"
+          aria-selected={option.value === value}
+          tabIndex={-1}
+          className={clsx('ring-inside', styles.option)}
+          onClick={() => choose(option.value)}
+        >
+          {option.icon !== undefined && <span className={styles.optionIcon}>{option.icon}</span>}
+          <span className={styles.optionLabel}>{option.label}</span>
+          {option.value === value && <Icon icon={Check} className={styles.check} />}
+        </button>
+      ))}
+    </FloatingPanel>
   );
 }
 
-function useCloseOnScroll(
-  menuRef: RefObject<HTMLElement | null>,
-  openedAt: RefObject<number>,
-  onClose: () => void,
-) {
-  useEffect(() => {
-    const onScroll = (event: Event) => {
-      if (performance.now() - openedAt.current < SCROLL_GRACE_MS) return;
-      if (event.target instanceof Node && menuRef.current?.contains(event.target)) return;
-      onClose();
-    };
-    window.addEventListener('scroll', onScroll, true);
-    return () => window.removeEventListener('scroll', onScroll, true);
-  }, [menuRef, openedAt, onClose]);
-}
-
-function position(menu: HTMLElement, anchor: HTMLElement, itemCount: number) {
+function position(menu: HTMLElement, anchor: DOMRect, itemCount: number) {
   const place = placeMenu({
-    triggerRect: anchor.getBoundingClientRect(),
+    triggerRect: anchor,
     viewport: { width: window.innerWidth, height: window.innerHeight },
     itemCount,
     isPhone: isPhoneNow(),
   });
-  menu.style.top = `${place.top}px`;
-  menu.style.left = `${place.left}px`;
   menu.style.width = `${place.width}px`;
   menu.style.maxHeight = `${place.maxHeight}px`;
-  menu.style.transformOrigin = `${place.originX}px ${place.up ? '100%' : '0'}`;
-  menu.dataset.up = String(place.up);
+  return place;
 }
 
 function optionButtons(menu: HTMLElement): HTMLElement[] {

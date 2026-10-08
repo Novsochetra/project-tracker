@@ -4,20 +4,23 @@ export interface AnchorRect {
   bottom: number;
 }
 
-export interface PlacePopoverInput {
+export interface PlaceFloatingInput {
   anchor: AnchorRect;
   size: { width: number; height: number };
   viewport: { width: number; height: number };
+  // A panel that scrolls (a long dropdown) shrinks to the room it has, down to this height.
+  minHeight?: number;
 }
 
-export interface PopoverPlacement {
+export interface FloatingPlacement {
   top: number;
   left: number;
+  height: number;
   up: boolean;
   originX: number;
 }
 
-// The same placement as the Status dropdown (SPEC §5.5), with the popover's measured size.
+// The dropdown placement of SPEC §5.5, shared by the dropdowns and the calendar.
 const EDGE = 8;
 const GAP = 4;
 const INSET = 6;
@@ -25,17 +28,25 @@ const INSET = 6;
 const clamp = (value: number, min: number, max: number): number =>
   Math.max(min, Math.min(value, max));
 
-export function placePopover({ anchor, size, viewport }: PlacePopoverInput): PopoverPlacement {
+export function placeFloating({
+  anchor,
+  size,
+  viewport,
+  minHeight = size.height,
+}: PlaceFloatingInput): FloatingPlacement {
   const left = clamp(anchor.right - INSET - size.width, EDGE, viewport.width - EDGE - size.width);
   const spaceBelow = viewport.height - EDGE - (anchor.bottom + GAP);
   const spaceAbove = anchor.top - GAP - EDGE;
+  // It opens above only when it doesn't fit below; when neither side fits, the roomier side wins.
   const up = size.height > spaceBelow && (size.height <= spaceAbove || spaceAbove > spaceBelow);
-  const wanted = up ? anchor.top - GAP - size.height : anchor.bottom + GAP;
-  // When neither side has room it covers part of the row rather than leave the screen.
-  const top = clamp(wanted, EDGE, viewport.height - EDGE - size.height);
+  const height = Math.max(minHeight, Math.min(size.height, up ? spaceAbove : spaceBelow));
+  const wanted = up ? anchor.top - GAP - height : anchor.bottom + GAP;
+  // A panel that can't shrink enough covers part of its row rather than leave the screen.
+  const top = clamp(wanted, EDGE, viewport.height - EDGE - height);
   return {
     top: Math.round(top),
     left: Math.round(left),
+    height: Math.round(height),
     up,
     originX: Math.round(clamp(anchor.right - INSET - left, 0, size.width)),
   };

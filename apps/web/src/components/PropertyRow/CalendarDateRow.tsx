@@ -28,8 +28,7 @@ export function CalendarDateRow({
         label={label}
         overdue={overdue}
         mutedIcon={mutedIcon}
-        labelId={`${id}-label`}
-        valueId={`${id}-value`}
+        nameOf={{ labelId: `${id}-label`, valueId: `${id}-value` }}
       />
       <button
         ref={triggerRef}

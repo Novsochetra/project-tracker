@@ -1,0 +1,93 @@
+.layer {
+  position: fixed;
+  inset: 0;
+  z-index: calc(var(--z-dropdown) - 1);
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: default;
+}
+
+.layer:focus-visible {
+  outline: none;
+}
+
+/* Placed without the motion's transform, so it covers every spot of the panel while it leaves. */
+.frame {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: var(--z-dropdown);
+}
+
+/* Menu motion (SPEC §10): in from scale .96 at the corner nearest the row, out the same way. */
+.panel {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-container);
+  background: var(--surface);
+  box-shadow: var(--shadow-floating);
+  color: var(--ink);
+  transform-origin: top right;
+  animation: floating-in var(--duration-fast) var(--ease-out) backwards;
+}
+
+.panel[data-up='true'] {
+  animation: floating-up-in var(--duration-fast) var(--ease-out) backwards;
+}
+
+.panel[data-leaving] {
+  animation: floating-out var(--duration-fast) var(--ease-in) forwards;
+}
+
+.panel[data-up='true'][data-leaving] {
+  animation: floating-up-out var(--duration-fast) var(--ease-in) forwards;
+}
+
+.panel:focus-visible {
+  outline: none;
+}
+
+@keyframes floating-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes floating-up-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes floating-out {
+  from {
+    opacity: 1;
+    transform: none;
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.96);
+  }
+}
+
+@keyframes floating-up-out {
+  from {
+    opacity: 1;
+    transform: none;
+  }
+  to {
+    opacity: 0;
+    transform: translateY(4px) scale(0.96);
+  }
+}

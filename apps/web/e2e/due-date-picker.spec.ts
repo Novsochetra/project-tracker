@@ -104,6 +104,41 @@ test.describe('due date on desktop', () => {
     await expect(toast(page, 'MOB-2 created')).toBeVisible();
     await expect(ticketRow(page, 'MOB-2')).toContainText(formatShortDay(tomorrow));
   });
+
+  test('a double-click on a day, a quick pick or an option stays on its popover', async ({
+    page,
+    api,
+  }, info) => {
+    test.skip(isPhone(info.project.name), 'Phones keep the native date picker');
+    await seedProject(api, 'Mobile app', 'MOB', [{ title: 'Existing ticket' }]);
+    await page.goto('/p/MOB');
+    await openNewTicketIn(page, 'To do');
+    const sheet = page.getByRole('dialog', { name: 'New ticket' });
+    await sheet.getByLabel('Ticket title').fill('Ship the calendar');
+    const row = dueRow(sheet);
+    const picker = calendar(page);
+    const discard = page.getByRole('dialog', { name: 'Discard changes?' });
+    const day = new Date(new Date().getFullYear(), new Date().getMonth(), 22);
+
+    await row.click();
+    await picker.getByRole('button', { name: fullDate(day), exact: true }).dblclick();
+    await expect(row).toHaveAccessibleName(`Due date ${formatLongDay(toYmd(day))}`);
+    await expect(picker).toBeHidden();
+    await expect(discard).toHaveCount(0);
+    await expect(row).toBeFocused();
+
+    await row.click();
+    await picker.getByRole('button', { name: /^Tomorrow/ }).dblclick();
+    await expect(row).toHaveAccessibleName(`Due date ${formatLongDay(toYmd(daysFromToday(1)))}`);
+
+    const priority = sheet.getByRole('button', { name: /^Priority/ });
+    await priority.click();
+    await page.getByRole('option', { name: 'High' }).dblclick();
+    await expect(priority).toHaveAccessibleName('Priority High');
+    await expect(priority).toBeFocused();
+    await expect(discard).toHaveCount(0);
+    await expect(sheet).toBeVisible();
+  });
 });
 
 test.describe('due date on phones', () => {

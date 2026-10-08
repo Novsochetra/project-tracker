@@ -97,7 +97,7 @@ describe('placeMenu', () => {
       isPhone: false,
     });
     expect(place.left).toBe(8);
-    expect(place.originX).toBe(92);
+    expect(place.originX).toBe(100 - 6 - 8);
   });
 
   it('clamps to 8px from the right edge', () => {

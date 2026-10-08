@@ -1,49 +1,5 @@
-.catch {
-  position: fixed;
-  inset: 0;
-  z-index: calc(var(--z-dropdown) - 1);
-  margin: 0;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  cursor: default;
-}
-
-.catch:focus-visible {
-  outline: none;
-}
-
-/* Menu motion (SPEC §10): in from scale .96 at the corner nearest the row, out the same way. */
 .popover {
-  position: fixed;
-  top: 0;
-  left: 0;
-  z-index: var(--z-dropdown);
   display: flex;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-container);
-  background: var(--surface);
-  box-shadow: var(--shadow-floating);
-  color: var(--ink);
-  transform-origin: top right;
-  animation: picker-in var(--duration-fast) var(--ease-out) backwards;
-}
-
-.popover[data-up='true'] {
-  animation: picker-up-in var(--duration-fast) var(--ease-out) backwards;
-}
-
-.popover[data-leaving] {
-  pointer-events: none;
-  animation: picker-out var(--duration-fast) var(--ease-in) forwards;
-}
-
-.popover[data-up='true'][data-leaving] {
-  animation: picker-up-out var(--duration-fast) var(--ease-in) forwards;
-}
-
-.popover:focus-visible {
-  outline: none;
 }
 
 .calendar {
@@ -94,6 +50,7 @@
 }
 
 .day {
+  position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -126,15 +83,25 @@
   color: var(--placeholder);
 }
 
+/* A dot rather than a ring, so today never looks like the keyboard focus ring. */
 .today {
-  box-shadow: inset 0 0 0 1px var(--accent);
   color: var(--accent);
   font-weight: var(--weight-semibold);
 }
 
+.today::after {
+  content: '';
+  position: absolute;
+  bottom: 3px;
+  left: calc(50% - 2px);
+  width: 4px;
+  height: 4px;
+  border-radius: var(--radius-full);
+  background: currentColor;
+}
+
 .chosen {
   background: var(--accent);
-  box-shadow: none;
   color: var(--text-inverse);
   font-weight: var(--weight-semibold);
 }
@@ -172,48 +139,4 @@
   height: 1px;
   margin: 4px 6px;
   background: var(--line);
-}
-
-@keyframes picker-in {
-  from {
-    opacity: 0;
-    transform: translateY(-4px) scale(0.96);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-
-@keyframes picker-up-in {
-  from {
-    opacity: 0;
-    transform: translateY(4px) scale(0.96);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-
-@keyframes picker-out {
-  from {
-    opacity: 1;
-    transform: none;
-  }
-  to {
-    opacity: 0;
-    transform: translateY(-4px) scale(0.96);
-  }
-}
-
-@keyframes picker-up-out {
-  from {
-    opacity: 1;
-    transform: none;
-  }
-  to {
-    opacity: 0;
-    transform: translateY(4px) scale(0.96);
-  }
 }
