@@ -7,8 +7,8 @@ interface Made {
   ticket: Ticket;
 }
 
-// The tracker as quick capture sees it. Like the server, a create that repeats a client id in a
-// project gets the ticket the first one made (apps/server/test/integration/clientIds.test.ts).
+// Like the server, a create that repeats a client id in a project gets the ticket the first one
+// made (apps/server/test/integration/clientIds.test.ts).
 export function fakeTracker() {
   const made: Made[] = [];
   const earlier = (projectKey: string, clientId: string | undefined) =>

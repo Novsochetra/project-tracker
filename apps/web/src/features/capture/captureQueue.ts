@@ -28,7 +28,6 @@ export function addCapture(queue: CaptureQueue, capture: QueuedCapture): Capture
   return isKnown(queue, capture.id) ? queue : { ...queue, items: [...queue.items, capture] };
 }
 
-// Captures still to send, oldest first.
 export function waitingCaptures(queue: CaptureQueue): QueuedCapture[] {
   return queue.items
     .filter((item) => !queue.created.includes(item.id))
@@ -81,7 +80,6 @@ function toCapture(value: unknown): QueuedCapture[] {
   ];
 }
 
-// Reads what storage holds, keeping every capture that is still readable.
 export function parseQueue(text: string | null): CaptureQueue {
   if (!text) return EMPTY_QUEUE;
   let value: unknown;

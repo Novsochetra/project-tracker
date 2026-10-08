@@ -31,7 +31,6 @@ function announce(report: SyncReport, show: ToastApi['show']): void {
   else if (report.added.length > 0) show(addedToast(report.added.length));
 }
 
-// Sends the captures waiting on this device; calls while one runs join it.
 function useSyncCaptures(): () => Promise<void> {
   const client = useApi();
   const queryClient = useQueryClient();
@@ -63,7 +62,6 @@ function onReturn(sync: () => void): () => void {
   };
 }
 
-// Syncs on start, when the tracker can be reached again, and when the device or app returns.
 export function useCaptureSync(reachability: Reachability): void {
   const runSync = useSyncCaptures();
   useEffect(() => {

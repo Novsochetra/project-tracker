@@ -12,7 +12,6 @@ const NON_TEXT_INPUTS = new Set([
   'submit',
 ]);
 
-// Fields where a typed letter is text: inputs, textareas, selects and editable content.
 export function isTypingTarget(element: Element | null): boolean {
   if (!(element instanceof HTMLElement)) return false;
   if (element.isContentEditable) return true;
@@ -25,7 +24,6 @@ export type ShortcutKey = Pick<
   'key' | 'ctrlKey' | 'metaKey' | 'altKey' | 'repeat' | 'isComposing' | 'defaultPrevented'
 >;
 
-// C, with no modifier, while no text field has focus.
 export function isCaptureShortcut(event: ShortcutKey, focused: Element | null): boolean {
   if (event.defaultPrevented || event.repeat || event.isComposing) return false;
   if (event.ctrlKey || event.metaKey || event.altKey) return false;

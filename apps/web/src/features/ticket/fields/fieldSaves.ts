@@ -1,18 +1,14 @@
-// The saves of one field that went out, numbered from 1 in the order they were sent. On a slow
-// connection several can be on their way, and the tracker ends with the latest one's text.
+// On a slow connection several saves of one field can be on their way, and the tracker ends with
+// the latest one's text.
 export interface SentSaves {
   latest: number;
-  // The text of each save still on its way.
   onTheirWay: ReadonlyMap<number, string>;
-  // The newest save that landed.
   landed: number;
 }
 
 export const NO_SAVES: SentSaves = { latest: 0, onTheirWay: new Map(), landed: 0 };
 
-// skip: the latest save sent carries this text and is still on its way, so its outcome settles
-// the field. unchanged: nothing is on its way and the tracker already shows this text. send:
-// anything else, and always for a retry that checked the tracker first.
+// Text the latest save is still carrying isn't sent again: that save's outcome settles the field.
 export type SaveStep = 'skip' | 'unchanged' | 'send';
 
 export interface SaveRequest {

@@ -13,14 +13,12 @@ import type { QueueAccess } from './queueStore';
 export interface SyncDeps {
   queue: QueueAccess;
   send: (capture: QueuedCapture) => Promise<Ticket>;
-  // Takes the capture's lock for sending it; null while a request in any tab holds it.
   claim: (id: string) => Promise<Release | null>;
 }
 
 export interface SyncReport {
   added: QueuedCapture[];
   dropped: QueuedCapture[];
-  // A failure ended the run, so captures are still waiting.
   stopped: boolean;
 }
 
@@ -66,7 +64,6 @@ async function syncClaimed(id: string, deps: SyncDeps, report: SyncReport): Prom
   }
 }
 
-// Sends waiting captures oldest first, one at a time, and stops at the first failure.
 export async function syncCaptures(deps: SyncDeps): Promise<SyncReport> {
   const report: SyncReport = { added: [], dropped: [], stopped: false };
   // Every capture is tried at most once per run, even if its result could not be saved.

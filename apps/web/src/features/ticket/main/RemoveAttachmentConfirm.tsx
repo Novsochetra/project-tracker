@@ -4,7 +4,6 @@ import { useIsPhone } from '../../../lib/media';
 import { ActionSheet } from '../../../overlays';
 import type { AttachmentRemoval } from './useAttachmentRemoval';
 
-// Phones confirm in an action sheet; desktop in a card under the attachments, like Delete ticket.
 export function RemoveAttachmentConfirm({ removal }: { removal: AttachmentRemoval }) {
   const isPhone = useIsPhone();
   const message = `Remove ${removal.target?.label ?? ''}? This can't be undone.`;

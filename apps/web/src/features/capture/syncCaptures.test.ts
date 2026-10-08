@@ -53,7 +53,6 @@ function memoryQueue(items: QueuedCapture[], created: string[] = []) {
 
 const NETWORK_DOWN = new TypeError('Failed to fetch');
 
-// Claims as the lock manager would: refused while a request elsewhere holds the capture.
 const claimsExcept = (held: ReadonlySet<string> = new Set()) =>
   vi.fn((id: string) => Promise.resolve(held.has(id) ? null : () => undefined));
 

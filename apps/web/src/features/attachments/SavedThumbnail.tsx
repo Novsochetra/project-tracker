@@ -8,7 +8,6 @@ import { capitalized, isWide } from './thumbnailLabels';
 
 export interface SavedThumbnailProps {
   attachment: Attachment;
-  /** "image 1", "video 1" or the file name (thumbnailLabels). */
   label: string;
   marked: boolean;
   onOpen?: (() => void) | undefined;

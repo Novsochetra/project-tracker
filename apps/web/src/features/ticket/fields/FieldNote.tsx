@@ -3,7 +3,6 @@ import type { FieldDraftState } from './useFieldDraft';
 
 export interface FieldNoteProps {
   draft: FieldDraftState;
-  // What isn't saved, as it starts a sentence: "Title".
   subject: string;
   id: string;
 }

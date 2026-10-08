@@ -4,7 +4,6 @@ export const RISE_STEP_MS = 16;
 export const RISE_MAX_STEPS = 10;
 
 export interface RisePlan {
-  /** Each item's rise-in delay, fixed when it first appears; null means it appears as is. */
   delays: ReadonlyMap<string, number | null>;
   drafts: ReadonlySet<string>;
 }
@@ -19,7 +18,7 @@ export const firstRise = (items: readonly ActivityItem[]): RisePlan => ({
   drafts: draftIds(items),
 });
 
-/** Items that show up later rise in at once, except a saved comment taking its draft's place. */
+// A saved comment replaces its draft, which already rose in, so it appears as is.
 export function nextRise(plan: RisePlan, items: readonly ActivityItem[]): RisePlan {
   const ids = new Set(items.map((item) => item.id));
   const fresh = items.some((item) => !plan.delays.has(item.id));

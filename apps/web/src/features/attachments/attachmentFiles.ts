@@ -14,7 +14,6 @@ export interface AdmittedFile {
 
 export interface Admission {
   admitted: AdmittedFile[];
-  /** Why the first refused file can't be attached. */
   refusal: string | null;
 }
 

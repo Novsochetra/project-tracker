@@ -20,7 +20,6 @@ export interface DraftSyncDeps {
 type Entry = [id: string, draft: StoredDraft];
 
 export interface DraftSyncReport {
-  // Drafts someone else's change got in the way of; they wait for the user on the ticket.
   changed: Entry[];
 }
 
@@ -51,7 +50,6 @@ const isSentForUser = (draft: StoredDraft): boolean =>
 const endsRun = (error: unknown): boolean =>
   !(error instanceof ApiError) || error.status === 401 || error.status >= 500;
 
-// False when the tracker can't be reached, which ends the run.
 async function save([id, draft]: Entry, run: Run): Promise<boolean> {
   try {
     await run.deps.save(draft);

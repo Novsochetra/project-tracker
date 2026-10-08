@@ -2,7 +2,6 @@ import type { UpdateTicketInput } from '@tracker/shared';
 import { errorMessage, useUpdateTicket } from '../../api';
 import { useToast } from '../../components';
 
-/** Saves ticket fields and resolves to whether they were saved; failures are explained in a toast. */
 export function useTicketUpdate(ticketKey: string): (input: UpdateTicketInput) => Promise<boolean> {
   const update = useUpdateTicket();
   const { show } = useToast();

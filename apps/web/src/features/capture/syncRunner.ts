@@ -25,5 +25,4 @@ export function runCaptureSync(run: () => Promise<SyncReport>): Promise<SyncRepo
 // Held while the sheet's request is out, so no sync in any tab sends the capture meanwhile.
 export const trackSending = (id: string): Release => captureLocks.hold(id);
 
-// A sync takes a capture's lock before sending it; null while a request in any tab holds it.
 export const claimCapture = (id: string): Promise<Release | null> => captureLocks.claim(id);

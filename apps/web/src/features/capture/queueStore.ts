@@ -5,7 +5,8 @@ export const QUEUE_STORAGE_KEY = 'tracker.capture.queue';
 
 export interface QueueAccess {
   read: () => CaptureQueue;
-  /** Applies `change` to what storage holds now; false when it could not be saved. */
+  // A change rather than a new queue: it applies to what storage holds now, so other tabs' changes
+  // since the last read are kept.
   update: (change: (queue: CaptureQueue) => CaptureQueue) => boolean;
 }
 
@@ -41,7 +42,7 @@ export function updateQueue(change: (queue: CaptureQueue) => CaptureQueue): bool
 
 export const queueStore: QueueAccess = { read: readQueue, update: updateQueue };
 
-/** Hears this tab's changes and, through the storage event, other tabs' changes. */
+// The storage event only reports other tabs' changes; this tab's own come through the listeners.
 export function subscribeQueue(listener: () => void): () => void {
   const onStorage = (event: StorageEvent) => {
     if (event.key === QUEUE_STORAGE_KEY || event.key === null) listener();

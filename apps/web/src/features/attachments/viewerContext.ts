@@ -4,7 +4,6 @@ import type { ViewerImage } from '../../overlays';
 import { capitalized, thumbnailLabels } from './thumbnailLabels';
 
 export interface AttachmentViewerApi {
-  /** Opens the attachment at index the way its kind opens (viewerTarget). */
   open: (attachments: readonly Attachment[], index: number) => void;
 }
 

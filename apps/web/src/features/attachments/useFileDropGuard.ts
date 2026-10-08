@@ -9,7 +9,6 @@ function refuseStrayFileDrop(event: DragEvent) {
   if (event.dataTransfer) event.dataTransfer.dropEffect = 'none';
 }
 
-/** Keeps files dropped outside the drop zones from opening in the browser. Use once, at the root. */
 export function useFileDropGuard(): void {
   useEffect(() => {
     window.addEventListener('dragover', refuseStrayFileDrop);

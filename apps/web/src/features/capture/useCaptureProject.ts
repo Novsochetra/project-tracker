@@ -11,9 +11,7 @@ import {
 export interface CaptureProject {
   choices: ProjectChoice[];
   current: ProjectChoice | undefined;
-  /** The project picked in the sheet; null while the default applies. */
   chosenKey: string | null;
-  /** The project list has loaded, so an empty one really means there are no projects. */
   loaded: boolean;
   choose: (projectKey: string) => void;
 }

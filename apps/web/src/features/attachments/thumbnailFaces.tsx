@@ -24,7 +24,7 @@ export function ImageFace({ src, alt = '' }: { src: string; alt?: string }) {
 
 export interface VideoFaceProps {
   src: string;
-  /** Off while the file uploads: the progress takes the middle then. */
+  // Off while the file uploads: the progress takes the middle then.
   playBadge?: boolean;
 }
 
@@ -63,7 +63,6 @@ export interface FileFaceProps {
   kind: AttachmentKind | null;
   name: string;
   size: number;
-  /** Stands in for the icon, such as the progress of an upload. */
   lead?: ReactNode;
 }
 

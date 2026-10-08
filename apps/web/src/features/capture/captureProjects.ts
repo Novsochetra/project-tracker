@@ -41,11 +41,10 @@ export function rememberProject(project: ProjectChoice): void {
   }
 }
 
-/** Capture needs a project: one in the list or, offline without a list, the last one used. */
+// Offline there is no project list, but the last project used can still take a capture.
 export const canCapture = (projects: readonly ProjectSummary[] | undefined): boolean =>
   projects ? projects.length > 0 : readLastProject() !== null;
 
-/** The projects to pick from; offline without a project list, at least the last one used. */
 export function projectChoices(
   projects: readonly ProjectSummary[] | undefined,
   remembered: ProjectChoice | null,
@@ -60,7 +59,6 @@ const mostRecentlyActive = (projects: readonly ProjectSummary[]): ProjectSummary
     undefined,
   );
 
-/** The last project used while it still exists, otherwise the most recently active one. */
 export function defaultProjectKey(
   projects: readonly ProjectSummary[] | undefined,
   remembered: ProjectChoice | null,

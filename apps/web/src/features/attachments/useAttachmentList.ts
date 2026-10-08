@@ -5,14 +5,11 @@ import { useAttachmentUploads, type AttachmentUploads } from './useAttachmentUpl
 
 export interface AttachmentList extends AttachmentUploads {
   remove: (attachmentId: string) => void;
-  /** Stops the uploads and deletes the uploaded files of a form that is thrown away. */
   discard: (attachments: readonly Attachment[]) => void;
 }
 
-/**
- * Files for something not created yet (a ticket, a comment): they upload right away and wait on
- * the server until it is created with them. The caller keeps the uploaded ones.
- */
+// Files upload before their ticket or comment exists and wait on the server until it is created
+// with them.
 export function useAttachmentList(setAttachments: Dispatch<SetStateAction<Attachment[]>>) {
   const uploads = useAttachmentUploads({
     onUploaded: (attachment) => setAttachments((current) => [...current, attachment]),

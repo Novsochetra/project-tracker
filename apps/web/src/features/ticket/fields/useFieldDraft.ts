@@ -25,7 +25,6 @@ import { useFieldSave, type FieldSave, type FieldSaver, type FieldTarget } from 
 export interface FieldDraftState {
   value: string;
   edited: boolean;
-  // Not saved yet: the field keeps the text and tries again when the tracker can be reached.
   failed: boolean;
   // Someone else changed the field meanwhile; only saveMine or discardMine settles it.
   conflict: boolean;
@@ -33,8 +32,6 @@ export interface FieldDraftState {
   focus: () => void;
   blur: () => void;
   save: (value: string) => void;
-  // Saves the kept text if the tracker still has the value it was typed over, and says so when
-  // the tracker can't be reached.
   retry: () => void;
   saveMine: () => void;
   discardMine: () => void;
@@ -83,8 +80,8 @@ function useFieldRetry({ id, ticketKey, draft, setDraft, saver }: RetryInput) {
   };
 }
 
-// Local text for a field the server also changes. Typed text is kept in the drafts store until
-// the server has it, so leaving the ticket or reloading doesn't lose it.
+// Typed text is kept in the drafts store until the server has it, so leaving the ticket or
+// reloading doesn't lose it.
 export function useFieldDraft(
   server: string,
   target: FieldTarget,

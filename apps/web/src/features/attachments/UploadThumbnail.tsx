@@ -17,7 +17,6 @@ function LocalPreview({ file }: { file: UploadingFile }) {
   return <ImageFace src={file.preview} />;
 }
 
-/** A file on its way to the tracker, shown from the file itself while it goes. */
 export function UploadThumbnail({ file, onCancel }: UploadThumbnailProps) {
   const wide = isWide(file.kind);
   const progress = (

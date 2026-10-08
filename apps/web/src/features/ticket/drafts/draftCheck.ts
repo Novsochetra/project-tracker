@@ -1,9 +1,6 @@
 import type { TicketDetail } from '@tracker/shared';
 import type { StoredDraft } from '../../../lib/storedDrafts';
 
-// saved: the tracker already has the text. unchanged: it still has the value the text was
-// typed over, so saving is safe. changed: someone else changed it meanwhile. gone: the comment
-// or ticket no longer exists.
 export type DraftCheck = 'saved' | 'unchanged' | 'changed' | 'gone';
 
 export function serverText(detail: TicketDetail, draft: StoredDraft): string | undefined {

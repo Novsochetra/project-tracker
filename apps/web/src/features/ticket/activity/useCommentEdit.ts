@@ -14,9 +14,7 @@ import { useEditSending } from './useEditSending';
 
 export interface CommentEdit {
   open: boolean;
-  // The editor was open and has closed, so focus can move on to the options button.
   closed: boolean;
-  // Opened again from a kept draft, not by the user just now, so it doesn't take focus.
   restored: boolean;
   text: string;
   saving: boolean;

@@ -4,8 +4,7 @@ const WIDE =
 
 const widthOf = (character: string): number => (WIDE.test(character) ? 2 : 1);
 
-// Shortens text to about `maxWidth` Latin letters, ending in "…". It steps by code point, so an
-// emoji or another character outside the BMP is never cut in half.
+// Steps by code point, so an emoji or another character outside the BMP is never cut in half.
 export function clipTitle(text: string, maxWidth: number): string {
   const characters = Array.from(text);
   const width = characters.reduce((sum, character) => sum + widthOf(character), 0);

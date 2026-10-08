@@ -18,7 +18,6 @@ export interface UnshownItemProps {
 // The text as stored, through nothing that parses it, so it can't fail the way the card did.
 const plainText = (item: ActivityItem): string => (typeof item.text === 'string' ? item.text : '');
 
-/** Stands in for an activity card that failed to render, keeping its menu. */
 export function UnshownItem({ item, actions }: UnshownItemProps) {
   const remove = () => actions.remove(item.id);
   switch (item.kind) {
@@ -87,7 +86,6 @@ interface UnshownCardProps {
   tone?: 'plain' | 'report';
   menu?: ReactNode;
   dimmed?: boolean;
-  /** Takes the place of the text while the item is being edited. */
   editor?: ReactNode;
 }
 

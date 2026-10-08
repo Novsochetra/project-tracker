@@ -12,7 +12,6 @@ import { useDraftSave, type DraftSave } from '../drafts/useDraftSave';
 import { beginSave, endSave, type FieldDraft } from './fieldDraft';
 import { NO_SAVES, saveStep, sendSave, settleSave, type SaveOutcome } from './fieldSaves';
 
-// Sends a value to the server and says whether it was saved.
 export type FieldSave = (value: string) => Promise<boolean>;
 
 export interface FieldTarget {
@@ -27,12 +26,10 @@ export interface SaveOptions {
   quiet?: boolean;
 }
 
-// Resolves once the save has settled, or at once when nothing had to be sent.
 export type SaveField = (value: string, options?: SaveOptions) => Promise<void>;
 
 export interface FieldSaver {
   save: SaveField;
-  // A save of the field is on its way, known as soon as it is sent.
   sending: () => boolean;
 }
 

@@ -4,7 +4,6 @@ import { draftIdOf, forgetDraft } from '../../../lib/storedDrafts';
 
 export interface ActivityActions {
   ticketKey: string;
-  // Resolves to whether the edit was saved; a failure is explained in a toast.
   editComment: (activityId: string, text: string) => Promise<boolean>;
   remove: (activityId: string) => void;
 }

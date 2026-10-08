@@ -7,7 +7,6 @@ import {
   withoutCaptureParam,
 } from './captureTriggers';
 
-// C opens quick capture from anywhere, unless a text field, sheet or menu has the keyboard.
 export function useCaptureShortcut(openCapture: () => void, enabled: boolean): void {
   useEffect(() => {
     if (!enabled) return;
@@ -23,7 +22,7 @@ export function useCaptureShortcut(openCapture: () => void, enabled: boolean): v
   }, [openCapture, enabled]);
 }
 
-// `?capture` (the app shortcut's link) opens quick capture once, then leaves the address clean.
+// `?capture` is the link of the app shortcut in the web manifest.
 export function useCaptureLink(openCapture: () => void): void {
   const { key, pathname, search, hash } = useLocation();
   const navigate = useNavigate();

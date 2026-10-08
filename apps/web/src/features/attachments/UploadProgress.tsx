@@ -3,13 +3,11 @@ import styles from './thumbnailFaces.module.css';
 
 const RADIUS = 9;
 const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
-// The arc a waiting ring shows while it spins, before any bytes have gone.
 const WAITING_ARC = 0.25;
 
 export interface UploadProgressProps {
   progress: number;
   label: string;
-  /** Over a photo or a video frame, which it dims. */
   overMedia: boolean;
 }
 

@@ -9,11 +9,9 @@ export interface AutosaveTextareaProps extends Omit<
   AutoTextareaProps,
   'value' | 'onChange' | 'onFocus' | 'onBlur' | 'variant' | 'aria-label'
 > {
-  // Names the field, and what isn't saved when a save fails.
   label: string;
-  // Where unsaved text is kept (drafts store), such as the title of MOB-3.
   target: FieldTarget;
-  // The saved value; edits are kept locally and saved while typing and on blur.
+  // The saved value; edits stay local until they are saved.
   value: string;
   onSave: FieldSave;
 }

@@ -5,7 +5,6 @@ import { BottomBar } from '../../navigation';
 import styles from './CaptureEntry.module.css';
 import { useWaitingCount } from './queueStore';
 
-/** Desktop: opens quick capture and shows its C shortcut. */
 export function CaptureButton({ onClick }: { onClick: () => void }) {
   return (
     <Button icon={Plus} aria-keyshortcuts="C" onClick={onClick}>
@@ -17,7 +16,6 @@ export function CaptureButton({ onClick }: { onClick: () => void }) {
   );
 }
 
-/** Phones: quick capture within thumb reach, above the home indicator. */
 export function CaptureBar({ onClick }: { onClick: () => void }) {
   return (
     <BottomBar>
@@ -28,7 +26,6 @@ export function CaptureBar({ onClick }: { onClick: () => void }) {
   );
 }
 
-/** How many captures wait on this device for a connection. */
 export function WaitingToSync() {
   const count = useWaitingCount();
   if (count === 0) return null;

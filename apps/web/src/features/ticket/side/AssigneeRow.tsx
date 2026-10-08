@@ -5,7 +5,6 @@ import type { FieldDraftState } from '../fields/useFieldDraft';
 
 export interface AssigneeRowProps {
   draft: FieldDraftState;
-  // The id of the message saying the assignee isn't saved, while there is one.
   describedBy?: string | undefined;
 }
 

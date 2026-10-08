@@ -19,7 +19,6 @@ function useFocusWhenOpen(ref: RefObject<HTMLTextAreaElement | null>, open: bool
   }, [ref, open]);
 }
 
-// Quick capture: a title is enough; the project defaults to the last one used.
 export function CaptureSheet({ open, onClose }: SheetProps) {
   const titleRef = useRef<HTMLTextAreaElement>(null);
   const [kept] = useState(keptCapture);

@@ -50,7 +50,7 @@ export function endSave(draft: FieldDraft, value: string, saved: boolean): Field
   return draft.value === value ? { ...settled, failed: !saved } : settled;
 }
 
-// What the tracker said about `value` before a retry, which counts only while it still shows.
+// A check counts only while the field still shows the text it was made for.
 export function checkedDraft(
   draft: FieldDraft,
   value: string,

@@ -58,8 +58,8 @@ function readLines(text: string): Line[] {
   );
 }
 
-// Lines after a label belong to it. Anything before the first label, or a label given twice,
-// means the text isn't a plain report, so it keeps its raw look.
+// Text before the first label, or a label given twice, means it isn't a plain report, so it keeps
+// its raw look.
 function readFields(text: string): Map<Field, string> | null {
   const fields = new Map<Field, string>();
   let current: Field | null = null;
@@ -100,7 +100,6 @@ function splitOnCommas(line: string): string[] {
   return [...parts, line.slice(start)];
 }
 
-// A list written one file per line keeps each line whole; a list on one line is split on commas.
 function fileList(value: string): string[] {
   const lines = value.split('\n').filter((line) => line.trim());
   const items = lines.length > 1 ? lines : lines.flatMap(splitOnCommas);

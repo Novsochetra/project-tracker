@@ -55,7 +55,6 @@ function PreviewBody({ attachment }: { attachment: Attachment }) {
   );
 }
 
-/** A text file to read in the app: monospaced, wrapped, scrolling, swiped down to close. */
 export function TextPreviewSheet({ attachment, open, onClose }: TextPreviewSheetProps) {
   if (!attachment) return null;
   return (

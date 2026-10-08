@@ -5,14 +5,12 @@ import { useToast } from '../../../components';
 
 export interface AttachmentRemovalTarget {
   id: string;
-  /** "image 2", "video 1" or the file's name. */
   label: string;
-  /** What the phone's action sheet removes: "image", "video" or "file". */
   noun: string;
 }
 
 export interface AttachmentRemoval {
-  /** The attachment last asked about, kept while the phone sheet animates out. */
+  // Kept after the answer, so the phone sheet still has its text while it animates out.
   target: AttachmentRemovalTarget | null;
   asking: boolean;
   ask: (attachment: Attachment, label: string) => void;
@@ -25,7 +23,6 @@ function nounOf(attachment: Attachment): string {
   return kind === 'image' || kind === 'video' ? kind : 'file';
 }
 
-/** Removing a saved ticket attachment asks first, like every other delete. */
 export function useAttachmentRemoval(ticketKey: string): AttachmentRemoval {
   const [target, setTarget] = useState<AttachmentRemovalTarget | null>(null);
   const [asking, setAsking] = useState(false);

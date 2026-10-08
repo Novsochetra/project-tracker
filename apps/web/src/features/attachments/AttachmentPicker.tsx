@@ -12,7 +12,6 @@ export interface AttachmentPickerProps {
   attachments: readonly Attachment[];
   uploads: AttachmentUploads;
   onRemove: (id: string, index: number) => void;
-  /** The file input's name, such as "Add files to ticket". */
   inputLabel: string;
   size?: 'md' | 'sm';
   onOpen?: ((index: number) => void) | undefined;
@@ -20,7 +19,6 @@ export interface AttachmentPickerProps {
   className?: string | undefined;
 }
 
-/** "Add files" until there are some, then their thumbnails with a tile to add more. */
 export function AttachmentPicker({
   attachments,
   uploads,

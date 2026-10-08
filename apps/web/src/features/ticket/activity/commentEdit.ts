@@ -11,7 +11,6 @@ export interface EditState {
   checkFirst: boolean;
 }
 
-// The user's Save, or a retry the app starts on its own.
 export type SentBy = 'user' | 'app';
 
 const OPEN_PHASES: ReadonlySet<EditPhase> = new Set(['editing', 'saving', 'failed', 'changed']);
@@ -33,8 +32,6 @@ export const withPhase = (edit: EditState, phase: EditPhase): EditState => ({ ..
 export const afterTyping = (edit: EditState): EditState =>
   edit.phase === 'saving' || edit.phase === 'failed' ? withPhase(edit, 'editing') : edit;
 
-// ignore: a save is already on its way. close: the comment reads so already. replace: the user
-// saw that it changed elsewhere and saves over it. check: see checkFirst. send: the rest.
 export type SaveStep = 'ignore' | 'close' | 'replace' | 'check' | 'send';
 
 export function saveStep(edit: EditState, text: string, comment: string): SaveStep {
@@ -50,9 +47,6 @@ export function saveStep(edit: EditState, text: string, comment: string): SaveSt
 export const checkApplies = (edit: EditState, by: SentBy): boolean =>
   edit.phase === (by === 'app' ? 'failed' : 'saving');
 
-// send: the tracker still has what the edit was typed over. changed: someone else changed the
-// comment. drop: it has the text already, or the comment is gone. wait: no answer, or nothing
-// is kept anymore.
 export type CheckStep = 'send' | 'changed' | 'drop' | 'wait';
 
 export function checkStep(result: CheckResult): CheckStep {

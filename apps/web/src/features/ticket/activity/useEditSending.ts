@@ -24,21 +24,16 @@ import {
 export interface SendingInput {
   id: string;
   target: DraftTarget;
-  // The comment's text when the edit started.
   base: string;
   edit: EditState;
   text: string;
   setEdit: Dispatch<SetStateAction<EditState>>;
-  // The user's save, which explains a failure in a toast.
   editComment: (text: string) => Promise<boolean>;
 }
 
 export interface EditSending {
-  // Sends the text at once.
   send: (text: string) => void;
-  // Sends the text once the tracker says the comment still reads as the edit's base.
   sendChecked: (text: string) => void;
-  // The app's own retry of a failed edit, under the same check, without a toast.
   retry: () => void;
 }
 

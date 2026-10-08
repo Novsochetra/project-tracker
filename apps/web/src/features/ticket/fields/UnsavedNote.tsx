@@ -12,7 +12,6 @@ export interface NoteAction {
 
 export interface UnsavedNoteProps {
   message: string;
-  // Names the message, for the field's aria-describedby.
   id?: string | undefined;
   actions?: readonly NoteAction[];
   className?: string | undefined;

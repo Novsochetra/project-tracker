@@ -2,10 +2,7 @@ import { attachmentKind, type Attachment, type AttachmentKind } from '@tracker/s
 
 type Labelled = Pick<Attachment, 'fileName' | 'mimeType'>;
 
-/**
- * What each thumbnail is called in its buttons and confirms: images and videos by number within
- * their kind (the image viewer counts the same way), other files by the name the tile shows.
- */
+// Images and videos are numbered within their kind because the image viewer counts the same way.
 export function thumbnailLabels(attachments: readonly Labelled[]): string[] {
   const counts = { image: 0, video: 0 };
   return attachments.map(({ fileName, mimeType }) => {
@@ -16,7 +13,6 @@ export function thumbnailLabels(attachments: readonly Labelled[]): string[] {
   });
 }
 
-/** Text files and PDFs show their name and size, so their thumbnails are wide. */
 export const isWide = (kind: AttachmentKind | null): boolean =>
   kind !== 'image' && kind !== 'video';
 
@@ -25,7 +21,6 @@ export const capitalized = (label: string): string =>
 
 const pad = (value: number): string => String(value).padStart(2, '0');
 
-/** A video's length as m:ss or h:mm:ss, or null while it isn't known. */
 export function formatDuration(seconds: number): string | null {
   if (!Number.isFinite(seconds) || seconds < 0) return null;
   const total = Math.round(seconds);

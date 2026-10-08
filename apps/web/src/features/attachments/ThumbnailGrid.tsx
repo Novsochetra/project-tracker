@@ -13,12 +13,8 @@ import type { UploadingFile } from './useAttachmentUploads';
 export interface ThumbnailGridProps {
   attachments: readonly Attachment[];
   uploading?: readonly UploadingFile[] | undefined;
-  // Makes each thumbnail open its file: "Open image 1", "Play video 1", "Open notes.txt". PDFs
-  // are links that open in a new tab.
   onOpen?: ((index: number) => void) | undefined;
-  // Adds a small x named "Remove image 1" or "Remove notes.txt".
   onRemove?: ((id: string, index: number) => void) | undefined;
-  // Adds the x to files still uploading, which stops them.
   onCancel?: ((key: string) => void) | undefined;
   // The attachment a removal is being confirmed for, so it is clear which one goes.
   markedId?: string | null | undefined;

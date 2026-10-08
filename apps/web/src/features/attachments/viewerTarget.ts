@@ -9,7 +9,6 @@ export type ViewerTarget =
 const isImage = (attachment: Attachment): boolean =>
   attachmentKind(attachment.mimeType) === 'image';
 
-/** Where a tapped attachment opens: images page together, PDFs open in the browser. */
 export function viewerTarget(
   attachments: readonly Attachment[],
   index: number,

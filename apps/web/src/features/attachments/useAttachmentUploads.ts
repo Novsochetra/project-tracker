@@ -10,14 +10,11 @@ export interface UploadingFile {
   name: string;
   kind: AttachmentKind;
   size: number;
-  /** From 0 to 1; 0 until the first bytes go out, while a photo is still being prepared. */
   progress: number;
-  /** A local address that shows an image or video before the tracker has it. */
   preview: string | null;
 }
 
 export interface AttachmentUploadOptions {
-  /** Attaches the files to this ticket. Without it they stay pending until something uses them. */
   ticketKey?: string | undefined;
   onUploaded?: (attachment: Attachment) => void;
 }

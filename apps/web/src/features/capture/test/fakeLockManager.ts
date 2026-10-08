@@ -1,5 +1,4 @@
-// jsdom has no Web Locks. This one stands in for the browser's, shared by the "tabs" of a test:
-// exclusive locks, `ifAvailable`, and requests that wait their turn.
+// jsdom has no Web Locks, so this one stands in for the browser's, shared by the "tabs" of a test.
 export function fakeLockManager(): LockManager {
   const held = new Set<string>();
   const waiting = new Map<string, (() => void)[]>();
@@ -42,7 +41,6 @@ export function fakeLockManager(): LockManager {
   return { request, query };
 }
 
-// Lets code that reads `navigator.locks` find the fake; the returned function removes it again.
 export function installLockManager(locks: LockManager): () => void {
   Object.defineProperty(navigator, 'locks', { configurable: true, value: locks });
   return () => {

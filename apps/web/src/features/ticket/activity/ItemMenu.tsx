@@ -6,11 +6,10 @@ import { useIsPhone, usePrefersReducedMotion } from '../../../lib/media';
 import { ActionSheet, type ActionSheetAction } from '../../../overlays';
 
 export interface ItemMenuProps {
-  /** What the item is called in the labels: "comment", "report", "review". */
   noun: string;
   onEdit?: (() => void) | undefined;
   onDelete: () => void;
-  /** Hides the button (while editing) but lets an open sheet finish its exit. */
+  // An open sheet stays mounted while the button hides, so it can finish its exit.
   hidden?: boolean;
   triggerRef?: RefObject<HTMLButtonElement | null>;
 }

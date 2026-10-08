@@ -5,7 +5,6 @@ import { CAPTURE_DRAFT_ID, hasContent, type CaptureValues } from './captureForm'
 
 export interface KeptCapture {
   values: CaptureValues;
-  /** The project picked in the sheet; null while the default applies. */
   projectKey: string | null;
 }
 

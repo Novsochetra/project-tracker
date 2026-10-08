@@ -15,11 +15,8 @@ export type SubmitOutcome =
 
 export interface SubmitDeps {
   create: (draft: CaptureDraft) => Promise<Ticket>;
-  // Puts the capture in the queue on this device; false when storage refused it.
   save: (capture: QueuedCapture) => boolean;
-  // Marks the capture as being sent, in every tab, and returns the function that unmarks it.
   track: (id: string) => () => void;
-  // A request that outlived the timeout settled: its ticket, or null when it failed.
   onLateResult: (capture: QueuedCapture, ticket: Ticket | null) => void;
   timeoutMs: number;
 }
