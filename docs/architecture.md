@@ -75,6 +75,14 @@ On phones (`max-width: 767px`) the app behaves like a native iOS app:
 - Installable PWA (manifest, icons, offline app shell).
 - App updates never lose typed text. While the app stays open it looks for a new build when the page becomes visible and every 30 minutes (skipped while offline). A new service worker takes over at once, but the page reloads into the new build only when no text field is focused, no dialog is open, no draft is marked and no write is in flight, whether the page is visible or hidden. It checks again every second and on `visibilitychange` (`apps/web/src/pwa`). Writes in flight come from the QueryClient's mutation cache.
 - **Draft contract** (`apps/web/src/lib/drafts.ts`): a feature that holds unsent text a reload would lose, such as the comment composer after the keyboard is dismissed, calls `markDraft(id)` while the text differs from what is saved, and `clearDraft(id)` once it is sent, saved or emptied and when the component unmounts. Use one id per draft, such as `comment:MOB-3`. Marking an id again changes nothing, and one `clearDraft` removes it. A draft that is never cleared keeps the page on the old build until the next launch.
+- Failed saves keep the typed text: title, description, assignee and comment edits show "isn't saved yet" with Retry, stay marked as drafts and save again when the device is back online.
+
+### 1.7 Small deviations from the design
+
+- Going back from a ticket keeps the Project screen's filter and search, because screens stay mounted in the navigation stack. Opening a project from Projects (or the sidebar) still resets them to All and an empty search.
+- When the projects list is narrower than 640px (a desktop window around 768px wide), the Progress column hides so names stay readable.
+- Delete confirmations count tickets correctly ("its 1 ticket", "its 3 tickets").
+- A status move is announced once, by the toast; the hidden live region announces reorders ("MOB-3 moved"), and every announcement is read again even when the text repeats.
 
 ## 2. Data model
 
