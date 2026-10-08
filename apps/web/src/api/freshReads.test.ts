@@ -2,102 +2,106 @@ import { QueryClient } from '@tanstack/react-query';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   changesBefore,
+  FRESH_READ_MARK_MS,
   FRESH_READS_STORAGE_KEY,
-  keepFreshReadsOnReload,
   markChanged,
   markRead,
 } from './freshReads';
 
 beforeEach(() => {
-  window.sessionStorage.clear();
+  window.localStorage.clear();
 });
 
 afterEach(() => {
+  vi.useRealTimers();
   vi.restoreAllMocks();
 });
 
-const reload = () => window.dispatchEvent(new Event('pagehide'));
+// Each page of the app has a query client of its own; storage is shared with the other pages.
+const newPage = () => new QueryClient();
+
+const readFresh = (page: QueryClient, ticketKey: string) => {
+  const changes = changesBefore(page, ticketKey);
+  if (changes !== undefined) markRead(page, ticketKey, changes);
+};
 
 describe('fresh reads after a change', () => {
   it('reads a ticket as usual until it changes', () => {
-    expect(changesBefore(new QueryClient(), 'MOB-1')).toBeUndefined();
+    expect(changesBefore(newPage(), 'MOB-1')).toBeUndefined();
   });
 
   it('reads a changed ticket fresh until a fresh read lands', () => {
-    const queryClient = new QueryClient();
-    markChanged(queryClient, 'MOB-1');
-    const changes = changesBefore(queryClient, 'mob-1');
+    const page = newPage();
+    markChanged(page, 'MOB-1');
+    const changes = changesBefore(page, 'mob-1');
     expect(changes).toBe(1);
-    expect(changesBefore(queryClient, 'MOB-2')).toBeUndefined();
-    markRead(queryClient, 'MOB-1', changes ?? 0);
-    expect(changesBefore(queryClient, 'MOB-1')).toBeUndefined();
+    expect(changesBefore(page, 'MOB-2')).toBeUndefined();
+    markRead(page, 'MOB-1', changes ?? 0);
+    expect(changesBefore(page, 'MOB-1')).toBeUndefined();
   });
 
   it('keeps reading fresh when another change settled while the read was on its way', () => {
-    const queryClient = new QueryClient();
-    markChanged(queryClient, 'MOB-1');
-    const changes = changesBefore(queryClient, 'MOB-1') ?? 0;
-    markChanged(queryClient, 'MOB-1');
-    markRead(queryClient, 'MOB-1', changes);
-    expect(changesBefore(queryClient, 'MOB-1')).toBe(2);
-  });
-
-  it('keeps each query client to itself', () => {
-    const written = new QueryClient();
-    markChanged(written, 'MOB-1');
-    expect(changesBefore(new QueryClient(), 'MOB-1')).toBeUndefined();
+    const page = newPage();
+    markChanged(page, 'MOB-1');
+    const changes = changesBefore(page, 'MOB-1') ?? 0;
+    markChanged(page, 'MOB-1');
+    markRead(page, 'MOB-1', changes);
+    expect(changesBefore(page, 'MOB-1')).toBe(2);
   });
 });
 
-describe('fresh reads across a reload', () => {
-  it('leaves what the page had not read fresh yet to the next page', () => {
-    const page = new QueryClient();
-    const stop = keepFreshReadsOnReload(page);
+describe('fresh reads in pages opened later', () => {
+  it('read fresh what another page changed and nobody read fresh since', () => {
+    const page = newPage();
     markChanged(page, 'MOB-1');
     markChanged(page, 'MOB-2');
-    markRead(page, 'MOB-2', 1);
-    reload();
-    stop();
+    readFresh(page, 'MOB-2');
 
-    const next = new QueryClient();
-    expect(changesBefore(next, 'MOB-1')).toBe(1);
-    expect(changesBefore(next, 'MOB-2')).toBeUndefined();
-    expect(changesBefore(new QueryClient(), 'MOB-1')).toBeUndefined();
-    expect(window.sessionStorage.getItem(FRESH_READS_STORAGE_KEY)).toBeNull();
+    const later = newPage();
+    expect(changesBefore(later, 'MOB-1')).toBe(0);
+    expect(changesBefore(later, 'MOB-2')).toBeUndefined();
+    expect(changesBefore(page, 'MOB-1')).toBe(1);
   });
 
-  it('leaves nothing when every change was read fresh', () => {
-    window.sessionStorage.setItem(FRESH_READS_STORAGE_KEY, '{"MOB-9":1}');
-    const page = new QueryClient();
-    const stop = keepFreshReadsOnReload(page);
-    markRead(page, 'MOB-9', 1);
-    reload();
-    stop();
-    expect(window.sessionStorage.getItem(FRESH_READS_STORAGE_KEY)).toBeNull();
+  it('stop once any page read the ticket fresh', () => {
+    markChanged(newPage(), 'MOB-1');
+    readFresh(newPage(), 'MOB-1');
+    expect(changesBefore(newPage(), 'MOB-1')).toBeUndefined();
+    expect(window.localStorage.getItem(FRESH_READS_STORAGE_KEY)).toBeNull();
   });
 
-  it('stops listening once the page lets go of its query client', () => {
-    const page = new QueryClient();
-    keepFreshReadsOnReload(page)();
-    markChanged(page, 'MOB-1');
-    reload();
-    expect(window.sessionStorage.getItem(FRESH_READS_STORAGE_KEY)).toBeNull();
+  it('keep the mark when another page changed the ticket while the read was on its way', () => {
+    const changer = newPage();
+    markChanged(changer, 'MOB-1');
+    const reader = newPage();
+    const changes = changesBefore(reader, 'MOB-1') ?? -1;
+    vi.useFakeTimers({ now: Date.now() + 1 });
+    markChanged(changer, 'MOB-1');
+    markRead(reader, 'MOB-1', changes);
+    expect(changesBefore(reader, 'MOB-1')).toBeUndefined();
+    expect(changesBefore(newPage(), 'MOB-1')).toBe(0);
   });
 
-  it('ignores what it cannot read, and reads as usual without session storage', () => {
-    window.sessionStorage.setItem(FRESH_READS_STORAGE_KEY, '{"MOB-1":"x","MOB-2":2}');
-    expect(changesBefore(new QueryClient(), 'MOB-1')).toBeUndefined();
+  it('forget a change nobody read fresh after a day', () => {
+    vi.useFakeTimers();
+    markChanged(newPage(), 'MOB-1');
+    vi.advanceTimersByTime(FRESH_READ_MARK_MS);
+    expect(changesBefore(newPage(), 'MOB-1')).toBeUndefined();
+  });
+
+  it('ignore what they cannot read, and read as usual without storage', () => {
+    window.localStorage.setItem(FRESH_READS_STORAGE_KEY, '{"MOB-1":"x","MOB-2":null}');
+    expect(changesBefore(newPage(), 'MOB-1')).toBeUndefined();
+    expect(changesBefore(newPage(), 'MOB-2')).toBeUndefined();
     vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
       throw new Error('blocked');
     });
     vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
       throw new Error('blocked');
     });
-    const page = new QueryClient();
-    const stop = keepFreshReadsOnReload(page);
-    markChanged(page, 'MOB-1');
-    expect(() => reload()).not.toThrow();
-    stop();
+    const page = newPage();
+    expect(() => markChanged(page, 'MOB-1')).not.toThrow();
     expect(changesBefore(page, 'MOB-1')).toBe(1);
+    expect(changesBefore(newPage(), 'MOB-1')).toBeUndefined();
   });
 });

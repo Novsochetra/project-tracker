@@ -1,12 +1,14 @@
 import { randomUUID } from 'node:crypto';
 import { imageSize } from 'image-size';
 import {
-  MAX_ATTACHMENT_BYTES,
+  ATTACHMENT_KINDS,
   PENDING_ATTACHMENT_TTL_MS,
   checkAttachment,
   storedExtension,
+  tooLargeMessage,
   type Attachment,
   type AttachmentKind,
+  type AttachmentMimeType,
 } from '@tracker/shared';
 import type { AttachmentRow, Db } from '../db/schema';
 import { invalidInput, notFound } from '../errors';
@@ -15,16 +17,21 @@ import {
   findAttachmentById,
   insertAttachment,
   listPendingBefore,
+  nextTicketPosition,
 } from '../repositories/attachments';
 import { findTicketById, updateTicketRow } from '../repositories/tickets';
 import { removeFiles, type ByteRange, type FileStorage } from '../storage/fileStorage';
 import { inTransaction, notify, type ServiceContext } from './context';
 import { requireTicket, type TicketRef } from './lookups';
 import { toAttachment } from './mappers';
-
-export const TOO_LARGE_MESSAGE = `Files can be up to ${MAX_ATTACHMENT_BYTES / (1024 * 1024)} MB.`;
+import { IMAGE_HEAD_BYTES, measureUpload } from './uploadStream';
 
 const NOT_FOUND_MESSAGE = 'Attachment was not found.';
+
+const INCOMPLETE_MESSAGE = 'The file did not arrive whole. Try again.';
+
+// Pages from before uploads were sent as the file itself still post forms until they reload.
+const FORM_MESSAGE = 'Reload the page and add the file again.';
 
 export const PENDING_TTL_MS = PENDING_ATTACHMENT_TTL_MS;
 
@@ -35,10 +42,10 @@ interface Dimensions {
   height: number | null;
 }
 
-async function dimensions(file: Blob, kind: AttachmentKind): Promise<Dimensions> {
+function dimensions(head: Uint8Array, kind: AttachmentKind): Dimensions {
   if (kind !== 'image') return { width: null, height: null };
   try {
-    const { width, height } = imageSize(new Uint8Array(await file.arrayBuffer()));
+    const { width, height } = imageSize(head);
     return { width: width || null, height: height || null };
   } catch {
     return { width: null, height: null };
@@ -46,47 +53,90 @@ async function dimensions(file: Blob, kind: AttachmentKind): Promise<Dimensions>
 }
 
 // Cut by code points: half of a surrogate pair can't be encoded in a download header.
-const fileNameOf = (file: File, extension: string): string =>
-  Array.from(file.name.trim()).slice(0, MAX_NAME_LENGTH).join('') || `attachment.${extension}`;
+const fileNameOf = (name: string, extension: string): string =>
+  Array.from(name.trim()).slice(0, MAX_NAME_LENGTH).join('') || `attachment.${extension}`;
 
 export interface UploadInput {
-  file: File;
-  ticketKey?: string;
+  body: ReadableStream<Uint8Array> | null;
+  name: string;
+  type: string;
+  // The Content-Length, when the client sent one.
+  size: number | null;
+  ticketKey?: string | undefined;
 }
 
-async function storeFile(ctx: ServiceContext, file: File, ref: TicketRef | null) {
-  const check = checkAttachment(file);
+interface CheckedUpload {
+  mimeType: AttachmentMimeType;
+  kind: AttachmentKind;
+}
+
+type StoredFile = Omit<AttachmentRow, 'ticketId' | 'activityId' | 'position' | 'createdAt'>;
+
+function checkUpload(input: UploadInput): CheckedUpload {
+  if (input.type.toLowerCase().startsWith('multipart/form-data')) throw invalidInput(FORM_MESSAGE);
+  const check = checkAttachment({ type: input.type, name: input.name, size: input.size ?? 0 });
   if (!check.ok) throw invalidInput(check.message);
-  const id = randomUUID();
-  const extension = storedExtension(check.mimeType);
-  const row: AttachmentRow = {
-    id,
-    ticketId: ref?.ticket.id ?? null,
-    activityId: null,
-    fileName: fileNameOf(file, extension),
-    mimeType: check.mimeType,
-    size: file.size,
-    ...(await dimensions(file, check.kind)),
-    storageKey: `${id}.${extension}`,
-    createdAt: ctx.now(),
-  };
-  await ctx.storage.write(row.storageKey, file);
-  return row;
+  return check;
 }
 
+async function storeFile(
+  ctx: ServiceContext,
+  input: UploadInput,
+  { mimeType, kind }: CheckedUpload,
+): Promise<StoredFile> {
+  const id = randomUUID();
+  const extension = storedExtension(mimeType);
+  const storageKey = `${id}.${extension}`;
+  const upload = measureUpload(input.body ?? new Blob([]).stream(), {
+    maxBytes: ATTACHMENT_KINDS[kind].maxBytes,
+    expectedBytes: input.size,
+    headBytes: kind === 'image' ? IMAGE_HEAD_BYTES : 0,
+    tooLarge: () => invalidInput(tooLargeMessage(kind)),
+    incomplete: () => invalidInput(INCOMPLETE_MESSAGE),
+  });
+  await ctx.storage.write(storageKey, upload.body);
+  return {
+    id,
+    fileName: fileNameOf(input.name, extension),
+    mimeType,
+    size: upload.size(),
+    ...dimensions(upload.head(), kind),
+    storageKey,
+  };
+}
+
+async function insertUploaded(
+  ctx: ServiceContext,
+  file: StoredFile,
+  ref: TicketRef | null,
+): Promise<AttachmentRow> {
+  return inTransaction(ctx, async (trx) => {
+    const row: AttachmentRow = {
+      ...file,
+      ticketId: ref?.ticket.id ?? null,
+      activityId: null,
+      position: ref ? await nextTicketPosition(trx, ref.ticket.id) : 0,
+      createdAt: ctx.now(),
+    };
+    await insertAttachment(trx, row);
+    if (ref) await updateTicketRow(trx, ref.ticket.id, { updatedAt: row.createdAt });
+    return row;
+  });
+}
+
+// The file streams to storage as it arrives, so an upload holds a chunk in memory, not the file.
 export async function uploadAttachment(
   ctx: ServiceContext,
   input: UploadInput,
 ): Promise<Attachment> {
+  const check = checkUpload(input);
   const ref = input.ticketKey ? await requireTicket(ctx.db, input.ticketKey) : null;
-  const row = await storeFile(ctx, input.file, ref);
+  const file = await storeFile(ctx, input, check);
+  let row: AttachmentRow;
   try {
-    await inTransaction(ctx, async (trx) => {
-      await insertAttachment(trx, row);
-      if (ref) await updateTicketRow(trx, ref.ticket.id, { updatedAt: row.createdAt });
-    });
+    row = await insertUploaded(ctx, file, ref);
   } catch (error) {
-    await ctx.storage.remove(row.storageKey);
+    await ctx.storage.remove(file.storageKey);
     throw error;
   }
   // Pending uploads belong to no ticket yet, so no open screen needs to refresh.

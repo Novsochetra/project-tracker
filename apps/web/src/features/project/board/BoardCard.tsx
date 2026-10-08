@@ -4,6 +4,7 @@ import { GripVertical } from 'lucide-react';
 import { useIsFlashing } from '../../../app/flash';
 import { Icon } from '../../../components';
 import { Lifted } from '../dnd/DragGhost';
+import { DROP_ROW_ATTRIBUTE } from '../dnd/dropRow';
 import type { DropEdge } from '../dnd/dropTarget';
 import type { DragState } from '../dnd/useTicketDrag';
 import { DragHandle } from '../DragHandle';
@@ -22,7 +23,7 @@ export interface BoardCardProps {
 export function BoardCard({ ticket, status, dragged, dropEdge, callbacks }: BoardCardProps) {
   const flashing = useIsFlashing(ticket.key);
   return (
-    <div className={styles.card} data-drop-row={ticket.id}>
+    <div className={styles.card} {...{ [DROP_ROW_ATTRIBUTE]: ticket.id }}>
       <DragHandle
         ticket={ticket}
         className={styles.handle}

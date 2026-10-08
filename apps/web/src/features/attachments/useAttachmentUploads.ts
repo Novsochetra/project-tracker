@@ -5,6 +5,7 @@ import { useLatest } from '../../lib/useLatest';
 import { admitFiles, roomFor, type AdmittedFile, type FileLimit } from './attachmentFiles';
 import type { FileNotice } from './fileNotice';
 import { useFileNotice } from './useFileNotice';
+import { usePickedOrder } from './usePickedOrder';
 
 export interface UploadingFile {
   key: string;
@@ -18,6 +19,9 @@ export interface UploadingFile {
 export interface AttachmentUploadOptions {
   ticketKey?: string | undefined;
   onUploaded?: (attachment: Attachment) => void;
+  // A file that finishes ahead of those picked before it waits in its tile, so onUploaded gets
+  // them in the order they were picked, and so does the ticket or comment they are created with.
+  inPickedOrder?: boolean;
   // Unset for a ticket's own files, which go straight to it: only a create has a limit.
   limit?: FileLimit | undefined;
 }
@@ -36,6 +40,11 @@ const PERCENT = 100;
 function previewOf({ file, kind }: AdmittedFile): string | null {
   if (kind !== 'image' && kind !== 'video') return null;
   return typeof URL.createObjectURL === 'function' ? URL.createObjectURL(file) : null;
+}
+
+interface Finished {
+  item: UploadingFile;
+  attachment: Attachment | null;
 }
 
 const toUploading = (key: string, entry: AdmittedFile): UploadingFile => ({
@@ -72,6 +81,13 @@ export function useAttachmentUploads(options: AttachmentUploadOptions = {}): Att
   const onUploadedRef = useLatest(options.onUploaded);
   const controllers = useRef(new Map<string, AbortController>());
   const counter = useRef(0);
+  const order = usePickedOrder<Finished>(options.inPickedOrder ?? false, ({ item, attachment }) => {
+    list.drop(item.key);
+    if (item.preview) URL.revokeObjectURL(item.preview);
+    if (attachment) onUploadedRef.current?.(attachment);
+  });
+  const forget = (attachment: Attachment) =>
+    deleteAttachment.mutate({ attachmentId: attachment.id, ticketKey });
 
   // Files waiting for a form that is gone have no home; ones for a ticket still belong to it.
   useEffect(() => {
@@ -86,6 +102,7 @@ export function useAttachmentUploads(options: AttachmentUploadOptions = {}): Att
     const item = toUploading(`upload-${counter.current}`, entry);
     const controller = new AbortController();
     controllers.current.set(item.key, controller);
+    order.pick(item.key);
     list.setUploading((current) => [...current, item]);
     // mutateAsync, because callbacks passed to mutate only run for the latest call.
     void upload
@@ -97,19 +114,19 @@ export function useAttachmentUploads(options: AttachmentUploadOptions = {}): Att
       })
       .then(
         (attachment) => {
+          if (!controller.signal.aborted) return attachment;
           // It got there before the stop did, so it goes again.
-          if (controller.signal.aborted) {
-            deleteAttachment.mutate({ attachmentId: attachment.id, ticketKey });
-          } else onUploadedRef.current?.(attachment);
+          forget(attachment);
+          return null;
         },
         (error: unknown) => {
           if (!controller.signal.aborted) notices.failed(item.name, error);
+          return null;
         },
       )
-      .finally(() => {
+      .then((attachment) => {
         controllers.current.delete(item.key);
-        list.drop(item.key);
-        if (item.preview) URL.revokeObjectURL(item.preview);
+        order.settle(item.key, { item, attachment });
       });
   };
 
@@ -122,10 +139,19 @@ export function useAttachmentUploads(options: AttachmentUploadOptions = {}): Att
   const cancel = (key: string) => {
     controllers.current.get(key)?.abort();
     list.drop(key);
+    const waiting = order.waiting(key);
+    if (waiting?.attachment) {
+      forget(waiting.attachment);
+      order.settle(key, { ...waiting, attachment: null });
+    }
   };
 
   const cancelAll = () => {
     controllers.current.forEach((controller) => controller.abort());
+    order.clear().forEach(({ item, attachment }) => {
+      if (attachment) forget(attachment);
+      if (item.preview) URL.revokeObjectURL(item.preview);
+    });
     list.setUploading([]);
   };
 

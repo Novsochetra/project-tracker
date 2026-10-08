@@ -17,6 +17,8 @@ export interface FieldContext {
   focused: boolean;
   // A save of the field is on its way, sent by this field or by one shown before it.
   saving: boolean;
+  // Another tab has a save of the field on its way.
+  sentElsewhere?: boolean;
   // The text the drafts store keeps for the field, which it keeps until the tracker has it.
   kept: string | undefined;
 }
@@ -49,12 +51,27 @@ function settledDraft(draft: FieldDraft, kept: string | undefined): FieldDraft {
   return draft;
 }
 
+// This tab keeps the store in step with what it types, so other kept text was typed in another
+// tab. The field shows it, unsaved, like text kept from an earlier visit: both tabs then edit
+// the same text, and neither types over text it hasn't shown.
+function adoptedDraft(draft: FieldDraft, kept: string | undefined): FieldDraft {
+  return kept === undefined || kept === draft.value ? draft : restoreDraft(kept, false);
+}
+
+// While another tab sends the kept text, the field shows it without a note, and that save's
+// outcome settles it, as for a field opened while a save of its text is on its way.
+function sentElsewhere(draft: FieldDraft, kept: string | undefined): FieldDraft {
+  if (kept === undefined || draft.conflict) return draft;
+  return draft.value === kept && !draft.failed ? draft : restoreDraft(kept, true);
+}
+
 // The server never overwrites a focused field, nor text whose save is in flight or failed (a
 // rollback must not wipe what was typed). Otherwise the field follows the server: its own save
 // landing, an agent's edit, or a change it missed while focused.
 export function syncDraft(draft: FieldDraft, server: string, context: FieldContext): FieldDraft {
   if (context.saving) return draft;
-  const settled = settledDraft(draft, context.kept);
+  if (context.sentElsewhere) return sentElsewhere(draft, context.kept);
+  const settled = adoptedDraft(settledDraft(draft, context.kept), context.kept);
   if (context.focused || settled.failed) return settled;
   return settled.edited || settled.value !== server ? startDraft(server) : settled;
 }

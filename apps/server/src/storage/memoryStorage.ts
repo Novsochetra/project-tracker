@@ -8,8 +8,8 @@ export function createMemoryStorage(): MemoryStorage {
   const files = new Map<string, Uint8Array>();
   return {
     files,
-    async write(key, file) {
-      files.set(key, new Uint8Array(await file.arrayBuffer()));
+    async write(key, body) {
+      files.set(key, new Uint8Array(await new Response(body).arrayBuffer()));
     },
     read(key, range) {
       const bytes = files.get(key);

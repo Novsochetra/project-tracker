@@ -33,13 +33,13 @@ function Harness({ initial = ALL_TICKETS, onChange = () => undefined }: HarnessP
   );
 }
 
-const group = () => screen.getByRole('group', { name: 'Filter tickets' });
-const tab = (name: RegExp) => within(group()).getByRole('button', { name });
+const toolbar = () => screen.getByRole('toolbar', { name: 'Filter tickets' });
+const tab = (name: RegExp) => within(toolbar()).getByRole('button', { name });
 const names = () =>
-  within(group())
+  within(toolbar())
     .getAllByRole('button')
     .map((button) => button.textContent);
-const thumb = () => group().querySelector<HTMLElement>('.thumb')!;
+const thumb = () => toolbar().querySelector<HTMLElement>('.thumb')!;
 
 // jsdom lays nothing out, so the tabs get, in order, the boxes a 200px track would give them.
 const BOXES = [
@@ -82,7 +82,7 @@ function layOutTabs(): void {
 }
 
 function layOutTrack(scrollLeft = 0) {
-  const track = group();
+  const track = toolbar();
   Object.defineProperties(track, {
     clientWidth: { configurable: true, value: 200 },
     scrollWidth: { configurable: true, value: 500 },
@@ -198,7 +198,7 @@ describe('FilterTabs', () => {
     expect(tab(/^In progress/)).toHaveAttribute('tabindex', '0');
     expect(tab(/^All/)).toHaveAttribute('tabindex', '-1');
     await user.tab({ shift: true });
-    expect(group()).not.toContainElement(document.activeElement as HTMLElement);
+    expect(toolbar()).not.toContainElement(document.activeElement as HTMLElement);
 
     await user.tab();
     expect(tab(/^All/)).toHaveFocus();
@@ -273,7 +273,7 @@ describe('FilterTabs on phones', () => {
   it('scroll sideways inside the row, snapping to a tab, without a scrollbar', () => {
     render(<Harness />);
     for (const width of [375, 320]) {
-      const track = phoneStyle(group(), MODULE, width);
+      const track = phoneStyle(toolbar(), MODULE, width);
       expect(track.get('overflow-x')).toBe('auto');
       expect(track.get('scroll-snap-type')).toBe('x mandatory');
       expect(track.get('scrollbar-width')).toBe('none');
@@ -283,7 +283,7 @@ describe('FilterTabs on phones', () => {
 
   it('take the whole row and never more, so the page never scrolls sideways', () => {
     render(<Harness />);
-    const track = phoneStyle(group(), MODULE, 320);
+    const track = phoneStyle(toolbar(), MODULE, 320);
     expect(track.get('flex')).toBe('1 1 100%');
     expect(track.get('min-width')).toBe('0');
     expect(track.get('max-width')).toBe('100%');

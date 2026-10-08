@@ -20,7 +20,7 @@ interface ProgressEventLike {
 interface ProgressRequest {
   open(method: string, url: string): void;
   setRequestHeader(name: string, value: string): void;
-  send(body: FormData): void;
+  send(body: Blob): void;
   abort(): void;
   upload: { onprogress: ((event: ProgressEventLike) => void) | null };
   onload: (() => void) | null;
@@ -44,7 +44,7 @@ const stopped = () => new DOMException('The upload was stopped.', 'AbortError');
 export function postWithProgress(
   url: string,
   headers: Headers,
-  form: FormData,
+  body: Blob,
   { onProgress, signal }: UploadOptions,
 ): Promise<Answer> {
   const Xhr = requestClass();
@@ -69,6 +69,6 @@ export function postWithProgress(
     xhr.onerror = () => reject(new TypeError('Failed to fetch'));
     xhr.onabort = () => reject(stopped());
     signal?.addEventListener('abort', () => xhr.abort(), { once: true });
-    xhr.send(form);
+    xhr.send(body);
   });
 }

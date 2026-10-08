@@ -8,6 +8,7 @@ import {
   keepDraft,
   rebaseDraft,
   storedDraft,
+  subscribeStoredDrafts,
 } from '../../../lib/storedDrafts';
 import { useLiveDraft } from '../drafts/liveDrafts';
 import { useDraftCheck } from '../drafts/useDraftCheck';
@@ -20,7 +21,14 @@ import {
   syncDraft,
   type FieldDraft,
 } from './fieldDraft';
-import { carries, isSaving, savesOf, subscribeSaves } from './fieldSaves';
+import {
+  carries,
+  isSaving,
+  isSavingAnywhere,
+  isSavingElsewhere,
+  savesOf,
+  subscribeSaves,
+} from './fieldSaves';
 import { useFieldSave, type FieldSave, type FieldTarget, type SaveField } from './useFieldSave';
 
 export interface FieldDraftState {
@@ -40,7 +48,8 @@ export interface FieldDraftState {
 
 const openDraft = (server: string, id: string): FieldDraft => {
   const stored = storedDraft(id);
-  return stored ? restoreDraft(stored.text, carries(savesOf(id), stored.text)) : startDraft(server);
+  if (!stored) return startDraft(server);
+  return restoreDraft(stored.text, carries(savesOf(id), stored.text) || isSavingElsewhere(id));
 };
 
 interface RetryInput {
@@ -62,7 +71,7 @@ function useFieldRetry({ id, ticketKey, draft, setDraft, save }: RetryInput) {
   return (by: RetryBy) => {
     // Saves on their way, also from before the field opened, settle the text, and the tracker
     // may already have one of them without having answered it.
-    if (!draft.failed || draft.conflict || isSaving(id) || checkingRef.current) return;
+    if (!draft.failed || draft.conflict || isSavingAnywhere(id) || checkingRef.current) return;
     checkingRef.current = true;
     const shown = draft.value;
     void check(id).then((result) => {
@@ -92,7 +101,9 @@ export function useFieldDraft(
   const [draft, setDraft] = useState(() => openDraft(server, id));
   const [focused, setFocused] = useState(false);
   const saving = useSyncExternalStore(subscribeSaves, () => isSaving(id));
-  const synced = syncDraft(draft, server, { focused, saving, kept: storedDraft(id)?.text });
+  const sentElsewhere = useSyncExternalStore(subscribeSaves, () => isSavingElsewhere(id));
+  const kept = useSyncExternalStore(subscribeStoredDrafts, () => storedDraft(id)?.text);
+  const synced = syncDraft(draft, server, { focused, saving, sentElsewhere, kept });
   if (synced !== draft) setDraft(synced);
   const save = useFieldSave({ target, server, setDraft, onSave });
   const retry = useFieldRetry({ id, ticketKey: target.ticketKey, draft: synced, setDraft, save });

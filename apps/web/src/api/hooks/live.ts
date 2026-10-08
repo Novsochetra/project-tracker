@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 import { useApi } from '../context';
 import { connectLiveUpdates } from '../live/eventStream';
 import { refreshForChange } from '../live/refreshForChange';
+import { setLiveRefreshPending } from '../live/refreshPending';
 import { recheckSession } from './session';
 
 export function useLiveUpdates(): void {
@@ -14,6 +15,7 @@ export function useLiveUpdates(): void {
       connectLiveUpdates(client.eventsUrl(), {
         onChange: (event) => refreshForChange(queryClient, event),
         onReconnect: () => refreshForChange(queryClient, null),
+        onRefreshPending: (pending) => setLiveRefreshPending(queryClient, pending),
         // Signing out shows the token screen, which ends the stream's retries.
         onRefused: () => void recheckSession(client, queryClient),
       }),

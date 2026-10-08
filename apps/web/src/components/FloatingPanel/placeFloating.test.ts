@@ -62,4 +62,19 @@ describe('placeFloating', () => {
     expect(placeFloating({ anchor: row(300, 200), size, viewport }).originX).toBe(200 - 6 - 8);
     expect(placeFloating({ anchor: row(300, 1280), size, viewport }).originX).toBe(392);
   });
+
+  it('takes another gap and inset, as the ••• menu does', () => {
+    const menu = { width: 260, height: 146 };
+    const button = { top: 20, right: 1248, bottom: 52 };
+    expect(placeFloating({ anchor: button, size: menu, viewport, gap: 6, inset: 0 })).toEqual({
+      top: 58,
+      left: 1248 - 260,
+      height: 146,
+      up: false,
+      originX: 260,
+    });
+    const low = { top: 700, right: 900, bottom: 724 };
+    const above = placeFloating({ anchor: low, size: menu, viewport, gap: 6, inset: 0 });
+    expect(above).toMatchObject({ up: true, top: 700 - 6 - 146 });
+  });
 });

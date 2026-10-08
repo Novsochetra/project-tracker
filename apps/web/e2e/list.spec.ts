@@ -12,7 +12,7 @@ test.describe('ticket list', () => {
       { title: 'Gamma', status: 'Done' },
     ]);
     await page.goto('/p/MOB');
-    const filters = page.getByRole('group', { name: 'Filter tickets' });
+    const filters = page.getByRole('toolbar', { name: 'Filter tickets' });
     await expect(filters.getByRole('button')).toHaveText([
       'All 3 tickets',
       'To do 1 ticket',
@@ -37,7 +37,7 @@ test.describe('ticket list', () => {
       { title: 'Gamma', status: 'Done' },
     ]);
     await page.goto('/p/MOB');
-    const filters = page.getByRole('group', { name: 'Filter tickets' });
+    const filters = page.getByRole('toolbar', { name: 'Filter tickets' });
     await filters.getByRole('button', { name: /^To do/ }).click();
     await expect(group(page, 'Done')).toBeHidden();
     await expect(group(page, 'To do')).toBeVisible();

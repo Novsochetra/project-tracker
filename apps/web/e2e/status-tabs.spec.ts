@@ -3,7 +3,7 @@ import type { TrackerClient } from '@tracker/client';
 import { expect, isPhone, test } from './fixtures';
 import { createTicketInSheet, group, seedProject, ticketRow } from './helpers';
 
-const tabs = (page: Page) => page.getByRole('group', { name: 'Filter tickets' });
+const tabs = (page: Page) => page.getByRole('toolbar', { name: 'Filter tickets' });
 const tab = (page: Page, name: string) =>
   tabs(page).getByRole('button', { name: new RegExp(`^${name} \\d`) });
 
@@ -47,7 +47,7 @@ const pageScrollsSideways = (page: Page) =>
     return [...document.querySelectorAll('*')].some((element) => {
       const { overflowX } = getComputedStyle(element);
       if (overflowX !== 'auto' && overflowX !== 'scroll') return false;
-      if (element.matches('[role="group"][aria-label="Filter tickets"], [data-board]'))
+      if (element.matches('[role="toolbar"][aria-label="Filter tickets"], [data-board]'))
         return false;
       return overflows(element);
     });
@@ -82,14 +82,29 @@ test.describe('status tabs', () => {
       .toEqual(['To do', 'In progress', 'Need review', 'Reviewed', 'Done']);
   });
 
-  test('creating a ticket the tab hides goes back to All and shows it', async ({ page, api }) => {
+  test('New ticket starts in the picked tab, and one the tab hides goes back to All', async ({
+    page,
+    api,
+  }) => {
     await seedProject(api, 'Mobile app', 'MOB', [{ title: 'Shipped', status: 'Done' }]);
     await page.goto('/p/MOB');
     await tab(page, 'Done').click();
-    await page.getByRole('button', { name: 'New ticket', exact: true }).first().click();
+    const newTicket = page.getByRole('button', { name: 'New ticket', exact: true }).first();
+    const sheet = page.getByRole('dialog', { name: 'New ticket' });
+    await newTicket.click();
+    await expect(sheet.getByRole('button', { name: /^Status/ })).toHaveAccessibleName(
+      'Status Done',
+    );
+    await createTicketInSheet(page, 'Release notes');
+    await expect(tab(page, 'Done')).toHaveAttribute('aria-pressed', 'true');
+    await expect(ticketRow(page, 'MOB-2')).toBeVisible();
+
+    await newTicket.click();
+    await sheet.getByRole('button', { name: /^Status/ }).click();
+    await page.getByRole('option', { name: 'To do' }).click();
     await createTicketInSheet(page, 'Next idea');
     await expect(tab(page, 'All')).toHaveAttribute('aria-pressed', 'true');
-    await expect(ticketRow(page, 'MOB-2')).toBeVisible();
+    await expect(ticketRow(page, 'MOB-3')).toBeVisible();
     await expect(ticketRow(page, 'MOB-1')).toBeVisible();
   });
 
@@ -128,7 +143,7 @@ test.describe('status tabs', () => {
     await addStatuses(api, ['Blocked']);
     await page.goto('/p/MOB');
     await tab(page, 'Blocked').click();
-    await expect(page.getByText('No tickets match.')).toBeVisible();
+    await expect(page.getByText('No tickets in Blocked')).toBeVisible();
 
     const { statuses } = await api.getProject('MOB');
     const blocked = statuses.find((status) => status.name === 'Blocked');
@@ -212,6 +227,16 @@ test.describe('status tabs', () => {
     expect(new Set(tops).size).toBe(1);
     expect(await tabs(page).evaluate((el) => el.scrollWidth > el.clientWidth)).toBe(true);
     expect(await pageScrollsSideways(page)).toBe(false);
+
+    const rowLeft = () => tabs(page).evaluate((el) => el.scrollLeft);
+    const middleOfRow = await box(tabs(page));
+    await page.mouse.move(middleOfRow.x + middleOfRow.width / 2, middleOfRow.y + 10);
+    await page.mouse.wheel(0, 100);
+    await expect.poll(rowLeft).toBeGreaterThan(0);
+    // Each step moves a tab from where the row's snap is taking it, which may be past where it is.
+    await page.mouse.wheel(0, -100);
+    await page.mouse.wheel(0, -100);
+    await expect.poll(rowLeft).toBe(0);
 
     await tabs(page).getByRole('button', { name: /^All/ }).focus();
     await page.keyboard.press('End');

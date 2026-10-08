@@ -1,8 +1,9 @@
-import { useQueryClient, type QueryClient } from '@tanstack/react-query';
+import { useQueryClient, type QueryClient, type QueryKey } from '@tanstack/react-query';
 import { useCallback, useEffect } from 'react';
-import { useApi } from '../../../api';
+import { projectOfQuery, useApi } from '../../../api';
 import { createReachability, watchApiTraffic } from '../../../app/reachability';
 import { useToast } from '../../../components';
+import { onDraftsNotKept } from '../../../lib/draftStorage';
 import { guardUnload } from '../../../lib/drafts';
 import type { StoredDraft } from '../../../lib/storedDrafts';
 import { useLatest } from '../../../lib/useLatest';
@@ -12,6 +13,7 @@ import {
   syncDrafts,
   type DraftSyncDeps,
   type DraftSyncReport,
+  type SyncScope,
 } from './syncDrafts';
 import { useDraftSave } from './useDraftSave';
 
@@ -32,19 +34,24 @@ function firstNewChange(report: DraftSyncReport): StoredDraft | undefined {
   return fresh?.[1];
 }
 
-function useDraftSync(): () => void {
+// The scope is taken as a run starts, so a run asked for while another goes covers what was
+// asked meanwhile.
+function useDraftSync(): (takeScope: () => SyncScope) => void {
   const deps = useLatest(useSyncDeps());
   const { show } = useToast();
-  return useCallback(() => {
-    runDraftSync(async () => {
-      if (navigator.onLine === false) return;
-      const changed = firstNewChange(await syncDrafts(deps.current));
-      if (!changed) return;
-      show(`Your edit to ${changed.ticketKey} isn't saved: it changed elsewhere.`, {
-        kind: 'error',
+  return useCallback(
+    (takeScope) => {
+      runDraftSync(async () => {
+        if (navigator.onLine === false) return;
+        const changed = firstNewChange(await syncDrafts(deps.current, takeScope()));
+        if (!changed) return;
+        show(`Your edit to ${changed.ticketKey} isn't saved: it changed elsewhere.`, {
+          kind: 'error',
+        });
       });
-    });
-  }, [deps, show]);
+    },
+    [deps, show],
+  );
 }
 
 export const RETRY_GAP_MS = 10_000;
@@ -67,39 +74,93 @@ function spacedRuns(sync: () => void) {
   return { now, soon, stop: () => clearTimeout(timer) };
 }
 
+// What the next run reads: every closed ticket with kept text, or only those in the projects
+// whose queries a reported change refreshed.
+function scopeOfNextRun() {
+  let next: SyncScope = new Set<string>();
+  return {
+    all: () => {
+      next = 'all';
+    },
+    add: (projectKey: string) => {
+      if (next !== 'all') next = new Set(next).add(projectKey);
+    },
+    take: (): SyncScope => {
+      const taken = next;
+      next = new Set<string>();
+      return taken;
+    },
+  };
+}
+
 // A change the tracker reports (a live update refreshes the cache) may be the deletion of a
-// ticket with kept text, which only a run finds out. A save refreshes the cache too, from its own
+// ticket with kept text, which only a run finds out. Such a ticket's project is refreshed with
+// it, so only changes in projects with closed drafts start a run, which reads only their
+// tickets: an unsent comment can sit for days. A save refreshes the cache too, from its own
 // callbacks while it still counts as pending; a refused one would otherwise start a run every
 // RETRY_GAP_MS.
-function onReportedChange(queryClient: QueryClient, run: () => void): () => void {
+function onReportedChange(queryClient: QueryClient, touch: (projectKey: string) => void) {
   return queryClient.getQueryCache().subscribe((event) => {
     if (event.type !== 'updated' || event.action.type !== 'invalidate') return;
-    if (queryClient.isMutating() === 0 && hasClosedDrafts()) run();
+    const projectKey = projectOfQuery(event.query.queryKey as QueryKey);
+    if (!projectKey || queryClient.isMutating() > 0) return;
+    if (hasClosedDrafts(new Set([projectKey]))) touch(projectKey);
   });
 }
 
-function syncOnReconnect(queryClient: QueryClient, sync: () => void): () => void {
-  const runs = spacedRuns(sync);
+type Sync = (takeScope: () => SyncScope) => void;
+
+function syncOnReconnect(queryClient: QueryClient, sync: Sync): () => void {
+  const scope = scopeOfNextRun();
+  const runs = spacedRuns(() => sync(scope.take));
+  const all = {
+    now: () => {
+      scope.all();
+      runs.now();
+    },
+    soon: () => {
+      scope.all();
+      runs.soon();
+    },
+  };
   const reachability = createReachability();
   const stopWatching = watchApiTraffic(queryClient, reachability);
   const stopListening = reachability.subscribe(() => {
-    if (!reachability.isUnreachable()) runs.soon();
+    if (!reachability.isUnreachable()) all.soon();
   });
-  const stopChanges = onReportedChange(queryClient, runs.soon);
-  window.addEventListener('online', runs.now);
-  runs.now();
+  const stopChanges = onReportedChange(queryClient, (projectKey) => {
+    scope.add(projectKey);
+    runs.soon();
+  });
+  window.addEventListener('online', all.now);
+  all.now();
   return () => {
     runs.stop();
     stopWatching();
     stopListening();
     stopChanges();
-    window.removeEventListener('online', runs.now);
+    window.removeEventListener('online', all.now);
   };
+}
+
+// Once each time storage starts refusing drafts: the text stays only in the page's memory.
+function useNotKeptNote(): void {
+  const { show } = useToast();
+  useEffect(
+    () =>
+      onDraftsNotKept(() =>
+        show("Unsaved text can't be kept on this device, so it's lost if this page closes.", {
+          kind: 'error',
+        }),
+      ),
+    [show],
+  );
 }
 
 // App-wide, so text left in a ticket that isn't open is saved too.
 export function useTicketDrafts(enabled: boolean): void {
   useEffect(guardUnload, []);
+  useNotKeptNote();
   const sync = useDraftSync();
   const queryClient = useQueryClient();
   useEffect(() => {

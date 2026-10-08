@@ -6,6 +6,8 @@ import { pauseWhileHidden } from './pauseWhileHidden';
 export interface LiveHandlers {
   onChange: (event: ChangeEvent) => void;
   onReconnect: () => void;
+  // While true, reads can wait for onReconnect: it runs once the stream reports every later change.
+  onRefreshPending: (pending: boolean) => void;
   // EventSource hides the HTTP status, so a 401 for a lost session looks like a proxy's 502.
   onRefused: () => void;
 }
@@ -23,12 +25,16 @@ export function connectLiveUpdates(url: string, handlers: LiveHandlers): () => v
   let failedAttempts = 0;
   // Changes made while no stream was open are lost, including before a first connect that failed.
   let reconnecting = false;
+  const setReconnecting = (value: boolean) => {
+    reconnecting = value;
+    handlers.onRefreshPending(value);
+  };
 
   const close = () => {
     source?.close();
     clearTimeout(retry);
     clearTimeout(silence);
-    reconnecting = true;
+    setReconnecting(true);
   };
   const reopenLater = () => {
     close();
@@ -42,8 +48,9 @@ export function connectLiveUpdates(url: string, handlers: LiveHandlers): () => v
   const onOpen = () => {
     alive();
     failedAttempts = 0;
-    if (reconnecting) handlers.onReconnect();
-    reconnecting = false;
+    const missed = reconnecting;
+    setReconnecting(false);
+    if (missed) handlers.onReconnect();
   };
   const onMessage = (message: MessageEvent) => {
     alive();
@@ -51,7 +58,7 @@ export function connectLiveUpdates(url: string, handlers: LiveHandlers): () => v
     if (event) handlers.onChange(event);
   };
   const onError = () => {
-    reconnecting = true;
+    setReconnecting(true);
     if (source?.readyState !== EventSource.CLOSED) return;
     reopenLater();
     handlers.onRefused();
@@ -72,5 +79,7 @@ export function connectLiveUpdates(url: string, handlers: LiveHandlers): () => v
   return () => {
     stopWatching();
     close();
+    // A stopped stream never opens again, so nothing else would refresh the page.
+    handlers.onRefreshPending(false);
   };
 }

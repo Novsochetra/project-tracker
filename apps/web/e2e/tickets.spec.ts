@@ -47,13 +47,16 @@ test.describe('tickets', () => {
   test('creating a ticket the status tab hides resets the tabs to All', async ({ page, api }) => {
     await seedProject(api, 'Mobile app', 'MOB', [{ title: 'Shipped', status: 'Done' }]);
     await page.goto('/p/MOB');
-    const filters = page.getByRole('group', { name: 'Filter tickets' });
+    const filters = page.getByRole('toolbar', { name: 'Filter tickets' });
     await filters.getByRole('button', { name: /^Done/ }).click();
     await expect(filters.getByRole('button', { name: /^Done/ })).toHaveAttribute(
       'aria-pressed',
       'true',
     );
     await page.getByRole('button', { name: 'New ticket', exact: true }).first().click();
+    const sheet = page.getByRole('dialog', { name: 'New ticket' });
+    await sheet.getByRole('button', { name: /^Status/ }).click();
+    await page.getByRole('option', { name: 'To do' }).click();
     await createTicketInSheet(page, 'New idea');
     await expect(filters.getByRole('button', { name: /^All/ })).toHaveAttribute(
       'aria-pressed',

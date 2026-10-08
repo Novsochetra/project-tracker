@@ -9,7 +9,8 @@ export interface ItemMenuProps {
   noun: string;
   onEdit?: (() => void) | undefined;
   onDelete: () => void;
-  // An open sheet stays mounted while the button hides, so it can finish its exit.
+  // A closing sheet or menu stays mounted while the button hides, so it can finish its exit and
+  // the menu can take the second click of a double-click.
   hidden?: boolean;
   triggerRef?: RefObject<HTMLButtonElement | null>;
 }
@@ -66,7 +67,7 @@ export function ItemMenu({ hidden = false, triggerRef, ...props }: ItemMenuProps
       </>
     );
   }
-  return hidden ? null : <ItemPopover {...props} {...state} trigger={trigger} />;
+  return <ItemPopover {...props} {...state} trigger={!hidden && trigger} />;
 }
 
 function ItemPopover({

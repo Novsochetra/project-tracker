@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { STATUS } from '../../api/test/fixtures';
 import { mockPhone, skipAnimations } from '../../overlays/testing';
+import { dropRowOf } from './dnd/dropRow';
 import { resetListView } from './listViewStore';
 import { renderProject } from './test/renderProject';
 
@@ -10,7 +11,7 @@ vi.mock('../projects/ProjectOptionsButton', () => ({ ProjectOptionsButton: () =>
 
 const pending = () => new Promise(() => undefined);
 const rowOf = (key: string) =>
-  screen.getByRole('button', { name: new RegExp(`^${key}\\b`) }).closest('[data-drop-row]');
+  dropRowOf(screen.getByRole('button', { name: new RegExp(`^${key}\\b`) }));
 
 // Swipe gestures need real touch input; the actions they reveal are plain buttons underneath.
 function swipeAction(key: string, label: string) {

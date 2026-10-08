@@ -68,6 +68,8 @@ export interface AttachmentRow {
   width: number | null;
   height: number | null;
   storageKey: string;
+  // Where it lists among its ticket's or comment's files (then by createdAt).
+  position: number;
   createdAt: number;
 }
 

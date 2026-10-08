@@ -8,7 +8,6 @@ import {
   CAPTURE_TIMEOUT_MS,
   createdToast,
   createInputOf,
-  newCaptureId,
   FILES_NEED_CONNECTION,
   SAVED_ON_PHONE,
   TITLE_REQUIRED,
@@ -26,6 +25,7 @@ export interface CaptureSubmitInput {
   project: ProjectChoice | undefined;
   attachments: readonly Attachment[];
   uploading: number;
+  captureId: () => string;
   onDone: () => void;
 }
 
@@ -56,7 +56,7 @@ function submitDeps(
 }
 
 export function useCaptureSubmit(input: CaptureSubmitInput): CaptureSubmit {
-  const { values, project, attachments, uploading, onDone } = input;
+  const { values, project, attachments, uploading, captureId, onDone } = input;
   const { mutateAsync } = useCreateTicket();
   const { show } = useToast();
   const [pending, setPending] = useState(false);
@@ -87,9 +87,8 @@ export function useCaptureSubmit(input: CaptureSubmitInput): CaptureSubmit {
     if (!project || uploading > 0 || busy.current) return;
     busy.current = true;
     setPending(true);
-    const id = newCaptureId();
     const capture = toQueuedCapture({
-      id,
+      id: captureId(),
       projectKey: project.key,
       values,
       capturedAt: Date.now(),

@@ -2,6 +2,7 @@ import { act, fireEvent, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { STATUS } from '../../api/test/fixtures';
 import { mockPhone, skipAnimations } from '../../overlays/testing';
+import { dropRowsIn } from './dnd/dropRow';
 import { resetListView } from './listViewStore';
 import { renderProject } from './test/renderProject';
 
@@ -31,7 +32,7 @@ function layout(): Map<Element, DOMRect> {
   for (const section of document.querySelectorAll('[data-drop-group]')) {
     const top = y;
     y += HEADER;
-    const rows = section.querySelectorAll('[data-drop-row]');
+    const rows = dropRowsIn(section);
     for (const row of rows) {
       rects.set(row, box(y, ROW));
       row.querySelectorAll('*').forEach((child) => rects.set(child, box(y, ROW)));

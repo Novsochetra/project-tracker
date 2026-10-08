@@ -80,9 +80,9 @@ function renderDescription(field: { top: number; bottom: number }, screenHeight:
   description.getBoundingClientRect = () => rect(field);
   const bar = document.querySelector<HTMLElement>('[data-bottom-bar]')!;
   Object.defineProperty(bar, 'offsetHeight', { value: BAR_HEIGHT });
-  const scrollBy = vi.fn();
-  scroller.scrollBy = scrollBy as typeof scroller.scrollBy;
-  return { description, bar, scrollBy };
+  const scrollTo = vi.fn();
+  scroller.scrollTo = scrollTo as typeof scroller.scrollTo;
+  return { description, bar, scrollTo };
 }
 
 const nextFrame = () =>
@@ -97,27 +97,27 @@ async function editAndCloseKeyboard(description: HTMLElement, bar: HTMLElement) 
 }
 
 it('leaves the screen where it is after editing a description too long to fit above the bar', async () => {
-  const { description, bar, scrollBy } = renderDescription(LONG_AT_375, 812);
+  const { description, bar, scrollTo } = renderDescription(LONG_AT_375, 812);
   await editAndCloseKeyboard(description, bar);
-  expect(scrollBy).not.toHaveBeenCalled();
+  expect(scrollTo).not.toHaveBeenCalled();
 });
 
 it('leaves a long description where it is on a 320×568 phone too', async () => {
-  const { description, bar, scrollBy } = renderDescription(LONG_AT_320, 568);
+  const { description, bar, scrollTo } = renderDescription(LONG_AT_320, 568);
   await editAndCloseKeyboard(description, bar);
-  expect(scrollBy).not.toHaveBeenCalled();
+  expect(scrollTo).not.toHaveBeenCalled();
 });
 
 it('counts the nav bar: a field that would end up under it stays where it is', async () => {
   // 700px tall: room below the screen's top (735px), not below the nav bar (682px).
-  const { description, bar, scrollBy } = renderDescription({ top: 100, bottom: 800 }, 812);
+  const { description, bar, scrollTo } = renderDescription({ top: 100, bottom: 800 }, 812);
   await editAndCloseKeyboard(description, bar);
-  expect(scrollBy).not.toHaveBeenCalled();
+  expect(scrollTo).not.toHaveBeenCalled();
 });
 
 it('still brings a field that fits up to 8px above the bar', async () => {
-  const { description, bar, scrollBy } = renderDescription({ top: 600, bottom: 780 }, 812);
+  const { description, bar, scrollTo } = renderDescription({ top: 600, bottom: 780 }, 812);
   await editAndCloseKeyboard(description, bar);
   // 780 − (812 − 69 − 8)
-  expect(scrollBy).toHaveBeenCalledExactlyOnceWith({ top: 45, behavior: 'smooth' });
+  expect(scrollTo).toHaveBeenCalledExactlyOnceWith({ top: 45, behavior: 'smooth' });
 });

@@ -17,6 +17,7 @@ export function useAttachmentList(
 ) {
   const uploads = useAttachmentUploads({
     onUploaded: (attachment) => setAttachments((current) => [...current, attachment]),
+    inPickedOrder: true,
     limit,
   });
   const deleteAttachment = useDeleteAttachment();

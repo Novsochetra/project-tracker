@@ -68,6 +68,10 @@ export const MAX_ATTACHMENT_BYTES = Math.max(
 
 export const PENDING_ATTACHMENT_TTL_MS = 24 * 60 * 60 * 1000;
 
+// An upload's body is the file itself, so its name travels in this header, percent-encoded
+// because a header carries only ASCII.
+export const FILE_NAME_HEADER = 'x-file-name';
+
 // Only creates (`attachmentIds`) are limited; files added to a ticket later go one at a time.
 export const MAX_NEW_ATTACHMENTS = 20;
 

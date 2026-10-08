@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useIsFlashing } from '../../app/flash';
 import { SwipeActions } from '../../gestures';
 import { useIsPhone } from '../../lib/media';
+import { DROP_ROW_ATTRIBUTE } from './dnd/dropRow';
 import type { DropEdge } from './dnd/dropTarget';
 import { rowSwipeActions } from './rowSwipeActions';
 import type { RowCallbacks } from './rowTypes';
@@ -33,7 +34,7 @@ export function TicketRow(props: TicketRowProps) {
     <div
       className={clsx(styles.row, rise !== null && styles.rise)}
       style={rise === null ? undefined : { animationDelay: `${rise}ms` }}
-      data-drop-row={ticket.id}
+      {...{ [DROP_ROW_ATTRIBUTE]: ticket.id }}
     >
       {isPhone ? (
         <SwipeActions {...rowSwipeActions(ticket, next, callbacks)}>{content}</SwipeActions>

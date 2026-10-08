@@ -1,4 +1,5 @@
 import { useEffect, useLayoutEffect, useState, type RefObject } from 'react';
+import { dropRowOf } from '../dnd/dropRow';
 import { measurePage, revealDistance, spanOf } from './boardSpans';
 
 export const MIN_BOARD_HEIGHT = 320;
@@ -73,7 +74,7 @@ export function useRevealFocusedCard(boardRef: RefObject<HTMLElement | null>): v
     if (!board) return;
     const reveal = (event: FocusEvent) => {
       const target = event.target instanceof Element ? event.target : null;
-      const card = target?.closest('[data-drop-row]');
+      const card = dropRowOf(target);
       // Only keyboard focus: a press that focused a card must not slide it from under the pointer.
       if (!card || !target?.matches(':focus-visible')) return;
       const { left, right } = board.getBoundingClientRect();

@@ -49,7 +49,38 @@ function isStoredDraft(value: unknown): value is StoredDraft {
 
 export const parseDrafts = (raw: string | null): Drafts => readDrafts(raw, isStoredDraft);
 
-const { load, store } = draftStorage(DRAFTS_STORAGE_KEY, isStoredDraft);
+const storage = draftStorage(DRAFTS_STORAGE_KEY, isStoredDraft);
+const { load } = storage;
+const listeners = new Set<() => void>();
+const notify = () => listeners.forEach((listener) => listener());
+
+function store(drafts: Drafts): void {
+  storage.store(drafts);
+  notify();
+}
+
+// Another tab's writes arrive as storage events (a null key: storage was cleared). A tab the
+// browser suspended may have missed some, so it reads again once it is shown.
+function onOutsideChange(event: Event): void {
+  if (event instanceof StorageEvent && event.key !== null && event.key !== DRAFTS_STORAGE_KEY) {
+    return;
+  }
+  notify();
+}
+
+export function subscribeStoredDrafts(listener: () => void): () => void {
+  if (listeners.size === 0) {
+    window.addEventListener('storage', onOutsideChange);
+    document.addEventListener('visibilitychange', onOutsideChange);
+  }
+  listeners.add(listener);
+  return () => {
+    listeners.delete(listener);
+    if (listeners.size > 0) return;
+    window.removeEventListener('storage', onOutsideChange);
+    document.removeEventListener('visibilitychange', onOutsideChange);
+  };
+}
 
 export const storedDraft = (id: string): StoredDraft | undefined => load()[id];
 

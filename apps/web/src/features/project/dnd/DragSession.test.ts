@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { DragSession, type DragEnvironment, type DragListener } from './DragSession';
+import { DROP_ROW_ATTRIBUTE } from './dropRow';
 import { dropTargetAt, type GroupBox } from './dropTarget';
 
 const groups: GroupBox[] = [
@@ -19,7 +20,7 @@ const groups: GroupBox[] = [
 
 function rowWithButton() {
   const row = document.createElement('div');
-  row.dataset.dropRow = 't-1';
+  row.setAttribute(DROP_ROW_ATTRIBUTE, 't-1');
   row.getBoundingClientRect = () => ({ left: 10, top: 101, width: 300, height: 44 }) as DOMRect;
   const button = document.createElement('button');
   row.append(button);

@@ -1,4 +1,4 @@
-import type { Actor, ErrorBody } from '@tracker/shared';
+import { FILE_NAME_HEADER, type Actor, type ErrorBody } from '@tracker/shared';
 import { canReportProgress, postWithProgress, type Answer, type UploadOptions } from './upload';
 
 export class ApiError extends Error {
@@ -30,6 +30,12 @@ export interface ReadOptions {
   // the web app's service worker passes the read on without answering it from its cache. For
   // decisions a stale answer would get wrong.
   fresh?: boolean;
+}
+
+export interface UploadFile {
+  blob: Blob;
+  name: string;
+  query?: Query;
 }
 
 export interface RequestOptions extends ReadOptions {
@@ -98,30 +104,36 @@ export class Http {
   }
 
   async request<T>(method: string, path: string, options: RequestOptions = {}): Promise<T> {
-    const isForm = options.body instanceof FormData;
-    const hasJson = options.body !== undefined && !isForm;
+    const hasJson = options.body !== undefined;
     const headers = this.headers(hasJson);
     if (options.fresh) headers.set(FRESH_READ_HEADER, '1');
     const response = await this.fetchImpl(this.url(path, options.query), {
       method,
       headers,
-      body: isForm
-        ? (options.body as FormData)
-        : hasJson
-          ? JSON.stringify(options.body)
-          : undefined,
+      body: hasJson ? JSON.stringify(options.body) : undefined,
       ...(options.fresh ? { cache: 'no-store' as const } : {}),
       ...(options.signal ? { signal: options.signal } : {}),
     });
     return this.read<T>(response, options.allowEmpty ?? false);
   }
 
-  async upload<T>(path: string, form: FormData, options: UploadOptions = {}): Promise<T> {
-    if (!options.onProgress || !canReportProgress()) {
-      return this.request<T>('POST', path, { body: form, signal: options.signal });
+  // The file itself is the body, so the server can write it to disk as it arrives; a form would
+  // have to be read whole first.
+  async upload<T>(path: string, file: UploadFile, options: UploadOptions = {}): Promise<T> {
+    const url = this.url(path, file.query);
+    const headers = this.headers(false);
+    headers.set('content-type', file.blob.type || 'application/octet-stream');
+    headers.set(FILE_NAME_HEADER, encodeURIComponent(file.name));
+    if (options.onProgress && canReportProgress()) {
+      return parseAnswer<T>(await postWithProgress(url, headers, file.blob, options), false);
     }
-    const answer = await postWithProgress(this.url(path), this.headers(false), form, options);
-    return parseAnswer<T>(answer, false);
+    const response = await this.fetchImpl(url, {
+      method: 'POST',
+      headers,
+      body: file.blob,
+      ...(options.signal ? { signal: options.signal } : {}),
+    });
+    return this.read<T>(response, false);
   }
 
   async raw(path: string): Promise<Response> {

@@ -47,6 +47,28 @@ describe('Popover', () => {
     expect(screen.queryByRole('group')).not.toBeInTheDocument();
   });
 
+  it('keeps the Tab order of a menu next to its trigger, though it sits in a portal', async () => {
+    const user = userEvent.setup();
+    render(
+      <>
+        <Harness onEdit={vi.fn()} />
+        <button type="button">After the menu</button>
+      </>,
+    );
+    const trigger = screen.getByRole('button', { name: 'Options' });
+    await user.click(trigger);
+    expect(screen.getByRole('group').parentElement?.parentElement).toBe(document.body);
+    await user.tab();
+    expect(screen.getByRole('button', { name: 'Edit project' })).toHaveFocus();
+    await user.tab({ shift: true });
+    expect(trigger).toHaveFocus();
+    await user.tab();
+    await user.tab();
+    expect(screen.getByRole('button', { name: 'Delete project' })).toHaveFocus();
+    await user.tab();
+    expect(screen.getByRole('button', { name: 'After the menu' })).toHaveFocus();
+  });
+
   it('closes on Escape and returns focus to the trigger', async () => {
     const user = userEvent.setup();
     render(<Harness onEdit={vi.fn()} />);

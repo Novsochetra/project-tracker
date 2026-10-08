@@ -2,7 +2,6 @@ import { QueryClientProvider, type QueryClient } from '@tanstack/react-query';
 import { TrackerClient } from '@tracker/client';
 import { useEffect, useState, type ReactNode } from 'react';
 import { ApiContext } from './context';
-import { keepFreshReadsOnReload } from './freshReads';
 import { createQueryClient } from './queryClient';
 import { watchUnauthorized } from './unauthorized';
 
@@ -23,7 +22,6 @@ export function ApiProvider({ client, queryClient, children }: ApiProviderProps)
   const activeQueryClient = queryClient ?? defaults.queryClient;
 
   useEffect(() => watchUnauthorized(activeQueryClient), [activeQueryClient]);
-  useEffect(() => keepFreshReadsOnReload(activeQueryClient), [activeQueryClient]);
 
   return (
     <QueryClientProvider client={activeQueryClient}>

@@ -11,6 +11,7 @@ import {
   rebaseDraft,
   storedDraft,
   storedDrafts,
+  subscribeStoredDrafts,
 } from './storedDrafts';
 
 const TITLE = { ticketKey: 'MOB-3', field: 'title' } as const;
@@ -91,6 +92,29 @@ describe('stored drafts', () => {
         }),
       ),
     ).toEqual({ good: { ...TITLE, base: '', text: 'Fine' } });
+  });
+});
+
+describe('changes to the stored drafts', () => {
+  const storageEvent = (key: string | null) =>
+    window.dispatchEvent(new StorageEvent('storage', { key }));
+
+  it('reach subscribers from this tab, from other tabs and when the tab is shown', () => {
+    const listener = vi.fn();
+    const stop = subscribeStoredDrafts(listener);
+    keepDraft(TITLE_ID, { ...TITLE, text: 'Mine' }, '');
+    expect(listener).toHaveBeenCalledTimes(1);
+    storageEvent(DRAFTS_STORAGE_KEY);
+    storageEvent(null);
+    expect(listener).toHaveBeenCalledTimes(3);
+    storageEvent('tracker.sheetDrafts');
+    expect(listener).toHaveBeenCalledTimes(3);
+    document.dispatchEvent(new Event('visibilitychange'));
+    expect(listener).toHaveBeenCalledTimes(4);
+    stop();
+    storageEvent(DRAFTS_STORAGE_KEY);
+    forgetDraft(TITLE_ID);
+    expect(listener).toHaveBeenCalledTimes(4);
   });
 });
 

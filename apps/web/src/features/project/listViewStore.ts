@@ -48,6 +48,10 @@ export const useListView = (projectKey: string): ListView =>
 
 export const isSearching = (view: ListView): boolean => view.query.trim() !== '';
 
+// The status a picked status tab shows: none on All, or once that status is deleted.
+export const pickedStatus = <T extends Status>(view: ListView, statuses: readonly T[]) =>
+  statuses.find((status) => status.id === view.filter);
+
 export function hidesNewTicket(
   view: ListView,
   statuses: readonly Status[],

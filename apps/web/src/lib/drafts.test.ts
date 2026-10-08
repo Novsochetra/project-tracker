@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { clearDraft, guardUnload, hasDrafts, markDraft } from './drafts';
 import { forgetSheetDraft, keepSheetDraft } from './sheetDrafts';
 import { forgetDraft, keepDraft } from './storedDrafts';
@@ -59,6 +59,17 @@ describe('stored drafts', () => {
     keepSheetDraft('new-ticket:PT', { title: 'Typed' });
     expect(hasDrafts()).toBe(false);
     forgetSheetDraft('new-ticket:PT');
+  });
+
+  it('count sheet drafts that storage refused, which a reload would lose', () => {
+    const full = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+      throw new DOMException('Full', 'QuotaExceededError');
+    });
+    keepSheetDraft('new-ticket:PT', { title: 'Typed' });
+    expect(hasDrafts()).toBe(true);
+    forgetSheetDraft('new-ticket:PT');
+    expect(hasDrafts()).toBe(false);
+    full.mockRestore();
   });
 });
 

@@ -1,4 +1,5 @@
 import { draftSaved, rebaseDraft } from '../../../lib/storedDrafts';
+import { isSentElsewhere, markSending, onOtherTabsMarks } from './saveMarks';
 
 // On a slow connection several saves of one field can be on their way, and the tracker ends with
 // the latest one's text.
@@ -63,9 +64,15 @@ export const savesOf = (id: string): SentSaves => sent.get(id) ?? NO_SAVES;
 
 export const isSaving = (id: string): boolean => savesOf(id).onTheirWay.size > 0;
 
+// Another tab has saves of the draft on their way, which settle it the same way.
+export const isSavingElsewhere = isSentElsewhere;
+
+export const isSavingAnywhere = (id: string): boolean => isSaving(id) || isSavingElsewhere(id);
+
 function update(id: string, saves: SentSaves): void {
   if (saves.onTheirWay.size === 0) sent.delete(id);
   else sent.set(id, saves);
+  markSending(id, saves.onTheirWay.size > 0);
   listeners.forEach((listener) => listener());
 }
 
@@ -86,5 +93,15 @@ export function finishSave(id: string, number: number, saved: boolean): void {
 
 export function subscribeSaves(listener: () => void): () => void {
   listeners.add(listener);
-  return () => listeners.delete(listener);
+  const stopMarks = onOtherTabsMarks(listener);
+  return () => {
+    listeners.delete(listener);
+    stopMarks();
+  };
+}
+
+// Tests start with nothing on its way, whatever the test before them left hanging.
+export function clearSaves(): void {
+  for (const id of sent.keys()) markSending(id, false);
+  sent.clear();
 }

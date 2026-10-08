@@ -1,12 +1,12 @@
 import { once } from 'node:events';
 import type { AddressInfo } from 'node:net';
 import { serve } from '@hono/node-server';
-import { LIVE_STALE_MS, type Attachment, type ChangeEvent } from '@tracker/shared';
+import { LIVE_STALE_MS, type ChangeEvent } from '@tracker/shared';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createApp } from '../../src/app';
 import { createBroadcaster } from '../../src/events/broadcaster';
 import { eventRoutes } from '../../src/http/routes/events';
-import { agent, imageForm, statusOf } from '../helpers/fixtures';
+import { agent, imageUpload, statusOf } from '../helpers/fixtures';
 import { DIALECTS, useTestServer } from '../helpers/server';
 
 type Reader = ReadableStreamDefaultReader<Uint8Array>;
@@ -75,7 +75,7 @@ describe.each(DIALECTS)('change events (%s)', (dialect) => {
         async () => person.deleteActivity((await person.getTicket('MA-1')).activity.at(-1)!.id),
         t,
       ],
-      ['upload to ticket', () => api.post('/api/attachments', imageForm({ ticketKey: 'MA-1' })), t],
+      ['upload to ticket', () => api.upload(imageUpload({ ticketKey: 'MA-1' })), t],
       [
         'delete image',
         async () => person.deleteAttachment((await person.getTicket('MA-1')).attachments[0]!.id),
@@ -119,9 +119,9 @@ describe.each(DIALECTS)('change events (%s)', (dialect) => {
   });
 
   it('stays quiet for pending images, reads and failures', async () => {
-    const pending = await api.post<Attachment>('/api/attachments', imageForm());
+    const pending = await api.upload(imageUpload());
     expect(pending.status).toBe(201);
-    const discarded = await api.post<Attachment>('/api/attachments', imageForm());
+    const discarded = await api.upload(imageUpload());
     expect((await api.delete(`/api/attachments/${discarded.body.id}`)).status).toBe(204);
     expect(api.events).toEqual([]);
     await api.client().createProject({ name: 'Mobile app' });
@@ -139,12 +139,12 @@ describe.each(DIALECTS)('change events (%s)', (dialect) => {
   it('publishes image changes that belong to a ticket', async () => {
     await api.client().createProject({ name: 'Mobile app' });
     const ticket = await api.client().createTicket('MA', { title: 'Crash' });
-    const pending = await api.post<Attachment>('/api/attachments', imageForm());
+    const pending = await api.upload(imageUpload());
     const comment = await api.client().addComment(ticket.key, { attachmentIds: [pending.body.id] });
     api.events.length = 0;
     const change = { type: 'changed', projectId: ticket.projectId, ticketId: ticket.id };
 
-    await api.post('/api/attachments', imageForm({ ticketKey: ticket.key }));
+    await api.upload(imageUpload({ ticketKey: ticket.key }));
     expect(api.events).toEqual([change]);
     await api.delete(`/api/attachments/${comment.attachments[0]!.id}`);
     expect(api.events).toEqual([change, change]);

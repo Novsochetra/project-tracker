@@ -1,3 +1,5 @@
+import { dropRowId, dropRowOf } from './dropRow';
+
 export const HANDLE_ATTRIBUTE = 'data-handle-for';
 
 let pending: { ticketId: string } | null = null;
@@ -32,7 +34,6 @@ export function wantsHandleFocus(ticketId: string): boolean {
 }
 
 export function rowHasFocus(ticketId: string): boolean {
-  return (
-    document.activeElement?.closest<HTMLElement>('[data-drop-row]')?.dataset.dropRow === ticketId
-  );
+  const row = dropRowOf(document.activeElement);
+  return row !== null && dropRowId(row) === ticketId;
 }

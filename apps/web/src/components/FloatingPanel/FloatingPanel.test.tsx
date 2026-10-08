@@ -5,7 +5,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { CLICK_SHIELD_MS } from './floatingHooks';
 import { FloatingPanel, FloatingPortal } from './FloatingPanel';
 
-const place = () => ({ top: 40, left: 20, up: false, originX: 100 });
+const place = vi.fn(() => ({ top: 40, left: 20, up: false, originX: 100 }));
 
 function Panel({ open, onClose }: { open: boolean; onClose: () => void }) {
   const anchorRef = useRef<HTMLButtonElement>(null);
@@ -51,6 +51,7 @@ const panel = () => document.querySelector<HTMLElement>('[role="listbox"]');
 
 afterEach(() => {
   vi.useRealTimers();
+  vi.unstubAllGlobals();
   Reflect.deleteProperty(document, 'elementsFromPoint');
 });
 
@@ -62,6 +63,25 @@ describe('FloatingPanel', () => {
     expect(panel()!.style.transformOrigin).toBe('100px 0');
     expect(panel()).toHaveAttribute('data-up', 'false');
     expect(screen.getByRole('listbox', { name: 'Priority' })).toBeInTheDocument();
+  });
+
+  it('places itself again when its content changes size', () => {
+    const resized: ResizeObserverCallback[] = [];
+    vi.stubGlobal(
+      'ResizeObserver',
+      class {
+        constructor(callback: ResizeObserverCallback) {
+          resized.push(callback);
+        }
+        observe() {}
+        disconnect() {}
+      },
+    );
+    render(<Harness />);
+    place.mockReturnValueOnce({ top: 12, left: 20, up: true, originX: 100 });
+    act(() => resized.forEach((callback) => callback([], {} as ResizeObserver)));
+    expect(panel()!.parentElement).toHaveStyle({ top: '12px' });
+    expect(panel()).toHaveAttribute('data-up', 'true');
   });
 
   it('closes on a click outside', async () => {

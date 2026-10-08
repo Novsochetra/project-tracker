@@ -8,6 +8,7 @@ import { setupApi } from '../../src/api/test/render';
 import { CALENDAR_QUERY, DateRow, SelectRow, ToastProvider } from '../../src/components';
 import { NewTicketSheet } from '../../src/features/project/NewTicketSheet';
 import { skipAnimations } from '../../src/overlays/testing';
+import { doubleClick, GAPS, hitTest } from './doubleClick';
 
 // Double-clicking a day, a quick pick or a Status or Priority option picked it, and the second
 // click went through the closing popover to what lay under it (Chromium and WebKit, 1280×800):
@@ -36,28 +37,6 @@ function mockDesktopCalendar(): () => void {
     else Reflect.deleteProperty(window, 'matchMedia');
   };
 }
-
-// jsdom has no layout, so this stands in for the browser's hit test at the spot of the first
-// click: the popover's topmost element there that still takes clicks, else a click-catching
-// layer over the page, else what lies under the popover.
-function hitTest(spot: Element, under: Element): Element {
-  for (let node: Element | null = spot; node && node !== document.body; node = node.parentElement) {
-    if (node.isConnected && !node.closest('[inert]')) return node;
-  }
-  return screen.queryByRole('button', { name: /^Close (menu|calendar)$/, hidden: true }) ?? under;
-}
-
-const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-
-type User = ReturnType<typeof userEvent.setup>;
-
-async function doubleClick(user: User, spot: Element, under: Element, gap: number) {
-  await user.click(spot);
-  if (gap > 0) await wait(gap);
-  await user.click(hitTest(spot, under));
-}
-
-const GAPS = [0, 120, 200];
 
 let cleanups: Array<() => void> = [];
 

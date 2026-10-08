@@ -1,5 +1,7 @@
 import clsx from 'clsx';
-import { useEffect, useRef, type ReactNode, type RefObject } from 'react';
+import { useRef, type ReactNode } from 'react';
+import { FloatingPanel, FloatingPortal, placeFloating, type PlaceFloating } from '../FloatingPanel';
+import { useCloseOnEscape, useMenuTabOrder } from './menuKeys';
 import styles from './Popover.module.css';
 
 export interface PopoverProps {
@@ -11,6 +13,19 @@ export interface PopoverProps {
   className?: string | undefined;
 }
 
+// SPEC §5.4: right-aligned with its button and 6px below it.
+const placeMenu: PlaceFloating = (anchor, panel) =>
+  placeFloating({
+    anchor,
+    size: { width: panel.offsetWidth, height: panel.offsetHeight },
+    viewport: {
+      width: document.documentElement.clientWidth,
+      height: document.documentElement.clientHeight,
+    },
+    gap: 6,
+    inset: 0,
+  });
+
 export function Popover({
   open,
   onClose,
@@ -20,43 +35,27 @@ export function Popover({
   className,
 }: PopoverProps) {
   const anchorRef = useRef<HTMLDivElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
   useCloseOnEscape(open, anchorRef, onClose);
+  useMenuTabOrder(open, anchorRef, panelRef);
   return (
     <div ref={anchorRef} className={clsx(styles.anchor, className)}>
       {trigger}
-      {open && (
-        <>
-          <button
-            type="button"
-            tabIndex={-1}
-            aria-label="Close menu"
-            className={styles.catch}
-            onClick={onClose}
-          />
-          <div role="group" aria-label={label} className={styles.panel}>
-            {children}
-          </div>
-        </>
-      )}
+      <FloatingPortal open={open}>
+        <FloatingPanel
+          open={open}
+          anchorRef={anchorRef}
+          panelRef={panelRef}
+          closeLabel="Close menu"
+          place={placeMenu}
+          onClose={onClose}
+          role="group"
+          aria-label={label}
+          className={styles.panel}
+        >
+          {children}
+        </FloatingPanel>
+      </FloatingPortal>
     </div>
   );
-}
-
-function useCloseOnEscape(
-  open: boolean,
-  anchorRef: RefObject<HTMLDivElement | null>,
-  onClose: () => void,
-) {
-  useEffect(() => {
-    if (!open) return;
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key !== 'Escape' || event.defaultPrevented) return;
-      event.preventDefault();
-      const trigger = anchorRef.current?.firstElementChild;
-      if (trigger instanceof HTMLElement) trigger.focus();
-      onClose();
-    };
-    document.addEventListener('keydown', onKeyDown);
-    return () => document.removeEventListener('keydown', onKeyDown);
-  }, [open, anchorRef, onClose]);
 }

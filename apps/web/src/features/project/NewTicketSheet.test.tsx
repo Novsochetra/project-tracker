@@ -181,8 +181,14 @@ describe('NewTicketSheet', () => {
 
   it('switches back to All when the status tab would hide the new ticket', async () => {
     setListFilter('MOB', STATUS.done);
-    const { user } = renderSheet();
+    const { user, createTicket } = renderSheet();
+    await user.click(screen.getByRole('button', { name: /^Status/ }));
+    await user.click(screen.getByRole('option', { name: 'To do' }));
     await user.type(titleField(), 'New idea{Enter}');
+    expect(createTicket).toHaveBeenCalledWith(
+      'MOB',
+      expect.objectContaining({ statusId: STATUS.todo }),
+    );
     await waitFor(() => expect(getListView('MOB')).toEqual({ filter: 'all', query: '' }));
   });
 

@@ -1,5 +1,12 @@
 import { crc32, deflateSync } from 'node:zlib';
-import type { Actor, ProjectDetail, Status, StatusCategory, TicketDetail } from '@tracker/shared';
+import {
+  FILE_NAME_HEADER,
+  type Actor,
+  type ProjectDetail,
+  type Status,
+  type StatusCategory,
+  type TicketDetail,
+} from '@tracker/shared';
 
 export const PERSON: Actor = { kind: 'human', name: '' };
 
@@ -34,28 +41,40 @@ export function pngBytes(width = 3, height = 2): Uint8Array {
   return new Uint8Array(png);
 }
 
-export interface FileFormOptions {
+export interface FileUploadOptions {
   bytes?: Uint8Array;
   name?: string;
   type?: string;
   ticketKey?: string;
 }
 
-// An empty type reaches the server as application/octet-stream, as in browsers.
-export function fileForm(options: FileFormOptions = {}): FormData {
-  const form = new FormData();
-  const bytes = options.bytes ?? new TextEncoder().encode('hello');
-  form.set(
-    'file',
-    new Blob([bytes], { type: options.type ?? 'text/plain' }),
-    options.name ?? 'a.txt',
-  );
-  if (options.ticketKey) form.set('ticketKey', options.ticketKey);
-  return form;
+export interface FileUpload {
+  path: string;
+  init: RequestInit;
 }
 
-export const imageForm = (options: FileFormOptions = {}): FormData =>
-  fileForm({ bytes: pngBytes(), name: 'screenshot.png', type: 'image/png', ...options });
+// What TrackerClient.uploadAttachment sends: the file itself as the body, its name and type in
+// headers. An empty type goes as application/octet-stream, as browsers send it.
+export function fileUpload(options: FileUploadOptions = {}): FileUpload {
+  const bytes = options.bytes ?? new TextEncoder().encode('hello');
+  const type = options.type ?? 'text/plain';
+  const query = options.ticketKey ? `?ticketKey=${encodeURIComponent(options.ticketKey)}` : '';
+  return {
+    path: `/api/attachments${query}`,
+    init: {
+      method: 'POST',
+      headers: {
+        'content-type': type || 'application/octet-stream',
+        'content-length': String(bytes.byteLength),
+        [FILE_NAME_HEADER]: encodeURIComponent(options.name ?? 'a.txt'),
+      },
+      body: new Blob([bytes]),
+    },
+  };
+}
+
+export const imageUpload = (options: FileUploadOptions = {}): FileUpload =>
+  fileUpload({ bytes: pngBytes(), name: 'screenshot.png', type: 'image/png', ...options });
 
 export function statusOf(
   detail: Pick<ProjectDetail | TicketDetail, 'statuses'>,

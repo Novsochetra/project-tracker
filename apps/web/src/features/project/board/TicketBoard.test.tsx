@@ -82,7 +82,7 @@ describe('TicketBoard', () => {
     const user = userEvent.setup();
     renderProject();
     await screen.findByRole('region', { name: 'Need review' });
-    const filters = screen.getByRole('group', { name: 'Filter tickets' });
+    const filters = screen.getByRole('toolbar', { name: 'Filter tickets' });
     await user.click(within(filters).getByRole('button', { name: /^To do/ }));
     expect(regionNames()).toEqual(['To do']);
     expect(cardKeys('To do')).toEqual(['MOB-1', 'MOB-2']);
@@ -185,7 +185,7 @@ describe('TicketBoard on phones', () => {
     expect(document.querySelector('[data-board-pager]')).toHaveTextContent('To do 1 / 5');
     expect(board).not.toHaveAttribute('data-single');
 
-    const filters = screen.getByRole('group', { name: 'Filter tickets' });
+    const filters = screen.getByRole('toolbar', { name: 'Filter tickets' });
     await user.click(within(filters).getByRole('button', { name: /^In progress/ }));
     expect(regionNames()).toEqual(['In progress']);
     expect(document.querySelector('[data-board-pager]')).toBeNull();

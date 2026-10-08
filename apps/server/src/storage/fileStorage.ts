@@ -5,7 +5,8 @@ export interface ByteRange {
 }
 
 export interface FileStorage {
-  write(key: string, file: Blob): Promise<void>;
+  // Stores the stream as it arrives. When the stream fails, nothing of it is kept.
+  write(key: string, body: ReadableStream<Uint8Array>): Promise<void>;
   read(key: string, range?: ByteRange): Promise<ReadableStream<Uint8Array> | null>;
   remove(key: string): Promise<void>;
 }

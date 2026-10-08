@@ -1,5 +1,6 @@
 import type { DropTarget } from '@tracker/shared';
 import { AUTO_SCROLL_INTERVAL_MS } from './autoScroll';
+import { dropRowOf } from './dropRow';
 import type { Point } from './dropTarget';
 
 export const DRAG_START_DISTANCE = 6;
@@ -105,7 +106,7 @@ export class DragSession {
   private start(): void {
     this.started = true;
     this.origin = this.pointer;
-    const row = this.press.element.closest<HTMLElement>('[data-drop-row]') ?? this.press.element;
+    const row = dropRowOf(this.press.element) ?? this.press.element;
     const rect = row.getBoundingClientRect();
     window.getSelection()?.removeAllRanges();
     document.addEventListener('scroll', this.schedule, SCROLL_LISTENER);

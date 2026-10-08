@@ -145,6 +145,35 @@ describe('syncDrafts', () => {
     expect(sync.save).toHaveBeenCalledTimes(2);
     expect(keptIds()).toEqual(['title:MOB-1']);
   });
+
+  it('sends a refused draft again only once its text changed', async () => {
+    const target = { ticketKey: 'MOB-1', field: 'description' } as const;
+    keep(target, 'Far too long', '');
+    const sync = deps({ 'MOB-1': ticket(1) });
+    vi.mocked(sync.save).mockRejectedValue(REFUSED);
+    await syncDrafts(sync);
+    await syncDrafts(sync);
+    expect(sync.save).toHaveBeenCalledTimes(1);
+    keep(target, 'Short', '');
+    await syncDrafts(sync);
+    expect(sync.save).toHaveBeenCalledTimes(2);
+    expect(sync.fetchTicket).toHaveBeenCalledTimes(3);
+  });
+
+  it('reads only the closed tickets in the projects a change touched', async () => {
+    keep({ ticketKey: 'MOB-1', field: 'comment' }, 'Unsent', '');
+    keep({ ticketKey: 'WEB-1', field: 'comment' }, 'Unsent too', '');
+    keep({ ticketKey: 'WEB-2', field: 'title' }, 'Open here', 'Ticket 2');
+    const retry = vi.fn();
+    const { unmount } = renderHook(() => useLiveDraft('title:WEB-2', retry));
+    retry.mockClear();
+    const sync = deps({ 'MOB-1': ticket(1), 'WEB-1': ticket(1) });
+    await syncDrafts(sync, new Set(['WEB']));
+    expect(sync.fetchTicket).toHaveBeenCalledTimes(1);
+    expect(sync.fetchTicket).toHaveBeenCalledWith('WEB-1');
+    expect(retry).not.toHaveBeenCalled();
+    unmount();
+  });
 });
 
 describe('runDraftSync', () => {

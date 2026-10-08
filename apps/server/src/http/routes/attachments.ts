@@ -1,9 +1,6 @@
-import { MAX_ATTACHMENT_BYTES } from '@tracker/shared';
+import { FILE_NAME_HEADER } from '@tracker/shared';
 import { Hono, type Context } from 'hono';
-import { bodyLimit } from 'hono/body-limit';
-import { invalidInput } from '../../errors';
 import {
-  TOO_LARGE_MESSAGE,
   deleteAttachment,
   readAttachmentFile,
   requireAttachment,
@@ -15,24 +12,30 @@ import { parseByteRange } from '../byteRange';
 import type { AppEnv } from '../env';
 import { fileHeaders } from '../fileHeaders';
 
-// Room for the multipart boundaries and the other form fields around the file.
-const FORM_OVERHEAD_BYTES = 64 * 1024;
+function decodeName(header: string | undefined): string {
+  if (!header) return '';
+  try {
+    return decodeURIComponent(header);
+  } catch {
+    return header;
+  }
+}
 
-const uploadLimit = bodyLimit({
-  maxSize: MAX_ATTACHMENT_BYTES + FORM_OVERHEAD_BYTES,
-  onError: () => {
-    throw invalidInput(TOO_LARGE_MESSAGE);
-  },
-});
+function declaredSize(header: string | undefined): number | null {
+  const size = Number(header);
+  return header && Number.isSafeInteger(size) && size >= 0 ? size : null;
+}
 
-async function readUpload(c: Context<AppEnv>): Promise<UploadInput> {
-  const body = await c.req.parseBody().catch(() => {
-    throw invalidInput('Send the file as multipart form data.');
-  });
-  const file = body.file;
-  if (!(file instanceof File)) throw invalidInput('Choose a file to upload.');
-  const ticketKey = typeof body.ticketKey === 'string' ? body.ticketKey.trim() : '';
-  return { file, ticketKey: ticketKey || undefined };
+// The body is the file itself and is read as it arrives (services/attachments).
+function readUpload(c: Context<AppEnv>): UploadInput {
+  const ticketKey = c.req.query('ticketKey')?.trim();
+  return {
+    body: c.req.raw.body,
+    name: decodeName(c.req.header(FILE_NAME_HEADER)),
+    type: c.req.header('content-type') ?? '',
+    size: declaredSize(c.req.header('content-length')),
+    ticketKey: ticketKey || undefined,
+  };
 }
 
 async function serveFile(c: Context<AppEnv>, ctx: ServiceContext): Promise<Response> {
@@ -61,9 +64,7 @@ async function serveFile(c: Context<AppEnv>, ctx: ServiceContext): Promise<Respo
 
 export const attachmentRoutes = (ctx: ServiceContext) =>
   new Hono<AppEnv>()
-    .post('/attachments', uploadLimit, async (c) =>
-      c.json(await uploadAttachment(ctx, await readUpload(c)), 201),
-    )
+    .post('/attachments', async (c) => c.json(await uploadAttachment(ctx, readUpload(c)), 201))
     .get('/attachments/:id/file', (c) => serveFile(c, ctx))
     .delete('/attachments/:id', async (c) => {
       await deleteAttachment(ctx, c.req.param('id'));

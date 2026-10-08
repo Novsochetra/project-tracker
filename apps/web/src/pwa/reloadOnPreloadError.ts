@@ -14,15 +14,23 @@ function rememberReload(now: number): boolean {
   }
 }
 
+type LastReload = 'recent' | 'long ago' | 'unknown';
+
 // Without storage a reload can't be remembered, so none is tried: it could repeat forever.
-function reloadedRecently(now: number): boolean {
+function lastReload(now: number): LastReload {
   try {
     const at = Number(window.sessionStorage.getItem(CHUNK_RELOAD_KEY));
-    return now - at < CHUNK_RELOAD_WINDOW_MS;
+    return now - at < CHUNK_RELOAD_WINDOW_MS ? 'recent' : 'long ago';
   } catch {
-    return true;
+    return 'unknown';
   }
 }
+
+const STAYING: Record<Exclude<LastReload, 'long ago'>, string> = {
+  recent: 'A file of the app still fails to load after a reload; staying.',
+  unknown:
+    "A file of the app fails to load, and without session storage a reload can't be remembered, so none is tried; staying.",
+};
 
 // A new build replaces the old one's chunks, so a page still on the old build can't load a lazy
 // chunk it hasn't loaded yet. A reload brings the new build; like an update it waits until no
@@ -34,8 +42,9 @@ export function reloadOnPreloadError(reload: () => void): () => void {
   const onPreloadError = (event: VitePreloadErrorEvent) => {
     if (handled) return;
     handled = true;
-    if (reloadedRecently(Date.now())) {
-      console.warn('A file of the app still fails to load after a reload; staying.', event.payload);
+    const last = lastReload(Date.now());
+    if (last !== 'long ago') {
+      console.warn(STAYING[last], event.payload);
       return;
     }
     reloadWhenSafe(() => {

@@ -11,6 +11,7 @@ import { renderWithApp } from '../../../app/test/harness';
 import { mockPhone, skipAnimations } from '../../../overlays/testing';
 import { readyItems } from '../../ready/readyItems';
 import { ReadySection } from '../../ready/ReadySection';
+import { dropRowOf } from '../dnd/dropRow';
 import { resetListView } from '../listViewStore';
 import { fakeBoardServer } from '../test/fakeBoardServer';
 import { renderProject } from '../test/renderProject';
@@ -41,9 +42,7 @@ const handle = (key: string) =>
 
 // Swipe gestures need real touch input; the actions they reveal are plain buttons underneath.
 function swipeAction(key: string, label: string) {
-  const row = screen
-    .getByRole('button', { name: new RegExp(`^${key}\\b`) })
-    .closest<HTMLElement>('[data-drop-row]');
+  const row = dropRowOf(screen.getByRole('button', { name: new RegExp(`^${key}\\b`) }));
   const action = row && within(row).getByText(label).closest('button');
   if (!action) throw new Error(`No ${label} action on ${key}`);
   fireEvent.click(action);

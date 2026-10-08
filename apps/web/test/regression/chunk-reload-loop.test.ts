@@ -52,4 +52,31 @@ describe('regression: a chunk that keeps failing reloads the page once', () => {
     failChunk();
     expect(reload).toHaveBeenCalledTimes(2);
   });
+
+  // Reviewer 36 (PT-55): with session storage blocked no reload is tried, yet the warning said the
+  // file "still fails to load after a reload".
+  it('says why it stays when session storage is blocked, without claiming a reload', () => {
+    vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
+      throw new DOMException('Blocked', 'SecurityError');
+    });
+    const reload = vi.fn();
+    loadPage(reload);
+    failChunk();
+    expect(reload).not.toHaveBeenCalled();
+    const [message] = vi.mocked(console.warn).mock.calls[0] ?? [];
+    expect(message).not.toMatch(/after a reload/);
+    expect(message).toMatch(/session storage/);
+  });
+
+  it('still says a reload was tried after one', () => {
+    const reload = vi.fn();
+    loadPage(reload);
+    failChunk();
+    loadPage(reload);
+    failChunk();
+    expect(console.warn).toHaveBeenCalledWith(
+      expect.stringMatching(/after a reload/),
+      expect.any(TypeError),
+    );
+  });
 });

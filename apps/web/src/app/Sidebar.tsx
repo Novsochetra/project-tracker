@@ -1,3 +1,4 @@
+import type { ProjectSummary } from '@tracker/shared';
 import clsx from 'clsx';
 import { LayoutGrid, Plus } from 'lucide-react';
 import type { ReactNode } from 'react';
@@ -5,6 +6,7 @@ import { useProjects, useReadyForYou } from '../api';
 import { Icon, IconButton, LogoGlyph } from '../components';
 import { sameProjectKey } from '../features/projects/projectLookup';
 import { readyCounts, readyItems } from '../features/ready/readyItems';
+import { ErrorBoundary } from '../lib/ErrorBoundary';
 import { useNavigation } from '../navigation';
 import { projectKeyOf } from './crumbs';
 import { useSheets } from './sheets/context';
@@ -31,12 +33,46 @@ function SidebarItem({
   );
 }
 
+interface ProjectItemsProps {
+  projects: readonly ProjectSummary[];
+  ready: ReadonlyMap<string, number>;
+}
+
+const NO_COUNTS: ReadonlyMap<string, number> = new Map();
+
+function ProjectItems({ projects, ready }: ProjectItemsProps) {
+  const { route, push } = useNavigation();
+  const activeKey = projectKeyOf(route);
+  return projects.map((project) => (
+    <SidebarItem
+      key={project.id}
+      active={activeKey !== null && sameProjectKey(project.key, activeKey)}
+      onClick={() => push({ name: 'project', key: project.key })}
+    >
+      <span className={styles.square} style={{ background: project.color }} />
+      <span className={styles.name}>{project.name}</span>{' '}
+      {ready.has(project.id) && (
+        <>
+          <span className={styles.ready}>{ready.get(project.id)} ready</span>{' '}
+        </>
+      )}
+      <span className={styles.count}>
+        {project.openCount} <span className="visually-hidden">open</span>
+      </span>
+    </SidebarItem>
+  ));
+}
+
+function ReadyProjectItems({ projects }: Pick<ProjectItemsProps, 'projects'>) {
+  const ready = readyCounts(readyItems(useReadyForYou().data, projects));
+  return <ProjectItems projects={projects} ready={ready} />;
+}
+
 export function Sidebar() {
   const { route, push } = useNavigation();
   const sheets = useSheets();
   const projects = useProjects().data ?? [];
-  const ready = readyCounts(readyItems(useReadyForYou().data, projects));
-  const activeKey = projectKeyOf(route);
+  const readyList = useReadyForYou().data;
   return (
     <aside aria-label="Projects" className={styles.sidebar}>
       <div className={styles.brand}>
@@ -59,24 +95,16 @@ export function Sidebar() {
             onClick={() => sheets.open({ type: 'newProject' })}
           />
         </div>
-        {projects.map((project) => (
-          <SidebarItem
-            key={project.id}
-            active={activeKey !== null && sameProjectKey(project.key, activeKey)}
-            onClick={() => push({ name: 'project', key: project.key })}
-          >
-            <span className={styles.square} style={{ background: project.color }} />
-            <span className={styles.name}>{project.name}</span>{' '}
-            {ready.has(project.id) && (
-              <>
-                <span className={styles.ready}>{ready.get(project.id)} ready</span>{' '}
-              </>
-            )}
-            <span className={styles.count}>
-              {project.openCount} <span className="visually-hidden">open</span>
-            </span>
-          </SidebarItem>
-        ))}
+        {/* A ready list it can't read only leaves out the counts; they are tried again once the
+            list changes. Projects that fail fail the fallback too, and the sidebar's boundary
+            takes over. */}
+        <ErrorBoundary
+          name="Sidebar ready counts"
+          retryKey={readyList}
+          fallback={<ProjectItems projects={projects} ready={NO_COUNTS} />}
+        >
+          <ReadyProjectItems projects={projects} />
+        </ErrorBoundary>
       </div>
     </aside>
   );

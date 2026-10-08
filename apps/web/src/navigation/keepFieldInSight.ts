@@ -32,10 +32,14 @@ function viewOf(scroller: HTMLElement): Edges {
   return { top: navBar ? navBar.getBoundingClientRect().bottom : top, bottom };
 }
 
+// To a position, not by a distance: WebKit runs a smooth scroll on its own thread, so while the
+// page is busy the scroll moves on from where the page measured the box, and a distance added to
+// that later spot overshot.
 function keepInSight(box: HTMLElement, bar: HTMLElement, scroller: HTMLElement, plan: Plan): void {
-  const top = plan(box.getBoundingClientRect(), viewOf(scroller), bar.offsetHeight);
-  if (top > 0)
-    scroller.scrollBy({ top, behavior: prefersReducedMotionNow() ? 'instant' : 'smooth' });
+  const distance = plan(box.getBoundingClientRect(), viewOf(scroller), bar.offsetHeight);
+  if (distance <= 0) return;
+  const behavior = prefersReducedMotionNow() ? 'instant' : 'smooth';
+  scroller.scrollTo({ top: scroller.scrollTop + distance, behavior });
 }
 
 // A field's actions, such as the comment box's Comment button, sit in its form below it.

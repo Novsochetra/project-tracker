@@ -55,4 +55,28 @@ describe.each(DIALECTS)('migrations (%s)', (dialect) => {
       await db.destroy();
     }
   });
+
+  it('keeps the files of a database from before positions in the order they arrived', async () => {
+    const db = await databaseWithTickets(dialect);
+    try {
+      for (const [id, createdAt] of [
+        ['f-late', 3000],
+        ['f-early', 2000],
+      ] as const) {
+        await sql`insert into attachments (id, ticket_id, file_name, mime_type, size, storage_key,
+          created_at) values (${id}, 't-1', ${`${id}.txt`}, 'text/plain', 5, ${`${id}.txt`},
+          ${createdAt})`.execute(db);
+      }
+      await migrateToLatest(db);
+      const client = clientFor(
+        createApp({ db, storage: createMemoryStorage(), events: createBroadcaster() }),
+      );
+
+      const added = await client.uploadAttachment(new Blob(['notes']), 'new.txt', 'MOB-1');
+      const files = (await client.getTicket('MOB-1')).attachments;
+      expect(files.map((file) => file.id)).toEqual(['f-early', 'f-late', added.id]);
+    } finally {
+      await db.destroy();
+    }
+  });
 });

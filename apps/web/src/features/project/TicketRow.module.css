@@ -224,6 +224,10 @@
     grid-area: due;
   }
 
+  .main .due {
+    container: due / inline-size;
+  }
+
   /* Only a sent-back row gets the chip's column: an empty one would still add a gap. */
   .main:has(.sentBack) {
     grid-template-columns: auto auto auto minmax(0, 1fr) auto;
@@ -238,6 +242,22 @@
 
   .assignee {
     grid-area: assignee;
+  }
+}
+
+/* A phone row's due date gets the room left beside the priority, key and chip. Where the icon and
+   the widest date ("May 20", or "May 20, 2030" in another year, 41.6 and 77.7px in WebKit) would
+   not fit, the icon goes, so the date keeps one line and the row its height (a sent-back TRACK-123
+   at 320px). */
+@container due (max-width: 61px) {
+  .due svg {
+    display: none;
+  }
+}
+
+@container due (max-width: 97px) {
+  .due[data-year] svg {
+    display: none;
   }
 }
 

@@ -58,7 +58,14 @@ export function useFloatingPlacement(
     };
     apply();
     window.addEventListener('resize', apply);
-    return () => window.removeEventListener('resize', apply);
+    // A ••• menu that turns into its delete confirm changes size, and one above its button must
+    // grow away from it.
+    const observer = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(apply);
+    if (panelRef.current) observer?.observe(panelRef.current);
+    return () => {
+      window.removeEventListener('resize', apply);
+      observer?.disconnect();
+    };
   }, [frameRef, panelRef, anchorRef, place]);
 }
 

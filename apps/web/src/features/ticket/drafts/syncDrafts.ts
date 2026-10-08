@@ -1,6 +1,6 @@
 import { ApiError } from '@tracker/client';
 import type { TicketDetail } from '@tracker/shared';
-import { isNotFound } from '../../../api';
+import { isNotFound, projectOfTicket } from '../../../api';
 import {
   draftSaved,
   forgetDraft,
@@ -8,7 +8,7 @@ import {
   storedDrafts,
   type StoredDraft,
 } from '../../../lib/storedDrafts';
-import { finishSave, isSaving, startSave } from '../fields/fieldSaves';
+import { finishSave, isSavingAnywhere, startSave } from '../fields/fieldSaves';
 import { checkDraft, serverText } from './draftCheck';
 import { isLeftToScreen, retryLiveDrafts } from './liveDrafts';
 
@@ -24,27 +24,41 @@ export interface DraftSyncReport {
   changed: Entry[];
 }
 
+// The closed tickets a run reads: all, or those in the projects a reported change touched.
+export type SyncScope = 'all' | ReadonlySet<string>;
+
 interface Run {
   deps: DraftSyncDeps;
   report: DraftSyncReport;
 }
 
 // Drafts on screen retry themselves, so only drafts left in closed tickets are synced here. A
-// draft with saves on its way is theirs to settle: the tracker may have the first of them
-// without having answered, which a check would take for someone else's change.
+// draft with saves on its way, in this tab or another, is theirs to settle: the tracker may have
+// the first of them without having answered, which a check would take for someone else's change.
 const isSettledElsewhere = (id: string, ticketKey: string): boolean =>
-  isLeftToScreen(id, ticketKey) || isSaving(id);
+  isLeftToScreen(id, ticketKey) || isSavingAnywhere(id);
 
-function closedTicketDrafts(): Map<string, Entry[]> {
+const inScope = (ticketKey: string, scope: SyncScope): boolean =>
+  scope === 'all' || scope.has(projectOfTicket(ticketKey) ?? '');
+
+function closedTicketDrafts(scope: SyncScope): Map<string, Entry[]> {
   const byTicket = new Map<string, Entry[]>();
   for (const [id, draft] of storedDrafts()) {
-    if (isSettledElsewhere(id, draft.ticketKey)) continue;
+    if (!inScope(draft.ticketKey, scope) || isSettledElsewhere(id, draft.ticketKey)) continue;
     byTicket.set(draft.ticketKey, [...(byTicket.get(draft.ticketKey) ?? []), [id, draft]]);
   }
   return byTicket;
 }
 
-export const hasClosedDrafts = (): boolean => closedTicketDrafts().size > 0;
+export const hasClosedDrafts = (scope: SyncScope = 'all'): boolean =>
+  closedTicketDrafts(scope).size > 0;
+
+// The text of each draft the tracker refused (a 4xx other than 404). It isn't sent again by later
+// runs, which would only be refused again, until its text changes; on its ticket's screen the
+// field says it isn't saved and retries it there.
+const refused = new Map<string, string>();
+
+export const clearRefusedDrafts = (): void => refused.clear();
 
 // The comment box is never sent for the user, nor an edit nobody pressed Save for. Their
 // tickets are still read, so their text goes once the ticket or comment is gone.
@@ -63,6 +77,7 @@ async function save([id, draft]: Entry, run: Run): Promise<boolean> {
   } catch (error) {
     finishSave(id, number, false);
     if (isNotFound(error)) forgetDraft(id);
+    else if (!endsRun(error)) refused.set(id, draft.text);
     return !endsRun(error);
   }
   finishSave(id, number, true);
@@ -72,7 +87,7 @@ async function save([id, draft]: Entry, run: Run): Promise<boolean> {
 async function syncDraft(entry: Entry, detail: TicketDetail, run: Run): Promise<boolean> {
   const [id, draft] = entry;
   // A save may have started while the ticket was read.
-  if (draft.field === 'comment' || isSaving(id)) return true;
+  if (draft.field === 'comment' || isSavingAnywhere(id)) return true;
   const check = checkDraft(draft, serverText(detail, draft));
   if (check === 'gone') {
     forgetDraft(id);
@@ -88,6 +103,7 @@ async function syncDraft(entry: Entry, detail: TicketDetail, run: Run): Promise<
     run.report.changed.push(entry);
     return true;
   }
+  if (refused.get(id) === draft.text) return true;
   return save(entry, run);
 }
 
@@ -107,10 +123,13 @@ async function syncTicket(ticketKey: string, entries: Entry[], run: Run): Promis
 
 // Saves drafts only while the tracker still has the value they were typed over, and drops the
 // drafts of tickets and comments that are gone.
-export async function syncDrafts(deps: DraftSyncDeps): Promise<DraftSyncReport> {
+export async function syncDrafts(
+  deps: DraftSyncDeps,
+  scope: SyncScope = 'all',
+): Promise<DraftSyncReport> {
   const run: Run = { deps, report: { changed: [] } };
-  retryLiveDrafts();
-  for (const [ticketKey, entries] of closedTicketDrafts()) {
+  if (scope === 'all') retryLiveDrafts();
+  for (const [ticketKey, entries] of closedTicketDrafts(scope)) {
     if (!(await syncTicket(ticketKey, entries, run))) break;
   }
   return run.report;

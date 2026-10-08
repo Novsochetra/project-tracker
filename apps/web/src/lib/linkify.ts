@@ -2,8 +2,10 @@ export type LinkPart =
   { kind: 'text'; text: string } | { kind: 'link'; text: string; href: string };
 
 // CJK punctuation ends a link like a space does, because CJK text has no spaces around it
-// ("请看https://x.dev/a。谢谢"). CJK letters stay, as in https://ja.wikipedia.org/wiki/東京.
-const CANDIDATE = /\bhttps?:\/\/[^\s<>"`、。，．：；！？（）「」『』【】〈〉《》〔〕｡｢｣､]+/gi;
+// ("请看https://x.dev/a。谢谢"). CJK letters stay, as in https://ja.wikipedia.org/wiki/東京. Curly
+// double quotes end it like a straight one ("请看https://x.dev/a“谢谢”"), and so does an opening
+// curly single quote; a closing one stays inside, where it is an apostrophe typed as ’.
+const CANDIDATE = /\bhttps?:\/\/[^\s<>"“”‘`、。，．：；！？（）「」『』【】〈〉《》〔〕｡｢｣､]+/gi;
 const HAS_HOST = /^https?:\/\/[^/?#.]/i;
 const TRAILING = new Set('.,;:!?*\'"’”…');
 const BRACKETS = [

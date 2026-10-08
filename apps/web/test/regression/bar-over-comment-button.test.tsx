@@ -118,17 +118,23 @@ function renderCommentBox(start = BOX_AT_BOTTOM) {
   scroller.getBoundingClientRect = () => rect({ top: 0, bottom: SCREEN_BOTTOM });
   form.getBoundingClientRect = () => rect(box);
   Object.defineProperty(bar, 'offsetHeight', { value: BAR_HEIGHT });
-  const scrollBy = vi.fn((options: ScrollToOptions) => steps.push(`scrolled ${options.top}`));
-  scroller.scrollBy = scrollBy as typeof scroller.scrollBy;
+  let scrollTop = 0;
+  Object.defineProperty(scroller, 'scrollTop', { get: () => scrollTop });
+  const scrollTo = vi.fn((options: ScrollToOptions) => steps.push(`scrolled to ${options.top}`));
+  scroller.scrollTo = scrollTo as typeof scroller.scrollTo;
   return {
     field: screen.getByRole('textbox', { name: 'Comment' }),
     send: screen.getByRole('button', { name: 'Comment' }),
     scroller,
     bar,
-    scrollBy,
+    scrollTo,
     steps,
     moveBox: (to: typeof box) => {
       box = to;
+    },
+    // Where a smooth scroll has got to while it runs.
+    scrolledTo: (top: number) => {
+      scrollTop = top;
     },
   };
 }
@@ -155,7 +161,7 @@ it('stays away until the press that took focus out of the field is released', as
   expect(bar).not.toHaveAttribute('data-hidden');
   expect(bar).not.toHaveAttribute('inert');
   await nextFrame();
-  expect(steps).toEqual(['comment sent', 'scrolled 84']);
+  expect(steps).toEqual(['comment sent', 'scrolled to 84']);
 });
 
 it('comes back after a cancelled press, such as a scroll that started on the button', async () => {
@@ -169,15 +175,15 @@ it('comes back after a cancelled press, such as a scroll that started on the but
 });
 
 it('scrolls the comment box and its Comment button above the bar when the keyboard closes', async () => {
-  const { field, bar, scrollBy } = renderCommentBox();
+  const { field, bar, scrollTo } = renderCommentBox();
   act(() => field.focus());
   act(() => field.blur());
   expect(bar).not.toHaveAttribute('data-hidden');
-  expect(scrollBy).not.toHaveBeenCalled();
+  expect(scrollTo).not.toHaveBeenCalled();
 
   await nextFrame();
   // 819 − (812 − 69 − 8): the box's bottom ends 8px above the bar.
-  expect(scrollBy).toHaveBeenCalledExactlyOnceWith({ top: 84, behavior: 'smooth' });
+  expect(scrollTo).toHaveBeenCalledExactlyOnceWith({ top: 84, behavior: 'smooth' });
 });
 
 // A tap on Comment while typing: the press takes focus out of the field, the release sends.
@@ -196,24 +202,54 @@ function userScrolls(scroller: HTMLElement) {
 }
 
 it('keeps the box above the bar when the comment it sent pushes it down while the bar comes in', async () => {
-  const { field, send, scrollBy, moveBox } = renderCommentBox();
+  const { field, send, scrollTo, moveBox } = renderCommentBox();
   tapCommentWhileTyping(field, send);
   await nextTask();
   await nextFrame();
-  expect(scrollBy).toHaveBeenLastCalledWith({ top: 84, behavior: 'smooth' });
+  expect(scrollTo).toHaveBeenLastCalledWith({ top: 84, behavior: 'smooth' });
 
   // Scrolled clear (606–735), then the new comment card, 90px tall, lands above the box.
   moveBox({ top: 696, bottom: 825 });
   contentResized();
-  expect(scrollBy).toHaveBeenLastCalledWith({ top: 90, behavior: 'smooth' });
+  expect(scrollTo).toHaveBeenLastCalledWith({ top: 90, behavior: 'smooth' });
+});
+
+// Reviewer 38 (PT-55): tapping Comment while typing a ticket's first comment left the box 17–24px
+// above the bar in about half the runs in WebKit, instead of 8. WebKit runs a smooth scroll on its
+// own thread, so while the page is busy, such as rendering the new comment, the scroll moves on
+// from where the page last read it; a second scroll by a distance was added to that later spot.
+it('lands the box 8px above the bar when the sent comment arrives during the first scroll', async () => {
+  const { field, send, scroller, scrollTo, moveBox, scrolledTo } = renderCommentBox();
+  let endsAt = 0;
+  let movedOnTo = 0;
+  scroller.scrollBy = (({ top = 0 }: ScrollToOptions) => {
+    endsAt = movedOnTo + top;
+  }) as typeof scroller.scrollBy;
+  scrollTo.mockImplementation(({ top = 0 }: ScrollToOptions) => {
+    endsAt = top;
+    return 0;
+  });
+  tapCommentWhileTyping(field, send);
+  await nextTask();
+  await nextFrame();
+  expect(endsAt).toBe(84);
+
+  // The page last read the scroll at 42, with the new comment card (90px) landed above the box;
+  // the scroll itself has got to 60 by then.
+  scrolledTo(42);
+  movedOnTo = 60;
+  moveBox({ top: 690 - 42 + 90, bottom: 819 - 42 + 90 });
+  contentResized();
+  const boxBottomOnceStill = 819 + 90 - endsAt;
+  expect(boxBottomOnceStill).toBe(SCREEN_BOTTOM - BAR_HEIGHT - 8);
 });
 
 it('keeps the emptied box above the bar when a comment sent after the keyboard closed lands', async () => {
-  const { field, send, scrollBy, moveBox, steps } = renderCommentBox();
+  const { field, send, scrollTo, moveBox, steps } = renderCommentBox();
   act(() => field.focus());
   act(() => field.blur());
   await nextFrame();
-  expect(scrollBy).toHaveBeenLastCalledWith({ top: 84, behavior: 'smooth' });
+  expect(scrollTo).toHaveBeenLastCalledWith({ top: 84, behavior: 'smooth' });
   moveBox({ top: 606, bottom: 735 });
 
   fireEvent.pointerDown(send);
@@ -222,39 +258,39 @@ it('keeps the emptied box above the bar when a comment sent after the keyboard c
   expect(steps).toContain('comment sent');
   moveBox({ top: 696, bottom: 825 });
   contentResized();
-  expect(scrollBy).toHaveBeenLastCalledWith({ top: 90, behavior: 'smooth' });
+  expect(scrollTo).toHaveBeenLastCalledWith({ top: 90, behavior: 'smooth' });
 });
 
 it('lets the user scroll away right after the keyboard closes', async () => {
-  const { field, scroller, bar, scrollBy, moveBox } = renderCommentBox();
+  const { field, scroller, bar, scrollTo, moveBox } = renderCommentBox();
   act(() => field.focus());
   act(() => field.blur());
   await nextFrame();
-  expect(scrollBy).toHaveBeenCalledExactlyOnceWith({ top: 84, behavior: 'smooth' });
+  expect(scrollTo).toHaveBeenCalledExactlyOnceWith({ top: 84, behavior: 'smooth' });
 
   // 120 ms later, while the bar is still sliding in, the user scrolls up 200px.
   userScrolls(scroller);
   moveBox({ top: 806, bottom: 935 });
   fireEvent.transitionEnd(bar);
   contentResized();
-  expect(scrollBy).toHaveBeenCalledTimes(1);
+  expect(scrollTo).toHaveBeenCalledTimes(1);
 });
 
 it('lets go of a sent box once the user scrolls', async () => {
-  const { field, send, scroller, scrollBy, moveBox } = renderCommentBox();
+  const { field, send, scroller, scrollTo, moveBox } = renderCommentBox();
   tapCommentWhileTyping(field, send);
   await nextTask();
   await nextFrame();
-  expect(scrollBy).toHaveBeenCalledTimes(1);
+  expect(scrollTo).toHaveBeenCalledTimes(1);
 
   userScrolls(scroller);
   moveBox({ top: 696, bottom: 825 });
   contentResized();
-  expect(scrollBy).toHaveBeenCalledTimes(1);
+  expect(scrollTo).toHaveBeenCalledTimes(1);
 });
 
 it('follows the box when a long comment pushes it below the screen', () => {
-  const { field, send, scrollBy, moveBox } = renderCommentBox({ top: 606, bottom: 735 });
+  const { field, send, scrollTo, moveBox } = renderCommentBox({ top: 606, bottom: 735 });
   act(() => field.focus());
   act(() => field.blur());
   fireEvent.click(send);
@@ -262,11 +298,11 @@ it('follows the box when a long comment pushes it below the screen', () => {
   // Seven lines of comment: a card 220px tall lands above the box.
   moveBox({ top: 826, bottom: 955 });
   contentResized();
-  expect(scrollBy).toHaveBeenLastCalledWith({ top: 220, behavior: 'smooth' });
+  expect(scrollTo).toHaveBeenLastCalledWith({ top: 220, behavior: 'smooth' });
 });
 
 it('lets content that lands well after a send push the box down like any other', async () => {
-  const { field, send, scrollBy, moveBox } = renderCommentBox({ top: 606, bottom: 735 });
+  const { field, send, scrollTo, moveBox } = renderCommentBox({ top: 606, bottom: 735 });
   act(() => field.focus());
   act(() => field.blur());
   fireEvent.click(send);
@@ -275,13 +311,13 @@ it('lets content that lands well after a send push the box down like any other',
   // An agent's comment, a minute later: the screen stays on what the user is reading.
   moveBox({ top: 696, bottom: 825 });
   contentResized();
-  expect(scrollBy).not.toHaveBeenCalled();
+  expect(scrollTo).not.toHaveBeenCalled();
 });
 
 it('leaves the screen where it is when the comment box is clear of the bar', async () => {
-  const { field, scrollBy } = renderCommentBox({ top: 500, bottom: 629 });
+  const { field, scrollTo } = renderCommentBox({ top: 500, bottom: 629 });
   act(() => field.focus());
   act(() => field.blur());
   await nextFrame();
-  expect(scrollBy).not.toHaveBeenCalled();
+  expect(scrollTo).not.toHaveBeenCalled();
 });

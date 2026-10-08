@@ -1,8 +1,8 @@
-import { renderHook } from '@testing-library/react';
+import { act, renderHook } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { keepSheetDraft, sheetDraft } from '../../lib/sheetDrafts';
 import { BLANK_CAPTURE, CAPTURE_DRAFT_ID } from './captureForm';
-import { keptCapture, useKeepCapture, type KeptCapture } from './keptCapture';
+import { keptCapture, useCaptureId, useKeepCapture, type KeptCapture } from './keptCapture';
 
 const IDEA = { title: 'Idea from the bus', description: 'Steps', priority: 'high' } as const;
 
@@ -12,14 +12,14 @@ afterEach(() => {
 
 describe('keptCapture', () => {
   it('starts blank, in the default project, when nothing is kept', () => {
-    expect(keptCapture()).toEqual({ values: BLANK_CAPTURE, projectKey: null });
+    expect(keptCapture()).toEqual({ values: BLANK_CAPTURE, projectKey: null, clientId: null });
   });
 
   it('reads back what an open sheet kept, and skips what it cannot read', () => {
-    keepSheetDraft(CAPTURE_DRAFT_ID, { ...IDEA, projectKey: 'MOB' });
-    expect(keptCapture()).toEqual({ values: IDEA, projectKey: 'MOB' });
-    keepSheetDraft(CAPTURE_DRAFT_ID, { title: 7, priority: 'urgent', projectKey: 3 });
-    expect(keptCapture()).toEqual({ values: BLANK_CAPTURE, projectKey: null });
+    keepSheetDraft(CAPTURE_DRAFT_ID, { ...IDEA, projectKey: 'MOB', clientId: 'c1' });
+    expect(keptCapture()).toEqual({ values: IDEA, projectKey: 'MOB', clientId: 'c1' });
+    keepSheetDraft(CAPTURE_DRAFT_ID, { title: 7, priority: 'urgent', projectKey: 3, clientId: 4 });
+    expect(keptCapture()).toEqual({ values: BLANK_CAPTURE, projectKey: null, clientId: null });
   });
 });
 
@@ -29,13 +29,13 @@ describe('useKeepCapture', () => {
       initialProps: { kept, open },
     });
 
-  it('keeps the text with its project while the sheet is open, until it is emptied', () => {
-    const { rerender } = keep({ values: IDEA, projectKey: null }, true);
-    expect(sheetDraft(CAPTURE_DRAFT_ID)).toEqual({ ...IDEA, projectKey: null });
-    rerender({ kept: { values: IDEA, projectKey: 'MOB' }, open: true });
-    expect(sheetDraft(CAPTURE_DRAFT_ID)).toEqual({ ...IDEA, projectKey: 'MOB' });
+  it('keeps the text with its project and id while the sheet is open, until it is emptied', () => {
+    const { rerender } = keep({ values: IDEA, projectKey: null, clientId: null }, true);
+    expect(sheetDraft(CAPTURE_DRAFT_ID)).toEqual({ ...IDEA, projectKey: null, clientId: null });
+    rerender({ kept: { values: IDEA, projectKey: 'MOB', clientId: 'c1' }, open: true });
+    expect(sheetDraft(CAPTURE_DRAFT_ID)).toEqual({ ...IDEA, projectKey: 'MOB', clientId: 'c1' });
     rerender({
-      kept: { values: { ...BLANK_CAPTURE, priority: 'high' }, projectKey: 'MOB' },
+      kept: { values: { ...BLANK_CAPTURE, priority: 'high' }, projectKey: 'MOB', clientId: 'c1' },
       open: true,
     });
     expect(sheetDraft(CAPTURE_DRAFT_ID)).toBeUndefined();
@@ -43,7 +43,29 @@ describe('useKeepCapture', () => {
 
   it('leaves the kept text alone while the sheet is closed', () => {
     keepSheetDraft(CAPTURE_DRAFT_ID, { ...IDEA, projectKey: null });
-    keep({ values: BLANK_CAPTURE, projectKey: null }, false);
+    keep({ values: BLANK_CAPTURE, projectKey: null, clientId: null }, false);
     expect(sheetDraft(CAPTURE_DRAFT_ID)).toEqual({ ...IDEA, projectKey: null });
+  });
+});
+
+describe('useCaptureId', () => {
+  it('makes an id at the first take, keeps it with the text at once and gives it every time', () => {
+    keepSheetDraft(CAPTURE_DRAFT_ID, { ...IDEA, projectKey: null, clientId: null });
+    const { result } = renderHook(() => useCaptureId(null));
+    expect(result.current.clientId).toBeNull();
+
+    let first = '';
+    act(() => {
+      first = result.current.take();
+      expect(sheetDraft(CAPTURE_DRAFT_ID)).toEqual({ ...IDEA, projectKey: null, clientId: first });
+    });
+    expect(first).not.toBe('');
+    expect(result.current.clientId).toBe(first);
+    expect(result.current.take()).toBe(first);
+  });
+
+  it('gives the kept id of a capture whose Create had no answer', () => {
+    const { result } = renderHook(() => useCaptureId('c1'));
+    expect(result.current.take()).toBe('c1');
   });
 });

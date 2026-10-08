@@ -34,7 +34,6 @@ const CAPTURE = {
   description: '',
   priority: 'medium',
   capturedAt: 1,
-  attempted: false,
 };
 
 const json = (body: string, status = 200, headers: Record<string, string> = {}) =>

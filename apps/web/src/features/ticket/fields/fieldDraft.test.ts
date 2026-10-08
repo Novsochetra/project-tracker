@@ -179,3 +179,43 @@ describe('field drafts opened while the latest save of their text is on its way'
     expect(syncDraft(draft, 'Fix login now!', IDLE)).toEqual(startDraft('Fix login now!'));
   });
 });
+
+describe('field drafts whose text another tab typed', () => {
+  const kept = 'Fix login from the other tab';
+
+  it('show that text, unsaved, also while focused', () => {
+    const draft = startDraft('Fix login');
+    expect(syncDraft(draft, 'Fix login', { ...IDLE, kept })).toEqual(restoreDraft(kept, false));
+    expect(syncDraft(draft, 'Fix login', { ...FOCUSED, kept }).value).toBe(kept);
+    const typed = editDraft(draft, 'Fix login here');
+    expect(syncDraft(typed, 'Fix login', { ...FOCUSED, kept }).value).toBe(kept);
+  });
+
+  it('wait while a save of the field is on its way', () => {
+    const draft = editDraft(startDraft('Fix login'), 'Fix login here');
+    expect(syncDraft(draft, 'Fix login', { ...SAVING, kept })).toBe(draft);
+  });
+
+  it('show it without a note while that tab sends it, until that save settles', () => {
+    const elsewhere = { ...IDLE, sentElsewhere: true, kept };
+    const shown = syncDraft(restoreDraft('Fix login from', false), 'Fix login', elsewhere);
+    expect(shown).toEqual(restoreDraft(kept, true));
+    expect(syncDraft(shown, 'Fix login', elsewhere)).toBe(shown);
+    expect(syncDraft(restoreDraft(kept, false), 'Fix login', elsewhere)).toEqual(shown);
+    expect(syncDraft(shown, kept, IDLE)).toEqual(startDraft(kept));
+    expect(syncDraft(shown, 'Fix login', { ...IDLE, kept })).toMatchObject({ failed: true });
+  });
+
+  it('keep a conflict and their own unsent text while another tab sends', () => {
+    const conflict = checkedDraft(restoreDraft(kept, false), kept, 'changed');
+    const elsewhere = { ...IDLE, sentElsewhere: true, kept };
+    expect(syncDraft(conflict, 'Theirs', elsewhere)).toBe(conflict);
+    const typed = editDraft(startDraft('Fix login'), kept);
+    expect(syncDraft(typed, 'Fix login', elsewhere)).toBe(typed);
+  });
+
+  it('follow the server once the other tab saved it', () => {
+    const draft = syncDraft(startDraft('Fix login'), 'Fix login', { ...IDLE, kept });
+    expect(syncDraft(draft, kept, IDLE)).toEqual(startDraft(kept));
+  });
+});

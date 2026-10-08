@@ -5,6 +5,7 @@ import type { SheetProps } from '../../app/sheets/types';
 import { Sheet, SheetActionButton, SheetCancelButton } from '../../overlays';
 import { AttachmentPicker, DropOverlay, useFileDrop } from '../attachments';
 import { forgetKeptForm, keptForm, useKeepForm } from './keptForm';
+import { pickedStatus, useListView } from './listViewStore';
 import { NewTicketFields } from './NewTicketFields';
 import styles from './NewTicketSheet.module.css';
 import {
@@ -38,6 +39,9 @@ function ProjectSubtitle({ project }: { project: Project }) {
 export function NewTicketSheet({ open, onClose, projectKey, statusId }: NewTicketSheetProps) {
   const board = useBoard(projectKey).data;
   const statuses = board?.statuses ?? NO_STATUSES;
+  const view = useListView(projectKey);
+  // A picked status tab is where the new ticket starts, so the tab can go on showing it.
+  const requested = statusId ?? pickedStatus(view, statuses)?.id;
   const titleRef = useRef<HTMLTextAreaElement>(null);
   const [form, setForm] = useState(() => keptForm(projectKey));
   const [error, setError] = useState('');
@@ -46,7 +50,7 @@ export function NewTicketSheet({ open, onClose, projectKey, statusId }: NewTicke
   const files = useNewTicketFiles(setForm, projectKey, open, form.attachments.length);
   const drop = useFileDrop(files.add);
   const uploading = files.uploading.length > 0;
-  const changed = hasChanges(form, defaultStatusId(statuses, statusId));
+  const changed = hasChanges(form, defaultStatusId(statuses, requested));
   useKeepForm({ projectKey, form, open, changed });
   const created = () => {
     forgetKeptForm(projectKey);
@@ -58,7 +62,7 @@ export function NewTicketSheet({ open, onClose, projectKey, statusId }: NewTicke
     created();
   };
   const flow = useCreateTicketFlow({ projectKey, statuses, onCreated: created, onError: setError });
-  const status = chosenStatusId(form, statuses, statusId);
+  const status = chosenStatusId(form, statuses, requested);
   const update = (patch: Partial<NewTicketForm>) => {
     setForm((current) => ({ ...current, ...patch }));
     setError('');

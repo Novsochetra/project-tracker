@@ -1,6 +1,6 @@
 import { PGlite } from '@electric-sql/pglite';
 import { TrackerClient } from '@tracker/client';
-import type { Actor, ChangeEvent } from '@tracker/shared';
+import type { Actor, Attachment, ChangeEvent } from '@tracker/shared';
 import type { Hono } from 'hono';
 import { PGliteDialect } from 'kysely';
 import { afterAll, beforeAll, beforeEach } from 'vitest';
@@ -12,6 +12,7 @@ import { createBroadcaster } from '../../src/events/broadcaster';
 import type { AppEnv } from '../../src/http/env';
 import { deleteAllRows } from '../../src/repositories/reset';
 import { createMemoryStorage } from '../../src/storage/memoryStorage';
+import type { FileUpload } from './fixtures';
 
 export const DIALECTS = ['sqlite', 'pglite'] as const;
 
@@ -60,10 +61,12 @@ function requestInit(method: string, options: RequestOptions): RequestInit {
     headers.set('x-actor-kind', options.actor.kind);
     headers.set('x-actor-name', encodeURIComponent(options.actor.name));
   }
-  const isForm = options.body instanceof FormData;
-  if (options.body !== undefined && !isForm) headers.set('content-type', 'application/json');
-  const body = isForm ? (options.body as FormData) : JSON.stringify(options.body);
-  return { method, headers, body: options.body === undefined ? undefined : body };
+  if (options.body !== undefined) headers.set('content-type', 'application/json');
+  return {
+    method,
+    headers,
+    body: options.body === undefined ? undefined : JSON.stringify(options.body),
+  };
 }
 
 async function readBody(response: Response): Promise<unknown> {
@@ -99,18 +102,17 @@ export function useTestServer(dialect: TestDialect, deps: TestDeps = {}) {
     await state?.db.destroy();
   });
 
-  const request = async <T = unknown>(
-    method: string,
-    path: string,
-    options: RequestOptions = {},
-  ): Promise<TestResponse<T>> => {
-    const response = await current().app.request(path, requestInit(method, options));
+  const send = async <T>(path: string, init: RequestInit): Promise<TestResponse<T>> => {
+    const response = await current().app.request(path, init);
     return {
       status: response.status,
       headers: response.headers,
       body: (await readBody(response)) as T,
     };
   };
+
+  const request = <T = unknown>(method: string, path: string, options: RequestOptions = {}) =>
+    send<T>(path, requestInit(method, options));
 
   return {
     storage,
@@ -132,6 +134,7 @@ export function useTestServer(dialect: TestDialect, deps: TestDeps = {}) {
       request<T>('PUT', path, { ...options, body }),
     delete: <T = unknown>(path: string, options?: RequestOptions) =>
       request<T>('DELETE', path, options),
+    upload: <T = Attachment>(file: FileUpload) => send<T>(file.path, file.init),
     client: (actor?: Actor) => clientFor(current().app, { actor }),
   };
 }

@@ -1,7 +1,7 @@
 export { ApiProvider, type ApiProviderProps } from './ApiProvider';
 export { useApi } from './context';
 export { createQueryClient } from './queryClient';
-export { queryKeys } from './queryKeys';
+export { projectOfQuery, projectOfTicket, queryKeys } from './queryKeys';
 export {
   errorMessage,
   FALLBACK_ERROR_MESSAGE,

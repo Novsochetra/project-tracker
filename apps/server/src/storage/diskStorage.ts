@@ -12,10 +12,15 @@ export function createDiskStorage(dir: string): FileStorage {
     return join(dir, key);
   };
   return {
-    async write(key, file) {
+    async write(key, body) {
       const path = pathOf(key);
       await mkdir(dir, { recursive: true });
-      await writeFile(path, file.stream());
+      try {
+        await writeFile(path, body);
+      } catch (error) {
+        await rm(path, { force: true });
+        throw error;
+      }
     },
     async read(key, range) {
       const path = pathOf(key);

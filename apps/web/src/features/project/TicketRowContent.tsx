@@ -27,10 +27,15 @@ export interface DueLabelProps {
 }
 
 export function DueLabel({ due, overdue, className }: DueLabelProps) {
+  const label = formatShortDay(due);
   return (
-    <span className={clsx(styles.due, className)} data-overdue={overdue || undefined}>
+    <span
+      className={clsx(styles.due, className)}
+      data-overdue={overdue || undefined}
+      data-year={/\d{4}/.test(label) || undefined}
+    >
       <Icon icon={Calendar} size={14} />
-      {formatShortDay(due)}
+      {label}
     </span>
   );
 }

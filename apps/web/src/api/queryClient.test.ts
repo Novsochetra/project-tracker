@@ -1,7 +1,8 @@
-import { MutationObserver } from '@tanstack/react-query';
+import { MutationObserver, QueryObserver, type QueryClient } from '@tanstack/react-query';
 import { ApiError } from '@tracker/client';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { hasPendingWrites } from '../lib/pendingWrites';
+import { setLiveRefreshPending } from './live/refreshPending';
 import { createQueryClient, retryOnce, STALE_TIME_MS } from './queryClient';
 
 describe('retryOnce', () => {
@@ -23,10 +24,56 @@ describe('createQueryClient', () => {
     expect(queries).toMatchObject({
       staleTime: STALE_TIME_MS,
       retry: retryOnce,
-      refetchOnWindowFocus: true,
       networkMode: 'offlineFirst',
     });
     expect(mutations).toMatchObject({ retry: 0, networkMode: 'always' });
+  });
+});
+
+function watchStaleQuery(queryClient: QueryClient) {
+  queryClient.setQueryData(['projects'], 'saved', { updatedAt: Date.now() - STALE_TIME_MS - 1 });
+  const queryFn = vi.fn().mockResolvedValue('fresh');
+  const observer = new QueryObserver(queryClient, {
+    queryKey: ['projects'],
+    queryFn,
+    refetchOnMount: false,
+  });
+  const stop = observer.subscribe(() => undefined);
+  return { queryFn, stop };
+}
+
+async function pageVisibleAgain() {
+  window.dispatchEvent(new Event('visibilitychange'));
+  await new Promise((resolve) => setTimeout(resolve, 0));
+}
+
+describe('refetch on focus', () => {
+  it('reads stale queries when the page is visible again', async () => {
+    const queryClient = createQueryClient();
+    queryClient.mount();
+    const { queryFn, stop } = watchStaleQuery(queryClient);
+
+    await pageVisibleAgain();
+
+    expect(queryFn).toHaveBeenCalledTimes(1);
+    stop();
+    queryClient.unmount();
+  });
+
+  it('leaves them to a live stream that refreshes everything once it opens', async () => {
+    const queryClient = createQueryClient();
+    queryClient.mount();
+    const { queryFn, stop } = watchStaleQuery(queryClient);
+    setLiveRefreshPending(queryClient, true);
+
+    await pageVisibleAgain();
+
+    expect(queryFn).not.toHaveBeenCalled();
+    setLiveRefreshPending(queryClient, false);
+    await pageVisibleAgain();
+    expect(queryFn).toHaveBeenCalledTimes(1);
+    stop();
+    queryClient.unmount();
   });
 });
 

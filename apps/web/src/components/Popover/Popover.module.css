@@ -1,37 +1,12 @@
 .anchor {
-  position: relative;
   display: inline-flex;
 }
 
-.catch {
-  position: fixed;
-  inset: 0;
-  z-index: calc(var(--z-dropdown) - 1);
-  margin: 0;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  cursor: default;
-}
-
-.catch:focus-visible {
-  outline: none;
-}
-
+/* The border, radius, shadow and motion come from the FloatingPanel. */
 .panel {
-  position: absolute;
-  top: calc(100% + 6px);
-  right: 0;
-  z-index: var(--z-dropdown);
   width: 260px;
   max-width: calc(100vw - 16px);
   padding: 4px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-container);
-  background: var(--surface);
-  box-shadow: var(--shadow-floating);
-  transform-origin: top right;
-  animation: menu-in var(--duration-fast) var(--ease-out) backwards;
 }
 
 .item {
@@ -65,16 +40,5 @@
 @media (max-width: 767px) {
   .item {
     min-height: var(--touch-target);
-  }
-}
-
-@keyframes menu-in {
-  from {
-    opacity: 0;
-    transform: translateY(-4px) scale(0.96);
-  }
-  to {
-    opacity: 1;
-    transform: none;
   }
 }

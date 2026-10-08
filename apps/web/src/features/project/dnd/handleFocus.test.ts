@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest';
+import { DROP_ROW_ATTRIBUTE } from './dropRow';
 import {
   clearHandleFocus,
   HANDLE_ATTRIBUTE,
@@ -73,7 +74,7 @@ describe('handle focus requests', () => {
 describe('rowHasFocus', () => {
   function rowFor(ticketId: string) {
     const row = document.createElement('div');
-    row.dataset.dropRow = ticketId;
+    row.setAttribute(DROP_ROW_ATTRIBUTE, ticketId);
     const handle = handleFor(ticketId);
     const main = document.createElement('button');
     row.append(handle, main);

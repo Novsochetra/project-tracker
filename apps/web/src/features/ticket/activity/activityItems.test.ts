@@ -80,6 +80,24 @@ describe('activityItems', () => {
   });
 });
 
+describe('entries that are not activities', () => {
+  const gaps = [
+    null,
+    entry('a', 'report', 5),
+    7,
+    'text',
+    entry('b', 'event', 9),
+  ] as unknown as Activity[];
+
+  it('leaves them out of the items', () => {
+    expect(activityItems(gaps).map((item) => item.id)).toEqual(['a', 'b']);
+  });
+
+  it('leaves them out of the last report', () => {
+    expect(lastReportAt(gaps)).toBe(5);
+  });
+});
+
 describe('reportTitle', () => {
   it('uses the agent name, or "Claude Code" for pasted and unnamed reports', () => {
     expect(reportTitle({ kind: 'agent', name: 'Claude (reviewer)' })).toBe(

@@ -1,6 +1,7 @@
 import { QueryClient } from '@tanstack/react-query';
 import { setPendingWrites } from '../lib/pendingWrites';
 import { isClientError } from './errors';
+import { isLiveRefreshPending } from './live/refreshPending';
 
 export const STALE_TIME_MS = 30_000;
 
@@ -16,13 +17,14 @@ function reportPendingWrites(queryClient: QueryClient): void {
 }
 
 export function createQueryClient(): QueryClient {
-  const queryClient = new QueryClient({
+  const queryClient: QueryClient = new QueryClient({
     defaultOptions: {
       // The service worker answers GET /api from its cache while offline, so queries keep running.
       queries: {
         staleTime: STALE_TIME_MS,
         retry: retryOnce,
-        refetchOnWindowFocus: true,
+        // A reopening live stream reads everything once it opens, as on a return after 30 s hidden.
+        refetchOnWindowFocus: () => !isLiveRefreshPending(queryClient),
         networkMode: 'offlineFirst',
       },
       // Writes aren't cached; trying right away fails fast with a clear message instead of pausing.

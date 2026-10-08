@@ -1,6 +1,6 @@
 import type { Attachment } from '@tracker/shared';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { fileForm, type FileFormOptions } from '../helpers/fixtures';
+import { fileUpload, type FileUploadOptions } from '../helpers/fixtures';
 import { DIALECTS, useTestServer } from '../helpers/server';
 
 const BYTES = Uint8Array.from({ length: 10 }, (_, index) => index);
@@ -13,8 +13,8 @@ describe.each(DIALECTS)('attachment files (%s)', (dialect) => {
   const api = useTestServer(dialect);
   let video: Attachment;
 
-  const uploadFile = async (options: FileFormOptions) =>
-    (await api.post<Attachment>('/api/attachments', fileForm(options))).body;
+  const uploadFile = async (options: FileUploadOptions) =>
+    (await api.upload(fileUpload(options))).body;
 
   const fetchFile = (url: string, headers: Record<string, string> = {}, method = 'GET') =>
     api.app.request(url, { method, headers });

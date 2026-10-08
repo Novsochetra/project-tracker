@@ -1,9 +1,12 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { keepDraft, storedDraft } from '../../../lib/storedDrafts';
 import {
   carries,
+  clearSaves,
   finishSave,
   isSaving,
+  isSavingAnywhere,
+  isSavingElsewhere,
   NO_SAVES,
   saveStep,
   savesOf,
@@ -13,6 +16,7 @@ import {
   subscribeSaves,
   type SentSaves,
 } from './fieldSaves';
+import { SAVE_MARKS_STORAGE_KEY } from './saveMarks';
 
 const sent = (...texts: string[]): SentSaves => texts.reduce(sendSave, NO_SAVES);
 
@@ -171,5 +175,61 @@ describe('the saves of a field kept per draft id', () => {
     stop();
     finishSave(ID, startSave(ID, 'Fix login now'), false);
     expect(listener).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe('the saves of a field on their way in another tab', () => {
+  const ID = 'description:MOB-1';
+
+  // The same module with memory of its own, as in another tab.
+  async function otherTab() {
+    vi.resetModules();
+    return import('./fieldSaves');
+  }
+
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('count for this tab until the other tab hears back', async () => {
+    const tab = await otherTab();
+    const number = tab.startSave(ID, 'Fix login now');
+    expect(isSavingElsewhere(ID)).toBe(true);
+    expect(isSavingAnywhere(ID)).toBe(true);
+    expect(isSaving(ID)).toBe(false);
+    expect(tab.isSavingElsewhere(ID)).toBe(false);
+    tab.finishSave(ID, number, true);
+    expect(isSavingElsewhere(ID)).toBe(false);
+    expect(localStorage.getItem(SAVE_MARKS_STORAGE_KEY)).toBeNull();
+  });
+
+  it('stop counting a minute after a tab that closed while sending last sent one', async () => {
+    vi.useFakeTimers();
+    const tab = await otherTab();
+    tab.startSave(ID, 'Fix login now');
+    vi.advanceTimersByTime(59_999);
+    expect(isSavingElsewhere(ID)).toBe(true);
+    vi.advanceTimersByTime(1);
+    expect(isSavingElsewhere(ID)).toBe(false);
+  });
+
+  it('tell subscribers when another tab marks or unmarks a draft', () => {
+    const listener = vi.fn();
+    const stop = subscribeSaves(listener);
+    window.dispatchEvent(new StorageEvent('storage', { key: SAVE_MARKS_STORAGE_KEY }));
+    window.dispatchEvent(new StorageEvent('storage', { key: 'tracker.drafts' }));
+    expect(listener).toHaveBeenCalledTimes(1);
+    stop();
+  });
+
+  it("leave nothing marked once tests reset this tab's record", () => {
+    startSave(ID, 'Fix login now');
+    clearSaves();
+    expect(isSaving(ID)).toBe(false);
+    expect(localStorage.getItem(SAVE_MARKS_STORAGE_KEY)).toBeNull();
   });
 });

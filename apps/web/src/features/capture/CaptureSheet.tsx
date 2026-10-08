@@ -6,7 +6,7 @@ import { AttachmentPicker, DropOverlay, useFileDrop } from '../attachments';
 import { CAPTURE_DRAFT_ID, hasContent, type CaptureValues } from './captureForm';
 import { CaptureDetails, CaptureText } from './CaptureFields';
 import styles from './CaptureSheet.module.css';
-import { forgetKeptCapture, keptCapture, useKeepCapture } from './keptCapture';
+import { forgetKeptCapture, keptCapture, useCaptureId, useKeepCapture } from './keptCapture';
 import { useCaptureFiles } from './useCaptureFiles';
 import { useCaptureProject } from './useCaptureProject';
 import { useCaptureSubmit } from './useCaptureSubmit';
@@ -25,6 +25,7 @@ export function CaptureSheet({ open, onClose }: SheetProps) {
   const [values, setValues] = useState<CaptureValues>(kept.values);
   const project = useCaptureProject(kept.projectKey);
   const files = useCaptureFiles();
+  const captureId = useCaptureId(kept.clientId);
   const finish = () => {
     forgetKeptCapture();
     onClose();
@@ -34,6 +35,7 @@ export function CaptureSheet({ open, onClose }: SheetProps) {
     project: project.current,
     attachments: files.items,
     uploading: files.uploading.length,
+    captureId: captureId.take,
     onDone: finish,
   });
   const drop = useFileDrop(files.add);
@@ -41,7 +43,7 @@ export function CaptureSheet({ open, onClose }: SheetProps) {
   const fileCount = files.items.length + files.uploading.length;
   const dirty = hasContent(values, fileCount);
   useFocusWhenOpen(titleRef, open);
-  useKeepCapture({ values, projectKey: project.chosenKey }, open);
+  useKeepCapture({ values, projectKey: project.chosenKey, clientId: captureId.clientId }, open);
   // The text is kept for the next opening, but files are not, so a reload would lose them.
   useDraftMark(CAPTURE_DRAFT_ID, open && fileCount > 0);
   const update = (patch: Partial<CaptureValues>) => {

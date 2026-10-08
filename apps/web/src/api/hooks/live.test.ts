@@ -2,6 +2,7 @@ import type { QueryClient } from '@tanstack/react-query';
 import { act, renderHook, waitFor } from '@testing-library/react';
 import type { Ticket } from '@tracker/shared';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { isLiveRefreshPending } from '../live/refreshPending';
 import { queryKeys } from '../queryKeys';
 import { deferred } from '../test/deferred';
 import { makeBoard, makeTicketDetail, otherProject, project, summaryOf } from '../test/fixtures';
@@ -83,6 +84,23 @@ describe('useLiveUpdates', () => {
     expect(isInvalidated(queryClient, queryKeys.board('MOB'))).toBe(true);
     expect(isInvalidated(queryClient, queryKeys.ticket('MOB-1'))).toBe(true);
     expect(isInvalidated(queryClient, queryKeys.session())).toBe(false);
+  });
+
+  it('holds focus reads from a drop until the reopened stream opens, and not once stopped', () => {
+    const { queryClient, wrapper } = setupApi();
+    const { unmount } = renderHook(() => useLiveUpdates(), { wrapper });
+    const source = MockEventSource.latest();
+    act(() => source.open());
+    expect(isLiveRefreshPending(queryClient)).toBe(false);
+
+    act(() => source.fail(false));
+    expect(isLiveRefreshPending(queryClient)).toBe(true);
+    act(() => source.open());
+    expect(isLiveRefreshPending(queryClient)).toBe(false);
+
+    act(() => source.fail(false));
+    unmount();
+    expect(isLiveRefreshPending(queryClient)).toBe(false);
   });
 
   it('signs out when the server refuses the stream because the session is gone', async () => {

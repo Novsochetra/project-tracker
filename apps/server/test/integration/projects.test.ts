@@ -8,7 +8,7 @@ import {
   type ProjectSummary,
 } from '@tracker/shared';
 import { describe, expect, it } from 'vitest';
-import { imageForm, statusOf } from '../helpers/fixtures';
+import { imageUpload, statusOf } from '../helpers/fixtures';
 import { DIALECTS, useTestServer } from '../helpers/server';
 
 describe.each(DIALECTS)('projects (%s)', (dialect) => {
@@ -166,8 +166,8 @@ describe.each(DIALECTS)('projects (%s)', (dialect) => {
     await client.createProject({ name: 'Mobile app' });
     await client.createProject({ name: 'Keep me' });
     const ticket = await client.createTicket('MA', { title: 'Crash' });
-    await api.post('/api/attachments', imageForm({ ticketKey: ticket.key }));
-    const upload = await api.post<{ id: string }>('/api/attachments', imageForm());
+    await api.upload(imageUpload({ ticketKey: ticket.key }));
+    const upload = await api.upload(imageUpload());
     await client.addComment(ticket.key, { text: 'See image', attachmentIds: [upload.body.id] });
     expect(api.storage.files.size).toBe(2);
 
@@ -193,7 +193,7 @@ describe.each(DIALECTS)('projects (%s)', (dialect) => {
     const c = await client.createTicket('MA', { title: 'C', statusId: done.id });
     await client.addComment(a.key, { text: 'one' });
     await client.addComment(a.key, { text: 'two' });
-    await api.post('/api/attachments', imageForm({ ticketKey: a.key }));
+    await api.upload(imageUpload({ ticketKey: a.key }));
 
     const res = await api.get<ProjectBoard>('/api/projects/MA/board');
     expect(res.status).toBe(200);

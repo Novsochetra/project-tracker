@@ -11,7 +11,12 @@ const event = { type: 'changed', projectId: 'p-mob', ticketId: 't-1' };
 let connections: Array<() => void> = [];
 
 function connect() {
-  const handlers = { onChange: vi.fn(), onReconnect: vi.fn(), onRefused: vi.fn() };
+  const handlers = {
+    onChange: vi.fn(),
+    onReconnect: vi.fn(),
+    onRefreshPending: vi.fn(),
+    onRefused: vi.fn(),
+  };
   const stop = connectLiveUpdates('/api/events', handlers);
   connections.push(stop);
   return { stop, ...handlers, source: MockEventSource.latest() };
@@ -208,6 +213,45 @@ describe('connectLiveUpdates', () => {
     expect(MockEventSource.instances).toHaveLength(attempts + 1);
   });
 
+  it('reports a refresh pending from a drop until the next stream opens', () => {
+    const { source, onRefreshPending, onReconnect } = connect();
+    source.open();
+    expect(onRefreshPending).toHaveBeenLastCalledWith(false);
+
+    source.fail(false);
+    expect(onRefreshPending).toHaveBeenLastCalledWith(true);
+    source.fail(true);
+    vi.advanceTimersByTime(LIVE_RETRY_MS);
+    expect(onRefreshPending).toHaveBeenLastCalledWith(true);
+    expect(onReconnect).not.toHaveBeenCalled();
+
+    MockEventSource.latest().open();
+
+    expect(onRefreshPending).toHaveBeenLastCalledWith(false);
+    expect(onReconnect).toHaveBeenCalledTimes(1);
+  });
+
+  it('reports a refresh pending from a pause until the stream reopened on return opens', () => {
+    const { source, onRefreshPending } = connect();
+    source.open();
+    setVisibility('hidden');
+    vi.advanceTimersByTime(HIDDEN_GRACE_MS);
+    expect(onRefreshPending).toHaveBeenLastCalledWith(true);
+
+    setVisibility('visible');
+    expect(onRefreshPending).toHaveBeenLastCalledWith(true);
+    MockEventSource.latest().open();
+    expect(onRefreshPending).toHaveBeenLastCalledWith(false);
+  });
+
+  it('reports no refresh pending once stopped, since no stream opens again', () => {
+    const { source, stop, onRefreshPending } = connect();
+    source.fail(true);
+    expect(onRefreshPending).toHaveBeenLastCalledWith(true);
+    stop();
+    expect(onRefreshPending).toHaveBeenLastCalledWith(false);
+  });
+
   it('closes the stream and cancels pending timers on cleanup', () => {
     const { source, stop } = connect();
     source.fail(true);
@@ -238,6 +282,7 @@ describe('connectLiveUpdates', () => {
     const stop = connectLiveUpdates('/api/events', {
       onChange: vi.fn(),
       onReconnect: vi.fn(),
+      onRefreshPending: vi.fn(),
       onRefused: vi.fn(),
     });
     expect(() => stop()).not.toThrow();

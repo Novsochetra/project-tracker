@@ -12,6 +12,7 @@ export const listTicketAttachments = (db: Db, ticketId: string) =>
     .selectFrom('attachments')
     .selectAll()
     .where('ticketId', '=', ticketId)
+    .orderBy('position')
     .orderBy('createdAt')
     .orderBy('id')
     .execute();
@@ -21,24 +22,40 @@ export const listActivityAttachments = (db: Db, activityId: string) =>
     .selectFrom('attachments')
     .selectAll()
     .where('activityId', '=', activityId)
+    .orderBy('position')
     .orderBy('createdAt')
     .orderBy('id')
     .execute();
 
+// A file added to a ticket goes after the ticket's own files.
+export async function nextTicketPosition(db: Db, ticketId: string): Promise<number> {
+  const row = await db
+    .selectFrom('attachments')
+    .select((eb) => eb.fn.max('position').as('last'))
+    .where('ticketId', '=', ticketId)
+    .where('activityId', 'is', null)
+    .executeTakeFirst();
+  return row?.last === null || row?.last === undefined ? 0 : Number(row.last) + 1;
+}
+
+// Each file takes its place in `ids`, so the files list in the order they were picked.
 export async function linkAttachments(
   db: Db,
   ids: readonly string[],
   target: { ticketId: string; activityId: string | null },
 ): Promise<number> {
-  if (ids.length === 0) return 0;
-  const result = await db
-    .updateTable('attachments')
-    .set(target)
-    .where('id', 'in', [...ids])
-    .where('activityId', 'is', null)
-    .where((eb) => eb.or([eb('ticketId', 'is', null), eb('ticketId', '=', target.ticketId)]))
-    .executeTakeFirst();
-  return Number(result.numUpdatedRows);
+  let linked = 0;
+  for (const [position, id] of ids.entries()) {
+    const result = await db
+      .updateTable('attachments')
+      .set({ ...target, position })
+      .where('id', '=', id)
+      .where('activityId', 'is', null)
+      .where((eb) => eb.or([eb('ticketId', 'is', null), eb('ticketId', '=', target.ticketId)]))
+      .executeTakeFirst();
+    linked += Number(result.numUpdatedRows);
+  }
+  return linked;
 }
 
 export async function deleteAttachmentRows(db: Db, ids: readonly string[]): Promise<void> {

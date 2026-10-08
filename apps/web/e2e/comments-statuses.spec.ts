@@ -1,4 +1,4 @@
-import { expect, test } from './fixtures';
+import { expect, isPhone, test } from './fixtures';
 import { activity, group, seedProject } from './helpers';
 
 const PNG_1X1 = Buffer.from(
@@ -30,6 +30,21 @@ test.describe('comments', () => {
     await page.getByRole('button', { name: 'Delete comment' }).click();
     await page.getByRole('button', { name: 'Delete', exact: true }).last().click();
     await expect(activity(page)).not.toContainText('Second thought');
+  });
+
+  test('a double-click on Edit comment leaves the editor open', async ({ page, api }, info) => {
+    test.skip(isPhone(info.project.name), 'Phones show an action sheet');
+    await seedProject(api, 'Mobile app', 'MOB', [{ title: 'Login error' }]);
+    await page.goto('/p/MOB/1');
+    await page.getByLabel('Comment', { exact: true }).fill('First thought');
+    await page.getByRole('button', { name: 'Comment', exact: true }).click();
+    await page.getByRole('button', { name: 'Comment options' }).first().click();
+    await page.getByRole('button', { name: 'Edit comment' }).dblclick();
+    const editor = page.getByLabel('Edit comment', { exact: true });
+    await expect(editor).toBeFocused();
+    await page.waitForTimeout(600);
+    await expect(editor).toBeVisible();
+    await expect(editor).toHaveValue('First thought');
   });
 
   test('attaches an image to a comment and opens the viewer', async ({ page, api }) => {

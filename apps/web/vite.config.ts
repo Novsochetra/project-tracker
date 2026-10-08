@@ -1,5 +1,5 @@
 import react from '@vitejs/plugin-react';
-import { defineConfig } from 'vite';
+import { defineConfig, type Plugin } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 import { isSavedApiRead } from './src/pwa/apiReadRoute.ts';
 import { attachmentCachePlugin, isCachedAttachmentFile } from './src/pwa/attachmentFileRoute.ts';
@@ -8,8 +8,22 @@ import { savedAnswerPlugin } from './src/pwa/savedAnswerPlugin.ts';
 const apiTarget = process.env.TRACKER_API_URL ?? 'http://localhost:4100';
 const DAY_SECONDS = 24 * 60 * 60;
 
+// The dev server is a Node server with Node's five minutes for a whole request to arrive, so an
+// upload sent slowly through its /api proxy failed with 408. It gets the hour the API gives
+// uploads (apps/server/src/main.ts).
+const DEV_REQUEST_TIMEOUT_MS = 60 * 60 * 1000;
+
+const devUploadTimeout: Plugin = {
+  name: 'tracker-dev-upload-timeout',
+  configureServer(server) {
+    const http = server.httpServer;
+    if (http && 'requestTimeout' in http) http.requestTimeout = DEV_REQUEST_TIMEOUT_MS;
+  },
+};
+
 export default defineConfig({
   plugins: [
+    devUploadTimeout,
     react(),
     VitePWA({
       registerType: 'autoUpdate',

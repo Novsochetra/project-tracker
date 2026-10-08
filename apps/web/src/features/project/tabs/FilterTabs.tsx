@@ -7,6 +7,7 @@ import { revealTab, tabButtons, tabScrollBehavior } from './revealTab';
 import { tabIndexForKey } from './tabKeys';
 import { useRevealPressed } from './useRevealPressed';
 import { useTabThumb } from './useTabThumb';
+import { useWheelScrollsRow } from './wheelRow';
 
 export interface FilterTabsProps {
   tabs: readonly FilterTab[];
@@ -47,14 +48,15 @@ function TabButton({ tab, pressed, tabbable, onPick, ...handlers }: TabButtonPro
   );
 }
 
-// The arrow keys only move focus, as in a toolbar: each pick refilters the list and replays its
-// rise, so it waits for Enter or Space.
+// A toolbar, so screen readers say the arrow keys move between the tabs. They only move focus:
+// each pick refilters the list and replays its rise, so it waits for Enter or Space.
 export function FilterTabs({ tabs, value, onChange, className }: FilterTabsProps) {
   const trackRef = useRef<HTMLDivElement>(null);
   const thumbRef = useRef<HTMLSpanElement>(null);
   const [focused, setFocused] = useState<TicketFilter | null>(null);
   useTabThumb(trackRef, thumbRef, tabs.map((tab) => tab.value).join(' '));
   useRevealPressed(trackRef, value);
+  useWheelScrollsRow(trackRef);
   const stop = tabs.some((tab) => tab.value === focused) ? focused : value;
 
   const moveFocus = (event: KeyboardEvent<HTMLButtonElement>, index: number) => {
@@ -73,7 +75,7 @@ export function FilterTabs({ tabs, value, onChange, className }: FilterTabsProps
   return (
     <div
       ref={trackRef}
-      role="group"
+      role="toolbar"
       aria-label="Filter tickets"
       className={clsx(styles.track, className)}
     >

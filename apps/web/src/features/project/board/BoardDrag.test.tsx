@@ -2,6 +2,7 @@ import { act, fireEvent, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { STATUS } from '../../../api/test/fixtures';
 import { mockPhone, skipAnimations } from '../../../overlays/testing';
+import { dropRowOf, dropRowsIn } from '../dnd/dropRow';
 import { resetListView } from '../listViewStore';
 import { renderProject } from '../test/renderProject';
 import { setViewMode } from '../viewModeStore';
@@ -41,12 +42,12 @@ function boxOf(element: Element): DOMRect {
   const columns = Array.from(document.querySelectorAll('[data-drop-group]'));
   const scrolled = boardElement()?.scrollLeft ?? 0;
   const left = layout.start + columns.indexOf(columnEl) * layout.step - scrolled;
-  const card = element.closest('[data-drop-row]');
+  const card = dropRowOf(element);
   if (!card) {
     const body = element.matches('[data-column-body]');
     return body ? rect(left, 140, layout.width, 560) : rect(left, 100, layout.width, 600);
   }
-  const index = Array.from(columnEl.querySelectorAll('[data-drop-row]')).indexOf(card);
+  const index = dropRowsIn(columnEl).indexOf(card);
   return rect(left, 150 + index * 68, layout.width, 60);
 }
 
@@ -140,9 +141,7 @@ describe('dragging cards on the desktop board', () => {
     pointer('pointermove', 120, 240);
     await nextFrame();
     const todo = screen.getByRole('region', { name: 'To do' });
-    expect(todo.querySelector('[data-edge="before"]')?.closest('[data-drop-row]')).toBe(
-      card('MOB-2').closest('[data-drop-row]'),
-    );
+    expect(dropRowOf(todo.querySelector('[data-edge="before"]'))).toBe(dropRowOf(card('MOB-2')));
     pointer('pointercancel', 120, 240);
   });
 });

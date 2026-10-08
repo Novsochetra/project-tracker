@@ -40,8 +40,10 @@ const OPEN_OVERLAY = [
   'button[aria-label="Close menu"]',
 ].join(', ');
 
+// A closing dropdown, calendar or ••• menu stays a moment, inert, to take the second click of a
+// double-click; it is already closed.
 export const hasOpenOverlay = (root: ParentNode): boolean =>
-  root.querySelector(OPEN_OVERLAY) !== null;
+  [...root.querySelectorAll(OPEN_OVERLAY)].some((overlay) => !overlay.closest('[inert]'));
 
 export const asksForCapture = (search: string): boolean =>
   new URLSearchParams(search).has(CAPTURE_PARAM);

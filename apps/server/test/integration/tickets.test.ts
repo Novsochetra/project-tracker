@@ -1,6 +1,5 @@
 import {
   formatShortDay,
-  type Attachment,
   type ErrorBody,
   type ProjectDetail,
   type Ticket,
@@ -8,7 +7,7 @@ import {
   type TicketListItem,
 } from '@tracker/shared';
 import { beforeEach, describe, expect, it } from 'vitest';
-import { agent, eventTexts, imageForm, statusOf } from '../helpers/fixtures';
+import { agent, eventTexts, imageUpload, statusOf } from '../helpers/fixtures';
 import { DIALECTS, useTestServer } from '../helpers/server';
 
 describe.each(DIALECTS)('tickets (%s)', (dialect) => {
@@ -110,7 +109,7 @@ describe.each(DIALECTS)('tickets (%s)', (dialect) => {
     });
 
     it('links pending images to the new ticket', async () => {
-      const upload = await api.post<Attachment>('/api/attachments', imageForm());
+      const upload = await api.upload(imageUpload());
       const ticket = await api.client().createTicket('MA', {
         title: 'With image',
         attachmentIds: [upload.body.id],
@@ -299,7 +298,7 @@ describe.each(DIALECTS)('tickets (%s)', (dialect) => {
     it('deletes the ticket, its activity and image files', async () => {
       const client = api.client();
       const ticket = await client.createTicket('MA', { title: 'Crash' });
-      await api.post('/api/attachments', imageForm({ ticketKey: ticket.key }));
+      await api.upload(imageUpload({ ticketKey: ticket.key }));
       await client.addComment(ticket.key, { text: 'note' });
       const res = await api.delete(`/api/tickets/${ticket.key}`);
       expect(res.status).toBe(204);

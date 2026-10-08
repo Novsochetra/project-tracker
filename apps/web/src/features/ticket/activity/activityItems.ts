@@ -71,11 +71,20 @@ function toItem(activity: Activity): ActivityItem {
 const order = (activity: Activity): number =>
   isDraftId(activity.id) ? Number.POSITIVE_INFINITY : activity.createdAt;
 
+// Like toItem, this runs outside the cards' boundaries: an entry that isn't an object, such as
+// null, has nothing to show and is left out.
+const readable = (activity: readonly Activity[]): Activity[] =>
+  activity.filter((entry: unknown) => typeof entry === 'object' && entry !== null);
+
 export const activityItems = (activity: readonly Activity[]): ActivityItem[] =>
-  [...activity].sort((a, b) => order(a) - order(b)).map(toItem);
+  readable(activity)
+    .sort((a, b) => order(a) - order(b))
+    .map(toItem);
 
 export function lastReportAt(activity: readonly Activity[]): number | null {
-  const times = activity.filter((item) => item.type === 'report').map((item) => item.createdAt);
+  const times = readable(activity)
+    .filter((item) => item.type === 'report')
+    .map((item) => item.createdAt);
   return times.length > 0 ? Math.max(...times) : null;
 }
 

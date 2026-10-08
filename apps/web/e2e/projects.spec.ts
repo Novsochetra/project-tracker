@@ -79,4 +79,20 @@ test.describe('projects', () => {
     await expect(toast(page, '“Marketing site” deleted')).toBeVisible();
     await expect(page.getByText('No projects yet')).toBeVisible();
   });
+
+  test('a double-click on Edit project leaves its sheet open', async ({ page, api }, info) => {
+    test.skip(isPhone(info.project.name), 'Phones show an action sheet');
+    await api.createProject({ name: 'Website', key: 'WEB' });
+    await page.goto('/p/WEB');
+    const options = page.getByRole('button', { name: 'Project options' }).first();
+    await options.click();
+    await page.getByRole('button', { name: 'Edit project' }).dblclick();
+    const dialog = page.getByRole('dialog', { name: 'Edit project' });
+    await expect(dialog.getByLabel('Project name')).toBeFocused();
+    await page.waitForTimeout(600);
+    await expect(dialog).toBeVisible();
+    await dialog.getByRole('button', { name: 'Cancel' }).click();
+    await expect(dialog).toBeHidden();
+    await expect(options).toBeFocused();
+  });
 });

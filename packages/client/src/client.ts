@@ -137,12 +137,12 @@ export class TrackerClient {
     fileName: string,
     ticketKey?: string,
     options: UploadOptions = {},
-  ) => {
-    const form = new FormData();
-    form.set('file', file, fileName);
-    if (ticketKey) form.set('ticketKey', ticketKey);
-    return this.http.upload<Attachment>('/api/attachments', form, options);
-  };
+  ) =>
+    this.http.upload<Attachment>(
+      '/api/attachments',
+      { blob: file, name: fileName, query: { ticketKey } },
+      options,
+    );
 
   deleteAttachment = (attachmentId: string) =>
     this.http.request<void>('DELETE', `/api/attachments/${segment(attachmentId)}`);

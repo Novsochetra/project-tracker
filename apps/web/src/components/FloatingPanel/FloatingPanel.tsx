@@ -17,7 +17,8 @@ import {
 import styles from './FloatingPanel.module.css';
 import { scrollUnder } from './scrollUnder';
 
-// Mounts the panel in a body portal while it is open, leaving or shielding a double-click.
+// In a body portal, so the panel's frame lies above any sheet, also one an item in it opens, and
+// can take the second click of a double-click there.
 export function FloatingPortal({ open, children }: { open: boolean; children: ReactNode }) {
   const { mounted, session } = useFloatingPresence(open);
   if (!mounted) return null;
@@ -35,8 +36,8 @@ export interface FloatingPanelProps extends ComponentPropsWithoutRef<'div'> {
 
 const keepFocus = (event: MouseEvent) => event.preventDefault();
 
-// The panel of the dropdowns and the calendar: placed at its row, closed by a click outside, the
-// wheel or a page scroll, with the menu motion in and out.
+// One base for the dropdowns, the calendar and the ••• menus, so they all close, move and take a
+// double-click's second click the same way.
 export function FloatingPanel({
   open,
   anchorRef,

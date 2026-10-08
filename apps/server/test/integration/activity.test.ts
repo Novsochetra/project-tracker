@@ -1,6 +1,6 @@
-import type { Activity, Attachment, ErrorBody, Ticket } from '@tracker/shared';
+import type { Activity, ErrorBody, Ticket } from '@tracker/shared';
 import { beforeEach, describe, expect, it } from 'vitest';
-import { agent, imageForm } from '../helpers/fixtures';
+import { agent, imageUpload } from '../helpers/fixtures';
 import { DIALECTS, useTestServer } from '../helpers/server';
 
 describe.each(DIALECTS)('comments and activity (%s)', (dialect) => {
@@ -13,8 +13,7 @@ describe.each(DIALECTS)('comments and activity (%s)', (dialect) => {
     api.events.length = 0;
   });
 
-  const upload = async (ticketKey?: string) =>
-    (await api.post<Attachment>('/api/attachments', imageForm({ ticketKey }))).body;
+  const upload = async (ticketKey?: string) => (await api.upload(imageUpload({ ticketKey }))).body;
 
   it('adds a trimmed comment from the request actor and bumps the ticket', async () => {
     const res = await api.post<Activity>(

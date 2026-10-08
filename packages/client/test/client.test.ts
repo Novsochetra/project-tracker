@@ -1,3 +1,4 @@
+import { FILE_NAME_HEADER } from '@tracker/shared';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ApiError, FRESH_READ_HEADER, TrackerClient, type HttpOptions } from '../src';
 
@@ -423,21 +424,18 @@ describe('fresh reads', () => {
 describe('uploadAttachment', () => {
   const image = () => new Blob(['png-bytes'], { type: 'image/png' });
 
-  it('posts the file and the ticket key as multipart form data', async () => {
+  it('posts the file itself, its name and type in headers and the ticket key in the query', async () => {
     const { client, last } = setup(() => json({ id: 'f1' }, 201));
 
     await client.uploadAttachment(image(), 'shot.png', 'MOB-3');
 
-    const body = last().init.body as FormData;
-    const file = body.get('file') as File;
     expect(last().init.method).toBe('POST');
-    expect(pathOf(last())).toBe('/api/attachments');
-    expect(body).toBeInstanceOf(FormData);
-    expect(file).toBeInstanceOf(File);
-    expect(file.name).toBe('shot.png');
-    expect(file.type).toBe('image/png');
-    expect(await file.text()).toBe('png-bytes');
-    expect(body.get('ticketKey')).toBe('MOB-3');
+    expect(pathOf(last())).toBe('/api/attachments?ticketKey=MOB-3');
+    const body = last().init.body as Blob;
+    expect(body).toBeInstanceOf(Blob);
+    expect(await body.text()).toBe('png-bytes');
+    expect(headersOf(last()).get('content-type')).toBe('image/png');
+    expect(headersOf(last()).get(FILE_NAME_HEADER)).toBe('shot.png');
   });
 
   it('leaves out the ticket key for a pending upload', async () => {
@@ -445,15 +443,24 @@ describe('uploadAttachment', () => {
 
     await client.uploadAttachment(image(), 'shot.png');
 
-    expect((last().init.body as FormData).has('ticketKey')).toBe(false);
+    expect(pathOf(last())).toBe('/api/attachments');
   });
 
-  it('lets fetch set the multipart content type', async () => {
+  it('percent-encodes the name, since a header carries only ASCII', async () => {
     const { client, last } = setup(() => json({ id: 'f1' }, 201));
 
-    await client.uploadAttachment(image(), 'shot.png', 'MOB-3');
+    await client.uploadAttachment(image(), 'ការងារ 📄.png');
 
-    expect(headersOf(last()).has('content-type')).toBe(false);
+    expect(decodeURIComponent(headersOf(last()).get(FILE_NAME_HEADER) ?? '')).toBe('ការងារ 📄.png');
+    expect(headersOf(last()).get(FILE_NAME_HEADER)).toMatch(/^[\x20-\x7e]+$/);
+  });
+
+  it('sends a file without a type as application/octet-stream, as browsers do', async () => {
+    const { client, last } = setup(() => json({ id: 'f1' }, 201));
+
+    await client.uploadAttachment(new Blob(['log line']), 'server.log');
+
+    expect(headersOf(last()).get('content-type')).toBe('application/octet-stream');
   });
 
   it('passes an abort signal to fetch', async () => {
@@ -550,15 +557,15 @@ describe('uploadAttachment with progress', () => {
     ]);
     const [sent] = FakeXhr.sent;
     expect(sent?.method).toBe('POST');
-    expect(sent?.url).toBe(`${BASE}/api/attachments`);
+    expect(sent?.url).toBe(`${BASE}/api/attachments?ticketKey=MOB-3`);
     expect(sent?.headers).toEqual({
       authorization: 'Bearer secret',
+      'content-type': 'image/png',
+      [FILE_NAME_HEADER]: 'shot.png',
       'x-actor-kind': 'agent',
       'x-actor-name': 'Cl%C3%A1ude',
     });
-    const body = sent?.body as FormData;
-    expect((body.get('file') as File).name).toBe('shot.png');
-    expect(body.get('ticketKey')).toBe('MOB-3');
+    expect(await (sent?.body as Blob).text()).toBe('png-bytes');
     expect(fetch).not.toHaveBeenCalled();
   });
 

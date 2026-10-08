@@ -6,7 +6,7 @@ import {
   type Ticket,
 } from '@tracker/shared';
 import { beforeEach, describe, expect, it } from 'vitest';
-import { agent, eventTexts, imageForm, statusOf } from '../helpers/fixtures';
+import { agent, eventTexts, imageUpload, statusOf } from '../helpers/fixtures';
 import { DIALECTS, useTestServer } from '../helpers/server';
 
 describe.each(DIALECTS)('prompts and sending (%s)', (dialect) => {
@@ -29,7 +29,7 @@ describe.each(DIALECTS)('prompts and sending (%s)', (dialect) => {
         assignee: 'Dara',
         due: '2026-10-09',
       });
-      const image = (await api.post<{ id: string }>('/api/attachments', imageForm())).body;
+      const image = (await api.upload(imageUpload())).body;
       await client.addComment(ticket.key, { text: 'First note\nwith a break' });
       await client.addComment(ticket.key, { attachmentIds: [image.id] });
       await client.applyReport({ text: 'TICKET: MA-1\nSTATUS: in progress\nSUMMARY: started' });

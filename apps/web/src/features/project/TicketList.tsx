@@ -8,7 +8,7 @@ import { listEnvironment } from './dnd/listEnvironment';
 import { useKeyboardMove } from './dnd/useKeyboardMove';
 import { useTicketDrag } from './dnd/useTicketDrag';
 import { NoMatches, NoTickets } from './ListEmptyStates';
-import { isSearching, useListView } from './listViewStore';
+import { isSearching, pickedStatus, useListView } from './listViewStore';
 import styles from './ProjectScreen.module.css';
 import { RowActionSheets } from './RowActionSheets';
 import { TicketGroup } from './TicketGroup';
@@ -64,7 +64,10 @@ export function TicketList({ board }: { board: ProjectBoard }) {
     if (tickets.length === 0) {
       return <NoTickets projectName={project.name} onAdd={() => addTicket()} />;
     }
-    return groups.length === 0 ? <NoMatches /> : renderGroups();
+    if (groups.length > 0) return renderGroups();
+    return (
+      <NoMatches status={isSearching(view) ? undefined : pickedStatus(view, statuses)?.name} />
+    );
   };
 
   return (

@@ -104,6 +104,7 @@
   .row .due {
     display: inline-flex;
     grid-area: due;
+    container: due / inline-size;
   }
 
   .row:has(.sentBack) {

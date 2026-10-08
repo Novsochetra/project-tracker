@@ -16,7 +16,7 @@ const rowButtons = (region: HTMLElement) =>
   within(region).getAllByRole('button', { name: /^MOB-\d+/ });
 const rowKeys = (region: HTMLElement) =>
   rowButtons(region).map((button) => /^MOB-\d+/.exec(button.textContent ?? '')?.[0]);
-const filters = () => screen.getByRole('group', { name: 'Filter tickets' });
+const filters = () => screen.getByRole('toolbar', { name: 'Filter tickets' });
 const tabNames = () =>
   within(filters())
     .getAllByRole('button')
@@ -89,7 +89,7 @@ describe('ProjectScreen', () => {
 
     await user.click(within(filters()).getByRole('button', { name: /^Need review/ }));
     expect(screen.queryAllByRole('region')).toEqual([]);
-    expect(screen.getByText('No tickets match.')).toBeInTheDocument();
+    expect(screen.getByText('No tickets in Need review')).toBeInTheDocument();
 
     await user.click(within(filters()).getByRole('button', { name: /^All/ }));
     expect(regionNames()).toEqual(['To do', 'In progress', 'Done']);

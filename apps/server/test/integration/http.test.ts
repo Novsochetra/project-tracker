@@ -5,7 +5,7 @@ import type { ErrorBody, ServerMeta } from '@tracker/shared';
 import { afterAll, describe, expect, it } from 'vitest';
 import { createApp, type AppDeps } from '../../src/app';
 import { REPO_ROOT } from '../../src/config';
-import { imageForm } from '../helpers/fixtures';
+import { imageUpload } from '../helpers/fixtures';
 import { DIALECTS, clientFor, useTestServer, type TestDeps } from '../helpers/server';
 
 const TOKEN = 'correct horse battery staple';
@@ -77,8 +77,8 @@ describe.each(DIALECTS)('http surface (%s)', (dialect) => {
       await client.createProject({ name: 'Mobile app' });
       const ticket = await client.createTicket('MA', { title: 'x' });
       await client.addComment(ticket.key, { text: 'note' });
-      await api.post('/api/attachments', imageForm({ ticketKey: ticket.key }));
-      await api.post('/api/attachments', imageForm());
+      await api.upload(imageUpload({ ticketKey: ticket.key }));
+      await api.upload(imageUpload());
       api.events.length = 0;
 
       const res = await appWith({ testReset: true }).request('/api/test/reset', { method: 'POST' });

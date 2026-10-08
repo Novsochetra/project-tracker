@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { Page, Response } from '@playwright/test';
+import { FILE_NAME_HEADER } from '@tracker/shared';
 import { expect, isPhone, test } from './fixtures';
 import { openNewTicketIn, seedProject, ticketRow, toast } from './helpers';
 
@@ -52,8 +53,8 @@ test.describe('attachments', () => {
     await sheet.getByRole('button', { name: 'Create' }).click();
     await expect(toast(page, 'MOB-2 created')).toBeVisible();
     const created = await api.getTicket('MOB-2');
-    // They upload side by side, so they may arrive in any order.
-    expect(created.attachments.map((file) => file.mimeType).sort()).toEqual([
+    // In the order they were picked, whichever finished first.
+    expect(created.attachments.map((file) => file.mimeType)).toEqual([
       'image/png',
       'text/plain',
       'video/mp4',
@@ -88,6 +89,49 @@ test.describe('attachments', () => {
     ).toMatch(new RegExp(`^bytes \\d+-\\d+/${CLIP.length}$`));
     await swipeDown(page);
     await expect(viewer).toBeHidden();
+  });
+
+  test('files keep the order they were picked, though the first one finishes last', async ({
+    page,
+    api,
+  }) => {
+    await seedProject(api, 'Mobile app', 'MOB', [{ title: 'Existing ticket' }]);
+    await page.goto('/p/MOB');
+    await openNewTicketIn(page, 'To do');
+    const sheet = newTicketSheet(page);
+    await sheet.getByLabel('Ticket title').fill('Five logs');
+    const names = ['a', 'b', 'c', 'd', 'e'].map((letter) => `${letter}.log`);
+    const uploadOf = (name: string) => (response: Response) =>
+      response.url().endsWith('/api/attachments') &&
+      response.request().headers()[FILE_NAME_HEADER] === name;
+    let releaseFirst: () => void = () => undefined;
+    const firstHeld = new Promise<void>((resolve) => (releaseFirst = resolve));
+    await page.route('**/api/attachments', async (route) => {
+      if (route.request().headers()[FILE_NAME_HEADER] === names[0]) await firstHeld;
+      await route.continue();
+    });
+    const othersDone = Promise.all(
+      names.slice(1).map((name) => page.waitForResponse(uploadOf(name))),
+    );
+    const tileNames = () =>
+      sheet
+        .locator('[title$=".log"]')
+        .evaluateAll((tiles) => tiles.map((tile) => tile.getAttribute('title')));
+
+    await sheet
+      .getByLabel('Add files to ticket')
+      .setInputFiles(
+        names.map((name) => ({ name, mimeType: 'text/plain', buffer: Buffer.from(`${name}\n`) })),
+      );
+    await othersDone;
+    expect(await tileNames()).toEqual(names);
+    releaseFirst();
+    await expect(sheet.getByRole('progressbar')).toHaveCount(0);
+    expect(await tileNames()).toEqual(names);
+    await sheet.getByRole('button', { name: 'Create' }).click();
+    await expect(toast(page, 'MOB-2 created')).toBeVisible();
+    const created = await api.getTicket('MOB-2');
+    expect(created.attachments.map((file) => file.fileName)).toEqual(names);
   });
 
   test('phone: a refused file and a 21st file are said in the picker area until dismissed', async ({

@@ -17,6 +17,9 @@ export function NoTickets({ projectName, onAdd }: { projectName: string; onAdd: 
   );
 }
 
-export function NoMatches() {
-  return <p className={styles.noMatches}>No tickets match.</p>;
+// Without a search, only an empty status tab leaves no group to show.
+export function NoMatches({ status }: { status?: string | undefined }) {
+  return (
+    <p className={styles.noMatches}>{status ? `No tickets in ${status}` : 'No tickets match.'}</p>
+  );
 }

@@ -10,8 +10,8 @@
   --subtle: #60606b;
   --placeholder: #6c6c77;
   /* Phones always show drag handles, so they keep 3:1 (WCAG 1.4.11) on every row background, the
-     row flash included. */
-  --handle: #82828d;
+     row flash included: it multiplies the hovered row under it to #DDDDF3. */
+  --handle: #7d7d88;
   --faint: #b4b4bc;
   --dashed: #c4c4cc;
   --bar-off: #d9d9de;

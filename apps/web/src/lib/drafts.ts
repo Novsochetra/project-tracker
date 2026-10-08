@@ -1,3 +1,4 @@
+import { hasUnstoredSheetDrafts } from './sheetDrafts';
 import { hasStoredDrafts } from './storedDrafts';
 
 // Counted per id: two mounted components can mark the same draft, and the first to let go
@@ -16,8 +17,10 @@ export function clearDraft(id: string): void {
 }
 
 // Text kept in the ticket drafts store survives a reload but isn't saved yet, so it counts too.
-// Sheet drafts don't: a reload loses nothing, since the sheet opens with them again.
-export const hasDrafts = (): boolean => marks.size > 0 || hasStoredDrafts();
+// Sheet drafts don't: a reload loses nothing, since the sheet opens with them again, unless
+// storage refused them.
+export const hasDrafts = (): boolean =>
+  marks.size > 0 || hasStoredDrafts() || hasUnstoredSheetDrafts();
 
 function askBeforeUnload(event: BeforeUnloadEvent): void {
   if (!hasDrafts()) return;
