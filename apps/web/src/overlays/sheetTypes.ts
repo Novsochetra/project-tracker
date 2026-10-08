@@ -15,4 +15,6 @@ export interface SheetProps {
   footer?: ReactNode;
   initialFocusRef?: RefObject<HTMLElement | null>;
   onSubmit?: (event: FormEvent<HTMLFormElement>) => void;
+  // Set while the sheet holds unsaved input, so an accidental swipe or tap outside asks first.
+  dirty?: boolean;
 }

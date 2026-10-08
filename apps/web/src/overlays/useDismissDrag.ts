@@ -42,9 +42,12 @@ export function useDismissDrag(input: DismissDragInput): DragHandlers {
       }
       releaseVelocityRef.current = Math.max(0, velocity);
       onClose();
-      // The owner may refuse to close (unsaved changes); then the panel must come back up.
+      // The owner may refuse to close (unsaved changes); then the panel must come back up, and a
+      // later close must not fling out with this release's speed.
       requestAnimationFrame(() => {
-        if (openRef.current) springBack(0);
+        if (!openRef.current) return;
+        releaseVelocityRef.current = 0;
+        springBack(0);
       });
     },
   };

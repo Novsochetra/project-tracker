@@ -18,11 +18,21 @@ import {
 
 export interface StatusEditorProps extends StatusEditorTarget {
   count: number;
+  onDirtyChange: (dirty: boolean) => void;
+}
+
+// The sheet asks before it closes over an unsaved edit, so it has to know about one.
+function useNotifyDirty(dirty: boolean, onDirtyChange: (dirty: boolean) => void): void {
+  useEffect(() => {
+    onDirtyChange(dirty);
+  }, [dirty, onDirtyChange]);
+  useEffect(() => () => onDirtyChange(false), [onDirtyChange]);
 }
 
 export function StatusEditor(props: StatusEditorProps) {
   const { status, onDone } = props;
   const editor = useStatusEditor(props);
+  useNotifyDirty(editor.dirty, props.onDirtyChange);
   const [deleting, setDeleting] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
   const nameRef = useRef<HTMLInputElement>(null);

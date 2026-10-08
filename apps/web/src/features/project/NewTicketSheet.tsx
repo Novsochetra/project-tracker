@@ -2,12 +2,14 @@ import type { Project, Status } from '@tracker/shared';
 import { useRef, useState } from 'react';
 import { useBoard } from '../../api';
 import type { SheetProps } from '../../app/sheets/types';
-import { Sheet, SheetActionButton, SheetTextButton } from '../../overlays';
+import { Sheet, SheetActionButton, SheetCancelButton } from '../../overlays';
 import { NewTicketFields } from './NewTicketFields';
 import styles from './NewTicketSheet.module.css';
 import {
   blankForm,
   chosenStatusId,
+  defaultStatusId,
+  hasChanges,
   TITLE_REQUIRED,
   toCreateInput,
   type NewTicketForm,
@@ -62,7 +64,7 @@ export function NewTicketSheet({ open, onClose, projectKey, statusId }: NewTicke
       label="New ticket"
       title="New ticket"
       subtitle={board && <ProjectSubtitle project={board.project} />}
-      left={<SheetTextButton onClick={onClose}>Cancel</SheetTextButton>}
+      left={<SheetCancelButton />}
       right={
         <SheetActionButton type="submit" disabled={!form.title.trim() || flow.pending}>
           Create
@@ -73,6 +75,7 @@ export function NewTicketSheet({ open, onClose, projectKey, statusId }: NewTicke
         event.preventDefault();
         submit();
       }}
+      dirty={hasChanges(form, defaultStatusId(statuses, statusId))}
     >
       <NewTicketFields
         form={form}

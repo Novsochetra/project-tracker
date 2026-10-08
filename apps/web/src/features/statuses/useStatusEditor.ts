@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useCreateStatus, useUpdateStatus } from '../../api';
 import {
   createInput,
+  draftChanged,
   draftOf,
   nameIssue,
   newDraft,
@@ -21,6 +22,7 @@ export interface StatusEditorTarget {
 
 export interface StatusEditorState {
   draft: StatusDraft;
+  dirty: boolean;
   change: (patch: Partial<StatusDraft>) => void;
   issue: NameIssue | null;
   pending: boolean;
@@ -34,7 +36,8 @@ export function useStatusEditor({
   statuses,
   onDone,
 }: StatusEditorTarget): StatusEditorState {
-  const [draft, setDraft] = useState(() => (status ? draftOf(status) : newDraft(statuses)));
+  const [initial] = useState(() => (status ? draftOf(status) : newDraft(statuses)));
+  const [draft, setDraft] = useState(initial);
   const create = useCreateStatus();
   const update = useUpdateStatus();
   const issue = nameIssue(draft.name, statuses, status?.id);
@@ -62,6 +65,7 @@ export function useStatusEditor({
 
   return {
     draft,
+    dirty: draftChanged(initial, draft),
     change: (patch) => setDraft((current) => ({ ...current, ...patch })),
     issue,
     pending,

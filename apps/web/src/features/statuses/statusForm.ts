@@ -51,6 +51,11 @@ export const draftOf = ({ name, category, color }: Status): StatusDraft => ({
   color,
 });
 
+export const draftChanged = (initial: StatusDraft, draft: StatusDraft): boolean =>
+  draft.name.trim() !== initial.name.trim() ||
+  draft.category !== initial.category ||
+  !sameColor(draft.color, initial.color);
+
 export type NameIssue = { kind: 'blank' } | { kind: 'taken'; name: string };
 
 export function nameIssue(

@@ -1,13 +1,23 @@
 import clsx from 'clsx';
 import { motion } from 'motion/react';
-import { useCallback, useRef, type CSSProperties, type ReactNode, type RefObject } from 'react';
+import {
+  useCallback,
+  useRef,
+  type CSSProperties,
+  type MouseEvent,
+  type ReactNode,
+  type RefObject,
+} from 'react';
 import { useKeyboardInset } from '../gestures/useKeyboardInset';
 import { useTopPull } from '../gestures/useTopPull';
 import { useAxisDrag } from '../gestures/useAxisDrag';
 import { usePrefersReducedMotion } from '../lib/media';
+import { DiscardChangesSheet } from './DiscardChangesSheet';
 import styles from './Sheet.module.css';
+import { SheetCancelContext } from './sheetCancel';
 import type { SheetProps } from './sheetTypes';
 import { useDialogPresence, useDialogValues } from './useDialogPresence';
+import { useDiscardGuard } from './useDiscardGuard';
 import { useDismissDrag } from './useDismissDrag';
 import { useOverlayBehavior } from './useOverlayBehavior';
 import { useBottomPanelValues, useSlidePresence } from './useSlidePresence';
@@ -57,8 +67,12 @@ function SheetContent(props: SheetContentProps): ReactNode {
   );
 }
 
-function useSheetMotion(props: SheetPanelProps, panelRef: RefObject<HTMLDivElement | null>) {
-  const { open, isPhone, onExited, onClose } = props;
+function useSheetMotion(
+  props: SheetPanelProps,
+  panelRef: RefObject<HTMLDivElement | null>,
+  onDismiss: () => void,
+) {
+  const { open, isPhone, onExited } = props;
   const reducedMotion = usePrefersReducedMotion();
   const releaseVelocityRef = useRef(0);
   const bottom = useBottomPanelValues();
@@ -81,7 +95,7 @@ function useSheetMotion(props: SheetPanelProps, panelRef: RefObject<HTMLDivEleme
     travel: bottom.travel,
     measureTravel,
     releaseVelocityRef,
-    onClose,
+    onClose: onDismiss,
   });
   const panelStyle = isPhone
     ? { y: bottom.y, opacity: bottom.opacity }
@@ -89,57 +103,71 @@ function useSheetMotion(props: SheetPanelProps, panelRef: RefObject<HTMLDivEleme
   return { drag, panelStyle, scrim: isPhone ? bottom.scrim : dialog.scrim };
 }
 
+// Keeps focus on the field being typed in, so Keep editing can hand it back.
+const keepFocus = (event: MouseEvent) => event.preventDefault();
+
 export function SheetPanel(props: SheetPanelProps) {
   const { open, onClose, label, size = 'form', isPhone, initialFocusRef, onSubmit } = props;
   const panelRef = useRef<HTMLDivElement>(null);
   const handleRef = useRef<HTMLDivElement>(null);
   const bodyRef = useRef<HTMLDivElement>(null);
   const keyboardVars = useKeyboardVars(isPhone);
-  const { drag, panelStyle, scrim } = useSheetMotion(props, panelRef);
+  const guard = useDiscardGuard(open, props.dirty ?? false, onClose);
+  const { drag, panelStyle, scrim } = useSheetMotion(props, panelRef, guard.requestClose);
   useAxisDrag(handleRef, { ...drag, axis: 'y' });
   useTopPull(bodyRef, drag);
   const trapKeys = useOverlayBehavior({
     active: open,
     panelRef,
-    onClose,
+    onClose: guard.requestClose,
     initialFocusRef,
     focusInitial: !isPhone,
   });
+  // iOS asks before Cancel throws changes away; a desktop Cancel button is a deliberate click.
+  const cancel = isPhone ? guard.requestClose : onClose;
 
   const content = <SheetContent {...props} handleRef={handleRef} bodyRef={bodyRef} />;
   return (
-    <div
-      className={clsx(styles.overlay, styles[size], isPhone ? styles.phone : styles.desktop)}
-      style={keyboardVars}
-      inert={!open}
-      data-sheet=""
-    >
-      <motion.button
-        type="button"
-        tabIndex={-1}
-        aria-label="Close"
-        className={styles.scrim}
-        style={{ opacity: scrim }}
-        onClick={onClose}
-      />
-      <motion.div
-        ref={panelRef}
-        role="dialog"
-        aria-modal="true"
-        aria-label={label}
-        tabIndex={-1}
-        className={styles.panel}
-        style={panelStyle}
-        onKeyDown={trapKeys}
+    <SheetCancelContext.Provider value={cancel}>
+      <div
+        className={clsx(styles.overlay, styles[size], isPhone ? styles.phone : styles.desktop)}
+        style={keyboardVars}
+        inert={!open}
+        data-sheet=""
       >
-        {onSubmit ? (
-          <form className={styles.sheetForm} onSubmit={onSubmit} noValidate>
-            {content}
-          </form>
-        ) : (
-          content
-        )}
-      </motion.div>
-    </div>
+        <motion.button
+          type="button"
+          tabIndex={-1}
+          aria-label="Close"
+          className={styles.scrim}
+          style={{ opacity: scrim }}
+          onMouseDown={keepFocus}
+          onClick={guard.requestClose}
+        />
+        <motion.div
+          ref={panelRef}
+          role="dialog"
+          aria-modal="true"
+          aria-label={label}
+          tabIndex={-1}
+          className={styles.panel}
+          style={panelStyle}
+          onKeyDown={trapKeys}
+        >
+          {onSubmit ? (
+            <form className={styles.sheetForm} onSubmit={onSubmit} noValidate>
+              {content}
+            </form>
+          ) : (
+            content
+          )}
+        </motion.div>
+      </div>
+      <DiscardChangesSheet
+        open={guard.asking}
+        onKeep={guard.keepEditing}
+        onDiscard={guard.discard}
+      />
+    </SheetCancelContext.Provider>
   );
 }

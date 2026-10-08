@@ -6,7 +6,7 @@ import { flashRows } from '../../app/flash';
 import type { ReportScope, SheetProps } from '../../app/sheets/types';
 import { Button, useToast } from '../../components';
 import { readClipboardText } from '../../lib/clipboard';
-import { Sheet, SheetActionButton, SheetTextButton } from '../../overlays';
+import { Sheet, SheetActionButton, SheetCancelButton } from '../../overlays';
 import { ChangesPreview } from './ChangesPreview';
 import {
   appliedMessage,
@@ -63,7 +63,7 @@ function useReportForm({ open, onClose, scope }: ReportSheetProps) {
       },
     );
   };
-  return { ...view, changeText, paste, submit };
+  return { ...view, changeText, paste, submit, dirty: text.trim() !== '' };
 }
 
 export function ReportSheet(props: ReportSheetProps) {
@@ -77,7 +77,8 @@ export function ReportSheet(props: ReportSheetProps) {
       label="Paste Claude Code report"
       size="report"
       onSubmit={form.submit}
-      left={<SheetTextButton onClick={onClose}>Cancel</SheetTextButton>}
+      dirty={form.dirty}
+      left={<SheetCancelButton />}
       title="Paste report"
       subtitle={reportSubtitle(scope, project.data?.project.name) || undefined}
       right={

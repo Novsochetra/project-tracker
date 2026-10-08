@@ -5,7 +5,7 @@ import { flushSync } from 'react-dom';
 import { errorMessage, useBoard, type TrackerQuery } from '../../api';
 import type { SheetProps } from '../../app/sheets/types';
 import { Button, Spinner } from '../../components';
-import { Sheet, SheetTextButton } from '../../overlays';
+import { Sheet, SheetCancelButton } from '../../overlays';
 import { StatusEditor } from './StatusEditor';
 import { StatusList } from './StatusList';
 import styles from './StatusManagerSheet.module.css';
@@ -20,6 +20,7 @@ export const STATUSES_HELP =
 
 export function StatusManagerSheet({ open, onClose, projectKey }: StatusManagerSheetProps) {
   const board = useBoard(projectKey);
+  const [unsavedEdit, setUnsavedEdit] = useState(false);
   return (
     <Sheet
       open={open}
@@ -27,12 +28,17 @@ export function StatusManagerSheet({ open, onClose, projectKey }: StatusManagerS
       label="Statuses"
       title="Statuses"
       subtitle={board.data?.project.name}
-      left={<SheetTextButton onClick={onClose}>Close</SheetTextButton>}
+      left={<SheetCancelButton>Close</SheetCancelButton>}
+      dirty={unsavedEdit}
     >
       <div className={styles.body}>
         <p className={styles.help}>{STATUSES_HELP}</p>
         {board.data ? (
-          <StatusManagerBody projectKey={projectKey} board={board.data} />
+          <StatusManagerBody
+            projectKey={projectKey}
+            board={board.data}
+            onDirtyChange={setUnsavedEdit}
+          />
         ) : (
           <BoardState query={board} />
         )}
@@ -43,7 +49,13 @@ export function StatusManagerSheet({ open, onClose, projectKey }: StatusManagerS
 
 type Editing = { kind: 'new' } | { kind: 'edit'; id: string } | null;
 
-function StatusManagerBody({ projectKey, board }: { projectKey: string; board: ProjectBoard }) {
+interface StatusManagerBodyProps {
+  projectKey: string;
+  board: ProjectBoard;
+  onDirtyChange: (dirty: boolean) => void;
+}
+
+function StatusManagerBody({ projectKey, board, onDirtyChange }: StatusManagerBodyProps) {
   // Deleting doesn't patch the cache, so a deleted status hides here until the refetch lands.
   const [deleted, setDeleted] = useState<ReadonlySet<string>>(() => new Set());
   const statuses = sortStatuses(board.statuses).filter((status) => !deleted.has(status.id));
@@ -74,6 +86,7 @@ function StatusManagerBody({ projectKey, board }: { projectKey: string; board: P
       count={status ? (counts.get(status.id) ?? 0) : 0}
       onDone={finish}
       onDeleted={removed}
+      onDirtyChange={onDirtyChange}
     />
   );
   return (

@@ -21,6 +21,15 @@ export const blankForm = (): NewTicketForm => ({
   due: '',
 });
 
+const hasText = (value: string): boolean => value.trim() !== '';
+
+export function hasChanges(form: NewTicketForm, defaultStatus: string | undefined): boolean {
+  const blank = blankForm();
+  if (hasText(form.title) || hasText(form.description) || hasText(form.assignee)) return true;
+  const statusPicked = form.statusId !== null && form.statusId !== defaultStatus;
+  return statusPicked || form.priority !== blank.priority || form.due !== blank.due;
+}
+
 /** The group's status when opened from its "+", otherwise the first status. */
 export function defaultStatusId(
   statuses: readonly Status[],
