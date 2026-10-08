@@ -20,13 +20,13 @@ export const isClientError = (error: unknown): boolean =>
 
 const isOffline = (): boolean => typeof navigator !== 'undefined' && navigator.onLine === false;
 
-const isUnreachable = (error: unknown): boolean =>
+export const isNetworkError = (error: unknown): boolean =>
   isApiError(error)
     ? error.code === 'http_error' && PROXY_FAILURE_STATUSES.has(error.status)
     : error instanceof TypeError || isOffline();
 
 export function errorMessage(error: unknown): string {
-  if (isUnreachable(error)) return NETWORK_ERROR_MESSAGE;
+  if (isNetworkError(error)) return NETWORK_ERROR_MESSAGE;
   if (isApiError(error) && error.message) return error.message;
   return FALLBACK_ERROR_MESSAGE;
 }

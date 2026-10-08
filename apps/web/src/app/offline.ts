@@ -1,5 +1,5 @@
 import { ApiError } from '@tracker/client';
-import { errorMessage, NETWORK_ERROR_MESSAGE } from '../api';
+import { isNetworkError } from '../api';
 
 export type ApiSignal = 'reachable' | 'unreachable';
 
@@ -9,11 +9,9 @@ export interface CacheAction {
   manual?: boolean;
 }
 
-const isNetworkFailure = (error: unknown): boolean => errorMessage(error) === NETWORK_ERROR_MESSAGE;
-
 // An error the server answered with still proves it can be reached.
 function signalOfError(error: unknown): ApiSignal | null {
-  if (isNetworkFailure(error)) return 'unreachable';
+  if (isNetworkError(error)) return 'unreachable';
   return error instanceof ApiError ? 'reachable' : null;
 }
 

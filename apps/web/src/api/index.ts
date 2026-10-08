@@ -5,6 +5,7 @@ export { queryKeys } from './queryKeys';
 export {
   errorMessage,
   FALLBACK_ERROR_MESSAGE,
+  isNetworkError,
   isNotFound,
   isUnauthorized,
   NETWORK_ERROR_MESSAGE,

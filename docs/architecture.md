@@ -69,7 +69,7 @@ On phones (`max-width: 767px`) the app behaves like a native iOS app:
 
 ### 1.6 Other additions
 
-- Live updates: the server pushes change events over SSE; open screens refresh when an agent changes something.
+- Live updates: the server pushes change events over SSE; open screens refresh when an agent changes something. The web app reopens the stream when the browser gives up on it or when it stays silent for 35 s (two missed pings: a proxy can keep a dead stream open after the API server crashes), waiting 1 s, then doubling up to 15 s. After any reopen, including the first open after a failed connect, all cached data except session and meta refreshes; keys with pending edits and deleted keys are skipped.
 - Project options menu adds **Manage statuses** and **Connect Claude Code** (MCP setup instructions with copy buttons).
 - Optional access token: when `TRACKER_TOKEN` is set, the API needs `Authorization: Bearer <token>` or the session cookie from `POST /api/session`. The web app shows a token screen once.
 - Installable PWA (manifest, icons, offline app shell).
@@ -133,7 +133,7 @@ All routes are under `/api`, JSON in and out. Errors: `{ "error": { "code", "mes
 | `POST /tickets/:key/review`                                                 | Agent reviews a ticket in `in_review`                                                                                    |
 | `GET /people`                                                               | Assignee suggestions                                                                                                     |
 | `GET /meta`                                                                 | Server info for Connect Claude Code: `serverUrl` (`PUBLIC_URL`, else the URL the request reached), entry paths           |
-| `GET /events`                                                               | SSE stream of `ChangeEvent` (`{ type: 'changed', projectId, ticketId }`), heartbeat every 25 s                           |
+| `GET /events`                                                               | SSE stream of `ChangeEvent` (`{ type: 'changed', projectId, ticketId }`), `event: ping` every 15 s                       |
 | `GET/POST /session`                                                         | Auth state / exchange token for an HttpOnly cookie                                                                       |
 
 Status changes made by the dropdown, a report, sending, claiming, submitting or reviewing put the ticket at the **top** of its new group (`topRank`). Drags and keyboard moves renumber the destination group (`planMove`).

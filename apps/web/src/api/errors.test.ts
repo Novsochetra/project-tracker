@@ -4,6 +4,7 @@ import {
   errorMessage,
   FALLBACK_ERROR_MESSAGE,
   isClientError,
+  isNetworkError,
   isNotFound,
   isUnauthorized,
   NETWORK_ERROR_MESSAGE,
@@ -51,5 +52,30 @@ describe('error checks', () => {
     expect(isNotFound(new ApiError(404, 'not_found', 'x'))).toBe(true);
     expect(isClientError(new ApiError(422, 'no_match', 'x'))).toBe(true);
     expect(isClientError(new ApiError(503, 'http_error', 'x'))).toBe(false);
+  });
+});
+
+describe('isNetworkError', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('recognizes requests that never reached the server', () => {
+    expect(isNetworkError(new TypeError('Failed to fetch'))).toBe(true);
+    expect(isNetworkError(new ApiError(502, 'http_error', 'Bad Gateway'))).toBe(true);
+    expect(isNetworkError(new ApiError(504, 'http_error', 'Gateway Timeout'))).toBe(true);
+  });
+
+  it('counts any other failure while the browser is offline', () => {
+    vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(false);
+    expect(isNetworkError(new Error('aborted'))).toBe(true);
+    expect(isNetworkError(new ApiError(409, 'conflict', 'Name taken.'))).toBe(false);
+  });
+
+  it('leaves out answers from the server and other errors', () => {
+    expect(isNetworkError(new ApiError(500, 'internal', 'Database is locked.'))).toBe(false);
+    expect(isNetworkError(new ApiError(404, 'not_found', 'x'))).toBe(false);
+    expect(isNetworkError(new SyntaxError('Unexpected token'))).toBe(false);
+    expect(isNetworkError('boom')).toBe(false);
   });
 });

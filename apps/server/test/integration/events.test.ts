@@ -4,6 +4,7 @@ import { serve } from '@hono/node-server';
 import type { Attachment, ChangeEvent } from '@tracker/shared';
 import { describe, expect, it, vi } from 'vitest';
 import { createApp } from '../../src/app';
+import { HEARTBEAT_MS } from '../../src/http/routes/events';
 import { agent, imageForm, statusOf } from '../helpers/fixtures';
 import { DIALECTS, useTestServer } from '../helpers/server';
 
@@ -168,7 +169,7 @@ describe.each(DIALECTS)('change events (%s)', (dialect) => {
     await vi.waitFor(() => expect(api.broadcaster.listenerCount()).toBe(baseline));
   });
 
-  it('sends a heartbeat comment on an interval', async () => {
+  it('sends a ping event the browser can see on an interval', async () => {
     const app = createApp({
       db: api.db,
       storage: api.storage,
@@ -177,7 +178,7 @@ describe.each(DIALECTS)('change events (%s)', (dialect) => {
     });
     const res = await app.request('/api/events');
     const reader = res.body!.getReader();
-    const text = await readUntil(reader, /: heartbeat\n\n/);
+    const text = await readUntil(reader, /(event: ping\ndata: \n\n.*){2}/s);
     expect(dataLines(text)).toEqual([]);
     await reader.cancel();
   });
@@ -214,5 +215,12 @@ describe.each(DIALECTS)('change events (%s)', (dialect) => {
       controller.abort();
       server.close();
     }
+  });
+});
+
+describe('heartbeat', () => {
+  // The web app reopens a stream that stays silent for 35 s (LIVE_STALE_MS in apps/web/src/api/live).
+  it('pings at least twice before a client gives up on a silent stream', () => {
+    expect(2 * HEARTBEAT_MS).toBeLessThan(35_000);
   });
 });
