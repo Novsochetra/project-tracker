@@ -13,6 +13,7 @@ export function thumbnailLabels(attachments: readonly Labelled[]): string[] {
   });
 }
 
+// Text files and PDFs show their name and size, so they need the wide tile.
 export const isWide = (kind: AttachmentKind | null): boolean =>
   kind !== 'image' && kind !== 'video';
 

@@ -13,7 +13,7 @@ ruleTester.run('no-jsdoc-blocks', noJsdocBlocks as Rule.RuleModule, {
   valid: [
     '// Agents read this, so the person is "User".\nconst label = "User";',
     '/* eslint-disable-next-line no-console */\nconsole.log("ready");',
-    "const pattern = '**/*.test.ts';",
+    "const pattern = '/** not a comment */';",
     '/**/\nconst empty = 1;',
   ],
   invalid: [

@@ -29,6 +29,8 @@ const NUMBER = new Intl.NumberFormat('en-US');
 
 const SKIPPED_NOTE = `(not shown: the ${NUMBER.format(TEXT_BUDGET_CHARS)}-character limit for text files is used up)`;
 
+// Each file once: the ticket's own, then each comment's, oldest first; the last list adds any file
+// whose comment isn't in the activity, so none is left out.
 export function ticketFiles(detail: TicketDetail): Attachment[] {
   const candidates = [
     ...detail.attachments.filter((file) => file.activityId === null),
