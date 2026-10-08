@@ -1,0 +1,101 @@
+.header {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--nav-height);
+  padding: 6px var(--space-4) 6px var(--space-5);
+  border-bottom: 1px solid var(--line);
+  background: var(--surface);
+}
+
+.breadcrumb {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  overflow: hidden;
+  font-size: var(--size-secondary);
+  white-space: nowrap;
+}
+
+.crumb {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 28px;
+  padding: 0 6px;
+  border: 0;
+  border-radius: var(--radius-control);
+  background: transparent;
+  color: var(--muted);
+  font-family: var(--font-sans);
+  font-size: var(--size-secondary);
+  cursor: pointer;
+  transition:
+    background-color var(--duration-fast) ease-out,
+    color var(--duration-fast) ease-out;
+}
+
+/* The breadcrumb clips its overflow to ellipsize long names, so the ring goes inside. */
+.crumb:focus-visible {
+  outline-offset: -2px;
+}
+
+@media (hover: hover) {
+  .crumb:hover {
+    background: var(--fill);
+    color: var(--ink);
+  }
+}
+
+.current {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 0 6px;
+  font-weight: var(--weight-medium);
+}
+
+/* Only the project name gives way to a narrow header. */
+.shrinks {
+  flex: 0 1 auto;
+  min-width: 0;
+}
+
+.current:first-child {
+  padding: 0 2px;
+}
+
+.ticketKey {
+  font-family: var(--font-mono);
+  font-size: var(--size-caption);
+}
+
+.crumbLabel {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.square {
+  flex: none;
+  width: 10px;
+  height: 10px;
+  border-radius: var(--radius-square);
+  background: var(--faint);
+}
+
+.separator {
+  flex: none;
+  color: var(--faint);
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}

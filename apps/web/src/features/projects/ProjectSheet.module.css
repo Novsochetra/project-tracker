@@ -1,0 +1,67 @@
+.fields {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 18px var(--space-5) 6px;
+}
+
+.name {
+  width: 100%;
+  margin: 0;
+  padding: var(--space-1) 0;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: var(--ink);
+  font: var(--text-heading);
+  letter-spacing: -0.01em;
+}
+
+/* Borderless like the design: the caret shows focus. */
+.name:focus-visible {
+  outline: none;
+}
+
+.fields .description {
+  min-height: 52px;
+  max-height: 30vh;
+  padding: var(--space-1) 0;
+  overflow-y: auto;
+  color: var(--ink-2);
+  font-size: var(--size-headline);
+  line-height: 1.55;
+}
+
+.details {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4) 18px;
+}
+
+.fieldIcon {
+  color: var(--muted);
+}
+
+.prefix input {
+  text-transform: uppercase;
+}
+
+.hint {
+  margin: 0 var(--space-1);
+  color: var(--muted);
+  font-size: var(--size-caption);
+  line-height: 1.5;
+}
+
+.error {
+  margin: 2px var(--space-1) 0;
+  color: var(--danger);
+  font-size: var(--size-secondary);
+}
+
+@media (max-width: 767px) {
+  .fields .description {
+    font-size: var(--size-input);
+  }
+}

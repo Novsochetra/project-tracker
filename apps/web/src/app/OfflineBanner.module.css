@@ -1,0 +1,30 @@
+.banner {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 28px;
+  padding: calc(var(--space-1) + var(--safe-top)) var(--space-4) var(--space-1);
+  border-bottom: 1px solid var(--line);
+  background: var(--fill);
+  color: var(--muted);
+  font-size: var(--size-caption);
+  animation: banner-in var(--duration-fade) var(--ease-out) both;
+}
+
+.text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@keyframes banner-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}

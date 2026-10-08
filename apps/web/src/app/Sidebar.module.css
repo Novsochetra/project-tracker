@@ -1,0 +1,107 @@
+.sidebar {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  width: var(--sidebar-width);
+  padding: var(--space-3) var(--space-2);
+  overflow-y: auto;
+  border-right: 1px solid var(--line);
+  background: var(--fill);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 36px;
+  padding: 0 var(--space-2);
+}
+
+.brandName {
+  flex: 1;
+  font-size: var(--size-body);
+  font-weight: var(--weight-semibold);
+}
+
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.sectionHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 28px;
+  padding: 0 var(--space-1) 0 var(--space-2);
+}
+
+.sectionLabel {
+  color: var(--muted);
+  font: var(--text-caption);
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 32px;
+  margin: 0;
+  padding: 0 var(--space-2);
+  border: 0;
+  border-radius: var(--radius-control);
+  background: transparent;
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: var(--size-secondary);
+  text-align: left;
+  cursor: pointer;
+  transition: background-color var(--duration-fast) ease-out;
+}
+
+.item:focus-visible {
+  outline-offset: -2px;
+}
+
+@media (hover: hover) {
+  .item:hover {
+    background: var(--fill-2);
+  }
+}
+
+.item.active {
+  background: var(--fill-2);
+}
+
+.navIcon {
+  flex: none;
+  color: var(--muted);
+}
+
+.allProjects {
+  font-weight: var(--weight-medium);
+}
+
+.square {
+  flex: none;
+  width: 10px;
+  height: 10px;
+  border-radius: var(--radius-square);
+}
+
+.name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.count {
+  color: var(--subtle);
+  font-size: var(--size-caption);
+  font-variant-numeric: tabular-nums;
+}

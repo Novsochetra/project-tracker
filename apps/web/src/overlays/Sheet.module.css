@@ -82,7 +82,7 @@
   pointer-events: none;
 }
 
-.form {
+.sheetForm {
   display: flex;
   flex: 1 1 auto;
   flex-direction: column;

@@ -133,7 +133,7 @@ export function SheetPanel(props: SheetPanelProps) {
         onKeyDown={trapKeys}
       >
         {onSubmit ? (
-          <form className={styles.form} onSubmit={onSubmit} noValidate>
+          <form className={styles.sheetForm} onSubmit={onSubmit} noValidate>
             {content}
           </form>
         ) : (

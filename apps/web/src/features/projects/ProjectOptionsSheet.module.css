@@ -1,0 +1,7 @@
+/* The delete question reads larger and darker than the plain name caption (Main.dc.html). */
+.confirm {
+  display: block;
+  margin: 2px 0 var(--space-1);
+  color: var(--muted-2);
+  font-size: var(--size-body);
+}

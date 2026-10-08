@@ -1,4 +1,5 @@
 import { lazy, Suspense } from 'react';
+import { TrackerApp } from './TrackerApp';
 
 const Gallery = lazy(() => import('../dev/Gallery'));
 
@@ -10,5 +11,5 @@ export function App() {
       </Suspense>
     );
   }
-  return <main className="app-placeholder">Tracker</main>;
+  return <TrackerApp />;
 }

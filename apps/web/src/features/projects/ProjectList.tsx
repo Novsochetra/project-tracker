@@ -1,0 +1,34 @@
+import type { ProjectSummary } from '@tracker/shared';
+import { ListCard } from '../../components';
+import { useIsPhone } from '../../lib/media';
+import { useNow } from '../../lib/useNow';
+import { useNavigation } from '../../navigation';
+import styles from './ProjectList.module.css';
+import { ProjectRow } from './ProjectRow';
+
+export function ProjectList({ projects }: { projects: readonly ProjectSummary[] }) {
+  const isPhone = useIsPhone();
+  const now = useNow();
+  const { push } = useNavigation();
+  return (
+    <ListCard className={styles.list}>
+      {!isPhone && (
+        <div className={styles.head} aria-hidden="true">
+          <span className={styles.nameHead}>Name</span>
+          <span className={styles.progressHead}>Progress</span>
+          <span className={styles.openHead}>Open</span>
+          <span className={styles.updatedHead}>Updated</span>
+        </div>
+      )}
+      {projects.map((project, index) => (
+        <ProjectRow
+          key={project.id}
+          project={project}
+          index={index}
+          now={now}
+          onOpen={() => push({ name: 'project', key: project.key })}
+        />
+      ))}
+    </ListCard>
+  );
+}
