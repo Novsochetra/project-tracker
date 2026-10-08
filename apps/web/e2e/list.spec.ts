@@ -71,6 +71,7 @@ test.describe('ticket list', () => {
       { title: 'C', status: 'To do' },
     ]);
     await page.goto('/p/MOB');
+    await expect(group(page, 'Done')).toBeVisible();
     const names = await page
       .getByRole('region')
       .evaluateAll((sections) => sections.map((s) => s.getAttribute('aria-label')));
