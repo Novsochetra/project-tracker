@@ -174,10 +174,11 @@ describe('ReadySection', () => {
         expect(rowButton('MOB-3').closest('[data-ready-row]')).toHaveTextContent('Done'),
       );
       swipeAction('MOB-3', 'Done');
+      // The toast leaves after 2.2s of real time, so check it before waiting on anything.
+      expect(screen.getByText('MOB-3 moved to Done')).toBeInTheDocument();
       await waitFor(() =>
         expect(updateTicket).toHaveBeenCalledWith('MOB-3', { statusId: STATUS.done }),
       );
-      expect(await screen.findByText('MOB-3 moved to Done')).toBeInTheDocument();
     });
 
     it('has no Done button; the row swipes instead', async () => {

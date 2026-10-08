@@ -20,8 +20,10 @@ export function useBoardKeyboardMove(projectKey: string, moveTicket: MoveTicket)
       const { statuses, tickets } = board;
       const columns = buildColumns({ ...getListView(projectKey), statuses, tickets });
       const target = boardMoveTarget(columns, ticket.id, direction);
-      if (!target || !moveTicket(ticket.id, target)) return;
-      requestHandleFocus(ticket.id);
+      const move = target && moveTicket(ticket.id, target);
+      if (!move) return;
+      const releaseFocus = requestHandleFocus(ticket.id);
+      void move.then(releaseFocus);
     },
     [readBoard, moveTicket, projectKey],
   );

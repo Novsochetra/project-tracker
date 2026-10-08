@@ -57,10 +57,11 @@ describe('ProjectScreen on phones', () => {
     renderProject({ client: { updateTicket } });
     await screen.findByRole('region', { name: 'To do' });
     swipeAction('MOB-1', 'In progress');
+    // The toast leaves after 2.2s of real time, so check it before waiting on anything.
+    expect(screen.getByText('MOB-1 moved to In progress')).toBeInTheDocument();
     await waitFor(() =>
       expect(updateTicket).toHaveBeenCalledWith('MOB-1', { statusId: STATUS.progress }),
     );
-    expect(await screen.findByText('MOB-1 moved to In progress')).toBeInTheDocument();
     await waitFor(() =>
       expect(screen.getByRole('region', { name: 'In progress' })).toHaveTextContent('MOB-1'),
     );
@@ -74,7 +75,6 @@ describe('ProjectScreen on phones', () => {
   });
 
   it('swipes left to pick another status from an action sheet', async () => {
-    const user = userEvent.setup();
     const updateTicket = vi.fn(pending);
     renderProject({ client: { updateTicket } });
     await screen.findByRole('region', { name: 'To do' });
@@ -82,25 +82,26 @@ describe('ProjectScreen on phones', () => {
     const sheet = await screen.findByRole('dialog', { name: 'Status' });
     expect(sheet).toHaveTextContent('Move MOB-1 to');
     expect(within(sheet).queryByRole('button', { name: 'To do' })).not.toBeInTheDocument();
-    await user.click(within(sheet).getByRole('button', { name: 'Done' }));
+    fireEvent.click(within(sheet).getByRole('button', { name: 'Done' }));
+    // The toast leaves after 2.2s of real time, so check it before waiting on anything.
+    expect(screen.getByText('MOB-1 moved to Done')).toBeInTheDocument();
     await waitFor(() =>
       expect(updateTicket).toHaveBeenCalledWith('MOB-1', { statusId: STATUS.done }),
     );
-    expect(await screen.findByText('MOB-1 moved to Done')).toBeInTheDocument();
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
   });
 
   it('swipes left to delete after confirming', async () => {
-    const user = userEvent.setup();
     const deleteTicket = vi.fn(pending);
     renderProject({ client: { deleteTicket } });
     await screen.findByRole('region', { name: 'To do' });
     swipeAction('MOB-2', 'Delete');
     const sheet = await screen.findByRole('dialog', { name: 'Delete ticket' });
     expect(sheet).toHaveTextContent("Delete MOB-2? This can't be undone.");
-    await user.click(within(sheet).getByRole('button', { name: 'Delete ticket' }));
+    fireEvent.click(within(sheet).getByRole('button', { name: 'Delete ticket' }));
+    // The toast leaves after 2.2s of real time, so check it before waiting on anything.
+    expect(screen.getByText('MOB-2 deleted')).toBeInTheDocument();
     await waitFor(() => expect(deleteTicket).toHaveBeenCalledWith('MOB-2'));
-    expect(await screen.findByText('MOB-2 deleted')).toBeInTheDocument();
     await waitFor(() =>
       expect(screen.queryByRole('button', { name: /^MOB-2\b/ })).not.toBeInTheDocument(),
     );

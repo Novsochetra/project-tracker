@@ -1,4 +1,4 @@
-import { screen, waitFor, within } from '@testing-library/react';
+import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ApiError } from '@tracker/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -127,22 +127,23 @@ describe('ProjectScreen', () => {
   });
 
   it('moves a ticket across groups with the arrow keys and keeps the handle focused', async () => {
-    const user = userEvent.setup();
     const moveTicket = vi.fn(() => new Promise(() => undefined));
     renderProject({ client: { moveTicket } });
     const handleName = 'Move MOB-2. Drag, or use the arrow keys.';
-    (await screen.findByRole('button', { name: handleName })).focus();
-    await user.keyboard('{ArrowDown}');
+    const handle = await screen.findByRole('button', { name: handleName });
+    handle.focus();
+    fireEvent.keyDown(handle, { key: 'ArrowDown' });
+    // The toast leaves after 2.2s of real time, so check it before waiting on anything.
+    expect(screen.getByText('MOB-2 moved to In progress')).toBeInTheDocument();
 
+    await waitFor(() => expect(rowKeys(group('In progress'))).toEqual(['MOB-2', 'MOB-3']));
     expect(moveTicket).toHaveBeenCalledWith('MOB-2', {
       statusId: STATUS.progress,
       beforeId: 't-3',
       afterId: null,
     });
-    await waitFor(() => expect(rowKeys(group('In progress'))).toEqual(['MOB-2', 'MOB-3']));
     expect(screen.getByRole('button', { name: handleName })).toHaveFocus();
     // Announced once, by the toast's status region; the hidden live region stays quiet.
-    expect(screen.getByText('MOB-2 moved to In progress')).toBeInTheDocument();
     expect(liveRegion()).toBeEmptyDOMElement();
   });
 

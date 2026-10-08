@@ -26,7 +26,7 @@ export function TicketList({ board }: { board: ProjectBoard }) {
   const { drag, ghostRef, startDrag } = useTicketDrag({
     environment: (ticket) =>
       listEnvironment({ groups: containerRef, scroller: scrollRef }, ticket.id),
-    onDrop: (ticket, target) => moveTicket(ticket.id, target),
+    onDrop: (ticket, target) => void moveTicket(ticket.id, target),
   });
   const handleKeyDown = useKeyboardMove(project.key, view.filter, moveTicket);
   const rowSheet = useRowSheet();

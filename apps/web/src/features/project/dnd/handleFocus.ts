@@ -1,9 +1,7 @@
-export const HANDLE_FOCUS_MS = 1000;
-
 // Every drag handle carries its ticket id in this attribute (see DragHandle).
 const HANDLE_ATTRIBUTE = 'data-handle-for';
 
-let pending: { ticketId: string; until: number } | null = null;
+let pending: { ticketId: string } | null = null;
 
 // Focus or a press anywhere else means the person moved on: stop pulling focus back.
 function forgetUnlessHandle(event: Event): void {
@@ -19,16 +17,20 @@ export function clearHandleFocus(): void {
 }
 
 /**
- * A keyboard move re-renders the row, and React may move or remount its DOM node, which drops
- * focus. The handle takes focus back on its next renders while the request is fresh.
+ * A keyboard move re-renders the row when it shows and again when a refused move goes back, and
+ * React may move or remount the row's DOM node, which drops focus. The handle takes focus back on
+ * its renders until the move is over: call the returned function then.
  */
-export function requestHandleFocus(ticketId: string, now: number = performance.now()): void {
-  pending = { ticketId, until: now + HANDLE_FOCUS_MS };
+export function requestHandleFocus(ticketId: string): () => void {
+  const request = { ticketId };
+  pending = request;
   document.addEventListener('focusin', forgetUnlessHandle, true);
   document.addEventListener('pointerdown', forgetUnlessHandle, true);
+  return () => {
+    if (pending === request) clearHandleFocus();
+  };
 }
 
-export function wantsHandleFocus(ticketId: string, now: number = performance.now()): boolean {
-  if (pending && now > pending.until) clearHandleFocus();
+export function wantsHandleFocus(ticketId: string): boolean {
   return pending?.ticketId === ticketId;
 }

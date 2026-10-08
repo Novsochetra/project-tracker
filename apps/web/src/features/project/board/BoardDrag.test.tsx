@@ -1,4 +1,4 @@
-import { act, fireEvent, screen, waitFor, within } from '@testing-library/react';
+import { act, fireEvent, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { STATUS } from '../../../api/test/fixtures';
 import { mockPhone, skipAnimations } from '../../../overlays/testing';
@@ -114,15 +114,14 @@ describe('dragging cards on the desktop board', () => {
     );
 
     pointer('pointerup', 650, 620);
-    await waitFor(() =>
-      expect(moveTicket).toHaveBeenCalledWith('MOB-1', {
-        statusId: STATUS.review,
-        beforeId: null,
-        afterId: null,
-      }),
-    );
-    expect(await screen.findByText('MOB-1 moved to Need review')).toBeInTheDocument();
-    expect(within(review).getByRole('button', { name: /^MOB-1\b/ })).toBeInTheDocument();
+    // The toast leaves after 2.2s of real time, so check it before waiting on anything.
+    expect(screen.getByText('MOB-1 moved to Need review')).toBeInTheDocument();
+    expect(await within(review).findByRole('button', { name: /^MOB-1\b/ })).toBeInTheDocument();
+    expect(moveTicket).toHaveBeenCalledWith('MOB-1', {
+      statusId: STATUS.review,
+      beforeId: null,
+      afterId: null,
+    });
   });
 
   it('draws the drop line between cards by their midpoints', async () => {

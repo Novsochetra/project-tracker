@@ -33,7 +33,7 @@ export function TicketBoard({ board }: { board: ProjectBoard }) {
       isPhoneNow()
         ? phoneBoardEnvironment(boardRef, ticket.id, press)
         : desktopBoardEnvironment(boardRef, ticket.id),
-    onDrop: (ticket, target) => moveTicket(ticket.id, target),
+    onDrop: (ticket, target) => void moveTicket(ticket.id, target),
   });
   const handleKeyDown = useBoardKeyboardMove(project.key, moveTicket);
   const open = useOpenTicket(project.key);

@@ -1,4 +1,4 @@
-import { screen, waitFor, within } from '@testing-library/react';
+import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { STATUS } from '../../../api/test/fixtures';
@@ -108,21 +108,21 @@ describe('TicketBoard', () => {
   });
 
   it('moves a card to the next column with → and keeps its handle focused', async () => {
-    const user = userEvent.setup();
     const moveTicket = vi.fn(() => new Promise(() => undefined));
     renderProject({ client: { moveTicket } });
     await screen.findByRole('region', { name: 'Need review' });
     handle('MOB-2').focus();
-    await user.keyboard('{ArrowRight}');
+    fireEvent.keyDown(handle('MOB-2'), { key: 'ArrowRight' });
+    // The toast leaves after 2.2s of real time, so check it before waiting on anything.
+    expect(screen.getByText('MOB-2 moved to In progress')).toBeInTheDocument();
 
+    await waitFor(() => expect(cardKeys('In progress')).toEqual(['MOB-3', 'MOB-2']));
     expect(moveTicket).toHaveBeenCalledWith('MOB-2', {
       statusId: STATUS.progress,
       beforeId: null,
       afterId: 't-3',
     });
-    await waitFor(() => expect(cardKeys('In progress')).toEqual(['MOB-3', 'MOB-2']));
     expect(handle('MOB-2')).toHaveFocus();
-    expect(screen.getByText('MOB-2 moved to In progress')).toBeInTheDocument();
   });
 
   it('moves a card back with ← into the same slot, even into an empty column', async () => {

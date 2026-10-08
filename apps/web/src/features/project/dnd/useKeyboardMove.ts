@@ -34,9 +34,12 @@ export function useKeyboardMove(
       if (!board) return;
       const order = visibleStatuses(board.statuses, filter).map((status) => status.id);
       const target = keyboardMoveTarget(board.tickets, ticket.id, direction, order);
-      if (!target || !moveTicket(ticket.id, target)) return;
+      if (!target) return;
+      const move = moveTicket(ticket.id, target);
+      if (!move) return;
       expandGroup(projectKey, target.statusId);
-      requestHandleFocus(ticket.id);
+      const releaseFocus = requestHandleFocus(ticket.id);
+      void move.then(releaseFocus);
     },
     [readBoard, filter, moveTicket, projectKey],
   );
