@@ -35,6 +35,14 @@ export const formValuesOf = (project: Pick<Project, 'name' | 'description' | 're
 
 export const hasName = (values: ProjectFormValues): boolean => values.name.trim() !== '';
 
+const FORM_FIELDS: readonly (keyof ProjectFormValues)[] = ['name', 'description', 'repo', 'prefix'];
+
+// Trimmed like Create and Save send them, so a stray space doesn't make the sheet ask.
+export const projectFormChanged = (
+  values: ProjectFormValues,
+  baseline: ProjectFormValues,
+): boolean => FORM_FIELDS.some((field) => values[field].trim() !== baseline[field].trim());
+
 export const prefixPlaceholder = (values: ProjectFormValues): string => derivePrefix(values.name);
 
 export function projectHint(mode: ProjectFormMode, values: ProjectFormValues): string {

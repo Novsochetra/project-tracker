@@ -6,6 +6,7 @@ import {
   formValuesOf,
   hasName,
   prefixPlaceholder,
+  projectFormChanged,
   projectHint,
   updateProjectInput,
   type ProjectFormValues,
@@ -99,6 +100,31 @@ describe('inputs', () => {
       repo: '~/web',
       prefix: '',
     });
+  });
+});
+
+describe('projectFormChanged', () => {
+  it('counts any text typed into a new project, and nothing else', () => {
+    const changed = (patch: Partial<ProjectFormValues>) =>
+      projectFormChanged(form(patch), EMPTY_PROJECT_FORM);
+    expect(changed({})).toBe(false);
+    expect(changed({ name: '  ', description: '\n', repo: ' ', prefix: ' ' })).toBe(false);
+    expect(changed({ name: 'Garden planner' })).toBe(true);
+    expect(changed({ description: 'Seeds and beds' })).toBe(true);
+    expect(changed({ repo: '~/code/garden' })).toBe(true);
+    expect(changed({ prefix: 'gp' })).toBe(true);
+  });
+
+  it('compares an edit with the project it loaded', () => {
+    const loaded = formValuesOf({ name: 'Website', description: 'Docs', repo: '~/code/web' });
+    const changed = (patch: Partial<ProjectFormValues>) =>
+      projectFormChanged({ ...loaded, ...patch }, loaded);
+    expect(changed({})).toBe(false);
+    expect(changed({ name: ' Website ', description: 'Docs\n' })).toBe(false);
+    expect(changed({ name: 'Marketing site' })).toBe(true);
+    expect(changed({ name: 'website' })).toBe(true);
+    expect(changed({ description: '' })).toBe(true);
+    expect(changed({ repo: '~/code/site' })).toBe(true);
   });
 });
 

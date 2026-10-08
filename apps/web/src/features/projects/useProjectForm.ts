@@ -1,25 +1,28 @@
 import { useState } from 'react';
-import { EMPTY_PROJECT_FORM, type ProjectFormValues } from './projectForm';
+import { EMPTY_PROJECT_FORM, projectFormChanged, type ProjectFormValues } from './projectForm';
 
 export interface ProjectForm {
   values: ProjectFormValues;
+  changed: boolean;
   error: string | null;
   setField: (field: keyof ProjectFormValues, value: string) => void;
   setError: (error: string | null) => void;
 }
 
-/** Starts from `initial`, or from it once it arrives when the sheet opened before the data. */
+// The sheet can open before the project has loaded: the form then starts from the project once
+// it arrives, and that start, not a blank form, is what typed changes are measured against.
 export function useProjectForm(initial: ProjectFormValues | undefined): ProjectForm {
+  const [start, setStart] = useState(initial);
   const [values, setValues] = useState(initial ?? EMPTY_PROJECT_FORM);
-  const [seeded, setSeeded] = useState(initial !== undefined);
   const [error, setError] = useState<string | null>(null);
-  if (!seeded && initial) {
-    setSeeded(true);
+  if (!start && initial) {
+    setStart(initial);
     setValues(initial);
   }
   const setField = (field: keyof ProjectFormValues, value: string) => {
     setValues((current) => ({ ...current, [field]: value }));
     setError(null);
   };
-  return { values, error, setField, setError };
+  const changed = projectFormChanged(values, start ?? EMPTY_PROJECT_FORM);
+  return { values, changed, error, setField, setError };
 }

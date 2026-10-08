@@ -2,7 +2,7 @@ import clsx from 'clsx';
 import { useRef, type FormEvent, type KeyboardEvent, type RefObject } from 'react';
 import type { SheetProps } from '../../app/sheets/types';
 import { AutoTextarea } from '../../components';
-import { Sheet, SheetActionButton, SheetTextButton } from '../../overlays';
+import { Sheet, SheetActionButton, SheetCancelButton } from '../../overlays';
 import { hasName, projectHint, type ProjectFormMode } from './projectForm';
 import { ProjectPathFields } from './ProjectPathFields';
 import styles from './ProjectSheet.module.css';
@@ -74,7 +74,7 @@ export function ProjectFormSheet({
       {...sheet}
       label={TEXT[mode].title}
       title={TEXT[mode].title}
-      left={<SheetTextButton onClick={sheet.onClose}>Cancel</SheetTextButton>}
+      left={<SheetCancelButton />}
       right={
         <SheetActionButton type="submit" disabled={!named || pending}>
           {TEXT[mode].action}
@@ -82,6 +82,7 @@ export function ProjectFormSheet({
       }
       initialFocusRef={nameRef}
       onSubmit={submit}
+      dirty={form.changed}
     >
       <NameFields form={form} nameRef={nameRef} onEnter={explainBlankName} />
       <div className={styles.details}>
