@@ -1,0 +1,79 @@
+.section {
+  min-width: 0;
+  padding: var(--space-2) var(--space-10) 56px;
+}
+
+.inner {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-width: 760px;
+  padding-top: var(--space-5);
+  border-top: 1px solid var(--line);
+}
+
+.heading {
+  margin: 0 0 6px;
+  font-size: var(--size-body);
+  font-weight: var(--weight-semibold);
+  line-height: 1.5;
+}
+
+.event {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  min-height: 26px;
+  color: var(--muted);
+  font-size: var(--size-secondary);
+}
+
+.dotSlot {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: var(--radius-full);
+  background: var(--dashed);
+}
+
+.eventText {
+  min-width: 0;
+  padding-top: 1px;
+  overflow-wrap: anywhere;
+}
+
+.actor {
+  color: var(--ink);
+  font-weight: var(--weight-medium);
+}
+
+.when {
+  color: var(--placeholder);
+}
+
+/* Fills backwards only: a finished row must not stay a stacking context (or a compositor
+   layer), or it would paint over the options menu of the card above it. */
+.rise {
+  animation: rise-in var(--duration-rise) var(--ease-out) backwards;
+}
+
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+@media (max-width: 767px) {
+  .section {
+    padding: var(--space-2) var(--space-4) 120px;
+  }
+}

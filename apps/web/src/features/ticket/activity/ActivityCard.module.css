@@ -1,0 +1,111 @@
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: var(--space-1) 0;
+  padding: var(--space-3) 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-group);
+  background: var(--surface);
+}
+
+/* Lifts the card over the rows below while its options menu is open. */
+.card:has(.menu [aria-expanded='true']) {
+  position: relative;
+  z-index: 1;
+}
+
+.report {
+  border-color: var(--report-line);
+  background: var(--report-bg);
+}
+
+.draft {
+  opacity: 0.6;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+  min-height: 20px;
+  font-size: var(--size-secondary);
+}
+
+.title {
+  min-width: 0;
+  overflow: hidden;
+  font-weight: var(--weight-medium);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.meta {
+  flex: none;
+  color: var(--placeholder);
+  white-space: nowrap;
+}
+
+/* The menu button is taller than the header row; negative margins keep the row 20px high. */
+.menu {
+  flex: none;
+  display: flex;
+  margin: -4px -6px -4px auto;
+}
+
+.body {
+  margin: 0;
+  color: var(--ink-2);
+  font-size: var(--size-body);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.reportBody {
+  margin: 0;
+  color: var(--ink-2);
+  font-family: var(--font-mono);
+  font-size: var(--size-report);
+  line-height: 1.6;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.images {
+  padding-top: 2px;
+}
+
+.verdictRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.verdict {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-height: 22px;
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-full);
+  background: color-mix(in srgb, var(--verdict) 10%, var(--surface));
+  color: var(--verdict);
+  font-size: var(--size-caption);
+  font-weight: var(--weight-medium);
+}
+
+.approved {
+  --verdict: var(--accent);
+}
+
+.changes {
+  --verdict: var(--danger);
+}
+
+@media (max-width: 767px) {
+  .menu {
+    margin: -12px -12px -12px auto;
+  }
+}

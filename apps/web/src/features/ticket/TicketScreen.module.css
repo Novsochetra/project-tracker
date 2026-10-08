@@ -1,0 +1,61 @@
+.grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--panel-width);
+  grid-template-rows: auto 1fr;
+  grid-template-areas:
+    'main side'
+    'act side';
+  min-height: 100%;
+}
+
+.main {
+  grid-area: main;
+}
+
+.side {
+  grid-area: side;
+}
+
+.activity {
+  grid-area: act;
+}
+
+/* Quiet on purpose: a fast load shows nothing, a slow one fades a spinner in. */
+.loading {
+  display: flex;
+  justify-content: center;
+  padding: 64px var(--space-6);
+  animation: appear var(--duration-fade) var(--ease-out) 400ms both;
+}
+
+/* The design's 12px padding lets both labels fit the 1 : 1.35 split at 375px. */
+button.barSecondary,
+button.barPrimary {
+  flex: 1 1 0;
+  padding: 0 var(--space-3);
+}
+
+button.barPrimary {
+  flex-grow: 1.35;
+}
+
+@media (max-width: 767px) {
+  .grid {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto;
+    grid-template-areas:
+      'main'
+      'side'
+      'act';
+    min-height: 0;
+  }
+}
+
+@keyframes appear {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
