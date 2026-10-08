@@ -46,6 +46,11 @@ const TEXT_ON: Record<string, Record<string, string>> = {
     '--row-hover': '"None" on a hovered property row',
     '--fill-2': 'the phone search field',
     '--report-bg': 'report card times, the comment box while images are dragged over it',
+    '--fill': 'the weekday of a hovered quick pick in the desktop calendar',
+  },
+  '--accent': {
+    '--surface': 'today in the desktop calendar',
+    '--fill-2': 'a hovered today in the desktop calendar',
   },
   '--danger': {
     '--surface': 'errors, overdue dates, delete actions',
@@ -67,6 +72,7 @@ const TEXT_ON: Record<string, Record<string, string>> = {
   '--text-inverse': {
     '--ink': 'primary buttons, toasts',
     '--danger': 'danger buttons',
+    '--accent': 'the chosen day in the desktop calendar',
   },
   '--accent-inverse': {
     '--ink': 'Undo in a toast',

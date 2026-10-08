@@ -1,20 +1,19 @@
-import { formatLongDay } from '@tracker/shared';
 import clsx from 'clsx';
-import { Calendar, ChevronDown, X } from 'lucide-react';
 import { useRef, type KeyboardEvent, type MouseEvent } from 'react';
-import { Icon } from '../Icon';
+import { useCalendarPicker } from '../DatePicker';
+import { CalendarDateRow } from './CalendarDateRow';
+import { ClearOrChevron, DateFace, type DateRowProps } from './DateRowParts';
 import styles from './PropertyRow.module.css';
 
-export interface DateRowProps {
-  value: string;
-  onChange: (value: string) => void;
-  label?: string;
-  overdue?: boolean;
-  mutedIcon?: boolean;
-  className?: string | undefined;
+export type { DateRowProps } from './DateRowParts';
+
+// Desktop gets the app's calendar instead of the SPEC's native picker (docs/architecture.md §1.7).
+export function DateRow(props: DateRowProps) {
+  const calendar = useCalendarPicker();
+  return calendar ? <CalendarDateRow {...props} /> : <NativeDateRow {...props} />;
 }
 
-export function DateRow({
+function NativeDateRow({
   value,
   onChange,
   label = 'Due date',
@@ -23,18 +22,13 @@ export function DateRow({
   className,
 }: DateRowProps) {
   const inputRef = useRef<HTMLInputElement>(null);
-  const tone = overdue ? styles.overdue : value ? styles.set : styles.unset;
   const clear = () => {
     onChange('');
     inputRef.current?.focus({ preventScroll: true });
   };
   return (
     <label className={clsx('ring-inside', styles.row, className)}>
-      <span className={clsx(styles.icon, mutedIcon && !overdue ? styles.mutedIcon : tone)}>
-        <Icon icon={Calendar} />
-      </span>
-      <span className={styles.label}>{label}</span>
-      <span className={clsx(styles.value, tone)}>{value ? formatLongDay(value) : 'None'}</span>
+      <DateFace value={value} label={label} overdue={overdue} mutedIcon={mutedIcon} />
       <input
         ref={inputRef}
         type="date"
@@ -45,18 +39,7 @@ export function DateRow({
         onClick={openPicker}
         onKeyDown={openPickerOnSpace}
       />
-      {value ? (
-        <button
-          type="button"
-          className={styles.clear}
-          aria-label={`Clear ${label.toLowerCase()}`}
-          onClick={clear}
-        >
-          <Icon icon={X} size={14} />
-        </button>
-      ) : (
-        <Icon icon={ChevronDown} className={styles.chevron} />
-      )}
+      <ClearOrChevron value={value} label={label} onClear={clear} />
     </label>
   );
 }

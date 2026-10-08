@@ -2,6 +2,7 @@ export * from './AutoTextarea';
 export * from './Avatar';
 export * from './Button';
 export * from './ConfirmCard';
+export * from './DatePicker';
 export * from './Dropdown';
 export * from './EmptyState';
 export * from './GroupedCard';
