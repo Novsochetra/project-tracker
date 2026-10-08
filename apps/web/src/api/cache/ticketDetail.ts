@@ -6,6 +6,7 @@ import {
   type TicketDetail,
   type UpdateTicketInput,
 } from '@tracker/shared';
+import { isEntry } from '../../lib/entries';
 import { ticketFields } from './fields';
 
 export const TEMPORARY_ID_PREFIX = 'temp-';
@@ -41,18 +42,23 @@ export const appendActivity = (detail: TicketDetail, activity: Activity): Ticket
   activity: [...detail.activity, activity],
 });
 
+// An entry the tracker sent that isn't an object, such as null, stays in the cache as it came
+// (the activity list leaves it out), and finding a comment passes over it.
+export const matchesActivity = (item: Activity, activityId: string | undefined): boolean =>
+  isEntry(item) && item.id === activityId;
+
 export const replaceActivity = (
   detail: TicketDetail,
   activityId: string,
   activity: Activity,
 ): TicketDetail => ({
   ...detail,
-  activity: detail.activity.map((item) => (item.id === activityId ? activity : item)),
+  activity: detail.activity.map((item) => (matchesActivity(item, activityId) ? activity : item)),
 });
 
 export const removeActivity = (detail: TicketDetail, activityId: string): TicketDetail => ({
   ...detail,
-  activity: detail.activity.filter((item) => item.id !== activityId),
+  activity: detail.activity.filter((item) => !matchesActivity(item, activityId)),
 });
 
 export const editActivityText = (
@@ -63,7 +69,7 @@ export const editActivityText = (
 ): TicketDetail => ({
   ...detail,
   activity: detail.activity.map((item) =>
-    item.id === activityId ? { ...item, text, editedAt } : item,
+    matchesActivity(item, activityId) ? { ...item, text, editedAt } : item,
   ),
 });
 
@@ -78,7 +84,9 @@ export function removeAttachment(detail: TicketDetail, attachmentId: string): Ti
     ...detail,
     attachments: detail.attachments.filter(keep),
     activity: detail.activity.map((item) =>
-      item.attachments.every(keep) ? item : { ...item, attachments: item.attachments.filter(keep) },
+      !isEntry(item) || item.attachments.every(keep)
+        ? item
+        : { ...item, attachments: item.attachments.filter(keep) },
     ),
   };
 }

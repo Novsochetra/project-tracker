@@ -1,4 +1,5 @@
 import { groupRiseDelay, type TicketGroupData } from '../buildGroups';
+import { DROP_GROUP_ATTRIBUTE } from '../dnd/dropGroup';
 import { dropEdgeFor } from '../dnd/dropTarget';
 import type { DragState } from '../dnd/useTicketDrag';
 import { DropZone, GroupHeader } from '../GroupParts';
@@ -36,7 +37,7 @@ export function BoardColumn(props: BoardColumnProps) {
     <section
       aria-label={status.name}
       className={styles.column}
-      data-drop-group={status.id}
+      {...{ [DROP_GROUP_ATTRIBUTE]: status.id }}
       data-tint={tint || undefined}
       style={{ animationDelay: `${groupRiseDelay(index)}ms` }}
     >

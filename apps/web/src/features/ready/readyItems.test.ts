@@ -59,6 +59,17 @@ describe('readyItems', () => {
     expect(items.map((item) => item.ticket.id)).toEqual(['t-3']);
   });
 
+  it('passes over tickets and statuses it cannot read', () => {
+    const items = readyItems(
+      {
+        tickets: [null, mob(3), 'text'],
+        statuses: [null, ...statuses],
+      } as unknown as Parameters<typeof readyItems>[0],
+      [project],
+    );
+    expect(items.map((item) => [item.ticket.id, item.doneStatus?.name])).toEqual([['t-3', 'Done']]);
+  });
+
   it('is empty until the ready list loads', () => {
     expect(readyItems(undefined, [project])).toEqual([]);
   });

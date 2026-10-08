@@ -1,3 +1,5 @@
+import { dropGroupsIn } from '../dnd/dropGroup';
+
 export interface Span {
   left: number;
   right: number;
@@ -29,8 +31,7 @@ export const spanOf = (element: Element): Span => {
   return { left, right };
 };
 
-export const columnElements = (board: HTMLElement): HTMLElement[] =>
-  Array.from(board.querySelectorAll<HTMLElement>('[data-drop-group]'));
+export const columnElements = (board: HTMLElement): HTMLElement[] => dropGroupsIn(board);
 
 export const measurePage = (board: HTMLElement): number =>
   currentPage(columnElements(board).map(spanOf), spanOf(board));

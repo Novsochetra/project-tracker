@@ -2,6 +2,7 @@ import { act, fireEvent, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { STATUS } from '../../api/test/fixtures';
 import { mockPhone, skipAnimations } from '../../overlays/testing';
+import { dropGroupsIn } from './dnd/dropGroup';
 import { dropRowsIn } from './dnd/dropRow';
 import { resetListView } from './listViewStore';
 import { renderProject } from './test/renderProject';
@@ -29,7 +30,7 @@ const box = (top: number, height: number): DOMRect => ({
 function layout(): Map<Element, DOMRect> {
   const rects = new Map<Element, DOMRect>();
   let y = 100;
-  for (const section of document.querySelectorAll('[data-drop-group]')) {
+  for (const section of dropGroupsIn(document)) {
     const top = y;
     y += HEADER;
     const rows = dropRowsIn(section);

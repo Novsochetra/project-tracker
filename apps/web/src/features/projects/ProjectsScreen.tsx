@@ -1,9 +1,10 @@
-import type { ProjectSummary } from '@tracker/shared';
+import type { ProjectSummary, TicketsAcrossProjects } from '@tracker/shared';
 import { Folder, Plus } from 'lucide-react';
 import { errorMessage, useProjects, useReadyForYou, type TrackerQuery } from '../../api';
 import { useSheets } from '../../app/sheets/context';
 import { Button, EmptyState, Icon } from '../../components';
 import { PullToRefresh } from '../../gestures';
+import { ErrorBoundary } from '../../lib/ErrorBoundary';
 import { useIsPhone } from '../../lib/media';
 import { LargeTitle, NavBar, NavBarButton, useScreen } from '../../navigation';
 import { CaptureBar, CaptureButton, canCapture, WaitingToSync } from '../capture';
@@ -14,7 +15,6 @@ import styles from './ProjectsScreen.module.css';
 export function ProjectsScreen() {
   const projects = useProjects();
   const ready = useReadyForYou();
-  const items = readyItems(ready.data, projects.data ?? []);
   const sheets = useSheets();
   const isPhone = useIsPhone();
   const { scrollRef } = useScreen();
@@ -42,12 +42,38 @@ export function ProjectsScreen() {
               {capture && !isPhone && <CaptureButton onClick={openCapture} />}
             </div>
             <WaitingToSync />
-            <ReadySection items={items} />
-            <ProjectsBody query={projects} readyCounts={readyCounts(items)} onNew={openNew} />
+            {/* A ready list it can't read only leaves out the Ready card and the counts; they are
+                tried again once the list changes. Projects that fail fail the fallback too, and
+                the screen's boundary takes over. */}
+            <ErrorBoundary
+              name="Projects ready list"
+              retryKey={ready.data}
+              fallback={<ProjectsBody query={projects} readyCounts={NO_COUNTS} onNew={openNew} />}
+            >
+              <ReadyAndProjects query={projects} ready={ready.data} onNew={openNew} />
+            </ErrorBoundary>
           </div>
         </div>
       </PullToRefresh>
       {capture && <CaptureBar onClick={openCapture} />}
+    </>
+  );
+}
+
+const NO_COUNTS: ReadonlyMap<string, number> = new Map();
+
+interface ReadyAndProjectsProps {
+  query: TrackerQuery<ProjectSummary[]>;
+  ready: TicketsAcrossProjects | undefined;
+  onNew: () => void;
+}
+
+function ReadyAndProjects({ query, ready, onNew }: ReadyAndProjectsProps) {
+  const items = readyItems(ready, query.data ?? []);
+  return (
+    <>
+      <ReadySection items={items} />
+      <ProjectsBody query={query} readyCounts={readyCounts(items)} onNew={onNew} />
     </>
   );
 }

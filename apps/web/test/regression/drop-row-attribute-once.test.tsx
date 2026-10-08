@@ -4,6 +4,7 @@ import { render } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { listItem, STATUS, statuses } from '../../src/api/test/fixtures';
 import { BoardCard } from '../../src/features/project/board/BoardCard';
+import { DROP_GROUP_ATTRIBUTE } from '../../src/features/project/dnd/dropGroup';
 import { measureGroups } from '../../src/features/project/dnd/measure';
 import type { RowCallbacks } from '../../src/features/project/rowTypes';
 import { TicketRow } from '../../src/features/project/TicketRow';
@@ -47,7 +48,7 @@ describe('regression: the drop row attribute is named in one place', () => {
 
   it('marks list rows and board cards the way measuring reads them', () => {
     const { container } = render(
-      <section data-drop-group={STATUS.todo}>
+      <section {...{ [DROP_GROUP_ATTRIBUTE]: STATUS.todo }}>
         <TicketRow
           ticket={listItem(1, STATUS.todo, 0)}
           status={statuses[0]!}

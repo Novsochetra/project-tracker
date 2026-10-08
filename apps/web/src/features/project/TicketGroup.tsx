@@ -1,5 +1,6 @@
 import { collapseGroup, type Status } from '@tracker/shared';
 import { groupRiseDelay, revealedRowDelay, type TicketGroupData } from './buildGroups';
+import { DROP_GROUP_ATTRIBUTE } from './dnd/dropGroup';
 import { dropEdgeFor } from './dnd/dropTarget';
 import type { DragState } from './dnd/useTicketDrag';
 import { toggleExpanded, useIsExpanded } from './expandedStore';
@@ -32,7 +33,7 @@ export function TicketGroup(props: TicketGroupProps) {
     <section
       aria-label={status.name}
       className={styles.group}
-      data-drop-group={status.id}
+      {...{ [DROP_GROUP_ATTRIBUTE]: status.id }}
       data-rise={rise}
       style={{ animationDelay: `${groupRiseDelay(index)}ms` }}
     >

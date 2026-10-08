@@ -5,6 +5,7 @@ import {
   type TicketListItem,
   type TicketsAcrossProjects,
 } from '@tracker/shared';
+import { readableEntries } from '../../lib/entries';
 
 export interface ReadyItem {
   ticket: TicketListItem;
@@ -22,10 +23,11 @@ export function readyItems(
 ): ReadyItem[] {
   const { tickets, statuses } = list ?? NOTHING_READY;
   const byId = new Map(projects.map((project) => [project.id, project]));
-  return tickets.flatMap((ticket) => {
+  const known = readableEntries(statuses);
+  return readableEntries(tickets).flatMap((ticket) => {
     const project = byId.get(ticket.projectId);
     if (!project) return [];
-    const own = statuses.filter((status) => status.projectId === project.id);
+    const own = known.filter((status) => status.projectId === project.id);
     return [
       {
         ticket,

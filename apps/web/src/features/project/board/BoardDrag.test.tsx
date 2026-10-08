@@ -2,6 +2,7 @@ import { act, fireEvent, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { STATUS } from '../../../api/test/fixtures';
 import { mockPhone, skipAnimations } from '../../../overlays/testing';
+import { DROP_GROUP_ATTRIBUTE, dropGroupsIn } from '../dnd/dropGroup';
 import { dropRowOf, dropRowsIn } from '../dnd/dropRow';
 import { resetListView } from '../listViewStore';
 import { renderProject } from '../test/renderProject';
@@ -35,11 +36,11 @@ const rect = (left: number, top: number, width: number, height: number): DOMRect
 
 // jsdom has no layout: columns side by side from `start`, cards 60px tall 8px apart from y 150.
 function boxOf(element: Element): DOMRect {
-  const columnEl = element.closest('[data-drop-group]');
+  const columnEl = element.closest(`[${DROP_GROUP_ATTRIBUTE}]`);
   if (!columnEl) {
     return element.matches('[data-board]') ? rect(0, 100, layout.board, 600) : rect(0, 0, 0, 0);
   }
-  const columns = Array.from(document.querySelectorAll('[data-drop-group]'));
+  const columns: Element[] = dropGroupsIn(document);
   const scrolled = boardElement()?.scrollLeft ?? 0;
   const left = layout.start + columns.indexOf(columnEl) * layout.step - scrolled;
   const card = dropRowOf(element);

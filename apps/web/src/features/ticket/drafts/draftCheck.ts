@@ -1,4 +1,5 @@
 import type { TicketDetail } from '@tracker/shared';
+import { matchesActivity } from '../../../api';
 import type { StoredDraft } from '../../../lib/storedDrafts';
 
 export type DraftCheck = 'saved' | 'unchanged' | 'changed' | 'gone';
@@ -12,7 +13,7 @@ export function serverText(detail: TicketDetail, draft: StoredDraft): string | u
     case 'assignee':
       return detail.ticket.assignee;
     case 'comment-edit':
-      return detail.activity.find((item) => item.id === draft.activityId)?.text;
+      return detail.activity.find((item) => matchesActivity(item, draft.activityId))?.text;
     case 'comment':
       return undefined;
   }

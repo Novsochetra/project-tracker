@@ -10,7 +10,7 @@ export {
   isUnauthorized,
   NETWORK_ERROR_MESSAGE,
 } from './errors';
-export { isTemporaryId } from './cache/ticketDetail';
+export { isTemporaryId, matchesActivity } from './cache/ticketDetail';
 export type { TrackerMutation, TrackerQuery } from './types';
 export * from './hooks/attachments';
 export * from './hooks/comments';

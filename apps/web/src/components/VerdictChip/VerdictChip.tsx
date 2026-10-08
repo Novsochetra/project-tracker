@@ -2,7 +2,7 @@ import { VERDICT_LABELS, type ReviewVerdict } from '@tracker/shared';
 import clsx from 'clsx';
 import { Check, RotateCcw } from 'lucide-react';
 import type { CSSProperties } from 'react';
-import { useMediaQuery } from '../../lib/media';
+import { NO_HOVER_QUERY, useMediaQuery } from '../../lib/media';
 import { Icon } from '../Icon';
 import { chipTextColor } from './chipText';
 import styles from './VerdictChip.module.css';
@@ -30,12 +30,15 @@ export function VerdictChip({
 }: VerdictChipProps) {
   const approved = verdict === 'approved';
   // Mouse users in a desktop window under 1024px see only the icon; the label stays in the row's
-  // accessible name, so the tooltip adds nothing for screen readers.
+  // accessible name, so the tooltip adds nothing for screen readers. A touch screen, such as a
+  // phone's, never shows a tooltip, so it gets none.
   const iconOnly = useMediaQuery(ICON_ONLY_QUERY) && compact;
+  const touch = useMediaQuery(NO_HOVER_QUERY);
+  const tooltip = iconOnly && !touch;
   return (
     <span
       data-verdict={verdict}
-      title={iconOnly ? VERDICT_LABELS[verdict] : undefined}
+      title={tooltip ? VERDICT_LABELS[verdict] : undefined}
       className={clsx(
         styles.chip,
         approved ? styles.approved : styles.changes,
