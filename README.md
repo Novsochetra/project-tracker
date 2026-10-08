@@ -77,4 +77,4 @@ npm run test:e2e   # Playwright: iPhone-sized WebKit and desktop Chromium
 - Code rules: `CLAUDE.md`
 - Original design hand-off: `init-design/`
 
-Configuration (environment variables): `PORT` (4100), `HOST` (127.0.0.1), `DATABASE_URL` (SQLite file path, `:memory:`, or `postgres://…`), `UPLOADS_DIR`, `TRACKER_TOKEN`, `WEB_DIST`.
+Configuration (environment variables): `PORT` (4100), `HOST` (127.0.0.1), `DATABASE_URL` (SQLite file path, `:memory:`, or `postgres://…`), `UPLOADS_DIR`, `TRACKER_TOKEN`, `WEB_DIST`, `PUBLIC_URL` (the address agents should use, shown in Connect Claude Code; defaults to the address the request reached).
