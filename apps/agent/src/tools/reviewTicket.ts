@@ -1,3 +1,4 @@
+import { REPORT_TEXT_MAX } from '@tracker/shared';
 import { z } from 'zod';
 import { formatVerdict } from '../format/activity';
 import { rating, ticketKey, verdict } from './fields';
@@ -20,7 +21,7 @@ export const reviewTicket = defineTool({
       .string()
       .trim()
       .min(1, 'Write a review summary.')
-      .max(20_000)
+      .max(REPORT_TEXT_MAX)
       .describe('What you checked and found; for changes_requested, specific actionable feedback.'),
   }),
   readOnly: false,

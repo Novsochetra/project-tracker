@@ -8,6 +8,7 @@ import { FileInput } from './FileInput';
 import { FileNote } from './FileNote';
 import { measureRows } from './foldRows';
 import { AddTile, ThumbnailGrid } from './ThumbnailGrid';
+import type { FileNotice } from './fileNotice';
 import type { AttachmentUploads } from './useAttachmentUploads';
 
 export interface AttachmentPickerProps {
@@ -31,21 +32,43 @@ function AddFilesButton({ onClick }: { onClick: () => void }) {
   );
 }
 
-// It tops the file area, where Add files was, so a big pick doesn't push it below the fold. A pick
-// from the Add tile under many files can leave that top out of sight, so a refusal, which answers
-// the pick just made, is brought into view; a failed upload comes later, while the person may be
-// scrolling, and leaves the page where it is.
-function PickNote({ uploads }: { uploads: AttachmentUploads }) {
+interface NoteProps {
+  notice: FileNotice | null;
+  onDismiss: () => void;
+}
+
+// What a pick left out tops the file area, where Add files was, so a big pick doesn't push it below
+// the fold. A pick from the Add tile under many files can leave that top out of sight, so it is
+// brought into view: it answers the pick just made.
+function PickNote({ notice, onDismiss }: NoteProps) {
   const ref = useRef<HTMLDivElement>(null);
-  const { notice } = uploads;
   useEffect(() => {
     // At once: WebKit keeps what is on screen in place when the note lands above it, and that
     // shift could cut a smooth scroll off before it began.
-    if (notice?.problem === 'refused') ref.current?.scrollIntoView?.({ block: 'nearest' });
+    if (notice) ref.current?.scrollIntoView?.({ block: 'nearest' });
   }, [notice]);
   if (!notice) return null;
   return (
-    <FileNote ref={ref} notice={notice} onDismiss={uploads.dismissNotice} className={styles.note} />
+    <FileNote
+      ref={ref}
+      notice={notice}
+      onDismiss={onDismiss}
+      className={clsx(styles.note, styles.pickNote)}
+    />
+  );
+}
+
+// An upload fails later, while the person may be anywhere, and Safari keeps no scroll anchor: a
+// note above the files would push down every tile on screen, or land unseen above them. Below the
+// files it moves only what is under it, and shows where the person picked from the Add tile.
+function LateNote({ notice, onDismiss }: NoteProps) {
+  if (!notice) return null;
+  return (
+    <FileNote
+      notice={notice}
+      onDismiss={onDismiss}
+      className={clsx(styles.note, styles.lateNote)}
+    />
   );
 }
 
@@ -73,7 +96,10 @@ export function AttachmentPicker({
   };
   return (
     <div className={clsx(styles.picker, className)}>
-      <PickNote uploads={uploads} />
+      <PickNote
+        notice={uploads.notices.refused}
+        onDismiss={() => uploads.dismissNotice('refused')}
+      />
       {empty ? (
         <AddFilesButton onClick={pick} />
       ) : (
@@ -108,6 +134,7 @@ export function AttachmentPicker({
           {fold.folded && <AddFilesButton onClick={pick} />}
         </div>
       )}
+      <LateNote notice={uploads.notices.failed} onDismiss={() => uploads.dismissNotice('failed')} />
       <FileInput ref={inputRef} label={inputLabel} onFiles={uploads.add} />
     </div>
   );

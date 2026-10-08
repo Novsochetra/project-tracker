@@ -1,4 +1,10 @@
-import { PRIORITIES, REVIEW_VERDICTS, STATUS_CATEGORIES } from '@tracker/shared';
+import {
+  PRIORITIES,
+  REVIEW_VERDICTS,
+  STATUS_CATEGORIES,
+  TICKET_DESCRIPTION_MAX,
+  TICKET_TITLE_MAX,
+} from '@tracker/shared';
 import { z } from 'zod';
 
 export const TICKET_KEY = /^[A-Za-z0-9]+-\d+$/;
@@ -29,7 +35,9 @@ export const category = z
 
 export const priority = z.enum(PRIORITIES).describe('Priority: high, medium or low.');
 
-export const title = z.string().trim().min(1, 'The title cannot be empty.').max(300);
+export const title = z.string().trim().min(1, 'The title cannot be empty.').max(TICKET_TITLE_MAX);
+
+export const description = z.string().max(TICKET_DESCRIPTION_MAX);
 
 export const verdict = z.enum(REVIEW_VERDICTS).describe('"approved" or "changes_requested".');
 

@@ -6,6 +6,7 @@ export const ACTIVITY_TYPES = ['event', 'comment', 'report', 'review'] as const;
 export type ActivityType = (typeof ACTIVITY_TYPES)[number];
 
 export const COMMENT_TEXT_MAX = 20_000;
+export const REPORT_TEXT_MAX = 20_000;
 
 export const REVIEW_VERDICTS = ['approved', 'changes_requested'] as const;
 

@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { attachment } from '../../src/api/test/fixtures';
 import { CLICK_SHIELD_MS } from '../../src/lib/clickShield';
-import { mockPhone, skipAnimations } from '../../src/overlays/testing';
+import { skipAnimations } from '../../src/overlays/testing';
 import {
   CAPTURE,
   COMMENT_BOX,
@@ -40,18 +40,17 @@ const tileNames = () =>
 const removeButton = (name: string) =>
   within(shown!.area()).getByRole('button', { name: `Remove ${name}` });
 
-async function pickThree(surface: Surface) {
-  shown = surface.show({
-    uploadAttachment: vi.fn((_file: Blob, fileName: string) =>
-      Promise.resolve(
-        attachment(fileName.replace('.txt', ''), {
-          ticketId: null,
-          fileName,
-          mimeType: 'text/plain',
-        }),
-      ),
+async function pickThree(surface: Surface, phone = true) {
+  const uploadAttachment = vi.fn((_file: Blob, fileName: string) =>
+    Promise.resolve(
+      attachment(fileName.replace('.txt', ''), {
+        ticketId: null,
+        fileName,
+        mimeType: 'text/plain',
+      }),
     ),
-  });
+  );
+  shown = surface.show({ uploadAttachment }, phone);
   const user = userEvent.setup();
   await user.upload(shown.input(), picked());
   await waitFor(() => expect(within(shown!.area()).queryByRole('progressbar')).toBeNull());
@@ -87,13 +86,18 @@ describe.each([NEW_TICKET, CAPTURE, COMMENT_BOX])('the x of a file in $name', (s
     expect(tileNames()).toEqual(['c.txt']);
   });
 
-  it('leaves desktop clicks as they were', async () => {
-    const user = await pickThree(surface);
-    restore.push(mockPhone(false));
-    await user.click(removeButton('a.txt'));
-    await user.click(removeButton('b.txt'));
-    expect(tileNames()).toEqual(['c.txt']);
-  });
+  // A touch tablet is as wide as a desktop and lost two files the same way, and so did a mouse's
+  // double-click (PT-72 review): the shield goes by the press, not the screen.
+  it.each(GAPS)(
+    'removes one file on a double-click on a wide screen (%i ms apart)',
+    async (gap) => {
+      const user = await pickThree(surface, false);
+      await user.click(removeButton('a.txt'));
+      if (gap > 0) await wait(gap);
+      await user.click(removeButton('b.txt'));
+      expect(tileNames()).toEqual(['b.txt', 'c.txt']);
+    },
+  );
 });
 
 it('keeps removing on a phone after the shield, as often as the person taps', async () => {

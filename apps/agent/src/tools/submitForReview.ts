@@ -1,3 +1,4 @@
+import { REPORT_TEXT_MAX } from '@tracker/shared';
 import { z } from 'zod';
 import { ticketKey } from './fields';
 import { defineTool } from './tool';
@@ -14,16 +15,16 @@ export const submitForReview = defineTool({
       .string()
       .trim()
       .min(1, 'Write a summary of the work.')
-      .max(20_000)
+      .max(REPORT_TEXT_MAX)
       .describe('What you changed and why, and how you verified it.'),
     files: z
       .string()
-      .max(20_000)
+      .max(REPORT_TEXT_MAX)
       .optional()
       .describe('Files you created or edited, one per line or comma separated.'),
     next: z
       .string()
-      .max(20_000)
+      .max(REPORT_TEXT_MAX)
       .optional()
       .describe('Anything the person still needs to do or decide, or "none".'),
   }),

@@ -27,7 +27,7 @@ describe('useFileNotice', () => {
   it('keeps a failure in the note while its screen is open', () => {
     render(<Screen open />);
     act(() => latest?.failed('clip.mov', timedOut()));
-    const notice = latest?.notice;
+    const notice = latest?.notices.failed;
     expect(notice && noticeTitle(notice)).toBe("clip.mov didn't upload.");
     expect(screen.queryByText("clip.mov didn't upload.")).not.toBeInTheDocument();
   });
@@ -40,15 +40,28 @@ describe('useFileNotice', () => {
     expect(screen.getByText("clip.mov didn't upload.")).toBeInTheDocument();
   });
 
-  it('clears the note on a pick that is all taken, and on a dismiss', () => {
+  it('clears the notes on a pick that is all taken, and on a dismiss', () => {
     render(<Screen open />);
     act(() => latest?.picked([{ name: 'notes.svg', reason: 'No.' }]));
-    expect(latest?.notice).not.toBeNull();
-    act(() => latest?.picked([]));
-    expect(latest?.notice).toBeNull();
+    expect(latest?.notices.refused).not.toBeNull();
     act(() => latest?.failed('clip.mov', timedOut()));
-    expect(latest?.notice).not.toBeNull();
+    act(() => latest?.picked([]));
+    expect(latest?.notices).toEqual({ refused: null, failed: null });
+    act(() => latest?.failed('clip.mov', timedOut()));
+    expect(latest?.notices.failed).not.toBeNull();
     act(() => latest?.dismiss());
-    expect(latest?.notice).toBeNull();
+    expect(latest?.notices).toEqual({ refused: null, failed: null });
+  });
+
+  it("keeps a pick's refusal beside a later failure, and dismisses each alone", () => {
+    render(<Screen open />);
+    act(() => latest?.picked([{ name: 'notes.svg', reason: 'No.' }]));
+    act(() => latest?.failed('clip.mov', timedOut()));
+    const { refused, failed } = latest?.notices ?? {};
+    expect(refused && noticeTitle(refused)).toBe("notes.svg can't be attached.");
+    expect(failed && noticeTitle(failed)).toBe("clip.mov didn't upload.");
+    act(() => latest?.dismiss('refused'));
+    expect(latest?.notices.refused).toBeNull();
+    expect(latest?.notices.failed).toBe(failed);
   });
 });

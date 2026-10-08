@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useDeleteAttachment, useUploadAttachment } from '../../api';
 import { useLatest } from '../../lib/useLatest';
 import { admitFiles, roomFor, type AdmittedFile, type FileLimit } from './attachmentFiles';
-import type { FileNotice } from './fileNotice';
+import type { FileNotice, Notices } from './fileNotice';
 import { useFileNotice } from './useFileNotice';
 import { usePickedOrder } from './usePickedOrder';
 
@@ -28,11 +28,11 @@ export interface AttachmentUploadOptions {
 
 export interface AttachmentUploads {
   uploading: UploadingFile[];
-  notice: FileNotice | null;
+  notices: Notices;
   add: (files: Iterable<File>) => void;
   cancel: (key: string) => void;
   cancelAll: () => void;
-  dismissNotice: () => void;
+  dismissNotice: (problem?: FileNotice['problem']) => void;
 }
 
 const PERCENT = 100;
@@ -157,7 +157,7 @@ export function useAttachmentUploads(options: AttachmentUploadOptions = {}): Att
 
   return {
     uploading: list.uploading,
-    notice: notices.notice,
+    notices: notices.notices,
     add,
     cancel,
     cancelAll,

@@ -1,7 +1,7 @@
 import { Paperclip } from 'lucide-react';
 import { useRef, type Ref } from 'react';
 import { AutoTextarea, Button, IconButton } from '../../../components';
-import { FileInput, FileNote, pasteFiles, ThumbnailGrid, useFileDrop } from '../../attachments';
+import { FileInput, FileNotes, pasteFiles, ThumbnailGrid, useFileDrop } from '../../attachments';
 import { COMMENT_MAX_LENGTH } from '../fields/limits';
 import styles from './Composer.module.css';
 import { isSubmitShortcut } from './commentRules';
@@ -53,9 +53,7 @@ export function Composer({ ticketKey, ref }: ComposerProps) {
           className={styles.pending}
         />
       )}
-      {files.notice && (
-        <FileNote notice={files.notice} onDismiss={files.dismissNotice} className={styles.note} />
-      )}
+      <FileNotes notices={files.notices} onDismiss={files.dismissNotice} className={styles.note} />
       <div className={styles.footer}>
         <IconButton
           aria-label="Attach files"

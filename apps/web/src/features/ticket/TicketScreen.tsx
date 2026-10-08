@@ -1,3 +1,4 @@
+import clsx from 'clsx';
 import { CircleAlert } from 'lucide-react';
 import { useEffect } from 'react';
 import { errorMessage, isNotFound, useProject, useTicket } from '../../api';
@@ -62,7 +63,7 @@ function TicketPlaceholder({ ticketKey, projectKey, error, onRetry }: TicketPlac
           action={<Button onClick={onRetry}>Try again</Button>}
         />
       ) : (
-        <div className={styles.loading}>
+        <div className={clsx(styles.loading, 'quiet-in')}>
           <Spinner label={`Loading ${ticketKey}`} />
         </div>
       )}

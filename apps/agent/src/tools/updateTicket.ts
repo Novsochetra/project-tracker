@@ -1,6 +1,7 @@
+import { TICKET_ASSIGNEE_MAX } from '@tracker/shared';
 import { z } from 'zod';
 import { ToolError } from '../errors';
-import { priority, ticketKey, title } from './fields';
+import { description, priority, ticketKey, title } from './fields';
 import { defineTool } from './tool';
 
 export const updateTicket = defineTool({
@@ -12,12 +13,12 @@ export const updateTicket = defineTool({
   input: z.object({
     ticket: ticketKey,
     title: title.optional().describe('New title.'),
-    description: z.string().max(50_000).optional().describe('New description. Plain text.'),
+    description: description.optional().describe('New description. Plain text.'),
     priority: priority.optional(),
     assignee: z
       .string()
       .trim()
-      .max(80)
+      .max(TICKET_ASSIGNEE_MAX)
       .optional()
       .describe('Assignee name, or an empty string to unassign.'),
     due: z

@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import type { Page, Response } from '@playwright/test';
+import type { Locator, Page, Response } from '@playwright/test';
 import { FILE_NAME_HEADER } from '@tracker/shared';
 import { expect, isPhone, test } from './fixtures';
 import { openNewTicketIn, seedProject, ticketRow, toast } from './helpers';
@@ -28,6 +28,8 @@ const crashLogs = (count: number) =>
 
 const PHONE = { width: 375, height: 812 };
 const SMALL_PHONE = { width: 320, height: 568 };
+// As wide as a desktop, with touch.
+const TABLET = { width: 820, height: 1180 };
 
 const NEW_TICKET_SHEETS = [
   {
@@ -70,6 +72,25 @@ const DRAFT_FILE_AREAS = [
     input: 'Attach files to comment',
   },
 ];
+
+const FILE_AREAS = [
+  ...DRAFT_FILE_AREAS,
+  {
+    name: 'the ticket screen',
+    open: async (page: Page) => {
+      await page.goto('/p/MOB/1');
+    },
+    area: (page: Page) => page.locator('body'),
+    input: 'Add files to ticket',
+  },
+];
+
+const SVG = { name: 'notes.svg', mimeType: 'image/svg+xml', buffer: Buffer.from('<svg/>') };
+
+const spotOf = async (locator: Locator) => {
+  const box = (await locator.boundingBox())!;
+  return { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+};
 
 async function swipeDown(page: Page): Promise<void> {
   const { width, height } = page.viewportSize() ?? { width: 375, height: 812 };
@@ -245,6 +266,7 @@ test.describe('attachments', () => {
 
       // From the Add tile under 19 files the top of the file area is out of sight.
       await note.getByRole('button', { name: 'Dismiss' }).tap();
+      await expect(note).toBeHidden();
       await sheet.getByRole('button', { name: 'Remove crash-report-20.log' }).tap();
       const addTile = sheet.locator('[data-add-tile]');
       await addTile.scrollIntoViewIfNeeded();
@@ -255,14 +277,17 @@ test.describe('attachments', () => {
     });
   }
 
+  // Quick capture opens from the phone's bottom bar, which a tablet doesn't have.
   for (const [surface, size] of DRAFT_FILE_AREAS.flatMap((area) =>
-    [PHONE, SMALL_PHONE].map((viewport) => [area, viewport] as const),
+    [PHONE, SMALL_PHONE, ...(area.name === 'quick capture' ? [] : [TABLET])].map(
+      (viewport) => [area, viewport] as const,
+    ),
   )) {
-    test(`phone ${size.width}: a double tap on a file's x in ${surface.name} removes one file`, async ({
+    test(`touch ${size.width}: a double tap on a file's x in ${surface.name} removes one file`, async ({
       page,
       api,
     }, info) => {
-      test.skip(!isPhone(info.project.name), 'A double tap on a phone; desktop clicks are below.');
+      test.skip(!isPhone(info.project.name), 'A double tap on a touch screen; clicks are below.');
       await page.setViewportSize(size);
       await seedProject(api, 'Mobile app', 'MOB', [{ title: 'Existing ticket' }]);
       await surface.open(page);
@@ -295,11 +320,8 @@ test.describe('attachments', () => {
     });
   }
 
-  test("desktop: the x's take one click after another at once, as before", async ({
-    page,
-    api,
-  }, info) => {
-    test.skip(isPhone(info.project.name), 'Phones hold back a double tap above.');
+  test("desktop: a double-click on a file's x removes one file", async ({ page, api }, info) => {
+    test.skip(isPhone(info.project.name), 'Touch screens are above.');
     await seedProject(api, 'Mobile app', 'MOB', [{ title: 'Existing ticket' }]);
     await page.goto('/p/MOB');
     await openNewTicketIn(page, 'To do');
@@ -307,11 +329,85 @@ test.describe('attachments', () => {
     await sheet.getByLabel('Add files to ticket').setInputFiles(images(3));
     await expect(sheet.getByRole('progressbar')).toHaveCount(0);
     const removes = sheet.getByRole('button', { name: /^Remove image/ });
-    await removes.first().click();
+    await removes.first().dblclick();
+    await page.waitForTimeout(600);
     await expect(removes).toHaveCount(2);
     await removes.first().click();
     await expect(removes).toHaveCount(1);
   });
+
+  for (const [surface, size] of FILE_AREAS.flatMap((area) =>
+    [PHONE, SMALL_PHONE].map((viewport) => [area, viewport] as const),
+  )) {
+    test(`phone ${size.width}: a double tap on the note's Dismiss in ${surface.name} only dismisses it`, async ({
+      page,
+      api,
+    }, info) => {
+      test.skip(!isPhone(info.project.name), 'A double tap on a phone.');
+      await page.setViewportSize(size);
+      await seedProject(api, 'Mobile app', 'MOB', [{ title: 'Existing ticket' }]);
+      await surface.open(page);
+      const area = surface.area(page);
+      const input = area.getByLabel(surface.input);
+      await input.setInputFiles(images(8));
+      await expect(area.getByRole('progressbar')).toHaveCount(0);
+      const removes = area.getByRole('button', { name: /^Remove image/ });
+      await expect(removes).toHaveCount(8);
+      let chooser = 0;
+      page.on('filechooser', () => (chooser += 1));
+      const note = area.getByRole('alert').filter({ hasText: "can't be attached" });
+
+      for (const gap of [0, 60, 120, 200]) {
+        await input.setInputFiles([SVG]);
+        const dismiss = note.getByRole('button', { name: 'Dismiss' });
+        // Clear of the phone's bottom bar, which covers the end of the screen.
+        await dismiss.evaluate((button) => button.scrollIntoView({ block: 'center' }));
+        await page.waitForTimeout(400);
+        const spot = await spotOf(dismiss);
+        await page.touchscreen.tap(spot.x, spot.y);
+        await page.waitForTimeout(gap);
+        await page.touchscreen.tap(spot.x, spot.y);
+        await page.waitForTimeout(700);
+        await expect(note).toHaveCount(0);
+        // Nothing that lay under the note took the second tap: no file removed or asked about,
+        // no comment sent (it would take the files along), no file picker.
+        await expect(removes).toHaveCount(8);
+        await expect(page.getByRole('dialog', { name: /^Remove/ })).toHaveCount(0);
+        expect(chooser).toBe(0);
+      }
+    });
+  }
+
+  for (const surface of NEW_TICKET_SHEETS) {
+    test(`small phone: an upload that fails late in ${surface.name} is said in view without moving the files`, async ({
+      page,
+      api,
+    }, info) => {
+      test.skip(!isPhone(info.project.name), 'The fold of a 320×568 phone.');
+      await page.setViewportSize(SMALL_PHONE);
+      await seedProject(api, 'Mobile app', 'MOB', [{ title: 'Existing ticket' }]);
+      await page.route('**/api/attachments', async (route) => {
+        if (route.request().headers()[FILE_NAME_HEADER] !== 'late.png') return route.continue();
+        await new Promise((resolve) => setTimeout(resolve, 2500));
+        return route.fulfill({ status: 500, contentType: 'application/json', body: '{}' });
+      });
+      await surface.open(page);
+      const sheet = newTicketSheet(page);
+      await sheet
+        .getByLabel('Add files to ticket')
+        .setInputFiles([...images(15), { ...images(1)[0]!, name: 'late.png' }]);
+      await expect(sheet.getByRole('progressbar')).toHaveCount(1);
+      await sheet.locator('[data-add-tile]').scrollIntoViewIfNeeded();
+      const tile = sheet.getByRole('button', { name: 'Remove image 10' });
+      const before = (await tile.boundingBox())!.y;
+
+      const note = sheet.getByRole('alert');
+      await expect(note).toContainText("late.png didn't upload.", { timeout: 8000 });
+      await page.waitForTimeout(500);
+      expect(Math.abs((await tile.boundingBox())!.y - before)).toBeLessThan(1);
+      await expect(note).toBeInViewport({ ratio: 1 });
+    });
+  }
 
   test('desktop: a file dropped on the New ticket sheet is attached', async ({
     page,

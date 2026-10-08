@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { COMMENT_TEXT_MAX, REVIEW_VERDICTS } from '../domain/activity';
+import { COMMENT_TEXT_MAX, REPORT_TEXT_MAX, REVIEW_VERDICTS } from '../domain/activity';
 import {
   MAX_NEW_ATTACHMENTS,
   tooManyFilesMessage,
@@ -110,16 +110,16 @@ export const reportInput = z.object({
 export type ReportInput = z.input<typeof reportInput>;
 
 export const submitWorkInput = z.object({
-  summary: z.string().trim().min(1).max(20_000),
-  files: z.string().max(20_000).default(''),
-  next: z.string().max(20_000).default(''),
+  summary: z.string().trim().min(1).max(REPORT_TEXT_MAX),
+  files: z.string().max(REPORT_TEXT_MAX).default(''),
+  next: z.string().max(REPORT_TEXT_MAX).default(''),
 });
 export type SubmitWorkInput = z.input<typeof submitWorkInput>;
 
 export const reviewInput = z.object({
   verdict: z.enum(REVIEW_VERDICTS),
   rating: z.number().int().min(1).max(5),
-  summary: z.string().trim().min(1).max(20_000),
+  summary: z.string().trim().min(1).max(REPORT_TEXT_MAX),
 });
 export type ReviewInput = z.input<typeof reviewInput>;
 

@@ -24,12 +24,10 @@
   grid-area: foot;
 }
 
-/* Quiet on purpose: a fast load shows nothing, a slow one fades a spinner in. */
 .loading {
   display: flex;
   justify-content: center;
   padding: 64px var(--space-6);
-  animation: appear var(--duration-fade) var(--ease-out) 400ms backwards;
 }
 
 /* The design's 12px padding lets both labels fit the 1 : 1.35 split at 375px. */
@@ -65,14 +63,5 @@ button.barPrimary {
       'act'
       'foot';
     min-height: 0;
-  }
-}
-
-@keyframes appear {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
   }
 }

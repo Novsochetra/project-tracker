@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { formatTicketLine, statusNameOf } from '../format/tickets';
-import { priority, projectKey, statusName, title } from './fields';
+import { description, priority, projectKey, statusName, title } from './fields';
 import { statusByName } from './statusByName';
 import { defineTool } from './tool';
 
@@ -13,9 +13,7 @@ export const createTicket = defineTool({
   input: z.object({
     project: projectKey,
     title: title.describe('Short, specific title.'),
-    description: z
-      .string()
-      .max(50_000)
+    description: description
       .optional()
       .describe('Details, steps to reproduce or acceptance criteria. Plain text.'),
     priority: priority.optional(),

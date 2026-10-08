@@ -1,3 +1,4 @@
+import { COMMENT_TEXT_MAX } from '@tracker/shared';
 import { z } from 'zod';
 import { ticketKey } from './fields';
 import { defineTool } from './tool';
@@ -9,7 +10,12 @@ export const addComment = defineTool({
     'and blockers, so the person and other agents can follow along. Plain text.',
   input: z.object({
     ticket: ticketKey,
-    text: z.string().trim().min(1, 'Write the comment text.').max(20_000).describe('The comment.'),
+    text: z
+      .string()
+      .trim()
+      .min(1, 'Write the comment text.')
+      .max(COMMENT_TEXT_MAX)
+      .describe('The comment.'),
   }),
   readOnly: false,
   async handler(client, { ticket, text }) {

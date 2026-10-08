@@ -6,6 +6,17 @@ export interface FileNotice {
   reasons: string[];
 }
 
+// A pick's refusal and the uploads that failed since are told apart: the first answers the pick,
+// the others come later, wherever the person is by then.
+export const NOTICE_PROBLEMS = [
+  'refused',
+  'failed',
+] as const satisfies readonly FileNotice['problem'][];
+
+export type Notices = Readonly<Record<FileNotice['problem'], FileNotice | null>>;
+
+export const NO_NOTICES: Notices = { refused: null, failed: null };
+
 const VERBS: Record<FileNotice['problem'], string> = {
   refused: "can't be attached",
   failed: "didn't upload",

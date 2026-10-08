@@ -23,7 +23,8 @@ export interface ShownSurface {
 
 export interface Surface {
   name: string;
-  show: (client?: ClientOverrides) => ShownSurface;
+  // On a phone unless told otherwise.
+  show: (client?: ClientOverrides, phone?: boolean) => ShownSurface;
 }
 
 const sheet = () => screen.getByRole('dialog', { name: 'New ticket' });
@@ -37,8 +38,8 @@ const sheetSurface = (client: TrackerClient, restore: () => void): ShownSurface 
 
 export const NEW_TICKET: Surface = {
   name: 'New ticket',
-  show: (overrides = {}) => {
-    const restorePhone = mockPhone(true);
+  show: (overrides = {}, phone = true) => {
+    const restorePhone = mockPhone(phone);
     const api = setupApi({
       getBoard: vi.fn().mockResolvedValue(makeBoard()),
       listPeople: vi.fn().mockResolvedValue([]),
@@ -60,8 +61,8 @@ export const NEW_TICKET: Surface = {
 
 export const CAPTURE: Surface = {
   name: 'quick capture',
-  show: (overrides = {}) => {
-    const restorePhone = mockPhone(true);
+  show: (overrides = {}, phone = true) => {
+    const restorePhone = mockPhone(phone);
     const projects = [projectSummary()];
     const app = renderWithApp(<CaptureSheet open onClose={() => undefined} />, {
       projects,
@@ -77,8 +78,8 @@ export const CAPTURE: Surface = {
 
 export const TICKET_SCREEN: Surface = {
   name: 'the ticket screen',
-  show: (overrides = {}) => {
-    const shown = renderTicket({ phone: true, client: overrides });
+  show: (overrides = {}, phone = true) => {
+    const shown = renderTicket({ phone, client: overrides });
     const input = () => screen.getByLabelText('Add files to ticket');
     return {
       client: shown.client,
@@ -91,9 +92,9 @@ export const TICKET_SCREEN: Surface = {
 
 export const COMMENT_BOX: Surface = {
   name: 'the comment box',
-  show: (overrides = {}) => {
+  show: (overrides = {}, phone = true) => {
     const shown = renderTicket({
-      phone: true,
+      phone,
       client: { deleteAttachment: vi.fn().mockResolvedValue(undefined), ...overrides },
     });
     const input = () => screen.getByLabelText('Attach files to comment');

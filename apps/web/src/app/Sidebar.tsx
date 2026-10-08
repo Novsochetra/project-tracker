@@ -5,6 +5,7 @@ import type { ReactNode } from 'react';
 import { useProjects, useReadyForYou } from '../api';
 import { Icon, IconButton, LogoGlyph } from '../components';
 import { sameProjectKey } from '../features/projects/projectLookup';
+import { useOpenProject } from '../features/projects/useOpenProject';
 import { readyCounts, readyItems } from '../features/ready/readyItems';
 import { ErrorBoundary } from '../lib/ErrorBoundary';
 import { useNavigation } from '../navigation';
@@ -41,13 +42,14 @@ interface ProjectItemsProps {
 const NO_COUNTS: ReadonlyMap<string, number> = new Map();
 
 function ProjectItems({ projects, ready }: ProjectItemsProps) {
-  const { route, push } = useNavigation();
+  const { route } = useNavigation();
+  const openProject = useOpenProject();
   const activeKey = projectKeyOf(route);
   return projects.map((project) => (
     <SidebarItem
       key={project.id}
       active={activeKey !== null && sameProjectKey(project.key, activeKey)}
-      onClick={() => push({ name: 'project', key: project.key })}
+      onClick={() => openProject(project.key)}
     >
       <span className={styles.square} style={{ background: project.color }} />
       <span className={styles.name}>{project.name}</span>{' '}

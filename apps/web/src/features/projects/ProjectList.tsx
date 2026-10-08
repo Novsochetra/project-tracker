@@ -2,9 +2,9 @@ import type { ProjectSummary } from '@tracker/shared';
 import { ListCard } from '../../components';
 import { useIsPhone } from '../../lib/media';
 import { useNow } from '../../lib/useNow';
-import { useNavigation } from '../../navigation';
 import styles from './ProjectList.module.css';
 import { ProjectRow } from './ProjectRow';
+import { useOpenProject } from './useOpenProject';
 
 export interface ProjectListProps {
   projects: readonly ProjectSummary[];
@@ -14,7 +14,7 @@ export interface ProjectListProps {
 export function ProjectList({ projects, readyCounts }: ProjectListProps) {
   const isPhone = useIsPhone();
   const now = useNow();
-  const { push } = useNavigation();
+  const openProject = useOpenProject();
   return (
     <ListCard className={styles.list}>
       {!isPhone && (
@@ -32,7 +32,7 @@ export function ProjectList({ projects, readyCounts }: ProjectListProps) {
           readyCount={readyCounts.get(project.id) ?? 0}
           index={index}
           now={now}
-          onOpen={() => push({ name: 'project', key: project.key })}
+          onOpen={() => openProject(project.key)}
         />
       ))}
     </ListCard>

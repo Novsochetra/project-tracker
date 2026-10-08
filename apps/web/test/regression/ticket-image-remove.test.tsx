@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { attachment, makeTicketDetail } from '../../src/api/test/fixtures';
 import { renderTicket } from '../../src/features/ticket/test/renderTicket';
+import { CLICK_SHIELD_MS } from '../../src/lib/clickShield';
 import { readActionSheet, skipAnimations } from '../../src/overlays/testing';
 
 let cleanups: Array<() => void> = [];
@@ -32,6 +33,8 @@ it('asks before removing a saved ticket image', async () => {
   const { client } = setup(false);
   await user.click(screen.getByRole('button', { name: 'Remove image 2' }));
   expect(screen.getByRole('alert')).toHaveTextContent("Remove image 2? This can't be undone.");
+  // A person reads the confirm; the grid ignores a double-click's second click (PT-83).
+  await new Promise((resolve) => setTimeout(resolve, CLICK_SHIELD_MS));
   await user.click(screen.getByRole('button', { name: 'Cancel' }));
   expect(client.deleteAttachment).not.toHaveBeenCalled();
   expect(screen.getAllByRole('button', { name: /^Open image/ })).toHaveLength(2);
