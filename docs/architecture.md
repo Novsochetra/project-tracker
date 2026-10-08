@@ -36,6 +36,7 @@ To do ──claim──▶ In progress ──submit──▶ Need review ──r
 - **Agents can never move a ticket to a `done` status** (API returns 403). Only a person does that.
 - Activity has an **actor**: `{ kind: 'human' | 'agent', name }`. People show as "You"; agents show by name with the terminal tile. Requests set the actor with `x-actor-kind` / `x-actor-name` headers (name URI-encoded). No header means the person.
 - New activity type **review** renders as a card with the verdict, star rating and summary.
+- A report whose text is TICKET / STATUS / SUMMARY / FILES / NEXT fields (a submission, or a pasted Claude Code report, Markdown marks allowed) renders as labeled sections instead of the raw mono block (`features/ticket/activity/reportSections.ts`): a status line ("Submitted for review" when the STATUS words mean done, otherwise "Status: …" as written), Summary in body text, Next on a highlighted panel, then Files one per line in mono. Next and Files are left out when they say "none". Text before the first field, a field given twice or no SUMMARY keeps the raw text.
 - Comments can be edited (sets `editedAt`, shows "edited") and deleted. Reports and reviews can be deleted. Events cannot be edited or deleted.
 
 ### 1.3 The copy/paste loop still exists
@@ -74,6 +75,7 @@ On phones (`max-width: 767px`) the app behaves like a native iOS app:
 
 - Live updates: the server pushes change events over SSE; open screens refresh when an agent changes something. The web app reopens the stream when the browser gives up on it or when it stays silent for 35 s (two missed pings: a proxy can keep a dead stream open after the API server crashes), waiting 1 s, then doubling up to 15 s. After any reopen, including the first open after a failed connect, all cached data except session and meta refreshes; keys with pending edits and deleted keys are skipped.
 - Project options menu adds **Manage statuses** and **Connect Claude Code** (MCP setup instructions with copy buttons).
+- **Links:** http(s) URLs in comments, reports (raw text and every section) and review summaries are links that open in a new tab (`rel="noopener noreferrer"`), in the link color and wrapping anywhere. Punctuation after a URL stays out of it ("see https://x.dev/a." links `https://x.dev/a`), and a closing bracket only stays when the URL opened it. The text is split into text and links (`apps/web/src/lib/linkify.ts`) and rendered as React nodes, so nothing else becomes markup. The description is always the editable field (§4.3), so its URLs stay plain text.
 - Optional access token: when `TRACKER_TOKEN` is set, the API needs `Authorization: Bearer <token>` or the session cookie from `POST /api/session`. The web app shows a token screen once.
 - Installable PWA (manifest, icons, offline app shell).
 - **Saved answers:** the service worker reads `GET /api` network-first (3 s timeout; not `/api/events` or image files) and answers from its cache when the network fails, is too slow, or a proxy answers for a stopped API with a bare 5xx. It marks those answers with `x-tracker-saved` (`pwa/savedAnswerPlugin`), and a fetch wrapper (`pwa/savedAnswers`, installed by the shell) notes whether the latest answer was one. A read answered that way counts as the tracker being unreachable (`app/reachability`), so the banner says "Offline — showing saved data", and capture sync and draft retries don't start; writes are never cached.
@@ -116,6 +118,7 @@ On phones (`max-width: 767px`) the app behaves like a native iOS app:
 - Project rows label their counts: "4 open", with "2 ready" below it when some are reviewed (the Open column is 64px).
 - Every `TicketListItem` has `lastReview: { verdict, rating } | null`, the latest `review` activity, read in the same query as the list.
 - The ready list (query key `['ready']`) refreshes on every change event, like the project list, but not while a ticket edit is in flight; the last edit to settle refreshes it.
+- **Ticket screen:** a ticket in a `reviewed` status shows its latest review (reviewer, time, verdict chip, stars, summary) under the description, with **Move to Done** (the project's first `done` status, same toast); on phones it is also the bottom bar's primary instead of "Send to Claude". Focus then moves to the Status row. A ticket sent back (latest review: changes requested, now in a `todo` or `in_progress` status) shows that review in the same place without the button until it is submitted again. The full activity stays as it was.
 
 ## 2. Data model
 

@@ -1,0 +1,11 @@
+/* Done statuses can have long names; the label ends in an ellipsis instead of overflowing. */
+.button {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

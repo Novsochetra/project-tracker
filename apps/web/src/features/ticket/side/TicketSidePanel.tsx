@@ -1,5 +1,6 @@
 import type { TicketDetail } from '@tracker/shared';
 import clsx from 'clsx';
+import type { Ref } from 'react';
 import { useIsPhone } from '../../../lib/media';
 import { useNow } from '../../../lib/useNow';
 import { ClaudeSection } from './ClaudeSection';
@@ -11,13 +12,14 @@ import styles from './SidePanel.module.css';
 export interface TicketSidePanelProps {
   detail: TicketDetail;
   className?: string | undefined;
+  ref?: Ref<HTMLElement>;
 }
 
-export function TicketSidePanel({ detail, className }: TicketSidePanelProps) {
+export function TicketSidePanel({ detail, className, ref }: TicketSidePanelProps) {
   const isPhone = useIsPhone();
   const now = useNow();
   return (
-    <aside aria-label="Ticket details" className={clsx(styles.panel, className)}>
+    <aside ref={ref} aria-label="Ticket details" className={clsx(styles.panel, className)}>
       {!isPhone && <ClaudeSection detail={detail} now={now} />}
       <DetailsCard detail={detail} />
       <InfoCard detail={detail} now={now} />

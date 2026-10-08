@@ -30,6 +30,7 @@ const TEXT_ON: Record<string, Record<string, string>> = {
     '--fill': 'list headers, sidebar section labels, the offline banner',
     '--fill-2': 'unselected segments on the track',
     '--panel': 'side panel labels and notes',
+    '--report-bg': 'report section labels and "Submitted for review"',
   },
   '--muted-2': {
     '--surface': 'due dates, repo paths',
@@ -56,11 +57,12 @@ const TEXT_ON: Record<string, Record<string, string>> = {
   '--link': {
     '--surface': 'links, Retry under fields',
     '--panel': 'Retry under the assignee',
-    '--report-bg': 'the targeted drop zone',
+    '--report-bg': 'the targeted drop zone, links in report cards',
   },
   '--link-hover': {
     '--surface': 'hovered links and Retry',
     '--panel': 'hovered Retry in the side panel',
+    '--report-bg': 'hovered links in report cards',
   },
   '--text-inverse': {
     '--ink': 'primary buttons, toasts',

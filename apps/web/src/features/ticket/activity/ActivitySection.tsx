@@ -1,4 +1,4 @@
-import { findStatusByCategory, type TicketDetail } from '@tracker/shared';
+import { findStatusByCategory, type Status, type TicketDetail } from '@tracker/shared';
 import clsx from 'clsx';
 import { useMemo, useState } from 'react';
 import { useNow } from '../../../lib/useNow';
@@ -48,6 +48,7 @@ export function ActivitySection({ detail, className }: ActivitySectionProps) {
             actions={actions}
             rise={riseProps(plan.delays.get(item.id))}
             approvedColor={approvedColor}
+            statuses={detail.statuses}
           />
         ))}
         <Composer ticketKey={detail.ticket.key} />
@@ -62,16 +63,17 @@ interface ActivityRowProps {
   actions: ActivityActions;
   rise: RiseProps;
   approvedColor: string | undefined;
+  statuses: readonly Status[];
 }
 
-function ActivityRow({ item, now, actions, rise, approvedColor }: ActivityRowProps) {
+function ActivityRow({ item, now, actions, rise, approvedColor, statuses }: ActivityRowProps) {
   switch (item.kind) {
     case 'event':
       return <EventLine item={item} now={now} rise={rise} />;
     case 'comment':
       return <CommentCard item={item} now={now} actions={actions} rise={rise} />;
     case 'report':
-      return <ReportCard item={item} now={now} actions={actions} rise={rise} />;
+      return <ReportCard item={item} now={now} actions={actions} rise={rise} statuses={statuses} />;
     case 'review':
       return (
         <ReviewCard

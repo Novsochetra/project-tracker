@@ -5,6 +5,7 @@ import { ActivityCard, ActorAvatar, CardImages, type RiseProps } from './Activit
 import styles from './ActivityCard.module.css';
 import { CommentEditor } from './CommentEditor';
 import { ItemMenu } from './ItemMenu';
+import { LinkedText } from './LinkedText';
 import { TimeAgo } from './TimeAgo';
 import type { ActivityActions } from './useActivityActions';
 import { useCommentEdit } from './useCommentEdit';
@@ -58,7 +59,11 @@ export function CommentCard({ item, now, actions, rise }: CommentCardProps) {
       {edit.open ? (
         <CommentEditor edit={edit} />
       ) : (
-        item.text && <p className={styles.body}>{item.text}</p>
+        item.text && (
+          <p className={styles.body}>
+            <LinkedText text={item.text} />
+          </p>
+        )
       )}
       <CardImages images={item.images} />
     </ActivityCard>

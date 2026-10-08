@@ -7,6 +7,7 @@ import {
   type ReviewVerdict,
 } from '@tracker/shared';
 import { isTemporaryId } from '../../../api';
+import { reportSections, type ReportSections } from './reportSections';
 
 interface ItemBase {
   id: string;
@@ -20,7 +21,7 @@ interface ItemBase {
 export type ActivityItem =
   | (ItemBase & { kind: 'event' })
   | (ItemBase & { kind: 'comment'; editedAt: number | null; draft: boolean })
-  | (ItemBase & { kind: 'report'; title: string })
+  | (ItemBase & { kind: 'report'; title: string; sections: ReportSections | null })
   | (ItemBase & { kind: 'review'; review: Review | null });
 
 export const VERDICT_LABELS: Record<ReviewVerdict, string> = {
@@ -51,7 +52,12 @@ function toItem(activity: Activity): ActivityItem {
         draft: isTemporaryId(activity.id),
       };
     case 'report':
-      return { ...base, kind: 'report', title: reportTitle(activity.actor) };
+      return {
+        ...base,
+        kind: 'report',
+        title: reportTitle(activity.actor),
+        sections: reportSections(activity.text),
+      };
     case 'review':
       return { ...base, kind: 'review', review: activity.review };
   }

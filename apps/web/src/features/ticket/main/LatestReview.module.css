@@ -1,0 +1,8 @@
+.latest {
+  padding-top: var(--space-2);
+}
+
+.latest .done {
+  align-self: flex-start;
+  margin-top: 6px;
+}
