@@ -1,0 +1,161 @@
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  padding: var(--space-4) var(--space-5) var(--space-5);
+}
+
+.help,
+.note {
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--size-secondary);
+  line-height: 1.55;
+  text-wrap: pretty;
+}
+
+.note {
+  font-size: var(--size-caption);
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.heading {
+  margin: 0;
+  color: var(--muted);
+  font: var(--text-caption);
+}
+
+.steps {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.step {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: 12px 14px;
+  font-size: var(--size-body);
+  line-height: 1.5;
+}
+
+.step + .step {
+  border-top: 1px solid var(--line);
+}
+
+.stepGlyph {
+  flex: none;
+  display: inline-flex;
+  margin-top: 2px;
+}
+
+.actor {
+  font-weight: var(--weight-semibold);
+}
+
+.status {
+  font-weight: var(--weight-medium);
+}
+
+.command {
+  margin: 0;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-group);
+  background: var(--fill);
+  color: var(--ink-2);
+  font: var(--text-mono);
+  line-height: 1.6;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  user-select: all;
+  -webkit-user-select: all;
+}
+
+.inlineCode {
+  color: var(--ink-2);
+  font-family: var(--font-mono);
+  font-size: var(--size-caption);
+  overflow-wrap: anywhere;
+}
+
+.nowrap {
+  white-space: nowrap;
+}
+
+button.copy {
+  align-self: flex-start;
+}
+
+.rows {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: var(--row-height);
+  padding: 8px 6px 8px 14px;
+}
+
+.row + .row {
+  border-top: 1px solid var(--line);
+}
+
+.rowText {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.rowCommand {
+  color: var(--ink);
+  font: var(--text-mono);
+  overflow-wrap: anywhere;
+  user-select: all;
+  -webkit-user-select: all;
+}
+
+.rowDescription {
+  color: var(--muted);
+  font-size: var(--size-caption);
+  line-height: 1.45;
+}
+
+.error {
+  margin: 0;
+  color: var(--danger);
+  font-size: var(--size-secondary);
+}
+
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 160px;
+}
+
+.retry {
+  align-self: flex-start;
+}
+
+@media (max-width: 767px) {
+  .step {
+    font-size: var(--size-headline);
+  }
+
+  .row {
+    padding-right: 2px;
+  }
+}

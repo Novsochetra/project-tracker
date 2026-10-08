@@ -1,0 +1,96 @@
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-5);
+}
+
+.help {
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--size-secondary);
+  line-height: 1.55;
+  text-wrap: pretty;
+}
+
+.prompt {
+  display: block;
+  width: 100%;
+  margin: 0;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-group);
+  background: var(--fill);
+  color: var(--ink-2);
+  font: var(--text-mono);
+  line-height: 1.6;
+  resize: vertical;
+}
+
+.prompt:focus-visible {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
+}
+
+.switchRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: 48px;
+  padding: 0 12px 0 14px;
+  font-size: var(--size-body);
+}
+
+.switchLabel {
+  flex: 1;
+  min-width: 0;
+}
+
+@media (hover: hover) {
+  .switchRow:hover {
+    background: var(--row-hover);
+  }
+}
+
+.error {
+  margin: 0;
+  color: var(--danger);
+  font-size: var(--size-secondary);
+}
+
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 120px;
+}
+
+.retry {
+  align-self: flex-start;
+}
+
+/* The design's share button is 40×40 with a 20px icon; phones keep the 44px IconButton. */
+@media (min-width: 768px) {
+  button.share {
+    width: 40px;
+    height: 40px;
+  }
+
+  .share svg {
+    width: var(--icon-lg);
+    height: var(--icon-lg);
+  }
+
+  button.copy {
+    font-size: var(--size-body);
+    font-weight: var(--weight-semibold);
+  }
+}
+
+@media (max-width: 767px) {
+  .switchRow {
+    min-height: 50px;
+    font-size: var(--size-input);
+  }
+}

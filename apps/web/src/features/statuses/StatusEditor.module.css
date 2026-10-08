@@ -1,0 +1,180 @@
+.editor {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-width: 0;
+  gap: var(--space-3);
+  padding: 14px;
+  background: var(--panel);
+  outline: none;
+}
+
+.nameRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.nameInput {
+  flex: 1;
+  min-width: 0;
+  height: var(--control-height);
+  margin: 0;
+  padding: 0 10px;
+  border: 1px solid var(--control-line);
+  border-radius: var(--radius-control);
+  background: var(--surface);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: var(--size-body);
+}
+
+.nameInput:focus-visible {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
+}
+
+.colors {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.label {
+  color: var(--muted);
+  font: var(--text-caption);
+}
+
+.swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  margin-left: -5px;
+}
+
+.swatch {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  cursor: pointer;
+}
+
+.swatch input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.dot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: var(--radius-full);
+  background: currentColor;
+  transition: box-shadow var(--duration-fast) ease-out;
+}
+
+.check {
+  color: var(--text-inverse);
+  opacity: 0;
+  transform: scale(0.6);
+  transition:
+    opacity var(--duration-fast) ease-out,
+    transform var(--duration-spring) var(--ease-spring);
+}
+
+.swatch input:checked + .dot {
+  box-shadow:
+    0 0 0 2px var(--panel),
+    0 0 0 4px currentColor;
+}
+
+.swatch input:checked + .dot .check {
+  opacity: 1;
+  transform: none;
+}
+
+.swatch input:focus-visible + .dot {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
+}
+
+.message {
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--size-caption);
+}
+
+.problem {
+  margin: 0;
+  color: var(--danger);
+  font-size: var(--size-secondary);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}
+
+.deleteGroup {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px var(--space-2);
+  margin-right: auto;
+}
+
+.deleteHint {
+  color: var(--muted);
+  font-size: var(--size-caption);
+}
+
+.confirm {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+@media (max-width: 767px) {
+  .nameInput {
+    font-size: var(--size-input);
+  }
+
+  /* 34px wide like the phone drag handle, so all nine colors fit one row. */
+  .swatch {
+    width: 34px;
+    height: var(--touch-target);
+  }
+
+  .dot {
+    width: 26px;
+    height: 26px;
+  }
+
+  .swatches {
+    gap: 0;
+    margin-left: -4px;
+  }
+
+  .deleteGroup {
+    order: 1;
+    flex-basis: 100%;
+  }
+
+  button.choice {
+    flex: 1;
+  }
+}
