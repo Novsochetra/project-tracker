@@ -4,8 +4,10 @@
   --ink-hover: #33333a;
   --muted: #6b6b76;
   --muted-2: #55555f;
-  --subtle: #8e8e99;
-  --placeholder: #9a9aa3;
+  /* WCAG AA (4.5:1) on --fill-2, the darkest background text sits on, allows nothing lighter:
+     Subtle and Placeholder keep their order but now look like Muted (docs/architecture.md §1.7). */
+  --subtle: #6c6c76;
+  --placeholder: #6c6c77;
   --faint: #b4b4bc;
   --dashed: #c4c4cc;
   --bar-off: #d9d9de;

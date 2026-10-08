@@ -89,6 +89,7 @@ On phones (`max-width: 767px`) the app behaves like a native iOS app:
 - A status move is announced once, by the toast; the hidden live region announces reorders ("MOB-3 moved"), and every announcement is read again even when the text repeats.
 
 - Phone ticket rows give the title the first line beside the avatar, wrapping up to three lines, with priority, key and due date on a second line below it. The per-row status glyph is hidden there because the group header shows it. Desktop rows keep the SPEC's single line.
+- Text colors reach WCAG AA (4.5:1) on every background they sit on, down to `--fill-2` (#EFEFF1: the segmented track, the phone search field, the selected sidebar item). Subtle (counts, keys) is #6C6C76 instead of #8E8E99 and Placeholder (placeholders, times, "None") is #6C6C77 instead of #9A9AA3; Muted stays #6B6B76. Nothing lighter passes on #EFEFF1, so the three keep their order but look alike. The search icon and an empty due date's calendar follow their text color; the To do ring (#8E8E99, status data), Faint chevrons, separators and drag handles, and dashed lines keep the design's colors. `apps/web/test/regression/text-contrast.test.ts` checks every text color against its backgrounds.
 
 ### 1.8 Board view
 
