@@ -130,7 +130,7 @@ const exitProblems = (sheets: Sheet[]): string[] =>
 
 const fillModeProblems = (sheets: Sheet[]): string[] =>
   sheets.flatMap(({ file, css }) =>
-    [...css.matchAll(/animation-fill-mode\s*:\s*(both|forwards)/gi)].map(
+    [...css.matchAll(/animation-fill-mode\s*:[^;}]*?\b(both|forwards)\b/gi)].map(
       (match) => `${file} sets animation-fill-mode: ${match[1]!}`,
     ),
   );
@@ -185,6 +185,14 @@ describe('the CSS animation checks', () => {
       '.a { animation: GLOBAL(fade-up) 1s, Global(fade-upp) 1s; }',
     );
     expect(unseenKeyframes([motion, typo])).toEqual(['a.module.css uses "fade-upp"']);
+  });
+
+  it('read every value of an animation-fill-mode list', () => {
+    const longhands = sheet(
+      'a.module.css',
+      '.a { animation-fill-mode: backwards, BOTH; } .b { animation-fill-mode: backwards, backwards; }',
+    );
+    expect(fillModeProblems([longhands])).toEqual(['a.module.css sets animation-fill-mode: BOTH']);
   });
 
   it('do not take negative delays or nested var() fallbacks for keyframe names', () => {
