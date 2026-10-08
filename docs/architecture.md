@@ -140,14 +140,17 @@ Status changes made by the dropdown, a report, sending, claiming, submitting or 
 
 ## 5. Web app structure (`apps/web/src`)
 
-| Folder        | What                                                                                   |
-| ------------- | -------------------------------------------------------------------------------------- |
-| `design/`     | `tokens.css` (all design tokens), `base.css`, `motion.css`                             |
-| `components/` | Base components from the Components board, one folder each with a CSS module and tests |
-| `navigation/` | Route parsing, stack navigator, transitions, edge swipe back                           |
-| `gestures/`   | Sheet drag, swipe actions, pull to refresh, pinch zoom, haptics                        |
-| `api/`        | Client instance, query keys, TanStack Query hooks, live events                         |
-| `features/`   | Screens and sheets: `projects`, `project`, `ticket`, `claude`, `statuses`, `connect`   |
-| `lib/`        | Small helpers (clipboard, platform detection, image downscaling)                       |
+| Folder        | What                                                                                                                          |
+| ------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| `design/`     | `tokens.css` (all design tokens), `base.css`, `motion.css`                                                                    |
+| `components/` | Base components from the Components board, one folder each with a CSS module and tests                                        |
+| `navigation/` | Route parsing, stack navigator, transitions, edge swipe back                                                                  |
+| `gestures/`   | Swipe actions, pull to refresh, axis drags, haptics, keyboard inset                                                           |
+| `overlays/`   | Sheet (dialog / bottom sheet with drag to dismiss), action sheet, image viewer                                                |
+| `api/`        | Client instance, query keys, TanStack Query hooks, live events                                                                |
+| `features/`   | Screens and sheets: `projects`, `project`, `ticket`, `attachments`, `claude`, `statuses`, `connect`, `capture`                |
+| `lib/`        | Small helpers: clipboard, share, platform and media queries, image downscaling, drafts registry, pending writes, `isEditable` |
+| `app/`        | Providers, shell (sidebar, header, token screen, offline banner), sheet host, flash and announcements, reachability           |
+| `pwa/`        | Service worker registration, update checks, safe reload policy                                                                |
 
 Routes: `/` Projects, `/p/:key` Project, `/p/:key/:num` Ticket. Unknown ticket → its project; unknown project → Projects.
