@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { describeImage, formatImageList } from '../../src/format/images';
 import { authorName, formatBytes, formatTime } from '../../src/format/text';
-import { at, attachment } from '../fixtures';
+import { at } from '../fixtures';
 
 describe('formatBytes', () => {
   it('uses B, KB and MB', () => {
@@ -32,28 +31,5 @@ describe('authorName', () => {
 
   it('falls back to "Agent" for a nameless agent', () => {
     expect(authorName({ kind: 'agent', name: '' })).toBe('Agent');
-  });
-});
-
-describe('image descriptions', () => {
-  it('shows name, size and dimensions', () => {
-    expect(describeImage(attachment())).toBe('screenshot.png · 1 KB · 1170×2532');
-  });
-
-  it('leaves out unknown dimensions', () => {
-    expect(describeImage(attachment({ width: null, height: null, size: 900 }))).toBe(
-      'screenshot.png · 900 B',
-    );
-  });
-
-  it('lists images as bullet lines', () => {
-    const images = [
-      attachment(),
-      attachment({ fileName: 'b.gif', size: 2048, width: 10, height: 20 }),
-    ];
-    expect(formatImageList(images)).toEqual([
-      '- screenshot.png · 1 KB · 1170×2532',
-      '- b.gif · 2 KB · 10×20',
-    ]);
   });
 });

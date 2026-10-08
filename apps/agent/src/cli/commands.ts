@@ -62,7 +62,7 @@ export const COMMANDS: readonly Command[] = [
   {
     name: 'show',
     usage: 'show <KEY>',
-    summary: 'Show a ticket in full with its activity.',
+    summary: 'Show a ticket in full: activity, text files inline, links to videos and PDFs.',
     args: ['KEY'],
     options: [],
     plan: ([ticket]) => ({ tool: getTicket, input: { ticket } }),

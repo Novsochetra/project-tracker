@@ -10,6 +10,6 @@ export async function attachUploads(
   const unique = [...new Set(ids)];
   const linked = await linkAttachments(db, unique, target);
   if (linked !== unique.length) {
-    throw invalidInput('Some images could not be attached. Upload them again.');
+    throw invalidInput('Some files could not be attached. Upload them again.');
   }
 }

@@ -1,6 +1,12 @@
-import { PRIORITY_LABELS, type TicketDetail } from '@tracker/shared';
+import { attachmentKind, PRIORITY_LABELS, type TicketDetail } from '@tracker/shared';
 import { formatActivity } from './activity';
-import { formatImageList } from './images';
+import {
+  formatAttachments,
+  NO_FILE_CONTENT,
+  ticketFiles,
+  TOKEN_NOTE,
+  type FileView,
+} from './attachments';
 import { SEP } from './text';
 
 function fieldsLine({ ticket, status }: TicketDetail): string {
@@ -18,14 +24,21 @@ function projectLine({ project }: TicketDetail): string {
   return parts.join(SEP);
 }
 
-export function formatTicket(detail: TicketDetail): string {
+// Checked on the finished text, so the note follows wherever a link was printed.
+const showsLink = (text: string, detail: TicketDetail, view: FileView): boolean =>
+  ticketFiles(detail).some(
+    (file) => attachmentKind(file.mimeType) !== 'image' && text.includes(view.fileUrl(file)),
+  );
+
+export function formatTicket(detail: TicketDetail, view: FileView = NO_FILE_CONTENT): string {
   const { ticket } = detail;
-  const images = detail.attachments.filter((image) => image.activityId === null);
+  const files = detail.attachments.filter((file) => file.activityId === null);
   const sections = [
     [`# ${ticket.key}: ${ticket.title || 'Untitled'}`, fieldsLine(detail), projectLine(detail)],
     ['## Description', ticket.description.trim() || '(No description.)'],
   ];
-  if (images.length > 0) sections.push(['## Images', ...formatImageList(images)]);
-  sections.push(['## Activity (oldest first)', formatActivity(detail.activity)]);
-  return sections.map((lines) => lines.join('\n')).join('\n\n');
+  if (files.length > 0) sections.push(['## Attachments', ...formatAttachments(files, view)]);
+  sections.push(['## Activity (oldest first)', formatActivity(detail.activity, view)]);
+  const text = sections.map((lines) => lines.join('\n')).join('\n\n');
+  return view.usesToken && showsLink(text, detail, view) ? `${text}\n\n${TOKEN_NOTE}` : text;
 }

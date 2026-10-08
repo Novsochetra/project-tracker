@@ -48,13 +48,23 @@ To do ──claim──▶ In progress ──submit──▶ Need review ──r
 - The switch reads "Move MOB-3 to {in_progress status name}" and shows for tickets in a `todo` status.
 - Report STATUS words map to categories (`normalizeReportStatus`): reviewed/approved/verified → `reviewed`; done/complete/fixed/finished/resolved and review words → `in_review`; not started → `todo`; progress/partial/blocked/wip/started/ongoing → `in_progress`; to do → `todo`. A report never sets Done.
 
-### 1.4 Images
+### 1.4 Attachments
 
-- Tickets and comments can have image attachments (png, jpeg, gif, webp, heic/heif, up to 15 MB). The text fields stay plain text.
+- Tickets (under the description) and comments can have attachments of four kinds. The text fields stay plain text. The rules live in `packages/shared/src/domain/attachment.ts` (`ATTACHMENT_TYPES`, `ATTACHMENT_KINDS`):
+
+  | Kind    | Types (extensions)                              | Up to  |
+  | ------- | ----------------------------------------------- | ------ |
+  | `image` | PNG, JPEG (jpg, jpeg), GIF, WebP, HEIC, HEIF    | 15 MB  |
+  | `video` | MP4, QuickTime (mov, as iPhones record), WebM   | 100 MB |
+  | `text`  | Plain text (txt, log), Markdown (md), CSV, JSON | 5 MB   |
+  | `pdf`   | PDF                                             | 25 MB  |
+
+- No SVG or HTML: opened from the tracker's address they could run script.
+- The type the browser gives decides. When it is empty, `application/octet-stream` (common for .log and .md), `application/vnd.ms-excel` (Windows, for .csv) or `text/x-markdown`, the extension decides (`resolveAttachmentType`); a declared type that isn't allowed is refused whatever the name. `checkAttachment(file)` gives the stored type and kind, or the message to show: one per kind from `tooLargeMessage` ("Videos can be up to 100 MB.") or `UNSUPPORTED_ATTACHMENT_MESSAGE`, which lists what can be attached. File inputs use `ATTACHMENT_ACCEPT` (every type and extension, because some systems give .log and .md no type), and `attachmentKind(mimeType)` tells how to show a stored attachment.
 - Add images by a photo button (opens camera roll/camera on phones), paste, or drag and drop. The web app downscales photos larger than 2048px before upload.
-- Upload first (`POST /api/attachments`, multipart `file` + optional `ticketKey`); without `ticketKey` the attachment is pending until a ticket or comment is created with its id in `attachmentIds`. Pending attachments older than 24 hours are deleted on startup.
-- Thumbnails show under the description and inside comment cards. Tapping opens a full-screen viewer: pinch and double-tap zoom, pan, swipe between images, swipe down to close.
-- `get_ticket` in the MCP server returns images as image content so agents can see screenshots.
+- Upload first (`POST /api/attachments`, multipart `file` + optional `ticketKey`); without `ticketKey` the attachment is pending until a ticket or comment is created with its id in `attachmentIds`. Pending attachments older than 24 hours are deleted on startup. How files are stored and served: §3.
+- Image thumbnails show under the description and inside comment cards. Tapping opens a full-screen viewer: pinch and double-tap zoom, pan, swipe between images, swipe down to close.
+- Agents get images as image content, text files inline and download links for the rest (§4).
 
 ### 1.5 Phone gestures and motion (Apple-like)
 
@@ -161,7 +171,7 @@ All routes are under `/api`, JSON in and out. Errors: `{ "error": { "code", "mes
 | `GET /tickets/:key/prompt`, `POST /tickets/:key/sent`                       | Ticket prompt / mark as sent                                                                                             |
 | `POST /tickets/:key/comments`                                               | Add comment (text and/or `attachmentIds`)                                                                                |
 | `PATCH /activity/:id`, `DELETE /activity/:id`                               | Edit comment / delete comment, report or review                                                                          |
-| `POST /attachments`, `GET /attachments/:id/file`, `DELETE /attachments/:id` | Upload / serve / delete images                                                                                           |
+| `POST /attachments`, `GET /attachments/:id/file`, `DELETE /attachments/:id` | Upload / serve / delete files (below)                                                                                    |
 | `POST /reports/preview`, `POST /reports/apply`                              | Paste-report preview and apply                                                                                           |
 | `POST /projects/:key/claim`                                                 | Claim the next `todo` ticket (204 when none)                                                                             |
 | `POST /tickets/:key/claim`                                                  | Claim a specific ticket                                                                                                  |
@@ -174,12 +184,19 @@ All routes are under `/api`, JSON in and out. Errors: `{ "error": { "code", "mes
 
 Status changes made by the dropdown, a report, sending, claiming, submitting or reviewing put the ticket at the **top** of its new group (`topRank`). Drags and keyboard moves renumber the destination group (`planMove`).
 
+**Attachment files.** `POST /attachments` checks the file with `checkAttachment` (§1.4), so each kind has its own limit; the route itself refuses a body over the largest limit plus 64 KB of form overhead ("Files can be up to 100 MB.") before reading it. Files are stored as `<id>.<extension of the type>` (`FileStorage`: disk, or memory in tests), images keep their dimensions, and names are cut to 200 characters without splitting one (`attachment.<ext>` when there is none). `GET /attachments/:id/file`:
+
+- Always `Accept-Ranges: bytes`. One range (`bytes=a-b`, `bytes=a-` or `bytes=-n`) answers 206 with `Content-Range` and reads only those bytes from storage (`FileStorage.read(key, range)`; disk storage streams them). iOS Safari doesn't play video without this. A range that starts past the end (or `bytes=-0`) answers 416 with `Content-Range: bytes */size`; several ranges or a malformed one get the whole file (200). HEAD answers the headers of the whole file and ignores `Range`.
+- `Content-Disposition: inline; filename="…"; filename*=UTF-8''…` (RFC 5987, with an ASCII fallback), so downloads keep their names. `X-Content-Type-Options: nosniff` and `Cache-Control: private, max-age=31536000, immutable` on every answer with the file.
+- Text kinds are served with `; charset=utf-8` and `Content-Security-Policy: sandbox` (defense in depth). Not PDFs: Chrome won't show a sandboxed PDF.
+
 ## 4. Agent integration (`apps/agent`)
 
 - **MCP server** (`tracker-mcp`, stdio): tools `list_projects`, `list_statuses`, `list_tickets`, `get_ticket`, `create_ticket`, `update_ticket`, `move_ticket`, `add_comment`, `claim_next_ticket`, `claim_ticket`, `submit_for_review`, `review_ticket`; prompts `work` and `review` that appear as slash commands in Claude Code. Config by env: `TRACKER_URL`, `TRACKER_TOKEN`, `TRACKER_AGENT_NAME`.
 - **CLI** (`tracker`): the same operations for shells and agents without MCP.
 - Register with Claude Code for every project: `claude mcp add tracker -s user --env TRACKER_URL=http://localhost:4100 --env TRACKER_AGENT_NAME=Claude -- node <repo>/apps/agent/dist/mcp.js`.
 - `move_ticket` uses `PATCH /tickets/:key { statusId }` (top of the new group). In agent-facing text the person is called "User".
+- **Attachments:** `get_ticket`, `claim_ticket`, `claim_next_ticket` and `tracker show` list a ticket's attachments under the description and each comment's in its card. Images keep their line (name, size, dimensions), and the MCP tools return up to 4 as image content (PNG, JPEG, GIF, WebP up to 1.5 MB). Text files are shown inline in a code fence (`TrackerClient.fetchAttachmentText`), up to 20,000 characters each, ending on a whole line when one is near, and 40,000 in all (Claude Code caps a tool result at about 25,000 tokens); a cut file gets a note with its download URL. Videos, PDFs and text files left out are one line with name, type, size and the download URL (`attachmentFileUrl`, based on `TRACKER_URL`). When `TRACKER_TOKEN` is set and a link is shown, the text ends with a note that downloads need it as `Authorization: Bearer`.
 
 ## 5. Web app structure (`apps/web/src`)
 

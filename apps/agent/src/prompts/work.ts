@@ -17,7 +17,7 @@ export const workPrompt: PromptDefinition = {
       findProjectStep(project),
       '',
       `1. Call claim_next_ticket with ${projectArgument(project)}. It moves the highest-priority To do ticket to In progress and returns it in full. If nothing is waiting, tell me and stop.`,
-      '2. Read the ticket fully: title, description, images, every comment and the last review. If a review requested changes, address every point in it.',
+      '2. Read the ticket fully: title, description, attachments, every comment and the last review. If a review requested changes, address every point in it.',
       '3. Do the work in the current repository. Keep the change focused on the ticket.',
       '4. Use add_comment to record important decisions, assumptions and blockers as you go.',
       '5. Verify before you submit: run the relevant tests, type checks and build, and check that the change really works.',

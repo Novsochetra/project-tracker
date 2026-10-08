@@ -7,6 +7,7 @@ import { DEFAULT_PORT, REPO_ROOT, loadConfig } from '../../src/config';
 import { isPostgresUrl } from '../../src/db/createDatabase';
 import { createBroadcaster } from '../../src/events/broadcaster';
 import { createDiskStorage } from '../../src/storage/diskStorage';
+import { createMemoryStorage } from '../../src/storage/memoryStorage';
 
 describe('createClock', () => {
   it('never repeats or goes back within a millisecond', () => {
@@ -109,13 +110,16 @@ describe('createBroadcaster', () => {
   });
 });
 
+const textOf = async (stream: Promise<ReadableStream<Uint8Array> | null>) =>
+  new Response(await stream).text();
+
 describe('createDiskStorage', () => {
   const dir = mkdtempSync(join(tmpdir(), 'tracker-uploads-'));
   const storage = createDiskStorage(join(dir, 'nested'));
   afterAll(() => rmSync(dir, { recursive: true, force: true }));
 
   it('writes, streams and removes files', async () => {
-    await storage.write('a.png', new Uint8Array([1, 2, 3]));
+    await storage.write('a.png', new Blob([new Uint8Array([1, 2, 3])]));
     const stream = await storage.read('a.png');
     expect(new Uint8Array(await new Response(stream).arrayBuffer())).toEqual(
       new Uint8Array([1, 2, 3]),
@@ -125,8 +129,26 @@ describe('createDiskStorage', () => {
     await expect(storage.remove('a.png')).resolves.toBeUndefined();
   });
 
+  it('reads only the asked bytes', async () => {
+    await storage.write('b.txt', new Blob(['0123456789']));
+    expect(await textOf(storage.read('b.txt', { start: 2, end: 4 }))).toBe('234');
+    expect(await textOf(storage.read('b.txt', { start: 9, end: 9 }))).toBe('9');
+    expect(await textOf(storage.read('b.txt'))).toBe('0123456789');
+    expect(await storage.read('missing.txt', { start: 0, end: 1 })).toBeNull();
+  });
+
   it('refuses keys that could escape the folder', async () => {
-    await expect(storage.write('../evil', new Uint8Array())).rejects.toThrow('Invalid storage key');
+    await expect(storage.write('../evil', new Blob([]))).rejects.toThrow('Invalid storage key');
     await expect(storage.read('.hidden')).rejects.toThrow('Invalid storage key');
+  });
+});
+
+describe('createMemoryStorage', () => {
+  it('reads only the asked bytes', async () => {
+    const storage = createMemoryStorage();
+    await storage.write('b.txt', new Blob(['0123456789']));
+    expect(await textOf(storage.read('b.txt', { start: 2, end: 4 }))).toBe('234');
+    expect(await textOf(storage.read('b.txt'))).toBe('0123456789');
+    expect(await storage.read('missing.txt', { start: 0, end: 1 })).toBeNull();
   });
 });

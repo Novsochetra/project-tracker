@@ -70,8 +70,24 @@ describe('tracker <command>', () => {
     });
     const result = await cli(['show', 'MOB-3'], tracker);
     expect(result.code).toBe(EXIT_OK);
-    expect(result.stdout).toContain('## Images\n- screenshot.png · 1 KB · 1170×2532');
+    expect(result.stdout).toContain('## Attachments\n- screenshot.png · 1 KB · 1170×2532');
     expect(fetchAttachment).not.toHaveBeenCalled();
+  });
+
+  it('shows the contents of text files and links the rest', async () => {
+    const log = attachment({ id: 'log', fileName: 'crash.log', mimeType: 'text/plain', size: 9 });
+    const pdf = attachment({ id: 'pdf', fileName: 'spec.pdf', mimeType: 'application/pdf' });
+    const tracker = fakeClient({
+      getTicket: returns(detail({ attachments: [log, pdf] })),
+      fetchAttachmentText: returns('boom\nboom'),
+      attachmentFileUrl: (id) => `http://t:1/api/attachments/${id}/file`,
+    });
+    const result = await cli(['show', 'MOB-3'], tracker);
+    expect(result.code).toBe(EXIT_OK);
+    expect(result.stdout).toContain(
+      '- spec.pdf · application/pdf · 1 KB · http://t:1/api/attachments/pdf/file\n\n' +
+        'Contents of crash.log:\n```\nboom\nboom\n```',
+    );
   });
 
   it('exits 0 when there is nothing to claim', async () => {

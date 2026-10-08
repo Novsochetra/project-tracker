@@ -33,6 +33,9 @@ import { Http, type HttpOptions, type ReadOptions } from './http';
 
 const segment = (value: string): string => encodeURIComponent(value);
 
+const attachmentFilePath = (attachmentId: string): string =>
+  `/api/attachments/${segment(attachmentId)}/file`;
+
 const listQuery = (query: ListTicketsQuery) => ({
   status: query.status,
   category: query.category,
@@ -137,8 +140,12 @@ export class TrackerClient {
   deleteAttachment = (attachmentId: string) =>
     this.http.request<void>('DELETE', `/api/attachments/${segment(attachmentId)}`);
 
-  fetchAttachment = (attachmentId: string) =>
-    this.http.raw(`/api/attachments/${segment(attachmentId)}/file`);
+  fetchAttachment = (attachmentId: string) => this.http.raw(attachmentFilePath(attachmentId));
+
+  fetchAttachmentText = async (attachmentId: string) =>
+    (await this.fetchAttachment(attachmentId)).text();
+
+  attachmentFileUrl = (attachmentId: string) => this.http.url(attachmentFilePath(attachmentId));
 
   previewReport = (input: ReportInput) =>
     this.http.request<ReportPreview>('POST', '/api/reports/preview', { body: input });

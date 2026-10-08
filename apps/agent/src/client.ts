@@ -15,11 +15,19 @@ export type TrackerApi = Pick<
   | 'submitForReview'
   | 'reviewTicket'
   | 'fetchAttachment'
->;
+  | 'fetchAttachmentText'
+  | 'attachmentFileUrl'
+> & {
+  /** Set when requests carry TRACKER_TOKEN, which download links then need too. */
+  readonly usesToken?: boolean;
+};
 
 export const createTrackerClient = (config: Config): TrackerApi =>
-  new TrackerClient({
-    baseUrl: config.url,
-    token: config.token,
-    actor: { kind: 'agent', name: config.agentName },
-  });
+  Object.assign(
+    new TrackerClient({
+      baseUrl: config.url,
+      token: config.token,
+      actor: { kind: 'agent', name: config.agentName },
+    }),
+    { usesToken: config.token !== undefined },
+  );

@@ -1,7 +1,8 @@
 import type { ContentBlock } from '@modelcontextprotocol/sdk/types.js';
-import type { Attachment, TicketDetail } from '@tracker/shared';
+import { attachmentKind, type Attachment, type TicketDetail } from '@tracker/shared';
 import type { TrackerApi } from '../client';
 import { describeError } from '../errors';
+import { ticketFiles } from '../format/attachments';
 import { formatBytes } from '../format/text';
 
 export const MAX_IMAGES = 4;
@@ -10,21 +11,8 @@ export const MAX_IMAGE_BYTES = 1.5 * 1024 * 1024;
 // Claude can only view these formats; HEIC photos from phones would make the request fail.
 const VIEWABLE_TYPES = new Set(['image/png', 'image/jpeg', 'image/gif', 'image/webp']);
 
-export function ticketImages(detail: TicketDetail): Attachment[] {
-  const candidates = [
-    ...detail.attachments.filter((image) => image.activityId === null),
-    ...[...detail.activity]
-      .sort((a, b) => a.createdAt - b.createdAt)
-      .flatMap((item) => item.attachments),
-    ...detail.attachments,
-  ];
-  const seen = new Set<string>();
-  return candidates.filter((image) => {
-    if (seen.has(image.id) || !image.mimeType.startsWith('image/')) return false;
-    seen.add(image.id);
-    return true;
-  });
-}
+export const ticketImages = (detail: TicketDetail): Attachment[] =>
+  ticketFiles(detail).filter((file) => attachmentKind(file.mimeType) === 'image');
 
 const note = (text: string): ContentBlock => ({ type: 'text', text });
 

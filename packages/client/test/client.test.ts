@@ -498,6 +498,22 @@ describe('responses', () => {
     expect(pathOf(last())).toBe('/api/attachments/f%201/file');
     expect(last().init.method).toBeUndefined();
   });
+
+  it('returns the file as UTF-8 text from fetchAttachmentText', async () => {
+    const text = 'line one\nlíne twö 📄';
+    const { client, last } = setup(() => new Response(text, { status: 200 }));
+
+    await expect(client.fetchAttachmentText('f 1')).resolves.toBe(text);
+    expect(pathOf(last())).toBe('/api/attachments/f%201/file');
+  });
+});
+
+describe('attachmentFileUrl', () => {
+  it('returns the absolute file URL, for agents that download it themselves', () => {
+    expect(setup().client.attachmentFileUrl('f 1')).toBe(
+      'http://tracker.test/api/attachments/f%201/file',
+    );
+  });
 });
 
 describe('errors', () => {
@@ -548,6 +564,10 @@ describe('errors', () => {
       name: 'ApiError',
       status: 404,
       code: 'not_found',
+    });
+    await expect(client.fetchAttachmentText('f1')).rejects.toMatchObject({
+      name: 'ApiError',
+      status: 404,
     });
   });
 

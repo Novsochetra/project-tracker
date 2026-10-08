@@ -8,13 +8,13 @@ export function createMemoryStorage(): MemoryStorage {
   const files = new Map<string, Uint8Array>();
   return {
     files,
-    write(key, bytes) {
-      files.set(key, bytes.slice());
-      return Promise.resolve();
+    async write(key, file) {
+      files.set(key, new Uint8Array(await file.arrayBuffer()));
     },
-    read(key) {
+    read(key, range) {
       const bytes = files.get(key);
-      return Promise.resolve(bytes ? new Blob([bytes]).stream() : null);
+      const part = bytes && range ? bytes.subarray(range.start, range.end + 1) : bytes;
+      return Promise.resolve(part ? new Blob([part]).stream() : null);
     },
     remove(key) {
       files.delete(key);

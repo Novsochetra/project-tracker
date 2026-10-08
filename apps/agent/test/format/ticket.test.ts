@@ -15,7 +15,7 @@ const landscape = attachment({
 });
 
 describe('formatTicket', () => {
-  it('prints the full ticket with images and activity oldest first', () => {
+  it('prints the full ticket with attachments and activity oldest first', () => {
     const {
       totalCount: _t,
       openCount: _o,
@@ -85,7 +85,7 @@ describe('formatTicket', () => {
         '1. Open profile',
         '2. Rotate',
         '',
-        '## Images',
+        '## Attachments',
         '- screenshot.png · 1 KB · 1170×2532',
         '',
         '## Activity (oldest first)',
@@ -94,7 +94,7 @@ describe('formatTicket', () => {
         '',
         '### Comment · User · 2026-10-03 09:30 (edited)',
         'Also happens in landscape.',
-        'Images:',
+        'Attachments:',
         '- landscape.png · 340 KB',
         '',
         '### Report · Claude · 2026-10-03 11:00',
@@ -139,10 +139,10 @@ describe('formatActivity', () => {
     );
   });
 
-  it('shows an image-only comment without a blank body', () => {
+  it('shows an attachment-only comment without a blank body', () => {
     const comment = activity({ type: 'comment', text: '  ', attachments: [attachment()] });
     expect(formatActivity([comment])).toBe(
-      '### Comment · User · 2026-10-02 14:05\nImages:\n- screenshot.png · 1 KB · 1170×2532',
+      '### Comment · User · 2026-10-02 14:05\nAttachments:\n- screenshot.png · 1 KB · 1170×2532',
     );
   });
 });

@@ -1,10 +1,7 @@
 import type { TicketDetail } from '@tracker/shared';
-import { formatTicket } from '../format/ticket';
-import { ticketImages } from './images';
+import type { TrackerApi } from '../client';
+import { ticketReply } from './ticketReply';
 import type { ToolReply } from './tool';
 
-export const claimedReply = (detail: TicketDetail): ToolReply => ({
-  text: `Claimed ${detail.ticket.key}. It is now in ${detail.status.name}.\n\n${formatTicket(detail)}`,
-  data: detail,
-  images: ticketImages(detail),
-});
+export const claimedReply = (client: TrackerApi, detail: TicketDetail): Promise<ToolReply> =>
+  ticketReply(client, detail, `Claimed ${detail.ticket.key}. It is now in ${detail.status.name}.`);

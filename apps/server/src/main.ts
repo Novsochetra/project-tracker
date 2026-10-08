@@ -13,7 +13,7 @@ await migrateToLatest(db);
 
 const storage = createDiskStorage(config.uploadsDir);
 const removed = await removeStalePendingAttachments({ db, storage }, Date.now());
-if (removed > 0) console.log(`Removed ${removed} unused image upload(s).`);
+if (removed > 0) console.log(`Removed ${removed} unused upload(s).`);
 
 const app = createApp({
   db,

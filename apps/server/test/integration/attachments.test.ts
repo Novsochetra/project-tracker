@@ -1,13 +1,18 @@
 import {
   MAX_ATTACHMENT_BYTES,
+  UNSUPPORTED_ATTACHMENT_MESSAGE,
   type Attachment,
   type ErrorBody,
   type Ticket,
 } from '@tracker/shared';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { PENDING_TTL_MS, removeStalePendingAttachments } from '../../src/services/attachments';
-import { imageForm, pngBytes } from '../helpers/fixtures';
+import { fileForm, imageForm, pngBytes } from '../helpers/fixtures';
 import { DIALECTS, useTestServer } from '../helpers/server';
+
+const MB = 1024 * 1024;
+
+const NOT_FOUND = { error: { code: 'not_found', message: 'Attachment was not found.' } };
 
 describe.each(DIALECTS)('attachments (%s)', (dialect) => {
   const api = useTestServer(dialect);
@@ -20,6 +25,8 @@ describe.each(DIALECTS)('attachments (%s)', (dialect) => {
   });
 
   const upload = (form: FormData) => api.post<Attachment>('/api/attachments', form);
+
+  const storedExtensions = () => [...api.storage.files.keys()].map((key) => key.split('.').pop());
 
   it('stores a pending image with its size and dimensions', async () => {
     const bytes = pngBytes(4, 7);
@@ -64,6 +71,14 @@ describe.each(DIALECTS)('attachments (%s)', (dialect) => {
     expect(api.storage.files.size).toBe(0);
   });
 
+  it('reads a text file through the typed client', async () => {
+    const text = 'line one\nlíne twö 📄\n';
+    const attachment = await api
+      .client()
+      .uploadAttachment(new Blob([text], { type: 'text/plain' }), 'notes.txt', ticket.key);
+    await expect(api.client().fetchAttachmentText(attachment.id)).resolves.toBe(text);
+  });
+
   it('serves the bytes with the content type and a long immutable cache', async () => {
     const bytes = pngBytes();
     const { body } = await upload(imageForm({ bytes }));
@@ -75,7 +90,17 @@ describe.each(DIALECTS)('attachments (%s)', (dialect) => {
     expect(res.headers.get('cache-control')).toContain('immutable');
     expect(res.headers.get('x-content-type-options')).toBe('nosniff');
     expect(new Uint8Array(await res.arrayBuffer())).toEqual(bytes);
-    expect((await api.get('/api/attachments/missing/file')).status).toBe(404);
+    const missing = await api.get('/api/attachments/missing/file');
+    expect(missing.status).toBe(404);
+    expect(missing.body).toEqual(NOT_FOUND);
+  });
+
+  it('answers 404 when the stored file is gone', async () => {
+    const { body } = await upload(fileForm({ name: 'notes.txt' }));
+    api.storage.files.clear();
+    const res = await api.get(body.url, { headers: { range: 'bytes=0-1' } });
+    expect(res.status).toBe(404);
+    expect(res.body).toEqual(NOT_FOUND);
   });
 
   it('deletes the row and the file', async () => {
@@ -88,25 +113,84 @@ describe.each(DIALECTS)('attachments (%s)', (dialect) => {
     expect(api.events).toEqual([
       { type: 'changed', projectId: ticket.projectId, ticketId: ticket.id },
     ]);
-    expect((await api.delete(`/api/attachments/${body.id}`)).status).toBe(404);
+    const again = await api.delete(`/api/attachments/${body.id}`);
+    expect(again.status).toBe(404);
+    expect(again.body).toEqual(NOT_FOUND);
     expect((await api.get(body.url)).status).toBe(404);
   });
 
-  it('accepts only images', async () => {
-    for (const type of ['text/plain', 'image/svg+xml', 'application/pdf']) {
-      const res = await upload(imageForm({ type }));
-      expect(res.status, type).toBe(400);
-      expect(res.body).toMatchObject({ error: { code: 'invalid_input' } });
+  it('stores every allowed type under the extension of its type', async () => {
+    const files = [
+      ['photo.jpeg', 'image/jpeg', 'jpg'],
+      ['anim.gif', 'image/gif', 'gif'],
+      ['shot.webp', 'image/webp', 'webp'],
+      ['IMG_0001.HEIC', 'image/heic', 'heic'],
+      ['IMG_0002.heif', 'image/heif', 'heif'],
+      ['clip.mp4', 'video/mp4', 'mp4'],
+      ['IMG_0003.MOV', 'video/quicktime', 'mov'],
+      ['screen.webm', 'video/webm', 'webm'],
+      ['notes.txt', 'text/plain', 'txt'],
+      ['README.md', 'text/markdown', 'md'],
+      ['export.csv', 'text/csv', 'csv'],
+      ['config.json', 'application/json', 'json'],
+      ['spec.pdf', 'application/pdf', 'pdf'],
+    ];
+    for (const [name, type] of files) {
+      const res = await upload(fileForm({ name, type }));
+      expect(res.status, name).toBe(201);
+      expect(res.body, name).toMatchObject({ fileName: name, mimeType: type, size: 5 });
     }
-    for (const type of ['image/jpeg', 'image/gif', 'image/webp', 'image/heic', 'image/heif']) {
-      expect((await upload(imageForm({ type }))).status, type).toBe(201);
+    expect(storedExtensions()).toEqual(files.map(([, , extension]) => extension));
+  });
+
+  it('keeps dimensions for images only', async () => {
+    const video = await upload(
+      fileForm({ bytes: pngBytes(), name: 'clip.mp4', type: 'video/mp4' }),
+    );
+    expect(video.body).toMatchObject({ width: null, height: null });
+  });
+
+  it('reads the type from the file name when the browser sends no useful one', async () => {
+    const files = [
+      ['server.log', '', 'text/plain'],
+      ['README.md', 'application/octet-stream', 'text/markdown'],
+      ['export.csv', 'application/vnd.ms-excel', 'text/csv'],
+      ['IMG_0001.HEIC', '', 'image/heic'],
+      ['IMG_0002.MOV', '', 'video/quicktime'],
+    ];
+    for (const [name, type, stored] of files) {
+      const res = await upload(fileForm({ name, type }));
+      expect(res.status, name).toBe(201);
+      expect(res.body.mimeType, name).toBe(stored);
     }
-    expect(api.storage.files.size).toBe(5);
+    expect(storedExtensions()).toEqual(['txt', 'md', 'csv', 'heic', 'mov']);
+  });
+
+  it('refuses SVG, HTML and unknown types, saying what can be attached', async () => {
+    const refused = [
+      ['logo.svg', 'image/svg+xml'],
+      ['logo.png', 'image/svg+xml'],
+      ['page.html', 'text/html'],
+      ['notes.txt', 'text/html'],
+      ['page.html', ''],
+      ['logs.zip', 'application/zip'],
+      ['tool.exe', ''],
+      ['budget.xls', 'application/vnd.ms-excel'],
+    ];
+    for (const [name, type] of refused) {
+      const res = await upload(fileForm({ name, type }));
+      expect(res.status, name).toBe(400);
+      expect(res.body, name).toEqual({
+        error: { code: 'invalid_input', message: UNSUPPORTED_ATTACHMENT_MESSAGE },
+      });
+    }
+    expect(api.storage.files.size).toBe(0);
   });
 
   it('needs a multipart file field', async () => {
     const empty = await api.post<ErrorBody>('/api/attachments', new FormData());
     expect(empty.status).toBe(400);
+    expect(empty.body.error.message).toBe('Choose a file to upload.');
     const json = await api.post<ErrorBody>('/api/attachments', { file: 'x' });
     expect(json.status).toBe(400);
     const broken = await api.app.request('/api/attachments', {
@@ -115,6 +199,9 @@ describe.each(DIALECTS)('attachments (%s)', (dialect) => {
       body: 'not really multipart',
     });
     expect(broken.status).toBe(400);
+    expect(await broken.json()).toEqual({
+      error: { code: 'invalid_input', message: 'Send the file as multipart form data.' },
+    });
   });
 
   it('keeps dimensions empty when the image cannot be read', async () => {
@@ -123,15 +210,84 @@ describe.each(DIALECTS)('attachments (%s)', (dialect) => {
     expect(res.body).toMatchObject({ width: null, height: null, size: 3 });
   });
 
-  it('rejects images over 15 MB', async () => {
-    for (const size of [MAX_ATTACHMENT_BYTES + 1, MAX_ATTACHMENT_BYTES + 200_000]) {
-      const res = await upload(imageForm({ bytes: new Uint8Array(size) }));
-      expect(res.status, String(size)).toBe(400);
-      expect(res.body).toEqual({
-        error: { code: 'invalid_input', message: 'Images can be up to 15 MB.' },
-      });
-    }
-    expect(api.storage.files.size).toBe(0);
+  it('applies the size limit of each kind', async () => {
+    const sixteenMb = new Uint8Array(16 * MB);
+    const image = await upload(imageForm({ bytes: sixteenMb }));
+    expect(image.status).toBe(400);
+    expect(image.body).toEqual({
+      error: { code: 'invalid_input', message: 'Images can be up to 15 MB.' },
+    });
+    const video = await upload(fileForm({ bytes: sixteenMb, name: 'clip.mp4', type: 'video/mp4' }));
+    expect(video.status).toBe(201);
+    expect(video.body.size).toBe(16 * MB);
+    const log = await upload(fileForm({ bytes: new Uint8Array(5 * MB + 1), name: 'big.log' }));
+    expect(log.body).toEqual({
+      error: { code: 'invalid_input', message: 'Text files can be up to 5 MB.' },
+    });
+    expect(storedExtensions()).toEqual(['mp4']);
+  });
+
+  it('refuses a body larger than the largest kind allows before reading it', async () => {
+    const res = await api.app.request('/api/attachments', {
+      method: 'POST',
+      headers: {
+        'content-type': 'multipart/form-data; boundary=xyz',
+        'content-length': String(MAX_ATTACHMENT_BYTES + 128 * 1024),
+      },
+      body: 'x',
+    });
+    expect(res.status).toBe(400);
+    expect(await res.json()).toEqual({
+      error: { code: 'invalid_input', message: 'Files can be up to 100 MB.' },
+    });
+  });
+
+  it('links pending uploads of any kind to a ticket created with their ids', async () => {
+    const video = (await upload(fileForm({ name: 'repro.mov', type: 'video/quicktime' }))).body;
+    const log = (await upload(fileForm({ name: 'crash.log', type: '' }))).body;
+    expect([video.ticketId, log.ticketId]).toEqual([null, null]);
+    expect(api.events).toEqual([]);
+
+    const created = await api.client().createTicket('MA', {
+      title: 'Crash on rotate',
+      attachmentIds: [video.id, log.id],
+    });
+
+    const detail = await api.client().getTicket(created.key);
+    expect(detail.attachments.map((file) => [file.id, file.ticketId, file.mimeType])).toEqual([
+      [video.id, created.id, 'video/quicktime'],
+      [log.id, created.id, 'text/plain'],
+    ]);
+  });
+
+  it('says files when an attachment id cannot be linked', async () => {
+    const res = await api.post<ErrorBody>('/api/projects/MA/tickets', {
+      title: 'x',
+      attachmentIds: ['missing'],
+    });
+    expect(res.status).toBe(400);
+    expect(res.body.error.message).toBe('Some files could not be attached. Upload them again.');
+  });
+
+  it('keeps the file name, or names a file that has none', async () => {
+    const named = await upload(fileForm({ name: 'ការងារ 📄.txt' }));
+    expect(named.body.fileName).toBe('ការងារ 📄.txt');
+    // FormData leaves out an empty file name, so this part is written by hand.
+    const unnamed = await api.app.request('/api/attachments', {
+      method: 'POST',
+      headers: { 'content-type': 'multipart/form-data; boundary=b' },
+      body:
+        '--b\r\nContent-Disposition: form-data; name="file"; filename="  "\r\n' +
+        'Content-Type: application/pdf\r\n\r\n%PDF\r\n--b--\r\n',
+    });
+    expect(unnamed.status).toBe(201);
+    expect(((await unnamed.json()) as Attachment).fileName).toBe('attachment.pdf');
+  });
+
+  it('cuts long names to 200 characters without splitting one', async () => {
+    const res = await upload(fileForm({ name: `${'a'.repeat(199)}📄.txt` }));
+    expect(res.body.fileName).toBe(`${'a'.repeat(199)}📄`);
+    expect((await api.app.request(res.body.url)).status).toBe(200);
   });
 
   it('removes pending uploads older than a day at startup, and only those', async () => {

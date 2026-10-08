@@ -34,20 +34,28 @@ export function pngBytes(width = 3, height = 2): Uint8Array {
   return new Uint8Array(png);
 }
 
-export interface ImageFormOptions {
+export interface FileFormOptions {
   bytes?: Uint8Array;
   name?: string;
   type?: string;
   ticketKey?: string;
 }
 
-export function imageForm(options: ImageFormOptions = {}): FormData {
+/** An upload form; an empty type reaches the server as application/octet-stream, as in browsers. */
+export function fileForm(options: FileFormOptions = {}): FormData {
   const form = new FormData();
-  const blob = new Blob([options.bytes ?? pngBytes()], { type: options.type ?? 'image/png' });
-  form.set('file', blob, options.name ?? 'screenshot.png');
+  const bytes = options.bytes ?? new TextEncoder().encode('hello');
+  form.set(
+    'file',
+    new Blob([bytes], { type: options.type ?? 'text/plain' }),
+    options.name ?? 'a.txt',
+  );
   if (options.ticketKey) form.set('ticketKey', options.ticketKey);
   return form;
 }
+
+export const imageForm = (options: FileFormOptions = {}): FormData =>
+  fileForm({ bytes: pngBytes(), name: 'screenshot.png', type: 'image/png', ...options });
 
 export function statusOf(
   detail: Pick<ProjectDetail | TicketDetail, 'statuses'>,

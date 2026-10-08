@@ -17,7 +17,7 @@ export const reviewPrompt: PromptDefinition = {
       findProjectStep(project),
       '',
       `1. Call list_tickets with ${projectArgument(project)} and category "in_review" to find tickets waiting for review. If there are none, tell me and stop.`,
-      "2. Take them one at a time. Call get_ticket and read the title, description, comments, images and the worker's report.",
+      "2. Take them one at a time. Call get_ticket and read the title, description, comments, attachments and the worker's report.",
       '3. Compare the work against the requirement in the title, description and comments, not just against the report.',
       '4. Verify the real changes yourself: read the diff and the changed files, run the tests and build, and try the feature where you can.',
       '5. Rate the work from 1 to 5:',

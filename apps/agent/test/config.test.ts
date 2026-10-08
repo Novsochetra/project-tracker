@@ -34,6 +34,14 @@ describe('loadConfig', () => {
 });
 
 describe('createTrackerClient', () => {
+  it('links attachment files under TRACKER_URL and knows whether it sends a token', () => {
+    const config = { url: 'http://t:1/', token: 'secret', agentName: 'Claude' };
+    const client = createTrackerClient(config);
+    expect(client.attachmentFileUrl('a 1')).toBe('http://t:1/api/attachments/a%201/file');
+    expect(client.usesToken).toBe(true);
+    expect(createTrackerClient({ ...config, token: undefined }).usesToken).toBe(false);
+  });
+
   it('talks to the configured URL as an agent', async () => {
     const fetchSpy = vi
       .spyOn(globalThis, 'fetch')

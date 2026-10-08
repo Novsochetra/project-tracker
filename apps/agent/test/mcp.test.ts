@@ -103,6 +103,33 @@ describe('MCP server', () => {
     ]);
   });
 
+  it('returns text files inside the ticket text, before the images', async () => {
+    const log = attachment({ id: 'log', fileName: 'crash.log', mimeType: 'text/plain' });
+    const tracker = fakeClient({
+      getTicket: returns(detail({ attachments: [log, attachment()] })),
+      fetchAttachmentText: returns('ERROR db down'),
+      fetchAttachment: returns(imageResponse(4)),
+    });
+    const result = await (
+      await connect(tracker)
+    ).callTool({
+      name: 'get_ticket',
+      arguments: { ticket: 'MOB-3' },
+    });
+    const [text, ...rest] = result.content as { type: string; text?: string }[];
+    expect(text?.text).toContain('Contents of crash.log:\n```\nERROR db down\n```');
+    expect(rest.map((block) => block.type)).toEqual(['text', 'image']);
+  });
+
+  it('tells agents what get_ticket shows of each kind of attachment', async () => {
+    const { tools } = await (await connect(fakeClient({}))).listTools();
+    const description = tools.find((tool) => tool.name === 'get_ticket')?.description ?? '';
+    for (const words of ['returned as images', 'Text files', '20,000', 'Videos and PDFs']) {
+      expect(description).toContain(words);
+    }
+    expect(description).toContain('access token');
+  });
+
   it('returns API errors as error results', async () => {
     const tracker = fakeClient({
       getTicket: rejectWith(404, 'not_found', 'Ticket MOB-99 not found.'),

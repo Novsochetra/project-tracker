@@ -12,15 +12,17 @@ export function createDiskStorage(dir: string): FileStorage {
     return join(dir, key);
   };
   return {
-    async write(key, bytes) {
+    async write(key, file) {
+      const path = pathOf(key);
       await mkdir(dir, { recursive: true });
-      await writeFile(pathOf(key), bytes);
+      await writeFile(path, file.stream());
     },
-    async read(key) {
+    async read(key, range) {
       const path = pathOf(key);
       const info = await stat(path).catch(() => null);
       if (!info?.isFile()) return null;
-      return Readable.toWeb(createReadStream(path)) as ReadableStream<Uint8Array>;
+      const stream = createReadStream(path, range && { start: range.start, end: range.end });
+      return Readable.toWeb(stream) as ReadableStream<Uint8Array>;
     },
     async remove(key) {
       await rm(pathOf(key), { force: true });
