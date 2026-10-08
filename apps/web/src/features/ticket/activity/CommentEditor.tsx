@@ -16,8 +16,9 @@ export function CommentEditor({ edit }: { edit: CommentEdit }) {
   const noteId = useId();
   const blank = edit.text.trim() === '';
   const note = noteFor(edit);
-  // An edit kept from an earlier visit opens unsaved; focusing it would pop up the keyboard.
-  const [focusOnOpen] = useState(!edit.failed);
+  // Only an editor the user just opened takes focus. One kept from an earlier visit, or reopened
+  // by a failed save after the user moved on, would pop up the keyboard.
+  const [focusOnOpen] = useState(!edit.failed && !edit.restored);
 
   useEffect(() => {
     const input = inputRef.current;

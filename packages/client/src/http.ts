@@ -20,7 +20,16 @@ export interface HttpOptions {
 
 type Query = Record<string, string | undefined>;
 
-export interface RequestOptions {
+// The web app's service worker leaves requests with this header to the network.
+export const FRESH_READ_HEADER = 'x-tracker-fresh';
+
+export interface ReadOptions {
+  // Skips every cache on the way, the browser's and the web app's service worker, so the answer
+  // comes from the server or the read fails. For decisions a stale answer would get wrong.
+  fresh?: boolean;
+}
+
+export interface RequestOptions extends ReadOptions {
   body?: unknown;
   query?: Query;
   allowEmpty?: boolean;
@@ -81,14 +90,17 @@ export class Http {
   async request<T>(method: string, path: string, options: RequestOptions = {}): Promise<T> {
     const isForm = options.body instanceof FormData;
     const hasJson = options.body !== undefined && !isForm;
+    const headers = this.headers(hasJson);
+    if (options.fresh) headers.set(FRESH_READ_HEADER, '1');
     const response = await this.fetchImpl(this.url(path, options.query), {
       method,
-      headers: this.headers(hasJson),
+      headers,
       body: isForm
         ? (options.body as FormData)
         : hasJson
           ? JSON.stringify(options.body)
           : undefined,
+      ...(options.fresh ? { cache: 'no-store' as const } : {}),
     });
     return this.read<T>(response, options.allowEmpty ?? false);
   }

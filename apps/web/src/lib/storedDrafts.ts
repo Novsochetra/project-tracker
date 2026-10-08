@@ -14,6 +14,8 @@ export interface StoredDraft extends DraftTarget {
   // changed it meanwhile.
   base: string;
   text: string;
+  // Save was pressed for this text. A comment edit is only ever sent for the user after that.
+  submitted?: boolean;
 }
 
 type Drafts = DraftMap<StoredDraft>;
@@ -41,7 +43,8 @@ function isStoredDraft(value: unknown): value is StoredDraft {
     FIELDS.has(draft.field) &&
     isText(draft.base) &&
     isText(draft.text) &&
-    (draft.activityId === undefined || isText(draft.activityId))
+    (draft.activityId === undefined || isText(draft.activityId)) &&
+    (draft.submitted === undefined || typeof draft.submitted === 'boolean')
   );
 }
 
@@ -56,10 +59,14 @@ export const storedDrafts = (): Array<[string, StoredDraft]> => Object.entries(l
 export const hasStoredDrafts = (): boolean => Object.keys(load()).length > 0;
 
 // The first text kept for an id remembers the server value it was typed over.
-export function keepDraft(id: string, draft: DraftTarget & { text: string }, base: string): void {
+export function keepDraft(
+  id: string,
+  draft: DraftTarget & Pick<StoredDraft, 'text' | 'submitted'>,
+  base: string,
+): void {
   const drafts = load();
   const current = drafts[id];
-  if (current?.text === draft.text) return;
+  if (current?.text === draft.text && current.submitted === draft.submitted) return;
   store({ ...drafts, [id]: { ...draft, base: current?.base ?? base } });
 }
 

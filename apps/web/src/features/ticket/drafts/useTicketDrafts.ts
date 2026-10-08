@@ -1,35 +1,25 @@
 import { useQueryClient, type QueryClient } from '@tanstack/react-query';
-import type { UpdateTicketInput } from '@tracker/shared';
 import { useCallback, useEffect } from 'react';
-import { useApi, useUpdateComment, useUpdateTicket } from '../../../api';
+import { useApi } from '../../../api';
 import { createReachability, watchApiTraffic } from '../../../app/reachability';
 import { useToast } from '../../../components';
 import { guardUnload } from '../../../lib/drafts';
 import type { StoredDraft } from '../../../lib/storedDrafts';
 import { useLatest } from '../../../lib/useLatest';
-import { runDraftSync, syncDrafts, type DraftSyncDeps, type DraftSyncReport } from './syncDrafts';
+import {
+  hasClosedDrafts,
+  runDraftSync,
+  syncDrafts,
+  type DraftSyncDeps,
+  type DraftSyncReport,
+} from './syncDrafts';
+import { useDraftSave } from './useDraftSave';
 
-const fieldInput = (draft: StoredDraft): UpdateTicketInput => {
-  if (draft.field === 'title') return { title: draft.text };
-  return draft.field === 'description' ? { description: draft.text } : { assignee: draft.text };
-};
-
-// Through the same mutations as the screen: the board and ticket caches follow, the offline
-// banner hears of failures, and an app update waits for the write.
 function useSyncDeps(): DraftSyncDeps {
   const client = useApi();
-  const updateTicket = useUpdateTicket().mutateAsync;
-  const updateComment = useUpdateComment().mutateAsync;
   return {
-    fetchTicket: (ticketKey) => client.getTicket(ticketKey),
-    save: (draft) =>
-      draft.field === 'comment-edit'
-        ? updateComment({
-            ticketKey: draft.ticketKey,
-            activityId: draft.activityId ?? '',
-            text: draft.text,
-          })
-        : updateTicket({ ticketKey: draft.ticketKey, input: fieldInput(draft) }),
+    fetchTicket: (ticketKey) => client.getTicket(ticketKey, { fresh: true }),
+    save: useDraftSave(),
   };
 }
 
@@ -57,8 +47,8 @@ function useDraftSync(): () => void {
 export const RETRY_GAP_MS = 10_000;
 
 // A retry that fails makes the tracker look unreachable, and the refetch after it reachable
-// again (also when a service worker answers reads from its cache), which would start the next
-// retry at once. So retries on that signal wait until RETRY_GAP_MS after the last one.
+// again, which would start the next retry at once. So retries on that signal wait until
+// RETRY_GAP_MS after the last one.
 function spacedRuns(sync: () => void) {
   let last = Number.NEGATIVE_INFINITY;
   let timer: ReturnType<typeof setTimeout> | undefined;
@@ -74,6 +64,17 @@ function spacedRuns(sync: () => void) {
   return { now, soon, stop: () => clearTimeout(timer) };
 }
 
+// A change the tracker reports (a live update refreshes the cache) may be the deletion of a
+// ticket with kept text, which only a run finds out. A save refreshes the cache too, from its own
+// callbacks while it still counts as pending; a refused one would otherwise start a run every
+// RETRY_GAP_MS.
+function onReportedChange(queryClient: QueryClient, run: () => void): () => void {
+  return queryClient.getQueryCache().subscribe((event) => {
+    if (event.type !== 'updated' || event.action.type !== 'invalidate') return;
+    if (queryClient.isMutating() === 0 && hasClosedDrafts()) run();
+  });
+}
+
 function syncOnReconnect(queryClient: QueryClient, sync: () => void): () => void {
   const runs = spacedRuns(sync);
   const reachability = createReachability();
@@ -81,12 +82,14 @@ function syncOnReconnect(queryClient: QueryClient, sync: () => void): () => void
   const stopListening = reachability.subscribe(() => {
     if (!reachability.isUnreachable()) runs.soon();
   });
+  const stopChanges = onReportedChange(queryClient, runs.soon);
   window.addEventListener('online', runs.now);
   runs.now();
   return () => {
     runs.stop();
     stopWatching();
     stopListening();
+    stopChanges();
     window.removeEventListener('online', runs.now);
   };
 }

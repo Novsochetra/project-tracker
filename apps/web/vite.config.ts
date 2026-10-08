@@ -1,6 +1,7 @@
 import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
+import { isSavedApiRead } from './src/pwa/apiReadRoute.ts';
 import { savedAnswerPlugin } from './src/pwa/savedAnswerPlugin.ts';
 
 const apiTarget = process.env.TRACKER_API_URL ?? 'http://localhost:4100';
@@ -68,12 +69,7 @@ export default defineConfig({
             },
           },
           {
-            // The SSE stream never ends, so caching it would buffer it forever.
-            urlPattern: ({ url, request, sameOrigin }) =>
-              sameOrigin &&
-              url.pathname.startsWith('/api/') &&
-              url.pathname !== '/api/events' &&
-              !request.headers.get('accept')?.includes('text/event-stream'),
+            urlPattern: isSavedApiRead,
             handler: 'NetworkFirst',
             options: {
               cacheName: 'api',

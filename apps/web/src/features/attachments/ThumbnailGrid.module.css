@@ -135,10 +135,11 @@
 
 @media (max-width: 767px) {
   /* The x sits on the corner and part of its touch target lies outside the image, so the
-     tiles leave room around them for it. */
+     tiles leave room around them for it, more above them than beside them. */
   .grid.removable {
     gap: var(--space-4);
-    padding-top: var(--space-4);
+    row-gap: var(--space-6);
+    padding-top: var(--space-6);
   }
 
   .remove {
@@ -148,10 +149,11 @@
     height: 24px;
   }
 
-  /* 44x44, leaning into the image: it reaches 14px past the tile, short of the next tile and
-     of anything above the grid, and 30px into the image, short of the middle of a 72px
-     thumbnail, so a tap meant to open the image does. */
+  /* 44x44. It reaches 30px into the image from the right but only 22px from the top, short of
+     the middle of a 56px thumbnail, so a tap in the middle never removes the image. Past the
+     tile it reaches 14px to the right and 22px up, short of the next tile and of anything
+     above the grid. */
   .remove::before {
-    inset: -6px -6px -14px -14px;
+    inset: -14px -6px -6px -14px;
   }
 }

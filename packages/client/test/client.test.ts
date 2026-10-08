@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { ApiError, TrackerClient, type HttpOptions } from '../src';
+import { ApiError, FRESH_READ_HEADER, TrackerClient, type HttpOptions } from '../src';
 
 interface Call {
   url: string;
@@ -393,6 +393,30 @@ describe('headers', () => {
     expect(headers.get('x-actor-kind')).toBe('human');
     expect(headers.get('x-actor-name')).toBe('Dara');
     expect(headers.has('content-type')).toBe(false);
+  });
+});
+
+describe('fresh reads', () => {
+  it('skip caches on the way, with a header the web app service worker leaves alone', async () => {
+    const { client, calls } = setup();
+
+    await client.getTicket('MOB-3', { fresh: true });
+    await client.listTickets('MOB', { q: 'login' }, { fresh: true });
+
+    for (const call of calls) {
+      expect(headersOf(call).get(FRESH_READ_HEADER)).toBe('1');
+      expect(call.init.cache).toBe('no-store');
+    }
+    expect(pathOf(calls[1]!)).toBe('/api/projects/MOB/tickets?q=login');
+  });
+
+  it('are not the default', async () => {
+    const { client, last } = setup();
+
+    await client.getTicket('MOB-3');
+
+    expect(headersOf(last()).has(FRESH_READ_HEADER)).toBe(false);
+    expect(last().init.cache).toBeUndefined();
   });
 });
 

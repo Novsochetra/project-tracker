@@ -2,7 +2,8 @@ import { useId } from 'react';
 import { AutoTextarea, type AutoTextareaProps } from '../../../components';
 import { FieldNote } from './FieldNote';
 import { useAutosave } from './useAutosave';
-import { useFieldDraft, type FieldSave, type FieldTarget } from './useFieldDraft';
+import { useFieldDraft } from './useFieldDraft';
+import type { FieldSave, FieldTarget } from './useFieldSave';
 
 export interface AutosaveTextareaProps extends Omit<
   AutoTextareaProps,

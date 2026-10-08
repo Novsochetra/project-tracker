@@ -2,6 +2,7 @@ import { CircleAlert } from 'lucide-react';
 import { useEffect } from 'react';
 import { errorMessage, isNotFound, useProject, useTicket } from '../../api';
 import { Button, EmptyState, Spinner } from '../../components';
+import { forgetTicketDrafts } from '../../lib/storedDrafts';
 import { NavBar, NavBarSpacer, useNavigation } from '../../navigation';
 import styles from './TicketScreen.module.css';
 import { TicketView } from './TicketView';
@@ -14,7 +15,7 @@ export interface TicketScreenProps {
 export function TicketScreen({ projectKey, num }: TicketScreenProps) {
   const ticketKey = `${projectKey}-${num}`.toUpperCase();
   const query = useTicket(ticketKey);
-  useLeaveWhenMissing(query.error, projectKey);
+  useLeaveWhenMissing(query.error, ticketKey, projectKey);
   if (query.data) return <TicketView detail={query.data} />;
   return (
     <TicketPlaceholder
@@ -26,13 +27,16 @@ export function TicketScreen({ projectKey, num }: TicketScreenProps) {
   );
 }
 
-// An unknown or deleted ticket falls back to its project (SPEC §3).
-function useLeaveWhenMissing(error: Error | null, projectKey: string) {
+// An unknown or deleted ticket falls back to its project (SPEC §3). Text kept for a ticket
+// deleted elsewhere has nothing left to save into.
+function useLeaveWhenMissing(error: Error | null, ticketKey: string, projectKey: string) {
   const { replace } = useNavigation();
   const missing = isNotFound(error);
   useEffect(() => {
-    if (missing) replace({ name: 'project', key: projectKey });
-  }, [missing, projectKey, replace]);
+    if (!missing) return;
+    forgetTicketDrafts(ticketKey);
+    replace({ name: 'project', key: projectKey });
+  }, [missing, ticketKey, projectKey, replace]);
 }
 
 interface TicketPlaceholderProps {

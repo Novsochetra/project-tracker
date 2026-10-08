@@ -29,7 +29,7 @@ import type {
   UpdateStatusInput,
   UpdateTicketInput,
 } from '@tracker/shared';
-import { Http, type HttpOptions } from './http';
+import { Http, type HttpOptions, type ReadOptions } from './http';
 
 const segment = (value: string): string => encodeURIComponent(value);
 
@@ -82,9 +82,10 @@ export class TrackerClient {
   deleteStatus = (statusId: string, moveTo?: string) =>
     this.http.request<void>('DELETE', `/api/statuses/${segment(statusId)}`, { query: { moveTo } });
 
-  listTickets = (projectKey: string, query: ListTicketsQuery = {}) =>
+  listTickets = (projectKey: string, query: ListTicketsQuery = {}, read: ReadOptions = {}) =>
     this.http.request<TicketListItem[]>('GET', `/api/projects/${segment(projectKey)}/tickets`, {
       query: listQuery(query),
+      fresh: read.fresh,
     });
 
   listAllTickets = (query: ListTicketsQuery = {}) =>
@@ -95,8 +96,10 @@ export class TrackerClient {
       body: input,
     });
 
-  getTicket = (ticketKey: string) =>
-    this.http.request<TicketDetail>('GET', `/api/tickets/${segment(ticketKey)}`);
+  getTicket = (ticketKey: string, read: ReadOptions = {}) =>
+    this.http.request<TicketDetail>('GET', `/api/tickets/${segment(ticketKey)}`, {
+      fresh: read.fresh,
+    });
 
   updateTicket = (ticketKey: string, input: UpdateTicketInput) =>
     this.http.request<Ticket>('PATCH', `/api/tickets/${segment(ticketKey)}`, { body: input });

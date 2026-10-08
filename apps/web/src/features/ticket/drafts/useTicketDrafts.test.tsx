@@ -1,10 +1,12 @@
 import { act, render, screen, waitFor } from '@testing-library/react';
+import { ApiError } from '@tracker/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { listItem, makeTicketDetail, STATUS } from '../../../api/test/fixtures';
-import { setupApi } from '../../../api/test/render';
+import { queryKeys } from '../../../api';
+import { seedTicket, setupApi } from '../../../api/test/render';
 import { ToastProvider } from '../../../components';
 import { keepDraft, storedDrafts } from '../../../lib/storedDrafts';
-import { useTicketDrafts } from './useTicketDrafts';
+import { RETRY_GAP_MS, useTicketDrafts } from './useTicketDrafts';
 
 function Drafts({ enabled }: { enabled: boolean }) {
   useTicketDrafts(enabled);
@@ -63,6 +65,22 @@ describe('useTicketDrafts', () => {
       window.dispatchEvent(new Event('online'));
     });
     await waitFor(() => expect(kept()).toEqual([]));
+  });
+
+  it('does not run again because its own refused save refreshed the cache', async () => {
+    vi.useFakeTimers();
+    keepTitle('Too long for the tracker');
+    const updateTicket = vi
+      .fn()
+      .mockRejectedValue(new ApiError(400, 'invalid_input', 'title: Too long'));
+    const { queryClient } = setup({ updateTicket });
+    seedTicket(queryClient);
+    queryClient.setQueryData(queryKeys.projects(), []);
+    await act(() => vi.advanceTimersByTimeAsync(0));
+    expect(updateTicket).toHaveBeenCalledTimes(1);
+    await act(() => vi.advanceTimersByTimeAsync(3 * RETRY_GAP_MS));
+    expect(updateTicket).toHaveBeenCalledTimes(1);
+    expect(kept()).toEqual(['title:MOB-1']);
   });
 
   it('keeps text whose field changed meanwhile and says where it waits', async () => {
