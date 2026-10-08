@@ -4,11 +4,14 @@ import { activity, group, seedProject, ticketRow, toast } from './helpers';
 
 async function dragTo(page: Page, source: Locator, target: Locator): Promise<void> {
   const from = await source.boundingBox();
-  const to = await target.boundingBox();
-  if (!from || !to) throw new Error('Missing bounding box');
+  if (!from) throw new Error('Missing source box');
   await page.mouse.move(from.x + from.width / 2, from.y + from.height / 2);
   await page.mouse.down();
   await page.mouse.move(from.x + from.width / 2, from.y + from.height / 2 + 12, { steps: 3 });
+  // Empty groups open drop zones once the drag starts, which moves the target down.
+  await page.waitForTimeout(250);
+  const to = await target.boundingBox();
+  if (!to) throw new Error('Missing target box');
   await page.mouse.move(to.x + to.width / 2, to.y + to.height - 4, { steps: 12 });
   await page.mouse.up();
 }
