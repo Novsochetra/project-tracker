@@ -53,6 +53,10 @@
   display: none;
 }
 
+.sentBack {
+  flex: none;
+}
+
 @media (max-width: 767px) {
   /* Mirrors the phone row: the title beside the avatar, then priority, key and due date. The
      padding is 1px short of the row's on every side because the border sits inside the row's
@@ -100,6 +104,17 @@
   .row .due {
     display: inline-flex;
     grid-area: due;
+  }
+
+  .row:has(.sentBack) {
+    grid-template-columns: 20px auto auto auto minmax(0, 1fr) auto;
+    grid-template-areas:
+      'grip title title title title assignee'
+      'grip priority key chip due assignee';
+  }
+
+  .sentBack {
+    grid-area: chip;
   }
 
   .assignee {

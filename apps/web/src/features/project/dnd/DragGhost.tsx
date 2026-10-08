@@ -1,9 +1,9 @@
-import { isDoneCategory, isOverdue } from '@tracker/shared';
+import { isDoneCategory, isOverdue, isSentBack } from '@tracker/shared';
 import clsx from 'clsx';
 import { GripVertical } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { createPortal } from 'react-dom';
-import { Avatar, Icon, PriorityBars, StatusGlyph } from '../../../components';
+import { Avatar, Icon, PriorityBars, StatusGlyph, VerdictChip } from '../../../components';
 import { DueLabel } from '../TicketRowContent';
 import styles from './DragGhost.module.css';
 import type { DragState, GhostRef } from './useTicketDrag';
@@ -36,6 +36,9 @@ function RowFace({ drag: { ticket, status } }: { drag: DragState }) {
         className={styles.status}
       />
       <span className={styles.title}>{ticket.title || 'Untitled'}</span>
+      {isSentBack(ticket.lastReview, status.category) && (
+        <VerdictChip verdict="changes_requested" compact className={styles.sentBack} />
+      )}
       {ticket.due && (
         <DueLabel due={ticket.due} overdue={isOverdue(ticket.due, isDone)} className={styles.due} />
       )}

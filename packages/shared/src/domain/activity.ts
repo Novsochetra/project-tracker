@@ -9,6 +9,11 @@ export const REVIEW_VERDICTS = ['approved', 'changes_requested'] as const;
 
 export type ReviewVerdict = (typeof REVIEW_VERDICTS)[number];
 
+export const VERDICT_LABELS: Record<ReviewVerdict, string> = {
+  approved: 'Approved',
+  changes_requested: 'Changes requested',
+};
+
 export interface Review {
   verdict: ReviewVerdict;
   rating: number;

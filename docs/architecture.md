@@ -123,6 +123,8 @@ On phones (`max-width: 767px`) the app behaves like a native iOS app:
 - Every `TicketListItem` has `lastReview: { verdict, rating } | null`, the latest `review` activity, read in the same query as the list.
 - The ready list (query key `['ready']`) refreshes on every change event, like the project list, but not while a ticket edit is in flight; the last edit to settle refreshes it.
 - **Ticket screen:** a ticket in a `reviewed` status shows its latest review (reviewer, time, verdict chip, stars, summary) under the description, with **Move to Done** (the project's first `done` status, same toast); on phones it is also the bottom bar's primary instead of "Send to Claude". Focus then moves to the Status row. A ticket sent back (latest review: changes requested, now in a `todo` or `in_progress` status) shows that review in the same place without the button until it is submitted again. The full activity stays as it was.
+- **Sent back on the Project screen:** while a ticket's latest review asks for changes and it waits in a `todo` or `in_progress` status (`isSentBack` in `packages/shared`), its list row and board card show a **Changes requested** chip (↺, Danger), so it doesn't look like a new idea. Submitting it again ends the chip. The row puts the chip between the key and the due date; below 1024px wide (phones, narrow windows) it shows only the ↺, 22×18 so a phone row keeps its height, because the full chip (144px) doesn't fit beside the priority, key and due date there (a phone row has about 105px left for it at 375px, 50px at 320px). The label stays in the row's accessible name. Cards always show the label, with the due date beside it or wrapped below. The drag ghost copies the row's chip.
+- **One verdict chip** (`components/VerdictChip`) for Ready rows, review cards, the latest review, rows and cards. An approval takes the project's Reviewed status color on a 10% tint of it. Status colors are data, so a light one can be unreadable on its own tint (teal `#12A594` is 2.77:1): the label then takes the lightest shade of the color toward black that reaches 4.5:1 (`chipText.ts`); the default Reviewed green already does and stays as it is.
 
 ## 2. Data model
 
@@ -189,7 +191,7 @@ Status changes made by the dropdown, a report, sending, claiming, submitting or 
 | `gestures/`   | Swipe actions, pull to refresh, axis drags, haptics, keyboard inset                                                           |
 | `overlays/`   | Sheet (dialog / bottom sheet with drag to dismiss), action sheet, image viewer                                                |
 | `api/`        | Client instance, query keys, TanStack Query hooks, live events                                                                |
-| `features/`   | Screens and sheets: `projects`, `project`, `ticket`, `attachments`, `claude`, `statuses`, `connect`, `capture`                |
+| `features/`   | Screens and sheets: `projects`, `ready`, `project`, `ticket`, `attachments`, `claude`, `statuses`, `connect`, `capture`       |
 | `lib/`        | Small helpers: clipboard, share, platform and media queries, image downscaling, drafts registry, pending writes, `isEditable` |
 | `app/`        | Providers, shell (sidebar, header, token screen, offline banner), sheet host, flash and announcements, reachability           |
 | `pwa/`        | Service worker registration, update checks, safe reload policy                                                                |

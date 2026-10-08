@@ -4,7 +4,6 @@ import {
   type Actor,
   type Attachment,
   type Review,
-  type ReviewVerdict,
 } from '@tracker/shared';
 import { isTemporaryId } from '../../../api';
 import { reportSections, type ReportSections } from './reportSections';
@@ -23,11 +22,6 @@ export type ActivityItem =
   | (ItemBase & { kind: 'comment'; editedAt: number | null; draft: boolean })
   | (ItemBase & { kind: 'report'; title: string; sections: ReportSections | null })
   | (ItemBase & { kind: 'review'; review: Review | null });
-
-export const VERDICT_LABELS: Record<ReviewVerdict, string> = {
-  approved: 'Approved',
-  changes_requested: 'Changes requested',
-};
 
 export const reportTitle = (actor: Actor): string =>
   actor.kind === 'agent' && actor.name ? `${actor.name} report` : 'Claude Code report';

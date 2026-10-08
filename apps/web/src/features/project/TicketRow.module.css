@@ -137,6 +137,10 @@
   color: var(--danger);
 }
 
+.sentBack {
+  flex: none;
+}
+
 .flash {
   position: absolute;
   inset: 0;
@@ -219,6 +223,18 @@
 
   .due {
     grid-area: due;
+  }
+
+  /* Only a sent-back row gets the chip's column: an empty one would still add a gap. */
+  .main:has(.sentBack) {
+    grid-template-columns: auto auto auto minmax(0, 1fr) auto;
+    grid-template-areas:
+      'title title title title assignee'
+      'priority key chip due assignee';
+  }
+
+  .sentBack {
+    grid-area: chip;
   }
 
   .assignee {

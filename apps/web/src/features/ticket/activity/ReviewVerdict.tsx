@@ -1,6 +1,5 @@
 import type { Review } from '@tracker/shared';
-import { StarRating } from '../../../components';
-import { VerdictChip } from '../../ready';
+import { StarRating, VerdictChip } from '../../../components';
 import styles from './ActivityCard.module.css';
 
 export interface ReviewVerdictProps {

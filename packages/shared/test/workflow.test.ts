@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { Priority } from '../src/domain/priority';
 import { DEFAULT_STATUSES, type Status } from '../src/domain/status';
-import { pickNextTicket, workableTickets } from '../src/logic/workflow';
+import { isSentBack, pickNextTicket, workableTickets } from '../src/logic/workflow';
 
 const statuses: Status[] = [
   ...DEFAULT_STATUSES.map((template, position) => ({
@@ -130,5 +130,25 @@ describe('workableTickets', () => {
 
   it('returns an empty list when nothing is open', () => {
     expect(workableTickets([item(1, 'done', 'high')], statuses)).toEqual([]);
+  });
+});
+
+describe('isSentBack', () => {
+  const changes = { verdict: 'changes_requested', rating: 2 } as const;
+
+  it('is true while a ticket whose latest review asked for changes waits in To do or In progress', () => {
+    expect(isSentBack(changes, 'todo')).toBe(true);
+    expect(isSentBack(changes, 'in_progress')).toBe(true);
+  });
+
+  it('ends once the ticket is submitted again, reviewed or done', () => {
+    expect(isSentBack(changes, 'in_review')).toBe(false);
+    expect(isSentBack(changes, 'reviewed')).toBe(false);
+    expect(isSentBack(changes, 'done')).toBe(false);
+  });
+
+  it('is false for an approval or a ticket nobody reviewed', () => {
+    expect(isSentBack({ verdict: 'approved', rating: 4 }, 'todo')).toBe(false);
+    expect(isSentBack(null, 'todo')).toBe(false);
   });
 });

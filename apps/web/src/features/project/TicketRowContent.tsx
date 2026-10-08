@@ -2,12 +2,13 @@ import {
   formatShortDay,
   isDoneCategory,
   isOverdue,
+  isSentBack,
   type Status,
   type TicketListItem,
 } from '@tracker/shared';
 import clsx from 'clsx';
 import { Calendar } from 'lucide-react';
-import { Avatar, Icon, PriorityBars, StatusGlyph } from '../../components';
+import { Avatar, Icon, PriorityBars, StatusGlyph, VerdictChip } from '../../components';
 import { DragHandle } from './DragHandle';
 import type { RowCallbacks } from './rowTypes';
 import styles from './TicketRow.module.css';
@@ -57,6 +58,9 @@ export function TicketRowContent({ ticket, status, dragged, callbacks }: TicketR
         <span className={styles.title} data-done={isDone || undefined}>
           {ticket.title || 'Untitled'}
         </span>{' '}
+        {isSentBack(ticket.lastReview, status.category) && (
+          <VerdictChip verdict="changes_requested" compact className={styles.sentBack} />
+        )}{' '}
         {ticket.due && <DueLabel due={ticket.due} overdue={isOverdue(ticket.due, isDone)} />}{' '}
         <Avatar name={ticket.assignee} className={styles.assignee} />
       </button>

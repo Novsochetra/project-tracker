@@ -1,4 +1,4 @@
-import type { ReviewVerdict } from '../domain/activity';
+import { VERDICT_LABELS, type ReviewVerdict } from '../domain/activity';
 import { PRIORITY_LABELS, type Priority } from '../domain/priority';
 import { formatShortDay } from './format';
 
@@ -26,11 +26,6 @@ export interface PromptTicket {
   lastReport: string | null;
   lastReview: PromptReview | null;
 }
-
-const VERDICT_LABELS: Record<ReviewVerdict, string> = {
-  approved: 'Approved',
-  changes_requested: 'Changes requested',
-};
 
 function replyFormat(key: string): string {
   return [

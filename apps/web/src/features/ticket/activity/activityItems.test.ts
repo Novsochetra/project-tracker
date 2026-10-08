@@ -1,7 +1,7 @@
 import { HUMAN, type Activity } from '@tracker/shared';
 import { describe, expect, it } from 'vitest';
 import { attachment, comment } from '../../../api/test/fixtures';
-import { activityItems, lastReportAt, reportTitle, VERDICT_LABELS } from './activityItems';
+import { activityItems, lastReportAt, reportTitle } from './activityItems';
 
 const CLAUDE = { kind: 'agent', name: 'Claude' } as const;
 
@@ -73,12 +73,5 @@ describe('lastReportAt', () => {
     const activity = [entry('a', 'report', 5), entry('b', 'report', 9), entry('c', 'event', 12)];
     expect(lastReportAt(activity)).toBe(9);
     expect(lastReportAt([entry('c', 'event', 12)])).toBeNull();
-  });
-});
-
-describe('VERDICT_LABELS', () => {
-  it('reads like the review outcome', () => {
-    expect(VERDICT_LABELS.approved).toBe('Approved');
-    expect(VERDICT_LABELS.changes_requested).toBe('Changes requested');
   });
 });

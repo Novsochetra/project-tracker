@@ -74,9 +74,8 @@ describe('latest review on the ticket screen', () => {
     expect(latest()).toHaveTextContent('Fix is correct; the new test covers rotation.');
     expect(within(latest()).getByRole('img', { name: 'Rated 4 out of 5' })).toBeInTheDocument();
     const reviewedColor = statuses.find((status) => status.category === 'reviewed')?.color;
-    expect(within(latest()).getByText('Approved').style.getPropertyValue('--verdict')).toBe(
-      reviewedColor,
-    );
+    const chip = within(latest()).getByText('Approved').closest<HTMLElement>('[data-verdict]');
+    expect(chip?.style.getPropertyValue('--verdict')).toBe(reviewedColor);
     expect(follows(screen.getByLabelText('Description'), latest())).toBe(true);
     const details = screen.getByRole('complementary', { name: 'Ticket details' });
     expect(follows(latest(), details)).toBe(true);

@@ -21,3 +21,4 @@ export * from './StatusGlyph';
 export * from './Switch';
 export * from './TitleField';
 export * from './Toast';
+export * from './VerdictChip';

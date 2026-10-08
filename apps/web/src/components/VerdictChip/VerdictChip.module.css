@@ -1,0 +1,41 @@
+.chip {
+  --verdict-text: var(--verdict);
+
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-height: 22px;
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-full);
+  background: color-mix(in srgb, var(--verdict) 10%, var(--surface));
+  color: var(--verdict-text);
+  font-size: var(--size-caption);
+  font-weight: var(--weight-medium);
+  white-space: nowrap;
+}
+
+.approved {
+  --verdict: var(--accent);
+}
+
+.changes {
+  --verdict: var(--danger);
+}
+
+/* A phone row's second line, and a desktop row in a window under 1024px, has no room for the
+   label beside the title, key and due date. It stays in the row's accessible name. */
+@media (max-width: 1023px) {
+  .compact {
+    min-height: 18px;
+    padding: 0 var(--space-1);
+  }
+
+  .compact .label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+}

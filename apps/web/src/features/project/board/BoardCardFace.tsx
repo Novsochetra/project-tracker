@@ -1,5 +1,11 @@
-import { isDoneCategory, isOverdue, type Status, type TicketListItem } from '@tracker/shared';
-import { Avatar, PriorityBars } from '../../../components';
+import {
+  isDoneCategory,
+  isOverdue,
+  isSentBack,
+  type Status,
+  type TicketListItem,
+} from '@tracker/shared';
+import { Avatar, PriorityBars, VerdictChip } from '../../../components';
 import { DueLabel } from '../TicketRowContent';
 import styles from './BoardCard.module.css';
 
@@ -10,7 +16,7 @@ export interface BoardCardFaceProps {
   decorative?: boolean;
 }
 
-/** What a card shows: key and priority, the title, the due date and the assignee. */
+/** What a card shows: key and priority, the title, a sent-back chip, due date and assignee. */
 export function BoardCardFace({ ticket, status, decorative = false }: BoardCardFaceProps) {
   const isDone = isDoneCategory(status.category);
   return (
@@ -21,10 +27,20 @@ export function BoardCardFace({ ticket, status, decorative = false }: BoardCardF
       <span className={styles.title} data-done={isDone || undefined}>
         {ticket.title || 'Untitled'}
       </span>{' '}
-      {ticket.due && (
-        <DueLabel due={ticket.due} overdue={isOverdue(ticket.due, isDone)} className={styles.due} />
-      )}{' '}
+      <CardMeta ticket={ticket} status={status} />{' '}
       <Avatar name={ticket.assignee} decorative={decorative} className={styles.avatar} />
     </>
+  );
+}
+
+function CardMeta({ ticket, status }: Omit<BoardCardFaceProps, 'decorative'>) {
+  const sentBack = isSentBack(ticket.lastReview, status.category);
+  if (!sentBack && !ticket.due) return null;
+  const overdue = isOverdue(ticket.due, isDoneCategory(status.category));
+  return (
+    <span className={styles.meta}>
+      {sentBack && <VerdictChip verdict="changes_requested" />}{' '}
+      {ticket.due && <DueLabel due={ticket.due} overdue={overdue} className={styles.due} />}
+    </span>
   );
 }

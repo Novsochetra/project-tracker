@@ -1,3 +1,4 @@
+import type { Review } from '../domain/activity';
 import { PRIORITY_ORDER, type Priority } from '../domain/priority';
 import type { Status, StatusCategory } from '../domain/status';
 
@@ -43,3 +44,10 @@ export function workableTickets<T extends WorkItem>(
         a.num - b.num,
     );
 }
+
+const SENT_BACK_TO: readonly StatusCategory[] = ['todo', 'in_progress'];
+
+// A submit keeps the latest review (changes requested) but moves the ticket to review, which
+// ends "sent back".
+export const isSentBack = (review: Review | null, category: StatusCategory): boolean =>
+  review?.verdict === 'changes_requested' && SENT_BACK_TO.includes(category);

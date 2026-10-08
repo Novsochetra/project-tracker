@@ -82,11 +82,8 @@ describe('ReadySection', () => {
       .map((button) => button.textContent?.split(' ')[0]);
     expect(keys).toEqual(['WEB-2', 'MOB-3']);
     const reviewedColor = statuses.find((status) => status.category === 'reviewed')?.color;
-    await waitFor(() =>
-      expect(within(mobile).getByText('Approved').style.getPropertyValue('--verdict')).toBe(
-        reviewedColor,
-      ),
-    );
+    const chip = () => within(mobile).getByText('Approved').closest<HTMLElement>('[data-verdict]');
+    await waitFor(() => expect(chip()?.style.getPropertyValue('--verdict')).toBe(reviewedColor));
   });
 
   it('shows a sent-back verdict and leaves out the verdict of a ticket nobody reviewed', () => {

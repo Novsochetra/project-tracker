@@ -2,13 +2,12 @@ import { findStatusByCategory, type Status } from '@tracker/shared';
 import clsx from 'clsx';
 import { ArrowRight, Check, ChevronRight } from 'lucide-react';
 import { useProject } from '../../api';
-import { Button, Icon, StarRating } from '../../components';
+import { Button, Icon, StarRating, VerdictChip } from '../../components';
 import { SwipeActions, type SwipeAction } from '../../gestures';
 import { useIsPhone } from '../../lib/media';
 import { riseDelay } from '../projects/projectRows';
 import type { ReadyItem } from './readyItems';
 import styles from './ReadySection.module.css';
-import { VerdictChip } from './VerdictChip';
 
 export interface ReadyRowProps {
   item: ReadyItem;
