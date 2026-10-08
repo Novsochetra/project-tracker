@@ -1,15 +1,6 @@
 import { useSyncExternalStore } from 'react';
+import { isEditable } from '../lib/editable';
 import { isTouchDevice } from '../lib/platform';
-
-const TEXT_INPUT_TYPES = new Set(['text', 'search', 'email', 'url', 'tel', 'password', 'number']);
-
-function isEditable(element: Element | null): boolean {
-  if (!(element instanceof HTMLElement)) return false;
-  if (element instanceof HTMLTextAreaElement) return !element.readOnly;
-  if (element instanceof HTMLInputElement)
-    return TEXT_INPUT_TYPES.has(element.type) && !element.readOnly;
-  return element.isContentEditable;
-}
 
 function subscribe(onChange: () => void): () => void {
   document.addEventListener('focusin', onChange);

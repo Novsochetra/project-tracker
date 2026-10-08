@@ -73,6 +73,8 @@ On phones (`max-width: 767px`) the app behaves like a native iOS app:
 - Project options menu adds **Manage statuses** and **Connect Claude Code** (MCP setup instructions with copy buttons).
 - Optional access token: when `TRACKER_TOKEN` is set, the API needs `Authorization: Bearer <token>` or the session cookie from `POST /api/session`. The web app shows a token screen once.
 - Installable PWA (manifest, icons, offline app shell).
+- App updates never lose typed text. While the app stays open it looks for a new build when the page becomes visible and every 30 minutes (skipped while offline). A new service worker takes over at once, but the page reloads into the new build only when no text field is focused, no dialog is open, no draft is marked and no write is in flight, whether the page is visible or hidden. It checks again every second and on `visibilitychange` (`apps/web/src/pwa`). Writes in flight come from the QueryClient's mutation cache.
+- **Draft contract** (`apps/web/src/lib/drafts.ts`): a feature that holds unsent text a reload would lose, such as the comment composer after the keyboard is dismissed, calls `markDraft(id)` while the text differs from what is saved, and `clearDraft(id)` once it is sent, saved or emptied and when the component unmounts. Use one id per draft, such as `comment:MOB-3`. Marking an id again changes nothing, and one `clearDraft` removes it. A draft that is never cleared keeps the page on the old build until the next launch.
 
 ## 2. Data model
 

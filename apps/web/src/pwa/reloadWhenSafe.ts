@@ -9,7 +9,7 @@ export function reloadWhenSafe(reload: () => void): void {
     document.removeEventListener('visibilitychange', tryReload);
     reload();
   };
-  // A sheet closing fires no event to listen for, so check on a timer as well.
+  // Closing a sheet, clearing a draft or finishing a write fires no event here, so poll as well.
   const timer = window.setInterval(tryReload, RECHECK_MS);
   document.addEventListener('visibilitychange', tryReload);
   tryReload();

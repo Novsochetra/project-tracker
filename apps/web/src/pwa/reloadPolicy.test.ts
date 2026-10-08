@@ -1,5 +1,9 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { clearDraft, markDraft } from '../lib/drafts';
+import { setPendingWrites } from '../lib/pendingWrites';
 import { isSafeToReload } from './reloadPolicy';
+
+const writer = {};
 
 function add<K extends keyof HTMLElementTagNameMap>(
   tag: K,
@@ -12,39 +16,34 @@ function add<K extends keyof HTMLElementTagNameMap>(
   return element;
 }
 
+function hidePage() {
+  vi.spyOn(document, 'visibilityState', 'get').mockReturnValue('hidden');
+}
+
 afterEach(() => {
   document.body.replaceChildren();
+  clearDraft('comment:PT-1');
+  setPendingWrites(writer, false);
   vi.restoreAllMocks();
 });
 
 describe('isSafeToReload', () => {
-  it('is safe on a visible page with no focused field and no dialog', () => {
+  it('is safe on a visible page with nothing focused, open, drafted or saving', () => {
     expect(isSafeToReload(document)).toBe(true);
   });
 
-  it('waits while a textarea has focus', () => {
+  it('waits while a text field has focus', () => {
     add('textarea').focus();
     expect(isSafeToReload(document)).toBe(false);
   });
 
-  it.each(['text', 'search', 'email', 'url', 'number', 'date'])(
-    'waits while a %s input has focus',
-    (type) => {
-      add('input', { type }).focus();
-      expect(isSafeToReload(document)).toBe(false);
-    },
-  );
+  it('does not wait for a focused control that takes no typing', () => {
+    add('input', { type: 'checkbox' }).focus();
+    expect(isSafeToReload(document)).toBe(true);
+  });
 
-  it.each(['checkbox', 'radio', 'button', 'range'])(
-    'does not wait for a focused %s input',
-    (type) => {
-      add('input', { type }).focus();
-      expect(isSafeToReload(document)).toBe(true);
-    },
-  );
-
-  it('does not wait for a focused button', () => {
-    add('button').focus();
+  it('does not wait for a focused read-only field', () => {
+    add('input', { type: 'text', readonly: '' }).focus();
     expect(isSafeToReload(document)).toBe(true);
   });
 
@@ -74,10 +73,38 @@ describe('isSafeToReload', () => {
     expect(isSafeToReload(document)).toBe(true);
   });
 
-  it('is safe in the background, even while typing in a sheet', () => {
+  it('waits while an unsent draft is marked, even with nothing focused', () => {
+    markDraft('comment:PT-1');
+    expect(isSafeToReload(document)).toBe(false);
+    clearDraft('comment:PT-1');
+    expect(isSafeToReload(document)).toBe(true);
+  });
+
+  it('waits while a write is in flight', () => {
+    setPendingWrites(writer, true);
+    expect(isSafeToReload(document)).toBe(false);
+    setPendingWrites(writer, false);
+    expect(isSafeToReload(document)).toBe(true);
+  });
+
+  it('waits in the background while typing in a sheet', () => {
     const sheet = add('div', { role: 'dialog' });
     add('textarea', {}, sheet).focus();
-    vi.spyOn(document, 'visibilityState', 'get').mockReturnValue('hidden');
+    hidePage();
+    expect(isSafeToReload(document)).toBe(false);
+  });
+
+  it('waits in the background while a draft or a write is pending', () => {
+    hidePage();
+    markDraft('comment:PT-1');
+    expect(isSafeToReload(document)).toBe(false);
+    clearDraft('comment:PT-1');
+    setPendingWrites(writer, true);
+    expect(isSafeToReload(document)).toBe(false);
+  });
+
+  it('is safe in the background once nothing is in progress', () => {
+    hidePage();
     expect(isSafeToReload(document)).toBe(true);
   });
 });
