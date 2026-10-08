@@ -16,7 +16,9 @@ function signalOfError(error: unknown): ApiSignal | null {
 }
 
 // setQueryData reports a success too; only answers to a request say anything about the server.
-export function signalOf(action: CacheAction): ApiSignal | null {
-  if (action.type === 'success') return action.manual ? null : 'reachable';
-  return action.type === 'error' ? signalOfError(action.error) : null;
+// The service worker answers a read from its cache only when the network failed or was too slow.
+export function signalOf(action: CacheAction, fromCache = false): ApiSignal | null {
+  if (action.type === 'error') return signalOfError(action.error);
+  if (action.type !== 'success' || action.manual) return null;
+  return fromCache ? 'unreachable' : 'reachable';
 }

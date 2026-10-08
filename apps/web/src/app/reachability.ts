@@ -1,5 +1,6 @@
 import { hashKey, type QueryClient } from '@tanstack/react-query';
 import { queryKeys } from '../api';
+import { lastAnswerWasSaved } from '../pwa/savedAnswers';
 import { signalOf, type ApiSignal } from './offline';
 
 export interface Reachability {
@@ -41,9 +42,11 @@ export function watchApiTraffic(queryClient: QueryClient, reachability: Reachabi
   };
   const stopQueries = queryClient.getQueryCache().subscribe((event) => {
     if (event.type === 'updated') {
-      apply(signalOf(event.action), event.query.queryHash === PROJECTS_HASH);
+      const signal = signalOf(event.action, lastAnswerWasSaved());
+      apply(signal, event.query.queryHash === PROJECTS_HASH);
     }
   });
+  // Writes never come from the service worker's cache.
   const stopMutations = queryClient.getMutationCache().subscribe((event) => {
     if (event.type === 'updated') apply(signalOf(event.action), false);
   });

@@ -1,6 +1,7 @@
 import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
+import { savedAnswerPlugin } from './src/pwa/savedAnswerPlugin';
 
 const apiTarget = process.env.TRACKER_API_URL ?? 'http://localhost:4100';
 const DAY_SECONDS = 24 * 60 * 60;
@@ -79,6 +80,8 @@ export default defineConfig({
               networkTimeoutSeconds: 3,
               cacheableResponse: { statuses: [200] },
               expiration: { maxEntries: 100, maxAgeSeconds: 7 * DAY_SECONDS },
+              // Last, so it marks only cached answers that are still fresh enough to use.
+              plugins: [savedAnswerPlugin],
             },
           },
         ],

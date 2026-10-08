@@ -4,10 +4,14 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { queryKeys } from '../api';
 import { makeBoard } from '../api/test/fixtures';
 import { createTestQueryClient, isInvalidated } from '../api/test/render';
+import { noteAnswer, SAVED_ANSWER_HEADER } from '../pwa/savedAnswers';
 import { signalOf } from './offline';
 import { createReachability, watchApiTraffic, type Reachability } from './reachability';
 
 const NETWORK_DOWN = new TypeError('Failed to fetch');
+const fromNetwork = () => new Response('[]');
+// What the service worker sends when it answers a read from its cache.
+const fromCache = () => new Response('[]', { headers: { [SAVED_ANSWER_HEADER]: '1' } });
 
 describe('signalOf', () => {
   it('counts every answer from the server as reachable', () => {
@@ -32,6 +36,14 @@ describe('signalOf', () => {
     expect(signalOf({ type: 'fetch' })).toBeNull();
     expect(signalOf({ type: 'failed', error: NETWORK_DOWN })).toBeNull();
     expect(signalOf({ type: 'error', error: new SyntaxError('Unexpected token') })).toBeNull();
+  });
+
+  it('counts a read the service worker answered from its cache as unreachable', () => {
+    expect(signalOf({ type: 'success' }, true)).toBe('unreachable');
+    expect(signalOf({ type: 'success', manual: true }, true)).toBeNull();
+    expect(signalOf({ type: 'error', error: new ApiError(404, 'not_found', 'x') }, true)).toBe(
+      'reachable',
+    );
   });
 });
 
@@ -63,7 +75,10 @@ describe('watchApiTraffic', () => {
     stop = watchApiTraffic(queryClient, reachability);
   });
 
-  afterEach(() => stop());
+  afterEach(() => {
+    stop();
+    noteAnswer(fromNetwork());
+  });
 
   const load = (queryKey: readonly unknown[], answer: () => Promise<unknown>) =>
     queryClient.fetchQuery({ queryKey, queryFn: answer }).catch(() => undefined);
@@ -118,5 +133,47 @@ describe('watchApiTraffic', () => {
     stop();
     await load(queryKeys.board('MOB'), () => Promise.reject(NETWORK_DOWN));
     expect(reachability.isUnreachable()).toBe(false);
+  });
+
+  describe('with reads answered from the service worker cache', () => {
+    const loadBoard = (projectKey = 'MOB') =>
+      load(queryKeys.board(projectKey), () => Promise.resolve(makeBoard()));
+
+    it('notices the server is down even though every read succeeds', async () => {
+      noteAnswer(fromCache());
+      await loadBoard();
+      expect(reachability.isUnreachable()).toBe(true);
+    });
+
+    it('never tells listeners, such as capture sync, that the server is back', async () => {
+      reachability.setUnreachable(true);
+      queryClient.setQueryData(queryKeys.projects(), []);
+      const listener = vi.fn();
+      reachability.subscribe(listener);
+
+      noteAnswer(fromCache());
+      await loadBoard();
+
+      expect(reachability.isUnreachable()).toBe(true);
+      expect(listener).not.toHaveBeenCalled();
+      expect(isInvalidated(queryClient, queryKeys.projects())).toBe(false);
+    });
+
+    it('recovers once a read is answered by the network again', async () => {
+      noteAnswer(fromCache());
+      await loadBoard();
+
+      noteAnswer(fromNetwork());
+      await loadBoard('WEB');
+
+      expect(reachability.isUnreachable()).toBe(false);
+    });
+
+    it('still counts a successful write, which never comes from the cache', async () => {
+      reachability.setUnreachable(true);
+      noteAnswer(fromCache());
+      await write(() => Promise.resolve('saved'));
+      expect(reachability.isUnreachable()).toBe(false);
+    });
   });
 });
