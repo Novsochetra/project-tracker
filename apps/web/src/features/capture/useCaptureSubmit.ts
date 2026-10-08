@@ -21,6 +21,7 @@ import {
 } from './captureForm';
 import { rememberProject, type ProjectChoice } from './captureProjects';
 import { addCapture, markCreated } from './captureQueue';
+import type { CaptureIdentity } from './keptCapture';
 import { updateQueue } from './queueStore';
 import { trackSending } from './syncRunner';
 import { sendCapture } from './sendCapture';
@@ -31,7 +32,7 @@ export interface CaptureSubmitInput {
   project: ProjectChoice | undefined;
   attachments: readonly Attachment[];
   uploading: number;
-  captureId: () => string;
+  identity: () => CaptureIdentity;
   onDone: () => void;
 }
 
@@ -68,7 +69,7 @@ function submitDeps({ create, update }: Writes, show: ToastApi['show']): SubmitD
 }
 
 export function useCaptureSubmit(input: CaptureSubmitInput): CaptureSubmit {
-  const { values, project, attachments, uploading, captureId, onDone } = input;
+  const { values, project, attachments, uploading, identity, onDone } = input;
   const { mutateAsync: create } = useCreateTicket();
   const { mutateAsync: update } = useUpdateTicket();
   const { show } = useToast();
@@ -100,11 +101,13 @@ export function useCaptureSubmit(input: CaptureSubmitInput): CaptureSubmit {
     if (!project || uploading > 0 || busy.current) return;
     busy.current = true;
     setPending(true);
+    const { clientId, sent } = identity();
     const capture = toQueuedCapture({
-      id: captureId(),
+      id: clientId,
       projectKey: project.key,
       values,
       capturedAt: Date.now(),
+      sent,
     });
     const draft = { capture, attachmentIds: attachments.map((attachment) => attachment.id) };
     void submitCapture(draft, submitDeps({ create, update }, show)).then((outcome) =>

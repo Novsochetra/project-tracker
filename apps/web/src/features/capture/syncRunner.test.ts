@@ -3,7 +3,7 @@ import { deferred } from '../../api/test/deferred';
 import type { SyncReport } from './syncCaptures';
 import { claimCapture, runCaptureSync, trackSending } from './syncRunner';
 
-const REPORT: SyncReport = { added: [], dropped: [], stopped: false };
+const REPORT: SyncReport = { added: [], unsaved: [], dropped: [], stopped: false };
 
 describe('runCaptureSync', () => {
   it('joins a sync that is already running instead of starting another', async () => {

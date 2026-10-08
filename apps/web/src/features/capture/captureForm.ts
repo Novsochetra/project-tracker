@@ -1,5 +1,6 @@
 import { createTicketInput, type CreateTicketInput, type Priority } from '@tracker/shared';
 import type { QueuedCapture } from './captureQueue';
+import type { CaptureText } from './captureText';
 import { clipTitle } from './clipTitle';
 
 export interface CaptureValues {
@@ -30,6 +31,9 @@ export const textNotSaved = (ticketKey: string): string =>
 
 export const createdToast = (ticketKey: string): string => `${ticketKey} created`;
 
+export const earlierTextToast = (ticketKey: string): string =>
+  `${ticketKey} created with your earlier text`;
+
 export const addedToast = (count: number): string =>
   `${count} ${count === 1 ? 'ticket' : 'tickets'} added`;
 
@@ -39,11 +43,18 @@ export const droppedToast = (title: string): string =>
 export const hasContent = (values: CaptureValues, fileCount: number): boolean =>
   values.title.trim() !== '' || values.description.trim() !== '' || fileCount > 0;
 
+export const captureTextOf = (values: CaptureValues): CaptureText => ({
+  title: values.title.trim(),
+  description: values.description.trim(),
+  priority: values.priority,
+});
+
 export interface NewCapture {
   id: string;
   projectKey: string;
   values: CaptureValues;
   capturedAt: number;
+  sent: CaptureText;
 }
 
 export const toQueuedCapture = ({
@@ -51,13 +62,13 @@ export const toQueuedCapture = ({
   projectKey,
   values,
   capturedAt,
+  sent,
 }: NewCapture): QueuedCapture => ({
   id,
   projectKey,
-  title: values.title.trim(),
-  description: values.description.trim(),
-  priority: values.priority,
+  ...captureTextOf(values),
   capturedAt,
+  sent,
 });
 
 // No statusId: the server puts a new ticket in the project's first status. Every request for a

@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { PenLine, Trash2 } from 'lucide-react';
 import { useState } from 'react';
@@ -67,6 +67,46 @@ describe('Popover', () => {
     expect(screen.getByRole('button', { name: 'Delete project' })).toHaveFocus();
     await user.tab();
     expect(screen.getByRole('button', { name: 'After the menu' })).toHaveFocus();
+  });
+
+  it('closes when Tab takes focus out of it, either way', async () => {
+    const user = userEvent.setup();
+    render(
+      <>
+        <button type="button">Before the menu</button>
+        <Harness onEdit={vi.fn()} />
+        <button type="button">After the menu</button>
+      </>,
+    );
+    const trigger = screen.getByRole('button', { name: 'Options' });
+    await user.click(trigger);
+    await user.tab();
+    await user.tab();
+    await user.tab();
+    expect(screen.getByRole('button', { name: 'After the menu' })).toHaveFocus();
+    await waitFor(() => expect(screen.queryByRole('group')).not.toBeInTheDocument());
+    expect(trigger).toHaveAttribute('aria-expanded', 'false');
+
+    await user.click(trigger);
+    await user.tab({ shift: true });
+    expect(screen.getByRole('button', { name: 'Before the menu' })).toHaveFocus();
+    await waitFor(() => expect(screen.queryByRole('group')).not.toBeInTheDocument());
+  });
+
+  // WebKit's Tab skips buttons by default, so focus can leave from the page rather than the menu.
+  it('closes when Tab moves focus elsewhere from outside it', async () => {
+    const user = userEvent.setup();
+    render(
+      <>
+        <input aria-label="Search" />
+        <Harness onEdit={vi.fn()} />
+      </>,
+    );
+    await user.click(screen.getByRole('button', { name: 'Options' }));
+    (document.activeElement as HTMLElement | null)?.blur();
+    await user.tab();
+    expect(screen.getByLabelText('Search')).toHaveFocus();
+    await waitFor(() => expect(screen.queryByRole('group')).not.toBeInTheDocument());
   });
 
   it('closes on Escape and returns focus to the trigger', async () => {

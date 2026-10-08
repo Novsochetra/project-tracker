@@ -3,6 +3,7 @@ import { AgentAvatar } from '../../../components';
 import type { ActivityItem } from './activityItems';
 import { ActivityCard, CardAttachments, type RiseProps } from './ActivityCard';
 import { ItemMenu } from './ItemMenu';
+import { PhoneFold } from './PhoneFold';
 import { ReportBody } from './ReportBody';
 import { TimeAgo } from './TimeAgo';
 import type { ActivityActions } from './useActivityActions';
@@ -25,7 +26,9 @@ export function ReportCard({ item, now, actions, rise, statuses }: ReportCardPro
       menu={<ItemMenu noun="report" onDelete={() => actions.remove(item.id)} />}
       {...rise}
     >
-      <ReportBody text={item.text} statuses={statuses} />
+      <PhoneFold>
+        <ReportBody text={item.text} statuses={statuses} />
+      </PhoneFold>
       <CardAttachments attachments={item.attachments} />
     </ActivityCard>
   );

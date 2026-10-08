@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   addedToast,
+  captureTextOf,
   createInputOf,
   droppedToast,
   hasContent,
@@ -16,6 +17,7 @@ describe('capture form', () => {
         projectKey: 'MOB',
         values: { title: '  Fix login ', description: ' On iOS\n', priority: 'high' },
         capturedAt: 42,
+        sent: { title: 'Fix', description: '', priority: 'high' },
       }),
     ).toEqual({
       id: 'c-1',
@@ -24,7 +26,14 @@ describe('capture form', () => {
       description: 'On iOS',
       priority: 'high',
       capturedAt: 42,
+      sent: { title: 'Fix', description: '', priority: 'high' },
     });
+  });
+
+  it('gives the text a create sends for typed values', () => {
+    expect(
+      captureTextOf({ title: ' Fix login ', description: '\nOn iOS ', priority: 'low' }),
+    ).toEqual({ title: 'Fix login', description: 'On iOS', priority: 'low' });
   });
 
   it('leaves the status to the server, which uses the first status', () => {

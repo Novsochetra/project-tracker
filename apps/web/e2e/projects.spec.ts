@@ -1,5 +1,5 @@
 import { expect, isPhone, test } from './fixtures';
-import { toast } from './helpers';
+import { readMenuConfirm, toast } from './helpers';
 
 test.describe('projects', () => {
   test('starts empty and creates a project with a derived prefix', async ({ page, api }) => {
@@ -73,6 +73,7 @@ test.describe('projects', () => {
 
     await page.getByRole('button', { name: 'Project options' }).first().click();
     await page.getByRole('button', { name: 'Delete project' }).click();
+    await readMenuConfirm(page);
     const confirmName = isPhone(info.project.name) ? 'Delete project' : 'Delete';
     await page.getByRole('button', { name: confirmName, exact: true }).last().click();
     await expect(page).toHaveURL(/\/$/);

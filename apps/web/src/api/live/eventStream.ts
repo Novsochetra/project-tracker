@@ -14,6 +14,10 @@ export interface LiveHandlers {
 
 type Timer = ReturnType<typeof setTimeout> | undefined;
 
+// Reads wait for a reopening stream only while it is likely to open soon: behind a proxy that
+// refuses the stream while the API answers, it never does, and focus would never read again.
+export const LIVE_WAIT_ATTEMPTS = 3;
+
 // EventSource retries network drops by itself but gives up for good on an HTTP error (a restarting
 // server behind a proxy, or a 401 once the session is gone), so a closed or silent stream is
 // reopened here.
@@ -25,9 +29,11 @@ export function connectLiveUpdates(url: string, handlers: LiveHandlers): () => v
   let failedAttempts = 0;
   // Changes made while no stream was open are lost, including before a first connect that failed.
   let reconnecting = false;
+  const reportPending = () =>
+    handlers.onRefreshPending(reconnecting && failedAttempts < LIVE_WAIT_ATTEMPTS);
   const setReconnecting = (value: boolean) => {
     reconnecting = value;
-    handlers.onRefreshPending(value);
+    reportPending();
   };
 
   const close = () => {
@@ -40,6 +46,7 @@ export function connectLiveUpdates(url: string, handlers: LiveHandlers): () => v
     close();
     retry = setTimeout(connect, retryDelay(failedAttempts));
     failedAttempts += 1;
+    reportPending();
   };
   const alive = () => {
     clearTimeout(silence);

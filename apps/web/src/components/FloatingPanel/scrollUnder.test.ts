@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { canScroll, scrollerFor, scrollUnder, wheelPixels } from './scrollUnder';
+import { canScroll, scrollerFor, scrollUnder } from './scrollUnder';
 
 function box(overflow: string, size: { height: number; content: number; top?: number }) {
   const element = document.createElement('div');
@@ -28,14 +28,6 @@ function stubElementsAt(elements: Element[]) {
 afterEach(() => {
   document.body.replaceChildren();
   Reflect.deleteProperty(document, 'elementsFromPoint');
-});
-
-describe('wheelPixels', () => {
-  it('reads pixels as they are, lines as 16px and pages as the scroller', () => {
-    expect(wheelPixels(wheel(100), 500)).toEqual({ x: 0, y: 100 });
-    expect(wheelPixels(wheel(3, 1), 500)).toEqual({ x: 0, y: 48 });
-    expect(wheelPixels(wheel(-1, 2), 500)).toEqual({ x: 0, y: -500 });
-  });
 });
 
 describe('canScroll', () => {

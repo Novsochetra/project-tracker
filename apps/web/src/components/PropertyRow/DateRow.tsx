@@ -1,8 +1,9 @@
 import clsx from 'clsx';
-import { useRef, type KeyboardEvent, type MouseEvent } from 'react';
+import { useRef } from 'react';
 import { useCalendarPicker } from '../DatePicker';
 import { CalendarDateRow } from './CalendarDateRow';
 import { ClearOrChevron, DateFace, type DateRowProps } from './DateRowParts';
+import { nativeDatePicker } from './nativeDatePicker';
 import styles from './PropertyRow.module.css';
 
 export type { DateRowProps } from './DateRowParts';
@@ -31,33 +32,11 @@ function NativeDateRow({
       <DateFace value={value} label={label} overdue={overdue} mutedIcon={mutedIcon} />
       <input
         ref={inputRef}
-        type="date"
         className={styles.dateInput}
-        aria-label={label}
         value={value}
-        onChange={(event) => onChange(event.currentTarget.value)}
-        onClick={openPicker}
-        onKeyDown={openPickerOnSpace}
+        {...nativeDatePicker(label, onChange)}
       />
       <ClearOrChevron value={value} label={label} onClear={clear} />
     </label>
   );
-}
-
-function showPicker(input: HTMLInputElement) {
-  try {
-    input.showPicker();
-  } catch {
-    // Browsers without showPicker, or that refuse it here, still open their own picker.
-  }
-}
-
-function openPicker(event: MouseEvent<HTMLInputElement>) {
-  showPicker(event.currentTarget);
-}
-
-function openPickerOnSpace(event: KeyboardEvent<HTMLInputElement>) {
-  if (event.key !== ' ') return;
-  event.preventDefault();
-  showPicker(event.currentTarget);
 }

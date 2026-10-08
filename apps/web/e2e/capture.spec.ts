@@ -181,6 +181,84 @@ test.describe('quick capture', () => {
     expect(clientIds).toEqual([expect.any(String), clientIds[0]]);
   });
 
+  test('a capture sent again leaves an edit someone made while it waited', async ({
+    page,
+    api,
+  }) => {
+    await seedProject(api, 'Mobile app', 'MOB');
+    await page.goto('/');
+    await waitForProjects(page);
+    // The first create reaches the tracker, but its answer never comes back. Later ones wait until
+    // someone else has edited the ticket.
+    let creates = 0;
+    let release: () => void = () => undefined;
+    const edited = new Promise<void>((resolve) => (release = resolve));
+    await page.route('**/api/projects/*/tickets', async (route) => {
+      if (!isCreate(route.request())) return route.continue();
+      creates += 1;
+      if (creates > 1) return edited.then(() => route.continue());
+      await route.fetch();
+      await route.abort('connectionreset');
+    });
+
+    await capture(page, 'Login button does nothing');
+    await expect(toast(page, SAVED_ON_PHONE)).toBeVisible();
+    const edit = {
+      title: 'Login button does nothing on iOS Safari',
+      description: 'Steps from the lead',
+      priority: 'high',
+    } as const;
+    await api.updateTicket('MOB-1', edit);
+    release();
+    await syncNow(page);
+
+    await expect(toast(page, '1 ticket added')).toBeVisible();
+    const { ticket } = await api.getTicket('MOB-1');
+    expect({
+      title: ticket.title,
+      description: ticket.description,
+      priority: ticket.priority,
+    }).toEqual(edit);
+  });
+
+  test('a file added after a lost answer joins the ticket the first Create made', async ({
+    page,
+    api,
+  }) => {
+    await seedProject(api, 'Mobile app', 'MOB');
+    await page.goto('/');
+    await waitForProjects(page);
+    let creates = 0;
+    await page.route('**/api/projects/*/tickets', async (route) => {
+      if (!isCreate(route.request())) return route.continue();
+      creates += 1;
+      if (creates > 1) return route.continue();
+      await route.fetch();
+      await route.abort('connectionreset');
+    });
+    await page.getByRole('button', { name: 'New ticket' }).last().click();
+    const sheet = captureSheet(page);
+    const addFile = async (name: string) => {
+      await sheet
+        .getByLabel('Add files to ticket')
+        .setInputFiles({ name, mimeType: 'text/plain', buffer: Buffer.from(`${name}\n`) });
+      await expect(sheet.getByText(name)).toBeVisible();
+      await expect(sheet.getByRole('progressbar')).toHaveCount(0);
+    };
+    await sheet.getByLabel('Ticket title').fill('Crash with logs');
+    await addFile('first.log');
+    await sheet.getByRole('button', { name: 'Create' }).click();
+    await expect(sheet.getByRole('alert')).toContainText('Files need a connection');
+
+    await addFile('second.log');
+    await sheet.getByRole('button', { name: 'Create' }).click();
+
+    await expect(toast(page, 'MOB-1 created')).toBeVisible();
+    const created = await api.getTicket('MOB-1');
+    expect(created.attachments.map((file) => file.fileName)).toEqual(['first.log', 'second.log']);
+    expect((await api.listTickets('MOB')).map((ticket) => ticket.key)).toEqual(['MOB-1']);
+  });
+
   test('desktop: C leaves an open menu alone', async ({ page, api }, info) => {
     test.skip(isPhone(info.project.name), 'Keyboard shortcut on desktop.');
     await seedProject(api, 'Website', 'WEB');

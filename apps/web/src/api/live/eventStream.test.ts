@@ -2,7 +2,7 @@ import { LIVE_STALE_MS } from '@tracker/shared';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { MockEventSource } from '../test/mockEventSource';
 import { LIVE_RETRY_MS, retryDelay } from './backoff';
-import { connectLiveUpdates } from './eventStream';
+import { connectLiveUpdates, LIVE_WAIT_ATTEMPTS } from './eventStream';
 import { HIDDEN_GRACE_MS } from './pauseWhileHidden';
 
 const event = { type: 'changed', projectId: 'p-mob', ticketId: 't-1' };
@@ -242,6 +242,28 @@ describe('connectLiveUpdates', () => {
     expect(onRefreshPending).toHaveBeenLastCalledWith(true);
     MockEventSource.latest().open();
     expect(onRefreshPending).toHaveBeenLastCalledWith(false);
+  });
+
+  it('stops holding reads back after a few failed attempts, and still refreshes on an open', () => {
+    const { source, onRefreshPending, onReconnect } = connect();
+    source.fail(true);
+    for (let attempt = 1; attempt < LIVE_WAIT_ATTEMPTS; attempt += 1) {
+      expect(onRefreshPending).toHaveBeenLastCalledWith(true);
+      vi.advanceTimersByTime(retryDelay(attempt - 1));
+      MockEventSource.latest().fail(true);
+    }
+    expect(onRefreshPending).toHaveBeenLastCalledWith(false);
+    vi.advanceTimersByTime(retryDelay(LIVE_WAIT_ATTEMPTS - 1));
+    MockEventSource.latest().fail(true);
+    expect(onRefreshPending).toHaveBeenLastCalledWith(false);
+    expect(onReconnect).not.toHaveBeenCalled();
+
+    vi.advanceTimersByTime(retryDelay(LIVE_WAIT_ATTEMPTS));
+    MockEventSource.latest().open();
+
+    expect(onReconnect).toHaveBeenCalledTimes(1);
+    MockEventSource.latest().fail(true);
+    expect(onRefreshPending).toHaveBeenLastCalledWith(true);
   });
 
   it('reports no refresh pending once stopped, since no stream opens again', () => {

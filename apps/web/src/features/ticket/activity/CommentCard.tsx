@@ -5,6 +5,7 @@ import styles from './ActivityCard.module.css';
 import { CommentEditor } from './CommentEditor';
 import { CommentMenu } from './CommentMenu';
 import { LinkedText } from './LinkedText';
+import { PhoneFold } from './PhoneFold';
 import { TimeAgo } from './TimeAgo';
 import type { ActivityActions } from './useActivityActions';
 import type { CommentEdit } from './useCommentEdit';
@@ -39,9 +40,11 @@ export function CommentCard({ item, edit, now, actions, rise }: CommentCardProps
         <CommentEditor edit={edit} />
       ) : (
         item.text && (
-          <p className={styles.body}>
-            <LinkedText text={item.text} />
-          </p>
+          <PhoneFold>
+            <p className={styles.body}>
+              <LinkedText text={item.text} />
+            </p>
+          </PhoneFold>
         )
       )}
       <CardAttachments attachments={item.attachments} />

@@ -1,6 +1,6 @@
 import { findStatusByCategory, type TicketDetail } from '@tracker/shared';
 import clsx from 'clsx';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type Ref } from 'react';
 import { useNow } from '../../../lib/useNow';
 import { activityItems, type ActivityItem } from './activityItems';
 import type { RiseProps } from './ActivityCard';
@@ -12,6 +12,7 @@ import { useActivityActions } from './useActivityActions';
 
 export interface ActivitySectionProps {
   detail: TicketDetail;
+  composerRef?: Ref<HTMLFormElement>;
   className?: string | undefined;
 }
 
@@ -27,7 +28,7 @@ const riseProps = (delay: number | null | undefined): RiseProps =>
     ? {}
     : { className: styles.rise, style: { animationDelay: `${delay}ms` } };
 
-export function ActivitySection({ detail, className }: ActivitySectionProps) {
+export function ActivitySection({ detail, composerRef, className }: ActivitySectionProps) {
   const items = useMemo(() => activityItems(detail.activity), [detail.activity]);
   const plan = useRisePlan(items);
   const now = useNow();
@@ -48,7 +49,7 @@ export function ActivitySection({ detail, className }: ActivitySectionProps) {
             statuses={detail.statuses}
           />
         ))}
-        <Composer ticketKey={detail.ticket.key} />
+        <Composer ticketKey={detail.ticket.key} ref={composerRef} />
       </div>
     </section>
   );

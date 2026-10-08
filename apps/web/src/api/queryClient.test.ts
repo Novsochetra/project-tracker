@@ -77,6 +77,43 @@ describe('refetch on focus', () => {
   });
 });
 
+// TanStack Query reads stale queries when the browser says it is online again after offline.
+async function browserOnlineAgain() {
+  window.dispatchEvent(new Event('offline'));
+  window.dispatchEvent(new Event('online'));
+  await new Promise((resolve) => setTimeout(resolve, 0));
+}
+
+describe('refetch on reconnect', () => {
+  it('reads stale queries when the browser is online again', async () => {
+    const queryClient = createQueryClient();
+    queryClient.mount();
+    const { queryFn, stop } = watchStaleQuery(queryClient);
+
+    await browserOnlineAgain();
+
+    expect(queryFn).toHaveBeenCalledTimes(1);
+    stop();
+    queryClient.unmount();
+  });
+
+  it('leaves them to a live stream that refreshes everything once it opens', async () => {
+    const queryClient = createQueryClient();
+    queryClient.mount();
+    const { queryFn, stop } = watchStaleQuery(queryClient);
+    setLiveRefreshPending(queryClient, true);
+
+    await browserOnlineAgain();
+
+    expect(queryFn).not.toHaveBeenCalled();
+    setLiveRefreshPending(queryClient, false);
+    await browserOnlineAgain();
+    expect(queryFn).toHaveBeenCalledTimes(1);
+    stop();
+    queryClient.unmount();
+  });
+});
+
 function startWrite(queryClient = createQueryClient()) {
   let resolve: (value: string) => void = () => undefined;
   let reject: (error: Error) => void = () => undefined;

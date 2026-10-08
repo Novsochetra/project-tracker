@@ -3,9 +3,10 @@ import type { Ticket } from '@tracker/shared';
 import { describe, expect, it, vi } from 'vitest';
 import { listItem, STATUS } from '../../api/test/fixtures';
 import { textNotSaved } from './captureForm';
-import { laterText, sendCapture } from './sendCapture';
+import { laterText, sendCapture, TextNotSavedError } from './sendCapture';
 
-const capture = { title: 'Idea', description: 'Steps', priority: 'high' } as const;
+const FIRST = { title: 'First idea', description: '', priority: 'high' } as const;
+const capture = { title: 'Idea', description: 'Steps', priority: 'high', sent: FIRST } as const;
 
 const ticketWith = (overrides: Partial<Ticket>): Ticket => {
   const {
@@ -17,19 +18,33 @@ const ticketWith = (overrides: Partial<Ticket>): Ticket => {
   return ticket;
 };
 
-const sameText = ticketWith(capture);
-const earlierText = ticketWith({ title: 'First idea', description: '', priority: 'high' });
+const sameText = ticketWith({ title: 'Idea', description: 'Steps', priority: 'high' });
+const earlierText = ticketWith(FIRST);
+const otherEdit = { title: 'Idea, edited', description: 'Their steps', priority: 'low' } as const;
 
 describe('laterText', () => {
   it('is nothing when the ticket has the capture text', () => {
     expect(laterText(sameText, capture)).toBeNull();
   });
 
-  it('is each field the capture changed since the ticket was made', () => {
+  it('is each field the person changed since the first create', () => {
     expect(laterText(earlierText, capture)).toEqual({ title: 'Idea', description: 'Steps' });
-    expect(laterText(ticketWith({ ...capture, priority: 'low' }), capture)).toEqual({
-      priority: 'high',
+    expect(laterText(earlierText, { ...FIRST, priority: 'low', sent: FIRST })).toEqual({
+      priority: 'low',
     });
+  });
+
+  it('leaves the fields the person did not change, whatever the ticket says now', () => {
+    expect(laterText(ticketWith(otherEdit), { ...FIRST, sent: FIRST })).toBeNull();
+    expect(laterText(ticketWith(otherEdit), { ...FIRST, title: 'Idea', sent: FIRST })).toEqual({
+      title: 'Idea',
+    });
+  });
+
+  it('takes a capture without sent text as unchanged since the first create', () => {
+    expect(
+      laterText(ticketWith(otherEdit), { title: 'Idea', description: '', priority: 'high' }),
+    ).toBeNull();
   });
 });
 
@@ -54,8 +69,13 @@ describe('sendCapture', () => {
   it('says plainly that the ticket has the earlier text when the tracker refuses the edit', async () => {
     const update = vi.fn().mockRejectedValue(new ApiError(404, 'not_found', 'Ticket not found.'));
     const sent = sendCapture(capture, { create: () => Promise.resolve(earlierText), update });
+    await expect(sent).rejects.toEqual(expect.any(TextNotSavedError));
     await expect(sent).rejects.toEqual(expect.any(ApiError));
-    await expect(sent).rejects.toMatchObject({ status: 404, message: textNotSaved('MOB-7') });
+    await expect(sent).rejects.toMatchObject({
+      status: 404,
+      message: textNotSaved('MOB-7'),
+      ticketKey: 'MOB-7',
+    });
   });
 
   it('passes a network failure on as it is, so a text-only capture can wait offline', async () => {

@@ -1,4 +1,5 @@
 import { useEffect, type RefObject } from 'react';
+import { useLatest } from '../../lib/useLatest';
 
 const FOCUSABLE = 'button:not(:disabled), a[href], input:not(:disabled), [tabindex="0"]';
 
@@ -41,22 +42,38 @@ function moveTab(event: KeyboardEvent, trigger: HTMLElement, items: HTMLElement[
   }
 }
 
+const holds = (anchor: HTMLElement, panel: HTMLElement, element: Element | null) =>
+  !!element && (anchor.contains(element) || panel.contains(element));
+
 // The menu sits in a body portal, so it stays above a sheet one of its items opens; Tab still goes
-// from the trigger into the menu and back out to the page after the trigger.
+// from the trigger into the menu and back out to the page after the trigger. Once Tab takes focus
+// out, the menu closes like any menu; it is checked after the move, because WebKit's Tab skips
+// buttons unless asked not to, so focus can leave from anywhere.
 export function useMenuTabOrder(
   open: boolean,
   anchorRef: RefObject<HTMLElement | null>,
   panelRef: RefObject<HTMLElement | null>,
+  onClose: () => void,
 ) {
+  const close = useLatest(onClose);
   useEffect(() => {
     if (!open) return;
+    let timer: ReturnType<typeof setTimeout> | undefined;
     const onKeyDown = (event: KeyboardEvent) => {
+      const anchor = anchorRef.current;
       const trigger = triggerOf(anchorRef);
       const panel = panelRef.current;
-      if (event.key !== 'Tab' || event.defaultPrevented || !trigger || !panel) return;
+      if (event.key !== 'Tab' || event.defaultPrevented || !anchor || !trigger || !panel) return;
       moveTab(event, trigger, [...panel.querySelectorAll<HTMLElement>(FOCUSABLE)]);
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        if (!holds(anchor, panel, document.activeElement)) close.current();
+      });
     };
     document.addEventListener('keydown', onKeyDown);
-    return () => document.removeEventListener('keydown', onKeyDown);
-  }, [open, anchorRef, panelRef]);
+    return () => {
+      clearTimeout(timer);
+      document.removeEventListener('keydown', onKeyDown);
+    };
+  }, [open, anchorRef, panelRef, close]);
 }

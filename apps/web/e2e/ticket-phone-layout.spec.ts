@@ -1,0 +1,167 @@
+import type { Page } from '@playwright/test';
+import { toYmd } from '@tracker/shared';
+import { expect, isPhone, test } from './fixtures';
+import { activity, seedProject, toast } from './helpers';
+
+// PT-73: on a phone the Details card sat in the middle of the ticket, under the description and
+// the files, and with long comments the comment box was screens away. The details are now chips
+// under the title, long text folds, and a pill jumps to the comment box.
+
+const PHONE_ONLY = 'The phone layout';
+const LONG_TITLE =
+  'Phone ticket screen: Details should stay at the top instead of the middle, long comments need folding';
+const LONG_STATUS = 'Waiting on design review from the team';
+const LONG_NAME = 'Claude (worker 55, the very long assignee name)';
+// About as long as PT-61's comments (500 to 1,900 characters).
+const LONG_COMMENT = (n: number) =>
+  `Decisions (worker ${n}): the calendar shows with a mouse on a window 768px or wider. `.repeat(
+    12,
+  );
+
+const screenOf = (page: Page) => page.locator('[data-stack-path="/p/MOB/1"]');
+const bar = (page: Page) => screenOf(page).locator('[data-bottom-bar]');
+const scroller = (page: Page) => screenOf(page).locator('[data-stack-scroller]');
+const chips = (page: Page) => page.getByRole('group', { name: 'Details' });
+const jump = (page: Page) => page.getByRole('button', { name: 'Go to the comment box' });
+const commentField = (page: Page) => page.getByLabel('Comment', { exact: true });
+
+const daysFromToday = (days: number) => {
+  const date = new Date();
+  date.setDate(date.getDate() + days);
+  return toYmd(date);
+};
+
+async function settle(page: Page) {
+  await page.evaluate(() =>
+    Promise.all(document.getAnimations().map((animation) => animation.finished.catch(() => null))),
+  );
+  await scroller(page).evaluate(async (element) => {
+    const frame = () => new Promise((resolve) => requestAnimationFrame(resolve));
+    let last = Number.NaN;
+    while (element.scrollTop !== last) {
+      last = element.scrollTop;
+      await frame();
+      await frame();
+    }
+  });
+}
+
+async function noSidewaysScroll(page: Page) {
+  const [scrollWidth, clientWidth] = await scroller(page).evaluate((element) => [
+    element.scrollWidth,
+    element.clientWidth,
+  ]);
+  expect(scrollWidth).toBeLessThanOrEqual(clientWidth);
+}
+
+test.describe('ticket screen on a phone', () => {
+  test('shows the details as chips under the title that fit 320px and change each field', async ({
+    page,
+    api,
+  }, info) => {
+    test.skip(!isPhone(info.project.name), PHONE_ONLY);
+    await seedProject(api, 'Mobile app', 'MOB', [
+      {
+        title: LONG_TITLE,
+        assignee: LONG_NAME,
+        due: daysFromToday(-2),
+        description: 'Rotate twice.',
+      },
+    ]);
+    await api.createStatus('MOB', { name: LONG_STATUS, category: 'in_progress', color: '#C26A06' });
+    for (const size of [
+      { width: 320, height: 568 },
+      { width: 375, height: 812 },
+    ]) {
+      await page.setViewportSize(size);
+      await page.goto('/p/MOB/1');
+      await expect(chips(page)).toBeInViewport();
+      for (const chip of await chips(page).locator(':scope > *').all()) {
+        const box = (await chip.boundingBox())!;
+        expect(box.x + box.width, `${size.width}px`).toBeLessThanOrEqual(size.width - 16);
+      }
+      await noSidewaysScroll(page);
+    }
+
+    const status = chips(page).getByRole('button', { name: /^Status/ });
+    await status.click();
+    await page.getByRole('option', { name: LONG_STATUS }).click();
+    await expect(status).toContainText(LONG_STATUS);
+    await expect(toast(page, `MOB-1 moved to ${LONG_STATUS}`)).toBeVisible();
+    await noSidewaysScroll(page);
+
+    await chips(page)
+      .getByRole('button', { name: /^Priority/ })
+      .click();
+    await page.getByRole('option', { name: 'High' }).click();
+    const assignee = chips(page).getByLabel('Assignee', { exact: true });
+    await assignee.fill('Dara');
+    await assignee.blur();
+    await expect(chips(page).getByRole('button', { name: 'Clear due date' })).toBeVisible();
+    await chips(page).getByRole('button', { name: 'Clear due date' }).click();
+    await chips(page).getByLabel('Due date', { exact: true }).fill(daysFromToday(3));
+
+    const log = activity(page);
+    await expect(log).toContainText(`You changed status to ${LONG_STATUS}`);
+    await expect(log).toContainText('You set priority to High');
+    await expect(log).toContainText('You assigned the ticket to Dara');
+    await expect(log).toContainText('You removed the due date');
+    await expect(log).toContainText('You set the due date to');
+    await expect(page.getByRole('complementary', { name: 'Ticket details' })).toHaveCount(0);
+  });
+
+  test('folds long comments and jumps to the comment box', async ({ page, api, agent }, info) => {
+    test.skip(!isPhone(info.project.name), PHONE_ONLY);
+    await seedProject(api, 'Mobile app', 'MOB', [{ title: 'Date picker', description: 'Bad.' }]);
+    for (let n = 1; n <= 8; n += 1) await agent.addComment('MOB-1', { text: LONG_COMMENT(n) });
+    await page.goto('/p/MOB/1');
+    await expect(jump(page)).toBeVisible();
+    await settle(page);
+
+    const first = activity(page).locator('article').first();
+    await first.scrollIntoViewIfNeeded();
+    const more = first.getByRole('button', { name: 'Show more' });
+    const folded = (await first.boundingBox())!.height;
+    await more.click();
+    const less = first.getByRole('button', { name: 'Show less' });
+    await expect(less).toHaveAttribute('aria-expanded', 'true');
+    expect((await first.boundingBox())!.height).toBeGreaterThan(folded + 200);
+    await less.scrollIntoViewIfNeeded();
+    await settle(page);
+    const before = (await less.boundingBox())!.y;
+    await less.click();
+    await settle(page);
+    // The button stays under the finger while the text closes above it.
+    const after = (await first.getByRole('button', { name: 'Show more' }).boundingBox())!.y;
+    expect(Math.abs(after - before)).toBeLessThanOrEqual(2);
+
+    await scroller(page).evaluate((element) => (element.scrollTop = 0));
+    await expect(jump(page)).toBeVisible();
+    await jump(page).tap();
+    await expect(commentField(page)).toBeFocused();
+    await expect(bar(page)).toHaveAttribute('data-hidden');
+    await expect(jump(page)).toHaveCount(0);
+    await settle(page);
+    await expect(commentField(page)).toBeInViewport();
+
+    await commentField(page).fill('Reached the box in one tap');
+    await commentField(page).blur();
+    await expect(bar(page)).not.toHaveAttribute('data-hidden');
+    await settle(page);
+    await expect(jump(page)).toHaveCount(0);
+    await page.getByRole('button', { name: 'Comment', exact: true }).click();
+    await expect(activity(page)).toContainText('Reached the box in one tap');
+  });
+
+  test('desktop keeps the side panel and shows text whole', async ({ page, api, agent }, info) => {
+    test.skip(isPhone(info.project.name), 'Desktop is unchanged');
+    await seedProject(api, 'Mobile app', 'MOB', [{ title: 'Date picker' }]);
+    await agent.addComment('MOB-1', { text: LONG_COMMENT(1) });
+    await page.goto('/p/MOB/1');
+    await expect(page.getByRole('complementary', { name: 'Ticket details' })).toBeVisible();
+    await expect(chips(page)).toHaveCount(0);
+    await expect(activity(page)).toContainText('Decisions (worker 1)');
+    await expect(page.getByRole('button', { name: 'Show more' })).toHaveCount(0);
+    await expect(jump(page)).toHaveCount(0);
+  });
+});

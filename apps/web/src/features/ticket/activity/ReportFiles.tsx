@@ -1,8 +1,6 @@
 import { collapseGroup } from '@tracker/shared';
-import clsx from 'clsx';
-import { ChevronDown } from 'lucide-react';
 import { useState } from 'react';
-import { Icon } from '../../../components';
+import { ShowMoreButton } from '../../../components';
 import { LinkedText } from './LinkedText';
 import styles from './ReportBody.module.css';
 
@@ -21,15 +19,11 @@ export function ReportFiles({ files }: { files: readonly string[] }) {
         ))}
       </ul>
       {hasToggle && (
-        <button
-          type="button"
-          className={clsx('ring-inside', styles.more)}
-          aria-expanded={expanded}
+        <ShowMoreButton
+          expanded={expanded}
+          moreLabel={`Show ${hiddenCount} more`}
           onClick={() => setExpanded((value) => !value)}
-        >
-          {expanded ? 'Show less' : `Show ${hiddenCount} more`}
-          <Icon icon={ChevronDown} className={styles.chevron} />
-        </button>
+        />
       )}
     </>
   );

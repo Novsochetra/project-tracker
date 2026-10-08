@@ -1,6 +1,6 @@
 import { CircleDot, Ellipsis, PenLine, Plug, Trash2 } from 'lucide-react';
 import { useRef, useState } from 'react';
-import { ConfirmCard, IconButton, MenuItem, Popover } from '../../components';
+import { IconButton, MenuConfirm, MenuItem, Popover } from '../../components';
 import { deleteMenuMessage } from './projectOptions';
 import { useProjectOptions } from './useProjectOptions';
 
@@ -40,8 +40,7 @@ export function ProjectOptionsMenu({ projectKey }: { projectKey: string }) {
       }
     >
       {confirming ? (
-        <ConfirmCard
-          variant="menu"
+        <MenuConfirm
           message={options.error ?? deleteMenuMessage(options.ticketCount)}
           pending={options.pending}
           onCancel={dismiss}

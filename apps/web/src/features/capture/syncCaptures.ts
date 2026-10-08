@@ -9,6 +9,7 @@ import {
   type QueuedCapture,
 } from './captureQueue';
 import type { QueueAccess } from './queueStore';
+import { TextNotSavedError } from './sendCapture';
 
 export interface SyncDeps {
   queue: QueueAccess;
@@ -18,6 +19,8 @@ export interface SyncDeps {
 
 export interface SyncReport {
   added: QueuedCapture[];
+  // Keys of tickets added with the text of an earlier create: the later text was refused.
+  unsaved: string[];
   dropped: QueuedCapture[];
   stopped: boolean;
 }
@@ -31,23 +34,27 @@ const isRefused = (error: unknown): boolean =>
   error.status < 500 &&
   !RETRYABLE_CLIENT_STATUSES.has(error.status);
 
-type Step = 'added' | 'dropped' | 'stop';
+type Step = { kind: 'added'; unsaved?: string } | { kind: 'dropped' } | { kind: 'stop' };
 
 // A capture an earlier request may have created is simply sent again: its client id gets the
-// ticket that request made.
+// ticket that request made. When only its later text is refused, that ticket exists, so the
+// capture is added all the same.
 async function syncOne(capture: QueuedCapture, deps: SyncDeps): Promise<Step> {
   try {
     await deps.send(capture);
-    return 'added';
+    return { kind: 'added' };
   } catch (error) {
-    return isRefused(error) ? 'dropped' : 'stop';
+    if (!isRefused(error)) return { kind: 'stop' };
+    if (error instanceof TextNotSavedError) return { kind: 'added', unsaved: error.ticketKey };
+    return { kind: 'dropped' };
   }
 }
 
 function settle(capture: QueuedCapture, step: Step, deps: SyncDeps, report: SyncReport): boolean {
-  if (step === 'stop') return false;
-  report[step].push(capture);
-  const settled = step === 'added' ? markCreated : dropCapture;
+  if (step.kind === 'stop') return false;
+  report[step.kind].push(capture);
+  if (step.kind === 'added' && step.unsaved) report.unsaved.push(step.unsaved);
+  const settled = step.kind === 'added' ? markCreated : dropCapture;
   return deps.queue.update((queue) => settled(queue, capture.id));
 }
 
@@ -65,7 +72,7 @@ async function syncClaimed(id: string, deps: SyncDeps, report: SyncReport): Prom
 }
 
 export async function syncCaptures(deps: SyncDeps): Promise<SyncReport> {
-  const report: SyncReport = { added: [], dropped: [], stopped: false };
+  const report: SyncReport = { added: [], unsaved: [], dropped: [], stopped: false };
   // Every capture is tried at most once per run, even if its result could not be saved.
   const seen = new Set<string>();
   // Read before each capture: a slow request from the sheet can join the queue mid-run.

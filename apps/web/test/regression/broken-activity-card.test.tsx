@@ -5,6 +5,7 @@ import { afterEach, beforeEach, expect, it, vi, type MockInstance } from 'vitest
 import { queryKeys } from '../../src/api';
 import { comment, listItem, makeTicketDetail, STATUS } from '../../src/api/test/fixtures';
 import { renderScreen } from '../../src/app/renderScreen';
+import { readMenuConfirm } from '../../src/components/Popover/testing';
 import type { ReportSections } from '../../src/features/ticket/activity/reportSections';
 import { renderTicket } from '../../src/features/ticket/test/renderTicket';
 import type { LinkPart } from '../../src/lib/linkify';
@@ -151,11 +152,13 @@ it('deletes a card that fails from its menu', async () => {
   const [badComment, badReport] = unshown();
   await user.click(within(badReport!).getByRole('button', { name: 'Report options' }));
   await user.click(screen.getByRole('button', { name: 'Delete report' }));
+  await readMenuConfirm();
   await user.click(screen.getByRole('button', { name: 'Delete' }));
   expect(client.deleteActivity).toHaveBeenCalledWith('r1');
 
   await user.click(within(badComment!).getByRole('button', { name: 'Comment options' }));
   await user.click(screen.getByRole('button', { name: 'Delete comment' }));
+  await readMenuConfirm();
   await user.click(screen.getByRole('button', { name: 'Delete' }));
   expect(client.deleteActivity).toHaveBeenCalledWith('c2');
   expect(within(log()).queryByText("Couldn't show this item")).toBeNull();
@@ -198,6 +201,7 @@ it.each([
     );
     await user.click(within(latest()).getByRole('button', { name: 'Review options' }));
     await user.click(screen.getByRole('button', { name: 'Delete review' }));
+    await readMenuConfirm();
     await user.click(screen.getByRole('button', { name: 'Delete' }));
     await waitFor(() => expect(client.deleteActivity).toHaveBeenCalledWith('v1'));
   },

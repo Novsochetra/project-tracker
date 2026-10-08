@@ -3,6 +3,7 @@ import { ActivityCard, ActorAvatar, CardAttachments, type RiseProps } from './Ac
 import styles from './ActivityCard.module.css';
 import { ItemMenu } from './ItemMenu';
 import { LinkedText } from './LinkedText';
+import { PhoneFold } from './PhoneFold';
 import { ReviewVerdict } from './ReviewVerdict';
 import { TimeAgo } from './TimeAgo';
 import type { ActivityActions } from './useActivityActions';
@@ -27,9 +28,11 @@ export function ReviewCard({ item, now, actions, rise, approvedColor }: ReviewCa
     >
       {item.review && <ReviewVerdict review={item.review} approvedColor={approvedColor} />}
       {item.text && (
-        <p className={styles.body}>
-          <LinkedText text={item.text} />
-        </p>
+        <PhoneFold>
+          <p className={styles.body}>
+            <LinkedText text={item.text} />
+          </p>
+        </PhoneFold>
       )}
       <CardAttachments attachments={item.attachments} />
     </ActivityCard>

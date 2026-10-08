@@ -1,6 +1,6 @@
 import { Ellipsis, PenLine, Trash2 } from 'lucide-react';
 import { useRef, useState, type ReactNode, type RefObject } from 'react';
-import { ConfirmCard, IconButton, MenuItem, Popover } from '../../../components';
+import { IconButton, MenuConfirm, MenuItem, Popover } from '../../../components';
 import { DURATION } from '../../../design/motion';
 import { useIsPhone, usePrefersReducedMotion } from '../../../lib/media';
 import { ActionSheet, type ActionSheetAction } from '../../../overlays';
@@ -93,12 +93,7 @@ function ItemPopover({
       trigger={trigger}
     >
       {confirming ? (
-        <ConfirmCard
-          variant="menu"
-          message={deleteMessage(noun)}
-          onCancel={cancel}
-          onConfirm={run(onDelete)}
-        />
+        <MenuConfirm message={deleteMessage(noun)} onCancel={cancel} onConfirm={run(onDelete)} />
       ) : (
         <>
           {onEdit && (

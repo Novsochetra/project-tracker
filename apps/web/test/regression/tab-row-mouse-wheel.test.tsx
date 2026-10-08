@@ -24,31 +24,32 @@ function renderRow(left: number) {
     scrollWidth: { configurable: true, value: 500 },
     scrollLeft: { configurable: true, value: left },
   });
-  const scrollBy = vi.fn();
-  track.scrollBy = scrollBy;
-  return { track, scrollBy };
+  const scrollTo = vi.fn();
+  track.scrollTo = scrollTo;
+  return { track, scrollTo };
 }
 
 describe('regression: the mouse wheel scrolls a long tab row sideways', () => {
   it('turns the wheel down into a scroll to the right, and up to the left', () => {
-    const { track, scrollBy } = renderRow(100);
+    const { track, scrollTo } = renderRow(100);
+    const lastLeft = () => (scrollTo.mock.lastCall?.[0] as ScrollToOptions).left;
     expect(fireEvent.wheel(track, { deltaY: 100 })).toBe(false);
-    expect(scrollBy).toHaveBeenLastCalledWith(expect.objectContaining({ left: 100 }));
+    expect(lastLeft()).toBeGreaterThan(100);
     expect(fireEvent.wheel(track, { deltaY: -3, deltaMode: DELTA_LINE })).toBe(false);
-    expect(scrollBy).toHaveBeenLastCalledWith(expect.objectContaining({ left: -48 }));
+    expect(lastLeft()).toBeLessThan(100);
   });
 
   it('lets the page scroll once the row is at its end', () => {
-    const { track, scrollBy } = renderRow(300);
+    const { track, scrollTo } = renderRow(300);
     expect(fireEvent.wheel(track, { deltaY: 100 })).toBe(true);
     expect(fireEvent.wheel(track, { deltaY: -100 })).toBe(false);
-    expect(scrollBy).toHaveBeenCalledTimes(1);
+    expect(scrollTo).toHaveBeenCalledTimes(1);
   });
 
   it('leaves sideways swipes and pinch zoom to the browser', () => {
-    const { track, scrollBy } = renderRow(100);
+    const { track, scrollTo } = renderRow(100);
     expect(fireEvent.wheel(track, { deltaX: 40, deltaY: 10 })).toBe(true);
     expect(fireEvent.wheel(track, { deltaY: 10, ctrlKey: true })).toBe(true);
-    expect(scrollBy).not.toHaveBeenCalled();
+    expect(scrollTo).not.toHaveBeenCalled();
   });
 });

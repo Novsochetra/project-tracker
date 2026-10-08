@@ -10,7 +10,8 @@ import { phoneStyle, pixels } from './phoneCss';
 // became two files, a summary line starting with "Next:" sent the whole card back to the raw
 // block, and PT-23's 46 files made a 3,700px card at 320px.
 
-const MODULE = 'features/ticket/activity/ReportBody.module.css';
+// The Show more button the report's Files list and folded text share.
+const MODULE = 'components/Fold/Fold.module.css';
 const CLAUDE = { kind: 'agent', name: 'Claude' } as const;
 const lines = (...parts: string[]) => parts.join('\n');
 

@@ -1,0 +1,56 @@
+/* The text keeps the spacing of the card or column it sits in, as if the fold weren't there. */
+.fold,
+.text {
+  display: flex;
+  flex-direction: column;
+  gap: inherit;
+  min-width: 0;
+}
+
+/* `clip`, not `hidden`: a box with hidden overflow still scrolls when something inside it takes
+   focus or is scrolled into view, which would slide the text up under the fade. */
+.folded {
+  overflow-x: visible;
+  overflow-y: clip;
+  -webkit-mask-image: linear-gradient(to bottom, var(--ink) calc(100% - 2.5em), transparent);
+  mask-image: linear-gradient(to bottom, var(--ink) calc(100% - 2.5em), transparent);
+}
+
+/* A quiet text button under the text, with the 44px target small controls get (SPEC §12). The
+   negative margins keep the card's rhythm while the target stays full size. */
+.more {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-height: var(--touch-target);
+  margin: -4px 0 -10px -8px;
+  padding: 0 var(--space-2);
+  border: 0;
+  border-radius: var(--radius-control);
+  background: transparent;
+  color: var(--muted);
+  font-family: var(--font-sans);
+  font-size: var(--size-secondary);
+  font-weight: var(--weight-medium);
+  cursor: pointer;
+  transition: color var(--duration-fast) ease-out;
+}
+
+@media (hover: hover) {
+  .more:hover {
+    color: var(--ink);
+  }
+}
+
+.toggle {
+  align-self: flex-start;
+}
+
+.chevron {
+  flex: none;
+  transition: transform var(--duration-fade) var(--ease-out);
+}
+
+.more[aria-expanded='true'] .chevron {
+  transform: rotate(180deg);
+}

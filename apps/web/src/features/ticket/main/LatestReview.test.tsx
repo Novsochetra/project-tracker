@@ -175,6 +175,20 @@ describe('the phone bottom bar', () => {
     await waitFor(() => expect(labels()).toEqual(['Paste report', 'Send to Claude']));
   });
 
+  it('keeps the review on the card without its own Move to Done, and focuses the Status chip after', async () => {
+    const user = userEvent.setup();
+    setup(STATUS.reviewed, [approval], { phone: true, client: { updateTicket: pending() } });
+    expect(latest()).toHaveTextContent('Fix is correct; the new test covers rotation.');
+    expect(within(latest()).getByRole('img', { name: 'Rated 4 out of 5' })).toBeInTheDocument();
+    expect(within(latest()).queryByRole('button', { name: /^Move to/ })).not.toBeInTheDocument();
+    await user.click(within(bar()).getByRole('button', { name: 'Move to Done' }));
+    const status = within(screen.getByRole('group', { name: 'Details' })).getByRole('button', {
+      name: /^Status/,
+    });
+    await waitFor(() => expect(status).toHaveFocus());
+    expect(status).toHaveTextContent('Done');
+  });
+
   it('offers Move to Done for a ticket moved to Reviewed by hand', () => {
     setup(STATUS.reviewed, [], { phone: true });
     expect(labels()).toEqual(['Paste report', 'Move to Done']);

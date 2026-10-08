@@ -153,13 +153,14 @@ test.describe('phone bottom bar and the comment box', () => {
     const description = page.getByLabel('Description', { exact: true });
     await expect(description).toHaveValue(LONG_DESCRIPTION);
     await settle(page);
-    const box = (await description.boundingBox())!;
-    expect(box.height, 'taller than the room above the bar').toBeGreaterThan(ROOM_AT_375);
-
-    await page.touchscreen.tap(box.x + 24, box.y + 12);
+    // Phones fold a long description until it is edited (PT-73): the tap edits it and opens it.
+    const folded = (await description.boundingBox())!;
+    await page.touchscreen.tap(folded.x + 24, folded.y + 12);
     await page.keyboard.type('x');
     await expect(bar(page)).toHaveAttribute('data-hidden');
     await settle(page);
+    const box = (await description.boundingBox())!;
+    expect(box.height, 'taller than the room above the bar').toBeGreaterThan(ROOM_AT_375);
     const editing = await scrollTop(page);
     await description.blur();
     await expect(bar(page)).not.toHaveAttribute('data-hidden');

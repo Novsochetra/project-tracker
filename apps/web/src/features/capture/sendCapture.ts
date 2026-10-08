@@ -2,21 +2,40 @@ import { ApiError } from '@tracker/client';
 import type { Ticket, UpdateTicketInput } from '@tracker/shared';
 import { isNetworkError } from '../../api';
 import { textNotSaved } from './captureForm';
+import type { CaptureText } from './captureText';
 
-type CaptureText = Pick<Ticket, 'title' | 'description' | 'priority'>;
+export interface SentCapture extends CaptureText {
+  // The text the capture's first create sent; missing when nothing changed since.
+  sent?: CaptureText;
+}
 
 export interface CaptureSteps {
   create: () => Promise<Ticket>;
   update: (ticketKey: string, input: UpdateTicketInput) => Promise<Ticket>;
 }
 
-// What the capture says and its ticket doesn't. The answer to a repeated client id is the ticket
-// the first create made, so it has the text of that create, not what the person changed since.
-export function laterText(ticket: CaptureText, capture: CaptureText): UpdateTicketInput | null {
+// The ticket exists, with the text of an earlier create; only the person's later text is missing.
+export class TextNotSavedError extends ApiError {
+  readonly ticketKey: string;
+
+  constructor(error: ApiError, ticketKey: string) {
+    super(error.status, error.code, textNotSaved(ticketKey));
+    this.name = 'TextNotSavedError';
+    this.ticketKey = ticketKey;
+  }
+}
+
+// What the person changed since the capture's first create and the ticket doesn't say yet. The
+// answer to a repeated client id is the ticket as it is now: a field the person left alone may
+// hold someone else's later edit, and that edit stays.
+export function laterText(ticket: CaptureText, capture: SentCapture): UpdateTicketInput | null {
+  const sent = capture.sent ?? capture;
+  const changed = (field: keyof CaptureText) =>
+    capture[field] !== sent[field] && capture[field] !== ticket[field];
   const changes: UpdateTicketInput = {};
-  if (capture.title !== ticket.title) changes.title = capture.title;
-  if (capture.description !== ticket.description) changes.description = capture.description;
-  if (capture.priority !== ticket.priority) changes.priority = capture.priority;
+  if (changed('title')) changes.title = capture.title;
+  if (changed('description')) changes.description = capture.description;
+  if (changed('priority')) changes.priority = capture.priority;
   return Object.keys(changes).length > 0 ? changes : null;
 }
 
@@ -24,12 +43,12 @@ export function laterText(ticket: CaptureText, capture: CaptureText): UpdateTick
 // stays as it is, so a text-only capture still waits offline and its sync saves the text later.
 function plainly(error: unknown, ticketKey: string): unknown {
   if (!(error instanceof ApiError) || isNetworkError(error)) return error;
-  return new ApiError(error.status, error.code, textNotSaved(ticketKey));
+  return new TextNotSavedError(error, ticketKey);
 }
 
-// The person's latest text wins and the capture stays one ticket: when a create gets back the
-// ticket an earlier Create made, the text changed since is saved to it as an ordinary edit.
-export async function sendCapture(capture: CaptureText, steps: CaptureSteps): Promise<Ticket> {
+// The capture stays one ticket and the person's later text wins: when a create gets back the
+// ticket an earlier Create made, what the person changed since is saved to it as an ordinary edit.
+export async function sendCapture(capture: SentCapture, steps: CaptureSteps): Promise<Ticket> {
   const ticket = await steps.create();
   const changes = laterText(ticket, capture);
   if (!changes) return ticket;

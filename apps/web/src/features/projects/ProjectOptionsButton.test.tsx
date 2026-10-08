@@ -3,6 +3,7 @@ import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { currentPath, projectSummary, renderWithApp } from '../../app/test/harness';
+import { readMenuConfirm } from '../../components/Popover/testing';
 import { mockPhone, skipAnimations } from '../../overlays/testing';
 import { ProjectOptionsButton } from './ProjectOptionsButton';
 
@@ -72,6 +73,7 @@ describe('Project options in the desktop header', () => {
       "Delete this project and its 4 tickets? This can't be undone.",
     );
     expect(screen.getByRole('button', { name: 'Cancel' })).toHaveFocus();
+    await readMenuConfirm();
     await user.click(screen.getByRole('button', { name: 'Delete' }));
     expect(deleteProject).toHaveBeenCalledWith('MOB');
     expect(await screen.findByText('“Mobile app” deleted')).toBeInTheDocument();
@@ -85,6 +87,7 @@ describe('Project options in the desktop header', () => {
     const trigger = screen.getByRole('button', { name: 'Project options' });
     await user.click(trigger);
     await user.click(screen.getByRole('button', { name: 'Delete project' }));
+    await readMenuConfirm();
     await user.click(screen.getByRole('button', { name: 'Cancel' }));
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
     expect(trigger).toHaveFocus();
@@ -101,6 +104,7 @@ describe('Project options in the desktop header', () => {
     );
     await user.click(screen.getByRole('button', { name: 'Project options' }));
     await user.click(screen.getByRole('button', { name: 'Delete project' }));
+    await readMenuConfirm();
     await user.click(screen.getByRole('button', { name: 'Delete' }));
     expect(await screen.findByText('Database is locked')).toBeInTheDocument();
     expect(currentPath()).toBe('/p/MOB');

@@ -43,12 +43,13 @@ export async function linkAttachments(
   db: Db,
   ids: readonly string[],
   target: { ticketId: string; activityId: string | null },
+  firstPosition = 0,
 ): Promise<number> {
   let linked = 0;
-  for (const [position, id] of ids.entries()) {
+  for (const [index, id] of ids.entries()) {
     const result = await db
       .updateTable('attachments')
-      .set({ ...target, position })
+      .set({ ...target, position: firstPosition + index })
       .where('id', '=', id)
       .where('activityId', 'is', null)
       .where((eb) => eb.or([eb('ticketId', 'is', null), eb('ticketId', '=', target.ticketId)]))

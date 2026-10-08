@@ -6,6 +6,7 @@ import { activityItems } from '../activity/activityItems';
 import { ActivityCard, ActorAvatar } from '../activity/ActivityCard';
 import cardStyles from '../activity/ActivityCard.module.css';
 import { LinkedText } from '../activity/LinkedText';
+import { PhoneFold } from '../activity/PhoneFold';
 import { ReviewVerdict } from '../activity/ReviewVerdict';
 import { TimeAgo } from '../activity/TimeAgo';
 import { UnshownItem } from '../activity/UnshownItem';
@@ -83,9 +84,11 @@ export function LatestReview({ detail, done }: LatestReviewProps) {
         >
           <ReviewVerdict review={item.review} approvedColor={approvedColor} />
           {item.text && (
-            <p className={cardStyles.body}>
-              <LinkedText text={item.text} />
-            </p>
+            <PhoneFold>
+              <p className={cardStyles.body}>
+                <LinkedText text={item.text} />
+              </p>
+            </PhoneFold>
           )}
           {doneButton}
         </ActivityCard>

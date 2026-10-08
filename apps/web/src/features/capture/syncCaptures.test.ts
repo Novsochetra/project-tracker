@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { deferred } from '../../api/test/deferred';
 import { addCapture, type CaptureQueue, type QueuedCapture } from './captureQueue';
 import type { QueueAccess } from './queueStore';
+import { TextNotSavedError } from './sendCapture';
 import { syncCaptures, type SyncDeps } from './syncCaptures';
 
 const capture = (id: string, capturedAt: number, overrides: Partial<QueuedCapture> = {}) => ({
@@ -103,7 +104,7 @@ describe('syncCaptures', () => {
 
     const report = await syncCaptures(sync);
 
-    expect(report).toEqual({ added: [], dropped: [], stopped: true });
+    expect(report).toEqual({ added: [], unsaved: [], dropped: [], stopped: true });
     expect(sentIds(sync.send)).toEqual(['a']);
     expect(store.current().items.map(({ id }) => id)).toEqual(['a', 'b']);
   });
@@ -207,6 +208,34 @@ describe('syncCaptures', () => {
     expect(report.dropped).toEqual([capture('gone', 1, { projectKey: 'OLD' })]);
     expect(report.added.map(({ id }) => id)).toEqual(['b']);
     expect(store.current()).toEqual({ items: [], created: ['b'] });
+  });
+
+  it('counts a capture whose later text is refused as added, with its ticket key', async () => {
+    const store = memoryQueue([capture('a', 1), capture('b', 2)]);
+    const refused = new ApiError(404, 'not_found', 'Ticket MOB-1 was not found.');
+    const send = vi.fn((item: QueuedCapture) =>
+      item.id === 'a'
+        ? Promise.reject(new TextNotSavedError(refused, 'MOB-1'))
+        : Promise.resolve(ticketFor(item)),
+    );
+
+    const report = await syncCaptures(deps(store.access, { send }));
+
+    expect(report.added.map(({ id }) => id)).toEqual(['a', 'b']);
+    expect(report.unsaved).toEqual(['MOB-1']);
+    expect(report.dropped).toEqual([]);
+    expect(store.current()).toEqual({ items: [], created: ['a', 'b'] });
+  });
+
+  it('keeps a capture whose later text met a server failure, to save it next run', async () => {
+    const store = memoryQueue([capture('a', 1)]);
+    const failed = new ApiError(503, 'http_error', 'Unavailable');
+    const send = vi.fn(() => Promise.reject(new TextNotSavedError(failed, 'MOB-1')));
+
+    const report = await syncCaptures(deps(store.access, { send }));
+
+    expect(report).toEqual({ added: [], unsaved: [], dropped: [], stopped: true });
+    expect(store.current().items).toHaveLength(1);
   });
 
   it('stops on a sign-in prompt instead of dropping the capture', async () => {

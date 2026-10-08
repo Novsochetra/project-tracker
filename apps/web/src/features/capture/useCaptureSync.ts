@@ -4,7 +4,7 @@ import { useCallback, useEffect } from 'react';
 import { queryKeys, useApi } from '../../api';
 import type { Reachability } from '../../app/reachability';
 import { useToast, type ToastApi } from '../../components';
-import { addedToast, createInputOf, droppedToast } from './captureForm';
+import { addedToast, createInputOf, droppedToast, earlierTextToast } from './captureForm';
 import type { QueuedCapture } from './captureQueue';
 import { queueStore } from './queueStore';
 import { sendCapture } from './sendCapture';
@@ -32,7 +32,9 @@ function refreshAfter(queryClient: QueryClient, report: SyncReport): void {
 
 function announce(report: SyncReport, show: ToastApi['show']): void {
   const [dropped] = report.dropped;
+  const [unsaved] = report.unsaved;
   if (dropped) show(droppedToast(dropped.title), { kind: 'error' });
+  else if (unsaved) show(earlierTextToast(unsaved), { kind: 'error' });
   else if (report.added.length > 0) show(addedToast(report.added.length));
 }
 

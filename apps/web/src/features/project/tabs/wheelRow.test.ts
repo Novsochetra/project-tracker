@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { bufferWheel, EMPTY_BUFFER, rowScrollFor, type RowWheel } from './wheelRow';
+import { bufferWheel, EMPTY_BUFFER, nextStop, rowScrollFor, type RowWheel } from './wheelRow';
 
 const row = (scrollLeft: number) => ({ scrollLeft, scrollWidth: 500, clientWidth: 200 });
 const wheel = (deltaY: number, more: Partial<RowWheel> = {}): RowWheel => ({
@@ -62,5 +62,25 @@ describe('bufferWheel', () => {
       buffer: { delta: -30, at: 100 },
       scroll: null,
     });
+  });
+});
+
+describe('nextStop', () => {
+  const stops = [0, 47, 133, 255, 383];
+
+  it('moves one tab start each way, however wide the tabs are', () => {
+    expect(nextStop(stops, 0, 100, 300)).toBe(47);
+    expect(nextStop(stops, 47, 40, 300)).toBe(133);
+    expect(nextStop(stops, 255, -100, 300)).toBe(133);
+  });
+
+  it('counts a row resting a fraction off a tab start as on it', () => {
+    expect(nextStop(stops, 46.6, 100, 300)).toBe(133);
+    expect(nextStop(stops, 133.4, -100, 300)).toBe(47);
+  });
+
+  it("stops at the row's ends", () => {
+    expect(nextStop(stops, 255, 100, 300)).toBe(300);
+    expect(nextStop(stops, 30, -100, 300)).toBe(0);
   });
 });

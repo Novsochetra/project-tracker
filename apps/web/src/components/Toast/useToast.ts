@@ -1,4 +1,4 @@
-import { useContext, useEffect } from 'react';
+import { useContext, useEffect, useSyncExternalStore } from 'react';
 import { ToastContext } from './context';
 import type { ToastStore } from './toastStore';
 
@@ -16,4 +16,16 @@ export function useToastRaise(active: boolean): void {
     if (!active || !store) return;
     return store.raise();
   }, [active, store]);
+}
+
+const noSubscription = () => () => undefined;
+
+// Something that sits where a toast shows (above the phone's bottom bar) makes way for it.
+export function useToastShowing(): boolean {
+  const store = useContext(ToastContext);
+  return useSyncExternalStore(
+    store?.subscribe ?? noSubscription,
+    () => Boolean(store?.getSnapshot().toast),
+    () => false,
+  );
 }

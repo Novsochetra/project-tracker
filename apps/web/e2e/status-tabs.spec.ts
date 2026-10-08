@@ -228,15 +228,35 @@ test.describe('status tabs', () => {
     expect(await tabs(page).evaluate((el) => el.scrollWidth > el.clientWidth)).toBe(true);
     expect(await pageScrollsSideways(page)).toBe(false);
 
-    const rowLeft = () => tabs(page).evaluate((el) => el.scrollLeft);
+    // Where the row snaps: each tab's start, and its end for the tabs past it.
+    const snaps = await tabs(page).evaluate((el) => {
+      const max = el.scrollWidth - el.clientWidth;
+      const starts = [...el.querySelectorAll('button')].map((b) => Math.min(b.offsetLeft - 2, max));
+      return [...new Set(starts)];
+    });
+    expect(snaps.length).toBeGreaterThan(3);
+    // Settled: still there 150ms later, so a step that passes a tab on its way doesn't count.
+    const settlesOn = (snap: number) =>
+      expect
+        .poll(() =>
+          tabs(page).evaluate(async (el, at) => {
+            const before = el.scrollLeft;
+            await new Promise((resolve) => setTimeout(resolve, 150));
+            return Math.abs(el.scrollLeft - before) < 0.5 ? Math.abs(el.scrollLeft - at) : Infinity;
+          }, snap),
+        )
+        .toBeLessThanOrEqual(1);
     const middleOfRow = await box(tabs(page));
     await page.mouse.move(middleOfRow.x + middleOfRow.width / 2, middleOfRow.y + 10);
-    await page.mouse.wheel(0, 100);
-    await expect.poll(rowLeft).toBeGreaterThan(0);
-    // Each step moves a tab from where the row's snap is taking it, which may be past where it is.
-    await page.mouse.wheel(0, -100);
-    await page.mouse.wheel(0, -100);
-    await expect.poll(rowLeft).toBe(0);
+    // One tab per wheel step, each step from where the last one settled.
+    for (const snap of [snaps[1]!, snaps[2]!]) {
+      await page.mouse.wheel(0, 100);
+      await settlesOn(snap);
+    }
+    for (const snap of [snaps[1]!, snaps[0]!]) {
+      await page.mouse.wheel(0, -100);
+      await settlesOn(snap);
+    }
 
     await tabs(page).getByRole('button', { name: /^All/ }).focus();
     await page.keyboard.press('End');

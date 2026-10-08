@@ -16,7 +16,8 @@ export {
   type Route,
   type Transition,
 } from './routes';
-export { useScreen, type Screen } from './ScreenContext';
+export { useOptionalScreen, useScreen, type Screen } from './ScreenContext';
 export { StackNavigator, type StackNavigatorProps } from './StackNavigator';
+export { useEditingText } from './useEditingText';
 export { useLargeTitle, useLargeTitleCollapsed } from './useLargeTitle';
 export { useNavigation } from './useNavigation';

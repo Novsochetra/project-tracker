@@ -37,7 +37,7 @@ export function Popover({
   const anchorRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   useCloseOnEscape(open, anchorRef, onClose);
-  useMenuTabOrder(open, anchorRef, panelRef);
+  useMenuTabOrder(open, anchorRef, panelRef, onClose);
   return (
     <div ref={anchorRef} className={clsx(styles.anchor, className)}>
       {trigger}

@@ -1,11 +1,14 @@
 import type { TicketDetail } from '@tracker/shared';
 import clsx from 'clsx';
 import type { KeyboardEvent } from 'react';
+import { useIsPhone } from '../../../lib/media';
 import { DropOverlay, pasteFiles, useAttachmentUploads, useFileDrop } from '../../attachments';
+import { DetailChips } from '../details/DetailChips';
 import { AutosaveTextarea } from '../fields/AutosaveTextarea';
-import { DESCRIPTION_MAX_LENGTH, TITLE_MAX_LENGTH } from '../fields/limits';
+import { TITLE_MAX_LENGTH } from '../fields/limits';
 import type { MoveToDone } from '../useMoveToDone';
 import { useTicketUpdate } from '../useTicketUpdate';
+import { DescriptionField } from './DescriptionField';
 import { LatestReview } from './LatestReview';
 import { TicketAttachments } from './TicketAttachments';
 import styles from './TicketMain.module.css';
@@ -23,6 +26,7 @@ function keepOneLine(event: KeyboardEvent<HTMLTextAreaElement>) {
 
 export function TicketMain({ detail, done, className }: TicketMainProps) {
   const { ticket } = detail;
+  const isPhone = useIsPhone();
   const update = useTicketUpdate(ticket.key);
   const uploads = useAttachmentUploads({ ticketKey: ticket.key });
   const drop = useFileDrop(uploads.add);
@@ -41,14 +45,11 @@ export function TicketMain({ detail, done, className }: TicketMainProps) {
           onKeyDown={keepOneLine}
           onSave={(title) => update({ title })}
         />
+        {isPhone && <DetailChips detail={detail} />}
         {/* Above the description, which often runs long enough to push it below a phone's fold. */}
         <LatestReview detail={detail} done={done} />
-        <AutosaveTextarea
-          label="Description"
-          target={{ ticketKey: ticket.key, field: 'description' }}
-          placeholder="Add details, steps or acceptance criteria…"
-          className={styles.description}
-          maxLength={DESCRIPTION_MAX_LENGTH}
+        <DescriptionField
+          ticketKey={ticket.key}
           value={ticket.description}
           onPaste={(event) => pasteFiles(event, uploads.add)}
           onSave={(description) => update({ description })}

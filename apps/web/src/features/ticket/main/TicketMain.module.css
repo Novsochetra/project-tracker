@@ -44,3 +44,9 @@
     font-size: var(--size-input);
   }
 }
+
+/* Up against the folded description it belongs to. */
+.inner .more {
+  align-self: flex-start;
+  margin-top: -8px;
+}

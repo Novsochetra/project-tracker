@@ -1,0 +1,179 @@
+/* They wrap rather than scroll sideways: every detail stays in sight, and a sideways row would
+   fight the edge swipe back. The padding leaves room for the chips' 44px targets. */
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  padding: var(--space-1) 0;
+}
+
+/* 16px text like the property rows they stand for, which also keeps iOS from zooming into the
+   assignee field. */
+.chip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  max-width: 100%;
+  height: 36px;
+  margin: 0;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--control-line);
+  border-radius: var(--radius-full);
+  background: var(--surface);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: var(--size-input);
+  line-height: 1.25;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    transform var(--duration-press) ease-out,
+    border-color var(--duration-fast) var(--ease-out),
+    box-shadow var(--duration-fast) var(--ease-out);
+}
+
+/* The 36px chip answers taps across its row's 44px. */
+.chip::before {
+  content: '';
+  position: absolute;
+  inset: -4px 0;
+}
+
+.chip:active {
+  transform: scale(0.97);
+}
+
+.chip:has(:focus-visible) {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.chip :focus-visible {
+  outline: none;
+}
+
+.icon {
+  flex: none;
+  display: inline-flex;
+}
+
+.value {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.chevron {
+  flex: none;
+  color: var(--faint);
+}
+
+.field {
+  padding-left: var(--space-2);
+  cursor: text;
+}
+
+/* Room to type while editing, as a text field has. */
+.field:focus-within {
+  flex: 1 0 100%;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
+}
+
+.field:focus-within .sizer {
+  flex: 1;
+}
+
+/* An unseen copy of the name sizes the grid cell, and the field fills it. */
+.sizer {
+  display: inline-grid;
+  min-width: 0;
+}
+
+.sizer::after {
+  content: attr(data-text) ' ';
+  grid-area: 1 / 1;
+  overflow: hidden;
+  visibility: hidden;
+  white-space: pre;
+}
+
+.input {
+  grid-area: 1 / 1;
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  text-overflow: ellipsis;
+}
+
+/* Chromium and iOS Safari reserve room for a datalist arrow, which pushed the name out of the
+   chip ("Claude (le…"); Chromium's UA rule is !important, so these have to be too. Two rules: a
+   browser that doesn't know one of the pseudo-elements drops a list holding it whole. */
+.input::-webkit-calendar-picker-indicator {
+  display: none !important;
+}
+
+.input::-webkit-list-button {
+  display: none !important;
+}
+
+.dateInput {
+  position: absolute;
+  inset: -4px 0;
+  width: 100%;
+  height: calc(100% + 8px);
+  margin: 0;
+  padding: 0;
+  border: 0;
+  opacity: 0;
+  font-size: var(--size-input);
+  cursor: pointer;
+}
+
+.set {
+  color: var(--muted-2);
+}
+
+.unset {
+  color: var(--placeholder);
+}
+
+.overdue {
+  color: var(--danger);
+}
+
+.late {
+  border-color: var(--danger-line);
+}
+
+.clear {
+  position: relative;
+  z-index: 2;
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  margin-right: -4px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-full);
+  background: var(--fill-2);
+  color: var(--muted);
+  cursor: pointer;
+}
+
+/* Keeps the 20px look with a 44px target. */
+.clear::before {
+  content: '';
+  position: absolute;
+  inset: -12px;
+}

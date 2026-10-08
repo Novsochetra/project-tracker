@@ -9,12 +9,6 @@
   background: var(--surface);
 }
 
-/* Lifts the card over the rows below while its options menu is open. */
-.card:has(.menu [aria-expanded='true']) {
-  position: relative;
-  z-index: 1;
-}
-
 .report {
   border-color: var(--report-line);
   background: var(--report-bg);

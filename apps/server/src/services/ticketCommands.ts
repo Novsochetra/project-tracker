@@ -24,7 +24,7 @@ import {
 } from '../repositories/tickets';
 import { removeFiles } from '../storage/fileStorage';
 import { isEmpty } from '../util';
-import { attachUploads } from './attachmentLinks';
+import { attachLaterUploads, attachUploads } from './attachmentLinks';
 import { inTransaction, notify, type ServiceContext } from './context';
 import {
   requireProject,
@@ -92,21 +92,42 @@ interface CreateRequest {
   input: CreateTicketValues;
 }
 
+interface Repeat {
+  project: ProjectRow;
+  earlier: TicketRow;
+  attachmentIds: readonly string[];
+}
+
+// The repeat's text is left alone: the client saves what the person changed with an update, so an
+// edit made in between stays. Its files have no other way onto the ticket, being pending uploads.
+async function repeatCreate(trx: Db, now: Clock, repeat: Repeat): Promise<Outcome> {
+  const { project, earlier, attachmentIds } = repeat;
+  if (!(await attachLaterUploads(trx, earlier.id, attachmentIds))) {
+    return { ticket: toTicket(earlier, project.key), changed: false };
+  }
+  const updatedAt = now();
+  await updateTicketRow(trx, earlier.id, { updatedAt });
+  return { ticket: toTicket({ ...earlier, updatedAt }, project.key), changed: true };
+}
+
 async function createOrRepeat(trx: Db, now: Clock, request: CreateRequest): Promise<Outcome> {
   const { actor, projectKey, input } = request;
   const project = await requireProject(trx, projectKey);
   const earlier = input.clientId
     ? await findTicketByClientId(trx, project.id, input.clientId)
     : undefined;
-  if (earlier) return { ticket: toTicket(earlier, project.key), changed: false };
+  if (earlier) {
+    return repeatCreate(trx, now, { project, earlier, attachmentIds: input.attachmentIds });
+  }
   return { ticket: await insertNewTicket(trx, now, { actor, project, input }), changed: true };
 }
 
-// A create that repeats a client id in the project gets the ticket the first one made. Looked up
-// inside the transaction: SQLite and PGlite run transactions one at a time, so two identical
-// creates at once make one ticket and take one number. On Postgres with several connections both
-// can miss it; the unique index refuses the second once the first has committed, and the second,
-// rolled back with its number, runs again like a later repeat.
+// A create that repeats a client id in the project gets the ticket the first one made, with the
+// repeat's files it lacks attached. Looked up inside the transaction: SQLite and PGlite run
+// transactions one at a time, so two identical creates at once make one ticket and take one
+// number. On Postgres with several connections both can miss it; the unique index refuses the
+// second once the first has committed, and the second, rolled back with its number, runs again
+// like a later repeat.
 export async function createTicket(
   ctx: ServiceContext,
   actor: Actor,

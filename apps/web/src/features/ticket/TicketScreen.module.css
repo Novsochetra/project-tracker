@@ -20,6 +20,10 @@
   grid-area: act;
 }
 
+.foot {
+  grid-area: foot;
+}
+
 /* Quiet on purpose: a fast load shows nothing, a slow one fades a spinner in. */
 .loading {
   display: flex;
@@ -58,8 +62,8 @@ button.barPrimary {
     grid-template-rows: auto;
     grid-template-areas:
       'main'
-      'side'
-      'act';
+      'act'
+      'foot';
     min-height: 0;
   }
 }

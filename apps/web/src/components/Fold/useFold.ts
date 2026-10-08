@@ -1,0 +1,76 @@
+import { useEffect, useLayoutEffect, useRef, useState, type RefObject } from 'react';
+import { foldedHeight, lineHeightOf } from './foldMath';
+
+export interface FoldState {
+  // The folded box's height while the text is long enough to fold, else null.
+  height: number | null;
+  expanded: boolean;
+  folded: boolean;
+  expand: () => void;
+  // Takes the button pressed, so a fold that closes keeps it under the finger.
+  toggle: (button: HTMLElement) => void;
+}
+
+const px = (value: string): number => Number.parseFloat(value) || 0;
+
+function measure(element: HTMLElement): number | null {
+  const style = getComputedStyle(element);
+  const padding = px(style.paddingTop) + px(style.paddingBottom);
+  const border = px(style.borderTopWidth) + px(style.borderBottomWidth);
+  return foldedHeight({
+    text: element.scrollHeight - padding,
+    lineHeight: lineHeightOf(style.lineHeight, style.fontSize),
+    frame: padding + border,
+  });
+}
+
+// Closing moves the button up by all it hid. Scrolling up as much keeps it where it was pressed,
+// instead of leaving the reader far down the page.
+function keepInPlace(button: HTMLElement, before: number): void {
+  const scroller = button.closest<HTMLElement>('[data-stack-scroller]');
+  const moved = button.getBoundingClientRect().top - before;
+  if (scroller && moved !== 0) scroller.scrollTop += moved;
+}
+
+// Measures `ref`'s whole text: the element itself for a field, the text inside the clipped box
+// otherwise. `content` changes with the text, for a field whose folded box doesn't resize.
+export function useFold(
+  ref: RefObject<HTMLElement | null>,
+  enabled: boolean,
+  content?: unknown,
+): FoldState {
+  const [height, setHeight] = useState<number | null>(null);
+  const [expanded, setExpanded] = useState(false);
+  const anchor = useRef<{ button: HTMLElement; top: number } | null>(null);
+
+  useLayoutEffect(() => {
+    const element = ref.current;
+    if (element && enabled) setHeight(measure(element));
+  }, [ref, enabled, content]);
+
+  // Fonts arriving, a turned phone and new text change the height without a render here.
+  useEffect(() => {
+    const element = ref.current;
+    if (!element || !enabled || typeof ResizeObserver === 'undefined') return;
+    const observer = new ResizeObserver(() => setHeight(measure(element)));
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [ref, enabled]);
+
+  useLayoutEffect(() => {
+    const pending = anchor.current;
+    anchor.current = null;
+    if (pending) keepInPlace(pending.button, pending.top);
+  }, [expanded]);
+
+  return {
+    height,
+    expanded,
+    folded: enabled && height !== null && !expanded,
+    expand: () => setExpanded(true),
+    toggle: (button) => {
+      if (expanded) anchor.current = { button, top: button.getBoundingClientRect().top };
+      setExpanded(!expanded);
+    },
+  };
+}

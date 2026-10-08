@@ -1,5 +1,5 @@
 import { Paperclip } from 'lucide-react';
-import { useRef } from 'react';
+import { useRef, type Ref } from 'react';
 import { AutoTextarea, Button, IconButton } from '../../../components';
 import { FileInput, FileNote, pasteFiles, ThumbnailGrid, useFileDrop } from '../../attachments';
 import { COMMENT_MAX_LENGTH } from '../fields/limits';
@@ -7,13 +7,19 @@ import styles from './Composer.module.css';
 import { isSubmitShortcut } from './commentRules';
 import { useComposer } from './useComposer';
 
-export function Composer({ ticketKey }: { ticketKey: string }) {
+export interface ComposerProps {
+  ticketKey: string;
+  ref?: Ref<HTMLFormElement>;
+}
+
+export function Composer({ ticketKey, ref }: ComposerProps) {
   const composer = useComposer(ticketKey);
   const { attachments, files } = composer;
   const drop = useFileDrop(files.add);
   const inputRef = useRef<HTMLInputElement>(null);
   return (
     <form
+      ref={ref}
       className={styles.composer}
       data-dropping={drop.active || undefined}
       onSubmit={(event) => {

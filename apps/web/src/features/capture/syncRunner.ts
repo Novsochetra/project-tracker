@@ -2,7 +2,7 @@ import { browserLockPlatform, createCaptureLocks, type Release } from './capture
 import type { SyncReport } from './syncCaptures';
 
 const LOCK_NAME = 'tracker-capture-sync';
-const NOTHING: SyncReport = { added: [], dropped: [], stopped: false };
+const NOTHING: SyncReport = { added: [], unsaved: [], dropped: [], stopped: false };
 
 let running: Promise<SyncReport> | null = null;
 const captureLocks = createCaptureLocks(browserLockPlatform);

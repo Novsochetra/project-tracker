@@ -7,7 +7,7 @@ import type { FieldSave, FieldTarget } from './useFieldSave';
 
 export interface AutosaveTextareaProps extends Omit<
   AutoTextareaProps,
-  'value' | 'onChange' | 'onFocus' | 'onBlur' | 'variant' | 'aria-label'
+  'value' | 'onChange' | 'onBlur' | 'variant' | 'aria-label'
 > {
   label: string;
   target: FieldTarget;
@@ -16,7 +16,14 @@ export interface AutosaveTextareaProps extends Omit<
   onSave: FieldSave;
 }
 
-export function AutosaveTextarea({ label, target, value, onSave, ...rest }: AutosaveTextareaProps) {
+export function AutosaveTextarea({
+  label,
+  target,
+  value,
+  onSave,
+  onFocus,
+  ...rest
+}: AutosaveTextareaProps) {
   const draft = useFieldDraft(value, target, onSave);
   const autosave = useAutosave(draft.save);
   const noteId = useId();
@@ -33,7 +40,10 @@ export function AutosaveTextarea({ label, target, value, onSave, ...rest }: Auto
           // Once a save has failed, only a retry that checks the tracker first saves again.
           if (!draft.failed) autosave.schedule(event.currentTarget.value);
         }}
-        onFocus={draft.focus}
+        onFocus={(event) => {
+          draft.focus();
+          onFocus?.(event);
+        }}
         onBlur={() => {
           draft.blur();
           if (draft.failed) {

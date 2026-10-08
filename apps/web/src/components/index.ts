@@ -5,6 +5,7 @@ export * from './ConfirmCard';
 export * from './DatePicker';
 export * from './Dropdown';
 export * from './EmptyState';
+export * from './Fold';
 export * from './GroupedCard';
 export * from './Icon';
 export * from './IconButton';

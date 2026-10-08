@@ -28,7 +28,7 @@ export function CaptureSheet({ open, onClose }: SheetProps) {
   // A file still uploading counts too: the person chose it.
   const fileCount = files.items.length + files.uploading.length;
   const dirty = hasContent(values, fileCount);
-  const captureId = useCaptureId(kept.clientId, !dirty);
+  const captureId = useCaptureId(kept.identity, !dirty);
   const finish = () => {
     forgetKeptCapture();
     onClose();
@@ -38,12 +38,12 @@ export function CaptureSheet({ open, onClose }: SheetProps) {
     project: project.current,
     attachments: files.items,
     uploading: files.uploading.length,
-    captureId: () => captureId.take({ values, projectKey: project.chosenKey }),
+    identity: () => captureId.take({ values, projectKey: project.chosenKey }),
     onDone: finish,
   });
   const drop = useFileDrop(files.add);
   useFocusWhenOpen(titleRef, open);
-  useKeepCapture({ values, projectKey: project.chosenKey, clientId: captureId.clientId }, open);
+  useKeepCapture({ values, projectKey: project.chosenKey, identity: captureId.identity }, open);
   // The text is kept for the next opening, but files are not, so a reload would lose them.
   useDraftMark(CAPTURE_DRAFT_ID, open && fileCount > 0);
   const update = (patch: Partial<CaptureValues>) => {

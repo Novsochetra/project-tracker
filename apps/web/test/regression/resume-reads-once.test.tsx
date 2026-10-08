@@ -1,22 +1,9 @@
-import type { SessionState } from '@tracker/shared';
-import { act, render, screen } from '@testing-library/react';
+import { act, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { HIDDEN_GRACE_MS } from '../../src/api/live/pauseWhileHidden';
-import { fakeClient } from '../../src/api/test/fakeClient';
-import {
-  defaultTickets,
-  listItem,
-  makeBoard,
-  makeTicketDetail,
-  project,
-  STATUS,
-  statuses,
-} from '../../src/api/test/fixtures';
 import { MockEventSource } from '../../src/api/test/mockEventSource';
-import { createTestQueryClient } from '../../src/api/test/render';
-import { projectSummary } from '../../src/app/test/harness';
-import { TrackerApp } from '../../src/app/TrackerApp';
 import { skipAnimations } from '../../src/overlays/testing';
+import { advance, ONE_EACH, RENAMED, renderApp, setVisibility } from './countedReads';
 
 // After the page was hidden for more than 30 s, TanStack Query's focus refetch read every open
 // query, and the refresh when the reopened live stream opened read them all again. A phone that
@@ -24,61 +11,7 @@ import { skipAnimations } from '../../src/overlays/testing';
 // everything before the stream had caught up, and the overdue silence timer reopened it and read
 // everything again.
 
-const OPEN_SESSION: SessionState = { authRequired: false, authenticated: true };
 const HIDDEN_MS = HIDDEN_GRACE_MS + 10_000;
-const RENAMED = 'Crash on launch';
-
-function fakeServer() {
-  let first = listItem(1, STATUS.todo, 0);
-  const routes = {
-    getSession: vi.fn(() => Promise.resolve(OPEN_SESSION)),
-    listProjects: vi.fn(() => Promise.resolve([projectSummary()])),
-    listAllTickets: vi.fn(() => Promise.resolve({ tickets: [], statuses: [] })),
-    getProject: vi.fn(() => Promise.resolve({ project, statuses })),
-    getBoard: vi.fn(() => Promise.resolve(makeBoard([first, ...defaultTickets().slice(1)]))),
-    getTicket: vi.fn(() => Promise.resolve(makeTicketDetail(first))),
-    listPeople: vi.fn(() => Promise.resolve([])),
-  };
-  const calls: string[] = [];
-  const counted = (name: string, route: (...args: unknown[]) => unknown) => {
-    return (...args: unknown[]) => {
-      calls.push(name);
-      return route(...args);
-    };
-  };
-  const client = fakeClient(
-    Object.fromEntries(Object.entries(routes).map(([name, route]) => [name, counted(name, route)])),
-  );
-  return {
-    routes,
-    client,
-    readsSince: (mark: number) => countsOf(calls.slice(mark)),
-    mark: () => calls.length,
-    renameFirstTicket: () => void (first = { ...first, title: RENAMED }),
-  };
-}
-
-function countsOf(names: readonly string[]): Record<string, number> {
-  const counts: Record<string, number> = {};
-  for (const name of names) counts[name] = (counts[name] ?? 0) + 1;
-  return counts;
-}
-
-function renderApp(path: string, server = fakeServer()) {
-  window.history.replaceState(null, '', path);
-  render(<TrackerApp client={server.client} queryClient={createTestQueryClient()} />);
-  return server;
-}
-
-const advance = (ms: number) => act(() => vi.advanceTimersByTimeAsync(ms));
-
-// Browsers fire it at the document and it bubbles to window, where TanStack Query listens for focus.
-function setVisibility(state: DocumentVisibilityState) {
-  vi.spyOn(document, 'visibilityState', 'get').mockReturnValue(state);
-  act(() => void document.dispatchEvent(new Event('visibilitychange', { bubbles: true })));
-}
-
-const ONE_EACH = { listProjects: 1, listAllTickets: 1, getBoard: 1 };
 
 let restore: Array<() => void> = [];
 

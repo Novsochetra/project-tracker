@@ -1,4 +1,5 @@
-import { PRIORITIES, type Priority } from '@tracker/shared';
+import type { Priority } from '@tracker/shared';
+import { isPriority, isRecord, parseCaptureText, type CaptureText } from './captureText';
 
 export interface QueuedCapture {
   // Client id, sent with every request for the capture: the tracker makes one ticket per id, so
@@ -9,6 +10,9 @@ export interface QueuedCapture {
   description: string;
   priority: Priority;
   capturedAt: number;
+  // The text the capture's first create sent. Only fields changed since then are saved to its
+  // ticket, so an edit someone else made in between stays. Missing: nothing changed since.
+  sent?: CaptureText;
 }
 
 export interface CaptureQueue {
@@ -56,18 +60,13 @@ export function dropCapture(queue: CaptureQueue, id: string): CaptureQueue {
   return { ...queue, items: queue.items.filter((item) => item.id !== id) };
 }
 
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null;
-
-const isPriority = (value: unknown): value is Priority =>
-  typeof value === 'string' && (PRIORITIES as readonly string[]).includes(value);
-
 function toCapture(value: unknown): QueuedCapture[] {
   if (!isRecord(value)) return [];
   const { id, projectKey, title, description, priority, capturedAt } = value;
   if (typeof id !== 'string' || typeof projectKey !== 'string' || typeof title !== 'string') {
     return [];
   }
+  const sent = parseCaptureText(value.sent);
   return [
     {
       id,
@@ -76,6 +75,7 @@ function toCapture(value: unknown): QueuedCapture[] {
       description: typeof description === 'string' ? description : '',
       priority: isPriority(priority) ? priority : 'medium',
       capturedAt: typeof capturedAt === 'number' ? capturedAt : 0,
+      ...(sent ? { sent } : {}),
     },
   ];
 }

@@ -4,6 +4,7 @@ import { HUMAN, UNSUPPORTED_ATTACHMENT_MESSAGE, type Activity } from '@tracker/s
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { attachment, comment, makeTicketDetail } from '../../../api/test/fixtures';
 import { deferred } from '../../../api/test/deferred';
+import { readMenuConfirm } from '../../../components/Popover/testing';
 import { hasDrafts } from '../../../lib/drafts';
 import { skipAnimations } from '../../../overlays/testing';
 import { renderTicket } from '../test/renderTicket';
@@ -98,6 +99,7 @@ describe('activity items', () => {
     await user.click(screen.getByRole('button', { name: 'Report options' }));
     expect(screen.queryByRole('button', { name: 'Edit report' })).not.toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Delete report' }));
+    await readMenuConfirm();
     await user.click(screen.getByRole('button', { name: 'Cancel' }));
     expect(screen.getByRole('button', { name: 'Report options' })).toHaveFocus();
     expect(client.deleteActivity).not.toHaveBeenCalled();
@@ -107,6 +109,7 @@ describe('activity items', () => {
     expect(screen.getByRole('alert')).toHaveTextContent(
       "Delete this report? This can't be undone.",
     );
+    await readMenuConfirm();
     await user.click(screen.getByRole('button', { name: 'Delete' }));
     expect(client.deleteActivity).toHaveBeenCalledWith('r1');
     expect(screen.queryByText('Claude report')).not.toBeInTheDocument();

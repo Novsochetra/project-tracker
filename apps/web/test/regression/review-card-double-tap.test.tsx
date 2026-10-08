@@ -9,6 +9,8 @@ import { skipAnimations } from '../../src/overlays/testing';
 // double tap, 150 ms later, landed on what moved up into its place: Add images, which opened the
 // photo picker, or the description, which opened the keyboard (WebKit, 375×812). While a double
 // tap can still land, the card stays where it was and takes no taps.
+// Since PT-73 phones move to Done from the bottom bar only, so the card's button is desktop's,
+// where the second click of a double-click lands the same way.
 
 const approval = comment('v1', 'Fix is correct.', {
   type: 'review',
@@ -29,7 +31,7 @@ function renderReviewedTicket(
   updateTicket = vi.fn().mockReturnValue(new Promise(() => undefined)),
 ) {
   const detail = makeTicketDetail(listItem(3, STATUS.reviewed, 0), { activity: [approval] });
-  const rendered = renderTicket({ detail, phone: true, client: { updateTicket } });
+  const rendered = renderTicket({ detail, client: { updateTicket } });
   cleanups.push(rendered.restorePhone);
   return rendered;
 }

@@ -23,8 +23,10 @@ export function createQueryClient(): QueryClient {
       queries: {
         staleTime: STALE_TIME_MS,
         retry: retryOnce,
-        // A reopening live stream reads everything once it opens, as on a return after 30 s hidden.
+        // A reopening live stream reads everything once it opens, as on a return after 30 s hidden
+        // or once the network is back.
         refetchOnWindowFocus: () => !isLiveRefreshPending(queryClient),
+        refetchOnReconnect: () => !isLiveRefreshPending(queryClient),
         networkMode: 'offlineFirst',
       },
       // Writes aren't cached; trying right away fails fast with a clear message instead of pausing.

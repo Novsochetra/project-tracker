@@ -1,9 +1,11 @@
 import { ClipboardCheck, Terminal } from 'lucide-react';
+import type { RefObject } from 'react';
 import { useSheets } from '../../app/sheets/context';
 import { Button } from '../../components';
 import { useJustChanged } from '../../lib/useJustChanged';
 import { BottomBar } from '../../navigation';
 import { DoneButton } from './DoneButton';
+import { CommentJump } from './jump/CommentJump';
 import styles from './TicketScreen.module.css';
 import { promptSheet, reportSheet } from './ticketSheets';
 import type { MoveToDone } from './useMoveToDone';
@@ -16,9 +18,10 @@ export interface TicketBottomBarProps {
   projectKey: string;
   // Reviewed work's next step is Done, not another round with Claude.
   done: MoveToDone | null;
+  commentBox?: RefObject<HTMLFormElement | null>;
 }
 
-export function TicketBottomBar({ ticketKey, projectKey, done }: TicketBottomBarProps) {
+export function TicketBottomBar({ ticketKey, projectKey, done, commentBox }: TicketBottomBarProps) {
   const sheets = useSheets();
   // Move to Done and Send to Claude take turns in one spot, so a tap just after they swap was
   // meant for the other one: the second tap of a double tap on Move to Done opened Send to Claude.
@@ -28,6 +31,7 @@ export function TicketBottomBar({ ticketKey, projectKey, done }: TicketBottomBar
   };
   return (
     <BottomBar>
+      {commentBox && <CommentJump boxRef={commentBox} />}
       <Button
         size="bar"
         icon={ClipboardCheck}
