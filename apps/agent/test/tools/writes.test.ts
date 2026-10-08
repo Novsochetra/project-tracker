@@ -175,7 +175,7 @@ describe('move_ticket', () => {
       updateTicket: updateTicketApi,
     });
     await expect(run(moveTicket, client, { ticket: 'MOB-3', status: 'Done' })).rejects.toThrow(
-      'MOB-3 is already in Done. Only a person moves tickets out of it.',
+      /^MOB-3 is already in Done\.$/,
     );
     expect(updateTicketApi).not.toHaveBeenCalled();
   });

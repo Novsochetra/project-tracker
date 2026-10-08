@@ -8,7 +8,7 @@ import { defineTool } from './tool';
 // Workers and reviewers both reach for Done at the end of their part; point each at the step that is theirs.
 function doneRefusal({ ticket, status }: TicketDetail, target: string): string {
   if (isDoneCategory(status.category)) {
-    return `${ticket.key} is already in ${status.name}. Only a person moves tickets out of it.`;
+    return `${ticket.key} is already in ${status.name}.`;
   }
   if (status.category === 'reviewed') {
     return `${ticket.key} is in ${status.name}, waiting for a person to move it to ${target}.`;

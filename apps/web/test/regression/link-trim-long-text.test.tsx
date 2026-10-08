@@ -11,8 +11,9 @@ import { skipAnimations } from '../../src/overlays/testing';
 // because the trailing-punctuation regex backtracked through the dots from every start.
 
 const URL = 'https://x.dev/';
-// Linear work takes a few milliseconds even at 100,000 characters; this leaves room for slow CI.
-const BUDGET_MS = 100;
+// Linear work takes a few milliseconds even at 100,000 characters, while the old quadratic work
+// took seconds. A loaded machine can stretch a few milliseconds past 100, so the budget is wide.
+const BUDGET_MS = 1_000;
 
 let cleanups: Array<() => void> = [];
 
