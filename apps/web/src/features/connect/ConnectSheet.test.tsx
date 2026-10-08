@@ -2,18 +2,20 @@ import { screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { ServerMeta } from '@tracker/shared';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { renderWithApp } from '../../app/test/harness';
 import { renderWithApi, setClipboard, sheetTestSetup } from '../claude/test/renderWithApi';
 import { ConnectSheet } from './ConnectSheet';
 
 const meta: ServerMeta = {
   version: '1.0.0',
+  serverUrl: 'http://localhost:4100',
   repoRoot: '/Users/dara/code/project-tracker',
   mcpEntry: '/Users/dara/code/project-tracker/apps/agent/dist/mcp.js',
   cliEntry: '/Users/dara/code/project-tracker/apps/agent/dist/cli.js',
   authRequired: false,
 };
 
-const COMMAND = `claude mcp add tracker -s user --env TRACKER_URL=${window.location.origin} --env TRACKER_AGENT_NAME=Claude -- node ${meta.mcpEntry}`;
+const COMMAND = `claude mcp add tracker -s user --env TRACKER_URL=http://localhost:4100 --env TRACKER_AGENT_NAME=Claude -- node ${meta.mcpEntry}`;
 
 const sheet = () => screen.getByRole('dialog', { name: 'Connect Claude Code' });
 
@@ -46,6 +48,20 @@ describe('ConnectSheet', () => {
     expect(within(sheet()).getByText('/mcp__tracker__review <PROJECT KEY>')).toBeInTheDocument();
     expect(within(sheet()).getByText(`node ${meta.cliEntry} help`)).toBeInTheDocument();
     expect(within(sheet()).queryByText(/TRACKER_TOKEN/)).not.toBeInTheDocument();
+  });
+
+  it('fills in the key of the project behind the sheet', async () => {
+    renderWithApp(<ConnectSheet open onClose={() => undefined} />, {
+      path: '/p/mob/2',
+      client: { getMeta: vi.fn().mockResolvedValue(meta) },
+    });
+    expect(await within(sheet()).findByText('/mcp__tracker__work MOB')).toBeInTheDocument();
+    expect(within(sheet()).getByText('/mcp__tracker__review MOB')).toBeInTheDocument();
+    expect(
+      within(sheet()).getByText(
+        'MOB is this project’s key. Leave it out and the agent finds the project by its repository.',
+      ),
+    ).toBeInTheDocument();
   });
 
   it('adds the token to the command when the tracker needs one', async () => {

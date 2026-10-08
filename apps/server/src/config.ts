@@ -12,6 +12,7 @@ export interface Config {
   testReset: boolean;
   repoRoot: string;
   version: string;
+  publicUrl: string | null;
 }
 
 // This file runs as src/config.ts (tsx, vitest) and bundled as dist/main.js:
@@ -38,6 +39,14 @@ function parsePort(value: string | undefined): number {
   return Number.isInteger(port) && port > 0 && port < 65536 ? port : DEFAULT_PORT;
 }
 
+function parsePublicUrl(value: string | undefined): string | null {
+  const text = value?.trim() ?? '';
+  if (!URL.canParse(text)) return null;
+  const url = new URL(text);
+  if (url.protocol !== 'http:' && url.protocol !== 'https:') return null;
+  return `${url.origin}${url.pathname}`.replace(/\/+$/, '');
+}
+
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
   return {
     port: parsePort(env.PORT),
@@ -49,5 +58,6 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     testReset: env.TRACKER_TEST_RESET === '1',
     repoRoot: REPO_ROOT,
     version: readVersion(),
+    publicUrl: parsePublicUrl(env.PUBLIC_URL),
   };
 }

@@ -12,25 +12,13 @@ import {
 } from './sendPrompt';
 import { SendSwitch } from './SendSwitch';
 import { useMarkSentOnce } from './useMarkSentOnce';
-import { useOpenSession } from './useOpenSession';
 import { usePromptDraft } from './usePromptDraft';
 
 export function PromptSheet({ open, onClose, scope }: SheetProps & { scope: PromptScope }) {
-  const session = useOpenSession(open);
   return scope.kind === 'ticket' ? (
-    <TicketPromptSheet
-      key={`ticket-${session}`}
-      open={open}
-      onClose={onClose}
-      ticketKey={scope.ticketKey}
-    />
+    <TicketPromptSheet open={open} onClose={onClose} ticketKey={scope.ticketKey} />
   ) : (
-    <ProjectPromptSheet
-      key={`project-${session}`}
-      open={open}
-      onClose={onClose}
-      projectKey={scope.projectKey}
-    />
+    <ProjectPromptSheet open={open} onClose={onClose} projectKey={scope.projectKey} />
   );
 }
 

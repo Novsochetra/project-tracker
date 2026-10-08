@@ -117,6 +117,7 @@ All routes are under `/api`, JSON in and out. Errors: `{ "error": { "code", "mes
 | `POST /tickets/:key/submit`                                                 | Agent submits work for review                                                                                            |
 | `POST /tickets/:key/review`                                                 | Agent reviews a ticket in `in_review`                                                                                    |
 | `GET /people`                                                               | Assignee suggestions                                                                                                     |
+| `GET /meta`                                                                 | Server info for Connect Claude Code: `serverUrl` (`PUBLIC_URL`, else the URL the request reached), entry paths           |
 | `GET /events`                                                               | SSE stream of `ChangeEvent` (`{ type: 'changed', projectId, ticketId }`), heartbeat every 25 s                           |
 | `GET/POST /session`                                                         | Auth state / exchange token for an HttpOnly cookie                                                                       |
 

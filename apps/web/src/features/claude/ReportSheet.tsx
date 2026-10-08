@@ -1,6 +1,6 @@
 import clsx from 'clsx';
 import { ClipboardCheck } from 'lucide-react';
-import { useState, type FormEvent } from 'react';
+import { useMemo, useState, type FormEvent } from 'react';
 import { errorMessage, useApplyReport, useProject, useReportPreview } from '../../api';
 import { flashRows } from '../../app/flash';
 import type { ReportScope, SheetProps } from '../../app/sheets/types';
@@ -15,26 +15,28 @@ import {
   reportHelp,
   reportPlaceholder,
   reportSubtitle,
+  reportView,
 } from './pasteReport';
 import styles from './ReportSheet.module.css';
-import { useOpenSession } from './useOpenSession';
+import { useHeldWhileClosed } from './useHeldWhileClosed';
 
 type ReportSheetProps = SheetProps & { scope: ReportScope };
 
-export function ReportSheet(props: ReportSheetProps) {
-  const session = useOpenSession(props.open);
-  return <ReportForm key={session} {...props} />;
-}
-
-function useReportForm(scope: ReportScope, onClose: () => void) {
+function useReportForm({ open, onClose, scope }: ReportSheetProps) {
   const toast = useToast();
   const [text, setText] = useState('');
   const [error, setError] = useState<string | null>(null);
   const ticketKey = scope.kind === 'ticket' ? scope.ticketKey : undefined;
   const preview = useReportPreview(text, ticketKey);
   const apply = useApplyReport();
-  const items = text.trim() ? (preview.data?.items ?? []) : [];
-  const canApply = items.length > 0 && (preview.data?.matchedCount ?? 0) > 0 && !apply.isPending;
+  const previewError = preview.isError ? errorMessage(preview.error) : null;
+  const live = useMemo(
+    () =>
+      reportView({ text, error, preview: preview.data, previewError, applying: apply.isPending }),
+    [text, error, preview.data, previewError, apply.isPending],
+  );
+  // Applying moves tickets, so the preview refetches while the sheet animates out.
+  const view = useHeldWhileClosed(open, live);
 
   const changeText = (next: string) => {
     setText(next);
@@ -47,7 +49,7 @@ function useReportForm(scope: ReportScope, onClose: () => void) {
   };
   const submit = (event: FormEvent) => {
     event.preventDefault();
-    if (!canApply) return;
+    if (!view.canApply) return;
     apply.mutate(
       { text, ticketKey },
       {
@@ -61,12 +63,12 @@ function useReportForm(scope: ReportScope, onClose: () => void) {
       },
     );
   };
-  const previewError = text.trim() && preview.isError ? errorMessage(preview.error) : null;
-  return { text, error: error ?? previewError, items, canApply, changeText, paste, submit };
+  return { ...view, changeText, paste, submit };
 }
 
-function ReportForm({ open, onClose, scope }: ReportSheetProps) {
-  const form = useReportForm(scope, onClose);
+export function ReportSheet(props: ReportSheetProps) {
+  const { open, onClose, scope } = props;
+  const form = useReportForm(props);
   const project = useProject(scope.projectKey);
   return (
     <Sheet

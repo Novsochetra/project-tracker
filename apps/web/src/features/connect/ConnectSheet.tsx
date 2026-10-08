@@ -4,16 +4,18 @@ import { useId, type ReactNode } from 'react';
 import { errorMessage, useMeta, type TrackerQuery } from '../../api';
 import type { SheetProps } from '../../app/sheets/types';
 import { Button, GroupedCard, Spinner } from '../../components';
+import { useOptionalNavigation } from '../../navigation/useNavigation';
 import { Sheet, SheetTextButton } from '../../overlays';
 import { CommandRow } from './CommandRow';
 import {
   BUILD_COMMAND,
   COMMAND_COPY_BLOCKED,
-  REVIEW_COMMAND,
   TOKEN_PLACEHOLDER,
-  WORK_COMMAND,
   cliHelpCommand,
   mcpAddCommand,
+  projectKeyNote,
+  routeProjectKey,
+  slashCommand,
 } from './connectCommand';
 import styles from './ConnectSheet.module.css';
 import { ConnectSteps } from './ConnectSteps';
@@ -21,6 +23,7 @@ import { useCopyCommand } from './useCopyCommand';
 
 export function ConnectSheet({ open, onClose }: SheetProps) {
   const meta = useMeta();
+  const projectKey = routeProjectKey(useOptionalNavigation()?.route);
   return (
     <Sheet
       open={open}
@@ -34,7 +37,11 @@ export function ConnectSheet({ open, onClose }: SheetProps) {
           Claude Code agents can pick up your tickets, do the work and hand it back for review.
         </p>
         <ConnectSteps />
-        {meta.data ? <Setup meta={meta.data} /> : <MetaState query={meta} />}
+        {meta.data ? (
+          <Setup meta={meta.data} projectKey={projectKey} />
+        ) : (
+          <MetaState query={meta} />
+        )}
       </div>
     </Sheet>
   );
@@ -52,13 +59,9 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
   );
 }
 
-function Setup({ meta }: { meta: ServerMeta }) {
+function Setup({ meta, projectKey }: { meta: ServerMeta; projectKey: string | null }) {
   const { copy, blocked } = useCopyCommand();
-  const command = mcpAddCommand({
-    origin: window.location.origin,
-    mcpEntry: meta.mcpEntry,
-    authRequired: meta.authRequired,
-  });
+  const command = mcpAddCommand(meta);
   return (
     <>
       <Section title="Add the tracker to Claude Code">
@@ -81,28 +84,7 @@ function Setup({ meta }: { meta: ServerMeta }) {
           <code className={styles.inlineCode}>{meta.repoRoot}</code>.
         </p>
       </Section>
-      <Section title="Then, in Claude Code">
-        <GroupedCard>
-          <ul className={styles.rows}>
-            <CommandRow
-              command={WORK_COMMAND}
-              description="Claims the next To do ticket, does the work and submits it for review."
-              copyLabel="Copy work command"
-              onCopy={copy}
-            />
-            <CommandRow
-              command={REVIEW_COMMAND}
-              description="Checks tickets in Need review, rates them and approves them or sends them back."
-              copyLabel="Copy review command"
-              onCopy={copy}
-            />
-          </ul>
-        </GroupedCard>
-        <p className={styles.note}>
-          Use the project’s key, like MOB. Leave it out and the agent finds the project by its
-          repository.
-        </p>
-      </Section>
+      <SlashCommands projectKey={projectKey} onCopy={copy} />
       <Section title="Without MCP">
         <GroupedCard>
           <ul className={styles.rows}>
@@ -121,6 +103,35 @@ function Setup({ meta }: { meta: ServerMeta }) {
         </p>
       )}
     </>
+  );
+}
+
+interface SlashCommandsProps {
+  projectKey: string | null;
+  onCopy: (command: string) => void;
+}
+
+function SlashCommands({ projectKey, onCopy }: SlashCommandsProps) {
+  return (
+    <Section title="Then, in Claude Code">
+      <GroupedCard>
+        <ul className={styles.rows}>
+          <CommandRow
+            command={slashCommand('work', projectKey)}
+            description="Claims the next To do ticket, does the work and submits it for review."
+            copyLabel="Copy work command"
+            onCopy={onCopy}
+          />
+          <CommandRow
+            command={slashCommand('review', projectKey)}
+            description="Checks tickets in Need review, rates them and approves them or sends them back."
+            copyLabel="Copy review command"
+            onCopy={onCopy}
+          />
+        </ul>
+      </GroupedCard>
+      <p className={styles.note}>{projectKeyNote(projectKey)}</p>
+    </Section>
   );
 }
 

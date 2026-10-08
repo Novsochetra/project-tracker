@@ -40,6 +40,7 @@ describe('loadConfig', () => {
       token: null,
       testReset: false,
       repoRoot: REPO_ROOT,
+      publicUrl: null,
     });
     expect(config.version).toMatch(/^\d+\.\d+\.\d+/);
   });
@@ -67,6 +68,16 @@ describe('loadConfig', () => {
       port: DEFAULT_PORT,
       testReset: false,
     });
+  });
+
+  it('reads the public URL agents use, without a trailing slash', () => {
+    const publicUrl = (value: string) => loadConfig({ PUBLIC_URL: value }).publicUrl;
+    expect(publicUrl(' https://tracker.example.com/ ')).toBe('https://tracker.example.com');
+    expect(publicUrl('http://10.0.0.5:4100')).toBe('http://10.0.0.5:4100');
+    expect(publicUrl('https://example.com/tracker/')).toBe('https://example.com/tracker');
+    expect(publicUrl('tracker.example.com')).toBeNull();
+    expect(publicUrl('ftp://tracker.example.com')).toBeNull();
+    expect(publicUrl('')).toBeNull();
   });
 
   it('tells Postgres URLs from SQLite paths', () => {

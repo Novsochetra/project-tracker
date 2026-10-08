@@ -6,7 +6,6 @@ import { errorMessage, useBoard, type TrackerQuery } from '../../api';
 import type { SheetProps } from '../../app/sheets/types';
 import { Button, Spinner } from '../../components';
 import { Sheet, SheetTextButton } from '../../overlays';
-import { useOpenSession } from '../claude/useOpenSession';
 import { StatusEditor } from './StatusEditor';
 import { StatusList } from './StatusList';
 import styles from './StatusManagerSheet.module.css';
@@ -19,12 +18,7 @@ type StatusManagerSheetProps = SheetProps & { projectKey: string };
 export const STATUSES_HELP =
   'Tickets are grouped by these statuses, in this order. A status’s type tells agents what it means.';
 
-export function StatusManagerSheet(props: StatusManagerSheetProps) {
-  const session = useOpenSession(props.open);
-  return <StatusManager key={session} {...props} />;
-}
-
-function StatusManager({ open, onClose, projectKey }: StatusManagerSheetProps) {
+export function StatusManagerSheet({ open, onClose, projectKey }: StatusManagerSheetProps) {
   const board = useBoard(projectKey);
   return (
     <Sheet

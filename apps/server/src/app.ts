@@ -32,6 +32,7 @@ export interface AppDeps {
   testReset?: boolean;
   repoRoot?: string;
   version?: string;
+  publicUrl?: string | null;
   heartbeatMs?: number;
 }
 
@@ -47,6 +48,7 @@ function createApi(ctx: ServiceContext, deps: AppDeps): Hono<AppEnv> {
         version: deps.version ?? '0.0.0',
         repoRoot: deps.repoRoot ?? REPO_ROOT,
         authRequired: token !== null,
+        publicUrl: deps.publicUrl ?? null,
       }),
     )
     .route('/', projectRoutes(ctx))

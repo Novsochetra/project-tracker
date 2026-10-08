@@ -153,9 +153,9 @@
     font-size: var(--size-input);
   }
 
-  /* 34px wide like the phone drag handle, so all nine colors fit one row. */
+  /* Nine 44px tap areas don't fit one row, so the swatches wrap; the dots keep their size. */
   .swatch {
-    width: 34px;
+    width: var(--touch-target);
     height: var(--touch-target);
   }
 
@@ -164,9 +164,10 @@
     height: 26px;
   }
 
+  /* Lines the first dot up with the fields above it. */
   .swatches {
     gap: 0;
-    margin-left: -4px;
+    margin-left: -9px;
   }
 
   .deleteGroup {

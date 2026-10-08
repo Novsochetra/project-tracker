@@ -9,10 +9,17 @@ export interface MetaOptions {
   version: string;
   repoRoot: string;
   authRequired: boolean;
+  publicUrl: string | null;
 }
 
-export const serverMeta = ({ version, repoRoot, authRequired }: MetaOptions): ServerMeta => ({
+// The page's origin is no use to agents: under `npm run dev` it is Vite's. Vite's proxy sends
+// API requests here with this server's host, so the request's own origin is the API's address.
+export const serverMeta = (
+  { version, repoRoot, authRequired, publicUrl }: MetaOptions,
+  requestUrl: string,
+): ServerMeta => ({
   version,
+  serverUrl: publicUrl ?? new URL(requestUrl).origin,
   repoRoot,
   mcpEntry: join(repoRoot, 'apps', 'agent', 'dist', 'mcp.js'),
   cliEntry: join(repoRoot, 'apps', 'agent', 'dist', 'cli.js'),
@@ -22,7 +29,7 @@ export const serverMeta = ({ version, repoRoot, authRequired }: MetaOptions): Se
 export const miscRoutes = (ctx: ServiceContext, meta: MetaOptions) =>
   new Hono<AppEnv>()
     .get('/health', (c) => c.json({ ok: true }))
-    .get('/meta', (c) => c.json(serverMeta(meta)))
+    .get('/meta', (c) => c.json(serverMeta(meta, c.req.url)))
     .get('/people', async (c) => c.json(await listPeople(ctx)));
 
 export const testResetRoutes = (ctx: ServiceContext) =>

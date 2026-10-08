@@ -1,5 +1,5 @@
 import { ApiError } from '@tracker/client';
-import type { ReportPreviewItem } from '@tracker/shared';
+import type { ReportPreview, ReportPreviewItem } from '@tracker/shared';
 import { describe, expect, it } from 'vitest';
 import {
   appliedMessage,
@@ -9,6 +9,8 @@ import {
   reportHelp,
   reportPlaceholder,
   reportSubtitle,
+  reportView,
+  type ReportState,
 } from './pasteReport';
 
 const ticketScope = { kind: 'ticket', ticketKey: 'MOB-3', projectKey: 'MOB' } as const;
@@ -103,5 +105,51 @@ describe('report sheet copy', () => {
     expect(isNoMatch(new ApiError(422, 'no_match', 'No matching ticket found.'))).toBe(true);
     expect(isNoMatch(new ApiError(400, 'invalid_input', 'Bad'))).toBe(false);
     expect(isNoMatch(new Error('no_match'))).toBe(false);
+  });
+});
+
+describe('reportView', () => {
+  const preview: ReportPreview = {
+    items: [item({ toStatusName: 'Need review' })],
+    matchedCount: 1,
+  };
+  const state: ReportState = {
+    text: 'TICKET: MOB-2\nSTATUS: done',
+    error: null,
+    preview,
+    previewError: null,
+    applying: false,
+  };
+
+  it('lists the preview and allows Apply once a block matches', () => {
+    expect(reportView(state)).toEqual({
+      text: state.text,
+      items: preview.items,
+      canApply: true,
+      error: null,
+    });
+  });
+
+  it('keeps Apply off while nothing matches or the report is being applied', () => {
+    expect(reportView({ ...state, preview: { ...preview, matchedCount: 0 } }).canApply).toBe(false);
+    expect(reportView({ ...state, preview: undefined }).canApply).toBe(false);
+    expect(reportView({ ...state, applying: true }).canApply).toBe(false);
+  });
+
+  it('shows no preview or preview error for an empty box', () => {
+    expect(reportView({ ...state, text: '  ', previewError: 'Can’t reach the tracker.' })).toEqual({
+      text: '  ',
+      items: [],
+      canApply: false,
+      error: null,
+    });
+  });
+
+  it('shows the form’s own error before a preview error', () => {
+    expect(reportView({ ...state, previewError: 'Preview failed' }).error).toBe('Preview failed');
+    expect(
+      reportView({ ...state, error: 'The clipboard is empty.', previewError: 'Preview failed' })
+        .error,
+    ).toBe('The clipboard is empty.');
   });
 });

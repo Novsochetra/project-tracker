@@ -1,5 +1,5 @@
 import { ApiError } from '@tracker/client';
-import type { ReportPreviewItem } from '@tracker/shared';
+import type { ReportPreview, ReportPreviewItem } from '@tracker/shared';
 import type { ReportScope } from '../../app/sheets/types';
 
 export const reportHelp = (scope: ReportScope): string =>
@@ -27,6 +27,33 @@ export const appliedMessage = (count: number): string =>
 
 export const isNoMatch = (error: unknown): boolean =>
   error instanceof ApiError && error.code === 'no_match';
+
+export interface ReportState {
+  text: string;
+  error: string | null;
+  preview: ReportPreview | undefined;
+  previewError: string | null;
+  applying: boolean;
+}
+
+export interface ReportView {
+  text: string;
+  items: readonly ReportPreviewItem[];
+  canApply: boolean;
+  error: string | null;
+}
+
+export function reportView(state: ReportState): ReportView {
+  const hasText = state.text.trim().length > 0;
+  const items = hasText ? (state.preview?.items ?? []) : [];
+  const matched = (state.preview?.matchedCount ?? 0) > 0;
+  return {
+    text: state.text,
+    items,
+    canApply: items.length > 0 && matched && !state.applying,
+    error: state.error ?? (hasText ? state.previewError : null),
+  };
+}
 
 export interface PreviewRow {
   keyLabel: string;

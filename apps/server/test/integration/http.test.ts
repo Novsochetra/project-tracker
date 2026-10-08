@@ -1,7 +1,7 @@
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import type { ErrorBody } from '@tracker/shared';
+import type { ErrorBody, ServerMeta } from '@tracker/shared';
 import { afterAll, describe, expect, it } from 'vitest';
 import { createApp, type AppDeps } from '../../src/app';
 import { REPO_ROOT } from '../../src/config';
@@ -46,15 +46,16 @@ describe.each(DIALECTS)('http surface (%s)', (dialect) => {
   });
 
   it('describes the server for the Connect Claude Code sheet', async () => {
-    const res = await api.get('/api/meta');
+    const res = await api.get<ServerMeta>('/api/meta');
     expect(res.body).toEqual({
       version: '1.2.3',
+      serverUrl: 'http://localhost',
       repoRoot: '/repo',
       mcpEntry: '/repo/apps/agent/dist/mcp.js',
       cliEntry: '/repo/apps/agent/dist/cli.js',
       authRequired: false,
     });
-    expect(await api.client().getMeta()).toEqual(res.body);
+    expect(await api.client().getMeta()).toEqual({ ...res.body, serverUrl: 'http://tracker.test' });
     const defaults = await appWith({ token: TOKEN, repoRoot: REPO_ROOT }).request('/api/meta', {
       headers: { authorization: `Bearer ${TOKEN}` },
     });

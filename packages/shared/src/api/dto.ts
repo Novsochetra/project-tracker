@@ -51,6 +51,7 @@ export interface ErrorBody {
 
 export interface ServerMeta {
   version: string;
+  serverUrl: string;
   repoRoot: string;
   mcpEntry: string;
   cliEntry: string;

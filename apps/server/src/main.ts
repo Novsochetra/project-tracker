@@ -24,12 +24,14 @@ const app = createApp({
   testReset: config.testReset,
   repoRoot: config.repoRoot,
   version: config.version,
+  publicUrl: config.publicUrl,
 });
 
 const server = serve({ fetch: app.fetch, port: config.port, hostname: config.host }, (info) => {
   const database = isPostgresUrl(config.databaseUrl) ? 'Postgres' : config.databaseUrl;
   console.log(`Tracker API on http://${config.host}:${info.port} (database: ${database})`);
   if (config.token) console.log('Access token required.');
+  if (config.publicUrl) console.log(`Agents connect at ${config.publicUrl}`);
   if (config.testReset) console.log('Test reset route enabled: POST /api/test/reset');
 });
 

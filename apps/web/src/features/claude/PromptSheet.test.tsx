@@ -3,6 +3,8 @@ import userEvent from '@testing-library/user-event';
 import { useState } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { listItem, makeTicketDetail, project, STATUS, statuses } from '../../api/test/fixtures';
+import { useSheets } from '../../app/sheets/context';
+import { SheetsProvider } from '../../app/sheets/SheetsProvider';
 import type { PromptScope } from '../../app/sheets/types';
 import { PromptSheet } from './PromptSheet';
 import { COPY_BLOCKED } from './sendPrompt';
@@ -14,13 +16,15 @@ const projectScope: PromptScope = { kind: 'project', projectKey: 'MOB' };
 
 function Harness({ scope }: { scope: PromptScope }) {
   const [open, setOpen] = useState(true);
+  return <PromptSheet open={open} onClose={() => setOpen(false)} scope={scope} />;
+}
+
+function Opener({ scope }: { scope: PromptScope }) {
+  const sheets = useSheets();
   return (
-    <>
-      <button type="button" onClick={() => setOpen(true)}>
-        Open sheet
-      </button>
-      <PromptSheet open={open} onClose={() => setOpen(false)} scope={scope} />
-    </>
+    <button type="button" onClick={() => sheets.open({ type: 'prompt', scope })}>
+      Open sheet
+    </button>
   );
 }
 
@@ -133,11 +137,17 @@ describe('PromptSheet for a ticket', () => {
     expect(screen.queryByText('Prompt copied')).not.toBeInTheDocument();
   });
 
-  it('starts fresh on every opening', async () => {
+  it('starts fresh on every opening from the sheet host', async () => {
     const client = ticketClient();
-    renderWithApi(<Harness scope={ticketScope} />, client);
+    renderWithApi(
+      <SheetsProvider>
+        <Opener scope={ticketScope} />
+      </SheetsProvider>,
+      client,
+    );
     const user = userEvent.setup();
     setClipboard({ writeText: vi.fn().mockResolvedValue(undefined) });
+    await user.click(screen.getByRole('button', { name: 'Open sheet' }));
     await user.type(await promptBox(), ' edited');
     await screen.findByRole('switch');
     await user.click(screen.getByRole('button', { name: 'Copy prompt' }));

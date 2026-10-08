@@ -89,6 +89,10 @@
 }
 
 @media (max-width: 767px) {
+  .prompt {
+    font-size: var(--size-input);
+  }
+
   .switchRow {
     min-height: 50px;
     font-size: var(--size-input);
