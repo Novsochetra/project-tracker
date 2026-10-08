@@ -168,6 +168,18 @@ describe('move_ticket', () => {
     expect(updateTicketApi).not.toHaveBeenCalled();
   });
 
+  it('says a ticket in a done status is already there', async () => {
+    const updateTicketApi = vi.fn();
+    const client = fakeClient({
+      getTicket: returns(detail({ ticket: ticket({ statusId: 's5' }), status: statusAt(4) })),
+      updateTicket: updateTicketApi,
+    });
+    await expect(run(moveTicket, client, { ticket: 'MOB-3', status: 'Done' })).rejects.toThrow(
+      'MOB-3 is already in Done. Only a person moves tickets out of it.',
+    );
+    expect(updateTicketApi).not.toHaveBeenCalled();
+  });
+
   it('says a reviewed ticket is waiting for a person', async () => {
     const updateTicketApi = vi.fn();
     const client = fakeClient({

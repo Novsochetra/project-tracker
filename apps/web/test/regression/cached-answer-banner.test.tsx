@@ -163,7 +163,7 @@ describe('regression: answers from the service worker cache keep the offline ban
     const queryClient = renderApp('/p/MOB', network);
     await screen.findByRole('button', { name: MOVE_MOB_1 });
     await waitFor(() => expect(captureRequests(network)).toHaveLength(1));
-    // The failed send marked the tracker unreachable; let the sync that sent it finish.
+    // The banner is up; let the first sync, whose send failed, end before the reads below.
     await waitFor(() => expect(banner()).not.toBeNull());
     await act(() => new Promise((resolve) => setTimeout(resolve, 50)));
 
