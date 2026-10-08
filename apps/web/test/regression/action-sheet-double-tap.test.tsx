@@ -2,11 +2,11 @@ import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { projectSummary, renderWithApp } from '../../src/app/test/harness';
-import { CLICK_SHIELD_MS } from '../../src/components/FloatingPanel/floatingHooks';
 import { DURATION } from '../../src/design/motion';
 import { ProjectOptionsButton } from '../../src/features/projects/ProjectOptionsButton';
 import { ItemMenu } from '../../src/features/ticket/activity/ItemMenu';
-import { mockPhone, skipAnimations } from '../../src/overlays/testing';
+import { CLICK_SHIELD_MS } from '../../src/lib/clickShield';
+import { mockPhone, skipAnimations, tap } from '../../src/overlays/testing';
 import { GAPS, type User } from './doubleClick';
 
 // On phones a double tap on Delete comment deleted the comment without a real confirm (WebKit,
@@ -30,9 +30,9 @@ afterEach(() => {
 });
 
 async function doubleTap(user: User, first: string, second: string, gap: number) {
-  await user.click(screen.getByRole('button', { name: first }));
+  await tap(user, screen.getByRole('button', { name: first }));
   if (gap > 0) await wait(gap);
-  await user.click(screen.getByRole('button', { name: second }));
+  await tap(user, screen.getByRole('button', { name: second }));
 }
 
 async function openItemSheet(noun: string) {
@@ -79,9 +79,9 @@ describe('regression: a double tap on Delete in an action sheet never confirms t
 
   it('deletes on a tap once the double tap is over', async () => {
     const { user, onDelete } = await openItemSheet('comment');
-    await user.click(screen.getByRole('button', { name: 'Delete comment' }));
+    await tap(user, screen.getByRole('button', { name: 'Delete comment' }));
     await wait(CLICK_SHIELD_MS);
-    await user.click(screen.getByRole('button', { name: 'Delete' }));
+    await tap(user, screen.getByRole('button', { name: 'Delete' }));
     await afterExit();
     expect(onDelete).toHaveBeenCalledTimes(1);
   });

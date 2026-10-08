@@ -98,4 +98,18 @@ test.describe('projects', () => {
     await expect(dialog).toBeHidden();
     await expect(options).toBeFocused();
   });
+
+  test('a double-click on Delete project keeps its confirm', async ({ page, api }, info) => {
+    test.skip(isPhone(info.project.name), 'Phones show an action sheet');
+    await api.createProject({ name: 'Website', key: 'WEB' });
+    await page.goto('/p/WEB');
+    await page.getByRole('button', { name: 'Project options' }).first().click();
+    await page.getByRole('button', { name: 'Delete project' }).dblclick();
+    await page.waitForTimeout(600);
+    await expect(
+      page.getByRole('alert').filter({ hasText: 'Delete this project and its' }),
+    ).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Cancel' })).toBeFocused();
+    await expect(page).toHaveURL(/\/p\/WEB$/);
+  });
 });

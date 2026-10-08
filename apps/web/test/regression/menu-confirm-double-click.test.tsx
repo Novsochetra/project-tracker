@@ -2,9 +2,9 @@ import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { projectSummary, renderWithApp } from '../../src/app/test/harness';
-import { CLICK_SHIELD_MS } from '../../src/components/FloatingPanel/floatingHooks';
 import { ProjectOptionsButton } from '../../src/features/projects/ProjectOptionsButton';
 import { ItemMenu } from '../../src/features/ticket/activity/ItemMenu';
+import { CLICK_SHIELD_MS } from '../../src/lib/clickShield';
 import { mockPhone, skipAnimations } from '../../src/overlays/testing';
 import { GAPS } from './doubleClick';
 

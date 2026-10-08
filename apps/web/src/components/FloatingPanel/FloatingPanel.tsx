@@ -8,6 +8,7 @@ import {
   type WheelEvent,
 } from 'react';
 import { createPortal } from 'react-dom';
+import { HoldCloseProvider, useCloseLayer } from './closeHold';
 import {
   useCloseOnScroll,
   useFloatingPlacement,
@@ -46,11 +47,13 @@ export function FloatingPanel({
   place,
   onClose,
   className,
+  children,
   ...panelProps
 }: FloatingPanelProps) {
   const frameRef = useRef<HTMLDivElement>(null);
   useFloatingPlacement(frameRef, panelRef, anchorRef, place);
   useCloseOnScroll(panelRef, open, onClose);
+  const { hold, ...layer } = useCloseLayer(onClose);
   const leaving = !open;
   const onWheel = (event: WheelEvent<HTMLButtonElement>) => {
     if (event.ctrlKey) return;
@@ -65,7 +68,7 @@ export function FloatingPanel({
           tabIndex={-1}
           aria-label={closeLabel}
           className={styles.layer}
-          onClick={onClose}
+          {...layer}
           onWheel={onWheel}
         />
       )}
@@ -85,7 +88,9 @@ export function FloatingPanel({
           inert={leaving}
           data-leaving={leaving || undefined}
           className={clsx(styles.panel, className)}
-        />
+        >
+          <HoldCloseProvider value={hold}>{children}</HoldCloseProvider>
+        </div>
       </div>
     </>
   );

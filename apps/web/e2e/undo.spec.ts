@@ -41,6 +41,18 @@ const seed = (api: TrackerClient) =>
     { title: 'Crash on rotate' },
   ]);
 
+async function moveOnBoard(page: Page): Promise<Locator> {
+  await page
+    .getByRole('group', { name: 'Show tickets as' })
+    .getByRole('button', { name: 'Board' })
+    .click();
+  const handle = page.getByRole('button', { name: 'Move MOB-2. Drag, or use the arrow keys.' });
+  await handle.focus();
+  await page.keyboard.press('ArrowRight');
+  await expect(toast(page, 'MOB-2 moved to In progress')).toBeVisible();
+  return handle;
+}
+
 test.describe('undo a status move', () => {
   test('a swiped row goes back to its status, between the same rows', async ({
     page,
@@ -69,14 +81,7 @@ test.describe('undo a status move', () => {
     test.skip(isPhone(info.project.name), 'Arrow-key moves are for keyboards');
     await seed(api);
     await page.goto('/p/MOB');
-    await page
-      .getByRole('group', { name: 'Show tickets as' })
-      .getByRole('button', { name: 'Board' })
-      .click();
-    const handle = page.getByRole('button', { name: 'Move MOB-2. Drag, or use the arrow keys.' });
-    await handle.focus();
-    await page.keyboard.press('ArrowRight');
-    await expect(toast(page, 'MOB-2 moved to In progress')).toBeVisible();
+    const handle = await moveOnBoard(page);
     await expect(page.getByRole('button', { name: 'Undo' })).toBeVisible();
     await expect.poll(() => savedOrder(api, 'In progress')).toEqual(['MOB-2']);
 
@@ -120,6 +125,10 @@ const SECOND_TAPS: { name: string; y: (undo: Box) => number }[] = [
   { name: '1px above its bottom', y: (undo) => undo.y + undo.height - 1 },
   { name: '2px above it', y: (undo) => undo.y - 2 },
   { name: '2px below it', y: (undo) => undo.y + undo.height + 2 },
+  // The band reached 9.5px past the target's top but 6.5px past its bottom, so a second tap
+  // that drifted 8px below the target opened the row behind the toast (PT-92).
+  { name: '8px above it', y: (undo) => undo.y - 8 },
+  { name: '8px below it', y: (undo) => undo.y + undo.height + 8 },
 ];
 
 // The first tap runs Undo, so it lands on the target, at its nearest edge to the second tap.
@@ -156,4 +165,31 @@ test.describe('a double tap on Undo runs it once and opens nothing behind the to
       });
     }
   }
+
+  // The toast centers in the window, but a click in the sidebar right after Undo is no second
+  // click on it (PT-92).
+  test('on desktop, only the content column catches clicks right after Undo', async ({
+    page,
+    api,
+  }, info) => {
+    test.skip(isPhone(info.project.name), 'The sidebar is on desktop');
+    await seed(api);
+    await page.goto('/p/MOB');
+    await moveOnBoard(page);
+    const undo = page.getByRole('button', { name: 'Undo' });
+    await settled(undo);
+    const box = (await undo.boundingBox())!;
+
+    await undo.click();
+    const hits = await page.evaluate(
+      (y) =>
+        [120, 1100].map((x) => {
+          const hit = document.elementFromPoint(x, y);
+          if (hit?.closest('aside')) return 'sidebar';
+          return hit?.closest('[role="status"]') ? 'band' : 'page';
+        }),
+      box.y + box.height / 2,
+    );
+    expect(hits).toEqual(['sidebar', 'band']);
+  });
 });

@@ -1,7 +1,5 @@
 import type { ChangeEvent } from '@tracker/shared';
-
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null;
+import { isRecord } from '../../lib/isRecord';
 
 const idOrNull = (value: unknown): string | null =>
   typeof value === 'string' && value ? value : null;

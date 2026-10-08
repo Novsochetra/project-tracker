@@ -27,6 +27,16 @@ export const listActivityAttachments = (db: Db, activityId: string) =>
     .orderBy('id')
     .execute();
 
+export async function existingAttachmentIds(db: Db, ids: readonly string[]): Promise<Set<string>> {
+  if (ids.length === 0) return new Set();
+  const rows = await db
+    .selectFrom('attachments')
+    .select('id')
+    .where('id', 'in', [...ids])
+    .execute();
+  return new Set(rows.map((row) => row.id));
+}
+
 export async function nextTicketPosition(db: Db, ticketId: string): Promise<number> {
   const row = await db
     .selectFrom('attachments')

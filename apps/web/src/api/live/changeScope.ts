@@ -1,5 +1,6 @@
 import type { QueryKey } from '@tanstack/react-query';
 import type { ChangeEvent } from '@tracker/shared';
+import { isRecord } from '../../lib/isRecord';
 import { rootOf, scopeOf } from '../queryKeys';
 
 export interface CachedEntry {
@@ -27,9 +28,6 @@ interface CacheIndex {
 export const EVERYTHING: ChangeScope = { all: true, projectKeys: new Set(), ticketKeys: new Set() };
 
 const INDEXED_ROOTS = new Set<unknown>(['projects', 'project', 'ticket']);
-
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null;
 
 function refOf(value: unknown): Ref[] {
   if (!isRecord(value) || typeof value.id !== 'string' || typeof value.key !== 'string') return [];

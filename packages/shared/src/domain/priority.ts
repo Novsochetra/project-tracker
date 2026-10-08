@@ -2,6 +2,9 @@ export const PRIORITIES = ['high', 'medium', 'low'] as const;
 
 export type Priority = (typeof PRIORITIES)[number];
 
+export const isPriority = (value: unknown): value is Priority =>
+  typeof value === 'string' && (PRIORITIES as readonly string[]).includes(value);
+
 export const PRIORITY_LABELS: Record<Priority, string> = {
   high: 'High',
   medium: 'Medium',

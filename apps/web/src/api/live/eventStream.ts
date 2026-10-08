@@ -65,10 +65,14 @@ export function connectLiveUpdates(url: string, handlers: LiveHandlers): () => v
     if (event) handlers.onChange(event);
   };
   const onError = () => {
+    if (source?.readyState === EventSource.CLOSED) {
+      reopenLater();
+      handlers.onRefused();
+      return;
+    }
+    // The browser tries a dropped stream again by itself, and each try that fails counts too.
+    failedAttempts += 1;
     setReconnecting(true);
-    if (source?.readyState !== EventSource.CLOSED) return;
-    reopenLater();
-    handlers.onRefused();
   };
   function connect() {
     source = new EventSource(url);

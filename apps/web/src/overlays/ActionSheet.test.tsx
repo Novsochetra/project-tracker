@@ -1,9 +1,9 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useState } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ActionSheet } from './ActionSheet';
-import { mockPhone, readActionSheet, skipAnimations } from './testing';
+import { mockPhone, readActionSheet, skipAnimations, tap } from './testing';
 
 let restore: Array<() => void> = [];
 
@@ -80,16 +80,62 @@ describe('ActionSheet', () => {
     const actions = [{ label: 'Edit project', onSelect: onEdit }];
     render(<ActionSheet open onClose={onClose} label="Options" actions={actions} />);
     const edit = screen.getByRole('button', { name: 'Edit project' });
-    await user.click(edit);
+    await tap(user, edit);
     expect(onEdit).not.toHaveBeenCalled();
     edit.focus();
     await user.keyboard('{Enter}');
     expect(onEdit).toHaveBeenCalledTimes(1);
-    await user.click(screen.getByRole('button', { name: 'Cancel' }));
+    await tap(user, screen.getByRole('button', { name: 'Cancel' }));
     expect(onClose).toHaveBeenCalledTimes(1);
     await readActionSheet();
-    await user.click(edit);
+    await tap(user, edit);
     expect(onEdit).toHaveBeenCalledTimes(2);
+  });
+
+  it('holds a pen tap and a click with no pointer before it, as VoiceOver’s', () => {
+    const onEdit = vi.fn();
+    const actions = [{ label: 'Edit project', onSelect: onEdit }];
+    render(<ActionSheet open onClose={vi.fn()} label="Options" actions={actions} />);
+    const edit = screen.getByRole('button', { name: 'Edit project' });
+    fireEvent.pointerDown(edit, { pointerType: 'pen' });
+    fireEvent.mouseDown(edit, { detail: 1 });
+    fireEvent.click(edit, { detail: 1 });
+    fireEvent.click(edit, { detail: 1 });
+    expect(onEdit).not.toHaveBeenCalled();
+  });
+
+  it('takes a single mouse click at once, but not a double-click’s second click', async () => {
+    const onEdit = vi.fn();
+    const user = userEvent.setup();
+    const actions = [{ label: 'Edit project', onSelect: onEdit }];
+    render(<ActionSheet open onClose={vi.fn()} label="Options" actions={actions} />);
+    const edit = screen.getByRole('button', { name: 'Edit project' });
+    await user.click(edit);
+    expect(onEdit).toHaveBeenCalledTimes(1);
+    await user.dblClick(edit);
+    expect(onEdit).toHaveBeenCalledTimes(2);
+  });
+
+  it('starts the shield again when only the caption changes', async () => {
+    const onSelect = vi.fn();
+    const user = userEvent.setup();
+    const sheet = (caption: string) => (
+      <ActionSheet
+        open
+        onClose={vi.fn()}
+        label="Options"
+        caption={caption}
+        actions={[{ label: 'Delete', tone: 'danger', onSelect }]}
+      />
+    );
+    const { rerender } = render(sheet('Delete this draft?'));
+    await readActionSheet();
+    rerender(sheet('Delete this draft and its files?'));
+    await tap(user, screen.getByRole('button', { name: 'Delete' }));
+    expect(onSelect).not.toHaveBeenCalled();
+    await readActionSheet();
+    await tap(user, screen.getByRole('button', { name: 'Delete' }));
+    expect(onSelect).toHaveBeenCalledTimes(1);
   });
 
   it('takes no taps on the rows of its next step until they have been there a moment', async () => {
@@ -97,12 +143,12 @@ describe('ActionSheet', () => {
     const user = userEvent.setup();
     render(<ProjectOptions onEdit={vi.fn()} onDelete={onDelete} />);
     await readActionSheet();
-    await user.click(screen.getByRole('button', { name: 'Delete project' }));
+    await tap(user, screen.getByRole('button', { name: 'Delete project' }));
     const confirm = screen.getByRole('button', { name: 'Delete project' });
-    await user.click(confirm);
+    await tap(user, confirm);
     expect(onDelete).not.toHaveBeenCalled();
     await readActionSheet();
-    await user.click(confirm);
+    await tap(user, confirm);
     expect(onDelete).toHaveBeenCalledTimes(1);
   });
 

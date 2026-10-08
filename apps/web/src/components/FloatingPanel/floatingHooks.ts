@@ -3,8 +3,6 @@ import { CLICK_SHIELD_MS } from '../../lib/clickShield';
 import { useLatest } from '../../lib/useLatest';
 import type { FloatingPlacement } from './placeFloating';
 
-export { CLICK_SHIELD_MS };
-
 export interface FloatingPresence {
   mounted: boolean;
   session: number;

@@ -266,6 +266,24 @@ describe('connectLiveUpdates', () => {
     expect(onRefreshPending).toHaveBeenLastCalledWith(true);
   });
 
+  it('counts the tries the browser makes itself toward holding reads back', () => {
+    const { source, onRefreshPending, onReconnect } = connect();
+    source.open();
+    for (let attempt = 1; attempt < LIVE_WAIT_ATTEMPTS; attempt += 1) {
+      source.fail(false);
+      expect(onRefreshPending).toHaveBeenLastCalledWith(true);
+    }
+
+    source.fail(false);
+
+    expect(onRefreshPending).toHaveBeenLastCalledWith(false);
+    expect(MockEventSource.instances).toHaveLength(1);
+    source.open();
+    expect(onReconnect).toHaveBeenCalledTimes(1);
+    source.fail(false);
+    expect(onRefreshPending).toHaveBeenLastCalledWith(true);
+  });
+
   it('reports no refresh pending once stopped, since no stream opens again', () => {
     const { source, stop, onRefreshPending } = connect();
     source.fail(true);

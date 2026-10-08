@@ -1,5 +1,6 @@
-import type { Priority } from '@tracker/shared';
-import { isPriority, isRecord, parseCaptureText, type CaptureText } from './captureText';
+import { isPriority, type Priority } from '@tracker/shared';
+import { isRecord } from '../../lib/isRecord';
+import { parseCaptureText, type CaptureText } from './captureText';
 
 export interface QueuedCapture {
   // Client id, sent with every request for the capture: the tracker makes one ticket per id, so

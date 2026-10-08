@@ -1,3 +1,4 @@
+import type { UserEvent } from '@testing-library/user-event';
 import { MotionGlobalConfig } from 'motion/react';
 import { CLICK_SHIELD_MS } from '../lib/clickShield';
 import { PHONE_QUERY } from '../lib/media';
@@ -38,3 +39,8 @@ export function skipAnimations(): () => void {
 // person reading them before tapping one.
 export const readActionSheet = (): Promise<void> =>
   new Promise((resolve) => setTimeout(resolve, CLICK_SHIELD_MS));
+
+// A finger's tap. An action sheet takes a mouse's single click at once (useTapShield), so a test of
+// what a phone's double tap does taps with this instead of clicking.
+export const tap = (user: UserEvent, target: Element): Promise<void> =>
+  user.pointer({ keys: '[TouchA]', target });

@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { dropRowOf } from '../../src/features/project/dnd/dropRow';
 import { resetListView } from '../../src/features/project/listViewStore';
 import { renderProject } from '../../src/features/project/test/renderProject';
-import { mockPhone, skipAnimations } from '../../src/overlays/testing';
+import { mockPhone, skipAnimations, tap } from '../../src/overlays/testing';
 import { GAPS } from './doubleClick';
 
 // A row's swipe actions open an action sheet from the bottom of the screen. Near the bottom bar a
@@ -42,10 +42,10 @@ function swipeAction(key: string, label: string): HTMLElement {
 async function doubleTap(label: string, sheetName: string, row: string, gap: number) {
   const user = userEvent.setup();
   await screen.findByRole('region', { name: 'To do' });
-  await user.click(swipeAction('MOB-1', label));
+  await tap(user, swipeAction('MOB-1', label));
   if (gap > 0) await wait(gap);
   const sheet = screen.getByRole('dialog', { name: sheetName });
-  await user.click(within(sheet).getByRole('button', { name: row }));
+  await tap(user, within(sheet).getByRole('button', { name: row }));
   return sheet;
 }
 

@@ -99,4 +99,39 @@ test.describe('new ticket sheet', () => {
     await openNewTicketIn(page, 'To do');
     await expect(sheet.getByLabel('Ticket title')).toHaveValue('');
   });
+
+  test('desktop: Discard changes takes a click at once, and a double-click discards nothing', async ({
+    page,
+    api,
+  }, info) => {
+    test.skip(isPhone(info.project.name), 'A mouse on a desktop screen');
+    await seedProject(api, 'Mobile app', 'MOB', [{ title: 'Existing ticket' }]);
+    await page.goto('/p/MOB');
+    await openNewTicketIn(page, 'To do');
+    const sheet = page.getByRole('dialog', { name: 'New ticket' });
+    const title = sheet.getByLabel('Ticket title');
+    await title.fill('Crash on launch');
+    const discard = page.getByRole('dialog', { name: 'Discard changes?' });
+    const discardRow = discard.getByRole('button', { name: 'Discard changes' });
+    await title.press('Escape');
+    await discardRow.click();
+    await expect(sheet).toBeHidden();
+
+    // A double-click on the backdrop where Discard changes comes to rest: the first click asks,
+    // and the second, a person's 150 ms later, lands on the row sliding up under it.
+    await openNewTicketIn(page, 'To do');
+    await title.fill('Crash on launch');
+    await title.press('Escape');
+    await discardRow.click({ trial: true });
+    const spot = (await discardRow.boundingBox())!;
+    await discard.getByRole('button', { name: 'Keep editing' }).click();
+    await expect(discard).toBeHidden();
+    await page.mouse.click(spot.x + spot.width / 2, spot.y + spot.height / 2);
+    await page.waitForTimeout(150);
+    await page.mouse.down({ clickCount: 2 });
+    await page.mouse.up({ clickCount: 2 });
+    await page.waitForTimeout(600);
+    await expect(discardRow).toBeVisible();
+    await expect(title).toHaveValue('Crash on launch');
+  });
 });

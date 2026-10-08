@@ -17,14 +17,28 @@
   pointer-events: auto;
 }
 
-/* Undo's target hangs 1.5px below the band, and a second tap drifts a few px past it, so the band
-   catches taps 8px past its top and bottom: 6.5px or more past the target, still clear of the
-   bottom bar 20px below. Behind the toast, so a toast shown meanwhile keeps its own taps. */
+/* A second tap drifts a few px past Undo's target, which starts 1.5px inside the band's top and
+   hangs 1.5px below its bottom. So the band catches taps 8px past its top and 3px more past its
+   bottom: 9.5px past the target either way, and 8px clear of the bottom bar 19px below. Behind the
+   toast, so a toast shown meanwhile keeps its own taps. */
 .shielded::before {
   content: '';
   position: absolute;
-  inset: calc(-1 * var(--space-2)) 0;
+  inset: calc(-1 * var(--space-2)) 0 calc(-1 * (var(--space-2) + 3px));
   z-index: -1;
+}
+
+/* The toast centers in the window, but a click in the sidebar right after Undo is no double click
+   on it, so there only the content column catches clicks. */
+@media (min-width: 768px) {
+  .shielded {
+    pointer-events: none;
+  }
+
+  .shielded::before {
+    left: var(--sidebar-width);
+    pointer-events: auto;
+  }
 }
 
 .toast {

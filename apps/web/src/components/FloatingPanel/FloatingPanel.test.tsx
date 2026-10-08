@@ -2,7 +2,7 @@ import { act, fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useRef, useState } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { CLICK_SHIELD_MS } from './floatingHooks';
+import { CLICK_SHIELD_MS } from '../../lib/clickShield';
 import { FloatingPanel, FloatingPortal } from './FloatingPanel';
 
 const place = vi.fn(() => ({ top: 40, left: 20, up: false, originX: 100 }));

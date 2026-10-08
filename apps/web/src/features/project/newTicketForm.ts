@@ -1,5 +1,5 @@
 import {
-  PRIORITIES,
+  isPriority,
   sortStatuses,
   TICKET_TITLE_MAX,
   type Attachment,
@@ -37,9 +37,6 @@ export const blankForm = (): NewTicketForm => ({
 export const newTicketDraftId = (projectKey: string): string => `new-ticket:${projectKey}`;
 
 const textOf = (value: unknown): string => (typeof value === 'string' ? value : '');
-
-const isPriority = (value: unknown): value is Priority =>
-  typeof value === 'string' && (PRIORITIES as readonly string[]).includes(value);
 
 // Kept fields come from storage, which an older build or another tab may have written.
 export function formFromDraft(
