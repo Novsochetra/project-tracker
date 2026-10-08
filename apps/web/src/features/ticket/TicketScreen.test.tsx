@@ -146,7 +146,7 @@ describe('TicketScreen info and images', () => {
     expect(within(viewer).getByText('2 / 2')).toBeInTheDocument();
   });
 
-  it('removes a ticket image', async () => {
+  it('removes a ticket image after confirming', async () => {
     const deleteAttachment = vi.fn().mockResolvedValue(undefined);
     const user = userEvent.setup();
     const { client } = setup({
@@ -154,8 +154,28 @@ describe('TicketScreen info and images', () => {
       client: { deleteAttachment },
     });
     await user.click(screen.getByRole('button', { name: 'Remove image 1' }));
+    expect(screen.getByRole('button', { name: 'Cancel' })).toHaveFocus();
+    await user.click(screen.getByRole('button', { name: 'Remove' }));
     expect(client.deleteAttachment).toHaveBeenCalledWith('a');
-    expect(screen.queryByRole('button', { name: 'Open image 1' })).not.toBeInTheDocument();
+    await waitFor(() =>
+      expect(screen.queryByRole('button', { name: 'Open image 1' })).not.toBeInTheDocument(),
+    );
+    expect(screen.getByRole('button', { name: 'Add images' })).toBeInTheDocument();
+  });
+
+  it('keeps the image when its removal fails', async () => {
+    const deleteAttachment = vi.fn().mockRejectedValue(new TypeError('Failed to fetch'));
+    const user = userEvent.setup();
+    setup({
+      detail: makeTicketDetail(undefined, { attachments: [attachment('a')] }),
+      client: { deleteAttachment },
+    });
+    await user.click(screen.getByRole('button', { name: 'Remove image 1' }));
+    await user.click(screen.getByRole('button', { name: 'Remove' }));
+    expect(
+      await screen.findByText("Can't reach the tracker. Check your connection."),
+    ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Open image 1' })).toBeInTheDocument();
   });
 
   it('uploads picked images to the ticket', async () => {

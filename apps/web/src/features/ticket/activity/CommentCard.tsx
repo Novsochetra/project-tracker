@@ -1,5 +1,5 @@
 import { formatFullDate } from '@tracker/shared';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import type { ActivityItem } from './activityItems';
 import { ActivityCard, ActorAvatar, CardImages, type RiseProps } from './ActivityCard';
 import styles from './ActivityCard.module.css';
@@ -7,6 +7,7 @@ import { CommentEditor } from './CommentEditor';
 import { ItemMenu } from './ItemMenu';
 import { TimeAgo } from './TimeAgo';
 import type { ActivityActions } from './useActivityActions';
+import { useCommentEdit } from './useCommentEdit';
 
 export interface CommentCardProps {
   item: Extract<ActivityItem, { kind: 'comment' }>;
@@ -15,22 +16,19 @@ export interface CommentCardProps {
   rise: RiseProps;
 }
 
-type EditPhase = 'idle' | 'editing' | 'done';
+const focusIsLost = () =>
+  document.activeElement === null || document.activeElement === document.body;
 
 export function CommentCard({ item, now, actions, rise }: CommentCardProps) {
-  const [phase, setPhase] = useState<EditPhase>('idle');
-  const editing = phase === 'editing';
+  const edit = useCommentEdit(item, actions.editComment);
   const triggerRef = useRef<HTMLButtonElement>(null);
 
-  // The editor had focus and is gone, so keyboard users continue from the options button.
+  // The editor had focus and is gone, so keyboard users continue from the options button. An
+  // edit that saves once the user has moved on leaves their focus alone.
   useEffect(() => {
-    if (phase === 'done') triggerRef.current?.focus({ preventScroll: true });
-  }, [phase]);
+    if (edit.closed && focusIsLost()) triggerRef.current?.focus({ preventScroll: true });
+  }, [edit.closed]);
 
-  const save = (text: string) => {
-    setPhase('done');
-    if (text.trim() !== item.text) actions.editComment(item.id, text);
-  };
   const meta = (
     <>
       <TimeAgo at={item.at} now={now} />
@@ -42,9 +40,9 @@ export function CommentCard({ item, now, actions, rise }: CommentCardProps) {
   const menu = !item.draft && (
     <ItemMenu
       noun="comment"
-      hidden={editing}
+      hidden={edit.open}
       triggerRef={triggerRef}
-      onEdit={() => setPhase('editing')}
+      onEdit={edit.start}
       onDelete={() => actions.remove(item.id)}
     />
   );
@@ -57,13 +55,8 @@ export function CommentCard({ item, now, actions, rise }: CommentCardProps) {
       dimmed={item.draft}
       {...rise}
     >
-      {editing ? (
-        <CommentEditor
-          draftId={`comment-edit:${item.id}`}
-          initial={item.text}
-          onSave={save}
-          onCancel={() => setPhase('done')}
-        />
+      {edit.open ? (
+        <CommentEditor edit={edit} />
       ) : (
         item.text && <p className={styles.body}>{item.text}</p>
       )}

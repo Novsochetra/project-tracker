@@ -3,6 +3,7 @@ import type { TrackerClient } from '@tracker/client';
 import { BrowserRouter } from 'react-router';
 import { ApiProvider, useSession } from '../api';
 import { ToastProvider } from '../components';
+import { useFileDropGuard } from '../features/attachments';
 import { NavigationProvider } from '../navigation';
 import { gateFor } from './sessionGate';
 import { SheetsProvider } from './sheets/SheetsProvider';
@@ -15,6 +16,7 @@ export interface TrackerAppProps {
 }
 
 export function TrackerApp({ client, queryClient }: TrackerAppProps) {
+  useFileDropGuard();
   return (
     <ApiProvider client={client} queryClient={queryClient}>
       <ToastProvider>

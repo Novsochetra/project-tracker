@@ -17,7 +17,17 @@ describe('ThumbnailGrid', () => {
     await user.click(screen.getByRole('button', { name: 'Open image 2' }));
     expect(onOpen).toHaveBeenCalledWith(1);
     await user.click(screen.getByRole('button', { name: 'Remove image 1' }));
-    expect(onRemove).toHaveBeenCalledWith('a');
+    expect(onRemove).toHaveBeenCalledWith('a', 0);
+  });
+
+  it('makes room for the x and marks the image being removed', () => {
+    const { container, rerender } = render(<ThumbnailGrid images={images} />);
+    expect(container.firstElementChild).not.toHaveClass('removable');
+    rerender(<ThumbnailGrid images={images} onRemove={vi.fn()} markedId="b" />);
+    expect(container.firstElementChild).toHaveClass('removable');
+    const tiles = container.querySelectorAll('.tile');
+    expect(tiles[0]).not.toHaveClass('marked');
+    expect(tiles[1]).toHaveClass('marked');
   });
 
   it('shows plain images when they cannot be opened', () => {

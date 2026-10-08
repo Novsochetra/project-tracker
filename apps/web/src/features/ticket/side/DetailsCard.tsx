@@ -1,5 +1,8 @@
 import { isDoneCategory, isOverdue, type TicketDetail } from '@tracker/shared';
+import { useId } from 'react';
 import { DateRow, GroupedCard, SelectRow } from '../../../components';
+import { UnsavedNote } from '../fields/UnsavedNote';
+import { useFieldDraft } from '../fields/useFieldDraft';
 import { useTicketUpdate } from '../useTicketUpdate';
 import { AssigneeRow } from './AssigneeRow';
 import { PRIORITY_OPTIONS, statusOptions } from './detailOptions';
@@ -9,6 +12,10 @@ export function DetailsCard({ detail }: { detail: TicketDetail }) {
   const { ticket } = detail;
   const update = useTicketUpdate(ticket.key);
   const done = isDoneCategory(detail.status.category);
+  const assignee = useFieldDraft(ticket.assignee, `assignee:${ticket.key}`, (name) =>
+    name === ticket.assignee ? undefined : update({ assignee: name }),
+  );
+  const noteId = useId();
   return (
     <div className={styles.section}>
       <span className={styles.label}>Details</span>
@@ -18,7 +25,7 @@ export function DetailsCard({ detail }: { detail: TicketDetail }) {
           options={statusOptions(detail.statuses)}
           value={ticket.statusId}
           onChange={(statusId) => {
-            if (statusId !== ticket.statusId) update({ statusId });
+            if (statusId !== ticket.statusId) void update({ statusId });
           }}
         />
         <SelectRow
@@ -26,18 +33,19 @@ export function DetailsCard({ detail }: { detail: TicketDetail }) {
           options={PRIORITY_OPTIONS}
           value={ticket.priority}
           onChange={(priority) => {
-            if (priority !== ticket.priority) update({ priority });
+            if (priority !== ticket.priority) void update({ priority });
           }}
         />
-        <AssigneeRow assignee={ticket.assignee} onSave={(assignee) => update({ assignee })} />
+        <AssigneeRow draft={assignee} describedBy={assignee.failed ? noteId : undefined} />
         <DateRow
           value={ticket.due}
           overdue={isOverdue(ticket.due, done)}
           onChange={(due) => {
-            if (due !== ticket.due) update({ due });
+            if (due !== ticket.due) void update({ due });
           }}
         />
       </GroupedCard>
+      {assignee.failed && <UnsavedNote id={noteId} subject="Assignee" onRetry={assignee.retry} />}
     </div>
   );
 }

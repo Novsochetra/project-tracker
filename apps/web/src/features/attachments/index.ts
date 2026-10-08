@@ -15,6 +15,7 @@ export {
   type ThumbnailGridProps,
   type ThumbnailImage,
 } from './ThumbnailGrid';
+export { useFileDropGuard } from './useFileDropGuard';
 export { pasteImages, useImageDrop, type ImageDrop, type ImageDropHandlers } from './useImageDrop';
 export { useImageUploads, type ImageUploadOptions, type ImageUploads } from './useImageUploads';
 export { toViewerImages, useImageViewer, type ImageViewerApi } from './viewerContext';

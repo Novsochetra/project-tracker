@@ -1,27 +1,42 @@
 export interface FieldDraft {
   value: string;
-  /** The server value at the last sync, so only a real server change replaces the draft. */
-  seen: string;
-  /** Typed since the last sync; kept until the save shows up on the server. */
+  /** Typed since the field was last in step with the server; leaving the field saves it. */
   edited: boolean;
+  /** The last save of `value` failed, so the field keeps it until a retry saves it. */
+  failed: boolean;
+  /** Saves in flight. Until they settle, the server's value may be optimistic or rolled back. */
+  saving: number;
 }
 
 export const startDraft = (server: string): FieldDraft => ({
   value: server,
-  seen: server,
   edited: false,
+  failed: false,
+  saving: 0,
 });
 
 export const editDraft = (draft: FieldDraft, value: string): FieldDraft =>
   draft.edited && draft.value === value ? draft : { ...draft, value, edited: true };
 
+const holdsUnsavedText = (draft: FieldDraft): boolean => draft.saving > 0 || draft.failed;
+
 /**
- * While the field has focus the server never overwrites it, but its changes are noted. Once
- * the field is left, a server change wins (a save landing, a rollback, an agent's edit), and
- * an untouched field catches up with changes it missed while focused.
+ * The server never overwrites a focused field, nor text whose save is in flight or failed (a
+ * rollback must not wipe what was typed). Otherwise the field follows the server: its own save
+ * landing, an agent's edit, or a change it missed while focused.
  */
 export function syncDraft(draft: FieldDraft, server: string, focused: boolean): FieldDraft {
-  if (server !== draft.seen) return focused ? { ...draft, seen: server } : startDraft(server);
-  if (focused || draft.edited || draft.value === server) return draft;
-  return startDraft(server);
+  if (focused || holdsUnsavedText(draft)) return draft;
+  return draft.edited || draft.value !== server ? startDraft(server) : draft;
+}
+
+export const beginSave = (draft: FieldDraft): FieldDraft => ({
+  ...draft,
+  saving: draft.saving + 1,
+});
+
+/** Only the outcome for the text the field still shows says whether that text is saved. */
+export function endSave(draft: FieldDraft, value: string, saved: boolean): FieldDraft {
+  const settled = { ...draft, saving: Math.max(0, draft.saving - 1) };
+  return draft.value === value ? { ...settled, failed: !saved } : settled;
 }

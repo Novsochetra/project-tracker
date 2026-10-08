@@ -1,0 +1,41 @@
+.note {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px 6px;
+  margin: 0;
+  color: var(--danger);
+  font-size: var(--size-secondary);
+  line-height: 1.5;
+}
+
+.icon {
+  flex: none;
+}
+
+.retry {
+  position: relative;
+  padding: 0 var(--space-1);
+  border: 0;
+  border-radius: var(--radius-tile);
+  background: transparent;
+  color: var(--link);
+  font: inherit;
+  font-weight: var(--weight-medium);
+  cursor: pointer;
+}
+
+@media (hover: hover) {
+  .retry:hover {
+    color: var(--link-hover);
+  }
+}
+
+@media (max-width: 767px) {
+  /* Keeps its inline look but gets a 44px touch target (SPEC §12). */
+  .retry::before {
+    content: '';
+    position: absolute;
+    inset: -13px -8px;
+  }
+}

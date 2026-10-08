@@ -4,4 +4,5 @@ import { createCommentInput, updateTicketInput } from '@tracker/shared';
 export const TITLE_MAX_LENGTH = updateTicketInput.shape.title.unwrap().maxLength ?? undefined;
 export const DESCRIPTION_MAX_LENGTH =
   updateTicketInput.shape.description.unwrap().maxLength ?? undefined;
+export const ASSIGNEE_MAX_LENGTH = updateTicketInput.shape.assignee.unwrap().maxLength ?? undefined;
 export const COMMENT_MAX_LENGTH = createCommentInput.shape.text.unwrap().maxLength ?? undefined;

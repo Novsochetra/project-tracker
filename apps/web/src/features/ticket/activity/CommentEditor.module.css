@@ -28,8 +28,14 @@
 
 .actions {
   display: flex;
+  flex-wrap: wrap;
+  align-items: center;
   justify-content: flex-end;
   gap: var(--space-2);
+}
+
+.actions .unsaved {
+  margin-right: auto;
 }
 
 @media (max-width: 767px) {

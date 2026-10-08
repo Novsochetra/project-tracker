@@ -1,12 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { editDraft, startDraft, syncDraft } from './fieldDraft';
+import { beginSave, editDraft, endSave, startDraft, syncDraft } from './fieldDraft';
 
 describe('field drafts', () => {
   it('start from the server value', () => {
     expect(startDraft('Fix login')).toEqual({
       value: 'Fix login',
-      seen: 'Fix login',
       edited: false,
+      failed: false,
+      saving: 0,
     });
   });
 
@@ -14,28 +15,62 @@ describe('field drafts', () => {
     expect(syncDraft(startDraft('Fix login'), 'Fix sign-in', false).value).toBe('Fix sign-in');
   });
 
-  it('keep what is typed while focused, but note the server change', () => {
+  it('keep what is typed while focused, whatever the server says', () => {
     const typing = editDraft(startDraft('Fix login'), 'Fix the login');
-    const synced = syncDraft(typing, 'Agent title', true);
-    expect(synced.value).toBe('Fix the login');
-    expect(synced.seen).toBe('Agent title');
+    expect(syncDraft(typing, 'Agent title', true).value).toBe('Fix the login');
   });
 
   it('do not flash back to an older save when the field is left before the last save lands', () => {
-    let draft = editDraft(startDraft('Fix login'), 'Fix the');
+    let draft = beginSave(editDraft(startDraft('Fix login'), 'Fix the'));
     draft = syncDraft(draft, 'Fix the', true);
-    draft = editDraft(draft, 'Fix the login error');
+    draft = beginSave(editDraft(draft, 'Fix the login error'));
+    draft = endSave(draft, 'Fix the', true);
     draft = syncDraft(draft, 'Fix the', false);
     expect(draft.value).toBe('Fix the login error');
+    draft = endSave(draft, 'Fix the login error', true);
     draft = syncDraft(draft, 'Fix the login error', false);
     expect(draft).toEqual(startDraft('Fix the login error'));
   });
 
-  it('roll back to the server value when a save fails after the field is left', () => {
-    let draft = editDraft(startDraft('Fix login'), 'Too long');
-    draft = syncDraft(draft, 'Too long', false);
+  // This used to roll back to the server value, which threw away what was typed whenever the
+  // tracker couldn't be reached. The text now stays, marked as failed, until a retry saves it.
+  it('keep the typed value when a save fails after the field is left, until a retry saves it', () => {
+    let draft = beginSave(editDraft(startDraft('Fix login'), 'Fix the login'));
+    draft = syncDraft(draft, 'Fix the login', false);
+    draft = endSave(draft, 'Fix the login', false);
     draft = syncDraft(draft, 'Fix login', false);
-    expect(draft.value).toBe('Fix login');
+    expect(draft).toEqual({ value: 'Fix the login', edited: true, failed: true, saving: 0 });
+
+    draft = beginSave(draft);
+    draft = syncDraft(draft, 'Fix the login', false);
+    draft = endSave(draft, 'Fix the login', true);
+    draft = syncDraft(draft, 'Fix the login', false);
+    expect(draft).toEqual(startDraft('Fix the login'));
+  });
+
+  it('keep the text when the rollback lands before the failure is reported', () => {
+    let draft = beginSave(editDraft(startDraft('Fix login'), 'Fix the login'));
+    draft = syncDraft(draft, 'Fix login', false);
+    expect(draft.value).toBe('Fix the login');
+    draft = endSave(draft, 'Fix the login', false);
+    expect(draft.failed).toBe(true);
+  });
+
+  it('wait for every save in flight, since an earlier one may still fail', () => {
+    let draft = beginSave(beginSave(editDraft(startDraft(''), 'Dara')));
+    draft = endSave(draft, 'Dara', true);
+    draft = syncDraft(draft, 'Dara', false);
+    expect(draft.edited).toBe(true);
+    draft = endSave(draft, 'Dara', false);
+    draft = syncDraft(draft, '', false);
+    expect(draft).toMatchObject({ value: 'Dara', failed: true });
+  });
+
+  it('ignore the outcome of a save for text that has been typed over since', () => {
+    let draft = beginSave(editDraft(startDraft('Fix login'), 'Fix'));
+    draft = editDraft(draft, 'Fix it');
+    draft = endSave(draft, 'Fix', false);
+    expect(draft).toMatchObject({ value: 'Fix it', failed: false, saving: 0 });
   });
 
   it('catch up when left untouched after a server change during focus', () => {

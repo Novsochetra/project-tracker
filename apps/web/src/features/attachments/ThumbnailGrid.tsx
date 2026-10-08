@@ -14,7 +14,9 @@ export interface ThumbnailGridProps {
   /** Makes each thumbnail a button named "Open image {n}". */
   onOpen?: ((index: number) => void) | undefined;
   /** Adds a small x named "Remove image {n}". */
-  onRemove?: ((id: string) => void) | undefined;
+  onRemove?: ((id: string, index: number) => void) | undefined;
+  /** The image a removal is being confirmed for, so it is clear which one goes. */
+  markedId?: string | null | undefined;
   uploading?: number;
   size?: 'md' | 'sm';
   children?: ReactNode;
@@ -25,22 +27,23 @@ export function ThumbnailGrid({
   images,
   onOpen,
   onRemove,
+  markedId,
   uploading = 0,
   size = 'md',
   children,
   className,
 }: ThumbnailGridProps) {
   return (
-    <div className={clsx(styles.grid, styles[size], className)}>
+    <div className={clsx(styles.grid, styles[size], onRemove && styles.removable, className)}>
       {images.map((image, index) => (
-        <div key={image.id} className={styles.tile}>
+        <div key={image.id} className={clsx(styles.tile, image.id === markedId && styles.marked)}>
           <Thumbnail image={image} number={index + 1} onOpen={onOpen && (() => onOpen(index))} />
           {onRemove && (
             <button
               type="button"
               className={styles.remove}
               aria-label={`Remove image ${index + 1}`}
-              onClick={() => onRemove(image.id)}
+              onClick={() => onRemove(image.id, index)}
             >
               <Icon icon={X} size={14} />
             </button>

@@ -29,26 +29,26 @@ export function TicketMain({ detail, className }: TicketMainProps) {
       <div className={styles.inner}>
         <span className={styles.key}>{ticket.key}</span>
         <AutosaveTextarea
-          aria-label="Title"
+          label="Title"
+          draftId={`title:${ticket.key}`}
           placeholder="Ticket title"
           className={styles.title}
           maxLength={TITLE_MAX_LENGTH}
           value={ticket.title}
           onKeyDown={keepOneLine}
-          onSave={(title) => {
-            if (title !== ticket.title) update({ title });
-          }}
+          onSave={(title) => (title === ticket.title ? undefined : update({ title }))}
         />
         <AutosaveTextarea
-          aria-label="Description"
+          label="Description"
+          draftId={`description:${ticket.key}`}
           placeholder="Add details, steps or acceptance criteria…"
           className={styles.description}
           maxLength={DESCRIPTION_MAX_LENGTH}
           value={ticket.description}
           onPaste={(event) => pasteImages(event, uploads.add)}
-          onSave={(description) => {
-            if (description !== ticket.description) update({ description });
-          }}
+          onSave={(description) =>
+            description === ticket.description ? undefined : update({ description })
+          }
         />
         <TicketImages ticketKey={ticket.key} images={images} uploads={uploads} />
       </div>

@@ -54,6 +54,12 @@
   justify-content: center;
 }
 
+/* The image a removal is being confirmed for. */
+.marked .frame {
+  outline: 2px solid var(--danger);
+  outline-offset: 2px;
+}
+
 .remove {
   position: absolute;
   top: 2px;
@@ -128,8 +134,23 @@
 }
 
 @media (max-width: 767px) {
+  /* The x sits on the corner with most of its touch target outside the image, so the tiles
+     leave room around them for it. */
+  .grid.removable {
+    gap: var(--space-4);
+    padding-top: var(--space-2);
+  }
+
   .remove {
+    top: -8px;
+    right: -8px;
     width: 24px;
     height: 24px;
+  }
+
+  /* 44x44 around the x. It reaches 26px into the image, short of the middle of a 56px or 72px
+     thumbnail, so a tap meant to open the image does. */
+  .remove::before {
+    inset: -10px;
   }
 }

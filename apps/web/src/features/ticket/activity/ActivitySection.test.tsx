@@ -169,7 +169,8 @@ describe('comments', () => {
   });
 
   it('edits a comment inline from the desktop menu', async () => {
-    const updateComment = vi.fn().mockReturnValue(new Promise(() => undefined));
+    const saved = deferred<Activity>();
+    const updateComment = vi.fn().mockReturnValue(saved.promise);
     const user = userEvent.setup();
     const { client } = setup([comment('c1', 'First thought')], { client: { updateComment } });
     await user.click(screen.getByRole('button', { name: 'Comment options' }));
@@ -181,8 +182,45 @@ describe('comments', () => {
     await user.type(editor, 'Second thought');
     await user.click(screen.getByRole('button', { name: 'Save' }));
     expect(client.updateComment).toHaveBeenCalledWith('c1', { text: 'Second thought' });
-    expect(log()).toHaveTextContent('Second thought');
+    expect(editor).toBeInTheDocument();
+    saved.resolve(comment('c1', 'Second thought', { editedAt: NOW }));
+    await waitFor(() => expect(screen.queryByLabelText('Edit comment')).not.toBeInTheDocument());
+    expect(within(log()).getByText('Second thought')).toBeInTheDocument();
     expect(log()).toHaveTextContent('edited');
+    expect(screen.getByRole('button', { name: 'Comment options' })).toHaveFocus();
+  });
+
+  it('keeps what is typed while an edit is saving', async () => {
+    const saved = deferred<Activity>();
+    const updateComment = vi.fn().mockReturnValue(saved.promise);
+    const user = userEvent.setup();
+    const { queryClient } = setup([comment('c1', 'First thought')], { client: { updateComment } });
+    await user.click(screen.getByRole('button', { name: 'Comment options' }));
+    await user.click(screen.getByRole('button', { name: 'Edit comment' }));
+    const editor = screen.getByLabelText('Edit comment');
+    await user.type(editor, '!');
+    await user.click(screen.getByRole('button', { name: 'Save' }));
+    await user.type(editor, '!');
+    saved.resolve(comment('c1', 'First thought!', { editedAt: NOW }));
+    await waitFor(() => expect(queryClient.isMutating()).toBe(0));
+    expect(screen.getByLabelText('Edit comment')).toHaveValue('First thought!!');
+    expect(hasDrafts()).toBe(true);
+  });
+
+  it('reopens the editor with the edit when a save left behind fails', async () => {
+    const saved = deferred<Activity>();
+    const updateComment = vi.fn().mockReturnValue(saved.promise);
+    const user = userEvent.setup();
+    setup([comment('c1', 'First thought')], { client: { updateComment } });
+    await user.click(screen.getByRole('button', { name: 'Comment options' }));
+    await user.click(screen.getByRole('button', { name: 'Edit comment' }));
+    await user.type(screen.getByLabelText('Edit comment'), ' revised');
+    await user.click(screen.getByRole('button', { name: 'Save' }));
+    await user.click(screen.getByRole('button', { name: 'Cancel' }));
+    expect(screen.queryByLabelText('Edit comment')).not.toBeInTheDocument();
+    saved.reject(new TypeError('Failed to fetch'));
+    expect(await screen.findByLabelText('Edit comment')).toHaveValue('First thought revised');
+    expect(screen.getByText("Your edit isn't saved yet.")).toBeInTheDocument();
   });
 
   it('cancels an edit with Escape', async () => {
@@ -199,7 +237,9 @@ describe('comments', () => {
 
   it('edits and deletes from the action sheet on phones', async () => {
     const deleteActivity = vi.fn().mockResolvedValue(undefined);
-    const updateComment = vi.fn().mockReturnValue(new Promise(() => undefined));
+    const updateComment = vi
+      .fn()
+      .mockResolvedValue(comment('c1', 'First thought!', { editedAt: NOW }));
     const user = userEvent.setup();
     const { client } = setup([comment('c1', 'First thought')], {
       phone: true,
@@ -212,7 +252,7 @@ describe('comments', () => {
     await user.click(screen.getByRole('button', { name: 'Save' }));
     expect(client.updateComment).toHaveBeenCalledWith('c1', { text: 'First thought!' });
 
-    await user.click(screen.getByRole('button', { name: 'Comment options' }));
+    await user.click(await screen.findByRole('button', { name: 'Comment options' }));
     const again = screen.getByRole('dialog', { name: 'Comment options' });
     await user.click(within(again).getByRole('button', { name: 'Delete comment' }));
     expect(again).toHaveTextContent("Delete this comment? This can't be undone.");

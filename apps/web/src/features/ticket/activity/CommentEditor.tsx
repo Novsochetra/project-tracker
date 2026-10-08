@@ -1,23 +1,15 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useId, useRef } from 'react';
 import { AutoTextarea, Button } from '../../../components';
 import { COMMENT_MAX_LENGTH } from '../fields/limits';
-import { useDraftMark } from '../fields/useDraftMark';
+import { UnsavedNote } from '../fields/UnsavedNote';
 import styles from './CommentEditor.module.css';
 import { isSubmitShortcut } from './commentRules';
+import type { CommentEdit } from './useCommentEdit';
 
-export interface CommentEditorProps {
-  /** Names the unsaved edit for the drafts contract, such as "comment-edit:<id>". */
-  draftId: string;
-  initial: string;
-  onSave: (text: string) => void;
-  onCancel: () => void;
-}
-
-export function CommentEditor({ draftId, initial, onSave, onCancel }: CommentEditorProps) {
-  const [text, setText] = useState(initial);
+export function CommentEditor({ edit }: { edit: CommentEdit }) {
   const inputRef = useRef<HTMLTextAreaElement>(null);
-  const blank = text.trim() === '';
-  useDraftMark(draftId, text !== initial);
+  const noteId = useId();
+  const blank = edit.text.trim() === '';
 
   useEffect(() => {
     const input = inputRef.current;
@@ -27,7 +19,7 @@ export function CommentEditor({ draftId, initial, onSave, onCancel }: CommentEdi
   }, []);
 
   const save = () => {
-    if (!blank) onSave(text);
+    if (!blank) edit.save();
   };
   return (
     <form
@@ -41,14 +33,15 @@ export function CommentEditor({ draftId, initial, onSave, onCancel }: CommentEdi
         <AutoTextarea
           ref={inputRef}
           aria-label="Edit comment"
+          aria-describedby={edit.failed ? noteId : undefined}
           className={styles.input}
           maxLength={COMMENT_MAX_LENGTH}
-          value={text}
-          onChange={(event) => setText(event.currentTarget.value)}
+          value={edit.text}
+          onChange={(event) => edit.setText(event.currentTarget.value)}
           onKeyDown={(event) => {
             if (event.key === 'Escape') {
               event.preventDefault();
-              onCancel();
+              edit.cancel();
             } else if (isSubmitShortcut(event)) {
               event.preventDefault();
               save();
@@ -57,7 +50,8 @@ export function CommentEditor({ draftId, initial, onSave, onCancel }: CommentEdi
         />
       </div>
       <div className={styles.actions}>
-        <Button size="sm" onClick={onCancel}>
+        {edit.failed && <UnsavedNote id={noteId} subject="Your edit" className={styles.unsaved} />}
+        <Button size="sm" onClick={edit.cancel}>
           Cancel
         </Button>
         <Button type="submit" variant="primary" size="sm" disabled={blank}>
