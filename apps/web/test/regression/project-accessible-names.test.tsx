@@ -16,10 +16,33 @@ describe('project names read with spaces between their parts', () => {
 
   it('in the Projects list', () => {
     renderWithApp(
-      <ProjectRow project={project} index={0} now={project.lastActivityAt} onOpen={() => {}} />,
+      <ProjectRow
+        project={project}
+        readyCount={0}
+        index={0}
+        now={project.lastActivityAt}
+        onOpen={() => {}}
+      />,
     );
     expect(
       screen.getByRole('button', { name: 'Mobile app MOB Phone app 25% 3 open Updated just now' }),
+    ).toBeInTheDocument();
+  });
+
+  it('in the Projects list, with tickets ready for you', () => {
+    renderWithApp(
+      <ProjectRow
+        project={project}
+        readyCount={2}
+        index={0}
+        now={project.lastActivityAt}
+        onOpen={() => {}}
+      />,
+    );
+    expect(
+      screen.getByRole('button', {
+        name: 'Mobile app MOB Phone app 25% 3 open 2 ready Updated just now',
+      }),
     ).toBeInTheDocument();
   });
 });

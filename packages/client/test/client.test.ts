@@ -110,6 +110,12 @@ const routes: Route[] = [
     call: (c) => c.listTickets('MOB'),
   },
   {
+    name: 'listAllTickets',
+    method: 'GET',
+    path: '/api/tickets',
+    call: (c) => c.listAllTickets(),
+  },
+  {
     name: 'createTicket',
     method: 'POST',
     path: '/api/projects/MOB/tickets',
@@ -318,6 +324,18 @@ describe('query strings', () => {
     await client.listTickets('MOB', { q: 'mob-3 & co/x' });
 
     expect(pathOf(last())).toBe('/api/projects/MOB/tickets?q=mob-3+%26+co%2Fx');
+  });
+
+  it('builds the same query for tickets across projects', async () => {
+    const { client, calls } = setup(() => json([]));
+
+    await client.listAllTickets({ category: 'reviewed' });
+    await client.listAllTickets({ status: 'Reviewed', q: 'web-2 & co', category: undefined });
+
+    expect(calls.map(pathOf)).toEqual([
+      '/api/tickets?category=reviewed',
+      '/api/tickets?status=Reviewed&q=web-2+%26+co',
+    ]);
   });
 
   it('adds moveTo when deleting a status only when it is given', async () => {

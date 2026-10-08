@@ -12,6 +12,8 @@ export function isRefreshable(
   queryKey: QueryKey,
   busy: BusyKeys,
 ): boolean {
+  // Any ticket's move may have taken it off the ready list, which a refetch would undo.
+  if (rootOf(queryKey) === 'ready') return busy.ticketKeys.size === 0;
   const scope = scopeOf(queryKey);
   if (!scope) return true;
   const projectKey = projectOfQuery(queryKey);
@@ -30,6 +32,9 @@ function refreshProject(
   options: SettleOptions,
 ): void {
   void queryClient.invalidateQueries({ queryKey: queryKeys.projects(), exact: true });
+  if (isRefreshable(queryClient, queryKeys.ready(), busy)) {
+    void queryClient.invalidateQueries({ queryKey: queryKeys.ready(), exact: true });
+  }
   if (busy.projectKeys.has(projectKey) || isDeleted(queryClient, projectKey)) return;
   void queryClient.invalidateQueries({ queryKey: queryKeys.project(projectKey) });
   if (!options.withTickets) return;

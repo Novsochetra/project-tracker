@@ -1,6 +1,5 @@
 import {
   byRank,
-  findStatusByName,
   matchesSearch,
   type ListTicketsQuery,
   type ProjectBoard,
@@ -11,8 +10,9 @@ import {
 import type { AttachmentRow, Db, StatusRow, TicketRow } from '../db/schema';
 import { listTicketActivities } from '../repositories/activities';
 import { listTicketAttachments } from '../repositories/attachments';
-import { listStatusRows } from '../repositories/statuses';
-import { listTicketItemRows } from '../repositories/tickets';
+import { listProjectRows } from '../repositories/projects';
+import { listAllStatusRows, listStatusRows } from '../repositories/statuses';
+import { listTicketItemRows, listTicketItemRowsInStatuses } from '../repositories/tickets';
 import type { ServiceContext } from './context';
 import {
   loadTicketScope,
@@ -80,14 +80,15 @@ export async function getBoard(ctx: ServiceContext, projectKey: string): Promise
   };
 }
 
-function allowedStatusIds(statuses: Status[], query: ListTicketsQuery): Set<string> {
-  let allowed = statuses;
-  if (query.status) {
-    const named = findStatusByName(statuses, query.status);
-    allowed = named ? [named] : [];
-  }
-  if (query.category) allowed = allowed.filter((status) => status.category === query.category);
-  return new Set(allowed.map((status) => status.id));
+type StatusFields = Pick<Status, 'id' | 'name' | 'category'>;
+
+// Names are unique within a project, so across projects a name can match one status in each.
+function allowedStatusIds(statuses: readonly StatusFields[], query: ListTicketsQuery): string[] {
+  const name = query.status ? query.status.trim().toLowerCase() : null;
+  return statuses
+    .filter((status) => name === null || status.name.toLowerCase() === name)
+    .filter((status) => !query.category || status.category === query.category)
+    .map((status) => status.id);
 }
 
 export async function listTickets(
@@ -96,8 +97,20 @@ export async function listTickets(
   query: ListTicketsQuery,
 ): Promise<TicketListItem[]> {
   const board = await getBoard(ctx, projectKey);
-  const allowed = allowedStatusIds(board.statuses, query);
+  const allowed = new Set(allowedStatusIds(board.statuses, query));
   return board.tickets.filter(
     (ticket) => allowed.has(ticket.statusId) && matchesSearch(ticket, query.q ?? ''),
   );
+}
+
+export async function listAllTickets(
+  ctx: ServiceContext,
+  query: ListTicketsQuery,
+): Promise<TicketListItem[]> {
+  const projectKeys = new Map((await listProjectRows(ctx.db)).map((row) => [row.id, row.key]));
+  const statusIds = allowedStatusIds(await listAllStatusRows(ctx.db), query);
+  const rows = await listTicketItemRowsInStatuses(ctx.db, statusIds);
+  return rows
+    .map((row) => toTicketListItem(row, projectKeys.get(row.projectId) ?? ''))
+    .filter((ticket) => matchesSearch(ticket, query.q ?? ''));
 }

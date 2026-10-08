@@ -10,6 +10,9 @@ export async function listStatusRows(db: Db, projectId: string): Promise<StatusR
   return sortStatuses(rows);
 }
 
+export const listAllStatusRows = (db: Db): Promise<StatusRow[]> =>
+  db.selectFrom('statuses').selectAll().execute();
+
 export const findStatusById = (db: Db, id: string) =>
   db.selectFrom('statuses').selectAll().where('id', '=', id).executeTakeFirst();
 

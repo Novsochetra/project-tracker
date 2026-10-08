@@ -6,7 +6,12 @@ import { useNavigation } from '../../navigation';
 import styles from './ProjectList.module.css';
 import { ProjectRow } from './ProjectRow';
 
-export function ProjectList({ projects }: { projects: readonly ProjectSummary[] }) {
+export interface ProjectListProps {
+  projects: readonly ProjectSummary[];
+  readyCounts: ReadonlyMap<string, number>;
+}
+
+export function ProjectList({ projects, readyCounts }: ProjectListProps) {
   const isPhone = useIsPhone();
   const now = useNow();
   const { push } = useNavigation();
@@ -24,6 +29,7 @@ export function ProjectList({ projects }: { projects: readonly ProjectSummary[] 
         <ProjectRow
           key={project.id}
           project={project}
+          readyCount={readyCounts.get(project.id) ?? 0}
           index={index}
           now={now}
           onOpen={() => push({ name: 'project', key: project.key })}

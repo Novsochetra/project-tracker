@@ -80,7 +80,7 @@ export function changeScope(event: ChangeEvent, entries: readonly CachedEntry[])
 
 export function isAffected(queryKey: QueryKey, scope: ChangeScope): boolean {
   const root = rootOf(queryKey);
-  if (root === 'projects' || root === 'reportPreview') return true;
+  if (root === 'projects' || root === 'ready' || root === 'reportPreview') return true;
   if (root === 'people') return scope.all;
   const key = scopeOf(queryKey) ?? '';
   if (root === 'project') return scope.all || scope.projectKeys.has(key);

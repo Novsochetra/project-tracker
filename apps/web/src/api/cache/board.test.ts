@@ -87,24 +87,37 @@ describe('removeBoardTicket', () => {
 
 describe('upsertBoardTicket', () => {
   it('inserts a new ticket with counts and bumps the next number', () => {
-    const { commentCount: _c, attachmentCount: _a, ...ticket } = listItem(5, STATUS.todo, -1000);
-    const board = upsertBoardTicket(makeBoard(), ticket, { attachmentCount: 2 });
-    expect(keysIn(board, STATUS.todo)).toEqual(['MOB-5', 'MOB-1', 'MOB-2']);
-    expect(findBoardTicket(board, 'MOB-5')).toMatchObject({ commentCount: 0, attachmentCount: 2 });
-    expect(board.project.nextNum).toBe(6);
-  });
-
-  it('replaces an existing ticket and keeps its counts', () => {
-    const original = makeBoard([listItem(1, STATUS.todo, 0, { commentCount: 3 })]);
     const {
       commentCount: _c,
       attachmentCount: _a,
+      lastReview: _r,
+      ...ticket
+    } = listItem(5, STATUS.todo, -1000);
+    const board = upsertBoardTicket(makeBoard(), ticket, { attachmentCount: 2 });
+    expect(keysIn(board, STATUS.todo)).toEqual(['MOB-5', 'MOB-1', 'MOB-2']);
+    expect(findBoardTicket(board, 'MOB-5')).toEqual({
+      ...ticket,
+      commentCount: 0,
+      attachmentCount: 2,
+      lastReview: null,
+    });
+    expect(board.project.nextNum).toBe(6);
+  });
+
+  it('replaces an existing ticket and keeps its counts and last review', () => {
+    const lastReview = { verdict: 'approved', rating: 4 } as const;
+    const original = makeBoard([listItem(1, STATUS.todo, 0, { commentCount: 3, lastReview })]);
+    const {
+      commentCount: _c,
+      attachmentCount: _a,
+      lastReview: _r,
       ...ticket
     } = listItem(1, STATUS.progress, -1000);
     const board = upsertBoardTicket(original, ticket);
     expect(findBoardTicket(board, 'MOB-1')).toMatchObject({
       statusId: STATUS.progress,
       commentCount: 3,
+      lastReview,
     });
     expect(board.tickets).toHaveLength(1);
     expect(board.project.nextNum).toBe(5);

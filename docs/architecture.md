@@ -105,6 +105,14 @@ On phones (`max-width: 767px`) the app behaves like a native iOS app:
 
 ## 2. Data model
 
+### 1.10 Ready for you
+
+- Projects (phone and desktop) shows a **Ready for you** card above the project list while any project has a ticket in a `reviewed` status (`GET /api/tickets?category=reviewed`, most recently updated first; `features/ready`). It is left out when empty or when it can't load. Rows show key, title, project color and name, the latest review's verdict chip and stars; long lists collapse like a group (§7.3).
+- Tapping a row opens the ticket. Phones swipe a row right to move it to its project's first `done` status; desktop shows a **Done** button on hover and on focus, and it stays in the tab order. Both use the Project screen's status change (toast "MOB-3 moved to Done", flash). The row leaves at once and comes back if the save fails.
+- Project rows label their counts: "4 open", with "2 ready" below it when some are reviewed (the Open column is 64px).
+- Every `TicketListItem` has `lastReview: { verdict, rating } | null`, the latest `review` activity, read in the same query as the list.
+- The ready list (query key `['ready']`) refreshes on every change event, like the project list, but not while a ticket edit is in flight; the last edit to settle refreshes it.
+
 TypeScript types live in `packages/shared/src/domain`. Database tables (snake_case, mapped to camelCase with Kysely's `CamelCasePlugin`):
 
 | Table         | Columns                                                                                                                                                                                                                                         |
@@ -130,6 +138,7 @@ All routes are under `/api`, JSON in and out. Errors: `{ "error": { "code", "mes
 | `GET /projects/:key/prompt`                                                 | Project prompt and open ticket count                                                                                     |
 | `GET /projects/:key/tickets?status=&category=&q=`                           | Filtered tickets (status by name, case-insensitive)                                                                      |
 | `POST /projects/:key/tickets`                                               | Create ticket (top of its group, "created the ticket")                                                                   |
+| `GET /tickets?status=&category=&q=`                                         | The same filters across every project, most recently updated first                                                       |
 | `POST /projects/:key/statuses`, `PUT /projects/:key/statuses/order`         | Create status / reorder                                                                                                  |
 | `PATCH /statuses/:id`, `DELETE /statuses/:id?moveTo=`                       | Edit / delete status                                                                                                     |
 | `GET/PATCH/DELETE /tickets/:key`                                            | Ticket detail / edit fields (events per SPEC §6.2) / delete                                                              |

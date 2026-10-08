@@ -55,8 +55,10 @@ describe('changeScope', () => {
 describe('isAffected', () => {
   const scope = changed('p-mob', 't-1');
 
-  it('always refreshes the project list and report previews', () => {
+  it('always refreshes the project list, the ready list and report previews', () => {
     expect(isAffected(queryKeys.projects(), scope)).toBe(true);
+    expect(isAffected(queryKeys.ready(), scope)).toBe(true);
+    expect(isAffected(queryKeys.ready(), changed('p-web', null))).toBe(true);
     expect(isAffected(queryKeys.reportPreview('TICKET: MOB-1'), scope)).toBe(true);
   });
 

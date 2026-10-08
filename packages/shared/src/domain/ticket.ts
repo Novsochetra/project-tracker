@@ -1,3 +1,4 @@
+import type { Review } from './activity';
 import type { Priority } from './priority';
 
 export interface Ticket {
@@ -19,4 +20,5 @@ export interface Ticket {
 export interface TicketListItem extends Ticket {
   commentCount: number;
   attachmentCount: number;
+  lastReview: Review | null;
 }

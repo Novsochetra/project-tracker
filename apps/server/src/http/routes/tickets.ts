@@ -14,13 +14,16 @@ import {
   moveTicket,
   updateTicket,
 } from '../../services/ticketCommands';
-import { getTicketDetail, listTickets } from '../../services/ticketQueries';
+import { getTicketDetail, listAllTickets, listTickets } from '../../services/ticketQueries';
 import { markSent } from '../../services/workflow';
 import type { AppEnv } from '../env';
 import { jsonBody, queryParams } from '../validation';
 
 export const ticketRoutes = (ctx: ServiceContext) =>
   new Hono<AppEnv>()
+    .get('/tickets', queryParams(listTicketsQuery), async (c) =>
+      c.json(await listAllTickets(ctx, c.req.valid('query'))),
+    )
     .get('/projects/:key/tickets', queryParams(listTicketsQuery), async (c) =>
       c.json(await listTickets(ctx, c.req.param('key'), c.req.valid('query'))),
     )

@@ -3,6 +3,8 @@ import {
   type Activity,
   type Attachment,
   type Project,
+  type Review,
+  type ReviewVerdict,
   type Status,
   type Ticket,
   type TicketListItem,
@@ -50,10 +52,14 @@ export const toTicket = (row: TicketRow, projectKey: string): Ticket => ({
   updatedAt: row.updatedAt,
 });
 
+const toReview = (verdict: ReviewVerdict | null, rating: number | null): Review | null =>
+  verdict ? { verdict, rating: rating ?? 0 } : null;
+
 export const toTicketListItem = (row: TicketItemRow, projectKey: string): TicketListItem => ({
   ...toTicket(row, projectKey),
   commentCount: row.commentCount,
   attachmentCount: row.attachmentCount,
+  lastReview: toReview(row.lastReviewVerdict, row.lastReviewRating),
 });
 
 export const toAttachment = (row: AttachmentRow): Attachment => ({
@@ -75,7 +81,7 @@ export const toActivity = (row: ActivityRow, attachments: readonly AttachmentRow
   type: row.type,
   actor: { kind: row.actorKind, name: row.actorName },
   text: row.text,
-  review: row.reviewVerdict ? { verdict: row.reviewVerdict, rating: row.reviewRating ?? 0 } : null,
+  review: toReview(row.reviewVerdict, row.reviewRating),
   attachments: attachments.map(toAttachment),
   createdAt: row.createdAt,
   editedAt: row.editedAt,

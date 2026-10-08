@@ -20,6 +20,7 @@ export * from './hooks/people';
 export * from './hooks/projectMutations';
 export * from './hooks/projects';
 export * from './hooks/prompts';
+export * from './hooks/ready';
 export * from './hooks/reports';
 export * from './hooks/session';
 export * from './hooks/statuses';

@@ -73,6 +73,7 @@ export function listItem(
     updatedAt: 1,
     commentCount: 0,
     attachmentCount: 0,
+    lastReview: null,
     ...overrides,
   };
 }

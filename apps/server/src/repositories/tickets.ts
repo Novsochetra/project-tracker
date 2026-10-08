@@ -1,11 +1,14 @@
-import type { Rankable } from '@tracker/shared';
-import type { Db, TicketRow } from '../db/schema';
+import type { Rankable, ReviewVerdict } from '@tracker/shared';
+import type { ExpressionBuilder, InferResult } from 'kysely';
+import type { Database, Db, TicketRow } from '../db/schema';
 
 export type TicketChanges = Partial<Omit<TicketRow, 'id' | 'projectId' | 'num' | 'createdAt'>>;
 
 export interface TicketItemRow extends TicketRow {
   commentCount: number;
   attachmentCount: number;
+  lastReviewVerdict: ReviewVerdict | null;
+  lastReviewRating: number | null;
 }
 
 export const findTicketByNum = (db: Db, projectId: string, num: number) =>
@@ -22,8 +25,18 @@ export const findTicketById = (db: Db, id: string) =>
 export const listTicketRows = (db: Db, projectId: string) =>
   db.selectFrom('tickets').selectAll().where('projectId', '=', projectId).execute();
 
-export async function listTicketItemRows(db: Db, projectId: string): Promise<TicketItemRow[]> {
-  const rows = await db
+const latestReview = (eb: ExpressionBuilder<Database, 'tickets'>) =>
+  eb
+    .selectFrom('activities')
+    .whereRef('activities.ticketId', '=', 'tickets.id')
+    .where('activities.type', '=', 'review')
+    .orderBy('activities.createdAt', 'desc')
+    .orderBy('activities.id', 'desc')
+    .limit(1);
+
+// Counts and the latest review come from correlated subqueries, so a list is one query.
+const selectTicketItems = (db: Db) =>
+  db
     .selectFrom('tickets')
     .selectAll('tickets')
     .select((eb) => [
@@ -38,14 +51,36 @@ export async function listTicketItemRows(db: Db, projectId: string): Promise<Tic
         .select((sub) => sub.fn.countAll().as('count'))
         .whereRef('attachments.ticketId', '=', 'tickets.id')
         .as('attachmentCount'),
-    ])
-    .where('tickets.projectId', '=', projectId)
+      latestReview(eb).select('activities.reviewVerdict').as('lastReviewVerdict'),
+      latestReview(eb).select('activities.reviewRating').as('lastReviewRating'),
+    ]);
+
+type SelectedItemRow = InferResult<ReturnType<typeof selectTicketItems>>[number];
+
+const toItemRow = (row: SelectedItemRow): TicketItemRow => ({
+  ...row,
+  commentCount: Number(row.commentCount ?? 0),
+  attachmentCount: Number(row.attachmentCount ?? 0),
+  lastReviewVerdict: row.lastReviewVerdict ?? null,
+  lastReviewRating: row.lastReviewRating === null ? null : Number(row.lastReviewRating),
+});
+
+export async function listTicketItemRows(db: Db, projectId: string): Promise<TicketItemRow[]> {
+  const rows = await selectTicketItems(db).where('tickets.projectId', '=', projectId).execute();
+  return rows.map(toItemRow);
+}
+
+export async function listTicketItemRowsInStatuses(
+  db: Db,
+  statusIds: readonly string[],
+): Promise<TicketItemRow[]> {
+  if (statusIds.length === 0) return [];
+  const rows = await selectTicketItems(db)
+    .where('tickets.statusId', 'in', statusIds)
+    .orderBy('tickets.updatedAt', 'desc')
+    .orderBy('tickets.id')
     .execute();
-  return rows.map((row) => ({
-    ...row,
-    commentCount: Number(row.commentCount ?? 0),
-    attachmentCount: Number(row.attachmentCount ?? 0),
-  }));
+  return rows.map(toItemRow);
 }
 
 export const listGroupRanks = (db: Db, statusId: string): Promise<Rankable[]> =>

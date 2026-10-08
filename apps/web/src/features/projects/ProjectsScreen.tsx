@@ -1,17 +1,20 @@
 import type { ProjectSummary } from '@tracker/shared';
 import { Folder, Plus } from 'lucide-react';
-import { errorMessage, useProjects, type TrackerQuery } from '../../api';
+import { errorMessage, useProjects, useReadyForYou, type TrackerQuery } from '../../api';
 import { useSheets } from '../../app/sheets/context';
 import { Button, EmptyState, Icon } from '../../components';
 import { PullToRefresh } from '../../gestures';
 import { useIsPhone } from '../../lib/media';
 import { LargeTitle, NavBar, NavBarButton, useScreen } from '../../navigation';
 import { CaptureBar, CaptureButton, canCapture, WaitingToSync } from '../capture';
+import { readyCounts, readyItems, ReadySection } from '../ready';
 import { ProjectList } from './ProjectList';
 import styles from './ProjectsScreen.module.css';
 
 export function ProjectsScreen() {
   const projects = useProjects();
+  const ready = useReadyForYou();
+  const items = readyItems(ready.data ?? [], projects.data ?? []);
   const sheets = useSheets();
   const isPhone = useIsPhone();
   const { scrollRef } = useScreen();
@@ -28,7 +31,10 @@ export function ProjectsScreen() {
           </NavBarButton>
         }
       />
-      <PullToRefresh onRefresh={() => projects.refetch()} scrollRef={scrollRef}>
+      <PullToRefresh
+        onRefresh={() => Promise.all([projects.refetch(), ready.refetch()])}
+        scrollRef={scrollRef}
+      >
         <div className={styles.page}>
           <div className={styles.content}>
             <div className={styles.titleRow}>
@@ -36,7 +42,8 @@ export function ProjectsScreen() {
               {capture && !isPhone && <CaptureButton onClick={openCapture} />}
             </div>
             <WaitingToSync />
-            <ProjectsBody query={projects} onNew={openNew} />
+            <ReadySection items={items} />
+            <ProjectsBody query={projects} readyCounts={readyCounts(items)} onNew={openNew} />
           </div>
         </div>
       </PullToRefresh>
@@ -45,16 +52,16 @@ export function ProjectsScreen() {
   );
 }
 
-function ProjectsBody({
-  query,
-  onNew,
-}: {
+interface ProjectsBodyProps {
   query: TrackerQuery<ProjectSummary[]>;
+  readyCounts: ReadonlyMap<string, number>;
   onNew: () => void;
-}) {
+}
+
+function ProjectsBody({ query, readyCounts, onNew }: ProjectsBodyProps) {
   if (query.data) {
     return query.data.length > 0 ? (
-      <ProjectList projects={query.data} />
+      <ProjectList projects={query.data} readyCounts={readyCounts} />
     ) : (
       <EmptyState
         bordered

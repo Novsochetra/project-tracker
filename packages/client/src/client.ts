@@ -33,6 +33,12 @@ import { Http, type HttpOptions } from './http';
 
 const segment = (value: string): string => encodeURIComponent(value);
 
+const listQuery = (query: ListTicketsQuery) => ({
+  status: query.status,
+  category: query.category,
+  q: query.q,
+});
+
 export class TrackerClient {
   private readonly http: Http;
 
@@ -78,8 +84,11 @@ export class TrackerClient {
 
   listTickets = (projectKey: string, query: ListTicketsQuery = {}) =>
     this.http.request<TicketListItem[]>('GET', `/api/projects/${segment(projectKey)}/tickets`, {
-      query: { status: query.status, category: query.category, q: query.q },
+      query: listQuery(query),
     });
+
+  listAllTickets = (query: ListTicketsQuery = {}) =>
+    this.http.request<TicketListItem[]>('GET', '/api/tickets', { query: listQuery(query) });
 
   createTicket = (projectKey: string, input: CreateTicketInput) =>
     this.http.request<Ticket>('POST', `/api/projects/${segment(projectKey)}/tickets`, {

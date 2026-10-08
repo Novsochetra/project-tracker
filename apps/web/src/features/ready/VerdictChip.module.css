@@ -1,0 +1,21 @@
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-height: 22px;
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-full);
+  background: color-mix(in srgb, var(--verdict) 10%, var(--surface));
+  color: var(--verdict);
+  font-size: var(--size-caption);
+  font-weight: var(--weight-medium);
+  white-space: nowrap;
+}
+
+.approved {
+  --verdict: var(--accent);
+}
+
+.changes {
+  --verdict: var(--danger);
+}

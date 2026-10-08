@@ -7,12 +7,13 @@ import { descriptionText, progressPercent, riseDelay } from './projectRows';
 
 interface ProjectRowProps {
   project: ProjectSummary;
+  readyCount: number;
   index: number;
   now: number;
   onOpen: () => void;
 }
 
-export function ProjectRow({ project, index, now, onOpen }: ProjectRowProps) {
+export function ProjectRow({ project, readyCount, index, now, onOpen }: ProjectRowProps) {
   const percent = progressPercent(project.doneCount, project.totalCount);
   return (
     <ListRow
@@ -36,8 +37,9 @@ export function ProjectRow({ project, index, now, onOpen }: ProjectRowProps) {
         </span>
         <span className={styles.percent}>{percent}%</span>
       </span>{' '}
-      <span className={styles.open}>
-        {project.openCount} <span className="visually-hidden">open</span>
+      <span className={styles.counts}>
+        <span className={styles.open}>{project.openCount} open</span>{' '}
+        {readyCount > 0 && <span className={styles.ready}>{readyCount} ready</span>}
       </span>{' '}
       <span className={styles.updated}>
         <span className="visually-hidden">Updated</span>{' '}

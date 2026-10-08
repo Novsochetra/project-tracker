@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { MoveTicketInput, Ticket, UpdateTicketInput } from '@tracker/shared';
 import { moveBoardTicket, patchBoardTicket } from '../cache/board';
 import { patchTicketDetail } from '../cache/ticketDetail';
-import { boardChanges, ticketChange } from '../cacheChanges';
+import { boardChanges, readyChanges, ticketChange } from '../cacheChanges';
 import { useApi } from '../context';
 import { applyOptimistic, rollbackOnError } from '../optimistic';
 import { refreshPeople, settleMutation } from '../refresh';
@@ -28,6 +28,7 @@ export function useUpdateTicket(): TrackerMutation<Ticket, UpdateTicketVariables
       applyOptimistic(queryClient, [
         ...boardChanges(ticketKey, (board) => patchBoardTicket(board, ticketKey, input)),
         ticketChange(ticketKey, (detail) => patchTicketDetail(detail, input)),
+        ...readyChanges(ticketKey, input.statusId),
       ]),
     onError: rollbackOnError,
     onSettled: (_ticket, _error, variables) => {
@@ -48,6 +49,7 @@ export function useMoveTicket(): TrackerMutation<Ticket, MoveTicketVariables> {
         ticketChange(ticketKey, (detail) =>
           patchTicketDetail(detail, { statusId: input.statusId }),
         ),
+        ...readyChanges(ticketKey, input.statusId),
       ]),
     onError: rollbackOnError,
     onSettled: (_ticket, _error, variables) => settleMutation(queryClient, variables),

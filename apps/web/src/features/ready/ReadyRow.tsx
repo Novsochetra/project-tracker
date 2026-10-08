@@ -1,0 +1,122 @@
+import { findStatusByCategory, type Status } from '@tracker/shared';
+import clsx from 'clsx';
+import { ArrowRight, Check, ChevronRight } from 'lucide-react';
+import { useProject } from '../../api';
+import { Button, Icon, StarRating } from '../../components';
+import { SwipeActions, type SwipeAction } from '../../gestures';
+import { useIsPhone } from '../../lib/media';
+import { riseDelay } from '../projects/projectRows';
+import type { ReadyItem } from './readyItems';
+import styles from './ReadySection.module.css';
+import { VerdictChip } from './VerdictChip';
+
+export interface ReadyRowProps {
+  item: ReadyItem;
+  index: number;
+  onOpen: (item: ReadyItem) => void;
+  onDone: (item: ReadyItem, status: Status) => void;
+}
+
+interface ReadyStatuses {
+  done: Status | null;
+  color: string | undefined;
+}
+
+function useReadyStatuses({ project, ticket }: ReadyItem): ReadyStatuses {
+  const statuses = useProject(project.key).data?.statuses ?? [];
+  return {
+    done: findStatusByCategory(statuses, 'done') ?? null,
+    color: statuses.find((status) => status.id === ticket.statusId)?.color,
+  };
+}
+
+// The row leaves the list, so keyboard users keep their place on the ticket next to it.
+function focusNeighbour(from: HTMLElement): void {
+  const row = from.closest('[data-ready-row]');
+  const neighbour = [row?.nextElementSibling, row?.previousElementSibling].find((element) =>
+    element?.hasAttribute('data-ready-row'),
+  );
+  neighbour?.querySelector<HTMLElement>('button')?.focus();
+}
+
+const doneAction = (status: Status, onTrigger: () => void): SwipeAction => ({
+  label: status.name,
+  icon: <Icon icon={ArrowRight} size={20} />,
+  tone: 'accent',
+  onTrigger,
+});
+
+export function ReadyRow({ item, index, onOpen, onDone }: ReadyRowProps) {
+  const isPhone = useIsPhone();
+  const { done, color } = useReadyStatuses(item);
+  const main = (
+    <ReadyRowMain item={item} approvedColor={color} chevron={isPhone} onOpen={() => onOpen(item)} />
+  );
+  return (
+    <div
+      className={clsx(styles.row, 'rise')}
+      style={{ animationDelay: `${riseDelay(index)}ms` }}
+      data-ready-row=""
+    >
+      {isPhone ? (
+        <SwipeActions
+          className={styles.swipe}
+          leading={done ? [doneAction(done, () => onDone(item, done))] : []}
+        >
+          {main}
+        </SwipeActions>
+      ) : (
+        <>
+          {main}
+          {done && (
+            <Button
+              size="sm"
+              icon={Check}
+              className={styles.done}
+              aria-label={`Move ${item.ticket.key} to ${done.name}`}
+              onClick={(event) => {
+                focusNeighbour(event.currentTarget);
+                onDone(item, done);
+              }}
+            >
+              {done.name}
+            </Button>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
+interface ReadyRowMainProps {
+  item: ReadyItem;
+  approvedColor: string | undefined;
+  chevron: boolean;
+  onOpen: () => void;
+}
+
+function ReadyRowMain({
+  item: { ticket, project },
+  approvedColor,
+  chevron,
+  onOpen,
+}: ReadyRowMainProps) {
+  return (
+    <button type="button" className={clsx('ring-inside', styles.main)} onClick={onOpen}>
+      {/* The spaces keep the parts apart in the accessible name, which starts with the key. */}
+      <span className={styles.key}>{ticket.key}</span>{' '}
+      <span className={styles.title}>{ticket.title || 'Untitled'}</span>{' '}
+      <span className={styles.project}>
+        <span className={styles.square} style={{ background: project.color }} aria-hidden="true" />
+        <span className={styles.projectName}>{project.name}</span>
+      </span>{' '}
+      {ticket.lastReview && (
+        <span className={styles.review}>
+          <VerdictChip verdict={ticket.lastReview.verdict} approvedColor={approvedColor} />{' '}
+          <StarRating value={ticket.lastReview.rating} />
+        </span>
+      )}
+      {chevron && <Icon icon={ChevronRight} size={20} className={styles.chevron} />}
+    </button>
+  );
+}

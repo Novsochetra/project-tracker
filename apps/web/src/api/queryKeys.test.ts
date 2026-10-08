@@ -19,6 +19,7 @@ describe('queryKeys', () => {
     expect(projectOfQuery(queryKeys.board('MOB'))).toBe('MOB');
     expect(projectOfQuery(queryKeys.ticketPrompt('MOB-3'))).toBe('MOB');
     expect(projectOfQuery(queryKeys.projects())).toBeUndefined();
+    expect(projectOfQuery(queryKeys.ready())).toBeUndefined();
     expect(belongsToProject(queryKeys.ticket('MOB-3'), 'mob')).toBe(true);
     expect(belongsToProject(queryKeys.ticket('MOBX-3'), 'MOB')).toBe(false);
   });
