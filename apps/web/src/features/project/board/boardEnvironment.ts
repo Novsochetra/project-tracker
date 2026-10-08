@@ -19,7 +19,7 @@ function scrollColumn(column: Element | undefined, y: number, bottomZone: number
   if (!body) return false;
   const rect = body.getBoundingClientRect();
   const bottom = Math.min(rect.bottom, window.innerHeight);
-  const zones = { start: COLUMN_EDGE_ZONE, end: bottomZone };
+  const zones = { start: COLUMN_EDGE_ZONE, end: bottomZone, capped: true };
   return scrollAlong(body, 'y', edgeScrollStep(y, rect.top, bottom, zones));
 }
 
@@ -54,7 +54,7 @@ export function desktopBoardEnvironment(
       const element = board.current;
       if (!element) return false;
       const { left, right } = element.getBoundingClientRect();
-      const zones = { start: BOARD_SIDE_ZONE, end: BOARD_SIDE_ZONE };
+      const zones = { start: BOARD_SIDE_ZONE, end: BOARD_SIDE_ZONE, capped: true };
       const sideways = scrollAlong(element, 'x', edgeScrollStep(point.x, left, right, zones));
       return scrollColumn(columnUnder(element, point.x), point.y, COLUMN_EDGE_ZONE) || sideways;
     },

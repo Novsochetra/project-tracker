@@ -8,26 +8,28 @@ const SPEED_DIVISOR = 5;
 export interface EdgeZones {
   start: number;
   end: number;
+  // On the board the pointer can rest far outside a column (over the sidebar), so the speed stops
+  // growing at the zone's edge; the list keeps the SPEC's ever-faster scroll past the window edge.
+  capped?: boolean;
 }
 
-/**
- * Pixels to scroll this tick when `position` is within a zone at either end of `start`–`end`:
- * faster the further in, and no faster once the pointer leaves the far side of the zone.
- */
+const stepFor = (distance: number, zone: number, capped: boolean): number =>
+  Math.ceil((capped ? Math.min(distance, zone) : distance) / SPEED_DIVISOR);
+
 export function edgeScrollStep(
   position: number,
   start: number,
   end: number,
   zones: EdgeZones,
 ): number {
+  const capped = zones.capped ?? false;
   const intoStart = start + zones.start - position;
-  if (intoStart > 0) return -Math.ceil(Math.min(intoStart, zones.start) / SPEED_DIVISOR);
+  if (intoStart > 0) return -stepFor(intoStart, zones.start, capped);
   const intoEnd = position - (end - zones.end);
-  if (intoEnd > 0) return Math.ceil(Math.min(intoEnd, zones.end) / SPEED_DIVISOR);
+  if (intoEnd > 0) return stepFor(intoEnd, zones.end, capped);
   return 0;
 }
 
-/** Pixels to scroll the screen this tick: faster the further into the top or bottom zone. */
 export function autoScrollStep(pointerY: number, viewportHeight: number, isPhone: boolean): number {
   const bottomZone = isPhone ? AUTO_SCROLL_BOTTOM_PHONE : AUTO_SCROLL_BOTTOM_DESKTOP;
   return edgeScrollStep(pointerY, 0, viewportHeight, { start: AUTO_SCROLL_TOP, end: bottomZone });

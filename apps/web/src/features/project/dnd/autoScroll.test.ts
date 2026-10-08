@@ -27,7 +27,7 @@ describe('autoScrollStep', () => {
 });
 
 describe('edgeScrollStep', () => {
-  const zones = { start: 72, end: 72 };
+  const zones = { start: 72, end: 72, capped: true };
 
   it('scrolls toward the edge of a range the pointer is near', () => {
     expect(edgeScrollStep(262, 200, 1200, zones)).toBe(-2);
@@ -35,9 +35,13 @@ describe('edgeScrollStep', () => {
     expect(edgeScrollStep(700, 200, 1200, zones)).toBe(0);
   });
 
-  it('keeps the full speed once the pointer leaves the range', () => {
+  it('keeps the full speed once the pointer leaves the range when capped', () => {
     expect(edgeScrollStep(0, 200, 1200, zones)).toBe(-15);
     expect(edgeScrollStep(5000, 200, 1200, zones)).toBe(15);
+  });
+
+  it('keeps speeding up past the range when not capped', () => {
+    expect(edgeScrollStep(0, 200, 1200, { start: 72, end: 72 })).toBe(-55);
   });
 });
 
