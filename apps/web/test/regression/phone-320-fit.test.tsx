@@ -28,8 +28,9 @@ function renderSendButton() {
   );
   const send = screen.getByRole('button', { name: 'Send open tickets' });
   return {
+    send,
     full: within(send).getByText('Send open tickets'),
-    short: within(send).getByText('Send all'),
+    short: within(send).getByText('Send'),
   };
 }
 
@@ -38,6 +39,12 @@ const switchWidth = (width: number) =>
 
 const shows = (element: Element, width: number) =>
   phoneStyle(element, MODULE, width).get('display') !== 'none';
+
+const visibleLabel = (button: HTMLElement, width: number) =>
+  [...button.querySelectorAll('span')]
+    .filter((span) => span.childElementCount === 0 && shows(span, width))
+    .map((span) => span.textContent)
+    .join(' ');
 
 let restore: () => void;
 
@@ -72,10 +79,19 @@ describe('regression: 320px phones keep the filter row and bottom bar inside the
     expect(half - 2 * segmentPadding).toBeGreaterThanOrEqual(BOARD_LABEL);
   });
 
-  it('shows "Send all" below 375px, where the full label needs about 367px', () => {
+  it('shows "Send" below 375px, where the full label needs about 367px', () => {
     const { full, short } = renderSendButton();
     for (const width of [320, 360]) {
       expect([shows(full, width), shows(short, width)]).toEqual([false, true]);
+    }
+  });
+
+  // Voice Control users say the words they see, so a shorter label must be part of the name.
+  it('keeps the visible label inside the accessible name at every width', () => {
+    const { send } = renderSendButton();
+    const name = send.getAttribute('aria-label')!.toLowerCase();
+    for (const width of [320, 360, 375]) {
+      expect(name).toContain(visibleLabel(send, width).toLowerCase());
     }
   });
 

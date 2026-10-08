@@ -55,7 +55,7 @@ export function ProjectBottomBar({ projectKey }: { projectKey: string }) {
         onClick={() => sheets.open({ type: 'prompt', scope })}
       >
         <span className={styles.sendLabel}>Send open tickets</span>
-        <span className={styles.sendShortLabel}>Send all</span>
+        <span className={styles.sendShortLabel}>Send</span>
       </Button>
     </BottomBar>
   );
