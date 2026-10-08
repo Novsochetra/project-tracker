@@ -30,7 +30,7 @@
   border: 0;
   border-radius: var(--radius-tile);
   background: transparent;
-  color: var(--faint);
+  color: var(--handle);
   cursor: grab;
   opacity: 0;
   touch-action: none;

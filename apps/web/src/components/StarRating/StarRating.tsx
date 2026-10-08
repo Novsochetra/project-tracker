@@ -27,6 +27,9 @@ export function StarRating({ value, size = 14, className }: StarRatingProps) {
           className={star <= rating ? styles.on : styles.off}
         />
       ))}
+      <span className={styles.score} aria-hidden="true">
+        {rating}/5
+      </span>
     </span>
   );
 }

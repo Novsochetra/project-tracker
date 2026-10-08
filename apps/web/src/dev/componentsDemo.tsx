@@ -173,7 +173,7 @@ function ListsDemo() {
     <Section title="Lists">
       <C.ListCard as="section" variant="group" aria-label="To do">
         <div style={head}>
-          <C.StatusGlyph category="todo" color="var(--subtle)" />
+          <C.StatusGlyph category="todo" color={DEFAULT_STATUSES[0]!.color} />
           <span style={{ flex: 1 }}>To do</span>
           <C.IconButton aria-label="New ticket in To do" icon={I.Plus} size="sm" />
         </div>
@@ -181,7 +181,7 @@ function ListsDemo() {
           <C.ListRow key={ticket.key}>
             <C.PriorityBars priority={ticket.priority} />
             <span style={mono}>{ticket.key}</span>
-            <C.StatusGlyph category="todo" color="var(--subtle)" />
+            <C.StatusGlyph category="todo" color={DEFAULT_STATUSES[0]!.color} />
             <span style={{ ...clip, whiteSpace: 'nowrap' }}>{ticket.title}</span>
             <C.Avatar name={ticket.who} />
           </C.ListRow>

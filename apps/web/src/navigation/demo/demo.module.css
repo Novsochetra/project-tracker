@@ -168,7 +168,7 @@
   align-items: center;
   justify-content: center;
   width: var(--handle-width);
-  color: var(--faint);
+  color: var(--handle);
   touch-action: none;
 }
 

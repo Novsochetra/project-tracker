@@ -9,7 +9,15 @@
   fill: currentColor;
 }
 
+/* Hollow, so an empty star differs from a filled one by its fill and not by color alone. */
 .off {
-  color: var(--bar-off);
-  fill: currentColor;
+  color: var(--faint);
+  fill: none;
+}
+
+.score {
+  margin-left: var(--space-1);
+  color: var(--muted);
+  font: var(--text-caption);
+  font-variant-numeric: tabular-nums;
 }
