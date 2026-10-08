@@ -7,13 +7,16 @@ export const AVATAR_COLORS = [
   '#6E56CF',
 ] as const;
 
+const firstLetterOrDigit = (word: string): string | undefined =>
+  [...word].find((char) => /[\p{L}\p{N}\p{Extended_Pictographic}]/u.test(char));
+
 export function initials(name: string): string {
   return name
     .trim()
     .split(/\s+/)
-    .filter(Boolean)
+    .map(firstLetterOrDigit)
+    .filter((char): char is string => Boolean(char))
     .slice(0, 2)
-    .map((word) => [...word][0] ?? '')
     .join('')
     .toUpperCase();
 }

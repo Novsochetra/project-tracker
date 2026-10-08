@@ -41,7 +41,7 @@ describe('initials', () => {
     expect(initials('😀')).toBe('😀');
     expect(initials('😀 Dara')).toBe('😀D');
     expect(initials('Dara 😀')).toBe('D😀');
-    expect(initials('𝒜lice 𝒝ob')).toBe('𝒜𝒝');
+    expect(initials('𝐀lice 𝐁ob')).toBe('𝐀𝐁');
   });
 
   it('keeps letters of other scripts', () => {

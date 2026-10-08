@@ -11,6 +11,6 @@ describe('initials', () => {
   });
 
   it('keeps two astral-plane initials whole', () => {
-    expect(initials('𝒜lice 𝒝ob')).toBe('𝒜𝒝');
+    expect(initials('𝐀lice 𝐁ob')).toBe('𝐀𝐁');
   });
 });
