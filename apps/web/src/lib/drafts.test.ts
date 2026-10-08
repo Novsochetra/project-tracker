@@ -1,9 +1,11 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import { clearDraft, hasDrafts, markDraft } from './drafts';
+import { clearDraft, guardUnload, hasDrafts, markDraft } from './drafts';
+import { forgetDraft, keepDraft } from './storedDrafts';
 
 afterEach(() => {
   clearDraft('comment:PT-1');
   clearDraft('new-ticket:PT');
+  forgetDraft('title:PT-1');
 });
 
 describe('drafts', () => {
@@ -35,5 +37,31 @@ describe('drafts', () => {
   it('ignores clearing a draft that was never marked', () => {
     clearDraft('comment:PT-1');
     expect(hasDrafts()).toBe(false);
+  });
+});
+
+describe('stored drafts', () => {
+  it('count as drafts until they are saved or dropped, with no screen marking them', () => {
+    keepDraft('title:PT-1', { ticketKey: 'PT-1', field: 'title', text: 'Typed' }, '');
+    expect(hasDrafts()).toBe(true);
+    forgetDraft('title:PT-1');
+    expect(hasDrafts()).toBe(false);
+  });
+});
+
+describe('guardUnload', () => {
+  const unload = () => {
+    const event = new Event('beforeunload', { cancelable: true });
+    window.dispatchEvent(event);
+    return event.defaultPrevented;
+  };
+
+  it('asks before reload or close only while there are drafts, until stopped', () => {
+    const stop = guardUnload();
+    expect(unload()).toBe(false);
+    markDraft('comment:PT-1');
+    expect(unload()).toBe(true);
+    stop();
+    expect(unload()).toBe(false);
   });
 });

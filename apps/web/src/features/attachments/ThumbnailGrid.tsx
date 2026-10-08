@@ -11,11 +11,11 @@ export interface ThumbnailImage {
 
 export interface ThumbnailGridProps {
   images: readonly ThumbnailImage[];
-  /** Makes each thumbnail a button named "Open image {n}". */
+  // Makes each thumbnail a button named "Open image {n}".
   onOpen?: ((index: number) => void) | undefined;
-  /** Adds a small x named "Remove image {n}". */
+  // Adds a small x named "Remove image {n}".
   onRemove?: ((id: string, index: number) => void) | undefined;
-  /** The image a removal is being confirmed for, so it is clear which one goes. */
+  // The image a removal is being confirmed for, so it is clear which one goes.
   markedId?: string | null | undefined;
   uploading?: number;
   size?: 'md' | 'sm';
@@ -43,7 +43,12 @@ export function ThumbnailGrid({
               type="button"
               className={styles.remove}
               aria-label={`Remove image ${index + 1}`}
-              onClick={() => onRemove(image.id, index)}
+              onClick={(event) => {
+                // Safari doesn't focus a tapped button, and a confirm hands focus back to what
+                // had it when it opened.
+                event.currentTarget.focus({ preventScroll: true });
+                onRemove(image.id, index);
+              }}
             >
               <Icon icon={X} size={14} />
             </button>

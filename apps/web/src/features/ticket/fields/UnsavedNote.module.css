@@ -1,19 +1,33 @@
 .note {
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 2px 6px;
+  align-items: flex-start;
+  gap: 6px;
   margin: 0;
   color: var(--danger);
   font-size: var(--size-secondary);
   line-height: 1.5;
 }
 
+/* Centered on the first line, so a message that wraps keeps the icon beside it. */
 .icon {
   flex: none;
+  margin-top: calc((1.5em - 14px) / 2);
 }
 
-.retry {
+.body {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px 6px;
+  min-width: 0;
+}
+
+.actions {
+  display: inline-flex;
+  gap: var(--space-2);
+}
+
+.action {
   position: relative;
   padding: 0 var(--space-1);
   border: 0;
@@ -22,20 +36,32 @@
   color: var(--link);
   font: inherit;
   font-weight: var(--weight-medium);
+  white-space: nowrap;
   cursor: pointer;
 }
 
 @media (hover: hover) {
-  .retry:hover {
+  .action:hover {
     color: var(--link-hover);
   }
 }
 
 @media (max-width: 767px) {
+  /* Room for the actions' touch targets, so they stay clear of the field above and of
+     what follows, such as the thumbnails' remove buttons. */
+  .note {
+    padding-block: var(--space-1);
+  }
+
+  /* The actions wrap together and sit far enough apart that their touch targets don't meet. */
+  .actions {
+    gap: var(--space-4);
+  }
+
   /* Keeps its inline look but gets a 44px touch target (SPEC §12). */
-  .retry::before {
+  .action::before {
     content: '';
     position: absolute;
-    inset: -13px -8px;
+    inset: calc((44px - 1.5em) / -2) -8px;
   }
 }

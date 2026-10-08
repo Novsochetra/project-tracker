@@ -30,25 +30,23 @@ export function TicketMain({ detail, className }: TicketMainProps) {
         <span className={styles.key}>{ticket.key}</span>
         <AutosaveTextarea
           label="Title"
-          draftId={`title:${ticket.key}`}
+          target={{ ticketKey: ticket.key, field: 'title' }}
           placeholder="Ticket title"
           className={styles.title}
           maxLength={TITLE_MAX_LENGTH}
           value={ticket.title}
           onKeyDown={keepOneLine}
-          onSave={(title) => (title === ticket.title ? undefined : update({ title }))}
+          onSave={(title) => update({ title })}
         />
         <AutosaveTextarea
           label="Description"
-          draftId={`description:${ticket.key}`}
+          target={{ ticketKey: ticket.key, field: 'description' }}
           placeholder="Add details, steps or acceptance criteria…"
           className={styles.description}
           maxLength={DESCRIPTION_MAX_LENGTH}
           value={ticket.description}
           onPaste={(event) => pasteImages(event, uploads.add)}
-          onSave={(description) =>
-            description === ticket.description ? undefined : update({ description })
-          }
+          onSave={(description) => update({ description })}
         />
         <TicketImages ticketKey={ticket.key} images={images} uploads={uploads} />
       </div>

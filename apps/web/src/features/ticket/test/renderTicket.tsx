@@ -11,6 +11,7 @@ import { ToastProvider } from '../../../components';
 import { NavigationProvider } from '../../../navigation';
 import { mockPhone } from '../../../overlays/testing';
 import { TicketScreen } from '../TicketScreen';
+import { AppDrafts } from './AppDrafts';
 import { Probes } from './Probes';
 
 type ClientOverrides = Parameters<typeof setupApi>[0];
@@ -48,6 +49,7 @@ export function renderTicket({
             <SheetsProvider>
               {children ?? <TicketScreen projectKey={detail.project.key} num={detail.ticket.num} />}
               <Probes />
+              <AppDrafts />
             </SheetsProvider>
           </NavigationProvider>
         </ToastProvider>

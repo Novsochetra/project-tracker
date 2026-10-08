@@ -1,19 +1,18 @@
 import { act, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { TicketDetail } from '@tracker/shared';
-import { afterEach, beforeEach, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, expect, it } from 'vitest';
 import { NETWORK_ERROR_MESSAGE } from '../../src/api';
 import { comment, makeTicketDetail } from '../../src/api/test/fixtures';
-import {
-  renderTicket,
-  type RenderTicketOptions,
-} from '../../src/features/ticket/test/renderTicket';
+import { fakeTicketServer } from '../../src/features/ticket/test/fakeTicketServer';
+import { renderTicket } from '../../src/features/ticket/test/renderTicket';
 import { hasDrafts } from '../../src/lib/drafts';
 import { skipAnimations } from '../../src/overlays/testing';
 
 let cleanups: Array<() => void> = [];
 
 beforeEach(() => {
+  localStorage.clear();
   cleanups = [skipAnimations()];
 });
 
@@ -21,35 +20,26 @@ afterEach(() => {
   cleanups.forEach((undo) => undo());
 });
 
-// Like a real request, the failure lands after the optimistic update has been rendered.
-const failsLater = () =>
-  vi.fn<(key: string, input: object) => Promise<unknown>>(
-    () =>
-      new Promise((_resolve, reject) => {
-        setTimeout(() => reject(new TypeError('Failed to fetch')), 10);
-      }),
-  );
-
-const savesTicket = (_key: string, input: object) =>
-  Promise.resolve({ ...makeTicketDetail().ticket, ...input });
+// Like a real request, a failure lands after the optimistic update has been rendered, and a
+// retry first reads what the tracker has now.
+function setup(detail: TicketDetail = makeTicketDetail()) {
+  const server = fakeTicketServer(detail);
+  server.setReachable(false);
+  const rendered = renderTicket({ detail, client: server.client });
+  cleanups.push(rendered.restorePhone);
+  return { ...rendered, server };
+}
 
 const reconnect = () =>
   act(() => {
     window.dispatchEvent(new Event('online'));
   });
 
-function setup(client: RenderTicketOptions['client'], detail?: TicketDetail) {
-  const rendered = renderTicket({ detail, client });
-  cleanups.push(rendered.restorePhone);
-  return rendered;
-}
-
 // Offline, leaving the field saved it, the save failed, and its rollback replaced the typed text
 // with the last saved one; going back online didn't bring it back.
 it('keeps a description typed offline, says it is not saved, and saves it once back online', async () => {
   const user = userEvent.setup();
-  const updateTicket = failsLater();
-  const { client } = setup({ updateTicket });
+  const { client, server } = setup();
   const description = screen.getByLabelText('Description');
   await user.type(description, 'Steps to reproduce');
   await user.tab();
@@ -58,7 +48,7 @@ it('keeps a description typed offline, says it is not saved, and saves it once b
   expect(screen.getByText("Description isn't saved yet.")).toBeInTheDocument();
   expect(hasDrafts()).toBe(true);
 
-  updateTicket.mockImplementation(savesTicket);
+  server.setReachable(true);
   reconnect();
   await waitFor(() =>
     expect(screen.queryByText("Description isn't saved yet.")).not.toBeInTheDocument(),
@@ -72,8 +62,7 @@ it('keeps a description typed offline, says it is not saved, and saves it once b
 
 it('keeps an assignee typed offline and saves it from the retry button', async () => {
   const user = userEvent.setup();
-  const updateTicket = failsLater();
-  const { client } = setup({ updateTicket });
+  const { client, server } = setup();
   const assignee = screen.getByLabelText('Assignee');
   await user.type(assignee, 'Dara');
   await user.tab();
@@ -82,7 +71,7 @@ it('keeps an assignee typed offline and saves it from the retry button', async (
   expect(screen.getByText("Assignee isn't saved yet.")).toBeInTheDocument();
   expect(hasDrafts()).toBe(true);
 
-  updateTicket.mockImplementation(savesTicket);
+  server.setReachable(true);
   await user.click(screen.getByRole('button', { name: 'Retry saving assignee' }));
   await waitFor(() =>
     expect(screen.queryByText("Assignee isn't saved yet.")).not.toBeInTheDocument(),
@@ -95,9 +84,7 @@ it('keeps an assignee typed offline and saves it from the retry button', async (
 // Save closed the inline editor at once, so a failed edit rolled back and the text was gone.
 it('keeps the comment editor open with the edit when saving fails', async () => {
   const user = userEvent.setup();
-  const updateComment = failsLater();
-  const { client } = setup(
-    { updateComment },
+  const { client, server } = setup(
     makeTicketDetail(undefined, { activity: [comment('c1', 'First thought')] }),
   );
   await user.click(screen.getByRole('button', { name: 'Comment options' }));
@@ -109,7 +96,7 @@ it('keeps the comment editor open with the edit when saving fails', async () => 
   expect(screen.getByText("Your edit isn't saved yet.")).toBeInTheDocument();
   expect(hasDrafts()).toBe(true);
 
-  updateComment.mockResolvedValue(comment('c1', 'First thought and a second', { editedAt: 2 }));
+  server.setReachable(true);
   reconnect();
   await waitFor(() => expect(screen.queryByLabelText('Edit comment')).not.toBeInTheDocument());
   expect(client.updateComment).toHaveBeenLastCalledWith('c1', {

@@ -20,7 +20,7 @@ const focusIsLost = () =>
   document.activeElement === null || document.activeElement === document.body;
 
 export function CommentCard({ item, now, actions, rise }: CommentCardProps) {
-  const edit = useCommentEdit(item, actions.editComment);
+  const edit = useCommentEdit(item, actions.editComment, actions.ticketKey);
   const triggerRef = useRef<HTMLButtonElement>(null);
 
   // The editor had focus and is gone, so keyboard users continue from the options button. An

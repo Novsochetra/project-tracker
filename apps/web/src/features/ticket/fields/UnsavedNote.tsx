@@ -3,30 +3,43 @@ import { CircleAlert } from 'lucide-react';
 import { Icon } from '../../../components';
 import styles from './UnsavedNote.module.css';
 
+export interface NoteAction {
+  label: string;
+  // The accessible name, when the label alone wouldn't say which field it is for.
+  name: string;
+  onClick: () => void;
+}
+
 export interface UnsavedNoteProps {
-  /** What isn't saved, as it starts a sentence: "Title", "Your edit". */
-  subject: string;
-  /** Names the message, for the field's aria-describedby. */
+  message: string;
+  // Names the message, for the field's aria-describedby.
   id?: string | undefined;
-  onRetry?: (() => void) | undefined;
+  actions?: readonly NoteAction[];
   className?: string | undefined;
 }
 
-export function UnsavedNote({ subject, id, onRetry, className }: UnsavedNoteProps) {
+export function UnsavedNote({ message, id, actions = [], className }: UnsavedNoteProps) {
   return (
     <p role="alert" className={clsx(styles.note, 'fade-in', className)}>
       <Icon icon={CircleAlert} size={14} className={styles.icon} />
-      <span id={id}>{`${subject} isn't saved yet.`}</span>
-      {onRetry && (
-        <button
-          type="button"
-          className={styles.retry}
-          aria-label={`Retry saving ${subject.toLowerCase()}`}
-          onClick={onRetry}
-        >
-          Retry
-        </button>
-      )}
+      <span className={styles.body}>
+        <span id={id}>{message}</span>
+        {actions.length > 0 && (
+          <span className={styles.actions}>
+            {actions.map((action) => (
+              <button
+                key={action.label}
+                type="button"
+                className={styles.action}
+                aria-label={action.name}
+                onClick={action.onClick}
+              >
+                {action.label}
+              </button>
+            ))}
+          </span>
+        )}
+      </span>
     </p>
   );
 }

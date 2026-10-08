@@ -4,7 +4,7 @@ import { useIsPhone } from '../../../lib/media';
 import { ActionSheet } from '../../../overlays';
 import type { ImageRemoval } from './useImageRemoval';
 
-/** Phones confirm in an action sheet; desktop in a card under the images, like Delete ticket. */
+// Phones confirm in an action sheet; desktop in a card under the images, like Delete ticket.
 export function RemoveImageConfirm({ removal }: { removal: ImageRemoval }) {
   const isPhone = useIsPhone();
   const message = `Remove image ${removal.target?.number ?? ''}? This can't be undone.`;
@@ -28,8 +28,18 @@ function InlineConfirm({ message, removal }: { message: string; removal: ImageRe
   useEffect(() => {
     ref.current?.scrollIntoView?.({ block: 'nearest' });
   }, []);
+  // Escape cancels, as it closes the app's other confirms and sheets; it bubbles up from the
+  // card's buttons, so the wrapper only listens and adds no meaning of its own.
   return (
-    <div ref={ref}>
+    <div
+      ref={ref}
+      role="presentation"
+      onKeyDown={(event) => {
+        if (event.key !== 'Escape') return;
+        event.preventDefault();
+        removal.cancel();
+      }}
+    >
       <ConfirmCard
         message={message}
         confirmLabel="Remove"

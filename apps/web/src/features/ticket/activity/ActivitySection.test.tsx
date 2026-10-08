@@ -14,6 +14,8 @@ const NOW = Date.now();
 let cleanups: Array<() => void> = [];
 
 beforeEach(() => {
+  // Unsaved text outlives the screen in the drafts store, so each test starts without any.
+  localStorage.clear();
   cleanups = [skipAnimations()];
 });
 

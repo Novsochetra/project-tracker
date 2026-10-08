@@ -1,0 +1,33 @@
+import type { TicketDetail } from '@tracker/shared';
+import type { StoredDraft } from '../../../lib/storedDrafts';
+
+// saved: the tracker already has the text. unchanged: it still has the value the text was
+// typed over, so saving is safe. changed: someone else changed it meanwhile. gone: the comment
+// or ticket no longer exists.
+export type DraftCheck = 'saved' | 'unchanged' | 'changed' | 'gone';
+
+export function serverText(detail: TicketDetail, draft: StoredDraft): string | undefined {
+  switch (draft.field) {
+    case 'title':
+      return detail.ticket.title;
+    case 'description':
+      return detail.ticket.description;
+    case 'assignee':
+      return detail.ticket.assignee;
+    case 'comment-edit':
+      return detail.activity.find((item) => item.id === draft.activityId)?.text;
+    case 'comment':
+      return undefined;
+  }
+}
+
+// The server trims names and comments, so spaces typed around them make no difference.
+const comparable = (draft: StoredDraft, text: string): string =>
+  draft.field === 'assignee' || draft.field === 'comment-edit' ? text.trim() : text;
+
+export function checkDraft(draft: StoredDraft, server: string | undefined): DraftCheck {
+  if (server === undefined) return 'gone';
+  const now = comparable(draft, server);
+  if (now === comparable(draft, draft.text)) return 'saved';
+  return now === comparable(draft, draft.base) ? 'unchanged' : 'changed';
+}

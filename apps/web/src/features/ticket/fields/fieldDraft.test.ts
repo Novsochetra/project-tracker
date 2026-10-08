@@ -1,5 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import { beginSave, editDraft, endSave, startDraft, syncDraft } from './fieldDraft';
+import {
+  beginSave,
+  checkedDraft,
+  editDraft,
+  endSave,
+  keepMine,
+  restoreDraft,
+  startDraft,
+  syncDraft,
+} from './fieldDraft';
 
 describe('field drafts', () => {
   it('start from the server value', () => {
@@ -8,6 +17,7 @@ describe('field drafts', () => {
       edited: false,
       failed: false,
       saving: 0,
+      conflict: false,
     });
   });
 
@@ -39,7 +49,13 @@ describe('field drafts', () => {
     draft = syncDraft(draft, 'Fix the login', false);
     draft = endSave(draft, 'Fix the login', false);
     draft = syncDraft(draft, 'Fix login', false);
-    expect(draft).toEqual({ value: 'Fix the login', edited: true, failed: true, saving: 0 });
+    expect(draft).toEqual({
+      value: 'Fix the login',
+      edited: true,
+      failed: true,
+      saving: 0,
+      conflict: false,
+    });
 
     draft = beginSave(draft);
     draft = syncDraft(draft, 'Fix the login', false);
@@ -86,5 +102,34 @@ describe('field drafts', () => {
     expect(syncDraft(draft, 'Fix login', true)).toBe(draft);
     const typed = editDraft(draft, 'Fix');
     expect(editDraft(typed, 'Fix')).toBe(typed);
+  });
+});
+
+describe('field drafts kept from an earlier visit', () => {
+  it('reopen unsaved and hold their text against the server', () => {
+    const draft = restoreDraft('Fix the login');
+    expect(draft).toMatchObject({ value: 'Fix the login', edited: true, failed: true });
+    expect(syncDraft(draft, 'Fix login', false)).toBe(draft);
+  });
+
+  it('follow the server once a check finds the text already saved', () => {
+    let draft = checkedDraft(restoreDraft('Fix the login'), 'Fix the login', 'saved');
+    draft = syncDraft(draft, 'Fix the login', false);
+    expect(draft).toEqual(startDraft('Fix the login'));
+  });
+
+  it('wait for the user when the server changed meanwhile, until they keep their text', () => {
+    let draft = checkedDraft(restoreDraft('Mine'), 'Mine', 'changed');
+    expect(draft).toMatchObject({ value: 'Mine', failed: true, conflict: true });
+    expect(syncDraft(draft, 'Theirs', false).value).toBe('Mine');
+    draft = beginSave(keepMine(draft));
+    expect(draft.conflict).toBe(false);
+    draft = syncDraft(endSave(draft, 'Mine', true), 'Mine', false);
+    expect(draft).toEqual(startDraft('Mine'));
+  });
+
+  it('ignore a check for text that has been typed over since', () => {
+    const draft = editDraft(restoreDraft('Mine'), 'Mine, longer');
+    expect(checkedDraft(draft, 'Mine', 'changed')).toBe(draft);
   });
 });

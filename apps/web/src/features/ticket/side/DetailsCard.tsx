@@ -1,7 +1,7 @@
 import { isDoneCategory, isOverdue, type TicketDetail } from '@tracker/shared';
 import { useId } from 'react';
 import { DateRow, GroupedCard, SelectRow } from '../../../components';
-import { UnsavedNote } from '../fields/UnsavedNote';
+import { FieldNote } from '../fields/FieldNote';
 import { useFieldDraft } from '../fields/useFieldDraft';
 import { useTicketUpdate } from '../useTicketUpdate';
 import { AssigneeRow } from './AssigneeRow';
@@ -12,8 +12,10 @@ export function DetailsCard({ detail }: { detail: TicketDetail }) {
   const { ticket } = detail;
   const update = useTicketUpdate(ticket.key);
   const done = isDoneCategory(detail.status.category);
-  const assignee = useFieldDraft(ticket.assignee, `assignee:${ticket.key}`, (name) =>
-    name === ticket.assignee ? undefined : update({ assignee: name }),
+  const assignee = useFieldDraft(
+    ticket.assignee,
+    { ticketKey: ticket.key, field: 'assignee' },
+    (name) => update({ assignee: name }),
   );
   const noteId = useId();
   return (
@@ -45,7 +47,7 @@ export function DetailsCard({ detail }: { detail: TicketDetail }) {
           }}
         />
       </GroupedCard>
-      {assignee.failed && <UnsavedNote id={noteId} subject="Assignee" onRetry={assignee.retry} />}
+      <FieldNote draft={assignee} subject="Assignee" id={noteId} />
     </div>
   );
 }

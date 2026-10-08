@@ -2,6 +2,7 @@ import { Trash2 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { errorMessage, useDeleteTicket } from '../../../api';
 import { Button, ConfirmCard, useToast } from '../../../components';
+import { forgetTicketDrafts } from '../../../lib/storedDrafts';
 import { useNavigation } from '../../../navigation';
 import styles from './SidePanel.module.css';
 
@@ -36,6 +37,8 @@ export function DeleteTicket({ ticketKey }: { ticketKey: string }) {
   const confirm = () => {
     void deleteTicket.mutateAsync({ ticketKey }).then(
       () => {
+        // Unsaved text in a deleted ticket has nothing left to save into.
+        forgetTicketDrafts(ticketKey);
         back();
         show(`${ticketKey} deleted`);
       },

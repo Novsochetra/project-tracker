@@ -5,20 +5,23 @@ import type { FieldDraftState } from '../fields/useFieldDraft';
 
 export interface AssigneeRowProps {
   draft: FieldDraftState;
-  /** The id of the message saying the assignee isn't saved, while there is one. */
+  // The id of the message saying the assignee isn't saved, while there is one.
   describedBy?: string | undefined;
 }
 
-/** Saves on blur only, so the event reads "assigned the ticket to Dara", not to "D", "Da"… */
+// Saves on blur only, so the event reads "assigned the ticket to Dara", not to "D", "Da"…
+function commit(draft: FieldDraftState): void {
+  draft.blur();
+  if (!draft.edited || draft.conflict) return;
+  const name = draft.value.trim();
+  draft.change(name);
+  // Once a save has failed, only a retry that checks the tracker first saves again.
+  if (draft.failed) draft.retry();
+  else draft.save(name);
+}
+
 export function AssigneeRow({ draft, describedBy }: AssigneeRowProps) {
   const people = usePeople().data;
-  const commit = () => {
-    draft.blur();
-    if (!draft.edited) return;
-    const name = draft.value.trim();
-    draft.change(name);
-    draft.save(name);
-  };
   return (
     <InputRow
       icon={<Avatar name={draft.value} size={20} decorative />}
@@ -31,7 +34,7 @@ export function AssigneeRow({ draft, describedBy }: AssigneeRowProps) {
       value={draft.value}
       onChange={(event) => draft.change(event.currentTarget.value)}
       onFocus={draft.focus}
-      onBlur={commit}
+      onBlur={() => commit(draft)}
       onKeyDown={(event) => {
         if (event.key === 'Enter' && !event.nativeEvent.isComposing) event.currentTarget.blur();
       }}

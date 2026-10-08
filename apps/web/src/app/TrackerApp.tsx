@@ -4,6 +4,7 @@ import { BrowserRouter } from 'react-router';
 import { ApiProvider, useSession } from '../api';
 import { ToastProvider } from '../components';
 import { useFileDropGuard } from '../features/attachments';
+import { useTicketDrafts } from '../features/ticket/drafts/useTicketDrafts';
 import { NavigationProvider } from '../navigation';
 import { gateFor } from './sessionGate';
 import { SheetsProvider } from './sheets/SheetsProvider';
@@ -34,7 +35,9 @@ export function TrackerApp({ client, queryClient }: TrackerAppProps) {
 
 function SessionGate() {
   const { data, fetchStatus } = useSession();
-  switch (gateFor({ data, fetchStatus })) {
+  const gate = gateFor({ data, fetchStatus });
+  useTicketDrafts(gate === 'app');
+  switch (gate) {
     case 'loading':
       return null;
     case 'token':
