@@ -21,7 +21,7 @@ export const TITLE_REQUIRED = 'Add a title to create the ticket.';
 export const NO_PROJECTS = 'Create a project first.';
 export const PHOTOS_NEED_CONNECTION =
   "Photos need a connection. Try again once you're online, or remove them to save the text on this phone.";
-export const SAVED_ON_PHONE = "Saved on this phone. It will be added when you're back online.";
+export const SAVED_ON_PHONE = "Saved offline. It'll sync later.";
 
 export const createdToast = (ticketKey: string): string => `${ticketKey} created`;
 

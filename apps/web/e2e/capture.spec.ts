@@ -2,7 +2,7 @@ import type { Page } from '@playwright/test';
 import { expect, isPhone, test } from './fixtures';
 import { seedProject, toast } from './helpers';
 
-const SAVED_ON_PHONE = "Saved on this phone. It will be added when you're back online.";
+const SAVED_ON_PHONE = "Saved offline. It'll sync later.";
 
 const captureSheet = (page: Page) => page.getByRole('dialog', { name: 'New ticket' });
 
