@@ -1,6 +1,7 @@
 import react from '@vitejs/plugin-react';
 import { defineConfig, type Plugin } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
+import { precompress } from './src/build/precompress.ts';
 import { isSavedApiRead } from './src/pwa/apiReadRoute.ts';
 import { attachmentCachePlugin, isCachedAttachmentFile } from './src/pwa/attachmentFileRoute.ts';
 import { savedAnswerPlugin } from './src/pwa/savedAnswerPlugin.ts';
@@ -99,6 +100,7 @@ export default defineConfig({
       },
       devOptions: { enabled: false },
     }),
+    precompress(),
   ],
   server: {
     host: true,
