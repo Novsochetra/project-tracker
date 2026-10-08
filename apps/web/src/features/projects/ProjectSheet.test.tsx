@@ -82,7 +82,7 @@ describe('New project sheet', () => {
     });
     expect(await screen.findByText('“Mobile app” created')).toBeInTheDocument();
     expect(onClose).toHaveBeenCalled();
-    expect(currentPath()).toBe('/p/MA');
+    await waitFor(() => expect(currentPath()).toBe('/p/MA'));
   });
 
   it('shows the server error and stays open', async () => {

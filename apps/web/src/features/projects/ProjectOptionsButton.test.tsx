@@ -75,7 +75,7 @@ describe('Project options in the desktop header', () => {
     await user.click(screen.getByRole('button', { name: 'Delete' }));
     expect(deleteProject).toHaveBeenCalledWith('MOB');
     expect(await screen.findByText('“Mobile app” deleted')).toBeInTheDocument();
-    expect(currentPath()).toBe('/');
+    await waitFor(() => expect(currentPath()).toBe('/'));
     expect(screen.queryByRole('group', { name: 'Project options' })).not.toBeInTheDocument();
   });
 
@@ -155,7 +155,7 @@ describe('Project options in the phone nav bar', () => {
     await user.click(confirm);
     expect(deleteProject).toHaveBeenCalledWith('MOB');
     expect(await screen.findByText('“Mobile app” deleted')).toBeInTheDocument();
-    expect(currentPath()).toBe('/');
+    await waitFor(() => expect(currentPath()).toBe('/'));
   });
 
   it('puts the reason in the caption when the delete fails', async () => {
