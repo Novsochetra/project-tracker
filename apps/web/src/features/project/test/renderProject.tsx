@@ -23,7 +23,6 @@ export interface RenderProjectOptions {
 const renderScreen = (route: Route): ReactNode =>
   route.name === 'project' ? <ProjectScreen projectKey={route.key} /> : <p>{routePath(route)}</p>;
 
-/** The Project screen inside a real stack, with a fake API and a recording sheet host. */
 export function renderProject({ path = '/p/MOB', board, client }: RenderProjectOptions = {}) {
   const api = setupApi({
     getBoard: vi.fn().mockResolvedValue(board ?? makeBoard()),

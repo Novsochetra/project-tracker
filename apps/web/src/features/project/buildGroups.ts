@@ -25,7 +25,6 @@ export interface GroupsInput extends ColumnsInput {
   dragging: boolean;
 }
 
-/** Every status the filter shows, in status order, with its matching tickets by rank. */
 export function buildColumns({
   statuses,
   tickets,
@@ -39,7 +38,6 @@ export function buildColumns({
   }));
 }
 
-/** One list group per status the filter shows; empty ones only while dragging. */
 export function buildGroups({ dragging, ...input }: GroupsInput): TicketGroupData[] {
   return buildColumns(input).filter((group) => dragging || group.tickets.length > 0);
 }
@@ -57,7 +55,6 @@ const MAX_STAGGER = 12;
 export const groupRiseDelay = (index: number): number =>
   Math.min(index, MAX_STAGGER) * GROUP_RISE_MS;
 
-/** Rows past the first five of a long group rise in when "Show more" reveals them. */
 export function revealedRowDelay(index: number, groupSize: number): number | null {
   if (groupSize <= GROUP_LIMIT + 1 || index < GROUP_LIMIT) return null;
   return Math.min(index - GROUP_LIMIT, MAX_STAGGER) * ROW_RISE_MS;

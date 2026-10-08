@@ -7,7 +7,6 @@ import { useBoardReader } from '../useBoardReader';
 import type { MoveTicket } from '../useTicketMove';
 import { boardDirection, boardMoveTarget } from './boardMoves';
 
-/** Arrow keys on a card's handle move it within its column (↑/↓) or across columns (←/→). */
 export function useBoardKeyboardMove(projectKey: string, moveTicket: MoveTicket): HandleKeyDown {
   const readBoard = useBoardReader(projectKey);
   return useCallback<HandleKeyDown>(

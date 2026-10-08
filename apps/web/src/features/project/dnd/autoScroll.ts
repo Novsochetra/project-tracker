@@ -35,7 +35,6 @@ export function autoScrollStep(pointerY: number, viewportHeight: number, isPhone
   return edgeScrollStep(pointerY, 0, viewportHeight, { start: AUTO_SCROLL_TOP, end: bottomZone });
 }
 
-/** Scrolls `element` by `step` along one axis; true when it actually moved. */
 export function scrollAlong(element: HTMLElement | null, axis: 'x' | 'y', step: number): boolean {
   if (!element || step === 0) return false;
   const property = axis === 'x' ? 'scrollLeft' : 'scrollTop';

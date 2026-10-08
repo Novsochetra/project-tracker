@@ -32,7 +32,6 @@ function writeStored(projectKey: string, mode: ViewMode): boolean {
   }
 }
 
-/** List or Board for a project: remembered per project on this device; List until chosen. */
 export const getViewMode = (projectKey: string): ViewMode =>
   unsaved.get(storageKey(projectKey)) ?? readStored(projectKey) ?? DEFAULT_VIEW_MODE;
 

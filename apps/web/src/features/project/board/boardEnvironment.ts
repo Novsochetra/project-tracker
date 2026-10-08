@@ -8,12 +8,9 @@ import { measureGroups } from '../dnd/measure';
 import { startEdgePaging, stepEdgePaging } from './edgePaging';
 import { columnElements, measurePage } from './boardSpans';
 
-/** Desktop: how close to the board's left or right edge the pointer scrolls it sideways. */
 export const BOARD_SIDE_ZONE = 56;
-/** How close to the top or bottom of a column's cards the pointer scrolls that column. */
 export const COLUMN_EDGE_ZONE = 48;
 
-/** Scrolls a column's cards when the pointer nears their top or bottom edge. */
 function scrollColumn(column: Element | undefined, y: number, bottomZone: number): boolean {
   const body = column?.querySelector<HTMLElement>('[data-column-body]');
   if (!body) return false;
@@ -31,7 +28,6 @@ function columnUnder(board: HTMLElement, x: number): Element | undefined {
   return columnAt(spans, x)?.element;
 }
 
-/** Pages the phone board by one column, the way a swipe would. */
 function pageBoard(board: HTMLElement, side: -1 | 1): void {
   const columns = columnElements(board);
   const page = measurePage(board);
@@ -43,7 +39,6 @@ function pageBoard(board: HTMLElement, side: -1 | 1): void {
   haptic('selection');
 }
 
-/** Desktop board: the column under the pointer by x; the board and columns scroll near edges. */
 export function desktopBoardEnvironment(
   board: RefObject<HTMLElement | null>,
   ticketId: string,
@@ -61,10 +56,6 @@ export function desktopBoardEnvironment(
   };
 }
 
-/**
- * Phone board: the card moves within the column on screen; resting the finger near the screen's
- * left or right edge pages to the neighbouring column.
- */
 export function phoneBoardEnvironment(
   board: RefObject<HTMLElement | null>,
   ticketId: string,

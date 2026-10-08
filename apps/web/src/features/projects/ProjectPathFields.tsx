@@ -13,7 +13,7 @@ interface ProjectPathFieldsProps {
 
 const CODE_INPUT = { mono: true, autoCorrect: 'off', spellCheck: false } as const;
 
-/** Repository, plus the ticket prefix when creating: it can't change later. */
+// Only a new project asks for the ticket prefix: it can't change later.
 export function ProjectPathFields({
   mode,
   form: { values, setField },

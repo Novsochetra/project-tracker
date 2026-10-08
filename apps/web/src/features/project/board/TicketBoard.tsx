@@ -18,7 +18,6 @@ import { BoardPager } from './BoardPager';
 import { useBoardKeyboardMove } from './useBoardKeyboardMove';
 import { useBoardPage, useFillHeight, useRevealFocusedCard } from './useBoardLayout';
 
-/** One column per status the filter shows; cards drag between them like rows between groups. */
 export function TicketBoard({ board }: { board: ProjectBoard }) {
   const { project, statuses, tickets } = board;
   const view = useListView(project.key);

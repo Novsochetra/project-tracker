@@ -9,7 +9,6 @@ import { moveMessage } from './moveMessage';
 import { useMoveToast, wasSaved } from './undo/useMoveToast';
 import { useBoardReader } from './useBoardReader';
 
-/** Null when nothing moves; otherwise resolves once the move is over and the board shows how. */
 export type MoveTicket = (ticketId: string, target: DropTarget) => Promise<void> | null;
 
 // React Query hands cache changes to React in batches it schedules, so a refused move's rollback
@@ -20,7 +19,6 @@ const boardShown = (): Promise<void> =>
     notifyManager.schedule(resolve);
   });
 
-/** Drag and keyboard moves: renumber the destination group. */
 export function useTicketMove(projectKey: string): MoveTicket {
   const readBoard = useBoardReader(projectKey);
   const { mutateAsync } = useMoveTicket();

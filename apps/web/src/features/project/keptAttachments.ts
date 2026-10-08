@@ -21,7 +21,7 @@ function isAttachment(value: unknown): value is Attachment {
   );
 }
 
-/** The uploads a kept New ticket form holds, read from storage an older build may have written. */
+// Storage may hold what an older build wrote, so each entry is checked.
 export function keptAttachments(value: unknown, now: number): Attachment[] {
   if (!Array.isArray(value)) return [];
   return value.filter(isAttachment).filter((entry) => now - entry.createdAt < KEEP_FOR_MS);

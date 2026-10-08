@@ -6,7 +6,6 @@ export interface ProjectOptionsButtonProps {
   placement: 'header' | 'navbar';
 }
 
-/** Desktop header: ••• popover. Phone nav bar: ••• action sheet. */
 export function ProjectOptionsButton({ projectKey, placement }: ProjectOptionsButtonProps) {
   return placement === 'header' ? (
     <ProjectOptionsMenu projectKey={projectKey} />

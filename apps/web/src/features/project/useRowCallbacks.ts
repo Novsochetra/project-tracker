@@ -15,7 +15,6 @@ export interface RowCallbackInput {
   showSheet: (kind: RowSheetKind, ticket: TicketListItem) => void;
 }
 
-/** Opens a ticket from its row or card, except for the click that ends a drag. */
 export function useOpenTicket(projectKey: string): (ticket: TicketListItem) => void {
   const { push } = useNavigation();
   return useCallback(

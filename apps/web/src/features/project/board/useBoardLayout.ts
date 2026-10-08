@@ -1,9 +1,7 @@
 import { useEffect, useLayoutEffect, useState, type RefObject } from 'react';
 import { measurePage, revealDistance, spanOf } from './boardSpans';
 
-/** Below this the board stops shrinking with the screen and the page scrolls instead. */
 export const MIN_BOARD_HEIGHT = 320;
-/** Room kept between a revealed card and the side of the board. */
 export const REVEAL_MARGIN = 16;
 
 // Offsets ignore transforms, so a screen still sliding or rising in measures where it will rest.
@@ -17,7 +15,6 @@ function offsetWithin(element: HTMLElement, ancestor: HTMLElement): number {
   return top;
 }
 
-/** Calls `onResize` when any of the elements changes size, or the window where that's unknown. */
 function observeSizes(elements: readonly Element[], onResize: () => void): () => void {
   if (typeof ResizeObserver === 'undefined') {
     window.addEventListener('resize', onResize);
@@ -36,7 +33,7 @@ function siblingsAbove(element: Element): Element[] {
   return above;
 }
 
-/** Sizes the board to the rest of the screen below the filters, so its columns scroll alone. */
+// Fills the screen below the filters so the columns scroll on their own, not the page.
 export function useFillHeight(
   frameRef: RefObject<HTMLElement | null>,
   scrollRef: RefObject<HTMLElement | null>,
@@ -54,7 +51,6 @@ export function useFillHeight(
   }, [frameRef, scrollRef]);
 }
 
-/** Phone: the column the board shows, kept current while it is swiped. */
 export function useBoardPage(
   boardRef: RefObject<HTMLElement | null>,
   enabled: boolean,
@@ -71,7 +67,6 @@ export function useBoardPage(
   return Math.min(page, Math.max(count - 1, 0));
 }
 
-/** Keyboard focus on a card half outside the board scrolls the board to show all of it. */
 export function useRevealFocusedCard(boardRef: RefObject<HTMLElement | null>): void {
   useEffect(() => {
     const board = boardRef.current;

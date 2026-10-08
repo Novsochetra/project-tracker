@@ -10,7 +10,6 @@ export interface ListElements {
   scroller: RefObject<HTMLElement | null>;
 }
 
-/** The list: groups stack vertically and the whole screen scrolls near its top and bottom. */
 export function listEnvironment(
   { groups, scroller }: ListElements,
   ticketId: string,

@@ -9,7 +9,6 @@ import styles from './ProjectScreen.module.css';
 
 const projectScope = (projectKey: string) => ({ kind: 'project', projectKey }) as const;
 
-/** Phone nav bar: back to Projects, the project name, options and New ticket. */
 export function ProjectNavBar({ project }: { project: Project }) {
   const sheets = useSheets();
   return (
@@ -31,7 +30,6 @@ export function ProjectNavBar({ project }: { project: Project }) {
   );
 }
 
-/** Phone bottom bar with the Claude Code loop. */
 export function ProjectBottomBar({ projectKey }: { projectKey: string }) {
   const sheets = useSheets();
   const scope = projectScope(projectKey);
@@ -61,7 +59,6 @@ export function ProjectBottomBar({ projectKey }: { projectKey: string }) {
   );
 }
 
-/** Desktop toolbar: the repository and the Claude Code loop; on phones these live in the bar. */
 export function ProjectToolbar({ project }: { project: Project }) {
   const sheets = useSheets();
   const isPhone = useIsPhone();

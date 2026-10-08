@@ -44,7 +44,6 @@ export function BoardCard({ ticket, status, dragged, dropEdge, callbacks }: Boar
   );
 }
 
-/** The card lifted under the pointer while it is dragged. */
 export function BoardCardGhost({ drag }: { drag: DragState }) {
   return (
     <Lifted className={clsx(styles.face, styles.ghost)}>

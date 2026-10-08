@@ -12,7 +12,6 @@ export interface CreateTicketFlow {
   onError: (message: string) => void;
 }
 
-/** Creates the ticket, makes sure the list shows it, then highlights it and confirms. */
 export function useCreateTicketFlow({
   projectKey,
   statuses,

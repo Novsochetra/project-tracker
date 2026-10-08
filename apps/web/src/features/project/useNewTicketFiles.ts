@@ -4,10 +4,8 @@ import { useDraftMark } from '../../lib/useDraftMark';
 import { useAttachmentList, type AttachmentList } from '../attachments';
 import type { NewTicketForm } from './newTicketForm';
 
-/**
- * The sheet's files live in its form, so the kept fields bring the uploaded ones back after a
- * reload. Files still on their way can't come back, so closing the page asks while they go.
- */
+// The sheet's files live in its form, so the kept fields bring the uploaded ones back after a
+// reload. Files still on their way can't come back, so closing the page asks while they go.
 export function useNewTicketFiles(
   setForm: Dispatch<SetStateAction<NewTicketForm>>,
   projectKey: string,

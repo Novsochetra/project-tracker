@@ -12,8 +12,7 @@ const HOLD = EDGE_PAGE_HOLD_MS;
 
 type Move = [x: number, at: number];
 
-/** Feeds finger positions at times, returning the pages turned along the way. */
-function run(paging: EdgePaging, ...moves: Move[]): number[] {
+function pagesTurned(paging: EdgePaging, ...moves: Move[]): number[] {
   const pages: number[] = [];
   let state = paging;
   for (const [x, at] of moves) {
@@ -39,25 +38,25 @@ describe('stepEdgePaging', () => {
   const fromMiddle = startEdgePaging(200, WIDTH);
 
   it('pages toward an edge after the finger rests there for the hold', () => {
-    expect(run(fromMiddle, [360, 0], [362, 200], [361, HOLD - 1])).toEqual([]);
-    expect(run(fromMiddle, [360, 0], [361, HOLD])).toEqual([1]);
-    expect(run(fromMiddle, [5, 100], [8, 100 + HOLD])).toEqual([-1]);
+    expect(pagesTurned(fromMiddle, [360, 0], [362, 200], [361, HOLD - 1])).toEqual([]);
+    expect(pagesTurned(fromMiddle, [360, 0], [361, HOLD])).toEqual([1]);
+    expect(pagesTurned(fromMiddle, [5, 100], [8, 100 + HOLD])).toEqual([-1]);
   });
 
   it('keeps paging once per hold while the finger stays at the edge', () => {
     const moves = [0, 500, 600, 999, 1000, 1500].map((at): Move => [370, at]);
-    expect(run(fromMiddle, ...moves)).toEqual([1, 1, 1]);
+    expect(pagesTurned(fromMiddle, ...moves)).toEqual([1, 1, 1]);
   });
 
   it('starts the hold over when the finger leaves the edge or switches sides', () => {
-    expect(run(fromMiddle, [360, 0], [200, 300], [360, 400], [360, 800])).toEqual([]);
-    expect(run(fromMiddle, [360, 0], [10, 300], [360, 600])).toEqual([]);
+    expect(pagesTurned(fromMiddle, [360, 0], [200, 300], [360, 400], [360, 800])).toEqual([]);
+    expect(pagesTurned(fromMiddle, [360, 0], [10, 300], [360, 600])).toEqual([]);
   });
 
   it('stays quiet at the edge the drag started in until the finger leaves it', () => {
     const fromRightEdge = startEdgePaging(360, WIDTH);
-    expect(run(fromRightEdge, [360, 0], [365, 900], [370, 2000])).toEqual([]);
-    expect(run(fromRightEdge, [360, 0], [200, 100], [360, 200], [360, 700])).toEqual([1]);
-    expect(run(fromRightEdge, [360, 0], [10, 100], [10, 600])).toEqual([-1]);
+    expect(pagesTurned(fromRightEdge, [360, 0], [365, 900], [370, 2000])).toEqual([]);
+    expect(pagesTurned(fromRightEdge, [360, 0], [200, 100], [360, 200], [360, 700])).toEqual([1]);
+    expect(pagesTurned(fromRightEdge, [360, 0], [10, 100], [10, 600])).toEqual([-1]);
   });
 });

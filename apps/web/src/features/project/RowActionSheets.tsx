@@ -9,7 +9,6 @@ export interface RowActionSheetsProps {
   onClose: () => void;
 }
 
-/** The phone sheets behind a row's Status and Delete swipe actions. */
 export function RowActionSheets({ sheet, statuses, onClose }: RowActionSheetsProps) {
   const changeStatus = useStatusChange();
   const removeTicket = useRemoveTicket();

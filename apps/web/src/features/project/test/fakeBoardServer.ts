@@ -3,10 +3,6 @@ import type { MoveTicketInput, ProjectBoard, UpdateTicketInput } from '@tracker/
 import { vi } from 'vitest';
 import { findBoardTicket, moveBoardTicket, patchBoardTicket } from '../../../api/cache/board';
 
-/**
- * Answers board reads and status moves like the tracker: a status change goes to the top of the
- * new group, a move renumbers the group it lands in, and reads return what was saved.
- */
 export function fakeBoardServer(initial: ProjectBoard) {
   let board = initial;
   const saved = (ticketKey: string) => {

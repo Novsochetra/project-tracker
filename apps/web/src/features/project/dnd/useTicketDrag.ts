@@ -33,7 +33,6 @@ export type StartDrag = (
 ) => void;
 
 export interface TicketDragOptions {
-  /** How a drag of this ticket, pressed at `press`, finds its drop target and scrolls. */
   environment: (ticket: TicketListItem, press: Point) => DragEnvironment;
   onDrop: (ticket: TicketListItem, target: DropTarget) => void;
 }
@@ -95,7 +94,6 @@ function dragListener(
   };
 }
 
-/** Mouse drags start after 6px from the row or handle; touch and pen drag from the handle only. */
 export function useTicketDrag({ environment, onDrop }: TicketDragOptions): TicketDrag {
   const [drag, setDrag] = useState<DragState | null>(null);
   const sessionRef = useRef<DragSession | null>(null);
@@ -118,6 +116,7 @@ export function useTicketDrag({ environment, onDrop }: TicketDragOptions): Ticke
   const startDrag = useCallback<StartDrag>((event, ticket, status, fromHandle) => {
     const touch = event.pointerType !== 'mouse';
     if (sessionRef.current || event.button !== 0 || !event.isPrimary) return;
+    // Touch and pen drag only from the handle, so rows still scroll and tap (SPEC §7.4).
     if (touch && !fromHandle) return;
     if (fromHandle) event.preventDefault();
     const finish = (target: DropTarget | null, started: boolean) => {

@@ -22,7 +22,6 @@ interface EmptyColumnProps {
   targeted: boolean;
 }
 
-/** Empty columns stay on the board: a quiet note, or a drop zone while a card is dragged. */
 function EmptyColumn({ name, searching, dragging, targeted }: EmptyColumnProps) {
   if (dragging) return <DropZone name={name} targeted={targeted} />;
   return <p className={styles.empty}>{searching ? 'No matches' : 'No tickets'}</p>;

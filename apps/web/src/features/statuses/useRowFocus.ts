@@ -2,8 +2,7 @@ import { useRef } from 'react';
 
 const FOCUS = { preventScroll: true } as const;
 
-// Returns focus to a row once the editor that replaced it is gone. A row that doesn't exist yet
-// (a status just created, before the list refreshes) takes focus as soon as it mounts.
+// A status just created has no row until the list refreshes, so focus waits for its row to mount.
 export function useRowFocus() {
   const rows = useRef(new Map<string, HTMLButtonElement>());
   const waitingFor = useRef<string | null>(null);

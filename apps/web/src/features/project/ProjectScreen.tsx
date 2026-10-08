@@ -51,7 +51,7 @@ function LoadError({ error, onRetry }: { error: Error; onRetry: () => void }) {
   );
 }
 
-/** Opening a project shows All with an empty search (SPEC §3); coming back from a ticket keeps them. */
+// Opening a project shows All with an empty search (SPEC §3); coming back from a ticket keeps them.
 function useFreshListView(projectKey: string): void {
   useLayoutEffect(() => resetListView(projectKey), [projectKey]);
 }

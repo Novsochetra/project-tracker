@@ -9,7 +9,6 @@ export interface RowSwipeActions {
   trailing: SwipeAction[];
 }
 
-/** Swipe right moves to the next status; swipe left reveals Status and Delete. */
 export function rowSwipeActions(
   ticket: TicketListItem,
   next: Status | null,

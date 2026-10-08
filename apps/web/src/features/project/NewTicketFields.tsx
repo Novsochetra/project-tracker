@@ -24,7 +24,6 @@ export interface NewTicketFieldsProps {
   onChange: (patch: Partial<NewTicketForm>) => void;
   onEnter: () => void;
   onFiles: (files: File[]) => void;
-  /** Shown under the description: its files and the way to attach more. */
   attachments: ReactNode;
 }
 

@@ -1,4 +1,3 @@
-// Every drag handle carries its ticket id in this attribute (see DragHandle).
 const HANDLE_ATTRIBUTE = 'data-handle-for';
 
 let pending: { ticketId: string } | null = null;
@@ -16,11 +15,8 @@ export function clearHandleFocus(): void {
   document.removeEventListener('pointerdown', forgetUnlessHandle, true);
 }
 
-/**
- * A keyboard move re-renders the row when it shows and again when a refused move goes back, and
- * React may move or remount the row's DOM node, which drops focus. The handle takes focus back on
- * its renders until the move is over: call the returned function then.
- */
+// React may move or remount a row when a keyboard move shows, and again when a refused move goes
+// back, which drops focus; the handle takes it back until the returned function is called.
 export function requestHandleFocus(ticketId: string): () => void {
   const request = { ticketId };
   pending = request;

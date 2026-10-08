@@ -18,7 +18,6 @@ const arrowDirection = (key: string): MoveDirection | null => {
   return key === 'ArrowDown' ? 'down' : null;
 };
 
-/** ↑/↓ on a handle move the ticket one slot, crossing into the next visible group at the edge. */
 export function useKeyboardMove(
   projectKey: string,
   filter: TicketFilter,

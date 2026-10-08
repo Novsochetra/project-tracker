@@ -6,8 +6,6 @@
   background: var(--surface);
 }
 
-/* Key and priority over the title, the sent-back chip and due date below, the assignee at the top
-   right. */
 .face {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;

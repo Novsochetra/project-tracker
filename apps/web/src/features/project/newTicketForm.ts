@@ -12,12 +12,11 @@ import { keptAttachments } from './keptAttachments';
 export interface NewTicketForm {
   title: string;
   description: string;
-  /** Null until the person picks one, so the sheet's default status applies. */
+  // Null until the person picks one, so the sheet's default status applies.
   statusId: string | null;
   priority: Priority;
   assignee: string;
   due: string;
-  /** Uploaded and waiting for the ticket to be created with them. */
   attachments: Attachment[];
 }
 
@@ -70,7 +69,6 @@ export function hasChanges(form: NewTicketForm, defaultStatus: string | undefine
   return statusPicked || form.priority !== blank.priority || form.due !== blank.due;
 }
 
-/** The group's status when opened from its "+", otherwise the first status. */
 export function defaultStatusId(
   statuses: readonly Status[],
   requested: string | undefined,

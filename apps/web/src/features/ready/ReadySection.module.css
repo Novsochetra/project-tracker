@@ -135,7 +135,6 @@
   }
 }
 
-/* Narrow lists stack a row: the title, then the project and key, then the review. */
 @container (max-width: 679px) {
   .main {
     display: grid;

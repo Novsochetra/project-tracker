@@ -6,7 +6,6 @@ export interface BoardPagerProps {
   page: number;
 }
 
-/** Phone: which column the board shows, as the status and "2 / 5" beside page dots. */
 export function BoardPager({ columns, page }: BoardPagerProps) {
   const current = columns[page];
   if (!current) return null;

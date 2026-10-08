@@ -11,11 +11,9 @@ import type { DragState, GhostRef } from './useTicketDrag';
 export interface DragGhostProps {
   drag: DragState | null;
   ghostRef: GhostRef;
-  /** The lifted face; the list's row when left out. */
   children?: ReactNode;
 }
 
-/** The white card that lifts off the page with the Lifted shadow. */
 export function Lifted({ className, children }: { className?: string; children: ReactNode }) {
   return <div className={clsx(styles.lifted, className)}>{children}</div>;
 }
@@ -47,10 +45,10 @@ function RowFace({ drag: { ticket, status } }: { drag: DragState }) {
   );
 }
 
-/** The lifted copy that follows the pointer; portalled so no transform offsets it. */
 export function DragGhost({ drag, ghostRef, children }: DragGhostProps) {
   if (!drag) return null;
   const { origin } = drag;
+  // Portalled so no transformed ancestor offsets its fixed position.
   return createPortal(
     <div
       ref={ghostRef}

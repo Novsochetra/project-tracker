@@ -186,7 +186,6 @@
     opacity: 1;
   }
 
-  /* The title takes the first line beside the avatar; key, priority and due date go below it. */
   .main {
     display: grid;
     grid-template-columns: auto auto minmax(0, 1fr) auto;

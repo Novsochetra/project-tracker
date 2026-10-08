@@ -5,20 +5,15 @@ import type { Point } from './dropTarget';
 export const DRAG_START_DISTANCE = 6;
 
 export interface DragPress {
-  /** The pressed element; it captures the pointer. */
   element: HTMLElement;
   pointerId: number;
   x: number;
   y: number;
-  /** Touch and pen drags start at once from the handle; a mouse waits for 6px of movement. */
   immediate: boolean;
 }
 
-/** What the list or the board under the drag provides: targets and scrolling. */
 export interface DragEnvironment {
-  /** Where the ticket would land with the pointer at `point`, measured now. */
   targetAt: (point: Point) => DropTarget | null;
-  /** Runs every tick while dragging; scrolls whatever the pointer is near and says if it did. */
   autoScroll: (point: Point, now: number) => boolean;
 }
 
@@ -37,7 +32,6 @@ export interface DragFrame {
 export interface DragListener {
   onStart: (start: DragStart) => void;
   onFrame: (frame: DragFrame) => void;
-  /** Always called once; `started` is false for a plain click or tap. */
   onEnd: (end: { started: boolean; target: DropTarget | null }) => void;
 }
 
@@ -61,7 +55,6 @@ function release(element: HTMLElement, pointerId: number): void {
 // Scroll events don't bubble; a capturing listener on the document hears every scroller.
 const SCROLL_LISTENER = { capture: true, passive: true } as const;
 
-/** One press on a row, card or handle, from pointerdown until release or cancel. */
 export class DragSession {
   private started = false;
   private finished = false;
@@ -84,7 +77,6 @@ export class DragSession {
     if (press.immediate) this.start();
   }
 
-  /** Ends the session without dropping, for example when the list unmounts mid-drag. */
   cancel(): void {
     this.finish(false);
   }

@@ -16,7 +16,7 @@ import { requestHandleFocus } from '../dnd/handleFocus';
 import { moveMessage } from '../moveMessage';
 import { restorePoint, undoTarget, type RestorePoint } from './restorePoint';
 
-/** Says "MOB-3 moved to Done" with Undo; `ticket` is the ticket as it was before the move. */
+// `ticket` is the ticket as it was before the move.
 export type ShowMove = (ticket: Ticket, to: Pick<Status, 'name'>, saved: Promise<boolean>) => void;
 
 export const wasSaved = (request: Promise<unknown>): Promise<boolean> =>

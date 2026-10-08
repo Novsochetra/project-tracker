@@ -25,7 +25,6 @@ function locate(columns: readonly TicketGroupData[], ticketId: string): Place | 
   return null;
 }
 
-/** The slot at `index` among the column's cards once the moving ticket is out of it. */
 function slotIn(column: TicketGroupData, ticketId: string, index: number): DropTarget {
   const ids = column.tickets.map((ticket) => ticket.id).filter((id) => id !== ticketId);
   return {
@@ -35,10 +34,6 @@ function slotIn(column: TicketGroupData, ticketId: string, index: number): DropT
   };
 }
 
-/**
- * Arrow keys on a card's handle: ↑/↓ move it one slot within its column and stop at the ends;
- * ←/→ move it to the same slot in the neighbouring visible column, or its end when shorter.
- */
 export function boardMoveTarget(
   columns: readonly TicketGroupData[],
   ticketId: string,

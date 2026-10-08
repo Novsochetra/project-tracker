@@ -45,13 +45,11 @@ function nearest<T>(
   return found;
 }
 
-/** The group under `y`, or the nearest one when `y` is above, below or between groups. */
 export const groupAt = <T extends { top: number; bottom: number }>(
   groups: readonly T[],
   y: number,
 ): T | null => nearest(groups, y, (group) => [group.top, group.bottom]);
 
-/** The board column under `x`, or the nearest one when `x` is beside or between columns. */
 export const columnAt = <T extends { left: number; right: number }>(
   columns: readonly T[],
   x: number,
@@ -62,7 +60,6 @@ export function insertionIndex(rows: readonly RowBox[], y: number): number {
   return index < 0 ? rows.length : index;
 }
 
-/** Lands before the first row whose midpoint is below `y`, ignoring the dragged row. */
 export function targetInGroup(group: GroupBox, y: number, draggedId: string): DropTarget {
   const rows = group.rows.filter((row) => row.id !== draggedId);
   const index = insertionIndex(rows, y);
@@ -73,7 +70,6 @@ export function targetInGroup(group: GroupBox, y: number, draggedId: string): Dr
   };
 }
 
-/** List: the group by the pointer's y, the slot by row midpoints. */
 export function dropTargetAt(
   groups: readonly GroupBox[],
   y: number,
@@ -83,7 +79,6 @@ export function dropTargetAt(
   return group ? targetInGroup(group, y, draggedId) : null;
 }
 
-/** Board: the column by the pointer's x, the slot by card midpoints. */
 export function columnDropTarget(
   columns: readonly GroupBox[],
   point: Point,
@@ -101,7 +96,6 @@ export const sameTarget = (a: DropTarget | null, b: DropTarget | null): boolean 
     (a.beforeId ?? null) === (b.beforeId ?? null) &&
     (a.afterId ?? null) === (b.afterId ?? null));
 
-/** The drop line sits above the row the ticket lands before, or below the last row. */
 export function dropEdgeFor(target: DropTarget | null, ticketId: string): DropEdge | null {
   if (!target) return null;
   if (target.beforeId === ticketId) return 'before';

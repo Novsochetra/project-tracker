@@ -48,7 +48,6 @@ export const useListView = (projectKey: string): ListView =>
 
 export const isSearching = (view: ListView): boolean => view.query.trim() !== '';
 
-/** A new ticket must stay visible: the filter would hide it, or a search is narrowing the list. */
 export function hidesNewTicket(view: ListView, isDone: boolean): boolean {
   const filteredOut = (view.filter === 'done' && !isDone) || (view.filter === 'active' && isDone);
   return filteredOut || isSearching(view);

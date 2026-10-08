@@ -1,6 +1,5 @@
 import { byRank, type DropTarget, type Placeable } from '@tracker/shared';
 
-/** Where a ticket was before a status move: enough to put it back with the move API. */
 export interface RestorePoint {
   statusId: string;
   rank: number;
@@ -12,10 +11,8 @@ export interface RestorePoint {
 const othersIn = (tickets: readonly Placeable[], statusId: string, ticketId: string) =>
   tickets.filter((t) => t.statusId === statusId && t.id !== ticketId).sort(byRank);
 
-/**
- * `ticket` is the ticket as it was; the other tickets of its group keep their ranks when it
- * leaves, so `tickets` may already show the move.
- */
+// `ticket` is the ticket as it was; the other tickets of its group keep their ranks when it
+// leaves, so `tickets` may already show the move.
 export function restorePoint(tickets: readonly Placeable[], ticket: Placeable): RestorePoint {
   const others = othersIn(tickets, ticket.statusId, ticket.id);
   const after = others.findIndex((other) => byRank(other, ticket) > 0);
@@ -29,10 +26,8 @@ export function restorePoint(tickets: readonly Placeable[], ticket: Placeable): 
   };
 }
 
-/**
- * Back between the same tickets while either is still in the group, so a reorder meanwhile keeps
- * it beside them; otherwise its old rank finds the place.
- */
+// Back between the same tickets while either is still in the group, so a reorder meanwhile keeps
+// it beside them; otherwise its old rank finds the place.
 export function undoTarget(
   tickets: readonly Placeable[],
   ticketId: string,

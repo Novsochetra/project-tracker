@@ -1,19 +1,16 @@
-/** How close to the screen's left or right edge a dragging finger asks for the next column. */
 export const EDGE_PAGE_ZONE = 32;
-/** How long the finger rests there before the board pages, and again for each further page. */
 export const EDGE_PAGE_HOLD_MS = 500;
 
 export type EdgeSide = -1 | 0 | 1;
 
 export interface EdgePaging {
-  /** The edge the drag started in pages only after the finger has left it once. */
+  // A drag that starts at an edge mustn't page by itself: that edge waits for the finger to leave.
   quiet: EdgeSide;
   hold: { side: -1 | 1; since: number } | null;
 }
 
 export interface EdgePageStep {
   paging: EdgePaging;
-  /** -1 pages to the previous column, 1 to the next, 0 stays. */
   page: EdgeSide;
 }
 
@@ -27,7 +24,6 @@ export const startEdgePaging = (x: number, width: number): EdgePaging => ({
   hold: null,
 });
 
-/** One tick of a phone drag: page once the finger has rested near an edge for a short hold. */
 export function stepEdgePaging(
   paging: EdgePaging,
   x: number,

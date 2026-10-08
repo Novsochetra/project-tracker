@@ -5,7 +5,6 @@ import { flashRows } from '../../app/flash';
 import { useToast } from '../../components';
 import { useMoveToast, wasSaved } from './undo/useMoveToast';
 
-/** Swipe and action-sheet status changes put the ticket at the top of its new group. */
 export function useStatusChange(): (ticket: TicketListItem, status: Status) => void {
   const { mutateAsync } = useUpdateTicket();
   const { show } = useToast();

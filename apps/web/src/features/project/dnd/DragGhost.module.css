@@ -58,9 +58,9 @@
 }
 
 @media (max-width: 767px) {
-  /* Mirrors the phone row: the title beside the avatar, then priority, key and due date. The
-     padding is 1px short of the row's on every side because the border sits inside the row's
-     width, so the title gets the row's column and breaks into the same lines. */
+  /* Mirrors the phone row. The padding is 1px short of the row's on every side because the border
+     sits inside the row's width, so the title gets the row's column and breaks into the same
+     lines. */
   .row {
     display: grid;
     grid-template-columns: 20px auto auto minmax(0, 1fr) auto;

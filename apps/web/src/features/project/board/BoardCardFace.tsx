@@ -12,11 +12,9 @@ import styles from './BoardCard.module.css';
 export interface BoardCardFaceProps {
   ticket: TicketListItem;
   status: Status;
-  /** The ghost's copy hides its avatar name from assistive tech. */
   decorative?: boolean;
 }
 
-/** What a card shows: key and priority, the title, a sent-back chip, due date and assignee. */
 export function BoardCardFace({ ticket, status, decorative = false }: BoardCardFaceProps) {
   const isDone = isDoneCategory(status.category);
   return (
