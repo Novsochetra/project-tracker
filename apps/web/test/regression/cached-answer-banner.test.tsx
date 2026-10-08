@@ -58,6 +58,12 @@ function fakeNetwork() {
   const fetch = vi.fn((url: string, init?: RequestInit) => {
     const method = init?.method ?? 'GET';
     requests.push(`${method} ${url}`);
+    // A failed send takes a moment, like a real one, so the first sync is over before the reads below.
+    if (!up && method !== 'GET') {
+      return new Promise<Response>((_, reject) =>
+        setTimeout(() => reject(new TypeError('Failed to fetch')), 30),
+      );
+    }
     if (!up) return whileDown(method, url);
     if (method !== 'GET' || !(url in ANSWERS)) return Promise.resolve(json(NOT_FOUND, 404));
     const body = JSON.stringify(ANSWERS[url]);
@@ -157,6 +163,9 @@ describe('regression: answers from the service worker cache keep the offline ban
     const queryClient = renderApp('/p/MOB', network);
     await screen.findByRole('button', { name: MOVE_MOB_1 });
     await waitFor(() => expect(captureRequests(network)).toHaveLength(1));
+    // The failed send marked the tracker unreachable; let the sync that sent it finish.
+    await waitFor(() => expect(banner()).not.toBeNull());
+    await act(() => new Promise((resolve) => setTimeout(resolve, 50)));
 
     await act(async () => {
       await queryClient.refetchQueries({ queryKey: queryKeys.projects() });

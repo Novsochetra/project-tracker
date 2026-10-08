@@ -12,8 +12,6 @@ import { syncCaptures, type SyncReport } from './syncCaptures';
 import { claimCapture, runCaptureSync } from './syncRunner';
 
 // Through the mutation cache, so an app update waits for the write and reachability hears of it.
-// No refetch after a failure: a cached answer from the service worker would count as reachable
-// and start the sync again.
 const sendWith = (queryClient: QueryClient, client: TrackerClient) => (capture: QueuedCapture) =>
   new MutationObserver(queryClient, {
     mutationFn: () => client.createTicket(capture.projectKey, createInputOf(capture)),

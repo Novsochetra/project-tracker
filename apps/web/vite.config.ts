@@ -1,7 +1,7 @@
 import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
-import { savedAnswerPlugin } from './src/pwa/savedAnswerPlugin';
+import { savedAnswerPlugin } from './src/pwa/savedAnswerPlugin.ts';
 
 const apiTarget = process.env.TRACKER_API_URL ?? 'http://localhost:4100';
 const DAY_SECONDS = 24 * 60 * 60;
