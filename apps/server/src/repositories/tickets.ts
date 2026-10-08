@@ -2,7 +2,9 @@ import type { Rankable, ReviewVerdict } from '@tracker/shared';
 import type { ExpressionBuilder, InferResult } from 'kysely';
 import type { Database, Db, TicketRow } from '../db/schema';
 
-export type TicketChanges = Partial<Omit<TicketRow, 'id' | 'projectId' | 'num' | 'createdAt'>>;
+export type TicketChanges = Partial<
+  Omit<TicketRow, 'id' | 'projectId' | 'num' | 'createdAt' | 'clientId'>
+>;
 
 export interface TicketItemRow extends TicketRow {
   commentCount: number;
@@ -21,6 +23,14 @@ export const findTicketByNum = (db: Db, projectId: string, num: number) =>
 
 export const findTicketById = (db: Db, id: string) =>
   db.selectFrom('tickets').selectAll().where('id', '=', id).executeTakeFirst();
+
+export const findTicketByClientId = (db: Db, projectId: string, clientId: string) =>
+  db
+    .selectFrom('tickets')
+    .selectAll()
+    .where('projectId', '=', projectId)
+    .where('clientId', '=', clientId)
+    .executeTakeFirst();
 
 export const listTicketRows = (db: Db, projectId: string) =>
   db.selectFrom('tickets').selectAll().where('projectId', '=', projectId).execute();

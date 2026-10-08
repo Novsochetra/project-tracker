@@ -42,6 +42,7 @@ export interface TicketRow {
   due: string;
   createdAt: number;
   updatedAt: number;
+  clientId: string | null;
 }
 
 export interface ActivityRow {

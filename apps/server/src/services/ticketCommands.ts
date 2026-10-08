@@ -8,13 +8,15 @@ import {
   type updateTicketInput,
 } from '@tracker/shared';
 import type { z } from 'zod';
-import type { Db, TicketRow } from '../db/schema';
+import type { Clock } from '../clock';
+import type { Db, ProjectRow, TicketRow } from '../db/schema';
 import { insertActivity } from '../repositories/activities';
 import { storageKeysOfTicket } from '../repositories/attachments';
 import { takeTicketNumber, updateProjectRow } from '../repositories/projects';
 import { listStatusRows } from '../repositories/statuses';
 import {
   deleteTicketRow,
+  findTicketByClientId,
   insertTicket,
   listTicketRows,
   updateTicketRow,
@@ -48,40 +50,63 @@ function finish(ctx: ServiceContext, outcome: Outcome): Ticket {
   return outcome.ticket;
 }
 
+interface NewTicket {
+  actor: Actor;
+  project: ProjectRow;
+  input: CreateTicketValues;
+}
+
+async function insertNewTicket(trx: Db, now: Clock, request: NewTicket): Promise<Ticket> {
+  const { actor, project, input } = request;
+  const statuses = await listStatusRows(trx, project.id);
+  const status = input.statusId ? requireStatusIn(statuses, input.statusId) : statuses[0];
+  if (!status) throw new Error(`Project ${project.key} has no statuses.`);
+  const placement = await enterStatus(trx, actor, status);
+  const num = await takeTicketNumber(trx, project.id);
+  const at = now();
+  const row: TicketRow = {
+    id: randomUUID(),
+    projectId: project.id,
+    num,
+    ...placement,
+    title: input.title,
+    description: input.description,
+    priority: input.priority,
+    assignee: input.assignee,
+    due: input.due,
+    createdAt: at,
+    updatedAt: at,
+    clientId: input.clientId ?? null,
+  };
+  await insertTicket(trx, row);
+  const created = { ticketId: row.id, actor, type: 'event' as const, at };
+  await insertActivity(trx, activityRow({ ...created, text: 'created the ticket' }));
+  await attachUploads(trx, input.attachmentIds, { ticketId: row.id, activityId: null });
+  return toTicket(row, project.key);
+}
+
+// A create that repeats a client id in the project gets the ticket the first one made. Looked up
+// inside the transaction: SQLite and PGlite run transactions one at a time, so two identical
+// creates at once make one ticket and take one number. On Postgres with several connections the
+// unique index refuses the second one, and sending it again gets the ticket.
 export async function createTicket(
   ctx: ServiceContext,
   actor: Actor,
   projectKey: string,
   input: CreateTicketValues,
 ): Promise<Ticket> {
-  const ticket = await inTransaction(ctx, async (trx) => {
+  const outcome = await inTransaction(ctx, async (trx): Promise<Outcome> => {
     const project = await requireProject(trx, projectKey);
-    const statuses = await listStatusRows(trx, project.id);
-    const status = input.statusId ? requireStatusIn(statuses, input.statusId) : statuses[0];
-    if (!status) throw new Error(`Project ${project.key} has no statuses.`);
-    const placement = await enterStatus(trx, actor, status);
-    const num = await takeTicketNumber(trx, project.id);
-    const at = ctx.now();
-    const row: TicketRow = {
-      id: randomUUID(),
-      projectId: project.id,
-      num,
-      ...placement,
-      title: input.title,
-      description: input.description,
-      priority: input.priority,
-      assignee: input.assignee,
-      due: input.due,
-      createdAt: at,
-      updatedAt: at,
+    const earlier = input.clientId
+      ? await findTicketByClientId(trx, project.id, input.clientId)
+      : undefined;
+    if (earlier) return { ticket: toTicket(earlier, project.key), changed: false };
+    return {
+      ticket: await insertNewTicket(trx, ctx.now, { actor, project, input }),
+      changed: true,
     };
-    await insertTicket(trx, row);
-    const created = { ticketId: row.id, actor, type: 'event' as const, at };
-    await insertActivity(trx, activityRow({ ...created, text: 'created the ticket' }));
-    await attachUploads(trx, input.attachmentIds, { ticketId: row.id, activityId: null });
-    return toTicket(row, project.key);
   });
-  return finish(ctx, { ticket, changed: true });
+  return finish(ctx, outcome);
 }
 
 async function statusChange(

@@ -15,6 +15,7 @@ const ticket: TicketRow = {
   due: '2026-10-09',
   createdAt: 1,
   updatedAt: 1,
+  clientId: null,
 };
 
 const today = new Date('2026-10-08T12:00:00');

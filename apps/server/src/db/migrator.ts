@@ -1,9 +1,11 @@
 import { Migrator, type Migration, type MigrationProvider } from 'kysely/migration';
 import * as initial from './migrations/0001_initial';
+import * as ticketClientId from './migrations/0002_ticket_client_id';
 import type { Db } from './schema';
 
 const MIGRATIONS: Record<string, Migration> = {
   '0001_initial': initial,
+  '0002_ticket_client_id': ticketClientId,
 };
 
 const provider: MigrationProvider = {

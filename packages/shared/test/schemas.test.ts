@@ -63,6 +63,17 @@ describe('createTicketInput', () => {
     expect(createTicketInput.safeParse({ title: 'T', attachmentIds: ids(20) }).success).toBe(true);
     expect(createTicketInput.safeParse({ title: 'T', attachmentIds: ids(21) }).success).toBe(false);
   });
+
+  it('takes an optional client id of up to 64 characters', () => {
+    const uuid = '0c6f1d2e-5b7a-4e3c-9d18-7a2b4c6e8f10';
+
+    expect(createTicketInput.parse({ title: 'T', clientId: uuid }).clientId).toBe(uuid);
+    expect(createTicketInput.parse({ title: 'T' })).not.toHaveProperty('clientId');
+    expect(createTicketInput.safeParse({ title: 'T', clientId: '' }).success).toBe(false);
+    expect(createTicketInput.safeParse({ title: 'T', clientId: 'x'.repeat(65) }).success).toBe(
+      false,
+    );
+  });
 });
 
 describe('createCommentInput', () => {

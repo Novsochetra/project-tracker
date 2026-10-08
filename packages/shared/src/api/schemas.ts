@@ -56,6 +56,8 @@ export const createTicketInput = z.object({
   assignee: z.string().trim().max(80).default(''),
   due: dueDate.default(''),
   attachmentIds: attachmentIds.default([]),
+  // From a client that may send the same create again: a repeat gets the ticket the first one made.
+  clientId: id.optional(),
 });
 export type CreateTicketInput = z.input<typeof createTicketInput>;
 
