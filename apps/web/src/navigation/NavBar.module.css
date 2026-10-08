@@ -2,7 +2,13 @@
   position: sticky;
   top: 0;
   z-index: var(--z-sticky);
-  display: flex;
+  /* Like UINavigationBar: the buttons keep their size, the title gets what is left, and the
+     equal sides keep it centred while it fits. */
+  display: grid;
+  grid-template-columns:
+    minmax(var(--touch-target), 1fr)
+    minmax(0, max-content)
+    minmax(max-content, 1fr);
   align-items: center;
   gap: var(--space-1);
   min-height: calc(var(--nav-height) + var(--safe-top));
@@ -20,10 +26,13 @@
 }
 
 .side {
-  flex: 1 1 0;
   min-width: 0;
   display: flex;
   align-items: center;
+}
+
+.lead {
+  container-type: inline-size;
 }
 
 .end {
@@ -31,7 +40,6 @@
 }
 
 .titleSlot {
-  flex: 0 1 auto;
   min-width: 0;
   display: flex;
   justify-content: center;
@@ -59,7 +67,7 @@
 .back {
   display: inline-flex;
   align-items: center;
-  min-width: 0;
+  min-width: var(--touch-target);
   max-width: 100%;
   min-height: var(--touch-target);
   padding: 0 var(--space-2) 0 2px;
@@ -85,4 +93,11 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+/* With no room for a few letters, show just the chevron, as iOS does. */
+@container (max-width: 79px) {
+  .backLabel {
+    display: none;
+  }
 }

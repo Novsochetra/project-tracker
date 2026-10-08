@@ -66,6 +66,8 @@ On phones (`max-width: 767px`) the app behaves like a native iOS app:
 - **Row swipe actions:** swipe a ticket row right to move it to the next status; swipe left to reveal "Status" and "Delete". A full swipe triggers the first action. Haptic tick at the threshold where supported.
 - **Pull to refresh** on Projects and Project lists.
 - **Large title** on Projects collapses into the nav bar title while scrolling.
+- **Nav bar layout:** the back button (at least 44×44) and the right buttons keep their size. The title takes the space left, ends in an ellipsis and stays centred while it fits. When the back label has no room for a few letters, only the chevron shows.
+- **Tap the nav bar to scroll up:** a tap anywhere on the nav bar except its buttons (including the safe-area padding at its top) smooth-scrolls the screen's scroller to the top, and jumps there with reduced motion (`navigation/useTapToTop.ts`). Each screen scrolls in its own scroller, and iOS's status-bar tap only scrolls the document, so the nav bar takes over that job.
 - Press feedback (scale .97), spring selections, `prefers-reduced-motion` honored everywhere.
 
 ### 1.6 Other additions
@@ -84,6 +86,8 @@ On phones (`max-width: 767px`) the app behaves like a native iOS app:
 - When the projects list is narrower than 640px (a desktop window around 768px wide), the Progress column hides so names stay readable.
 - Delete confirmations count tickets correctly ("its 1 ticket", "its 3 tickets").
 - A status move is announced once, by the toast; the hidden live region announces reorders ("MOB-3 moved"), and every announcement is read again even when the text repeats.
+
+- Phone ticket rows give the title the first line beside the avatar, wrapping up to three lines, with priority, key and due date on a second line below it. The per-row status glyph is hidden there because the group header shows it. Desktop rows keep the SPEC's single line.
 
 ### 1.8 Board view
 

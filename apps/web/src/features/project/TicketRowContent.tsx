@@ -50,15 +50,15 @@ export function TicketRowContent({ ticket, status, dragged, callbacks }: TicketR
         onClick={() => callbacks.open(ticket)}
         onPointerDown={(event) => callbacks.startDrag(event, ticket, status, false)}
       >
-        <PriorityBars priority={ticket.priority} />
+        <PriorityBars priority={ticket.priority} className={styles.priority} />
         {/* The spaces keep the parts apart in the accessible name, which starts with the key. */}
         <span className={styles.key}>{ticket.key}</span>{' '}
-        <StatusGlyph category={status.category} color={status.color} />
+        <StatusGlyph category={status.category} color={status.color} className={styles.status} />
         <span className={styles.title} data-done={isDone || undefined}>
           {ticket.title || 'Untitled'}
         </span>{' '}
         {ticket.due && <DueLabel due={ticket.due} overdue={isOverdue(ticket.due, isDone)} />}{' '}
-        <Avatar name={ticket.assignee} />
+        <Avatar name={ticket.assignee} className={styles.assignee} />
       </button>
     </div>
   );

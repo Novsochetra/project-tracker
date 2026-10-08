@@ -182,16 +182,47 @@
     opacity: 1;
   }
 
+  /* The title takes the first line beside the avatar; key, priority and due date go below it. */
   .main {
+    display: grid;
+    grid-template-columns: auto auto minmax(0, 1fr) auto;
+    grid-template-areas:
+      'title title title assignee'
+      'priority key due assignee';
+    gap: 2px var(--space-3);
     padding-left: 40px;
   }
 
+  .priority {
+    grid-area: priority;
+  }
+
+  .key {
+    grid-area: key;
+    min-width: 0;
+  }
+
+  /* The group header already shows it. */
+  .status {
+    display: none;
+  }
+
   .title {
+    display: -webkit-box;
+    grid-area: title;
+    overflow-wrap: anywhere;
     white-space: normal;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
   }
 
   .due {
-    display: none;
+    grid-area: due;
+  }
+
+  .assignee {
+    grid-area: assignee;
   }
 }
 

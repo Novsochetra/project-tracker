@@ -5,6 +5,7 @@ import { useIsPhone } from '../lib/media';
 import styles from './NavBar.module.css';
 import { useLargeTitleState } from './useLargeTitle';
 import { useOptionalNavigation } from './useNavigation';
+import { useTapToTop } from './useTapToTop';
 
 export interface NavBarProps {
   title?: string;
@@ -18,13 +19,19 @@ export function NavBar({ title, mono = false, backLabel, onBack, right }: NavBar
   const isPhone = useIsPhone();
   const navigation = useOptionalNavigation();
   const largeTitle = useLargeTitleState();
+  const tapToTopRef = useTapToTop();
   if (!isPhone) return null;
 
   const handleBack = onBack ?? navigation?.back;
   const expanded = largeTitle.present && largeTitle.visible;
   return (
-    <header className={styles.bar} data-navbar="" data-expanded={expanded || undefined}>
-      <div className={styles.side}>
+    <header
+      ref={tapToTopRef}
+      className={styles.bar}
+      data-navbar=""
+      data-expanded={expanded || undefined}
+    >
+      <div className={clsx(styles.side, styles.lead)}>
         {backLabel !== undefined && handleBack && (
           <button
             type="button"
