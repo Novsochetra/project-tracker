@@ -27,6 +27,9 @@ async function hits(page: Page, target: Locator, x: number, y: number) {
 }
 
 test.describe('phone nav bar with a long project name', () => {
+  // Measured mid-entry, the sliding back button can graze the title by a pixel or two.
+  test.use({ reducedMotion: 'reduce' });
+
   for (const width of [320, 375]) {
     for (const [key, name] of Object.entries(NAMES)) {
       test(`${name.length} chars at ${width}px: back, ••• and + stay clear of the title`, async ({
