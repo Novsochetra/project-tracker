@@ -1,15 +1,17 @@
-export const CLICK_GUARD_MS = 400;
+let armed = false;
 
-let armedUntil = 0;
-
-/** After a drag, the click the browser fires on release must not open the ticket. */
-export function armClickGuard(now: number = performance.now()): void {
-  armedUntil = now + CLICK_GUARD_MS;
+// After a drag, the click the browser fires on release must not open the ticket. It comes in the
+// same task as the pointerup, after the drop re-rendered however long that took, so the guard
+// lasts until that task ends instead of a fixed time.
+export function armClickGuard(): void {
+  armed = true;
+  setTimeout(() => {
+    armed = false;
+  }, 0);
 }
 
-/** True when this click follows a drag; only one click is swallowed. */
-export function consumeClickGuard(now: number = performance.now()): boolean {
-  const blocked = now < armedUntil;
-  armedUntil = 0;
+export function consumeClickGuard(): boolean {
+  const blocked = armed;
+  armed = false;
   return blocked;
 }

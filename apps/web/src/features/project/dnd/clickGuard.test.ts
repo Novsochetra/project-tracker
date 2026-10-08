@@ -1,24 +1,29 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { armClickGuard, consumeClickGuard } from './clickGuard';
 
 describe('click guard', () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+
+  afterEach(() => {
+    consumeClickGuard();
+    vi.useRealTimers();
+  });
+
   it('lets clicks through when no drag ended', () => {
-    expect(consumeClickGuard(1_000)).toBe(false);
+    expect(consumeClickGuard()).toBe(false);
   });
 
-  it('swallows the click that follows a drag within 400ms', () => {
-    armClickGuard(1_000);
-    expect(consumeClickGuard(1_050)).toBe(true);
+  it('swallows one click in the task that ended the drag', () => {
+    armClickGuard();
+    expect(consumeClickGuard()).toBe(true);
+    expect(consumeClickGuard()).toBe(false);
   });
 
-  it('swallows only one click', () => {
-    armClickGuard(1_000);
-    expect(consumeClickGuard(1_010)).toBe(true);
-    expect(consumeClickGuard(1_020)).toBe(false);
-  });
-
-  it('expires after 400ms', () => {
-    armClickGuard(1_000);
-    expect(consumeClickGuard(1_400)).toBe(false);
+  it('expires when that task is over', () => {
+    armClickGuard();
+    vi.advanceTimersToNextTimer();
+    expect(consumeClickGuard()).toBe(false);
   });
 });

@@ -73,16 +73,18 @@ describe('PromptSheet for a ticket', () => {
     await user.type(await promptBox(), ' Thanks!');
     await screen.findByRole('switch');
 
-    await user.click(screen.getByRole('button', { name: 'Copy prompt' }));
+    const copy = screen.getByRole('button', { name: 'Copy prompt' });
+    await user.click(copy);
     expect(writeText).toHaveBeenCalledWith(`${PROMPT} Thanks!`);
-    expect(await screen.findByRole('button', { name: 'Copied' })).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: 'Copied' })).toBe(copy);
     expect(screen.getByText('Prompt copied')).toBeInTheDocument();
     await waitFor(() =>
       expect(client.markSent).toHaveBeenCalledWith('MOB-1', { moveToInProgress: true }),
     );
     expect(sendSwitch()).not.toBeInTheDocument();
 
-    await user.click(screen.getByRole('button', { name: 'Copied' }));
+    // The label turns back into "Copy prompt" after 2s of real time; click the same button again.
+    await user.click(copy);
     expect(writeText).toHaveBeenCalledTimes(2);
     expect(client.markSent).toHaveBeenCalledTimes(1);
   });
@@ -114,10 +116,10 @@ describe('PromptSheet for a ticket', () => {
   });
 
   it('has no switch for a ticket that is already in progress', async () => {
-    const client = ticketClient(STATUS.progress);
-    renderWithApi(<Harness scope={ticketScope} />, client);
+    renderWithApi(<Harness scope={ticketScope} />, ticketClient(STATUS.progress));
     await promptBox();
-    await waitFor(() => expect(client.getTicket).toHaveBeenCalled());
+    // The switch also stays hidden while the ticket loads; wait until it has.
+    expect(await screen.findByText('MOB-1 · Mobile app')).toBeInTheDocument();
     expect(sendSwitch()).not.toBeInTheDocument();
   });
 

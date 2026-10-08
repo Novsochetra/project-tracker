@@ -104,9 +104,12 @@ describe('dragging tickets', () => {
     expect(done.firstElementChild).toHaveAttribute('data-tint');
 
     pointer('pointerup', 669);
-    // The browser clicks the pressed row right after the release; that click must not open it.
+    // The browser clicks the pressed row in the same task as the release; that click must not
+    // open it, however long the drop took to render.
     fireEvent.click(rowButton('MOB-1'));
     expect(location()).toBe('/p/MOB');
+    // The toast leaves after 2.2s of real time, so check it before waiting on anything.
+    expect(screen.getByText('MOB-1 moved to Done')).toBeInTheDocument();
     expect(document.documentElement).not.toHaveAttribute('data-ticket-drag');
     await waitFor(() =>
       expect(moveTicket).toHaveBeenCalledWith('MOB-1', {
@@ -120,7 +123,6 @@ describe('dragging tickets', () => {
         within(screen.getByRole('region', { name: 'Done' })).getByText('Ticket 1'),
       ).toBeTruthy(),
     );
-    expect(screen.getByText('MOB-1 moved to Done')).toBeInTheDocument();
 
     fireEvent.click(rowButton('MOB-1'));
     await waitFor(() => expect(location()).toBe('/p/MOB/1'));
