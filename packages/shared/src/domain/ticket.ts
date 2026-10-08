@@ -5,6 +5,8 @@ import type { Priority } from './priority';
 export const TICKET_TITLE_MAX = 300;
 export const TICKET_DESCRIPTION_MAX = 50_000;
 export const TICKET_ASSIGNEE_MAX = 80;
+// One limit for list_tickets' query and the API's `q`, so the tool never sends what the API refuses.
+export const TICKET_SEARCH_MAX = 200;
 
 export interface Ticket {
   id: string;
@@ -26,4 +28,10 @@ export interface TicketListItem extends Ticket {
   commentCount: number;
   attachmentCount: number;
   lastReview: Review | null;
+}
+
+// The answer to a create. A repeat of an earlier create's client id names the files it left out
+// because they are gone (an upload that expired, or a file removed from the ticket since).
+export interface CreatedTicket extends Ticket {
+  leftOutAttachmentIds?: string[];
 }

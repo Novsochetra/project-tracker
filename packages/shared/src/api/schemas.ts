@@ -7,7 +7,12 @@ import {
 } from '../domain/attachment';
 import { PRIORITIES } from '../domain/priority';
 import { STATUS_CATEGORIES } from '../domain/status';
-import { TICKET_ASSIGNEE_MAX, TICKET_DESCRIPTION_MAX, TICKET_TITLE_MAX } from '../domain/ticket';
+import {
+  TICKET_ASSIGNEE_MAX,
+  TICKET_DESCRIPTION_MAX,
+  TICKET_SEARCH_MAX,
+  TICKET_TITLE_MAX,
+} from '../domain/ticket';
 import { toYmd } from '../logic/format';
 
 const hexColor = z.string().regex(/^#[0-9A-Fa-f]{6}$/, 'Use a hex color like #5B5BD6');
@@ -126,6 +131,6 @@ export type ReviewInput = z.input<typeof reviewInput>;
 export const listTicketsQuery = z.object({
   status: z.string().max(40).optional(),
   category: z.enum(STATUS_CATEGORIES).optional(),
-  q: z.string().max(200).optional(),
+  q: z.string().max(TICKET_SEARCH_MAX).optional(),
 });
 export type ListTicketsQuery = z.input<typeof listTicketsQuery>;

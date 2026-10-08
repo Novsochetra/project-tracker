@@ -2,11 +2,13 @@ import {
   COMMENT_TEXT_MAX,
   createCommentInput,
   createTicketInput,
+  listTicketsQuery,
   REPORT_TEXT_MAX,
   reviewInput,
   submitWorkInput,
   TICKET_ASSIGNEE_MAX,
   TICKET_DESCRIPTION_MAX,
+  TICKET_SEARCH_MAX,
   TICKET_TITLE_MAX,
   updateTicketInput,
 } from '@tracker/shared';
@@ -14,6 +16,7 @@ import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 import { addComment } from '../../src/tools/addComment';
 import { createTicket } from '../../src/tools/createTicket';
+import { listTickets } from '../../src/tools/listTickets';
 import { reviewTicket } from '../../src/tools/reviewTicket';
 import { submitForReview } from '../../src/tools/submitForReview';
 import type { Tool } from '../../src/tools/tool';
@@ -47,6 +50,11 @@ describe('MCP tool text limits', () => {
       expect(maxLength(api.shape[field])).toBe(limit);
     });
   }
+
+  it('list_tickets takes as long a query as the API, the shared limit', () => {
+    expect(maxLength(listTickets.input.shape.query)).toBe(TICKET_SEARCH_MAX);
+    expect(maxLength(listTicketsQuery.shape.q)).toBe(TICKET_SEARCH_MAX);
+  });
 
   it('refuses a comment one character past the shared limit, like the API', () => {
     const comment = (length: number) => ({ ticket: 'MOB-3', text: 'x'.repeat(length) });

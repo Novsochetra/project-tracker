@@ -8,25 +8,26 @@ import { sameProjectKey } from '../features/projects/projectLookup';
 import { useOpenProject } from '../features/projects/useOpenProject';
 import { readyCounts, readyItems } from '../features/ready/readyItems';
 import { ErrorBoundary } from '../lib/ErrorBoundary';
-import { useNavigation } from '../navigation';
+import { useIsOpening, useNavigation, type Route } from '../navigation';
 import { projectKeyOf } from './crumbs';
 import { useSheets } from './sheets/context';
 import styles from './Sidebar.module.css';
 
-function SidebarItem({
-  active,
-  onClick,
-  children,
-}: {
+interface SidebarItemProps {
+  route: Route;
   active: boolean;
   onClick: () => void;
   children: ReactNode;
-}) {
+}
+
+function SidebarItem({ route, active, onClick, children }: SidebarItemProps) {
+  const opening = useIsOpening(route);
   return (
     <button
       type="button"
       className={clsx(styles.item, active && styles.active)}
       aria-current={active ? 'page' : undefined}
+      data-opening={opening || undefined}
       onClick={onClick}
     >
       {children}
@@ -40,6 +41,7 @@ interface ProjectItemsProps {
 }
 
 const NO_COUNTS: ReadonlyMap<string, number> = new Map();
+const PROJECTS: Route = { name: 'projects' };
 
 function ProjectItems({ projects, ready }: ProjectItemsProps) {
   const { route } = useNavigation();
@@ -48,6 +50,7 @@ function ProjectItems({ projects, ready }: ProjectItemsProps) {
   return projects.map((project) => (
     <SidebarItem
       key={project.id}
+      route={{ name: 'project', key: project.key }}
       active={activeKey !== null && sameProjectKey(project.key, activeKey)}
       onClick={() => openProject(project.key)}
     >
@@ -82,7 +85,11 @@ export function Sidebar() {
         <span className={styles.brandName}>Tracker</span>
       </div>
       <nav aria-label="Main" className={styles.group}>
-        <SidebarItem active={route.name === 'projects'} onClick={() => push({ name: 'projects' })}>
+        <SidebarItem
+          route={PROJECTS}
+          active={route.name === 'projects'}
+          onClick={() => push(PROJECTS)}
+        >
           <Icon icon={LayoutGrid} className={styles.navIcon} />
           <span className={styles.allProjects}>All projects</span>
         </SidebarItem>

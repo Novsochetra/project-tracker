@@ -49,14 +49,29 @@ function renderApp() {
 const sidebar = () => screen.findByRole('complementary', { name: 'Projects' });
 
 describe('opening a project', () => {
+  // First, while the code is still held: the row case below opens the gate.
+  it('from the sidebar reads its board on the press too, while the code is on its way', async () => {
+    const user = userEvent.setup();
+    const { getBoard } = renderApp();
+    const item = await within(await sidebar()).findByRole('button', { name: /^Mobile app/ });
+    await user.click(item);
+    expect(getBoard).toHaveBeenCalledTimes(1);
+    expect(getBoard).toHaveBeenCalledWith('MOB');
+    expect(screen.queryByText('Ticket 1')).not.toBeInTheDocument();
+    expect(item).toHaveAttribute('data-opening');
+  });
+
   it('reads its board on the press, while the screen’s code is on its way, and only then', async () => {
     const user = userEvent.setup();
     const { getBoard } = renderApp();
     const main = await screen.findByRole('main');
-    await user.click(await within(main).findByRole('button', { name: /^Mobile app/ }));
+    const row = await within(main).findByRole('button', { name: /^Mobile app/ });
+    await user.click(row);
     expect(getBoard).toHaveBeenCalledTimes(1);
     expect(getBoard).toHaveBeenCalledWith('MOB');
     expect(screen.queryByText('Ticket 1')).not.toBeInTheDocument();
+    // Pressed until the screen opens, so a slow network doesn't look like a missed tap.
+    expect(row).toHaveAttribute('data-opening');
 
     await act(async () => {
       gate.open();
@@ -64,6 +79,7 @@ describe('opening a project', () => {
     });
     expect(await screen.findByText('Ticket 1')).toBeInTheDocument();
     expect(getBoard).toHaveBeenCalledTimes(1);
+    expect(row).not.toHaveAttribute('data-opening');
   });
 
   it('from the sidebar reads its board once too', async () => {

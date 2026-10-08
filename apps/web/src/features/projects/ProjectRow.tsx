@@ -2,6 +2,7 @@ import { formatRelative, type ProjectSummary } from '@tracker/shared';
 import clsx from 'clsx';
 import { ChevronRight } from 'lucide-react';
 import { Icon, ListRow } from '../../components';
+import { useIsOpening } from '../../navigation';
 import styles from './ProjectList.module.css';
 import { descriptionText, progressPercent, riseDelay } from './projectRows';
 
@@ -15,10 +16,12 @@ interface ProjectRowProps {
 
 export function ProjectRow({ project, readyCount, index, now, onOpen }: ProjectRowProps) {
   const percent = progressPercent(project.doneCount, project.totalCount);
+  const opening = useIsOpening({ name: 'project', key: project.key });
   return (
     <ListRow
       className={clsx(styles.row, 'rise')}
       style={{ animationDelay: `${riseDelay(index)}ms` }}
+      data-opening={opening || undefined}
       onClick={onOpen}
     >
       <span className={styles.main}>

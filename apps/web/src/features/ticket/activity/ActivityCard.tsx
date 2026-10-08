@@ -2,7 +2,8 @@ import type { Actor, Attachment } from '@tracker/shared';
 import clsx from 'clsx';
 import type { CSSProperties, ReactNode } from 'react';
 import { AgentAvatar, Avatar, YouAvatar } from '../../../components';
-import { readableFiles, ThumbnailGrid, useAttachmentViewer } from '../../attachments';
+import { ThumbnailGrid, useAttachmentViewer } from '../../attachments';
+import { readableFiles } from '../../attachments/readableFiles';
 import styles from './ActivityCard.module.css';
 
 export interface RiseProps {

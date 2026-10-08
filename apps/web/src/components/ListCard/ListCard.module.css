@@ -32,7 +32,9 @@
   transition: background-color var(--duration-fast) ease-out;
 }
 
-.row:active {
+/* Held while the row's screen loads, so a tap on a slow network doesn't look missed. */
+.row:active,
+.row[data-opening] {
   background: var(--fill);
 }
 

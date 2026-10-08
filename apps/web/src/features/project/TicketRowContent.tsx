@@ -12,6 +12,7 @@ import { Avatar, Icon, PriorityBars, StatusGlyph, VerdictChip } from '../../comp
 import { DragHandle } from './DragHandle';
 import type { RowCallbacks } from './rowTypes';
 import styles from './TicketRow.module.css';
+import { useIsOpeningTicket } from './useRowCallbacks';
 
 export interface TicketRowContentProps {
   ticket: TicketListItem;
@@ -42,6 +43,7 @@ export function DueLabel({ due, overdue, className }: DueLabelProps) {
 
 export function TicketRowContent({ ticket, status, dragged, callbacks }: TicketRowContentProps) {
   const isDone = isDoneCategory(status.category);
+  const opening = useIsOpeningTicket(ticket);
   return (
     <div className={styles.inner}>
       <DragHandle
@@ -53,6 +55,7 @@ export function TicketRowContent({ ticket, status, dragged, callbacks }: TicketR
         type="button"
         className={clsx('ring-inside', styles.main)}
         data-dragged={dragged || undefined}
+        data-opening={opening || undefined}
         onClick={() => callbacks.open(ticket)}
         onPointerDown={(event) => callbacks.startDrag(event, ticket, status, false)}
       >

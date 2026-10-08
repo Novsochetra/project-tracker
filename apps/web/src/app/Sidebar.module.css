@@ -72,7 +72,9 @@
   }
 }
 
-.item.active {
+/* Held while the project's screen loads, so a click on a slow network doesn't look missed. */
+.item.active,
+.item[data-opening] {
   background: var(--fill-2);
 }
 

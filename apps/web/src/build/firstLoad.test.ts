@@ -71,7 +71,7 @@ describe('readFirstLoad', () => {
 });
 
 describe('firstLoadProblems', () => {
-  const sizes = (kB: number) => ({ kB, budgetKB: 215 });
+  const sizes = (kB: number, maxFiles = 3) => ({ kB, budgetKB: 215, maxFiles });
 
   it('has none for a split build within its budget', () => {
     expect(firstLoadProblems(readFirstLoad(SPLIT), sizes(206.5))).toEqual([]);
@@ -80,6 +80,14 @@ describe('firstLoadProblems', () => {
   it('reports a first load past its budget', () => {
     expect(firstLoadProblems(readFirstLoad(SPLIT), sizes(215.1))).toEqual([
       'First-load JS is past its 215 kB budget: load more of it when its screen or sheet opens, or raise the budget.',
+    ]);
+  });
+
+  it('reports a first load split into more files than it allows', () => {
+    expect(firstLoadProblems(readFirstLoad(SPLIT), sizes(206.5, 1))).toEqual([
+      'First-load JS is 2 files, more than 1: code the first screen shares stopped folding into ' +
+        'the entry. A likely cause is a barrel the first load imports that re-exports a module ' +
+        'only a lazy part uses; import that module directly instead.',
     ]);
   });
 

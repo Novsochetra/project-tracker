@@ -4,6 +4,7 @@ import { ArrowRight, Check, ChevronRight } from 'lucide-react';
 import { Button, Icon, StarRating, VerdictChip } from '../../components';
 import { SwipeActions, type SwipeAction } from '../../gestures';
 import { useIsPhone } from '../../lib/media';
+import { useIsOpening } from '../../navigation';
 import { riseDelay } from '../projects/projectRows';
 import type { ReadyItem } from './readyItems';
 import styles from './ReadySection.module.css';
@@ -82,8 +83,14 @@ function ReadyRowMain({
   chevron,
   onOpen,
 }: ReadyRowMainProps) {
+  const opening = useIsOpening({ name: 'ticket', key: project.key, num: ticket.num });
   return (
-    <button type="button" className={clsx('ring-inside', styles.main)} onClick={onOpen}>
+    <button
+      type="button"
+      className={clsx('ring-inside', styles.main)}
+      data-opening={opening || undefined}
+      onClick={onOpen}
+    >
       {/* The spaces keep the parts apart in the accessible name, which starts with the key. */}
       <span className={styles.key}>{ticket.key}</span>{' '}
       <span className={styles.title}>{ticket.title || 'Untitled'}</span>{' '}

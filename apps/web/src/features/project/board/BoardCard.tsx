@@ -9,6 +9,7 @@ import type { DropEdge } from '../dnd/dropTarget';
 import type { DragState } from '../dnd/useTicketDrag';
 import { DragHandle } from '../DragHandle';
 import type { CardCallbacks } from '../rowTypes';
+import { useIsOpeningTicket } from '../useRowCallbacks';
 import styles from './BoardCard.module.css';
 import { BoardCardFace } from './BoardCardFace';
 
@@ -22,6 +23,7 @@ export interface BoardCardProps {
 
 export function BoardCard({ ticket, status, dragged, dropEdge, callbacks }: BoardCardProps) {
   const flashing = useIsFlashing(ticket.key);
+  const opening = useIsOpeningTicket(ticket);
   return (
     <div className={styles.card} {...{ [DROP_ROW_ATTRIBUTE]: ticket.id }}>
       <DragHandle
@@ -34,6 +36,7 @@ export function BoardCard({ ticket, status, dragged, dropEdge, callbacks }: Boar
         type="button"
         className={clsx('ring-inside', styles.face, styles.main)}
         data-dragged={dragged || undefined}
+        data-opening={opening || undefined}
         onClick={() => callbacks.open(ticket)}
         onPointerDown={(event) => callbacks.startDrag(event, ticket, status, false)}
       >

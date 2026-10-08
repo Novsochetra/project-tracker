@@ -78,19 +78,23 @@ export const editActivityText = (
 const matchesFile = (item: Attachment, attachmentId: string): boolean =>
   isEntry(item) && item.id === attachmentId;
 
-export const addTicketAttachment = (detail: TicketDetail, attachment: Attachment): TicketDetail =>
-  detail.attachments.some((item) => matchesFile(item, attachment.id))
+// A ticket's list of files the tracker sent as something else, such as null, has no files yet, so
+// a file added is its first.
+export function addTicketAttachment(detail: TicketDetail, attachment: Attachment): TicketDetail {
+  const files = isList(detail.attachments) ? detail.attachments : [];
+  return files.some((item) => matchesFile(item, attachment.id))
     ? detail
-    : { ...detail, attachments: [...detail.attachments, attachment] };
+    : { ...detail, attachments: [...files, attachment] };
+}
 
-// An activity entry without a list of files stays as it came too.
+// A list of files that isn't one, the ticket's or an activity entry's, stays as it came.
 export function removeAttachment(detail: TicketDetail, attachmentId: string): TicketDetail {
   const keep = (attachment: Attachment) => !matchesFile(attachment, attachmentId);
   const holdsIt = (item: Activity) =>
     isEntry(item) && isList(item.attachments) && !item.attachments.every(keep);
   return {
     ...detail,
-    attachments: detail.attachments.filter(keep),
+    attachments: isList(detail.attachments) ? detail.attachments.filter(keep) : detail.attachments,
     activity: detail.activity.map((item) =>
       holdsIt(item) ? { ...item, attachments: item.attachments.filter(keep) } : item,
     ),

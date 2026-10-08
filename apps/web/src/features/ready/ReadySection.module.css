@@ -61,7 +61,9 @@
   cursor: pointer;
 }
 
-.main:active {
+/* Held while the ticket's screen loads, so a tap on a slow network doesn't look missed. */
+.main:active,
+.main[data-opening] {
   background: var(--fill);
 }
 

@@ -45,20 +45,34 @@ export function readFirstLoad(manifest: Manifest): FirstLoad {
   };
 }
 
+export interface FirstLoadLimits {
+  kB: number;
+  budgetKB: number;
+  maxFiles: number;
+}
+
+const takenProblem = (file: string) =>
+  `Loaded at start but meant to load when opened: a dynamic import of ${file}, which the ` +
+  'first load holds. Something there imports the part statically; ' +
+  "Vite's INEFFECTIVE_DYNAMIC_IMPORT warning above names it.";
+
+// More files can cost more than their size shows: each is a request on a slow phone, and the split
+// that makes them can also grow the total (PT-93: 2 files became 7, 207.3 kB became 210.6 kB).
 export function firstLoadProblems(
-  { taken }: FirstLoad,
-  { kB, budgetKB }: { kB: number; budgetKB: number },
+  { files, taken }: FirstLoad,
+  { kB, budgetKB, maxFiles }: FirstLoadLimits,
 ): string[] {
-  const problems = taken.map(
-    (file) =>
-      `Loaded at start but meant to load when opened: a dynamic import of ${file}, which the ` +
-      'first load holds. Something there imports the part statically; ' +
-      "Vite's INEFFECTIVE_DYNAMIC_IMPORT warning above names it.",
-  );
-  if (kB <= budgetKB) return problems;
-  return [
-    `First-load JS is past its ${budgetKB} kB budget: load more of it when its screen or sheet ` +
-      'opens, or raise the budget.',
-    ...problems,
-  ];
+  const problems: string[] = [];
+  if (kB > budgetKB)
+    problems.push(
+      `First-load JS is past its ${budgetKB} kB budget: load more of it when its screen or sheet ` +
+        'opens, or raise the budget.',
+    );
+  if (files.length > maxFiles)
+    problems.push(
+      `First-load JS is ${files.length} files, more than ${maxFiles}: code the first screen ` +
+        'shares stopped folding into the entry. A likely cause is a barrel the first load imports ' +
+        'that re-exports a module only a lazy part uses; import that module directly instead.',
+    );
+  return [...problems, ...taken.map(takenProblem)];
 }

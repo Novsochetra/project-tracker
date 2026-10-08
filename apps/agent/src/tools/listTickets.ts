@@ -1,3 +1,4 @@
+import { TICKET_SEARCH_MAX } from '@tracker/shared';
 import { z } from 'zod';
 import { formatTicketList } from '../format/tickets';
 import { category, projectKey, statusName } from './fields';
@@ -17,7 +18,7 @@ export const listTickets = defineTool({
     query: z
       .string()
       .trim()
-      .max(200)
+      .max(TICKET_SEARCH_MAX)
       .optional()
       .describe('Search text matched against ticket titles and keys.'),
   }),

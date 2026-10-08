@@ -1,6 +1,6 @@
-import type { TicketListItem } from '@tracker/shared';
+import { parseTicketKey, type TicketListItem } from '@tracker/shared';
 import { useCallback, useMemo } from 'react';
-import { useNavigation } from '../../navigation';
+import { useIsOpening, useNavigation } from '../../navigation';
 import { consumeClickGuard } from './dnd/clickGuard';
 import type { HandleKeyDown } from './dnd/useKeyboardMove';
 import type { StartDrag } from './dnd/useTicketDrag';
@@ -24,6 +24,12 @@ export function useOpenTicket(projectKey: string): (ticket: TicketListItem) => v
     },
     [push, projectKey],
   );
+}
+
+// The screen opens a ticket under its project's key, which the ticket's own key starts with.
+export function useIsOpeningTicket(ticket: TicketListItem): boolean {
+  const projectKey = parseTicketKey(ticket.key)?.projectKey ?? '';
+  return useIsOpening({ name: 'ticket', key: projectKey, num: ticket.num });
 }
 
 export function useRowCallbacks({

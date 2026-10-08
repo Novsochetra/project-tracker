@@ -2,13 +2,8 @@ import type { TicketDetail } from '@tracker/shared';
 import clsx from 'clsx';
 import type { KeyboardEvent } from 'react';
 import { useIsPhone } from '../../../lib/media';
-import {
-  DropOverlay,
-  pasteFiles,
-  ticketFiles,
-  useAttachmentUploads,
-  useFileDrop,
-} from '../../attachments';
+import { DropOverlay, pasteFiles, useAttachmentUploads, useFileDrop } from '../../attachments';
+import { ticketFiles } from '../../attachments/readableFiles';
 import { DetailChips } from '../details/DetailChips';
 import { AutosaveTextarea } from '../fields/AutosaveTextarea';
 import { TITLE_MAX_LENGTH } from '../fields/limits';

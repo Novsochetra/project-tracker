@@ -1,8 +1,12 @@
 import { createContext } from 'react';
+import { createOpeningStore, type OpeningStore } from './openingStore';
 import type { NavigationIntent } from './resolveTransition';
-import type { Route } from './routes';
+import { routePath, type Route } from './routes';
 
 export type NavigationTarget = Route | string;
+
+export const targetPath = (target: NavigationTarget): string =>
+  typeof target === 'string' ? target : routePath(target);
 
 export interface Navigation {
   route: Route;
@@ -18,3 +22,6 @@ export interface NavigationState extends Navigation {
 }
 
 export const NavigationContext = createContext<NavigationState | null>(null);
+
+// A store rather than state, so a push re-renders only the row it opens.
+export const OpeningContext = createContext<OpeningStore>(createOpeningStore());
