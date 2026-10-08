@@ -253,4 +253,26 @@ describe('createToastStore', () => {
     store.dispose();
     vi.useRealTimers();
   });
+
+  it('lets an important toast stay its full 4s, and shows the latest one shown meanwhile after', () => {
+    vi.useFakeTimers();
+    const store = createToastStore();
+    const text = () => store.getSnapshot().toast?.text;
+    store.show("Text can't be kept", { kind: 'error', important: true });
+    store.show('MOB-3 deleted');
+    store.show("Can't reach the tracker", { kind: 'error' });
+    vi.advanceTimersByTime(TOAST_UNDO_MS - 1);
+    expect(text()).toBe("Text can't be kept");
+    vi.advanceTimersByTime(1 + TOAST_EXIT_MS);
+    expect(text()).toBe("Can't reach the tracker");
+    expect(store.getSnapshot().toast?.leaving).toBe(false);
+    vi.advanceTimersByTime(TOAST_VISIBLE_MS + TOAST_EXIT_MS);
+    expect(store.getSnapshot().toast).toBeNull();
+
+    store.show("Text can't be kept", { kind: 'error', important: true });
+    store.show("Text can't be kept, again", { kind: 'error', important: true });
+    expect(text()).toBe("Text can't be kept, again");
+    store.dispose();
+    vi.useRealTimers();
+  });
 });

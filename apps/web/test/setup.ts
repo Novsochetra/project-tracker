@@ -5,7 +5,7 @@ import { FRESH_READS_STORAGE_KEY } from '../src/api/freshReads';
 import { clearHandleFocus } from '../src/features/project/dnd/handleFocus';
 import { clearRefusedDrafts } from '../src/features/ticket/drafts/syncDrafts';
 import { clearSaves } from '../src/features/ticket/fields/fieldSaves';
-import { DRAFTS_STORAGE_KEY } from '../src/lib/storedDrafts';
+import { clearStoredDrafts } from '../src/lib/storedDrafts';
 
 // Tests wait for what they need to see, however long a loaded machine takes to render it (booting
 // the whole app took over 2s with parallel runs). The default 1s turned slowness into failures;
@@ -22,6 +22,6 @@ afterEach(() => {
   // same text, and a write would have the next test's pages read that ticket fresh.
   clearSaves();
   clearRefusedDrafts();
-  window.localStorage.removeItem(DRAFTS_STORAGE_KEY);
+  clearStoredDrafts();
   window.localStorage.removeItem(FRESH_READS_STORAGE_KEY);
 });

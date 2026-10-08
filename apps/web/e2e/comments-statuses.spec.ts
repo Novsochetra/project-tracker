@@ -1,5 +1,5 @@
 import { expect, isPhone, test } from './fixtures';
-import { activity, group, readActionSheet, readMenuConfirm, seedProject } from './helpers';
+import { activity, group, readActionSheet, readMenuConfirm, seedProject, settled } from './helpers';
 
 const PNG_1X1 = Buffer.from(
   'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
@@ -47,9 +47,7 @@ test.describe('comments', () => {
     await page.goto('/p/MOB/1');
     const options = page.getByRole('button', { name: 'Comment options' }).last();
     // Placed while the cards still rise, the button would settle lower, partly off the screen.
-    await expect
-      .poll(() => activity(page).evaluate((log) => log.getAnimations({ subtree: true }).length))
-      .toBe(0);
+    await settled(activity(page));
     await options.evaluate((button) => {
       let scroller = button.parentElement;
       const scrolls = (element: HTMLElement) =>
@@ -60,7 +58,9 @@ test.describe('comments', () => {
         button.getBoundingClientRect().bottom - (window.innerHeight - 40);
     });
     await options.click();
-    const menu = await page.getByRole('group', { name: 'Comment options' }).boundingBox();
+    const menuGroup = page.getByRole('group', { name: 'Comment options' });
+    await settled(menuGroup);
+    const menu = await menuGroup.boundingBox();
     const button = await options.boundingBox();
     expect(menu!.y + menu!.height).toBeLessThanOrEqual(button!.y);
     const item = (await page.getByRole('button', { name: 'Delete comment' }).boundingBox())!;

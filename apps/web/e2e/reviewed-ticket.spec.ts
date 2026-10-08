@@ -1,7 +1,7 @@
 import type { Locator, Page } from '@playwright/test';
 import { TrackerClient } from '@tracker/client';
 import { expect, isPhone, test } from './fixtures';
-import { activity, seedProject, toast } from './helpers';
+import { activity, seedProject, settled, toast } from './helpers';
 import { API_URL } from './ports';
 
 const reviewer = new TrackerClient({
@@ -18,10 +18,12 @@ const DESCRIPTION = 'Steps to reproduce, what happened and what should happen in
 // On phones the ticket's bottom bar covers the end of the viewport. Screens under it in the
 // navigation stack keep their own bars.
 async function expectAboveBar(page: Page, locator: Locator) {
+  const ticketBar = bottomBar(page).filter({ hasText: /Move to Done|Send to Claude/ });
+  // Right after the page loads the cards still rise and the bar still slides in.
+  await settled(locator);
+  await settled(ticketBar);
   const box = await locator.boundingBox();
-  const bar = await bottomBar(page)
-    .filter({ hasText: /Move to Done|Send to Claude/ })
-    .boundingBox();
+  const bar = await ticketBar.boundingBox();
   expect(box && bar && box.y + box.height <= bar.y).toBe(true);
 }
 

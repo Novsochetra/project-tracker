@@ -1,4 +1,5 @@
 import type { QueryClient } from '@tanstack/react-query';
+import { storedMap, type StoredMap } from '../lib/storedMap';
 
 export const FRESH_READS_STORAGE_KEY = 'tracker.freshReads';
 
@@ -15,36 +16,18 @@ const changesSinceRead = new WeakMap<QueryClient, Map<string, number>>();
 // The stored mark each ticket had when this page's fresh read of it started.
 const storedAtRead = new Map<string, number | undefined>();
 
-type StoredMarks = Readonly<Record<string, number>>;
-
 const isTime = (value: unknown): value is number =>
   typeof value === 'number' && Number.isFinite(value);
 
-function readStoredMarks(): StoredMarks {
-  try {
-    const raw = window.localStorage.getItem(FRESH_READS_STORAGE_KEY);
-    const parsed: unknown = JSON.parse(raw ?? '{}');
-    if (typeof parsed !== 'object' || parsed === null) return {};
-    const since = Date.now() - FRESH_READ_MARK_MS;
-    return Object.fromEntries(
-      Object.entries(parsed).filter(
-        (entry): entry is [string, number] => isTime(entry[1]) && entry[1] > since,
-      ),
-    );
-  } catch {
-    return {};
-  }
+// Without storage only this page reads fresh, and a page opened later reads as usual.
+const stored = storedMap(FRESH_READS_STORAGE_KEY, isTime);
+
+function readStoredMarks(): StoredMap<number> {
+  const since = Date.now() - FRESH_READ_MARK_MS;
+  return Object.fromEntries(Object.entries(stored.read()).filter(([, time]) => time > since));
 }
 
-function writeStoredMarks(marks: StoredMarks): void {
-  try {
-    if (Object.keys(marks).length > 0) {
-      window.localStorage.setItem(FRESH_READS_STORAGE_KEY, JSON.stringify(marks));
-    } else window.localStorage.removeItem(FRESH_READS_STORAGE_KEY);
-  } catch {
-    // Without storage only this page reads fresh, and a page opened later reads as usual.
-  }
-}
+const writeStoredMarks = (marks: StoredMap<number>): void => void stored.write(marks);
 
 // A page starts with the tickets other pages, also earlier ones, changed and nobody read fresh.
 function marksOf(queryClient: QueryClient): Map<string, number> {

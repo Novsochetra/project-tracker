@@ -2,7 +2,7 @@ import type { Locator, Page } from '@playwright/test';
 import { TrackerClient } from '@tracker/client';
 import { formatShortDay, toYmd } from '@tracker/shared';
 import { expect, isPhone, test } from './fixtures';
-import { group, seedProject, ticketRow } from './helpers';
+import { group, seedProject, settled, ticketRow } from './helpers';
 import { API_URL } from './ports';
 
 const reviewer = new TrackerClient({
@@ -27,28 +27,12 @@ async function box(locator: Locator) {
   return found;
 }
 
-// The group and the row rise in after the page loads, and each box below is a separate read, so
-// reads taken mid-rise disagree by how far the row moved between them (PT-81: 1.26px under load).
-async function settle(row: Locator): Promise<void> {
-  await row.evaluate(async (element) => {
-    await document.fonts.ready;
-    const running = () => {
-      const animations = element.getAnimations({ subtree: true });
-      for (let node = element.parentElement; node; node = node.parentElement) {
-        animations.push(...node.getAnimations());
-      }
-      return animations.filter((animation) => animation.playState !== 'finished');
-    };
-    for (let left = running(); left.length > 0; left = running()) {
-      await Promise.all(left.map((animation) => animation.finished.catch(() => null)));
-    }
-  });
-}
-
 // The chip shares the phone row's second line with the key and the due date, under the title,
 // clear of the avatar, without making the row taller or anything overflow.
 async function expectOnSecondLine(page: Page, row: Locator): Promise<void> {
-  await settle(row);
+  // The group and the row rise in after the page loads, and each box below is a separate read, so
+  // reads taken mid-rise disagree by how far the row moved between them (PT-81: 1.26px under load).
+  await settled(row);
   const chip = await box(chipOf(row));
   const key = await box(row.getByText('MOB-1', { exact: true }));
   const title = await box(row.getByText(TITLE));

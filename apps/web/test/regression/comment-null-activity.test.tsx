@@ -1,4 +1,4 @@
-import { screen, waitFor, within } from '@testing-library/react';
+import { act, renderHook, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { Activity, TicketDetail } from '@tracker/shared';
 import { afterEach, beforeEach, describe, expect, it, vi, type MockInstance } from 'vitest';
@@ -8,7 +8,10 @@ import {
   removeAttachment,
   replaceActivity,
 } from '../../src/api/cache/ticketDetail';
+import { useDeleteAttachment } from '../../src/api/hooks/attachments';
+import { queryKeys } from '../../src/api/queryKeys';
 import { attachment, comment, makeTicketDetail } from '../../src/api/test/fixtures';
+import { seedTicket, setupApi } from '../../src/api/test/render';
 import { serverText } from '../../src/features/ticket/drafts/draftCheck';
 import {
   renderTicket,
@@ -78,6 +81,35 @@ describe('regression: comment helpers pass over an activity entry they cannot re
       text: 'Mine',
     } as const;
     expect(serverText(detail, draft)).toBe('Next');
+  });
+});
+
+// Reviewer 57 (PT-74): an entry that is an object or an array without an attachments array still
+// failed Remove file: no DELETE, and "Can't reach the tracker".
+describe('regression: removing a file beside activity entries it cannot read', () => {
+  const odd = [{}, [1, 2], { type: 'event', text: 'ghost' }, { attachments: [null] }];
+  const detail = makeTicketDetail(undefined, {
+    attachments: [attachment('a1'), attachment('a2')],
+    activity: [...odd, comment('c1', 'First', { attachments: [attachment('a3')] })] as never,
+  });
+
+  it('removes the file and keeps those entries as they came', () => {
+    const left = removeAttachment(detail, 'a1');
+    expect(left.attachments.map(({ id }) => id)).toEqual(['a2']);
+    expect(left.activity.slice(0, odd.length)).toEqual(odd);
+    expect(removeAttachment(detail, 'a3').activity.at(-1)?.attachments).toEqual([]);
+  });
+
+  it('sends the DELETE', async () => {
+    const deleteAttachment = vi.fn().mockResolvedValue(undefined);
+    const { queryClient, wrapper } = setupApi({ deleteAttachment });
+    seedTicket(queryClient, detail);
+    const { result } = renderHook(() => useDeleteAttachment(), { wrapper });
+
+    await act(() => result.current.mutateAsync({ attachmentId: 'a1', ticketKey: 'MOB-1' }));
+    expect(deleteAttachment).toHaveBeenCalledWith('a1');
+    const cached = queryClient.getQueryData<TicketDetail>(queryKeys.ticket('MOB-1'));
+    expect(cached?.attachments.map(({ id }) => id)).toEqual(['a2']);
   });
 });
 

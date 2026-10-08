@@ -1,5 +1,5 @@
 import type { Attachment } from '@tracker/shared';
-import { useState } from 'react';
+import { useState, useSyncExternalStore } from 'react';
 import { errorMessage, useAddComment } from '../../../api';
 import { useToast } from '../../../components';
 import {
@@ -7,6 +7,7 @@ import {
   forgetDraft,
   keepDraft,
   storedDraft,
+  subscribeStoredDrafts,
   type DraftTarget,
 } from '../../../lib/storedDrafts';
 import { useAttachmentList, type AttachmentList } from '../../attachments';
@@ -22,14 +23,20 @@ export interface ComposerState {
   submit: () => void;
 }
 
+// What the drafts store keeps for the text: spaces alone are not kept.
+const keptForm = (text: string): string | undefined => (text.trim() ? text : undefined);
+
 // Unsent text is kept in the drafts store until it is sent or emptied; it is never sent for
-// the user.
+// the user. The box shows what the store keeps, so a comment another tab types, sends or empties
+// shows here too, as in a field: neither tab types over a comment it hasn't shown.
 function useComposerText(ticketKey: string) {
   const target: DraftTarget = { ticketKey, field: 'comment' };
   const id = draftIdOf(target);
-  const [text, setText] = useState(() => storedDraft(id)?.text ?? '');
+  const kept = useSyncExternalStore(subscribeStoredDrafts, () => storedDraft(id)?.text);
+  const [text, setText] = useState(kept ?? '');
+  if (keptForm(text) !== kept) setText(kept ?? '');
   const keep = (next: string) => {
-    if (next.trim()) keepDraft(id, { ...target, text: next }, '');
+    if (keptForm(next)) keepDraft(id, { ...target, text: next }, '');
     else forgetDraft(id);
   };
   return {
@@ -41,7 +48,6 @@ function useComposerText(ticketKey: string) {
     // Unless something new was typed meanwhile, also after the screen has closed.
     handBack: (sent: string) => {
       if (!storedDraft(id)) keep(sent);
-      setText((current) => (current.trim() ? current : sent));
     },
   };
 }

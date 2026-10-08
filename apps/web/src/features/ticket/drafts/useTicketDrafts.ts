@@ -143,7 +143,9 @@ function syncOnReconnect(queryClient: QueryClient, sync: Sync): () => void {
   };
 }
 
-// Once each time storage starts refusing drafts: the text stays only in the page's memory.
+// Once each time storage starts refusing drafts: the text stays only in the page's memory. iOS
+// doesn't ask before closing a page, so this toast is the only warning there, and the failed
+// save that follows typing offline must not replace it.
 function useNotKeptNote(): void {
   const { show } = useToast();
   useEffect(
@@ -151,6 +153,7 @@ function useNotKeptNote(): void {
       onDraftsNotKept(() =>
         show("Unsaved text can't be kept on this device, so it's lost if this page closes.", {
           kind: 'error',
+          important: true,
         }),
       ),
     [show],

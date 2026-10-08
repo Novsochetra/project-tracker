@@ -218,4 +218,14 @@ describe('field drafts whose text another tab typed', () => {
     const draft = syncDraft(startDraft('Fix login'), 'Fix login', { ...IDLE, kept });
     expect(syncDraft(draft, kept, IDLE)).toEqual(startDraft(kept));
   });
+
+  it('keep the text that tab saved while this tab still has the older copy, until it changes', () => {
+    const landed = syncDraft(restoreDraft(kept, true), 'Fix login', IDLE);
+    expect(landed).toMatchObject({ value: kept, edited: false, failed: false, carried: false });
+    expect(syncDraft(landed, 'Fix login', IDLE)).toBe(landed);
+    expect(syncDraft(landed, kept, IDLE)).toEqual(startDraft(kept));
+    expect(syncDraft(landed, 'Renamed by Claude', IDLE)).toEqual(startDraft('Renamed by Claude'));
+    const typed = editDraft(landed, `${kept}!`);
+    expect(syncDraft(typed, 'Fix login', FOCUSED).value).toBe(`${kept}!`);
+  });
 });

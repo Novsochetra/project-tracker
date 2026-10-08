@@ -1,4 +1,4 @@
-import { readDrafts, type DraftMap } from '../../../lib/draftStorage';
+import { storedMap } from '../../../lib/storedMap';
 
 // The saves of a draft on their way live in the memory of the tab that sent them. Other tabs
 // can't see that, and their app-wide sync would take the tracker having the first of them for a
@@ -20,38 +20,20 @@ const isMark = (value: unknown): value is Mark =>
   typeof (value as Mark).page === 'string' &&
   typeof (value as Mark).until === 'number';
 
-let cached: { raw: string | null; marks: DraftMap<Mark> } = { raw: null, marks: {} };
-
-function readMarks(): DraftMap<Mark> {
-  try {
-    const raw = window.localStorage.getItem(SAVE_MARKS_STORAGE_KEY);
-    if (raw !== cached.raw) cached = { raw, marks: readDrafts(raw, isMark) };
-    return cached.marks;
-  } catch {
-    return {};
-  }
-}
-
-function writeMarks(marks: DraftMap<Mark>): void {
-  try {
-    if (Object.keys(marks).length === 0) window.localStorage.removeItem(SAVE_MARKS_STORAGE_KEY);
-    else window.localStorage.setItem(SAVE_MARKS_STORAGE_KEY, JSON.stringify(marks));
-  } catch {
-    // Without storage other tabs don't see this tab's saves, and leave the draft to their checks.
-  }
-}
+// Without storage other tabs don't see this tab's saves, and leave the draft to their checks.
+const marks = storedMap(SAVE_MARKS_STORAGE_KEY, isMark);
 
 export function markSending(id: string, sending: boolean): void {
   const now = Date.now();
-  const others = Object.entries(readMarks()).filter(
+  const others = Object.entries(marks.read()).filter(
     ([markId, mark]) => mark.until > now && !(markId === id && mark.page === PAGE),
   );
   const own = sending ? [[id, { page: PAGE, until: now + MARK_MS }] as const] : [];
-  writeMarks(Object.fromEntries([...others, ...own]));
+  marks.write(Object.fromEntries([...others, ...own]));
 }
 
 export function isSentElsewhere(id: string): boolean {
-  const mark = readMarks()[id];
+  const mark = marks.read()[id];
   return mark !== undefined && mark.page !== PAGE && mark.until > Date.now();
 }
 

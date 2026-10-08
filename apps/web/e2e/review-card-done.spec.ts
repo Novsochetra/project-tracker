@@ -1,7 +1,7 @@
 import type { Page } from '@playwright/test';
 import { TrackerClient } from '@tracker/client';
 import { expect, isPhone, test } from './fixtures';
-import { seedProject, toast } from './helpers';
+import { seedProject, settled, toast } from './helpers';
 import { API_URL } from './ports';
 
 // The Latest review card left as soon as its Move to Done was tapped, so the second tap of a
@@ -42,10 +42,6 @@ async function renameDone(api: TrackerClient, name: string) {
   await api.updateStatus(done.id, { name });
 }
 
-// The screen's entrance moves the button; the taps go where it rests.
-const settled = (page: Page) =>
-  page.evaluate(() => Promise.all(document.getAnimations().map((animation) => animation.finished)));
-
 const PHONE_ONLY = 'Touch taps and phone widths';
 
 test.describe('Move to Done for a reviewed ticket', () => {
@@ -65,7 +61,8 @@ test.describe('Move to Done for a reviewed ticket', () => {
       await expect(latestReview(page)).toContainText('Works.');
       await expect(cardDone(page)).toHaveCount(0);
       await expect(barDone(page)).toBeInViewport();
-      await settled(page);
+      // The screen's entrance moves the button; the taps go where it rests.
+      await settled(barDone(page));
       const box = (await barDone(page).boundingBox())!;
       const [x, y] = [box.x + box.width / 2, box.y + box.height / 2];
 
@@ -92,7 +89,7 @@ test.describe('Move to Done for a reviewed ticket', () => {
     await seedReviewed(api, agent, LONG_DESCRIPTION);
     await page.goto('/p/MOB/1');
     await expect(cardDone(page)).toBeInViewport();
-    await settled(page);
+    await settled(cardDone(page));
     await cardDone(page).dblclick();
     await expect(toast(page, 'MOB-1 moved to Done')).toBeVisible();
     await expect(latestReview(page)).toHaveCount(0);

@@ -1,7 +1,7 @@
 import type { Page } from '@playwright/test';
 import { toYmd } from '@tracker/shared';
 import { expect, isPhone, test } from './fixtures';
-import { activity, seedProject, toast } from './helpers';
+import { activity, seedProject, settled, toast } from './helpers';
 
 // PT-73: on a phone the Details card sat in the middle of the ticket, under the description and
 // the files, and with long comments the comment box was screens away. The details are now chips
@@ -37,9 +37,7 @@ const daysFromToday = (days: number) => {
 };
 
 async function settle(page: Page) {
-  await page.evaluate(() =>
-    Promise.all(document.getAnimations().map((animation) => animation.finished.catch(() => null))),
-  );
+  await settled(screenOf(page));
   await scroller(page).evaluate(async (element) => {
     const frame = () => new Promise((resolve) => requestAnimationFrame(resolve));
     let last = Number.NaN;

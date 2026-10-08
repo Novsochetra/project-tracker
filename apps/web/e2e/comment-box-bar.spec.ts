@@ -1,6 +1,6 @@
 import type { Locator, Page } from '@playwright/test';
 import { expect, isPhone, test } from './fixtures';
-import { activity, seedProject } from './helpers';
+import { activity, seedProject, settled } from './helpers';
 
 // The phone bottom bar slides away while a text field has focus. It came back over the comment
 // box's Comment button: mid-tap (the release landed on "Send to Claude") and when the keyboard
@@ -32,9 +32,7 @@ async function openTicket(page: Page, api: Parameters<typeof seedProject>[0]) {
 }
 
 async function settle(page: Page) {
-  await bar(page).evaluate((element) =>
-    Promise.all(element.getAnimations().map((animation) => animation.finished)),
-  );
+  await settled(screenOf(page));
   await scroller(page).evaluate(async (element) => {
     const frame = () => new Promise((resolve) => requestAnimationFrame(resolve));
     let last = Number.NaN;

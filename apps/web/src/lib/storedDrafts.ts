@@ -1,4 +1,5 @@
-import { draftStorage, readDrafts, type DraftMap } from './draftStorage';
+import { draftStorage } from './draftStorage';
+import { parseMap, type StoredMap } from './storedMap';
 
 export type DraftField = 'title' | 'description' | 'assignee' | 'comment' | 'comment-edit';
 
@@ -17,7 +18,7 @@ export interface StoredDraft extends DraftTarget {
   submitted?: boolean;
 }
 
-type Drafts = DraftMap<StoredDraft>;
+type Drafts = StoredMap<StoredDraft>;
 
 export const DRAFTS_STORAGE_KEY = 'tracker.drafts';
 
@@ -47,7 +48,7 @@ function isStoredDraft(value: unknown): value is StoredDraft {
   );
 }
 
-export const parseDrafts = (raw: string | null): Drafts => readDrafts(raw, isStoredDraft);
+export const parseDrafts = (raw: string | null): Drafts => parseMap(raw, isStoredDraft);
 
 const storage = draftStorage(DRAFTS_STORAGE_KEY, isStoredDraft);
 const { load } = storage;
@@ -116,6 +117,9 @@ export function draftSaved(id: string, text: string): void {
   if (storedDraft(id)?.text === text) forgetDraft(id);
   else rebaseDraft(id, text);
 }
+
+// Tests start with no drafts, also none that full storage left in the page's memory.
+export const clearStoredDrafts = (): void => store({});
 
 export function forgetTicketDrafts(ticketKey: string): void {
   const drafts = storedDrafts();

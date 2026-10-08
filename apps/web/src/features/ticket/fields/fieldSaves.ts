@@ -67,7 +67,15 @@ export const isSaving = (id: string): boolean => savesOf(id).onTheirWay.size > 0
 // Another tab has saves of the draft on their way, which settle it the same way.
 export const isSavingElsewhere = isSentElsewhere;
 
-export const isSavingAnywhere = (id: string): boolean => isSaving(id) || isSavingElsewhere(id);
+// Where saves of the draft are on their way. This tab's come first: they settle the field it shows.
+export type SavingWhere = 'here' | 'elsewhere' | 'nowhere';
+
+export function savingWhere(id: string): SavingWhere {
+  if (isSaving(id)) return 'here';
+  return isSavingElsewhere(id) ? 'elsewhere' : 'nowhere';
+}
+
+export const isSavingAnywhere = (id: string): boolean => savingWhere(id) !== 'nowhere';
 
 function update(id: string, saves: SentSaves): void {
   if (saves.onTheirWay.size === 0) sent.delete(id);

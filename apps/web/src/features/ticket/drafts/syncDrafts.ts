@@ -65,10 +65,14 @@ export const clearRefusedDrafts = (): void => refused.clear();
 const isSentForUser = (draft: StoredDraft): boolean =>
   draft.field === 'comment-edit' ? draft.submitted === true : draft.field !== 'comment';
 
-// Only a tracker that can't be reached (no answer, 401, 5xx) ends a run. Any other refusal is the
-// draft's own: it waits on its ticket, where the field says it isn't saved, and the rest go on.
+// Answers that say "not now" rather than "not this text": signed out, too slow, too many requests.
+const NOT_NOW_STATUSES = new Set([401, 408, 429]);
+
+// Only a tracker that can't be reached (no answer, a 5xx) or won't take the text now ends a run,
+// and a later run sends it again. Any other refusal is the draft's own: it waits on its ticket,
+// where the field says it isn't saved, and the rest go on.
 const endsRun = (error: unknown): boolean =>
-  !(error instanceof ApiError) || error.status === 401 || error.status >= 500;
+  !(error instanceof ApiError) || NOT_NOW_STATUSES.has(error.status) || error.status >= 500;
 
 async function save([id, draft]: Entry, run: Run): Promise<boolean> {
   const number = startSave(id, draft.text);

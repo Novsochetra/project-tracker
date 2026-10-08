@@ -1,7 +1,7 @@
 import type { Locator, Page } from '@playwright/test';
 import { formatLongDay, formatShortDay, toYmd } from '@tracker/shared';
 import { expect, isPhone, test } from './fixtures';
-import { activity, openNewTicketIn, seedProject, ticketRow, toast } from './helpers';
+import { activity, openNewTicketIn, seedProject, settled, ticketRow, toast } from './helpers';
 
 // The names screen readers hear for the days, worked out here rather than taken from the app.
 const fullDate = (date: Date) =>
@@ -82,6 +82,7 @@ test.describe('due date on desktop', () => {
 
     await row.click();
     await expect(picker).toBeVisible();
+    await settled(picker);
     const rowBox = (await row.boundingBox())!;
     const box = (await picker.boundingBox())!;
     expect(box.y).toBeGreaterThanOrEqual(8);

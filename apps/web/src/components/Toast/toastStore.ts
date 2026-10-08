@@ -5,6 +5,9 @@ export type ToastKind = 'success' | 'error';
 export interface ToastOptions {
   kind?: ToastKind;
   undo?: () => void;
+  // Not replaced: a toast shown while it is up waits until it has gone. For a warning that has
+  // to be read, such as typed text that can't be kept.
+  important?: boolean;
 }
 
 export interface ToastMessage {
@@ -12,6 +15,7 @@ export interface ToastMessage {
   text: string;
   kind: ToastKind;
   undo: (() => void) | null;
+  important: boolean;
   leaving: boolean;
 }
 
@@ -37,7 +41,8 @@ export const TOAST_EXIT_MS = DURATION.fast;
 // Longer than a double tap, whose second tap lands within about 300 ms of the first.
 export const TOAST_SHIELD_MS = 500;
 
-const visibleMs = (toast: ToastMessage): number => (toast.undo ? TOAST_UNDO_MS : TOAST_VISIBLE_MS);
+const visibleMs = (toast: ToastMessage): number =>
+  toast.undo || toast.important ? TOAST_UNDO_MS : TOAST_VISIBLE_MS;
 
 export function createToastStore(): ToastStore {
   let state: ToastState = { toast: null, raised: 0, shielded: false };
@@ -45,6 +50,8 @@ export function createToastStore(): ToastStore {
   let held = false;
   let timer: ReturnType<typeof setTimeout> | undefined;
   let shieldTimer: ReturnType<typeof setTimeout> | undefined;
+  // The latest toast shown while an important one is up.
+  let waiting: { text: string; options: ToastOptions } | null = null;
   const listeners = new Set<() => void>();
 
   const update = (patch: Partial<ToastState>) => {
@@ -58,17 +65,29 @@ export function createToastStore(): ToastStore {
   const current = (id: number) => (state.toast?.id === id ? state.toast : null);
   const showing = (id: number) => (current(id)?.leaving ? null : current(id));
 
-  const leave = () => {
-    if (state.toast) update({ toast: { ...state.toast, leaving: true } });
-    after(TOAST_EXIT_MS, () => update({ toast: null }));
+  const showNext = () => {
+    const next = waiting;
+    waiting = null;
+    if (next) show(next.text, next.options);
+    else update({ toast: null });
   };
 
-  const show = (text: string, { kind = 'success', undo }: ToastOptions = {}) => {
-    const toast = { id: nextId++, text, kind, undo: undo ?? null, leaving: false };
+  const leave = () => {
+    if (state.toast) update({ toast: { ...state.toast, leaving: true } });
+    after(TOAST_EXIT_MS, showNext);
+  };
+
+  function show(text: string, options: ToastOptions = {}) {
+    const { kind = 'success', undo, important = false } = options;
+    if (state.toast?.important && !state.toast.leaving && !important) {
+      waiting = { text, options };
+      return;
+    }
+    const toast = { id: nextId++, text, kind, undo: undo ?? null, important, leaving: false };
     held = false;
     update({ toast });
     after(visibleMs(toast), leave);
-  };
+  }
 
   const hold = (id: number, next: boolean) => {
     const toast = showing(id);

@@ -86,6 +86,7 @@ describe('entries that are not activities', () => {
     entry('a', 'report', 5),
     7,
     'text',
+    [1, 2],
     entry('b', 'event', 9),
   ] as unknown as Activity[];
 

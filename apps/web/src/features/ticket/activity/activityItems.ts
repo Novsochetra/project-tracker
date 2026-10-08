@@ -7,6 +7,7 @@ import {
   type Review,
 } from '@tracker/shared';
 import { isTemporaryId } from '../../../api';
+import { readableEntries } from '../../../lib/entries';
 
 interface ItemBase {
   id: string;
@@ -73,16 +74,13 @@ const order = (activity: Activity): number =>
 
 // Like toItem, this runs outside the cards' boundaries: an entry that isn't an object, such as
 // null, has nothing to show and is left out.
-const readable = (activity: readonly Activity[]): Activity[] =>
-  activity.filter((entry: unknown) => typeof entry === 'object' && entry !== null);
-
 export const activityItems = (activity: readonly Activity[]): ActivityItem[] =>
-  readable(activity)
+  readableEntries(activity)
     .sort((a, b) => order(a) - order(b))
     .map(toItem);
 
 export function lastReportAt(activity: readonly Activity[]): number | null {
-  const times = readable(activity)
+  const times = readableEntries(activity)
     .filter((item) => item.type === 'report')
     .map((item) => item.createdAt);
   return times.length > 0 ? Math.max(...times) : null;

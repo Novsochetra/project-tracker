@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
+  clearStoredDrafts,
   DRAFTS_STORAGE_KEY,
   draftIdOf,
   draftSaved,
@@ -129,5 +130,17 @@ describe('stored drafts without storage', () => {
     store.keepDraft('title:MOB-9', { ticketKey: 'MOB-9', field: 'title', text: 'Kept' }, '');
     expect(store.storedDraft('title:MOB-9')?.text).toBe('Kept');
     expect(store.hasStoredDrafts()).toBe(true);
+  });
+
+  it('are all gone after a clear, also those only in memory', () => {
+    keepDraft(TITLE_ID, { ...TITLE, text: 'On disk' }, 'Fix login');
+    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+      throw new DOMException('Full', 'QuotaExceededError');
+    });
+    keepDraft('title:MOB-9', { ticketKey: 'MOB-9', field: 'title', text: 'In memory' }, '');
+    clearStoredDrafts();
+    vi.restoreAllMocks();
+    expect(hasStoredDrafts()).toBe(false);
+    expect(localStorage.getItem(DRAFTS_STORAGE_KEY)).toBeNull();
   });
 });

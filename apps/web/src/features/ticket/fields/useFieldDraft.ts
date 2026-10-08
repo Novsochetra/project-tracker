@@ -23,10 +23,10 @@ import {
 } from './fieldDraft';
 import {
   carries,
-  isSaving,
   isSavingAnywhere,
   isSavingElsewhere,
   savesOf,
+  savingWhere,
   subscribeSaves,
 } from './fieldSaves';
 import { useFieldSave, type FieldSave, type FieldTarget, type SaveField } from './useFieldSave';
@@ -100,10 +100,14 @@ export function useFieldDraft(
   const id = draftIdOf(target);
   const [draft, setDraft] = useState(() => openDraft(server, id));
   const [focused, setFocused] = useState(false);
-  const saving = useSyncExternalStore(subscribeSaves, () => isSaving(id));
-  const sentElsewhere = useSyncExternalStore(subscribeSaves, () => isSavingElsewhere(id));
+  const where = useSyncExternalStore(subscribeSaves, () => savingWhere(id));
   const kept = useSyncExternalStore(subscribeStoredDrafts, () => storedDraft(id)?.text);
-  const synced = syncDraft(draft, server, { focused, saving, sentElsewhere, kept });
+  const synced = syncDraft(draft, server, {
+    focused,
+    saving: where === 'here',
+    sentElsewhere: where === 'elsewhere',
+    kept,
+  });
   if (synced !== draft) setDraft(synced);
   const save = useFieldSave({ target, server, setDraft, onSave });
   const retry = useFieldRetry({ id, ticketKey: target.ticketKey, draft: synced, setDraft, save });

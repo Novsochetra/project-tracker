@@ -11,6 +11,10 @@ export interface FieldDraft {
   // The tracker's value changed since the text was typed, so nothing saves it until the user
   // picks a version.
   conflict: boolean;
+  // Another tab's save of `value` landed while this tab's copy of the ticket still had this text.
+  // The field shows `value` until that copy changes: typing over the older text would save it
+  // over the newer one.
+  staleServer?: string;
 }
 
 export interface FieldContext {
@@ -41,21 +45,27 @@ export const restoreDraft = (text: string, carried: boolean): FieldDraft => ({
 export const editDraft = (draft: FieldDraft, value: string): FieldDraft =>
   draft.edited && draft.value === value ? draft : { ...draft, value, edited: true, carried: false };
 
-// Once nothing is on its way, text the store no longer keeps is saved (or dropped elsewhere),
-// and text it still keeps after its save is not.
-function settledDraft(draft: FieldDraft, kept: string | undefined): FieldDraft {
-  if (draft.carried) return { ...draft, carried: false, failed: kept === draft.value };
+// The save of the shown text landed, so the tracker has it, though this tab's copy of the ticket
+// may not yet.
+const landedDraft = (value: string, server: string): FieldDraft =>
+  value === server ? startDraft(value) : { ...startDraft(value), staleServer: server };
+
+// What the drafts store says once nothing is on its way. This tab keeps the store in step with
+// what it types, so other kept text was typed in another tab: the field shows it, unsaved, like
+// text kept from an earlier visit, so both tabs edit the same text and neither types over text it
+// hasn't shown. Text the store no longer keeps was saved (or dropped elsewhere), and text it
+// still keeps after its save was not.
+function settledDraft(draft: FieldDraft, kept: string | undefined, server: string): FieldDraft {
+  if (kept !== undefined && kept !== draft.value) return restoreDraft(kept, false);
+  if (draft.carried) {
+    return kept === undefined
+      ? landedDraft(draft.value, server)
+      : { ...draft, carried: false, failed: true };
+  }
   if (kept === undefined && (draft.failed || draft.conflict)) {
     return { ...draft, failed: false, conflict: false };
   }
   return draft;
-}
-
-// This tab keeps the store in step with what it types, so other kept text was typed in another
-// tab. The field shows it, unsaved, like text kept from an earlier visit: both tabs then edit
-// the same text, and neither types over text it hasn't shown.
-function adoptedDraft(draft: FieldDraft, kept: string | undefined): FieldDraft {
-  return kept === undefined || kept === draft.value ? draft : restoreDraft(kept, false);
 }
 
 // While another tab sends the kept text, the field shows it without a note, and that save's
@@ -71,9 +81,10 @@ function sentElsewhere(draft: FieldDraft, kept: string | undefined): FieldDraft 
 export function syncDraft(draft: FieldDraft, server: string, context: FieldContext): FieldDraft {
   if (context.saving) return draft;
   if (context.sentElsewhere) return sentElsewhere(draft, context.kept);
-  const settled = adoptedDraft(settledDraft(draft, context.kept), context.kept);
-  if (context.focused || settled.failed) return settled;
-  return settled.edited || settled.value !== server ? startDraft(server) : settled;
+  const settled = settledDraft(draft, context.kept, server);
+  if (context.focused || settled.failed || settled.staleServer === server) return settled;
+  const inStep = !settled.edited && settled.value === server && settled.staleServer === undefined;
+  return inStep ? settled : startDraft(server);
 }
 
 // Only the outcome for the text the field still shows says whether that text is saved.

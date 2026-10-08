@@ -1,4 +1,4 @@
-import type { Page } from '@playwright/test';
+import type { Locator, Page } from '@playwright/test';
 import type { TrackerClient } from '@tracker/client';
 import type { Priority } from '@tracker/shared';
 import { expect } from './fixtures';
@@ -68,3 +68,49 @@ export const readMenuConfirm = (page: Page): Promise<void> => page.waitForTimeou
 // A phone's action sheet takes no taps on its rows for 500 ms after they appear (lib/clickShield),
 // so a test reads them first, like a person. Desktop menus take clicks at once; the wait is harmless.
 export const readActionSheet = (page: Page): Promise<void> => page.waitForTimeout(500);
+
+const SETTLE_MS = 3_000;
+
+// A box read while it rises, slides or grows in is not where it comes to rest, and it moves with
+// its ancestors' animations as well as its own and its children's. Endless ones (spinners) never
+// finish and a paused one does not move, so neither is waited for.
+export async function settled(locator: Locator): Promise<void> {
+  const moving = await locator.evaluate(async (element, limit) => {
+    const name = (animation: Animation) =>
+      animation instanceof CSSAnimation
+        ? `animation "${animation.animationName}"`
+        : animation instanceof CSSTransition
+          ? `transition of ${animation.transitionProperty}`
+          : `script animation "${animation.id}"`;
+    const where = (animation: Animation) => {
+      const target = animation.effect instanceof KeyframeEffect ? animation.effect.target : null;
+      return target ? [target.tagName.toLowerCase(), ...target.classList].join('.') : 'no element';
+    };
+    const running = () => {
+      const animations = element.getAnimations({ subtree: true });
+      for (let node = element.parentElement; node; node = node.parentElement) {
+        animations.push(...node.getAnimations());
+      }
+      return animations.filter(
+        (animation) =>
+          animation.playState === 'running' &&
+          animation.effect?.getComputedTiming().endTime !== Infinity,
+      );
+    };
+    await document.fonts.ready;
+    const deadline = performance.now() + limit;
+    for (let left = running(); left.length > 0; left = running()) {
+      const rest = deadline - performance.now();
+      if (rest <= 0) return left.map((animation) => `${name(animation)} on ${where(animation)}`);
+      // A cancelled animation rejects: it has stopped, which is all this waits for.
+      const ended = Promise.all(left.map((animation) => animation.finished.catch(() => null)));
+      await Promise.race([ended, new Promise((resolve) => setTimeout(resolve, rest))]);
+    }
+    return [];
+  }, SETTLE_MS);
+  if (moving.length > 0) {
+    throw new Error(
+      `${locator.toString()} still moves after ${SETTLE_MS} ms: ${moving.join('; ')}`,
+    );
+  }
+}

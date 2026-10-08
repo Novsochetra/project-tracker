@@ -116,6 +116,8 @@ describe('syncDrafts', () => {
   it.each([
     ['no answer', NETWORK_DOWN],
     ['a 401', SIGNED_OUT],
+    ['a 408', new ApiError(408, 'timeout', 'Too slow')],
+    ['a 429', new ApiError(429, 'rate_limited', 'Too many requests')],
     ['a 5xx', SERVER_DOWN],
   ])('stops when a save gets %s and keeps the rest', async (_answer, error) => {
     keep({ ticketKey: 'MOB-1', field: 'title' }, 'One', 'Ticket 1');

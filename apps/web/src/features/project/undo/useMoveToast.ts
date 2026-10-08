@@ -10,7 +10,7 @@ import {
   type TicketsAcrossProjects,
 } from '@tracker/shared';
 import { useCallback } from 'react';
-import { errorMessage, queryKeys, useApi, useMoveTicket } from '../../../api';
+import { errorMessage, queryKeys, readyStatuses, useApi, useMoveTicket } from '../../../api';
 import { flashRows } from '../../../app/flash';
 import { useToast } from '../../../components';
 import { requestHandleFocus, rowHasFocus } from '../dnd/handleFocus';
@@ -46,8 +46,7 @@ function cachedProject(queryClient: QueryClient, ticketKey: string) {
     board?.statuses ??
     queryClient.getQueryData<ProjectDetail>(queryKeys.project(projectKey))?.statuses ??
     queryClient.getQueryData<TicketDetail>(queryKeys.ticket(ticketKey))?.statuses ??
-    queryClient.getQueryData<TicketsAcrossProjects>(queryKeys.ready())?.statuses ??
-    [];
+    readyStatuses(queryClient.getQueryData<TicketsAcrossProjects>(queryKeys.ready()));
   return { tickets: board?.tickets ?? [], statuses };
 }
 

@@ -78,15 +78,16 @@ export const addTicketAttachment = (detail: TicketDetail, attachment: Attachment
     ? detail
     : { ...detail, attachments: [...detail.attachments, attachment] };
 
+// An activity entry without a list of files, or a file this app can't read, stays as it came.
 export function removeAttachment(detail: TicketDetail, attachmentId: string): TicketDetail {
-  const keep = (attachment: Attachment) => attachment.id !== attachmentId;
+  const keep = (attachment: Attachment) => !isEntry(attachment) || attachment.id !== attachmentId;
+  const holdsIt = (item: Activity) =>
+    isEntry(item) && Array.isArray(item.attachments) && !item.attachments.every(keep);
   return {
     ...detail,
     attachments: detail.attachments.filter(keep),
     activity: detail.activity.map((item) =>
-      !isEntry(item) || item.attachments.every(keep)
-        ? item
-        : { ...item, attachments: item.attachments.filter(keep) },
+      holdsIt(item) ? { ...item, attachments: item.attachments.filter(keep) } : item,
     ),
   };
 }

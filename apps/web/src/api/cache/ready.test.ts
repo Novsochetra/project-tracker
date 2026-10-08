@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { listItem, STATUS, statuses } from '../test/fixtures';
-import { withoutMovedTicket, withStatuses } from './ready';
+import { readyStatuses, withoutMovedTicket, withStatuses } from './ready';
 
 const ready = () => ({
   tickets: [listItem(3, STATUS.reviewed, 0), listItem(5, STATUS.reviewed, 1000)],
@@ -20,6 +20,17 @@ describe('withoutMovedTicket', () => {
     expect(withoutMovedTicket(list, 'MOB-3', STATUS.reviewed)).toBe(list);
     expect(withoutMovedTicket(list, 'MOB-3', undefined)).toBe(list);
     expect(withoutMovedTicket(list, 'MOB-9', STATUS.done)).toBe(list);
+  });
+});
+
+describe('readyStatuses', () => {
+  it('gives the statuses it can read, and none for a list it cannot', () => {
+    expect(readyStatuses(ready())).toEqual(statuses);
+    const odd = { tickets: [], statuses: [null, statuses[0], [1]] } as never;
+    expect(readyStatuses(odd)).toEqual([statuses[0]]);
+    expect(readyStatuses({ tickets: [], statuses: null } as never)).toEqual([]);
+    expect(readyStatuses(null as never)).toEqual([]);
+    expect(readyStatuses(undefined)).toEqual([]);
   });
 });
 
