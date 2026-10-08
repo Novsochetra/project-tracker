@@ -14,7 +14,7 @@
   font-size: var(--size-body);
   font-weight: var(--weight-medium);
   pointer-events: none;
-  animation: overlay-in var(--duration-fast) var(--ease-out) both;
+  animation: overlay-in var(--duration-fast) var(--ease-out) backwards;
 }
 
 @keyframes overlay-in {

@@ -25,7 +25,7 @@
   display: flex;
   justify-content: center;
   padding: 64px var(--space-6);
-  animation: appear var(--duration-fade) var(--ease-out) 400ms both;
+  animation: appear var(--duration-fade) var(--ease-out) 400ms backwards;
 }
 
 /* The design's 12px padding lets both labels fit the 1 : 1.35 split at 375px. */

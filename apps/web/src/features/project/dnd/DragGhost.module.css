@@ -17,7 +17,9 @@
   color: var(--ink);
   font-family: var(--font-sans);
   font-size: var(--size-body);
-  animation: lift var(--duration-fast) var(--ease-out) both;
+  box-shadow: var(--shadow-lifted);
+  transform: scale(1.02);
+  animation: lift var(--duration-fast) var(--ease-out) backwards;
 }
 
 .grip {
@@ -54,9 +56,5 @@
   from {
     transform: scale(1);
     box-shadow: none;
-  }
-  to {
-    transform: scale(1.02);
-    box-shadow: var(--shadow-lifted);
   }
 }

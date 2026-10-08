@@ -9,12 +9,12 @@
 .animated .disc {
   transform-box: fill-box;
   transform-origin: center;
-  animation: pop var(--duration-spring) var(--ease-spring) both;
+  animation: pop var(--duration-spring) var(--ease-spring) backwards;
 }
 
 .animated .check {
   stroke-dasharray: 10;
-  animation: draw var(--duration-spring) var(--delay-check) var(--ease-out) both;
+  animation: draw var(--duration-spring) var(--delay-check) var(--ease-out) backwards;
 }
 
 @keyframes pop {

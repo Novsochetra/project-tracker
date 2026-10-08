@@ -5,7 +5,7 @@
   gap: 10px;
   padding: 64px 24px;
   text-align: center;
-  animation: fade-up var(--duration-fade) var(--ease-out) both;
+  animation: fade-up var(--duration-fade) var(--ease-out) backwards;
 }
 
 .bordered {

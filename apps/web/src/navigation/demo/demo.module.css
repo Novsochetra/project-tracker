@@ -368,10 +368,10 @@
   font-size: 14px;
   font-weight: 500;
   white-space: nowrap;
-  animation: toast 2.6s var(--ease-out) forwards;
+  animation: toast-in-out 2.6s var(--ease-out) forwards;
 }
 
-@keyframes toast {
+@keyframes toast-in-out {
   0% {
     opacity: 0;
     transform: translateY(14px) scale(0.96);

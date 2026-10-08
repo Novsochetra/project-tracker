@@ -8,7 +8,7 @@
 }
 
 .rise {
-  animation: rise var(--duration-rise) var(--ease-out) both;
+  animation: rise var(--duration-rise) var(--ease-out) backwards;
 }
 
 .inner {
@@ -142,7 +142,7 @@
   inset: 0;
   pointer-events: none;
   mix-blend-mode: multiply;
-  animation: flash var(--duration-flash) var(--ease-out) both;
+  animation: flash var(--duration-flash) var(--ease-out) backwards;
 }
 
 .dropLine {

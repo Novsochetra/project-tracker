@@ -40,7 +40,7 @@
   margin: 10px 4px 0;
   color: var(--danger);
   font-size: var(--size-secondary);
-  animation: fade-up var(--duration-fade) var(--ease-out) both;
+  animation: fade-up var(--duration-fade) var(--ease-out) backwards;
 }
 
 .square {

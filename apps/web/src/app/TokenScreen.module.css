@@ -54,7 +54,7 @@
   color: var(--danger);
   font-size: var(--size-secondary);
   text-align: center;
-  animation: error-in var(--duration-fade) var(--ease-out) both;
+  animation: error-in var(--duration-fade) var(--ease-out) backwards;
 }
 
 @media (max-width: 767px) {

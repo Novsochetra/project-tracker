@@ -27,7 +27,7 @@
   background: var(--surface);
   box-shadow: var(--shadow-floating);
   transform-origin: top right;
-  animation: menu-in var(--duration-fast) var(--ease-out) both;
+  animation: menu-in var(--duration-fast) var(--ease-out) backwards;
 }
 
 .menu[data-up='true'] {

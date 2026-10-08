@@ -116,7 +116,7 @@
   border-radius: var(--radius-full);
   background: var(--accent);
   transform-origin: left center;
-  animation: grow var(--duration-grow) var(--ease-out) both;
+  animation: grow var(--duration-grow) var(--ease-out) backwards;
 }
 
 .percent {

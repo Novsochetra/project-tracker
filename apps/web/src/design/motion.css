@@ -110,7 +110,7 @@
 }
 
 .fade-in {
-  animation: fade-up var(--duration-fade) var(--ease-out) both;
+  animation: fade-up var(--duration-fade) var(--ease-out) backwards;
 }
 
 .rise {
@@ -118,7 +118,7 @@
 }
 
 .flash {
-  animation: flash var(--duration-flash) var(--ease-out) both;
+  animation: flash var(--duration-flash) var(--ease-out) backwards;
 }
 
 .press {

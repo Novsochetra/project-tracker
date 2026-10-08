@@ -10,7 +10,7 @@
   background: var(--fill);
   color: var(--muted);
   font-size: var(--size-caption);
-  animation: banner-in var(--duration-fade) var(--ease-out) both;
+  animation: banner-in var(--duration-fade) var(--ease-out) backwards;
 }
 
 .text {

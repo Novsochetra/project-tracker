@@ -55,7 +55,7 @@
   color: var(--muted);
   font-size: var(--size-secondary);
   text-align: center;
-  animation: fade-up var(--duration-fade) var(--ease-out) both;
+  animation: fade-up var(--duration-fade) var(--ease-out) backwards;
 }
 
 .emptyAction {

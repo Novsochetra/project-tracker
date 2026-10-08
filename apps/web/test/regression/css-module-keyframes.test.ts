@@ -28,47 +28,83 @@ const KEYWORDS = new Set([
   'unset',
 ]);
 
-function moduleFiles(dir: string): string[] {
+interface Animation {
+  file: string;
+  name: string;
+  isGlobal: boolean;
+  fill: string | null;
+}
+
+function cssFiles(dir: string): string[] {
   return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
     const path = join(dir, entry.name);
-    if (entry.isDirectory()) return moduleFiles(path);
-    return entry.name.endsWith('.module.css') ? [path] : [];
+    if (entry.isDirectory()) return cssFiles(path);
+    return entry.name.endsWith('.css') ? [path] : [];
   });
 }
 
-function referencedKeyframes(css: string): string[] {
-  const names: string[] = [];
-  for (const match of css.matchAll(/animation(?:-name)?\s*:\s*([^;}]+)/g)) {
-    const value = (match[1] ?? '')
-      .replace(/\bglobal\([^)]*\)/g, ' ')
-      .replace(/[a-z-]+\([^)]*\)/g, ' ');
-    for (const token of value.split(/[\s,]+/)) {
-      if (token && !KEYWORDS.has(token) && !/^[\d.]/.test(token)) names.push(token);
-    }
-  }
-  return names;
-}
+const read = (file: string): string => readFileSync(file, 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
 
-const definedKeyframes = (css: string): Set<string> =>
-  new Set([...css.matchAll(/@keyframes\s+([\w-]+)/g)].map((match) => match[1] ?? ''));
+const isModule = (file: string): boolean => file.endsWith('.module.css');
 
-describe('regression: CSS modules only animate with keyframes they can see', () => {
-  it('defines every keyframe locally or references it with global(name)', () => {
-    const problems: string[] = [];
-    for (const file of moduleFiles(SRC)) {
-      const css = readFileSync(file, 'utf8');
-      const local = definedKeyframes(css);
-      for (const name of referencedKeyframes(css)) {
-        if (!local.has(name)) problems.push(`${relative(SRC, file)} uses "${name}"`);
+function animationsIn(file: string): Animation[] {
+  const found: Animation[] = [];
+  for (const match of read(file).matchAll(/animation(?:-name)?\s*:\s*([^;}]+)/gi)) {
+    const value = match[1] ?? '';
+    const fill = /\b(both|forwards|backwards)\b/.exec(value)?.[1] ?? null;
+    const globals = [...value.matchAll(/\bglobal\(\s*([\w-]+)\s*\)/g)].map((m) => m[1] ?? '');
+    globals.forEach((name) => found.push({ file, name, isGlobal: true, fill }));
+    const rest = value.replace(/\bglobal\([^)]*\)/g, ' ').replace(/[a-z-]+\([^)]*\)/gi, ' ');
+    for (const token of rest.split(/[\s,]+/)) {
+      if (token && !KEYWORDS.has(token) && !/^[\d.]/.test(token)) {
+        found.push({ file, name: token, isGlobal: !isModule(file), fill });
       }
     }
+  }
+  return found;
+}
+
+const keyframesIn = (file: string): Set<string> =>
+  new Set([...read(file).matchAll(/@keyframes\s+([\w-]+)/g)].map((match) => match[1] ?? ''));
+
+const files = cssFiles(SRC);
+const animations = files.flatMap(animationsIn);
+const globalKeyframes = new Set(
+  files.filter((f) => !isModule(f)).flatMap((f) => [...keyframesIn(f)]),
+);
+const where = (animation: Animation): string =>
+  `${relative(SRC, animation.file)} uses "${animation.name}"`;
+
+describe('regression: CSS animations only use keyframes they can see', () => {
+  it('modules define their keyframes locally or reference real global ones with global(name)', () => {
+    const problems = animations
+      .filter(({ file, name, isGlobal }) =>
+        isGlobal ? !globalKeyframes.has(name) : !keyframesIn(file).has(name),
+      )
+      .map(where);
+    expect(problems).toEqual([]);
+  });
+
+  it('entrance animations leave no styles behind, so :active and stacking still work', () => {
+    const problems = animations
+      .filter(
+        ({ name, fill }) => (fill === 'both' || fill === 'forwards') && !name.endsWith('-out'),
+      )
+      .map((animation) => `${where(animation)} with fill ${animation.fill}`);
+    expect(problems).toEqual([]);
+  });
+
+  it('never keeps an end state through animation-fill-mode', () => {
+    const problems = files.flatMap((file) =>
+      [...read(file).matchAll(/animation-fill-mode\s*:\s*(both|forwards)/gi)].map(
+        (match) => `${relative(SRC, file)} sets animation-fill-mode: ${match[1] ?? ''}`,
+      ),
+    );
     expect(problems).toEqual([]);
   });
 
   it('lets the shared rise animation leave no transform behind', () => {
-    const motion = readFileSync(join(SRC, 'design/motion.css'), 'utf8');
-    const rise = /\.rise\s*{([^}]*)}/.exec(motion)?.[1] ?? '';
+    const rise = /\.rise\s*{([^}]*)}/.exec(read(join(SRC, 'design/motion.css')))?.[1] ?? '';
     expect(rise).toMatch(/backwards/);
-    expect(rise).not.toMatch(/\bboth\b|\bforwards\b/);
   });
 });
