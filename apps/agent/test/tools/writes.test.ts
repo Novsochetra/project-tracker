@@ -155,6 +155,30 @@ describe('move_ticket', () => {
     );
     expect(updateTicketApi).not.toHaveBeenCalled();
   });
+
+  it('points a reviewer at review_ticket when the ticket waits for review', async () => {
+    const updateTicketApi = vi.fn();
+    const client = fakeClient({
+      getTicket: returns(detail({ ticket: ticket({ statusId: 's3' }), status: statusAt(2) })),
+      updateTicket: updateTicketApi,
+    });
+    await expect(run(moveTicket, client, { ticket: 'MOB-3', status: 'Done' })).rejects.toThrow(
+      'Only a person can move a ticket to Done. To finish a review, use review_ticket.',
+    );
+    expect(updateTicketApi).not.toHaveBeenCalled();
+  });
+
+  it('says a reviewed ticket is waiting for a person', async () => {
+    const updateTicketApi = vi.fn();
+    const client = fakeClient({
+      getTicket: returns(detail({ ticket: ticket({ statusId: 's4' }), status: statusAt(3) })),
+      updateTicket: updateTicketApi,
+    });
+    await expect(run(moveTicket, client, { ticket: 'MOB-3', status: 'Done' })).rejects.toThrow(
+      'MOB-3 is in Reviewed, waiting for a person to move it to Done.',
+    );
+    expect(updateTicketApi).not.toHaveBeenCalled();
+  });
 });
 
 describe('add_comment', () => {
