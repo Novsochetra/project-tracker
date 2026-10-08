@@ -1,11 +1,13 @@
 import {
   byRank,
   matchesSearch,
+  sortStatuses,
   type ListTicketsQuery,
   type ProjectBoard,
   type Status,
   type TicketDetail,
   type TicketListItem,
+  type TicketsAcrossProjects,
 } from '@tracker/shared';
 import type { AttachmentRow, Db, StatusRow, TicketRow } from '../db/schema';
 import { listTicketActivities } from '../repositories/activities';
@@ -106,11 +108,16 @@ export async function listTickets(
 export async function listAllTickets(
   ctx: ServiceContext,
   query: ListTicketsQuery,
-): Promise<TicketListItem[]> {
+): Promise<TicketsAcrossProjects> {
   const projectKeys = new Map((await listProjectRows(ctx.db)).map((row) => [row.id, row.key]));
-  const statusIds = allowedStatusIds(await listAllStatusRows(ctx.db), query);
-  const rows = await listTicketItemRowsInStatuses(ctx.db, statusIds);
-  return rows
+  const statuses = await listAllStatusRows(ctx.db);
+  const rows = await listTicketItemRowsInStatuses(ctx.db, allowedStatusIds(statuses, query));
+  const tickets = rows
     .map((row) => toTicketListItem(row, projectKeys.get(row.projectId) ?? ''))
     .filter((ticket) => matchesSearch(ticket, query.q ?? ''));
+  const listed = new Set(tickets.map((ticket) => ticket.projectId));
+  return {
+    tickets,
+    statuses: sortStatuses(statuses.filter((status) => listed.has(status.projectId))).map(toStatus),
+  };
 }

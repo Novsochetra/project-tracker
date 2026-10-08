@@ -14,7 +14,7 @@ import styles from './ProjectsScreen.module.css';
 export function ProjectsScreen() {
   const projects = useProjects();
   const ready = useReadyForYou();
-  const items = readyItems(ready.data ?? [], projects.data ?? []);
+  const items = readyItems(ready.data, projects.data ?? []);
   const sheets = useSheets();
   const isPhone = useIsPhone();
   const { scrollRef } = useScreen();

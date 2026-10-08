@@ -1,7 +1,6 @@
-import { findStatusByCategory, type Status } from '@tracker/shared';
+import type { Status } from '@tracker/shared';
 import clsx from 'clsx';
 import { ArrowRight, Check, ChevronRight } from 'lucide-react';
-import { useProject } from '../../api';
 import { Button, Icon, StarRating, VerdictChip } from '../../components';
 import { SwipeActions, type SwipeAction } from '../../gestures';
 import { useIsPhone } from '../../lib/media';
@@ -14,19 +13,6 @@ export interface ReadyRowProps {
   index: number;
   onOpen: (item: ReadyItem) => void;
   onDone: (item: ReadyItem, status: Status) => void;
-}
-
-interface ReadyStatuses {
-  done: Status | null;
-  color: string | undefined;
-}
-
-function useReadyStatuses({ project, ticket }: ReadyItem): ReadyStatuses {
-  const statuses = useProject(project.key).data?.statuses ?? [];
-  return {
-    done: findStatusByCategory(statuses, 'done') ?? null,
-    color: statuses.find((status) => status.id === ticket.statusId)?.color,
-  };
 }
 
 // The row leaves the list, so keyboard users keep their place on the ticket next to it.
@@ -47,10 +33,8 @@ const doneAction = (status: Status, onTrigger: () => void): SwipeAction => ({
 
 export function ReadyRow({ item, index, onOpen, onDone }: ReadyRowProps) {
   const isPhone = useIsPhone();
-  const { done, color } = useReadyStatuses(item);
-  const main = (
-    <ReadyRowMain item={item} approvedColor={color} chevron={isPhone} onOpen={() => onOpen(item)} />
-  );
+  const done = item.doneStatus;
+  const main = <ReadyRowMain item={item} chevron={isPhone} onOpen={() => onOpen(item)} />;
   return (
     <div
       className={clsx(styles.row, 'rise')}
@@ -89,14 +73,12 @@ export function ReadyRow({ item, index, onOpen, onDone }: ReadyRowProps) {
 
 interface ReadyRowMainProps {
   item: ReadyItem;
-  approvedColor: string | undefined;
   chevron: boolean;
   onOpen: () => void;
 }
 
 function ReadyRowMain({
-  item: { ticket, project },
-  approvedColor,
+  item: { ticket, project, statusColor },
   chevron,
   onOpen,
 }: ReadyRowMainProps) {
@@ -111,7 +93,7 @@ function ReadyRowMain({
       </span>{' '}
       {ticket.lastReview && (
         <span className={styles.review}>
-          <VerdictChip verdict={ticket.lastReview.verdict} approvedColor={approvedColor} />{' '}
+          <VerdictChip verdict={ticket.lastReview.verdict} approvedColor={statusColor} />{' '}
           <StarRating value={ticket.lastReview.rating} />
         </span>
       )}

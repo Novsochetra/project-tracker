@@ -1,3 +1,5 @@
+import { draftSaved, rebaseDraft } from '../../../lib/storedDrafts';
+
 // On a slow connection several saves of one field can be on their way, and the tracker ends with
 // the latest one's text.
 export interface SentSaves {
@@ -8,7 +10,10 @@ export interface SentSaves {
 
 export const NO_SAVES: SentSaves = { latest: 0, onTheirWay: new Map(), landed: 0 };
 
-// Text the latest save is still carrying isn't sent again: that save's outcome settles the field.
+// The latest save sent carries this text and is still on its way, so its outcome settles it.
+export const carries = (saves: SentSaves, value: string): boolean =>
+  saves.onTheirWay.get(saves.latest) === value;
+
 export type SaveStep = 'skip' | 'unchanged' | 'send';
 
 export interface SaveRequest {
@@ -20,7 +25,7 @@ export interface SaveRequest {
 
 export function saveStep(saves: SentSaves, { value, shown, checked }: SaveRequest): SaveStep {
   if (checked) return 'send';
-  if (saves.onTheirWay.get(saves.latest) === value) return 'skip';
+  if (carries(saves, value)) return 'skip';
   return saves.onTheirWay.size === 0 && value === shown ? 'unchanged' : 'send';
 }
 
@@ -46,4 +51,40 @@ export function settleSave(saves: SentSaves, number: number, saved: boolean): Se
   if (!saved || number < saves.landed) return { saves: { ...saves, onTheirWay }, outcome: 'keep' };
   const outcome = number === saves.latest ? 'done' : 'rebase';
   return { saves: { ...saves, onTheirWay, landed: number }, outcome };
+}
+
+// Kept per draft id rather than in a mounted field: the field opened again after leaving the
+// ticket, and the app-wide sync, must know about the saves a field that is gone still has on
+// their way, or the tracker having the first of them looks like someone else's change.
+const sent = new Map<string, SentSaves>();
+const listeners = new Set<() => void>();
+
+export const savesOf = (id: string): SentSaves => sent.get(id) ?? NO_SAVES;
+
+export const isSaving = (id: string): boolean => savesOf(id).onTheirWay.size > 0;
+
+function update(id: string, saves: SentSaves): void {
+  if (saves.onTheirWay.size === 0) sent.delete(id);
+  else sent.set(id, saves);
+  listeners.forEach((listener) => listener());
+}
+
+export function startSave(id: string, value: string): number {
+  const saves = sendSave(savesOf(id), value);
+  update(id, saves);
+  return saves.latest;
+}
+
+export function finishSave(id: string, number: number, saved: boolean): void {
+  const value = savesOf(id).onTheirWay.get(number);
+  if (value === undefined) return;
+  const { saves, outcome } = settleSave(savesOf(id), number, saved);
+  if (outcome === 'done') draftSaved(id, value);
+  else if (outcome === 'rebase') rebaseDraft(id, value);
+  update(id, saves);
+}
+
+export function subscribeSaves(listener: () => void): () => void {
+  listeners.add(listener);
+  return () => listeners.delete(listener);
 }

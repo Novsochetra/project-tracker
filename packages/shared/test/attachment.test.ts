@@ -4,6 +4,7 @@ import {
   ATTACHMENT_KINDS,
   ATTACHMENT_TYPES,
   MAX_ATTACHMENT_BYTES,
+  MAX_NEW_ATTACHMENTS,
   PENDING_ATTACHMENT_TTL_MS,
   UNSUPPORTED_ATTACHMENT_MESSAGE,
   attachmentKind,
@@ -11,6 +12,7 @@ import {
   resolveAttachmentType,
   storedExtension,
   tooLargeMessage,
+  tooManyFilesMessage,
   typeFromFileName,
 } from '../src/domain/attachment';
 
@@ -116,6 +118,19 @@ describe('resolveAttachmentType', () => {
     expect(resolveAttachmentType('text/x-markdown', 'notes.md')).toBe('text/markdown');
   });
 
+  it('takes the other names systems give allowed types, whatever the name', () => {
+    expect(resolveAttachmentType('text/x-log', 'server.log')).toBe('text/plain');
+    expect(resolveAttachmentType('text/x-csv', 'export.csv')).toBe('text/csv');
+    expect(resolveAttachmentType('application/csv', 'export.csv')).toBe('text/csv');
+    expect(resolveAttachmentType('text/comma-separated-values', 'a.csv')).toBe('text/csv');
+    expect(resolveAttachmentType('image/jpg', 'IMG_0003.JPG')).toBe('image/jpeg');
+    expect(checkAttachment({ type: 'text/x-log', name: 'server.log', size: 10 })).toEqual({
+      ok: true,
+      mimeType: 'text/plain',
+      kind: 'text',
+    });
+  });
+
   it('reads CSV files that Windows labels as Excel files by their name', () => {
     expect(resolveAttachmentType('application/vnd.ms-excel', 'export.csv')).toBe('text/csv');
     expect(resolveAttachmentType('application/vnd.ms-excel', 'budget.xls')).toBeNull();
@@ -182,6 +197,12 @@ describe('messages', () => {
     expect(tooLargeMessage('video')).toBe('Videos can be up to 100 MB.');
     expect(tooLargeMessage('text')).toBe('Text files can be up to 5 MB.');
     expect(tooLargeMessage('pdf')).toBe('PDFs can be up to 25 MB.');
+  });
+
+  it('say how many files a new ticket or comment can have', () => {
+    expect(MAX_NEW_ATTACHMENTS).toBe(20);
+    expect(tooManyFilesMessage('ticket')).toBe('A new ticket can have up to 20 files.');
+    expect(tooManyFilesMessage('comment')).toBe('A comment can have up to 20 files.');
   });
 
   it('list everything that can be attached', () => {

@@ -1,5 +1,18 @@
-import { describe, expect, it } from 'vitest';
-import { NO_SAVES, saveStep, sendSave, settleSave, type SentSaves } from './fieldSaves';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { keepDraft, storedDraft } from '../../../lib/storedDrafts';
+import {
+  carries,
+  finishSave,
+  isSaving,
+  NO_SAVES,
+  saveStep,
+  savesOf,
+  sendSave,
+  settleSave,
+  startSave,
+  subscribeSaves,
+  type SentSaves,
+} from './fieldSaves';
 
 const sent = (...texts: string[]): SentSaves => texts.reduce(sendSave, NO_SAVES);
 
@@ -92,5 +105,71 @@ describe('a field save that settles', () => {
     settled = settleSave(saves, 2, true);
     expect(settled.outcome).toBe('rebase');
     expect(settleSave(settled.saves, 3, true).outcome).toBe('done');
+  });
+});
+
+describe('the saves of a field kept per draft id', () => {
+  const ID = 'description:MOB-1';
+  const keep = (text: string) =>
+    keepDraft(ID, { ticketKey: 'MOB-1', field: 'description', text }, 'Fix login');
+
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  // A field opened again, or the app-wide sync, asks by id while the field that sent them is gone.
+  it('are on their way until the last of them settles', () => {
+    keep('Fix login now please');
+    const first = startSave(ID, 'Fix login now');
+    const second = startSave(ID, 'Fix login now please');
+    expect(isSaving(ID)).toBe(true);
+    expect(isSaving('title:MOB-1')).toBe(false);
+    expect(carries(savesOf(ID), 'Fix login now please')).toBe(true);
+    expect(carries(savesOf(ID), 'Fix login now')).toBe(false);
+    finishSave(ID, first, true);
+    expect(isSaving(ID)).toBe(true);
+    finishSave(ID, second, true);
+    expect(isSaving(ID)).toBe(false);
+    expect(savesOf(ID)).toBe(NO_SAVES);
+  });
+
+  it('let the kept text go only when the latest save lands', () => {
+    keep('Fix login now please');
+    const first = startSave(ID, 'Fix login now');
+    const second = startSave(ID, 'Fix login now please');
+    finishSave(ID, first, true);
+    expect(storedDraft(ID)).toMatchObject({ text: 'Fix login now please', base: 'Fix login now' });
+    finishSave(ID, second, true);
+    expect(storedDraft(ID)).toBeUndefined();
+  });
+
+  it('keep the text when the latest save fails', () => {
+    keep('Fix login now');
+    const first = startSave(ID, 'Fix login now please');
+    const second = startSave(ID, 'Fix login now');
+    finishSave(ID, first, true);
+    finishSave(ID, second, false);
+    expect(storedDraft(ID)).toMatchObject({ text: 'Fix login now', base: 'Fix login now please' });
+    expect(isSaving(ID)).toBe(false);
+  });
+
+  it('settle each save once', () => {
+    keep('Fix login now');
+    const number = startSave(ID, 'Fix login now');
+    finishSave(ID, number + 1, true);
+    expect(isSaving(ID)).toBe(true);
+    expect(storedDraft(ID)?.text).toBe('Fix login now');
+    finishSave(ID, number, true);
+  });
+
+  it('tell subscribers when a save starts or settles', () => {
+    const listener = vi.fn();
+    const stop = subscribeSaves(listener);
+    const number = startSave(ID, 'Fix login now');
+    finishSave(ID, number, false);
+    expect(listener).toHaveBeenCalledTimes(2);
+    stop();
+    finishSave(ID, startSave(ID, 'Fix login now'), false);
+    expect(listener).toHaveBeenCalledTimes(2);
   });
 });

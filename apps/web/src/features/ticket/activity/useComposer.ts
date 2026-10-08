@@ -49,7 +49,10 @@ function useComposerText(ticketKey: string) {
 export function useComposer(ticketKey: string): ComposerState {
   const composer = useComposerText(ticketKey);
   const [attachments, setAttachments] = useState<Attachment[]>([]);
-  const files = useAttachmentList(setAttachments);
+  const files = useAttachmentList(setAttachments, {
+    owner: 'comment',
+    attached: attachments.length,
+  });
   const addComment = useAddComment();
   const { show } = useToast();
   const { text } = composer;
@@ -63,6 +66,7 @@ export function useComposer(ticketKey: string): ComposerState {
     const sent = { text: text.trim(), attachments };
     composer.change('');
     setAttachments([]);
+    files.dismissNotice();
     void addComment
       .mutateAsync({ ticketKey, text: sent.text, attachments: sent.attachments })
       .catch((error: unknown) => {

@@ -166,6 +166,20 @@ describe.each(DIALECTS)('attachments (%s)', (dialect) => {
     expect(storedExtensions()).toEqual(['txt', 'md', 'csv', 'heic', 'mov']);
   });
 
+  it('stores other names systems give an allowed type as that type', async () => {
+    const files = [
+      ['server.log', 'text/x-log', 'text/plain'],
+      ['export.csv', 'text/x-csv', 'text/csv'],
+      ['IMG_0003.JPG', 'image/jpg', 'image/jpeg'],
+    ];
+    for (const [name, type, stored] of files) {
+      const res = await upload(fileForm({ name, type }));
+      expect(res.status, name).toBe(201);
+      expect(res.body.mimeType, name).toBe(stored);
+    }
+    expect(storedExtensions()).toEqual(['txt', 'csv', 'jpg']);
+  });
+
   it('refuses SVG, HTML and unknown types, saying what can be attached', async () => {
     const refused = [
       ['logo.svg', 'image/svg+xml'],

@@ -1,9 +1,10 @@
 import clsx from 'clsx';
 import { LayoutGrid, Plus } from 'lucide-react';
 import type { ReactNode } from 'react';
-import { useProjects } from '../api';
+import { useProjects, useReadyForYou } from '../api';
 import { Icon, IconButton, LogoGlyph } from '../components';
 import { sameProjectKey } from '../features/projects/projectLookup';
+import { readyCounts, readyItems } from '../features/ready/readyItems';
 import { useNavigation } from '../navigation';
 import { projectKeyOf } from './crumbs';
 import { useSheets } from './sheets/context';
@@ -34,6 +35,7 @@ export function Sidebar() {
   const { route, push } = useNavigation();
   const sheets = useSheets();
   const projects = useProjects().data ?? [];
+  const ready = readyCounts(readyItems(useReadyForYou().data, projects));
   const activeKey = projectKeyOf(route);
   return (
     <aside aria-label="Projects" className={styles.sidebar}>
@@ -65,6 +67,11 @@ export function Sidebar() {
           >
             <span className={styles.square} style={{ background: project.color }} />
             <span className={styles.name}>{project.name}</span>{' '}
+            {ready.has(project.id) && (
+              <>
+                <span className={styles.ready}>{ready.get(project.id)} ready</span>{' '}
+              </>
+            )}
             <span className={styles.count}>
               {project.openCount} <span className="visually-hidden">open</span>
             </span>

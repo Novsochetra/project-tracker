@@ -10,7 +10,7 @@ import {
   type RefObject,
 } from 'react';
 import { Icon } from '../../components';
-import { wantsHandleFocus } from './dnd/handleFocus';
+import { HANDLE_ATTRIBUTE, wantsHandleFocus } from './dnd/handleFocus';
 import styles from './TicketRow.module.css';
 
 export interface DragHandleProps {
@@ -47,7 +47,7 @@ export function DragHandle({ ticket, onPointerDown, onKeyDown, className }: Drag
       type="button"
       className={clsx(styles.handle, className)}
       data-no-swipe=""
-      data-handle-for={ticket.id}
+      {...{ [HANDLE_ATTRIBUTE]: ticket.id }}
       aria-label={`Move ${ticket.key}. Drag, or use the arrow keys.`}
       onPointerDown={onPointerDown}
       onKeyDown={onKeyDown}

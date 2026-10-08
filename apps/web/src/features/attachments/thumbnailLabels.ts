@@ -20,6 +20,24 @@ export const isWide = (kind: AttachmentKind | null): boolean =>
 export const capitalized = (label: string): string =>
   label.charAt(0).toUpperCase() + label.slice(1);
 
+// Characters before the extension that stay with it, enough to tell "crash-report-1.log" from
+// "crash-report-2.log" when a small tile has room for neither name.
+const KEPT_BEFORE_EXTENSION = 4;
+
+export interface NameParts {
+  head: string;
+  tail: string;
+}
+
+// By code points, so an emoji in a name is never split.
+export function splitFileName(name: string): NameParts {
+  const characters = Array.from(name);
+  const dot = characters.lastIndexOf('.');
+  const extension = dot > 0 ? dot : characters.length;
+  const cut = Math.max(0, extension - KEPT_BEFORE_EXTENSION);
+  return { head: characters.slice(0, cut).join(''), tail: characters.slice(cut).join('') };
+}
+
 const pad = (value: number): string => String(value).padStart(2, '0');
 
 export function formatDuration(seconds: number): string | null {

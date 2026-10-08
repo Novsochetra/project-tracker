@@ -10,13 +10,14 @@ export function useNewTicketFiles(
   setForm: Dispatch<SetStateAction<NewTicketForm>>,
   projectKey: string,
   open: boolean,
+  attached: number,
 ): AttachmentList {
   const setAttachments = (next: SetStateAction<Attachment[]>) =>
     setForm((current) => ({
       ...current,
       attachments: typeof next === 'function' ? next(current.attachments) : next,
     }));
-  const files = useAttachmentList(setAttachments);
+  const files = useAttachmentList(setAttachments, { owner: 'ticket', attached });
   useDraftMark(`new-ticket-files:${projectKey}`, open && files.uploading.length > 0);
   return files;
 }

@@ -1,0 +1,103 @@
+/* Tabs that don't fit scroll inside the track instead of wrapping, so the row stays one line
+   however many statuses a project has. */
+.track {
+  position: relative;
+  display: flex;
+  flex: 0 1 auto;
+  gap: 2px;
+  min-width: 0;
+  max-width: 100%;
+  padding: 0 2px;
+  border-radius: var(--radius-container);
+  background: var(--fill-2);
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  scroll-padding-inline: 2px;
+  scrollbar-width: none;
+}
+
+.track::-webkit-scrollbar {
+  display: none;
+}
+
+/* useTabThumb measures the pressed tab, because tabs are as wide as their names. */
+.thumb {
+  position: absolute;
+  top: 2px;
+  bottom: 2px;
+  left: 0;
+  width: var(--thumb-width, 0);
+  border-radius: var(--radius-control);
+  background: var(--surface);
+  box-shadow: var(--shadow-raised);
+  transform: translateX(var(--thumb-x, 0));
+}
+
+.thumb[data-placed] {
+  transition:
+    transform var(--duration-spring) var(--ease-spring),
+    width var(--duration-spring) var(--ease-spring);
+}
+
+/* Tabs fill the track's height, so the target is the whole track and the thumb sits 2px inside. */
+.tab {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  flex: 1 0 auto;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 34px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: var(--radius-control);
+  background: transparent;
+  color: var(--muted);
+  font-family: var(--font-sans);
+  font-size: var(--size-secondary);
+  font-weight: var(--weight-medium);
+  white-space: nowrap;
+  cursor: pointer;
+  scroll-snap-align: start;
+  transition: color var(--duration-fast) ease-out;
+}
+
+.tab[aria-pressed='true'] {
+  color: var(--ink);
+}
+
+.tab:focus-visible {
+  outline-offset: -2px;
+}
+
+@media (hover: hover) {
+  .tab:hover {
+    color: var(--ink);
+  }
+}
+
+.name {
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.count {
+  color: var(--subtle);
+  font-size: var(--size-caption);
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 767px) {
+  .track {
+    flex: 1 1 100%;
+  }
+
+  .tab {
+    min-height: 44px;
+    font-size: var(--size-body);
+  }
+}

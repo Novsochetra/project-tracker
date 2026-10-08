@@ -52,7 +52,8 @@ export function ActivityCard({
   );
 }
 
-export function ActorAvatar({ actor }: { actor: Actor }) {
+export function ActorAvatar({ actor }: { actor: Actor | null }) {
+  if (!actor) return <Avatar name="" size={20} decorative />;
   if (actor.kind === 'agent') return <AgentAvatar />;
   return actor.name ? <Avatar name={actor.name} size={20} decorative /> : <YouAvatar />;
 }

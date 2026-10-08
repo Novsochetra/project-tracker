@@ -5,6 +5,7 @@ import { afterAll, describe, expect, it, vi } from 'vitest';
 import { createClock } from '../../src/clock';
 import { DEFAULT_PORT, REPO_ROOT, loadConfig } from '../../src/config';
 import { isPostgresUrl } from '../../src/db/createDatabase';
+import { isUniqueViolation } from '../../src/db/errors';
 import { createBroadcaster } from '../../src/events/broadcaster';
 import { createDiskStorage } from '../../src/storage/diskStorage';
 import { createMemoryStorage } from '../../src/storage/memoryStorage';
@@ -86,6 +87,24 @@ describe('loadConfig', () => {
     expect(isPostgresUrl('postgresql://u@h/db')).toBe(true);
     expect(isPostgresUrl(':memory:')).toBe(false);
     expect(isPostgresUrl('/data/tracker.db')).toBe(false);
+  });
+});
+
+describe('isUniqueViolation', () => {
+  const failure = (code: unknown) => Object.assign(new Error('refused'), { code });
+
+  it('knows a unique index refusing a row in SQLite and in Postgres', () => {
+    expect(isUniqueViolation(failure('SQLITE_CONSTRAINT_UNIQUE'))).toBe(true);
+    expect(isUniqueViolation(failure('23505'))).toBe(true);
+  });
+
+  it('leaves out every other failure', () => {
+    expect(isUniqueViolation(failure('SQLITE_CONSTRAINT_FOREIGNKEY'))).toBe(false);
+    expect(isUniqueViolation(failure('23503'))).toBe(false);
+    expect(isUniqueViolation(failure(23505))).toBe(false);
+    expect(isUniqueViolation(new Error('UNIQUE constraint failed: tickets.client_id'))).toBe(false);
+    expect(isUniqueViolation('23505')).toBe(false);
+    expect(isUniqueViolation(null)).toBe(false);
   });
 });
 

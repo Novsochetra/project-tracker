@@ -5,7 +5,7 @@ const many = (count: number, status: string) =>
   Array.from({ length: count }, (_, i) => ({ title: `${status} item ${i + 1}`, status }));
 
 test.describe('ticket list', () => {
-  test('filter counts cover the whole project and search finds keys', async ({ page, api }) => {
+  test('tab counts cover the whole project and search finds keys', async ({ page, api }) => {
     await seedProject(api, 'Mobile app', 'MOB', [
       { title: 'Alpha' },
       { title: 'Beta', status: 'In progress' },
@@ -13,31 +13,39 @@ test.describe('ticket list', () => {
     ]);
     await page.goto('/p/MOB');
     const filters = page.getByRole('group', { name: 'Filter tickets' });
-    await expect(filters.getByRole('button', { name: /^All\s*3$/ })).toBeVisible();
-    await expect(filters.getByRole('button', { name: /^Active\s*2$/ })).toBeVisible();
-    await expect(filters.getByRole('button', { name: /^Done\s*1$/ })).toBeVisible();
+    await expect(filters.getByRole('button')).toHaveText([
+      'All 3 tickets',
+      'To do 1 ticket',
+      'In progress 1 ticket',
+      'Need review 0 tickets',
+      'Reviewed 0 tickets',
+      'Done 1 ticket',
+    ]);
 
     await page.getByLabel('Search tickets').fill('mob-3');
     await expect(ticketRow(page, 'MOB-3')).toBeVisible();
     await expect(ticketRow(page, 'MOB-1')).toBeHidden();
-    await expect(filters.getByRole('button', { name: /^All\s*3$/ })).toBeVisible();
+    await expect(filters.getByRole('button', { name: 'All 3 tickets' })).toBeVisible();
 
     await page.getByLabel('Search tickets').fill('zzz');
     await expect(page.getByText('No tickets match.')).toBeVisible();
   });
 
-  test('active and done filters hide the other groups', async ({ page, api }) => {
+  test("a status tab shows only that status's group", async ({ page, api }) => {
     await seedProject(api, 'Mobile app', 'MOB', [
       { title: 'Alpha' },
       { title: 'Gamma', status: 'Done' },
     ]);
     await page.goto('/p/MOB');
     const filters = page.getByRole('group', { name: 'Filter tickets' });
-    await filters.getByRole('button', { name: /^Active/ }).click();
+    await filters.getByRole('button', { name: /^To do/ }).click();
     await expect(group(page, 'Done')).toBeHidden();
     await expect(group(page, 'To do')).toBeVisible();
     await filters.getByRole('button', { name: /^Done/ }).click();
     await expect(group(page, 'To do')).toBeHidden();
+    await expect(group(page, 'Done')).toBeVisible();
+    await filters.getByRole('button', { name: /^All/ }).click();
+    await expect(group(page, 'To do')).toBeVisible();
     await expect(group(page, 'Done')).toBeVisible();
   });
 

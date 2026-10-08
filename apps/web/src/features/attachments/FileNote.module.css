@@ -1,0 +1,44 @@
+.note {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  min-width: 0;
+  color: var(--danger);
+  font-size: var(--size-secondary);
+  line-height: 1.5;
+}
+
+/* Centered on the first line, so the icon stays beside the title however the text wraps. */
+.icon {
+  flex: none;
+  margin-top: calc((1.5em - 14px) / 2);
+}
+
+.text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  margin: 0;
+  /* A long file name wraps instead of running out of the note. */
+  overflow-wrap: anywhere;
+}
+
+.title {
+  font-weight: var(--weight-medium);
+}
+
+.detail {
+  color: var(--muted);
+}
+
+/* The x lines up with the title; on phones its 44px target reaches past the note's corner. */
+.note .dismiss {
+  margin: -3px -4px 0 0;
+}
+
+@media (max-width: 767px) {
+  .note .dismiss {
+    margin: -12px -12px -12px 0;
+  }
+}

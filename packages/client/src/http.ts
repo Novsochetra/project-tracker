@@ -21,12 +21,14 @@ export interface HttpOptions {
 
 type Query = Record<string, string | undefined>;
 
-// The web app's service worker leaves requests with this header to the network.
+// The web app's service worker never answers a read with this header from its cache; it still
+// stores the answer, so its saved copy catches up.
 export const FRESH_READ_HEADER = 'x-tracker-fresh';
 
 export interface ReadOptions {
-  // Skips every cache on the way, the browser's and the web app's service worker, so the answer
-  // comes from the server or the read fails. For decisions a stale answer would get wrong.
+  // The answer comes from the server or the read fails: the browser's HTTP cache is skipped, and
+  // the web app's service worker passes the read on without answering it from its cache. For
+  // decisions a stale answer would get wrong.
   fresh?: boolean;
 }
 

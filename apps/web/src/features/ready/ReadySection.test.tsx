@@ -1,4 +1,4 @@
-import type { ProjectDetail, Review, Status, TicketListItem } from '@tracker/shared';
+import type { Review, Status, TicketListItem } from '@tracker/shared';
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -33,21 +33,13 @@ const webTicket = (num: number, overrides: Partial<TicketListItem> = {}) =>
     ...overrides,
   });
 
-const details: Record<string, ProjectDetail> = {
-  MOB: { project, statuses },
-  WEB: { project: otherProject, statuses: webStatuses },
-};
-
 const pending = () => new Promise<never>(() => undefined);
 
-function renderSection(tickets: TicketListItem[], client: Record<string, unknown> = {}) {
-  const getProject = vi.fn((key: string) => Promise.resolve(details[key]));
+function renderSection(tickets: TicketListItem[], projectStatuses = [...statuses, ...webStatuses]) {
   const updateTicket = vi.fn(pending);
-  const view = renderWithApp(
-    <ReadySection items={readyItems(tickets, [project, otherProject])} />,
-    { client: { getProject, updateTicket, ...client } },
-  );
-  return { ...view, getProject, updateTicket };
+  const items = readyItems({ tickets, statuses: projectStatuses }, [project, otherProject]);
+  const view = renderWithApp(<ReadySection items={items} />, { client: { updateTicket } });
+  return { ...view, updateTicket };
 }
 
 const section = () => screen.getByRole('region', { name: 'Ready for you' });
@@ -65,7 +57,7 @@ afterEach(() => {
 });
 
 describe('ReadySection', () => {
-  it('lists each ticket with its key, title, project, verdict and rating under a counted heading', async () => {
+  it('lists each ticket with its key, title, project, verdict and rating under a counted heading', () => {
     renderSection([webTicket(2, { lastReview: { verdict: 'approved', rating: 5 } }), mobTicket(3)]);
     expect(within(section()).getByRole('heading', { name: 'Ready for you' })).toBeInTheDocument();
     expect(section()).toHaveTextContent(/^Ready for you\s*2/);
@@ -82,8 +74,8 @@ describe('ReadySection', () => {
       .map((button) => button.textContent?.split(' ')[0]);
     expect(keys).toEqual(['WEB-2', 'MOB-3']);
     const reviewedColor = statuses.find((status) => status.category === 'reviewed')?.color;
-    const chip = () => within(mobile).getByText('Approved').closest<HTMLElement>('[data-verdict]');
-    await waitFor(() => expect(chip()?.style.getPropertyValue('--verdict')).toBe(reviewedColor));
+    const chip = within(mobile).getByText('Approved').closest<HTMLElement>('[data-verdict]');
+    expect(chip?.style.getPropertyValue('--verdict')).toBe(reviewedColor);
   });
 
   it('shows a sent-back verdict and leaves out the verdict of a ticket nobody reviewed', () => {
@@ -107,7 +99,7 @@ describe('ReadySection', () => {
   it('moves a ticket to its project’s done status with the Done button on desktop', async () => {
     const user = userEvent.setup();
     const { updateTicket } = renderSection([mobTicket(3), webTicket(2)]);
-    await user.click(await screen.findByRole('button', { name: 'Move WEB-2 to Shipped' }));
+    await user.click(screen.getByRole('button', { name: 'Move WEB-2 to Shipped' }));
     expect(updateTicket).toHaveBeenCalledWith('WEB-2', { statusId: 'web-s-done' });
     expect(await screen.findByText('WEB-2 moved to Shipped')).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Move MOB-3 to Done' }));
@@ -118,7 +110,7 @@ describe('ReadySection', () => {
   it('hands keyboard focus to the next ticket, or the one before, when one is moved', async () => {
     const user = userEvent.setup();
     renderSection([mobTicket(3), mobTicket(4), mobTicket(5)]);
-    (await screen.findByRole('button', { name: 'Move MOB-4 to Done' })).focus();
+    screen.getByRole('button', { name: 'Move MOB-4 to Done' }).focus();
     await user.keyboard('{Enter}');
     expect(rowButton('MOB-5')).toHaveFocus();
     screen.getByRole('button', { name: 'Move MOB-5 to Done' }).focus();
@@ -126,15 +118,11 @@ describe('ReadySection', () => {
     expect(rowButton('MOB-4')).toHaveFocus();
   });
 
-  it('offers Done only once it knows the project’s done status', async () => {
+  it('offers no Done for a project without a done status', () => {
     const noDone = statuses.filter((status) => status.category !== 'done');
-    const getProject = vi.fn((key: string) =>
-      key === 'MOB' ? Promise.resolve({ project, statuses: noDone }) : pending(),
-    );
-    renderSection([mobTicket(3), webTicket(2)], { getProject });
-    await waitFor(() => expect(getProject).toHaveBeenCalledWith('MOB'));
-    await waitFor(() => expect(getProject).toHaveBeenCalledWith('WEB'));
-    expect(screen.queryByRole('button', { name: /^Move / })).not.toBeInTheDocument();
+    renderSection([mobTicket(3), webTicket(2)], [...noDone, ...webStatuses]);
+    expect(screen.queryByRole('button', { name: /^Move MOB-3/ })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Move WEB-2 to Shipped' })).toBeInTheDocument();
   });
 
   it('shows five tickets and a Show more toggle for a long list', async () => {
@@ -170,9 +158,7 @@ describe('ReadySection', () => {
 
     it('swipes right to move a ticket to Done, with the usual toast', async () => {
       const { updateTicket } = renderSection([mobTicket(3)]);
-      await waitFor(() =>
-        expect(rowButton('MOB-3').closest('[data-ready-row]')).toHaveTextContent('Done'),
-      );
+      expect(rowButton('MOB-3').closest('[data-ready-row]')).toHaveTextContent('Done');
       swipeAction('MOB-3', 'Done');
       // The toast leaves after 2.2s of real time, so check it before waiting on anything.
       expect(screen.getByText('MOB-3 moved to Done')).toBeInTheDocument();
@@ -181,10 +167,10 @@ describe('ReadySection', () => {
       );
     });
 
-    it('has no Done button; the row swipes instead', async () => {
+    it('has no Done button; the row swipes instead', () => {
       renderSection([mobTicket(3)]);
       const row = rowButton('MOB-3').closest('[data-ready-row]');
-      await waitFor(() => expect(row).toHaveTextContent('Done'));
+      expect(row).toHaveTextContent('Done');
       expect(row?.querySelector('[data-swipe-row]')).not.toBeNull();
       expect(screen.queryByRole('button', { name: 'Move MOB-3 to Done' })).not.toBeInTheDocument();
     });

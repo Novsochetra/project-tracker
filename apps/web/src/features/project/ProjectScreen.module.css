@@ -47,11 +47,15 @@
   padding: 14px 32px 16px;
 }
 
+/* Starts as narrow as it gets (the search at its 160px minimum beside the 136px switch) and grows
+   to the search's 240px, so the status tabs keep this row while both fit (SPEC §4.2). */
 .tools {
   display: flex;
+  flex: 1 1 304px;
   align-items: stretch;
   gap: var(--space-2);
   min-width: 0;
+  max-width: 384px;
 }
 
 .tools .viewSwitch {
@@ -102,6 +106,7 @@
 
   .tools {
     flex: 1 1 100%;
+    max-width: none;
   }
 
   .tools .viewSwitch {

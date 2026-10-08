@@ -1,16 +1,15 @@
-import { useCallback, useRef, type Dispatch, type SetStateAction } from 'react';
+import type { Dispatch, SetStateAction } from 'react';
 import {
   draftIdOf,
   draftSaved,
   keepDraft,
-  rebaseDraft,
   storedDraft,
   type StoredDraft,
 } from '../../../lib/storedDrafts';
 import { useLatest } from '../../../lib/useLatest';
 import { useDraftSave, type DraftSave } from '../drafts/useDraftSave';
-import { beginSave, endSave, type FieldDraft } from './fieldDraft';
-import { NO_SAVES, saveStep, sendSave, settleSave, type SaveOutcome } from './fieldSaves';
+import { endSave, markSaved, type FieldDraft } from './fieldDraft';
+import { finishSave, saveStep, savesOf, startSave } from './fieldSaves';
 
 export type FieldSave = (value: string) => Promise<boolean>;
 
@@ -27,11 +26,6 @@ export interface SaveOptions {
 }
 
 export type SaveField = (value: string, options?: SaveOptions) => Promise<void>;
-
-export interface FieldSaver {
-  save: SaveField;
-  sending: () => boolean;
-}
 
 interface SaveInput {
   target: FieldTarget;
@@ -50,39 +44,25 @@ function request({ send, saveDraft }: Sender, draft: StoredDraft, quiet: boolean
   return sent.catch(() => false);
 }
 
-function keepOutcome(id: string, value: string, outcome: SaveOutcome): void {
-  if (outcome === 'done') draftSaved(id, value);
-  else if (outcome === 'rebase') rebaseDraft(id, value);
-}
-
-export function useFieldSave({ target, server, setDraft, onSave }: SaveInput): FieldSaver {
+export function useFieldSave({ target, server, setDraft, onSave }: SaveInput): SaveField {
   const { ticketKey, field } = target;
   const latest = useLatest({ server, send: onSave, saveDraft: useDraftSave() });
-  const savesRef = useRef(NO_SAVES);
-  const save = useCallback<SaveField>(
-    async (value, { checked = false, quiet = false } = {}) => {
-      const id = draftIdOf({ ticketKey, field });
-      const shown = latest.current.server;
-      const step = saveStep(savesRef.current, { value, shown, checked });
-      if (step === 'skip') return;
-      if (step === 'unchanged') {
-        draftSaved(id, value);
-        setDraft((current) => endSave(beginSave(current), value, true));
-        return;
-      }
-      // Kept until the tracker has it, so leaving or reloading during the request loses nothing.
-      if (!storedDraft(id)) keepDraft(id, { ticketKey, field, text: value }, shown);
-      savesRef.current = sendSave(savesRef.current, value);
-      const number = savesRef.current.latest;
-      setDraft(beginSave);
-      const draft = { ticketKey, field, text: value, base: shown };
-      const saved = await request(latest.current, draft, quiet);
-      const settled = settleSave(savesRef.current, number, saved);
-      savesRef.current = settled.saves;
-      keepOutcome(id, value, settled.outcome);
-      setDraft((current) => endSave(current, value, saved));
-    },
-    [ticketKey, field, latest, setDraft],
-  );
-  return { save, sending: () => savesRef.current.onTheirWay.size > 0 };
+  return async (value, { checked = false, quiet = false } = {}) => {
+    const id = draftIdOf({ ticketKey, field });
+    const shown = latest.current.server;
+    const step = saveStep(savesOf(id), { value, shown, checked });
+    if (step === 'skip') return;
+    if (step === 'unchanged') {
+      draftSaved(id, value);
+      setDraft((current) => markSaved(current, value));
+      return;
+    }
+    // Kept until the tracker has it, so leaving or reloading during the request loses nothing.
+    if (!storedDraft(id)) keepDraft(id, { ticketKey, field, text: value }, shown);
+    const number = startSave(id, value);
+    const draft = { ticketKey, field, text: value, base: shown };
+    const saved = await request(latest.current, draft, quiet);
+    setDraft((current) => endSave(current, value, saved));
+    finishSave(id, number, saved);
+  };
 }

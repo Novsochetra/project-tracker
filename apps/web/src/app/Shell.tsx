@@ -9,6 +9,7 @@ import { LiveRegion } from './LiveRegion';
 import { OfflineBanner } from './OfflineBanner';
 import { renderScreen } from './renderScreen';
 import { RouteFallback } from './RouteFallback';
+import { HeaderError, ShellBoundary, SidebarError } from './ShellError';
 import styles from './Shell.module.css';
 import { Sidebar } from './Sidebar';
 import { useApiUnreachable, useReachability } from './useApiUnreachable';
@@ -21,9 +22,17 @@ export function Shell() {
   const unreachable = useApiUnreachable(reachability);
   return (
     <div className={styles.shell}>
-      {!isPhone && <Sidebar />}
+      {!isPhone && (
+        <ShellBoundary name="Sidebar" fallback={<SidebarError />}>
+          <Sidebar />
+        </ShellBoundary>
+      )}
       <div className={styles.column}>
-        {!isPhone && <DesktopHeader />}
+        {!isPhone && (
+          <ShellBoundary name="Desktop header" fallback={<HeaderError />}>
+            <DesktopHeader />
+          </ShellBoundary>
+        )}
         {unreachable && <OfflineBanner />}
         <main className={clsx(styles.stack, unreachable && styles.belowBanner)}>
           <StackNavigator renderScreen={renderScreen} />

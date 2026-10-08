@@ -1,5 +1,6 @@
 import { render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { makeBoard } from '../../src/api/test/fixtures';
 import { SheetsContext, type SheetsApi } from '../../src/app/sheets/context';
 import { FilterRow } from '../../src/features/project/FilterRow';
 import { ProjectBottomBar } from '../../src/features/project/ProjectBars';
@@ -13,7 +14,7 @@ const SEGMENTED = 'components/Segmented/Segmented.module.css';
 const BOARD_LABEL = 39.2;
 
 function renderFilters() {
-  render(<FilterRow projectKey="MOB" counts={{ all: 6, active: 5, done: 1 }} />);
+  render(<FilterRow board={makeBoard()} />);
   const search = screen.getByRole('searchbox', { name: 'Search tickets' }).closest('label')!;
   const tools = search.parentElement!;
   return { search, tools, filters: tools.parentElement! };

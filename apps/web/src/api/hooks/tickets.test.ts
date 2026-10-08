@@ -2,7 +2,7 @@ import { act, renderHook, waitFor } from '@testing-library/react';
 import { ApiError } from '@tracker/client';
 import type { ProjectDetail, Ticket } from '@tracker/shared';
 import { describe, expect, it, vi } from 'vitest';
-import { markWritten } from '../freshReads';
+import { markChanged } from '../freshReads';
 import { refreshForChange } from '../live/refreshForChange';
 import { queryKeys } from '../queryKeys';
 import { deferred } from '../test/deferred';
@@ -138,14 +138,56 @@ describe('useTicket', () => {
     expect(getTicket).toHaveBeenLastCalledWith('MOB-1');
   });
 
-  it('reads a written ticket it has no copy of as usual, so a saved copy can still show', async () => {
+  // After a reload the page has no copy, and the service worker's may be older than the change.
+  it('reads a changed ticket it has no copy of fresh as well', async () => {
     const detail = makeTicketDetail();
     const getTicket = vi.fn().mockResolvedValue(detail);
     const { queryClient, wrapper } = setupApi({ getTicket });
-    markWritten(queryClient, 'MOB-1');
+    markChanged(queryClient, 'MOB-1');
     const { result } = renderHook(() => useTicket('MOB-1'), { wrapper });
     await waitFor(() => expect(result.current.data).toEqual(detail));
-    expect(getTicket).toHaveBeenCalledWith('MOB-1');
+    expect(getTicket.mock.calls).toEqual([['MOB-1', { fresh: true }]]);
+  });
+
+  it('shows a saved copy of a changed ticket it has no copy of when the tracker cannot be reached', async () => {
+    const detail = makeTicketDetail();
+    const getTicket = vi.fn().mockRejectedValueOnce(new TypeError('Failed to fetch'));
+    getTicket.mockResolvedValue(detail);
+    const { queryClient, wrapper } = setupApi({ getTicket });
+    markChanged(queryClient, 'MOB-1');
+    const { result } = renderHook(() => useTicket('MOB-1'), { wrapper });
+    await waitFor(() => expect(result.current.data).toEqual(detail));
+    expect(getTicket.mock.calls).toEqual([['MOB-1', { fresh: true }], ['MOB-1']]);
+
+    await act(() => result.current.refetch());
+    expect(getTicket).toHaveBeenLastCalledWith('MOB-1', { fresh: true });
+  });
+
+  it('does not take a saved copy for a ticket the tracker says is gone', async () => {
+    const getTicket = vi.fn().mockRejectedValue(new ApiError(404, 'not_found', 'Not found.'));
+    const { queryClient, wrapper } = setupApi({ getTicket });
+    markChanged(queryClient, 'MOB-1');
+    const { result } = renderHook(() => useTicket('MOB-1'), { wrapper });
+    await waitFor(() => expect(result.current.isError).toBe(true));
+    expect(getTicket).toHaveBeenCalledTimes(1);
+  });
+
+  // A saved copy can't hold the change that caused a live update.
+  it('reads the ticket fresh when a live update reports a change to it', async () => {
+    const detail = makeTicketDetail();
+    const getTicket = vi.fn().mockResolvedValue(detail);
+    const { queryClient, wrapper } = setupApi({ getTicket });
+    seedTicket(queryClient, detail);
+    renderHook(() => useTicket('MOB-1'), { wrapper });
+
+    act(() =>
+      refreshForChange(queryClient, { type: 'changed', projectId: 'p-mob', ticketId: 't-1' }),
+    );
+    await waitFor(() => expect(getTicket).toHaveBeenCalledTimes(1));
+    expect(getTicket).toHaveBeenLastCalledWith('MOB-1', { fresh: true });
+
+    await act(() => queryClient.invalidateQueries({ queryKey: queryKeys.ticket('MOB-1') }));
+    expect(getTicket).toHaveBeenLastCalledWith('MOB-1');
   });
 
   it('keeps reading fresh after a write while those reads fail', async () => {

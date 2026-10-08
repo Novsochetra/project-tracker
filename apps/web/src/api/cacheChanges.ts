@@ -1,4 +1,4 @@
-import type { ProjectBoard, TicketDetail, TicketListItem } from '@tracker/shared';
+import type { ProjectBoard, TicketDetail, TicketsAcrossProjects } from '@tracker/shared';
 import { withoutMovedTicket } from './cache/ready';
 import { cacheChange, type CacheChange } from './optimistic';
 import { projectOfTicket, queryKeys } from './queryKeys';
@@ -21,7 +21,7 @@ export const readyChanges = (ticketKey: string, statusId: string | undefined): C
   statusId === undefined
     ? []
     : [
-        cacheChange<TicketListItem[]>(queryKeys.ready(), (list) =>
+        cacheChange<TicketsAcrossProjects>(queryKeys.ready(), (list) =>
           withoutMovedTicket(list, ticketKey, statusId),
         ),
       ];

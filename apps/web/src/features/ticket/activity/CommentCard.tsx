@@ -1,35 +1,23 @@
 import { formatFullDate } from '@tracker/shared';
-import { useEffect, useRef } from 'react';
 import type { ActivityItem } from './activityItems';
 import { ActivityCard, ActorAvatar, CardAttachments, type RiseProps } from './ActivityCard';
 import styles from './ActivityCard.module.css';
 import { CommentEditor } from './CommentEditor';
-import { ItemMenu } from './ItemMenu';
+import { CommentMenu } from './CommentMenu';
 import { LinkedText } from './LinkedText';
 import { TimeAgo } from './TimeAgo';
 import type { ActivityActions } from './useActivityActions';
-import { useCommentEdit } from './useCommentEdit';
+import type { CommentEdit } from './useCommentEdit';
 
 export interface CommentCardProps {
   item: Extract<ActivityItem, { kind: 'comment' }>;
+  edit: CommentEdit;
   now: number;
   actions: ActivityActions;
   rise: RiseProps;
 }
 
-const focusIsLost = () =>
-  document.activeElement === null || document.activeElement === document.body;
-
-export function CommentCard({ item, now, actions, rise }: CommentCardProps) {
-  const edit = useCommentEdit(item, actions.editComment, actions.ticketKey);
-  const triggerRef = useRef<HTMLButtonElement>(null);
-
-  // The editor had focus and is gone, so keyboard users continue from the options button. An
-  // edit that saves once the user has moved on leaves their focus alone.
-  useEffect(() => {
-    if (edit.closed && focusIsLost()) triggerRef.current?.focus({ preventScroll: true });
-  }, [edit.closed]);
-
+export function CommentCard({ item, edit, now, actions, rise }: CommentCardProps) {
   const meta = (
     <>
       <TimeAgo at={item.at} now={now} />
@@ -38,21 +26,12 @@ export function CommentCard({ item, now, actions, rise }: CommentCardProps) {
       )}
     </>
   );
-  const menu = !item.draft && (
-    <ItemMenu
-      noun="comment"
-      hidden={edit.open}
-      triggerRef={triggerRef}
-      onEdit={edit.start}
-      onDelete={() => actions.remove(item.id)}
-    />
-  );
   return (
     <ActivityCard
       avatar={<ActorAvatar actor={item.actor} />}
       title={item.author}
       meta={meta}
-      menu={menu}
+      menu={!item.draft && <CommentMenu item={item} edit={edit} actions={actions} />}
       dimmed={item.draft}
       {...rise}
     >

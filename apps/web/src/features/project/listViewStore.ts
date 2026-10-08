@@ -1,4 +1,4 @@
-import type { TicketFilter } from '@tracker/shared';
+import { ALL_TICKETS, resolveFilter, type Status, type TicketFilter } from '@tracker/shared';
 import { useSyncExternalStore } from 'react';
 
 export interface ListView {
@@ -6,7 +6,7 @@ export interface ListView {
   query: string;
 }
 
-export const DEFAULT_LIST_VIEW: ListView = { filter: 'all', query: '' };
+export const DEFAULT_LIST_VIEW: ListView = { filter: ALL_TICKETS, query: '' };
 
 // Module state, so the New ticket sheet (rendered outside the screen) can read and reset it.
 const views = new Map<string, ListView>();
@@ -48,7 +48,11 @@ export const useListView = (projectKey: string): ListView =>
 
 export const isSearching = (view: ListView): boolean => view.query.trim() !== '';
 
-export function hidesNewTicket(view: ListView, isDone: boolean): boolean {
-  const filteredOut = (view.filter === 'done' && !isDone) || (view.filter === 'active' && isDone);
-  return filteredOut || isSearching(view);
+export function hidesNewTicket(
+  view: ListView,
+  statuses: readonly Status[],
+  statusId: string,
+): boolean {
+  const filter = resolveFilter(statuses, view.filter);
+  return (filter !== ALL_TICKETS && filter !== statusId) || isSearching(view);
 }

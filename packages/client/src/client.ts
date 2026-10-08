@@ -24,6 +24,7 @@ import type {
   Ticket,
   TicketDetail,
   TicketListItem,
+  TicketsAcrossProjects,
   UpdateCommentInput,
   UpdateProjectInput,
   UpdateStatusInput,
@@ -93,7 +94,7 @@ export class TrackerClient {
     });
 
   listAllTickets = (query: ListTicketsQuery = {}) =>
-    this.http.request<TicketListItem[]>('GET', '/api/tickets', { query: listQuery(query) });
+    this.http.request<TicketsAcrossProjects>('GET', '/api/tickets', { query: listQuery(query) });
 
   createTicket = (projectKey: string, input: CreateTicketInput) =>
     this.http.request<Ticket>('POST', `/api/projects/${segment(projectKey)}/tickets`, {

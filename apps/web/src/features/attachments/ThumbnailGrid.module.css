@@ -9,10 +9,12 @@
   --file-name-lines: 2;
 }
 
-/* Small thumbnails have room for one line of a file's name. */
+/* Small thumbnails have room for one line of a file's name, which keeps its end (thumbnailFaces). */
 .sm {
   --thumb-size: 56px;
   --file-name-lines: 1;
+  --file-name-flow: flex;
+  --file-name-wrap: nowrap;
 }
 
 .tile {

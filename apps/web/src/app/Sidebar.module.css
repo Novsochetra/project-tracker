@@ -105,3 +105,11 @@
   font-size: var(--size-caption);
   font-variant-numeric: tabular-nums;
 }
+
+.ready {
+  flex: none;
+  font-size: var(--size-caption);
+  font-weight: var(--weight-medium);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}

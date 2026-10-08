@@ -1,5 +1,10 @@
 import { z } from 'zod';
 import { REVIEW_VERDICTS } from '../domain/activity';
+import {
+  MAX_NEW_ATTACHMENTS,
+  tooManyFilesMessage,
+  type AttachmentOwner,
+} from '../domain/attachment';
 import { PRIORITIES } from '../domain/priority';
 import { STATUS_CATEGORIES } from '../domain/status';
 import { toYmd } from '../logic/format';
@@ -14,7 +19,8 @@ const dueDate = z.union([
     .refine(isRealDay, 'Use a real date like 2026-10-09'),
 ]);
 const id = z.string().min(1).max(64);
-const attachmentIds = z.array(id).max(20);
+const attachmentIds = (owner: AttachmentOwner) =>
+  z.array(id).max(MAX_NEW_ATTACHMENTS, tooManyFilesMessage(owner));
 
 export const createProjectInput = z.object({
   name: z.string().trim().min(1, 'Add a name to create the project.').max(120),
@@ -55,7 +61,7 @@ export const createTicketInput = z.object({
   priority: z.enum(PRIORITIES).default('medium'),
   assignee: z.string().trim().max(80).default(''),
   due: dueDate.default(''),
-  attachmentIds: attachmentIds.default([]),
+  attachmentIds: attachmentIds('ticket').default([]),
   // From a client that may send the same create again: a repeat gets the ticket the first one made.
   clientId: id.optional(),
 });
@@ -84,10 +90,10 @@ export type MarkSentInput = z.input<typeof markSentInput>;
 export const createCommentInput = z
   .object({
     text: z.string().max(20_000).default(''),
-    attachmentIds: attachmentIds.default([]),
+    attachmentIds: attachmentIds('comment').default([]),
   })
   .refine((v) => v.text.trim().length > 0 || v.attachmentIds.length > 0, {
-    message: 'Write a comment or add an image.',
+    message: 'Write a comment or add a file.',
   });
 export type CreateCommentInput = z.input<typeof createCommentInput>;
 

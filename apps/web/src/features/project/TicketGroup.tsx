@@ -1,4 +1,4 @@
-import { collapseGroup, type Status, type TicketFilter } from '@tracker/shared';
+import { collapseGroup, type Status } from '@tracker/shared';
 import { groupRiseDelay, revealedRowDelay, type TicketGroupData } from './buildGroups';
 import { dropEdgeFor } from './dnd/dropTarget';
 import type { DragState } from './dnd/useTicketDrag';
@@ -7,12 +7,13 @@ import { DropZone, GroupHeader, ShowMoreButton } from './GroupParts';
 import type { RowCallbacks } from './rowTypes';
 import styles from './TicketGroup.module.css';
 import { TicketRow } from './TicketRow';
+import type { RisePhase } from './useRisePhase';
 
 export interface TicketGroupProps {
   projectKey: string;
   group: TicketGroupData;
   index: number;
-  filter: TicketFilter;
+  rise: RisePhase;
   searching: boolean;
   next: Status | null;
   drag: DragState | null;
@@ -21,7 +22,7 @@ export interface TicketGroupProps {
 }
 
 export function TicketGroup(props: TicketGroupProps) {
-  const { projectKey, group, index, filter, searching, next, drag, callbacks, onAdd } = props;
+  const { projectKey, group, index, rise, searching, next, drag, callbacks, onAdd } = props;
   const { status, tickets } = group;
   const expanded = useIsExpanded(projectKey, status.id);
   const collapsed = collapseGroup(tickets, { expanded, searching });
@@ -32,7 +33,7 @@ export function TicketGroup(props: TicketGroupProps) {
       aria-label={status.name}
       className={styles.group}
       data-drop-group={status.id}
-      data-rise={filter}
+      data-rise={rise}
       style={{ animationDelay: `${groupRiseDelay(index)}ms` }}
     >
       <GroupHeader

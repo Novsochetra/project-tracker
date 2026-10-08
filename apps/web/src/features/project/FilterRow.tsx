@@ -1,48 +1,42 @@
-import type { FilterCounts, TicketFilter } from '@tracker/shared';
+import { filterTabs, resolveFilter, type ProjectBoard } from '@tracker/shared';
 import { SearchField, Segmented, type SegmentedOption } from '../../components';
 import { setListFilter, setListQuery, useListView } from './listViewStore';
 import styles from './ProjectScreen.module.css';
+import { FilterTabs } from './tabs/FilterTabs';
 import { setViewMode, useViewMode, type ViewMode } from './viewModeStore';
 
 export interface FilterRowProps {
-  projectKey: string;
-  counts: FilterCounts;
+  board: ProjectBoard;
 }
-
-const filterOptions = (counts: FilterCounts): SegmentedOption<TicketFilter>[] => [
-  { value: 'all', label: 'All', count: counts.all },
-  { value: 'active', label: 'Active', count: counts.active },
-  { value: 'done', label: 'Done', count: counts.done },
-];
 
 const viewOptions: SegmentedOption<ViewMode>[] = [
   { value: 'list', label: 'List' },
   { value: 'board', label: 'Board' },
 ];
 
-export function FilterRow({ projectKey, counts }: FilterRowProps) {
-  const { filter, query } = useListView(projectKey);
-  const viewMode = useViewMode(projectKey);
+export function FilterRow({ board }: FilterRowProps) {
+  const { project, statuses, tickets } = board;
+  const { filter, query } = useListView(project.key);
+  const viewMode = useViewMode(project.key);
   return (
     <div className={styles.filters}>
-      <Segmented
-        aria-label="Filter tickets"
-        options={filterOptions(counts)}
-        value={filter}
-        onChange={(next) => setListFilter(projectKey, next)}
+      <FilterTabs
+        tabs={filterTabs(statuses, tickets)}
+        value={resolveFilter(statuses, filter)}
+        onChange={(next) => setListFilter(project.key, next)}
       />
       <div className={styles.tools}>
         <SearchField
           aria-label="Search tickets"
           placeholder="Search tickets"
           value={query}
-          onChange={(event) => setListQuery(projectKey, event.currentTarget.value)}
+          onChange={(event) => setListQuery(project.key, event.currentTarget.value)}
         />
         <Segmented
           aria-label="Show tickets as"
           options={viewOptions}
           value={viewMode}
-          onChange={(next) => setViewMode(projectKey, next)}
+          onChange={(next) => setViewMode(project.key, next)}
           className={styles.viewSwitch}
         />
       </div>

@@ -9,6 +9,7 @@ import {
 } from '@tracker/shared';
 import type { z } from 'zod';
 import type { Clock } from '../clock';
+import { isUniqueViolation } from '../db/errors';
 import type { Db, ProjectRow, TicketRow } from '../db/schema';
 import { insertActivity } from '../repositories/activities';
 import { storageKeysOfTicket } from '../repositories/attachments';
@@ -85,26 +86,38 @@ async function insertNewTicket(trx: Db, now: Clock, request: NewTicket): Promise
   return toTicket(row, project.key);
 }
 
+interface CreateRequest {
+  actor: Actor;
+  projectKey: string;
+  input: CreateTicketValues;
+}
+
+async function createOrRepeat(trx: Db, now: Clock, request: CreateRequest): Promise<Outcome> {
+  const { actor, projectKey, input } = request;
+  const project = await requireProject(trx, projectKey);
+  const earlier = input.clientId
+    ? await findTicketByClientId(trx, project.id, input.clientId)
+    : undefined;
+  if (earlier) return { ticket: toTicket(earlier, project.key), changed: false };
+  return { ticket: await insertNewTicket(trx, now, { actor, project, input }), changed: true };
+}
+
 // A create that repeats a client id in the project gets the ticket the first one made. Looked up
 // inside the transaction: SQLite and PGlite run transactions one at a time, so two identical
-// creates at once make one ticket and take one number. On Postgres with several connections the
-// unique index refuses the second one, and sending it again gets the ticket.
+// creates at once make one ticket and take one number. On Postgres with several connections both
+// can miss it; the unique index refuses the second once the first has committed, and the second,
+// rolled back with its number, runs again like a later repeat.
 export async function createTicket(
   ctx: ServiceContext,
   actor: Actor,
   projectKey: string,
   input: CreateTicketValues,
 ): Promise<Ticket> {
-  const outcome = await inTransaction(ctx, async (trx): Promise<Outcome> => {
-    const project = await requireProject(trx, projectKey);
-    const earlier = input.clientId
-      ? await findTicketByClientId(trx, project.id, input.clientId)
-      : undefined;
-    if (earlier) return { ticket: toTicket(earlier, project.key), changed: false };
-    return {
-      ticket: await insertNewTicket(trx, ctx.now, { actor, project, input }),
-      changed: true,
-    };
+  const attempt = () =>
+    inTransaction(ctx, (trx) => createOrRepeat(trx, ctx.now, { actor, projectKey, input }));
+  const outcome = await attempt().catch((error: unknown) => {
+    if (input.clientId && isUniqueViolation(error)) return attempt();
+    throw error;
   });
   return finish(ctx, outcome);
 }

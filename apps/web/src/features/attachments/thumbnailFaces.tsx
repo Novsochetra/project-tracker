@@ -3,7 +3,7 @@ import { File, FileImage, FileText, Film, Play } from 'lucide-react';
 import { useState, type ReactNode } from 'react';
 import { Icon } from '../../components';
 import styles from './thumbnailFaces.module.css';
-import { formatDuration } from './thumbnailLabels';
+import { formatDuration, splitFileName } from './thumbnailLabels';
 
 export function ImageFace({ src, alt = '' }: { src: string; alt?: string }) {
   const [failed, setFailed] = useState(false);
@@ -66,12 +66,25 @@ export interface FileFaceProps {
   lead?: ReactNode;
 }
 
+// In two parts so a small tile can shorten the first; the title shows a shortened name whole.
+function FileName({ name }: { name: string }) {
+  const { head, tail } = splitFileName(name);
+  return (
+    <span className={styles.fileName} title={name}>
+      <span className={styles.nameText}>
+        <span className={styles.nameHead}>{head}</span>
+        <span className={styles.nameTail}>{tail}</span>
+      </span>
+    </span>
+  );
+}
+
 export function FileFace({ kind, name, size, lead }: FileFaceProps) {
   return (
     <span className={styles.file}>
       {lead ?? <Icon icon={kind === 'text' ? FileText : File} size={20} className={styles.icon} />}
       <span className={styles.fileText}>
-        <span className={styles.fileName}>{name}</span>
+        <FileName name={name} />
         <span className={styles.fileSize}>{formatBytes(size)}</span>
       </span>
     </span>

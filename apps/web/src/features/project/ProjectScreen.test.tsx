@@ -1,8 +1,9 @@
-import { fireEvent, screen, waitFor, within } from '@testing-library/react';
+import { act, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ApiError } from '@tracker/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { listItem, makeBoard, STATUS } from '../../api/test/fixtures';
+import { queryKeys } from '../../api';
+import { listItem, makeBoard, STATUS, statuses } from '../../api/test/fixtures';
 import { mockPhone, skipAnimations } from '../../overlays/testing';
 import { announce } from '../../app/announce';
 import { resetListView, setListFilter } from './listViewStore';
@@ -16,6 +17,12 @@ const rowButtons = (region: HTMLElement) =>
 const rowKeys = (region: HTMLElement) =>
   rowButtons(region).map((button) => /^MOB-\d+/.exec(button.textContent ?? '')?.[0]);
 const filters = () => screen.getByRole('group', { name: 'Filter tickets' });
+const tabNames = () =>
+  within(filters())
+    .getAllByRole('button')
+    .map((button) => button.textContent);
+const regionNames = () =>
+  screen.getAllByRole('region').map((region) => region.getAttribute('aria-label'));
 const location = () => screen.getByRole('status', { name: 'Location' }).textContent;
 const liveRegion = () => document.querySelector('[aria-live="polite"]');
 
@@ -48,32 +55,113 @@ describe('ProjectScreen', () => {
     const user = userEvent.setup();
     renderProject();
     await screen.findByRole('region', { name: 'To do' });
-    expect(within(filters()).getByRole('button', { name: 'All 4' })).toHaveAttribute(
+    expect(tabNames()).toEqual([
+      'All 4 tickets',
+      'To do 2 tickets',
+      'In progress 1 ticket',
+      'Need review 0 tickets',
+      'Reviewed 0 tickets',
+      'Done 1 ticket',
+    ]);
+    expect(within(filters()).getByRole('button', { name: 'All 4 tickets' })).toHaveAttribute(
       'aria-pressed',
       'true',
     );
-    expect(within(filters()).getByRole('button', { name: 'Active 3' })).toBeInTheDocument();
-    expect(within(filters()).getByRole('button', { name: 'Done 1' })).toBeInTheDocument();
 
     await user.type(screen.getByLabelText('Search tickets'), 'mob-3');
-    expect(
-      screen.getAllByRole('region').map((region) => region.getAttribute('aria-label')),
-    ).toEqual(['In progress']);
-    expect(within(filters()).getByRole('button', { name: 'All 4' })).toBeInTheDocument();
+    expect(regionNames()).toEqual(['In progress']);
+    expect(within(filters()).getByRole('button', { name: 'All 4 tickets' })).toBeInTheDocument();
+    expect(within(filters()).getByRole('button', { name: 'To do 2 tickets' })).toBeInTheDocument();
 
     await user.type(screen.getByLabelText('Search tickets'), 'zzz');
     expect(screen.getByText('No tickets match.')).toBeInTheDocument();
   });
 
-  it('shows open groups for Active and done groups for Done', async () => {
+  it("shows only the picked status's group, and every group again on All", async () => {
     const user = userEvent.setup();
     renderProject();
     await screen.findByRole('region', { name: 'To do' });
-    await user.click(within(filters()).getByRole('button', { name: /^Active/ }));
-    expect(screen.queryByRole('region', { name: 'Done' })).not.toBeInTheDocument();
     await user.click(within(filters()).getByRole('button', { name: /^Done/ }));
-    expect(screen.queryByRole('region', { name: 'To do' })).not.toBeInTheDocument();
-    expect(group('Done')).toBeInTheDocument();
+    expect(regionNames()).toEqual(['Done']);
+    await user.click(within(filters()).getByRole('button', { name: /^To do/ }));
+    expect(regionNames()).toEqual(['To do']);
+    expect(rowKeys(group('To do'))).toEqual(['MOB-1', 'MOB-2']);
+
+    await user.click(within(filters()).getByRole('button', { name: /^Need review/ }));
+    expect(screen.queryAllByRole('region')).toEqual([]);
+    expect(screen.getByText('No tickets match.')).toBeInTheDocument();
+
+    await user.click(within(filters()).getByRole('button', { name: /^All/ }));
+    expect(regionNames()).toEqual(['To do', 'In progress', 'Done']);
+  });
+
+  it('combines the status tab with the search', async () => {
+    const user = userEvent.setup();
+    renderProject();
+    await screen.findByRole('region', { name: 'To do' });
+    await user.click(within(filters()).getByRole('button', { name: /^To do/ }));
+    await user.type(screen.getByLabelText('Search tickets'), 'mob-2');
+    expect(regionNames()).toEqual(['To do']);
+    expect(rowKeys(group('To do'))).toEqual(['MOB-2']);
+    await user.clear(screen.getByLabelText('Search tickets'));
+    await user.type(screen.getByLabelText('Search tickets'), 'mob-3');
+    expect(screen.getByText('No tickets match.')).toBeInTheDocument();
+  });
+
+  it('replays the rise of the groups when the tab changes', async () => {
+    const user = userEvent.setup();
+    renderProject();
+    const todo = await screen.findByRole('region', { name: 'To do' });
+    const before = todo.getAttribute('data-rise');
+    await user.click(within(filters()).getByRole('button', { name: /^To do/ }));
+    expect(group('To do')).toBe(todo);
+    expect(todo.getAttribute('data-rise')).not.toBe(before);
+    const picked = todo.getAttribute('data-rise');
+    await user.click(within(filters()).getByRole('button', { name: /^All/ }));
+    expect(todo.getAttribute('data-rise')).not.toBe(picked);
+  });
+
+  it('keeps the tabs in step with the statuses: renamed, added, reordered, deleted', async () => {
+    const user = userEvent.setup();
+    const { queryClient } = renderProject();
+    await screen.findByRole('region', { name: 'To do' });
+    await user.click(within(filters()).getByRole('button', { name: /^In progress/ }));
+    const setStatuses = (next: typeof statuses) =>
+      act(() => {
+        queryClient.setQueryData(queryKeys.board('MOB'), { ...makeBoard(), statuses: next });
+      });
+    const pressed = (name: RegExp) =>
+      expect(within(filters()).getByRole('button', { name })).toHaveAttribute(
+        'aria-pressed',
+        'true',
+      );
+
+    const blocked = { ...statuses[1]!, id: 's-blocked', name: 'Blocked', position: 2.5 };
+    setStatuses([
+      ...statuses.map((s) => (s.id === STATUS.todo ? { ...s, name: 'Backlog' } : s)),
+      blocked,
+    ]);
+    await waitFor(() =>
+      expect(tabNames()).toEqual([
+        'All 4 tickets',
+        'Backlog 2 tickets',
+        'In progress 1 ticket',
+        'Need review 0 tickets',
+        'Blocked 0 tickets',
+        'Reviewed 0 tickets',
+        'Done 1 ticket',
+      ]),
+    );
+
+    setStatuses(statuses.map((s) => (s.id === STATUS.done ? { ...s, position: -1 } : s)));
+    await waitFor(() => expect(tabNames()[1]).toBe('Done 1 ticket'));
+    pressed(/^In progress/);
+    expect(regionNames()).toEqual(['In progress']);
+
+    setStatuses(statuses.filter((s) => s.id !== STATUS.progress));
+    await waitFor(() => expect(tabNames()).not.toContain('In progress 1 ticket'));
+    pressed(/^All/);
+    expect(regionNames()).toEqual(['To do', 'Done']);
   });
 
   it('collapses groups of more than six to five rows with Show more', async () => {
@@ -186,7 +274,7 @@ describe('ProjectScreen', () => {
   });
 
   it('opens on All with an empty search', async () => {
-    setListFilter('MOB', 'done');
+    setListFilter('MOB', STATUS.done);
     renderProject();
     await screen.findByRole('region', { name: 'To do' });
     expect(within(filters()).getByRole('button', { name: /^All/ })).toHaveAttribute(

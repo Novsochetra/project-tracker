@@ -8,6 +8,7 @@ import {
   storedDrafts,
   type StoredDraft,
 } from '../../../lib/storedDrafts';
+import { finishSave, isSaving, startSave } from '../fields/fieldSaves';
 import { checkDraft, serverText } from './draftCheck';
 import { isLeftToScreen, retryLiveDrafts } from './liveDrafts';
 
@@ -28,11 +29,16 @@ interface Run {
   report: DraftSyncReport;
 }
 
-// Drafts on screen retry themselves, so only drafts left in closed tickets are synced here.
+// Drafts on screen retry themselves, so only drafts left in closed tickets are synced here. A
+// draft with saves on its way is theirs to settle: the tracker may have the first of them
+// without having answered, which a check would take for someone else's change.
+const isSettledElsewhere = (id: string, ticketKey: string): boolean =>
+  isLeftToScreen(id, ticketKey) || isSaving(id);
+
 function closedTicketDrafts(): Map<string, Entry[]> {
   const byTicket = new Map<string, Entry[]>();
   for (const [id, draft] of storedDrafts()) {
-    if (isLeftToScreen(id, draft.ticketKey)) continue;
+    if (isSettledElsewhere(id, draft.ticketKey)) continue;
     byTicket.set(draft.ticketKey, [...(byTicket.get(draft.ticketKey) ?? []), [id, draft]]);
   }
   return byTicket;
@@ -51,19 +57,22 @@ const endsRun = (error: unknown): boolean =>
   !(error instanceof ApiError) || error.status === 401 || error.status >= 500;
 
 async function save([id, draft]: Entry, run: Run): Promise<boolean> {
+  const number = startSave(id, draft.text);
   try {
     await run.deps.save(draft);
   } catch (error) {
+    finishSave(id, number, false);
     if (isNotFound(error)) forgetDraft(id);
     return !endsRun(error);
   }
-  draftSaved(id, draft.text);
+  finishSave(id, number, true);
   return true;
 }
 
 async function syncDraft(entry: Entry, detail: TicketDetail, run: Run): Promise<boolean> {
   const [id, draft] = entry;
-  if (draft.field === 'comment') return true;
+  // A save may have started while the ticket was read.
+  if (draft.field === 'comment' || isSaving(id)) return true;
   const check = checkDraft(draft, serverText(detail, draft));
   if (check === 'gone') {
     forgetDraft(id);

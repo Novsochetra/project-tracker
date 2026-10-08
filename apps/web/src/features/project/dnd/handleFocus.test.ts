@@ -1,9 +1,15 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import { clearHandleFocus, requestHandleFocus, wantsHandleFocus } from './handleFocus';
+import {
+  clearHandleFocus,
+  HANDLE_ATTRIBUTE,
+  requestHandleFocus,
+  rowHasFocus,
+  wantsHandleFocus,
+} from './handleFocus';
 
 function handleFor(ticketId: string): HTMLButtonElement {
   const handle = document.createElement('button');
-  handle.setAttribute('data-handle-for', ticketId);
+  handle.setAttribute(HANDLE_ATTRIBUTE, ticketId);
   document.body.append(handle);
   return handle;
 }
@@ -61,5 +67,34 @@ describe('handle focus requests', () => {
     requestHandleFocus('t-1');
     document.body.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
     expect(wantsHandleFocus('t-1')).toBe(false);
+  });
+});
+
+describe('rowHasFocus', () => {
+  function rowFor(ticketId: string) {
+    const row = document.createElement('div');
+    row.dataset.dropRow = ticketId;
+    const handle = handleFor(ticketId);
+    const main = document.createElement('button');
+    row.append(handle, main);
+    document.body.append(row);
+    return { handle, main };
+  }
+
+  it('is true while the ticket’s handle or its row’s button has focus', () => {
+    const { handle, main } = rowFor('t-1');
+    handle.focus();
+    expect(rowHasFocus('t-1')).toBe(true);
+    main.focus();
+    expect(rowHasFocus('t-1')).toBe(true);
+  });
+
+  it('is false for another ticket’s row and for focus outside rows', () => {
+    rowFor('t-1').main.focus();
+    expect(rowHasFocus('t-2')).toBe(false);
+    const search = document.createElement('input');
+    document.body.append(search);
+    search.focus();
+    expect(rowHasFocus('t-1')).toBe(false);
   });
 });

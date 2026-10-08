@@ -1,7 +1,6 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { ApiError } from '@tracker/client';
-import type { ProjectDetail } from '@tracker/shared';
 import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
@@ -16,17 +15,13 @@ const toastWith = (text: string) => screen.getByText(text, { exact: true }).pare
 describe('regression: a failure toast looks like a failure, not a success', () => {
   it('shows the error icon when a move to Done is refused, and the check for the move itself', async () => {
     const user = userEvent.setup();
-    const detail: ProjectDetail = { project, statuses };
+    const ready = { tickets: [listItem(3, STATUS.reviewed, 0)], statuses };
     let refuse: (error: Error) => void = () => undefined;
-    renderWithApp(
-      <ReadySection items={readyItems([listItem(3, STATUS.reviewed, 0)], [project])} />,
-      {
-        client: {
-          getProject: vi.fn().mockResolvedValue(detail),
-          updateTicket: vi.fn(() => new Promise((_resolve, reject) => (refuse = reject))),
-        },
+    renderWithApp(<ReadySection items={readyItems(ready, [project])} />, {
+      client: {
+        updateTicket: vi.fn(() => new Promise((_resolve, reject) => (refuse = reject))),
       },
-    );
+    });
     await user.click(await screen.findByRole('button', { name: 'Move MOB-3 to Done' }));
     const moved = toastWith('MOB-3 moved to Done');
     expect(moved?.querySelector('svg')).toHaveClass('lucide-circle-check');

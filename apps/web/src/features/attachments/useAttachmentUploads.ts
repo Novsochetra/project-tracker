@@ -1,9 +1,10 @@
 import type { Attachment, AttachmentKind } from '@tracker/shared';
 import { useEffect, useRef, useState } from 'react';
-import { errorMessage, useDeleteAttachment, useUploadAttachment } from '../../api';
-import { useToast } from '../../components';
+import { useDeleteAttachment, useUploadAttachment } from '../../api';
 import { useLatest } from '../../lib/useLatest';
-import { admitFiles, type AdmittedFile } from './attachmentFiles';
+import { admitFiles, roomFor, type AdmittedFile, type FileLimit } from './attachmentFiles';
+import type { FileNotice } from './fileNotice';
+import { useFileNotice } from './useFileNotice';
 
 export interface UploadingFile {
   key: string;
@@ -17,13 +18,17 @@ export interface UploadingFile {
 export interface AttachmentUploadOptions {
   ticketKey?: string | undefined;
   onUploaded?: (attachment: Attachment) => void;
+  // Unset for a ticket's own files, which go straight to it: only a create has a limit.
+  limit?: FileLimit | undefined;
 }
 
 export interface AttachmentUploads {
   uploading: UploadingFile[];
+  notice: FileNotice | null;
   add: (files: Iterable<File>) => void;
   cancel: (key: string) => void;
   cancelAll: () => void;
+  dismissNotice: () => void;
 }
 
 const PERCENT = 100;
@@ -59,10 +64,10 @@ function useUploadingList() {
 }
 
 export function useAttachmentUploads(options: AttachmentUploadOptions = {}): AttachmentUploads {
-  const { ticketKey } = options;
+  const { ticketKey, limit } = options;
   const upload = useUploadAttachment();
   const deleteAttachment = useDeleteAttachment();
-  const { show } = useToast();
+  const notices = useFileNotice();
   const list = useUploadingList();
   const onUploadedRef = useLatest(options.onUploaded);
   const controllers = useRef(new Map<string, AbortController>());
@@ -98,7 +103,7 @@ export function useAttachmentUploads(options: AttachmentUploadOptions = {}): Att
           } else onUploadedRef.current?.(attachment);
         },
         (error: unknown) => {
-          if (!controller.signal.aborted) show(errorMessage(error), { kind: 'error' });
+          if (!controller.signal.aborted) notices.failed(item.name, error);
         },
       )
       .finally(() => {
@@ -109,8 +114,8 @@ export function useAttachmentUploads(options: AttachmentUploadOptions = {}): Att
   };
 
   const add = (files: Iterable<File>) => {
-    const { admitted, refusal } = admitFiles(files);
-    if (refusal) show(refusal, { kind: 'error' });
+    const { admitted, refused } = admitFiles(files, roomFor(limit, list.uploading.length));
+    notices.picked(refused);
     admitted.forEach(start);
   };
 
@@ -124,5 +129,12 @@ export function useAttachmentUploads(options: AttachmentUploadOptions = {}): Att
     list.setUploading([]);
   };
 
-  return { uploading: list.uploading, add, cancel, cancelAll };
+  return {
+    uploading: list.uploading,
+    notice: notices.notice,
+    add,
+    cancel,
+    cancelAll,
+    dismissNotice: notices.dismiss,
+  };
 }

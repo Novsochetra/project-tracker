@@ -78,14 +78,15 @@ describe('boardMoveTarget', () => {
     expect(boardMoveTarget(columns, 't-5', 'right')).toBeNull();
   });
 
-  it('only crosses into the columns the filter shows', () => {
-    const active = buildColumns({
+  it("stays in the one column a status's tab shows", () => {
+    const reviewed = buildColumns({
       statuses,
       tickets: [listItem(1, STATUS.reviewed, 0)],
-      filter: 'active',
+      filter: STATUS.reviewed,
       query: '',
     });
-    expect(boardMoveTarget(active, 't-1', 'right')).toBeNull();
+    expect(boardMoveTarget(reviewed, 't-1', 'right')).toBeNull();
+    expect(boardMoveTarget(reviewed, 't-1', 'left')).toBeNull();
   });
 
   it('knows nothing about tickets the columns do not show', () => {

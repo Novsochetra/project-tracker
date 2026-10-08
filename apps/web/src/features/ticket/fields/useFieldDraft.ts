@@ -1,4 +1,4 @@
-import { useRef, useState, type Dispatch, type SetStateAction } from 'react';
+import { useRef, useState, useSyncExternalStore, type Dispatch, type SetStateAction } from 'react';
 import { NETWORK_ERROR_MESSAGE } from '../../../api';
 import { useToast } from '../../../components';
 import {
@@ -20,7 +20,8 @@ import {
   syncDraft,
   type FieldDraft,
 } from './fieldDraft';
-import { useFieldSave, type FieldSave, type FieldSaver, type FieldTarget } from './useFieldSave';
+import { carries, isSaving, savesOf, subscribeSaves } from './fieldSaves';
+import { useFieldSave, type FieldSave, type FieldTarget, type SaveField } from './useFieldSave';
 
 export interface FieldDraftState {
   value: string;
@@ -39,7 +40,7 @@ export interface FieldDraftState {
 
 const openDraft = (server: string, id: string): FieldDraft => {
   const stored = storedDraft(id);
-  return stored ? restoreDraft(stored.text) : startDraft(server);
+  return stored ? restoreDraft(stored.text, carries(savesOf(id), stored.text)) : startDraft(server);
 };
 
 interface RetryInput {
@@ -47,21 +48,21 @@ interface RetryInput {
   ticketKey: string;
   draft: FieldDraft;
   setDraft: Dispatch<SetStateAction<FieldDraft>>;
-  saver: FieldSaver;
+  save: SaveField;
 }
 
 // The user's Retry says when the tracker can't be reached. Retries the app starts on its own
 // stay quiet, also when their save fails: the field's note already says it isn't saved.
 type RetryBy = 'user' | 'app';
 
-function useFieldRetry({ id, ticketKey, draft, setDraft, saver }: RetryInput) {
+function useFieldRetry({ id, ticketKey, draft, setDraft, save }: RetryInput) {
   const check = useDraftCheck(ticketKey);
   const checkingRef = useRef(false);
   const { show } = useToast();
   return (by: RetryBy) => {
-    // The saver knows at once that a retry's save went out; the draft only once the screen shows
-    // it, and the app-wide sync can ask again before that.
-    if (!draft.failed || draft.conflict || saver.sending() || checkingRef.current) return;
+    // Saves on their way, also from before the field opened, settle the text, and the tracker
+    // may already have one of them without having answered it.
+    if (!draft.failed || draft.conflict || isSaving(id) || checkingRef.current) return;
     checkingRef.current = true;
     const shown = draft.value;
     void check(id).then((result) => {
@@ -70,7 +71,7 @@ function useFieldRetry({ id, ticketKey, draft, setDraft, saver }: RetryInput) {
       // Saves the newest typed text; none is kept when the user dropped it while this ran.
       const kept = storedDraft(id);
       if (result === 'unchanged' && kept) {
-        void saver.save(kept.text, { checked: true, quiet: by === 'app' });
+        void save(kept.text, { checked: true, quiet: by === 'app' });
       } else if (result === 'gone') forgetDraft(id);
       else if (result === 'saved') draftSaved(id, shown);
       if (result === 'saved' || result === 'changed') {
@@ -90,11 +91,11 @@ export function useFieldDraft(
   const id = draftIdOf(target);
   const [draft, setDraft] = useState(() => openDraft(server, id));
   const [focused, setFocused] = useState(false);
-  const synced = syncDraft(draft, server, focused);
+  const saving = useSyncExternalStore(subscribeSaves, () => isSaving(id));
+  const synced = syncDraft(draft, server, { focused, saving, kept: storedDraft(id)?.text });
   if (synced !== draft) setDraft(synced);
-  const saver = useFieldSave({ target, server, setDraft, onSave });
-  const { save } = saver;
-  const retry = useFieldRetry({ id, ticketKey: target.ticketKey, draft: synced, setDraft, saver });
+  const save = useFieldSave({ target, server, setDraft, onSave });
+  const retry = useFieldRetry({ id, ticketKey: target.ticketKey, draft: synced, setDraft, save });
   useLiveDraft(id, () => retry('app'));
 
   return {

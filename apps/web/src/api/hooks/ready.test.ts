@@ -1,10 +1,10 @@
 import type { QueryClient } from '@tanstack/react-query';
 import { act, renderHook, waitFor } from '@testing-library/react';
-import type { Ticket, TicketListItem } from '@tracker/shared';
+import type { Ticket, TicketsAcrossProjects } from '@tracker/shared';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { queryKeys } from '../queryKeys';
 import { deferred } from '../test/deferred';
-import { listItem, makeBoard, STATUS } from '../test/fixtures';
+import { listItem, makeBoard, STATUS, statuses } from '../test/fixtures';
 import { MockEventSource } from '../test/mockEventSource';
 import { isInvalidated, setupApi } from '../test/render';
 import { useLiveUpdates } from './live';
@@ -14,15 +14,17 @@ import { useMoveTicket, useUpdateTicket } from './ticketEdits';
 const reviewed = (num: number) =>
   listItem(num, STATUS.reviewed, num, { lastReview: { verdict: 'approved', rating: 4 } });
 
-const READY = [reviewed(3), reviewed(5)];
+const READY: TicketsAcrossProjects = { tickets: [reviewed(3), reviewed(5)], statuses };
 const webTicketChanged = { type: 'changed', projectId: 'p-web', ticketId: 't-web-1' };
 
 const cachedReady = (queryClient: QueryClient) =>
-  queryClient.getQueryData<TicketListItem[]>(queryKeys.ready())?.map((ticket) => ticket.key);
+  queryClient
+    .getQueryData<TicketsAcrossProjects>(queryKeys.ready())
+    ?.tickets.map((ticket) => ticket.key);
 
 function seed(queryClient: QueryClient) {
   queryClient.setQueryData(queryKeys.ready(), READY);
-  queryClient.setQueryData(queryKeys.board('MOB'), makeBoard(READY));
+  queryClient.setQueryData(queryKeys.board('MOB'), makeBoard(READY.tickets));
 }
 
 beforeEach(() => {
@@ -41,6 +43,14 @@ describe('useReadyForYou', () => {
     const { result } = renderHook(() => useReadyForYou(), { wrapper });
     await waitFor(() => expect(result.current.data).toEqual(READY));
     expect(listAllTickets).toHaveBeenCalledWith({ category: 'reviewed' });
+  });
+
+  it('keeps the tickets of a list the service worker saved before the statuses came with it', async () => {
+    const { wrapper } = setupApi({ listAllTickets: vi.fn().mockResolvedValue(READY.tickets) });
+    const { result } = renderHook(() => useReadyForYou(), { wrapper });
+    await waitFor(() =>
+      expect(result.current.data).toEqual({ tickets: READY.tickets, statuses: [] }),
+    );
   });
 
   it('refreshes on a change anywhere, like the project list', () => {
@@ -71,7 +81,7 @@ describe('useReadyForYou', () => {
     act(() => MockEventSource.latest().emit(webTicketChanged));
     expect(isInvalidated(queryClient, queryKeys.ready())).toBe(false);
 
-    act(() => request.resolve({ ...READY[0]!, statusId: STATUS.done }));
+    act(() => request.resolve({ ...READY.tickets[0]!, statusId: STATUS.done }));
     await waitFor(() => expect(isInvalidated(queryClient, queryKeys.ready())).toBe(true));
   });
 

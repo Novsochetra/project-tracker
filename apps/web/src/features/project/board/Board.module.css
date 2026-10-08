@@ -149,6 +149,15 @@
     scroll-snap-stop: always;
   }
 
+  /* A status tab shows one column, with no next one to peek at. */
+  .board[data-single]::after {
+    display: none;
+  }
+
+  .board[data-single] .column {
+    flex-basis: 100%;
+  }
+
   .body {
     padding-bottom: calc(96px + var(--safe-bottom));
   }

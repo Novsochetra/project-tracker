@@ -1,6 +1,7 @@
 import { screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { listItem, otherProject, STATUS, statuses } from '../api/test/fixtures';
 import { skipAnimations } from '../overlays/testing';
 import { DesktopHeader } from './DesktopHeader';
 import { Sidebar } from './Sidebar';
@@ -64,5 +65,20 @@ describe('Sidebar', () => {
     expect(currentPath()).toBe('/p/MOB');
     await user.click(screen.getByRole('button', { name: 'All projects' }));
     expect(currentPath()).toBe('/');
+  });
+
+  it('shows how many of a project’s tickets are ready, like the Projects list', async () => {
+    const reviewed = (num: number) => listItem(num, STATUS.reviewed, 0);
+    const listAllTickets = vi
+      .fn()
+      .mockResolvedValue({ tickets: [reviewed(3), reviewed(4)], statuses });
+    renderWithApp(<Sidebar />, {
+      projects: [...projects, projectSummary({ ...otherProject, openCount: 0 })],
+      client: { listAllTickets },
+    });
+    const mobile = await screen.findByRole('button', { name: 'Mobile app 2 ready 3 open' });
+    expect(within(mobile).getByText('2 ready')).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Website 0 open' })).not.toHaveTextContent('ready');
+    expect(listAllTickets).toHaveBeenCalledWith({ category: 'reviewed' });
   });
 });

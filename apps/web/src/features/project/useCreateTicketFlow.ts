@@ -1,4 +1,4 @@
-import { isDoneCategory, type CreateTicketInput, type Status } from '@tracker/shared';
+import type { CreateTicketInput, Status } from '@tracker/shared';
 import { useRef } from 'react';
 import { errorMessage, useCreateTicket } from '../../api';
 import { flashRows } from '../../app/flash';
@@ -29,9 +29,9 @@ export function useCreateTicketFlow({
       { projectKey, input },
       {
         onSuccess: (ticket) => {
-          const status = statuses.find((candidate) => candidate.id === ticket.statusId);
-          const isDone = status ? isDoneCategory(status.category) : false;
-          if (hidesNewTicket(getListView(projectKey), isDone)) resetListView(projectKey);
+          if (hidesNewTicket(getListView(projectKey), statuses, ticket.statusId)) {
+            resetListView(projectKey);
+          }
           flashRows([ticket.key]);
           show(`${ticket.key} created`);
           onCreated();

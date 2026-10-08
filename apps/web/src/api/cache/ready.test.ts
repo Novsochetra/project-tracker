@@ -1,19 +1,36 @@
 import { describe, expect, it } from 'vitest';
-import { listItem, STATUS } from '../test/fixtures';
-import { withoutMovedTicket } from './ready';
+import { listItem, STATUS, statuses } from '../test/fixtures';
+import { withoutMovedTicket, withStatuses } from './ready';
 
-const ready = () => [listItem(3, STATUS.reviewed, 0), listItem(5, STATUS.reviewed, 1000)];
-const keysOf = (list: { key: string }[]) => list.map((ticket) => ticket.key);
+const ready = () => ({
+  tickets: [listItem(3, STATUS.reviewed, 0), listItem(5, STATUS.reviewed, 1000)],
+  statuses,
+});
+const keysOf = (list: { tickets: { key: string }[] }) => list.tickets.map((ticket) => ticket.key);
 
 describe('withoutMovedTicket', () => {
-  it('drops a ticket that moves to another status', () => {
-    expect(keysOf(withoutMovedTicket(ready(), 'mob-3', STATUS.done))).toEqual(['MOB-5']);
+  it('drops a ticket that moves to another status and keeps the statuses', () => {
+    const left = withoutMovedTicket(ready(), 'mob-3', STATUS.done);
+    expect(keysOf(left)).toEqual(['MOB-5']);
+    expect(left.statuses).toBe(statuses);
   });
 
   it('keeps the list when the status stays or is not part of the change', () => {
     const list = ready();
-    expect(withoutMovedTicket(list, 'MOB-3', STATUS.reviewed)).toEqual(list);
+    expect(withoutMovedTicket(list, 'MOB-3', STATUS.reviewed)).toBe(list);
     expect(withoutMovedTicket(list, 'MOB-3', undefined)).toBe(list);
-    expect(withoutMovedTicket(list, 'MOB-9', STATUS.done)).toEqual(list);
+    expect(withoutMovedTicket(list, 'MOB-9', STATUS.done)).toBe(list);
+  });
+});
+
+describe('withStatuses', () => {
+  it('keeps an answer that brings the statuses', () => {
+    const answer = ready();
+    expect(withStatuses(answer)).toBe(answer);
+  });
+
+  it('keeps the tickets of a list saved before the statuses came with it', () => {
+    const saved = ready().tickets;
+    expect(withStatuses(saved)).toEqual({ tickets: saved, statuses: [] });
   });
 });

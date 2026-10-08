@@ -52,11 +52,29 @@ const UNCLEAR_TYPES = new Set([
   'text/x-markdown',
 ]);
 
+// Other names systems give allowed types (Linux calls .log files text/x-log). Files keep the
+// allowed type, so they are stored and served as that.
+const TYPE_ALIASES = new Map<string, AttachmentMimeType>([
+  ['text/x-log', 'text/plain'],
+  ['text/x-csv', 'text/csv'],
+  ['application/csv', 'text/csv'],
+  ['text/comma-separated-values', 'text/csv'],
+  ['image/jpg', 'image/jpeg'],
+]);
+
 export const MAX_ATTACHMENT_BYTES = Math.max(
   ...Object.values(ATTACHMENT_KINDS).map((kind) => kind.maxBytes),
 );
 
 export const PENDING_ATTACHMENT_TTL_MS = 24 * 60 * 60 * 1000;
+
+// Only creates (`attachmentIds`) are limited; files added to a ticket later go one at a time.
+export const MAX_NEW_ATTACHMENTS = 20;
+
+export type AttachmentOwner = 'ticket' | 'comment';
+
+export const tooManyFilesMessage = (owner: AttachmentOwner): string =>
+  `${owner === 'ticket' ? 'A new ticket' : 'A comment'} can have up to ${MAX_NEW_ATTACHMENTS} files.`;
 
 // Extensions too, since some systems give .log or .md files no type.
 export const ATTACHMENT_ACCEPT = [
@@ -90,6 +108,8 @@ export function typeFromFileName(fileName: string): AttachmentMimeType | null {
 export function resolveAttachmentType(type: string, fileName: string): AttachmentMimeType | null {
   const declared = bareType(type);
   if (TYPES.has(declared)) return declared as AttachmentMimeType;
+  const alias = TYPE_ALIASES.get(declared);
+  if (alias) return alias;
   return UNCLEAR_TYPES.has(declared) ? typeFromFileName(fileName) : null;
 }
 

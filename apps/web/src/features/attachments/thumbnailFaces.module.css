@@ -75,6 +75,24 @@
   line-clamp: var(--file-name-lines);
 }
 
+/* Small tiles have one line (ThumbnailGrid), so there a name too long for it loses its middle and
+   keeps its end: "crash-r…t-1.log" and "crash-r…t-2.log" stay apart. */
+.nameText {
+  display: var(--file-name-flow, inline);
+}
+
+.nameHead {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: var(--file-name-wrap, normal);
+}
+
+.nameTail {
+  flex: none;
+  white-space: var(--file-name-wrap, normal);
+}
+
 .fileSize {
   color: var(--muted);
   font-size: var(--size-caption);

@@ -88,6 +88,17 @@ describe('ThumbnailGrid', () => {
     expect(onOpen.mock.calls).toEqual([[0], [1], [3]]);
   });
 
+  it('keeps the end of a file name apart, so a small tile can shorten only its start', () => {
+    const logs = ['crash-report-1.log', 'crash-report-2.log'].map((fileName, index) =>
+      attachment(`log-${index}`, { fileName, mimeType: 'text/plain' }),
+    );
+    render(<ThumbnailGrid size="sm" attachments={logs} onOpen={vi.fn()} />);
+    const name = screen.getByTitle('crash-report-2.log');
+    expect(name).toHaveTextContent('crash-report-2.log');
+    expect(within(name).getByText('rt-2.log')).toHaveClass('nameTail');
+    expect(within(name).getByText('crash-repo')).toHaveClass('nameHead');
+  });
+
   it('names files in their remove buttons', async () => {
     const onRemove = vi.fn();
     const user = userEvent.setup();

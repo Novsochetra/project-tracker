@@ -1,4 +1,4 @@
-import type { ProjectBoard } from '@tracker/shared';
+import { resolveFilter, type ProjectBoard } from '@tracker/shared';
 import { Fragment, useMemo, useRef } from 'react';
 import { useSheets } from '../../../app/sheets/context';
 import { isPhoneNow, useIsPhone } from '../../../lib/media';
@@ -49,13 +49,18 @@ export function TicketBoard({ board }: { board: ProjectBoard }) {
 
   return (
     <>
-      {isPhone && <BoardPager columns={columns} page={page} />}
+      {isPhone && columns.length > 1 && <BoardPager columns={columns} page={page} />}
       <div ref={frameRef} className={styles.frame}>
         {/* Keeps the left edge free for swiping back to Projects instead of scrolling columns. */}
         {isPhone && <div className={styles.edgeGuard} aria-hidden="true" />}
-        <div ref={boardRef} className={styles.board} data-board="">
-          {/* A new filter remounts the columns, so they rise in again like the list's groups. */}
-          <Fragment key={view.filter}>
+        <div
+          ref={boardRef}
+          className={styles.board}
+          data-board=""
+          data-single={columns.length === 1 || undefined}
+        >
+          {/* A new tab remounts the columns, so they rise in again like the list's groups. */}
+          <Fragment key={resolveFilter(statuses, view.filter)}>
             {columns.map((column, index) => (
               <BoardColumn
                 key={column.status.id}

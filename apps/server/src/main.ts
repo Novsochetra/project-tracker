@@ -27,13 +27,26 @@ const app = createApp({
   publicUrl: config.publicUrl,
 });
 
-const server = serve({ fetch: app.fetch, port: config.port, hostname: config.host }, (info) => {
-  const database = isPostgresUrl(config.databaseUrl) ? 'Postgres' : config.databaseUrl;
-  console.log(`Tracker API on http://${config.host}:${info.port} (database: ${database})`);
-  if (config.token) console.log('Access token required.');
-  if (config.publicUrl) console.log(`Agents connect at ${config.publicUrl}`);
-  if (config.testReset) console.log('Test reset route enabled: POST /api/test/reset');
-});
+// Node gives a whole request five minutes and then answers 408, which cut off a 100 MB video sent
+// slower than 2.8 Mbit/s. An hour lets the largest file arrive at 240 kbit/s, slower than a weak
+// phone uplink. Headers keep Node's one minute, so a client that never sends them is still dropped.
+const REQUEST_TIMEOUT_MS = 60 * 60 * 1000;
+
+const server = serve(
+  {
+    fetch: app.fetch,
+    port: config.port,
+    hostname: config.host,
+    serverOptions: { requestTimeout: REQUEST_TIMEOUT_MS },
+  },
+  (info) => {
+    const database = isPostgresUrl(config.databaseUrl) ? 'Postgres' : config.databaseUrl;
+    console.log(`Tracker API on http://${config.host}:${info.port} (database: ${database})`);
+    if (config.token) console.log('Access token required.');
+    if (config.publicUrl) console.log(`Agents connect at ${config.publicUrl}`);
+    if (config.testReset) console.log('Test reset route enabled: POST /api/test/reset');
+  },
+);
 
 function shutdown(): void {
   // Open SSE streams would keep close() waiting forever.

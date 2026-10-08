@@ -1,5 +1,6 @@
 .picker {
   display: flex;
+  flex-wrap: wrap;
 }
 
 .picker .attach {
@@ -11,5 +12,17 @@
 @media (hover: hover) {
   .picker .attach:hover {
     color: var(--ink);
+  }
+}
+
+.note {
+  flex: 1 0 100%;
+  margin-top: var(--space-2);
+}
+
+@media (max-width: 767px) {
+  /* Clear of the thumbnails above for the dismiss button's touch target. */
+  .note {
+    margin-top: var(--space-3);
   }
 }

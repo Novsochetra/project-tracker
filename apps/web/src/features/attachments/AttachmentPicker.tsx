@@ -5,6 +5,7 @@ import { useRef } from 'react';
 import { Button } from '../../components';
 import styles from './AttachmentPicker.module.css';
 import { FileInput } from './FileInput';
+import { FileNote } from './FileNote';
 import { AddTile, ThumbnailGrid } from './ThumbnailGrid';
 import type { AttachmentUploads } from './useAttachmentUploads';
 
@@ -50,6 +51,13 @@ export function AttachmentPicker({
         >
           <AddTile onClick={pick} />
         </ThumbnailGrid>
+      )}
+      {uploads.notice && (
+        <FileNote
+          notice={uploads.notice}
+          onDismiss={uploads.dismissNotice}
+          className={styles.note}
+        />
       )}
       <FileInput ref={inputRef} label={inputLabel} onFiles={uploads.add} />
     </div>

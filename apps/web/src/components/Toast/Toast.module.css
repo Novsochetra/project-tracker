@@ -19,7 +19,7 @@
 
 .toast {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 8px;
   max-width: 100%;
   padding: 10px 16px 10px 12px;
@@ -30,7 +30,6 @@
   font-size: var(--size-body);
   font-weight: var(--weight-medium);
   line-height: 1.5;
-  white-space: nowrap;
   box-shadow: var(--shadow-toast);
   animation: toast-in var(--duration-base) var(--ease-out) backwards;
 }
@@ -43,23 +42,30 @@
   animation: toast-out var(--duration-fast) var(--ease-in) both;
 }
 
+/* Centered on the first line, so a toast that wraps keeps the icon beside it. */
 .icon {
   flex: none;
+  margin-top: calc((1.5em - 16px) / 2);
 }
 
 .errorIcon {
   color: var(--danger-inverse);
 }
 
+/* A server message may hold a path or URL longer than the line, and even lines keep a lone word
+   from ending the toast. */
 .text {
-  overflow: hidden;
-  text-overflow: ellipsis;
+  overflow-wrap: anywhere;
+  text-wrap: balance;
 }
 
+/* Beside the last line, where a one-line toast has it: the band that catches the second tap of a
+   double tap is 44px tall, and wouldn't cover it beside the first line of a toast that wraps. */
 .undo {
   position: relative;
   isolation: isolate;
   flex: none;
+  align-self: flex-end;
   min-width: var(--touch-target);
   min-height: var(--touch-target);
   /* The 44px target reaches into the toast's padding instead of making the toast taller, and

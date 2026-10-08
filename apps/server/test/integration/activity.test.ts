@@ -64,12 +64,12 @@ describe.each(DIALECTS)('comments and activity (%s)', (dialect) => {
     ).toBe('%E0%A4%A');
   });
 
-  it('needs text or an image', async () => {
+  it('needs text or a file', async () => {
     const res = await api.post<ErrorBody>(`/api/tickets/${ticket.key}/comments`, { text: '   ' });
     expect(res.status).toBe(400);
     expect(res.body.error).toEqual({
       code: 'invalid_input',
-      message: 'Write a comment or add an image.',
+      message: 'Write a comment or add a file.',
     });
     expect((await api.post('/api/tickets/MA-9/comments', { text: 'x' })).status).toBe(404);
   });

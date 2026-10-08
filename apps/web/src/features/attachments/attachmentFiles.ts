@@ -1,9 +1,12 @@
 import {
   ATTACHMENT_TYPES,
+  MAX_NEW_ATTACHMENTS,
   checkAttachment,
   resolveAttachmentType,
+  tooManyFilesMessage,
   type AttachmentKind,
   type AttachmentMimeType,
+  type AttachmentOwner,
 } from '@tracker/shared';
 
 export interface AdmittedFile {
@@ -12,9 +15,34 @@ export interface AdmittedFile {
   mimeType: AttachmentMimeType;
 }
 
+export interface RefusedFile {
+  name: string;
+  reason: string;
+}
+
 export interface Admission {
   admitted: AdmittedFile[];
-  refusal: string | null;
+  refused: RefusedFile[];
+}
+
+export interface FileRoom {
+  room: number;
+  reason: string;
+}
+
+export interface FileLimit {
+  owner: AttachmentOwner;
+  attached: number;
+}
+
+const UNLIMITED: FileRoom = { room: Infinity, reason: '' };
+
+export function roomFor(limit: FileLimit | undefined, uploading: number): FileRoom {
+  if (!limit) return UNLIMITED;
+  return {
+    room: MAX_NEW_ATTACHMENTS - limit.attached - uploading,
+    reason: tooManyFilesMessage(limit.owner),
+  };
 }
 
 function check(file: File) {
@@ -25,15 +53,17 @@ function check(file: File) {
   return checkAttachment(scaled ? { type: file.type, name: file.name, size: 0 } : file);
 }
 
-export function admitFiles(files: Iterable<File>): Admission {
+export function admitFiles(files: Iterable<File>, { room, reason } = UNLIMITED): Admission {
   const admitted: AdmittedFile[] = [];
-  let refusal: string | null = null;
+  const refused: RefusedFile[] = [];
   for (const file of files) {
     const result = check(file);
-    if (result.ok) admitted.push({ file, kind: result.kind, mimeType: result.mimeType });
-    else refusal ??= result.message;
+    const name = file.name || 'A file';
+    if (!result.ok) refused.push({ name, reason: result.message });
+    else if (admitted.length >= room) refused.push({ name, reason });
+    else admitted.push({ file, kind: result.kind, mimeType: result.mimeType });
   }
-  return { admitted, refusal };
+  return { admitted, refused };
 }
 
 export function filesOf(data: DataTransfer | null): File[] {

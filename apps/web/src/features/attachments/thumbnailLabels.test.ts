@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatDuration, thumbnailLabels } from './thumbnailLabels';
+import { formatDuration, splitFileName, thumbnailLabels } from './thumbnailLabels';
 
 const file = (fileName: string, mimeType: string) => ({ fileName, mimeType });
 
@@ -30,5 +30,26 @@ describe('formatDuration', () => {
     expect(formatDuration(Number.NaN)).toBeNull();
     expect(formatDuration(Number.POSITIVE_INFINITY)).toBeNull();
     expect(formatDuration(-1)).toBeNull();
+  });
+});
+
+describe('splitFileName', () => {
+  it('keeps the extension and the characters just before it together', () => {
+    expect(splitFileName('crash-report-1.log')).toEqual({ head: 'crash-repo', tail: 'rt-1.log' });
+    expect(splitFileName('IMG_0001.HEIC')).toEqual({ head: 'IMG_', tail: '0001.HEIC' });
+    expect(splitFileName('archive.tar.gz')).toEqual({ head: 'archive', tail: '.tar.gz' });
+  });
+
+  it('keeps a short name whole in the part that never shrinks', () => {
+    expect(splitFileName('spec.pdf')).toEqual({ head: '', tail: 'spec.pdf' });
+    expect(splitFileName('.env')).toEqual({ head: '', tail: '.env' });
+  });
+
+  it('keeps the end of a name without an extension', () => {
+    expect(splitFileName('Makefile')).toEqual({ head: 'Make', tail: 'file' });
+  });
+
+  it('counts a character made of two code units once and never splits it', () => {
+    expect(splitFileName('notes 🐞🐞.txt')).toEqual({ head: 'note', tail: 's 🐞🐞.txt' });
   });
 });

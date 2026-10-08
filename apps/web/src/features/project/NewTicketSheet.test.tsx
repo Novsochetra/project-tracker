@@ -179,27 +179,27 @@ describe('NewTicketSheet', () => {
     );
   });
 
-  it('switches back to All when the filter would hide the new ticket', async () => {
-    setListFilter('MOB', 'done');
+  it('switches back to All when the status tab would hide the new ticket', async () => {
+    setListFilter('MOB', STATUS.done);
     const { user } = renderSheet();
     await user.type(titleField(), 'New idea{Enter}');
     await waitFor(() => expect(getListView('MOB')).toEqual({ filter: 'all', query: '' }));
   });
 
   it('clears an active search so the new ticket shows', async () => {
-    setListFilter('MOB', 'active');
+    setListFilter('MOB', STATUS.todo);
     setListQuery('MOB', 'login');
     const { user } = renderSheet();
     await user.type(titleField(), 'New idea{Enter}');
     await waitFor(() => expect(getListView('MOB')).toEqual({ filter: 'all', query: '' }));
   });
 
-  it('keeps a filter that already shows the new ticket', async () => {
-    setListFilter('MOB', 'active');
+  it("keeps the tab of the new ticket's status", async () => {
+    setListFilter('MOB', STATUS.todo);
     const { user } = renderSheet();
     await user.type(titleField(), 'New idea{Enter}');
     expect(await screen.findByText('MOB-5 created')).toBeInTheDocument();
-    expect(getListView('MOB').filter).toBe('active');
+    expect(getListView('MOB').filter).toBe(STATUS.todo);
   });
 
   it('shows the server error and stays open', async () => {

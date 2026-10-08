@@ -14,7 +14,8 @@ import { withTicket } from '../cache/ticketDetail';
 import { boardChanges, ticketChange } from '../cacheChanges';
 import { useApi } from '../context';
 import { markDeleted } from '../deleted';
-import { markRead, writesBefore } from '../freshReads';
+import { isNetworkError } from '../errors';
+import { changesBefore, markRead } from '../freshReads';
 import { applyOptimistic, cacheChange, patchCaches, rollbackOnError } from '../optimistic';
 import { queryKeys } from '../queryKeys';
 import { refreshPeople, settleMutation } from '../refresh';
@@ -34,16 +35,21 @@ export interface MarkSentVariables {
   input: MarkSentInput;
 }
 
-// Only a copy on screen can be newer than the service worker's; without one, its saved copy still
-// beats nothing while the tracker can't be reached.
+// A ticket changed since its last fresh read is read fresh, because the service worker's copy may
+// be older than the change. When that read gets no answer, a copy on screen stays; without one
+// (such as after a reload), the saved copy still beats nothing while the tracker can't be reached.
 async function readTicket(client: TrackerClient, queryClient: QueryClient, ticketKey: string) {
-  const key = ticketKey.toUpperCase();
-  const writes = writesBefore(queryClient, key);
-  const shown = queryClient.getQueryData(queryKeys.ticket(key)) !== undefined;
-  if (writes === undefined || !shown) return client.getTicket(ticketKey);
-  const detail = await client.getTicket(ticketKey, { fresh: true });
-  markRead(queryClient, key, writes);
-  return detail;
+  const changes = changesBefore(queryClient, ticketKey);
+  if (changes === undefined) return client.getTicket(ticketKey);
+  try {
+    const detail = await client.getTicket(ticketKey, { fresh: true });
+    markRead(queryClient, ticketKey, changes);
+    return detail;
+  } catch (error) {
+    const shown = queryClient.getQueryData(queryKeys.ticket(ticketKey)) !== undefined;
+    if (shown || !isNetworkError(error)) throw error;
+    return client.getTicket(ticketKey);
+  }
 }
 
 export function useTicket(ticketKey: string): TrackerQuery<TicketDetail> {

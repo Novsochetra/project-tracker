@@ -1,79 +1,56 @@
 import { CircleAlert } from 'lucide-react';
-import { useEffect, useRef, type ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import { Icon } from '../../../components';
 import type { ActivityItem } from './activityItems';
 import { ActivityCard, ActorAvatar } from './ActivityCard';
 import cardStyles from './ActivityCard.module.css';
 import { CommentEditor } from './CommentEditor';
+import { CommentMenu } from './CommentMenu';
 import { ItemMenu } from './ItemMenu';
 import styles from './UnshownItem.module.css';
 import type { ActivityActions } from './useActivityActions';
-import { useCommentEdit } from './useCommentEdit';
+import type { CommentEdit } from './useCommentEdit';
+
+type CommentItem = Extract<ActivityItem, { kind: 'comment' }>;
 
 export interface UnshownItemProps {
-  item: ActivityItem;
+  item: Exclude<ActivityItem, CommentItem>;
   actions: ActivityActions;
+  children?: ReactNode;
 }
 
 // The text as stored, through nothing that parses it, so it can't fail the way the card did.
 const plainText = (item: ActivityItem): string => (typeof item.text === 'string' ? item.text : '');
 
-export function UnshownItem({ item, actions }: UnshownItemProps) {
-  const remove = () => actions.remove(item.id);
+export function UnshownItem({ item, actions, children }: UnshownItemProps) {
+  const menu = (noun: string) => <ItemMenu noun={noun} onDelete={() => actions.remove(item.id)} />;
   switch (item.kind) {
     case 'event':
+    case 'unknown':
       return <UnshownCard item={item} title={item.author} />;
-    case 'comment':
-      return <UnshownComment item={item} actions={actions} />;
     case 'report':
-      return (
-        <UnshownCard
-          item={item}
-          title={item.title}
-          tone="report"
-          menu={<ItemMenu noun="report" onDelete={remove} />}
-        />
-      );
+      return <UnshownCard item={item} title={item.title} tone="report" menu={menu('report')} />;
     case 'review':
       return (
-        <UnshownCard
-          item={item}
-          title={`${item.author} reviewed`}
-          menu={<ItemMenu noun="review" onDelete={remove} />}
-        />
+        <UnshownCard item={item} title={`${item.author} reviewed`} menu={menu('review')}>
+          {children}
+        </UnshownCard>
       );
   }
 }
 
-const focusIsLost = () =>
-  document.activeElement === null || document.activeElement === document.body;
-
-interface UnshownCommentProps {
-  item: Extract<ActivityItem, { kind: 'comment' }>;
+export interface UnshownCommentProps {
+  item: CommentItem;
+  edit: CommentEdit;
   actions: ActivityActions;
 }
 
-function UnshownComment({ item, actions }: UnshownCommentProps) {
-  const edit = useCommentEdit(item, actions.editComment, actions.ticketKey);
-  const triggerRef = useRef<HTMLButtonElement>(null);
-  // As on a comment card: keyboard users continue from the options button once the editor goes.
-  useEffect(() => {
-    if (edit.closed && focusIsLost()) triggerRef.current?.focus({ preventScroll: true });
-  }, [edit.closed]);
-  const menu = !item.draft && (
-    <ItemMenu
-      noun="comment"
-      hidden={edit.open}
-      triggerRef={triggerRef}
-      onEdit={edit.start}
-      onDelete={() => actions.remove(item.id)}
-    />
-  );
+export function UnshownComment({ item, edit, actions }: UnshownCommentProps) {
   return (
     <UnshownCard
       item={item}
       title={item.author}
-      menu={menu}
+      menu={!item.draft && <CommentMenu item={item} edit={edit} actions={actions} />}
       dimmed={item.draft}
       editor={edit.open ? <CommentEditor edit={edit} /> : null}
     />
@@ -87,9 +64,10 @@ interface UnshownCardProps {
   menu?: ReactNode;
   dimmed?: boolean;
   editor?: ReactNode;
+  children?: ReactNode;
 }
 
-function UnshownCard({ item, title, tone, menu, dimmed, editor }: UnshownCardProps) {
+function UnshownCard({ item, title, tone, menu, dimmed, editor, children }: UnshownCardProps) {
   const text = plainText(item);
   return (
     <ActivityCard
@@ -105,6 +83,7 @@ function UnshownCard({ item, title, tone, menu, dimmed, editor }: UnshownCardPro
         Couldn't show this item
       </p>
       {editor ?? (text && <p className={cardStyles.body}>{text}</p>)}
+      {children}
     </ActivityCard>
   );
 }

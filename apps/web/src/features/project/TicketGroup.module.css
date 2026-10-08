@@ -8,17 +8,13 @@
   animation-fill-mode: backwards;
 }
 
-/* One keyframe name per filter, so changing the filter replays the rise (SPEC §7.1). */
-.group[data-rise='all'] {
-  animation-name: rise-all;
+/* Two names for the same rise: a new tab switches between them, which replays it (SPEC §7.1). */
+.group[data-rise='a'] {
+  animation-name: rise-a;
 }
 
-.group[data-rise='active'] {
-  animation-name: rise-active;
-}
-
-.group[data-rise='done'] {
-  animation-name: rise-done;
+.group[data-rise='b'] {
+  animation-name: rise-b;
 }
 
 .header {
@@ -130,7 +126,7 @@
   }
 }
 
-@keyframes rise-all {
+@keyframes rise-a {
   from {
     opacity: 0;
     transform: translateY(6px);
@@ -141,18 +137,7 @@
   }
 }
 
-@keyframes rise-active {
-  from {
-    opacity: 0;
-    transform: translateY(6px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-
-@keyframes rise-done {
+@keyframes rise-b {
   from {
     opacity: 0;
     transform: translateY(6px);

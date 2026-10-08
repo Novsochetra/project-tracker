@@ -1,6 +1,7 @@
 import type { Attachment } from '@tracker/shared';
 import type { Dispatch, SetStateAction } from 'react';
 import { useDeleteAttachment } from '../../api';
+import type { FileLimit } from './attachmentFiles';
 import { useAttachmentUploads, type AttachmentUploads } from './useAttachmentUploads';
 
 export interface AttachmentList extends AttachmentUploads {
@@ -10,9 +11,13 @@ export interface AttachmentList extends AttachmentUploads {
 
 // Files upload before their ticket or comment exists and wait on the server until it is created
 // with them.
-export function useAttachmentList(setAttachments: Dispatch<SetStateAction<Attachment[]>>) {
+export function useAttachmentList(
+  setAttachments: Dispatch<SetStateAction<Attachment[]>>,
+  limit: FileLimit,
+) {
   const uploads = useAttachmentUploads({
     onUploaded: (attachment) => setAttachments((current) => [...current, attachment]),
+    limit,
   });
   const deleteAttachment = useDeleteAttachment();
   // Unused uploads expire on the server anyway, so a failed cleanup needs no message.

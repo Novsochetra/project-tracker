@@ -44,7 +44,7 @@ test.describe('tickets', () => {
     await expect(toast(page, 'MOB-3 created')).toBeVisible();
   });
 
-  test('creating a hidden ticket resets the filter to All', async ({ page, api }) => {
+  test('creating a ticket the status tab hides resets the tabs to All', async ({ page, api }) => {
     await seedProject(api, 'Mobile app', 'MOB', [{ title: 'Shipped', status: 'Done' }]);
     await page.goto('/p/MOB');
     const filters = page.getByRole('group', { name: 'Filter tickets' });

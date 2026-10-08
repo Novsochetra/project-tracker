@@ -90,6 +90,43 @@ test.describe('attachments', () => {
     await expect(viewer).toBeHidden();
   });
 
+  test('phone: a refused file and a 21st file are said in the picker area until dismissed', async ({
+    page,
+    api,
+  }, info) => {
+    test.skip(!isPhone(info.project.name), 'The note replaces a toast too short for a phone.');
+    await seedProject(api, 'Mobile app', 'MOB', [{ title: 'Existing ticket' }]);
+    await page.goto('/p/MOB');
+    await openNewTicketIn(page, 'To do');
+    const sheet = newTicketSheet(page);
+    const svg = { name: 'notes.svg', mimeType: 'image/svg+xml', buffer: Buffer.from('<svg/>') };
+    await sheet.getByLabel('Add files to ticket').setInputFiles([svg]);
+    const note = sheet.getByRole('alert');
+    await expect(note).toContainText("notes.svg can't be attached.");
+    await expect(note).toContainText('text files (TXT, LOG, MD, CSV, JSON) and PDFs');
+    const box = await note.boundingBox();
+    expect((box?.x ?? -1) >= 0 && (box?.x ?? 0) + (box?.width ?? 0) <= 375).toBe(true);
+    await page.waitForTimeout(3_000);
+    await expect(note).toBeVisible();
+    await note.getByRole('button', { name: 'Dismiss' }).tap();
+    await expect(note).toBeHidden();
+
+    const logs = Array.from({ length: 21 }, (_, index) => ({
+      name: `crash-report-${index + 1}.log`,
+      mimeType: 'text/plain',
+      buffer: Buffer.from('boom\n'),
+    }));
+    await sheet.getByLabel('Add files to ticket').setInputFiles(logs);
+    await expect(note).toContainText("crash-report-21.log can't be attached.");
+    await expect(note).toContainText('A new ticket can have up to 20 files.');
+    await expect(sheet.getByRole('progressbar')).toHaveCount(0);
+    await expect(sheet.locator('[title^="crash-report-"]')).toHaveCount(20);
+    await sheet.getByLabel('Ticket title').fill('Twenty logs');
+    await sheet.getByRole('button', { name: 'Create' }).click();
+    await expect(toast(page, 'MOB-2 created')).toBeVisible();
+    expect((await api.getTicket('MOB-2')).attachments).toHaveLength(20);
+  });
+
   test('desktop: a file dropped on the New ticket sheet is attached', async ({
     page,
     api,

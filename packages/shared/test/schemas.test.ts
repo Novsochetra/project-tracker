@@ -92,11 +92,9 @@ describe('createCommentInput', () => {
   });
 
   it('rejects a comment with neither text nor attachments', () => {
-    expect(messages(createCommentInput.safeParse({}))).toEqual([
-      'Write a comment or add an image.',
-    ]);
+    expect(messages(createCommentInput.safeParse({}))).toEqual(['Write a comment or add a file.']);
     expect(messages(createCommentInput.safeParse({ text: '  \n ', attachmentIds: [] }))).toEqual([
-      'Write a comment or add an image.',
+      'Write a comment or add a file.',
     ]);
   });
 });

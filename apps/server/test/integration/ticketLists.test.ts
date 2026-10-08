@@ -1,4 +1,11 @@
-import type { ErrorBody, ProjectDetail, Review, TicketListItem } from '@tracker/shared';
+import type {
+  ErrorBody,
+  ListTicketsQuery,
+  ProjectDetail,
+  Review,
+  TicketListItem,
+  TicketsAcrossProjects,
+} from '@tracker/shared';
 import type { KyselyPlugin } from 'kysely';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { createApp } from '../../src/app';
@@ -54,10 +61,10 @@ describe.each(DIALECTS)('ticket lists (%s)', (dialect) => {
       await approve('MOB-1', 5);
       await approve('MOB-2', 3);
 
-      const res = await api.get<TicketListItem[]>('/api/tickets?category=reviewed');
+      const res = await api.get<TicketsAcrossProjects>('/api/tickets?category=reviewed');
       expect(res.status).toBe(200);
-      expect(keys(res.body)).toEqual(['MOB-2', 'MOB-1', 'WEB-1']);
-      expect(res.body.find((ticket) => ticket.key === 'WEB-1')).toMatchObject({
+      expect(keys(res.body.tickets)).toEqual(['MOB-2', 'MOB-1', 'WEB-1']);
+      expect(res.body.tickets.find((ticket) => ticket.key === 'WEB-1')).toMatchObject({
         projectId: web.project.id,
         title: 'Pricing layout',
         statusId: statusOf(web, 'reviewed').id,
@@ -66,11 +73,13 @@ describe.each(DIALECTS)('ticket lists (%s)', (dialect) => {
 
       await api.client().updateTicket('WEB-1', { title: 'Pricing page layout' });
       const reordered = await api.client().listAllTickets({ category: 'reviewed' });
-      expect(keys(reordered)).toEqual(['WEB-1', 'MOB-2', 'MOB-1']);
+      expect(keys(reordered.tickets)).toEqual(['WEB-1', 'MOB-2', 'MOB-1']);
     });
 
     it('filters by status name in any project, category and search like a project list', async () => {
       const client = api.client();
+      const listed = async (query?: ListTicketsQuery) =>
+        keys((await client.listAllTickets(query)).tickets);
       await waitingForReview(mobile, 'Crash on rotate');
       await waitingForReview(web, 'Crash on the pricing page');
       await client.createTicket('WEB', { title: 'Hero copy' });
@@ -78,21 +87,45 @@ describe.each(DIALECTS)('ticket lists (%s)', (dialect) => {
       await approve('WEB-1', 2);
       await client.updateStatus(statusOf(web, 'reviewed').id, { name: 'Checked' });
 
-      expect(keys(await client.listAllTickets())).toEqual(['WEB-1', 'MOB-1', 'WEB-2']);
-      expect(keys(await client.listAllTickets({ status: ' reviewed ' }))).toEqual(['MOB-1']);
-      expect(keys(await client.listAllTickets({ status: 'CHECKED' }))).toEqual(['WEB-1']);
-      expect(keys(await client.listAllTickets({ category: 'reviewed' }))).toEqual([
-        'WEB-1',
-        'MOB-1',
-      ]);
-      expect(keys(await client.listAllTickets({ category: 'todo' }))).toEqual(['WEB-2']);
-      expect(keys(await client.listAllTickets({ q: 'crash' }))).toEqual(['WEB-1', 'MOB-1']);
-      expect(keys(await client.listAllTickets({ q: 'web-2' }))).toEqual(['WEB-2']);
-      expect(keys(await client.listAllTickets({ status: 'To do', category: 'done' }))).toEqual([]);
-      expect(await client.listAllTickets({ status: 'Nope' })).toEqual([]);
+      expect(await listed()).toEqual(['WEB-1', 'MOB-1', 'WEB-2']);
+      expect(await listed({ status: ' reviewed ' })).toEqual(['MOB-1']);
+      expect(await listed({ status: 'CHECKED' })).toEqual(['WEB-1']);
+      expect(await listed({ category: 'reviewed' })).toEqual(['WEB-1', 'MOB-1']);
+      expect(await listed({ category: 'todo' })).toEqual(['WEB-2']);
+      expect(await listed({ q: 'crash' })).toEqual(['WEB-1', 'MOB-1']);
+      expect(await listed({ q: 'web-2' })).toEqual(['WEB-2']);
+      expect(await listed({ status: 'To do', category: 'done' })).toEqual([]);
+      expect(await listed({ status: 'Nope' })).toEqual([]);
       const bad = await api.get<ErrorBody>('/api/tickets?category=later');
       expect(bad.status).toBe(400);
       expect(bad.body.error.code).toBe('invalid_input');
+    });
+
+    it('sends the statuses of the projects it lists tickets from, in their order', async () => {
+      const client = api.client();
+      await waitingForReview(mobile, 'Crash on rotate');
+      await approve('MOB-1', 4);
+      await client.createTicket('WEB', { title: 'Hero copy' });
+      const reordered = await client.reorderStatuses(
+        'MOB',
+        mobile.statuses.map((status) => status.id).reverse(),
+      );
+      const webStatuses = (await client.getProject('WEB')).statuses;
+
+      const ready = await client.listAllTickets({ category: 'reviewed' });
+      expect(keys(ready.tickets)).toEqual(['MOB-1']);
+      expect(ready.statuses).toEqual(reordered);
+
+      const all = await client.listAllTickets();
+      const ofProject = (id: string) => all.statuses.filter((status) => status.projectId === id);
+      expect(ofProject(mobile.project.id)).toEqual(reordered);
+      expect(ofProject(web.project.id)).toEqual(webStatuses);
+      expect(all.statuses).toHaveLength(reordered.length + webStatuses.length);
+
+      expect(await client.listAllTickets({ q: 'nothing like it' })).toEqual({
+        tickets: [],
+        statuses: [],
+      });
     });
   });
 
@@ -108,7 +141,7 @@ describe.each(DIALECTS)('ticket lists (%s)', (dialect) => {
       return [
         reviewOf((await client.getBoard('MOB')).tickets, key),
         reviewOf(await client.listTickets('MOB'), key),
-        reviewOf(await client.listAllTickets(), key),
+        reviewOf((await client.listAllTickets()).tickets, key),
       ];
     };
 
@@ -180,7 +213,7 @@ describe.each(DIALECTS)('ticket lists (%s)', (dialect) => {
       await api.client().addComment(ticket.key, { text: 'Comment' });
       await approve(ticket.key, 3);
     }
-    expect(await client.listAllTickets({ category: 'reviewed' })).toHaveLength(7);
+    expect((await client.listAllTickets({ category: 'reviewed' })).tickets).toHaveLength(7);
     expect(await readAll()).toEqual(few);
   });
 });

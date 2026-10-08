@@ -44,12 +44,44 @@ describe('buildGroups', () => {
     expect(buildGroups(input({ statuses: reordered }))[0]?.status.name).toBe('Done');
   });
 
-  it('shows only open statuses for Active and only done ones for Done', () => {
-    expect(shape(buildGroups(input({ filter: 'active' }))).map(([name]) => name)).toEqual([
-      'To do',
-      'Need review',
+  it("shows only the picked status's group for its tab", () => {
+    expect(shape(buildGroups(input({ filter: STATUS.todo })))).toEqual([
+      ['To do', ['MOB-2', 'MOB-1']],
     ]);
-    expect(shape(buildGroups(input({ filter: 'done' })))).toEqual([['Done', ['MOB-4']]]);
+    expect(shape(buildGroups(input({ filter: STATUS.done })))).toEqual([['Done', ['MOB-4']]]);
+    expect(buildGroups(input({ filter: STATUS.progress }))).toEqual([]);
+  });
+
+  it('shows a custom status like any other', () => {
+    const blocked = { ...statuses[0]!, id: 's-blocked', name: 'Blocked', position: 9 };
+    const withBlocked = [...statuses, blocked];
+    const stuck = listItem(5, 's-blocked', 0, { title: 'Waiting on design' });
+    expect(
+      shape(buildGroups(input({ statuses: withBlocked, tickets: [...tickets, stuck] }))).map(
+        ([name]) => name,
+      ),
+    ).toEqual(['To do', 'Need review', 'Done', 'Blocked']);
+    expect(
+      shape(
+        buildGroups(
+          input({ statuses: withBlocked, tickets: [...tickets, stuck], filter: 's-blocked' }),
+        ),
+      ),
+    ).toEqual([['Blocked', ['MOB-5']]]);
+  });
+
+  it('shows every group again when the picked status was deleted', () => {
+    const left = statuses.filter((status) => status.id !== STATUS.progress);
+    expect(shape(buildGroups(input({ statuses: left, filter: STATUS.progress })))).toEqual(
+      shape(buildGroups(input({ statuses: left }))),
+    );
+  });
+
+  it('combines a status tab with the search', () => {
+    expect(shape(buildGroups(input({ filter: STATUS.todo, query: 'crash' })))).toEqual([
+      ['To do', ['MOB-2']],
+    ]);
+    expect(buildGroups(input({ filter: STATUS.todo, query: 'mob-3' }))).toEqual([]);
   });
 
   it('searches titles and keys', () => {
@@ -67,13 +99,15 @@ describe('buildGroups', () => {
       'Done',
     ]);
     expect(
-      buildGroups(input({ dragging: true, filter: 'active' })).map((group) => group.status.name),
-    ).not.toContain('Done');
+      buildGroups(input({ dragging: true, filter: STATUS.reviewed })).map(
+        (group) => group.status.name,
+      ),
+    ).toEqual(['Reviewed']);
   });
 });
 
 describe('buildColumns', () => {
-  it('keeps a column for every status the filter shows, empty or not', () => {
+  it('keeps a column for every status the tab shows, empty or not', () => {
     expect(shape(buildColumns(input()))).toEqual([
       ['To do', ['MOB-2', 'MOB-1']],
       ['In progress', []],
@@ -81,15 +115,20 @@ describe('buildColumns', () => {
       ['Reviewed', []],
       ['Done', ['MOB-4']],
     ]);
-    expect(shape(buildColumns(input({ filter: 'done' })))).toEqual([['Done', ['MOB-4']]]);
+    expect(shape(buildColumns(input({ filter: STATUS.done })))).toEqual([['Done', ['MOB-4']]]);
+    expect(shape(buildColumns(input({ filter: STATUS.reviewed })))).toEqual([['Reviewed', []]]);
   });
 
   it('narrows every column to the search without dropping any', () => {
-    expect(shape(buildColumns(input({ filter: 'active', query: 'crash' })))).toEqual([
+    expect(shape(buildColumns(input({ query: 'crash' })))).toEqual([
       ['To do', ['MOB-2']],
       ['In progress', []],
       ['Need review', []],
       ['Reviewed', []],
+      ['Done', []],
+    ]);
+    expect(shape(buildColumns(input({ filter: STATUS.review, query: 'crash' })))).toEqual([
+      ['Need review', []],
     ]);
   });
 });

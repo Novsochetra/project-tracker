@@ -1,5 +1,6 @@
 import { findStatusByCategory, type TicketDetail } from '@tracker/shared';
 import { useEffect, useMemo, useState } from 'react';
+import { ErrorBoundary } from '../../../lib/ErrorBoundary';
 import { useNow } from '../../../lib/useNow';
 import { activityItems } from '../activity/activityItems';
 import { ActivityCard, ActorAvatar } from '../activity/ActivityCard';
@@ -7,6 +8,8 @@ import cardStyles from '../activity/ActivityCard.module.css';
 import { LinkedText } from '../activity/LinkedText';
 import { ReviewVerdict } from '../activity/ReviewVerdict';
 import { TimeAgo } from '../activity/TimeAgo';
+import { UnshownItem } from '../activity/UnshownItem';
+import { useActivityActions } from '../activity/useActivityActions';
 import { DoneButton } from '../DoneButton';
 import type { MoveToDone } from '../useMoveToDone';
 import styles from './LatestReview.module.css';
@@ -39,6 +42,7 @@ function useLeaving(): [Shown | null, (shown: Shown) => void] {
 
 export function LatestReview({ detail, done }: LatestReviewProps) {
   const now = useNow();
+  const actions = useActivityActions(detail.ticket.key);
   const items = useMemo(() => activityItems(detail.activity), [detail.activity]);
   const review = shownReview(detail.status.category, items);
   const [leaving, leave] = useLeaving();
@@ -53,22 +57,39 @@ export function LatestReview({ detail, done }: LatestReviewProps) {
       target.move();
     },
   };
+  const doneButton = moveToDone && (
+    <DoneButton done={moveToDone} size="lg" className={styles.done} />
+  );
+  const item = shown.review;
+  // Outside the activity list's boundaries, so it has its own; its stand-in keeps Delete and Move
+  // to Done. Keyed by review, so a newer one never inherits a failure.
   return (
     <section aria-label="Latest review" className={styles.latest} inert={leaving !== null}>
-      <ActivityCard
-        avatar={<ActorAvatar actor={shown.review.actor} />}
-        title={`${shown.review.author} reviewed`}
-        meta={<TimeAgo at={shown.review.at} now={now} />}
-        dimmed={leaving !== null}
+      <ErrorBoundary
+        key={item.id}
+        name={`Latest review ${item.id}`}
+        retryKey={item.source}
+        fallback={
+          <UnshownItem item={item} actions={actions}>
+            {doneButton}
+          </UnshownItem>
+        }
       >
-        <ReviewVerdict review={shown.review.review} approvedColor={approvedColor} />
-        {shown.review.text && (
-          <p className={cardStyles.body}>
-            <LinkedText text={shown.review.text} />
-          </p>
-        )}
-        {moveToDone && <DoneButton done={moveToDone} size="lg" className={styles.done} />}
-      </ActivityCard>
+        <ActivityCard
+          avatar={<ActorAvatar actor={item.actor} />}
+          title={`${item.author} reviewed`}
+          meta={<TimeAgo at={item.at} now={now} />}
+          dimmed={leaving !== null}
+        >
+          <ReviewVerdict review={item.review} approvedColor={approvedColor} />
+          {item.text && (
+            <p className={cardStyles.body}>
+              <LinkedText text={item.text} />
+            </p>
+          )}
+          {doneButton}
+        </ActivityCard>
+      </ErrorBoundary>
     </section>
   );
 }

@@ -13,6 +13,12 @@ export interface ProjectBoard extends ProjectDetail {
   tickets: TicketListItem[];
 }
 
+// Each project has its own statuses, so a list across projects brings those of its tickets.
+export interface TicketsAcrossProjects {
+  tickets: TicketListItem[];
+  statuses: Status[];
+}
+
 export interface TicketDetail {
   ticket: Ticket;
   project: Project;

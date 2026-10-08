@@ -1,4 +1,4 @@
-import { HUMAN, type Activity } from '@tracker/shared';
+import { HUMAN, type Activity, type Actor } from '@tracker/shared';
 import { describe, expect, it } from 'vitest';
 import { attachment, comment } from '../../../api/test/fixtures';
 import { activityItems, lastReportAt, reportTitle } from './activityItems';
@@ -51,6 +51,33 @@ describe('activityItems', () => {
     expect(report).toMatchObject({ kind: 'report', title: 'Claude report', text: 'report r' });
     expect(review).toMatchObject({ kind: 'review', review: { verdict: 'approved', rating: 4 } });
   });
+
+  it('keeps the activity each item shows, so a changed one can be told apart', () => {
+    const activity = [entry('a', 'event', 1), entry('b', 'comment', 2)];
+    expect(activityItems(activity).map((item) => item.source)).toEqual(activity);
+    expect(activityItems(activity)[1]?.source).toBe(activity[1]);
+  });
+
+  it('builds one activity in a shape it does not expect without failing the rest', () => {
+    const odd = (actor: unknown) => actor as Actor;
+    const items = activityItems([
+      entry('a', 'comment', 1, { actor: odd(null) }),
+      entry('b', 'report', 2, { actor: odd({ kind: 'robot', name: 'R2' }) }),
+      entry('c', 'review', 3, { actor: odd({ kind: 'agent', name: 42 }) }),
+      entry('d', 'poll' as Activity['type'], 4),
+      entry(7 as unknown as string, 'comment', 5),
+    ]);
+    expect(items.map((item) => [item.kind, item.actor, item.author])).toEqual([
+      ['comment', null, 'Someone'],
+      ['report', null, 'Someone'],
+      ['review', null, 'Someone'],
+      ['unknown', HUMAN, 'You'],
+      ['comment', HUMAN, 'You'],
+    ]);
+    expect(items[1]).toMatchObject({ title: 'Claude Code report' });
+    expect(items[3]).toMatchObject({ text: 'poll d' });
+    expect(items[4]).toMatchObject({ draft: false });
+  });
 });
 
 describe('reportTitle', () => {
@@ -60,6 +87,7 @@ describe('reportTitle', () => {
     );
     expect(reportTitle(HUMAN)).toBe('Claude Code report');
     expect(reportTitle({ kind: 'agent', name: '' })).toBe('Claude Code report');
+    expect(reportTitle(null)).toBe('Claude Code report');
   });
 });
 

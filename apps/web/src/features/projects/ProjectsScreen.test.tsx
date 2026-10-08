@@ -3,7 +3,7 @@ import type { ProjectSummary, TicketListItem } from '@tracker/shared';
 import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { listItem, otherProject, project, STATUS, statuses } from '../../api/test/fixtures';
+import { listItem, otherProject, STATUS, statuses } from '../../api/test/fixtures';
 import { currentPath, projectSummary, renderWithApp } from '../../app/test/harness';
 import { routePath, StackNavigator } from '../../navigation';
 import { mockPhone, skipAnimations } from '../../overlays/testing';
@@ -42,8 +42,7 @@ function renderWithReady(
   return renderWithApp(stack, {
     client: {
       listProjects: vi.fn().mockResolvedValue([projectSummary({ openCount: 3 }), web]),
-      listAllTickets: vi.fn(ready),
-      getProject: vi.fn().mockResolvedValue({ project, statuses }),
+      listAllTickets: vi.fn(async () => ({ tickets: await ready(), statuses })),
       ...client,
     },
   });

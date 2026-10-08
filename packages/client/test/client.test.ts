@@ -397,7 +397,7 @@ describe('headers', () => {
 });
 
 describe('fresh reads', () => {
-  it('skip caches on the way, with a header the web app service worker leaves alone', async () => {
+  it('skip the browser cache, with a header the service worker never answers from cache', async () => {
     const { client, calls } = setup();
 
     await client.getTicket('MOB-3', { fresh: true });

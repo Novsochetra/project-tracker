@@ -78,18 +78,28 @@ describe('TicketBoard', () => {
     ).toBeInTheDocument();
   });
 
-  it('follows the filter and narrows every column to the search', async () => {
+  it("shows only the picked status's column, and narrows every column to the search", async () => {
     const user = userEvent.setup();
     renderProject();
     await screen.findByRole('region', { name: 'Need review' });
     const filters = screen.getByRole('group', { name: 'Filter tickets' });
-    await user.click(within(filters).getByRole('button', { name: /^Active/ }));
-    expect(regionNames()).toEqual(['To do', 'In progress', 'Need review', 'Reviewed']);
+    await user.click(within(filters).getByRole('button', { name: /^To do/ }));
+    expect(regionNames()).toEqual(['To do']);
+    expect(cardKeys('To do')).toEqual(['MOB-1', 'MOB-2']);
+    await user.click(within(filters).getByRole('button', { name: /^Reviewed/ }));
+    expect(regionNames()).toEqual(['Reviewed']);
+    expect(within(column('Reviewed')).getByText('No tickets')).toBeInTheDocument();
+
+    await user.click(within(filters).getByRole('button', { name: /^All/ }));
     await user.type(screen.getByLabelText('Search tickets'), 'mob-3');
-    expect(regionNames()).toEqual(['To do', 'In progress', 'Need review', 'Reviewed']);
+    expect(regionNames()).toEqual(['To do', 'In progress', 'Need review', 'Reviewed', 'Done']);
     expect(cardKeys('In progress')).toEqual(['MOB-3']);
     expect(header('To do')).toHaveTextContent('To do 0');
     expect(within(column('To do')).getByText('No matches')).toBeInTheDocument();
+
+    await user.click(within(filters).getByRole('button', { name: /^In progress/ }));
+    expect(regionNames()).toEqual(['In progress']);
+    expect(cardKeys('In progress')).toEqual(['MOB-3']);
   });
 
   it("opens New ticket preset to a column's status, and a ticket from its card", async () => {
@@ -158,5 +168,27 @@ describe('TicketBoard', () => {
     });
     await waitFor(() => expect(cardKeys('To do')).toEqual(['MOB-2', 'MOB-1']));
     expect(document.querySelector('[aria-live="polite"]')).toHaveTextContent('MOB-1 moved');
+  });
+});
+
+describe('TicketBoard on phones', () => {
+  beforeEach(() => {
+    restore.push(mockPhone(true));
+    setViewMode('MOB', 'board');
+  });
+
+  it("gives a status tab's one column the whole width, with nothing to page to", async () => {
+    const user = userEvent.setup();
+    renderProject();
+    await screen.findByRole('region', { name: 'Need review' });
+    const board = document.querySelector('[data-board]');
+    expect(document.querySelector('[data-board-pager]')).toHaveTextContent('To do 1 / 5');
+    expect(board).not.toHaveAttribute('data-single');
+
+    const filters = screen.getByRole('group', { name: 'Filter tickets' });
+    await user.click(within(filters).getByRole('button', { name: /^In progress/ }));
+    expect(regionNames()).toEqual(['In progress']);
+    expect(document.querySelector('[data-board-pager]')).toBeNull();
+    expect(board).toHaveAttribute('data-single');
   });
 });

@@ -1,4 +1,4 @@
-import type { ProjectBoard } from '@tracker/shared';
+import { resolveFilter, type ProjectBoard } from '@tracker/shared';
 import { useRef } from 'react';
 import { useSheets } from '../../app/sheets/context';
 import { useScreen } from '../../navigation';
@@ -14,6 +14,7 @@ import { RowActionSheets } from './RowActionSheets';
 import { TicketGroup } from './TicketGroup';
 import { useRowCallbacks } from './useRowCallbacks';
 import { useRowSheet } from './useRowSheet';
+import { useRisePhase } from './useRisePhase';
 import { useTicketMove } from './useTicketMove';
 
 export function TicketList({ board }: { board: ProjectBoard }) {
@@ -39,6 +40,7 @@ export function TicketList({ board }: { board: ProjectBoard }) {
   const addTicket = (statusId?: string) =>
     sheets.open({ type: 'newTicket', projectKey: project.key, statusId });
   const groups = buildGroups({ ...view, statuses, tickets, dragging: drag !== null });
+  const rise = useRisePhase(resolveFilter(statuses, view.filter));
 
   const renderGroups = () => (
     <div ref={containerRef} className={styles.groups}>
@@ -48,7 +50,7 @@ export function TicketList({ board }: { board: ProjectBoard }) {
           projectKey={project.key}
           group={group}
           index={index}
-          filter={view.filter}
+          rise={rise}
           searching={isSearching(view)}
           next={nextStatus(statuses, group.status.id)}
           drag={drag}

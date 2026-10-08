@@ -1,4 +1,4 @@
-const HANDLE_ATTRIBUTE = 'data-handle-for';
+export const HANDLE_ATTRIBUTE = 'data-handle-for';
 
 let pending: { ticketId: string } | null = null;
 
@@ -29,4 +29,10 @@ export function requestHandleFocus(ticketId: string): () => void {
 
 export function wantsHandleFocus(ticketId: string): boolean {
   return pending?.ticketId === ticketId;
+}
+
+export function rowHasFocus(ticketId: string): boolean {
+  return (
+    document.activeElement?.closest<HTMLElement>('[data-drop-row]')?.dataset.dropRow === ticketId
+  );
 }

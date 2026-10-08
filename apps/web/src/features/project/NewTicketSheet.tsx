@@ -43,7 +43,7 @@ export function NewTicketSheet({ open, onClose, projectKey, statusId }: NewTicke
   const [error, setError] = useState('');
   const known = board ? withoutGoneStatus(form, board.statuses) : form;
   if (known !== form) setForm(known);
-  const files = useNewTicketFiles(setForm, projectKey, open);
+  const files = useNewTicketFiles(setForm, projectKey, open, form.attachments.length);
   const drop = useFileDrop(files.add);
   const uploading = files.uploading.length > 0;
   const changed = hasChanges(form, defaultStatusId(statuses, statusId));

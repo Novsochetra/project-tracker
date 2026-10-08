@@ -1,7 +1,7 @@
 import { Paperclip } from 'lucide-react';
 import { useRef } from 'react';
 import { AutoTextarea, Button, IconButton } from '../../../components';
-import { FileInput, pasteFiles, ThumbnailGrid, useFileDrop } from '../../attachments';
+import { FileInput, FileNote, pasteFiles, ThumbnailGrid, useFileDrop } from '../../attachments';
 import { COMMENT_MAX_LENGTH } from '../fields/limits';
 import styles from './Composer.module.css';
 import { isSubmitShortcut } from './commentRules';
@@ -46,6 +46,9 @@ export function Composer({ ticketKey }: { ticketKey: string }) {
           onCancel={files.cancel}
           className={styles.pending}
         />
+      )}
+      {files.notice && (
+        <FileNote notice={files.notice} onDismiss={files.dismissNotice} className={styles.note} />
       )}
       <div className={styles.footer}>
         <IconButton

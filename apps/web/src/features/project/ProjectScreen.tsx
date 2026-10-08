@@ -1,4 +1,4 @@
-import { filterCounts, type ProjectBoard } from '@tracker/shared';
+import type { ProjectBoard } from '@tracker/shared';
 import { CircleAlert } from 'lucide-react';
 import { useEffect, useLayoutEffect } from 'react';
 import { errorMessage, isNotFound, useBoard } from '../../api';
@@ -28,10 +28,7 @@ function ProjectView({ board, onRefresh }: ProjectViewProps) {
       <PullToRefresh onRefresh={onRefresh} scrollRef={scrollRef}>
         <div className={styles.page} data-view={viewMode}>
           <ProjectToolbar project={project} />
-          <FilterRow
-            projectKey={project.key}
-            counts={filterCounts(board.tickets, board.statuses)}
-          />
+          <FilterRow board={board} />
           {viewMode === 'board' ? <TicketBoard board={board} /> : <TicketList board={board} />}
         </div>
       </PullToRefresh>

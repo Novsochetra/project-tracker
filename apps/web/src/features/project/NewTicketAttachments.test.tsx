@@ -113,7 +113,7 @@ describe('New ticket attachments', () => {
     upload.resolve(pending('log', 'crash.log', 'text/plain'));
     await waitFor(() => expect(createButton()).toBeEnabled());
     expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
-    expect(within(dialog()).getByText('crash.log')).toBeInTheDocument();
+    expect(within(dialog()).getByTitle('crash.log')).toBeInTheDocument();
     await user.click(createButton());
     expect(client.createTicket).toHaveBeenCalledWith(
       'MOB',
@@ -137,7 +137,7 @@ describe('New ticket attachments', () => {
     fireEvent.drop(description, { dataTransfer });
     await waitFor(() => expect(client.uploadAttachment).toHaveBeenCalledTimes(1));
     await waitFor(() => expect(screen.queryByRole('progressbar')).not.toBeInTheDocument());
-    expect(within(dialog()).getByText('notes.md')).toBeInTheDocument();
+    expect(within(dialog()).getByTitle('notes.md')).toBeInTheDocument();
 
     const shot = new File(['png'], 'shot.png', { type: 'image/png' });
     const paste = createEvent.paste(description, {
@@ -162,7 +162,7 @@ describe('New ticket attachments', () => {
     await user.upload(fileInput(), crashLog());
     await user.click(await screen.findByRole('button', { name: 'Remove crash.log' }));
     expect(client.deleteAttachment).toHaveBeenCalledWith('log');
-    expect(within(dialog()).queryByText('crash.log')).not.toBeInTheDocument();
+    expect(within(dialog()).queryByTitle('crash.log')).not.toBeInTheDocument();
     expect(sheetDraft('new-ticket:MOB')).toBeUndefined();
   });
 
@@ -171,7 +171,7 @@ describe('New ticket attachments', () => {
     const uploadAttachment = vi.fn().mockResolvedValue(pending('log', 'crash.log', 'text/plain'));
     const { user, client } = renderSheet({ uploadAttachment });
     await user.upload(fileInput(), crashLog());
-    expect(await within(dialog()).findByText('crash.log')).toBeInTheDocument();
+    expect(await within(dialog()).findByTitle('crash.log')).toBeInTheDocument();
 
     await user.click(within(dialog()).getByRole('button', { name: 'Cancel' }));
     const ask = screen.getByRole('dialog', { name: 'Discard changes?' });
@@ -203,11 +203,11 @@ describe('New ticket attachments', () => {
     const uploadAttachment = vi.fn().mockResolvedValue(pending('log', 'crash.log', 'text/plain'));
     const first = renderSheet({ uploadAttachment });
     await first.user.upload(fileInput(), crashLog());
-    expect(await within(dialog()).findByText('crash.log')).toBeInTheDocument();
+    expect(await within(dialog()).findByTitle('crash.log')).toBeInTheDocument();
     cleanup();
 
     const { user, client } = renderSheet();
-    expect(within(dialog()).getByText('crash.log')).toBeInTheDocument();
+    expect(within(dialog()).getByTitle('crash.log')).toBeInTheDocument();
     await user.type(titleField(), 'From before{Enter}');
     expect(client.createTicket).toHaveBeenCalledWith(
       'MOB',

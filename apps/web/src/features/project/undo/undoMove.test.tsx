@@ -1,8 +1,8 @@
-import type { ProjectDetail } from '@tracker/shared';
+import type { TicketsAcrossProjects } from '@tracker/shared';
 import { act, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { queryKeys } from '../../../api';
+import { queryKeys, useReadyForYou } from '../../../api';
 import { patchBoardTicket } from '../../../api/cache/board';
 import { deferred } from '../../../api/test/deferred';
 import { listItem, makeBoard, project, STATUS, statuses } from '../../../api/test/fixtures';
@@ -212,16 +212,19 @@ describe('Undo after a move on the board', () => {
 describe('Undo after Done in Ready for you', () => {
   beforeEach(() => restore.push(mockPhone(false)));
 
+  function ReadyFromServer() {
+    return <ReadySection items={readyItems(useReadyForYou().data, [project])} />;
+  }
+
   it('reads the project’s tickets to put the ticket back above the one that followed it', async () => {
     const user = userEvent.setup();
     const server = fakeBoardServer(
       makeBoard([listItem(3, STATUS.reviewed, 0), listItem(7, STATUS.reviewed, 500)]),
     );
-    const detail: ProjectDetail = { project, statuses };
-    renderWithApp(
-      <ReadySection items={readyItems([listItem(3, STATUS.reviewed, 0)], [project])} />,
-      { client: { ...server.client, getProject: vi.fn().mockResolvedValue(detail) } },
-    );
+    const ready: TicketsAcrossProjects = { tickets: [listItem(3, STATUS.reviewed, 0)], statuses };
+    renderWithApp(<ReadyFromServer />, {
+      client: { ...server.client, listAllTickets: vi.fn().mockResolvedValue(ready) },
+    });
     await user.click(await screen.findByRole('button', { name: 'Move MOB-3 to Done' }));
     await waitFor(() => expect(server.client.updateTicket).toHaveBeenCalled());
     await user.click(undoButton());

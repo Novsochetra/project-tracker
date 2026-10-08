@@ -2,7 +2,7 @@ import type { SessionState, TicketListItem } from '@tracker/shared';
 import { act, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { fakeClient } from '../../src/api/test/fakeClient';
-import { listItem, otherProject, project, STATUS, statuses } from '../../src/api/test/fixtures';
+import { listItem, otherProject, STATUS, statuses } from '../../src/api/test/fixtures';
 import { MockEventSource } from '../../src/api/test/mockEventSource';
 import { createTestQueryClient } from '../../src/api/test/render';
 import { projectSummary } from '../../src/app/test/harness';
@@ -27,8 +27,7 @@ function renderProjects(ready: TicketListItem[]) {
     listProjects: vi
       .fn()
       .mockResolvedValue([projectSummary({ openCount: 4 }), projectSummary(otherProject)]),
-    listAllTickets: vi.fn(() => Promise.resolve(current)),
-    getProject: vi.fn().mockResolvedValue({ project, statuses }),
+    listAllTickets: vi.fn(() => Promise.resolve({ tickets: current, statuses })),
   });
   window.history.replaceState(null, '', '/');
   render(<TrackerApp client={client} queryClient={createTestQueryClient()} />);
