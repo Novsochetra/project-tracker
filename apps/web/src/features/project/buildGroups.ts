@@ -14,29 +14,34 @@ export interface TicketGroupData {
   tickets: TicketListItem[];
 }
 
-export interface GroupsInput {
+export interface ColumnsInput {
   statuses: readonly Status[];
   tickets: readonly TicketListItem[];
   filter: TicketFilter;
   query: string;
+}
+
+export interface GroupsInput extends ColumnsInput {
   dragging: boolean;
 }
 
-/** One group per status the filter shows, in status order; empty ones only while dragging. */
-export function buildGroups({
+/** Every status the filter shows, in status order, with its matching tickets by rank. */
+export function buildColumns({
   statuses,
   tickets,
   filter,
   query,
-  dragging,
-}: GroupsInput): TicketGroupData[] {
+}: ColumnsInput): TicketGroupData[] {
   const matching = tickets.filter((ticket) => matchesSearch(ticket, query));
-  return visibleStatuses(statuses, filter)
-    .map((status) => ({
-      status,
-      tickets: matching.filter((ticket) => ticket.statusId === status.id).sort(byRank),
-    }))
-    .filter((group) => dragging || group.tickets.length > 0);
+  return visibleStatuses(statuses, filter).map((status) => ({
+    status,
+    tickets: matching.filter((ticket) => ticket.statusId === status.id).sort(byRank),
+  }));
+}
+
+/** One list group per status the filter shows; empty ones only while dragging. */
+export function buildGroups({ dragging, ...input }: GroupsInput): TicketGroupData[] {
+  return buildColumns(input).filter((group) => dragging || group.tickets.length > 0);
 }
 
 export function nextStatus(statuses: readonly Status[], statusId: string): Status | null {

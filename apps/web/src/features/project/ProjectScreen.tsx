@@ -5,11 +5,13 @@ import { errorMessage, isNotFound, useBoard } from '../../api';
 import { Button, EmptyState } from '../../components';
 import { PullToRefresh } from '../../gestures';
 import { NavBar, useNavigation, useScreen } from '../../navigation';
+import { TicketBoard } from './board/TicketBoard';
 import { FilterRow } from './FilterRow';
 import { resetListView } from './listViewStore';
 import { ProjectBottomBar, ProjectNavBar, ProjectToolbar } from './ProjectBars';
 import styles from './ProjectScreen.module.css';
 import { TicketList } from './TicketList';
+import { useViewMode } from './viewModeStore';
 
 interface ProjectViewProps {
   board: ProjectBoard;
@@ -19,17 +21,18 @@ interface ProjectViewProps {
 function ProjectView({ board, onRefresh }: ProjectViewProps) {
   const { scrollRef } = useScreen();
   const { project } = board;
+  const viewMode = useViewMode(project.key);
   return (
     <>
       <ProjectNavBar project={project} />
       <PullToRefresh onRefresh={onRefresh} scrollRef={scrollRef}>
-        <div className={styles.page}>
+        <div className={styles.page} data-view={viewMode}>
           <ProjectToolbar project={project} />
           <FilterRow
             projectKey={project.key}
             counts={filterCounts(board.tickets, board.statuses)}
           />
-          <TicketList board={board} />
+          {viewMode === 'board' ? <TicketBoard board={board} /> : <TicketList board={board} />}
         </div>
       </PullToRefresh>
       <ProjectBottomBar projectKey={project.key} />

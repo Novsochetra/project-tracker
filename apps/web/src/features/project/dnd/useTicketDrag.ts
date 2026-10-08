@@ -9,11 +9,14 @@ import {
   type RefObject,
 } from 'react';
 import { haptic } from '../../../gestures';
-import { isPhoneNow } from '../../../lib/media';
 import { armClickGuard } from './clickGuard';
-import { DragSession, type DragListener, type DragStart } from './DragSession';
-import { sameTarget } from './dropTarget';
-import { measureGroups } from './measure';
+import {
+  DragSession,
+  type DragEnvironment,
+  type DragListener,
+  type DragStart,
+} from './DragSession';
+import { sameTarget, type Point } from './dropTarget';
 
 export interface DragState {
   ticket: TicketListItem;
@@ -30,8 +33,8 @@ export type StartDrag = (
 ) => void;
 
 export interface TicketDragOptions {
-  containerRef: RefObject<HTMLElement | null>;
-  scrollRef: RefObject<HTMLElement | null>;
+  /** How a drag of this ticket, pressed at `press`, finds its drop target and scrolls. */
+  environment: (ticket: TicketListItem, press: Point) => DragEnvironment;
   onDrop: (ticket: TicketListItem, target: DropTarget) => void;
 }
 
@@ -93,14 +96,14 @@ function dragListener(
 }
 
 /** Mouse drags start after 6px from the row or handle; touch and pen drag from the handle only. */
-export function useTicketDrag({ containerRef, scrollRef, onDrop }: TicketDragOptions): TicketDrag {
+export function useTicketDrag({ environment, onDrop }: TicketDragOptions): TicketDrag {
   const [drag, setDrag] = useState<DragState | null>(null);
   const sessionRef = useRef<DragSession | null>(null);
   const ghost = useRef<HTMLDivElement | null>(null);
   const delta = useRef<Delta>({ dx: 0, dy: 0 });
-  const onDropRef = useRef(onDrop);
+  const optionsRef = useRef({ environment, onDrop });
   useLayoutEffect(() => {
-    onDropRef.current = onDrop;
+    optionsRef.current = { environment, onDrop };
   });
   useEffect(() => {
     const sessions = sessionRef;
@@ -112,38 +115,30 @@ export function useTicketDrag({ containerRef, scrollRef, onDrop }: TicketDragOpt
     moveGhost(element, delta.current);
   }, []);
 
-  const startDrag = useCallback<StartDrag>(
-    (event, ticket, status, fromHandle) => {
-      const touch = event.pointerType !== 'mouse';
-      if (sessionRef.current || event.button !== 0 || !event.isPrimary) return;
-      if (touch && !fromHandle) return;
-      if (fromHandle) event.preventDefault();
-      const finish = (target: DropTarget | null, started: boolean) => {
-        sessionRef.current = null;
-        if (!started) return;
-        setDocumentDragging(false);
-        armClickGuard();
-        setDrag(null);
-        if (target) onDropRef.current(ticket, target);
-      };
-      const press = {
-        ticketId: ticket.id,
-        element: event.currentTarget,
-        pointerId: event.pointerId,
-        x: event.clientX,
-        y: event.clientY,
-        immediate: touch,
-      };
-      const env = {
-        measure: () => measureGroups(containerRef.current),
-        scroller: () => scrollRef.current,
-        isPhone: isPhoneNow,
-      };
-      const listener = dragListener({ ticket, status, touch, setDrag }, { ghost, delta }, finish);
-      sessionRef.current = new DragSession(press, env, listener);
-    },
-    [containerRef, scrollRef],
-  );
+  const startDrag = useCallback<StartDrag>((event, ticket, status, fromHandle) => {
+    const touch = event.pointerType !== 'mouse';
+    if (sessionRef.current || event.button !== 0 || !event.isPrimary) return;
+    if (touch && !fromHandle) return;
+    if (fromHandle) event.preventDefault();
+    const finish = (target: DropTarget | null, started: boolean) => {
+      sessionRef.current = null;
+      if (!started) return;
+      setDocumentDragging(false);
+      armClickGuard();
+      setDrag(null);
+      if (target) optionsRef.current.onDrop(ticket, target);
+    };
+    const press = {
+      element: event.currentTarget,
+      pointerId: event.pointerId,
+      x: event.clientX,
+      y: event.clientY,
+      immediate: touch,
+    };
+    const env = optionsRef.current.environment(ticket, { x: press.x, y: press.y });
+    const listener = dragListener({ ticket, status, touch, setDrag }, { ghost, delta }, finish);
+    sessionRef.current = new DragSession(press, env, listener);
+  }, []);
 
   return { drag, ghostRef, startDrag };
 }

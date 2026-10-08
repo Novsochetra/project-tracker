@@ -19,9 +19,15 @@ export interface TicketRowContentProps {
   callbacks: RowCallbacks;
 }
 
-function DueLabel({ due, overdue }: { due: string; overdue: boolean }) {
+export interface DueLabelProps {
+  due: string;
+  overdue: boolean;
+  className?: string | undefined;
+}
+
+export function DueLabel({ due, overdue, className }: DueLabelProps) {
   return (
-    <span className={styles.due} data-overdue={overdue || undefined}>
+    <span className={clsx(styles.due, className)} data-overdue={overdue || undefined}>
       <Icon icon={Calendar} size={14} />
       {formatShortDay(due)}
     </span>

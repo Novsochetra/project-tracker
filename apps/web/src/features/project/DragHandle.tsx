@@ -1,4 +1,5 @@
 import type { TicketListItem } from '@tracker/shared';
+import clsx from 'clsx';
 import { GripVertical } from 'lucide-react';
 import {
   useEffect,
@@ -16,6 +17,7 @@ export interface DragHandleProps {
   ticket: TicketListItem;
   onPointerDown: (event: PointerEvent<HTMLButtonElement>) => void;
   onKeyDown: (event: KeyboardEvent<HTMLButtonElement>) => void;
+  className?: string | undefined;
 }
 
 // Pull to refresh listens for touchstart above the list; dragging the handle down must not pull.
@@ -29,7 +31,7 @@ function useStopTouchStart(ref: RefObject<HTMLElement | null>): void {
   }, [ref]);
 }
 
-export function DragHandle({ ticket, onPointerDown, onKeyDown }: DragHandleProps) {
+export function DragHandle({ ticket, onPointerDown, onKeyDown, className }: DragHandleProps) {
   const ref = useRef<HTMLButtonElement>(null);
   useStopTouchStart(ref);
   // After a keyboard move React may remount or move this row, which drops focus; take it back.
@@ -43,7 +45,7 @@ export function DragHandle({ ticket, onPointerDown, onKeyDown }: DragHandleProps
     <button
       ref={ref}
       type="button"
-      className={styles.handle}
+      className={clsx(styles.handle, className)}
       data-no-swipe=""
       data-handle-for={ticket.id}
       aria-label={`Move ${ticket.key}. Drag, or use the arrow keys.`}

@@ -84,6 +84,13 @@ On phones (`max-width: 767px`) the app behaves like a native iOS app:
 - Delete confirmations count tickets correctly ("its 1 ticket", "its 3 tickets").
 - A status move is announced once, by the toast; the hidden live region announces reorders ("MOB-3 moved"), and every announcement is read again even when the text repeats.
 
+### 1.8 Board view
+
+- The Project screen's filter row has a **List · Board** switch (next to search; beside it on phones). The choice is remembered per project on the device (`localStorage` `tracker.projectView.<KEY>`, session fallback when storage fails); List is the default. Filter and search apply to both.
+- The board shows one column per visible status in status order, empty ones included ("No tickets", or "No matches" while searching), each with glyph, name, count and "+". Cards show priority, key, title, due date and avatar. The board fills the screen below the filters and each column scrolls on its own; columns are at least 260px and the board scrolls sideways when they don't fit.
+- Moves reuse the list's flow (`useTicketMove`, `planMove`, toast, live region, flash). Drags use the same `DragSession` with a board environment (`features/project/board/boardEnvironment.ts`): on desktop the column under the pointer by x and the slot by card midpoints, auto-scroll near the board's sides and a column's top and bottom. Arrow keys on a card's handle: ↑/↓ within the column, ←/→ to the same slot of the neighbouring column.
+- Phones page through the columns with scroll snap (a column is the width minus a 26px peek of the next) and a "2 / 5" indicator with page dots. Cards open on tap; a drag from the handle moves within the column on screen and pages to the neighbouring column after the finger rests 500ms within 32px of the screen edge. A 20px strip at the left edge doesn't pan the board, so the edge swipe back still works.
+
 ## 2. Data model
 
 TypeScript types live in `packages/shared/src/domain`. Database tables (snake_case, mapped to camelCase with Kysely's `CamelCasePlugin`):

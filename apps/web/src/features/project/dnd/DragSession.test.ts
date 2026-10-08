@@ -1,25 +1,21 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { GroupBox } from './dropTarget';
-import { DragSession, type DragListener } from './DragSession';
+import { DragSession, type DragEnvironment, type DragListener } from './DragSession';
+import { dropTargetAt, type GroupBox } from './dropTarget';
 
 const groups: GroupBox[] = [
   {
     statusId: 'todo',
     top: 100,
     bottom: 189,
+    left: 0,
+    right: 600,
     rows: [
       { id: 't-1', top: 101, height: 44 },
       { id: 't-2', top: 145, height: 44 },
     ],
   },
-  { statusId: 'done', top: 205, bottom: 270, rows: [] },
+  { statusId: 'done', top: 205, bottom: 270, left: 0, right: 600, rows: [] },
 ];
-
-interface FakeScroller {
-  scrollTop: number;
-  addEventListener: () => void;
-  removeEventListener: () => void;
-}
 
 function rowWithButton() {
   const row = document.createElement('div');
@@ -31,11 +27,10 @@ function rowWithButton() {
   return button;
 }
 
-function startSession(immediate = false) {
-  const scroller: FakeScroller = {
-    scrollTop: 0,
-    addEventListener: () => undefined,
-    removeEventListener: () => undefined,
+function startSession(immediate = false, scrolls = false) {
+  const env = {
+    targetAt: vi.fn<DragEnvironment['targetAt']>((point) => dropTargetAt(groups, point.y, 't-1')),
+    autoScroll: vi.fn<DragEnvironment['autoScroll']>(() => scrolls),
   };
   const listener = {
     onStart: vi.fn<DragListener['onStart']>(),
@@ -43,15 +38,11 @@ function startSession(immediate = false) {
     onEnd: vi.fn<DragListener['onEnd']>(),
   };
   const session = new DragSession(
-    { ticketId: 't-1', element: rowWithButton(), pointerId: 1, x: 50, y: 120, immediate },
-    {
-      measure: () => groups,
-      scroller: () => scroller as unknown as HTMLElement,
-      isPhone: () => false,
-    },
+    { element: rowWithButton(), pointerId: 1, x: 50, y: 120, immediate },
+    env,
     listener,
   );
-  return { session, listener, scroller };
+  return { session, listener, env };
 }
 
 function pointer(type: string, x: number, y: number, pointerId = 1) {
@@ -133,13 +124,30 @@ describe('DragSession', () => {
     expect(listener.onEnd).not.toHaveBeenCalled();
   });
 
-  it('auto-scrolls the screen near the bottom edge', () => {
-    const { scroller } = startSession(true);
-    pointer('pointermove', 50, window.innerHeight - 10);
+  it('asks its environment to auto-scroll every tick with the pointer', () => {
+    const { env } = startSession(true);
+    pointer('pointermove', 50, 700);
+    vi.advanceTimersByTime(32);
+    expect(env.autoScroll).toHaveBeenCalledTimes(2);
+    expect(env.autoScroll).toHaveBeenLastCalledWith({ x: 50, y: 700 }, expect.any(Number));
+  });
+
+  it('redraws after an auto-scroll moved the content under a still pointer', () => {
+    const { listener } = startSession(true, true);
     vi.advanceTimersByTime(16);
-    expect(scroller.scrollTop).toBe(6);
     vi.advanceTimersByTime(16);
-    expect(scroller.scrollTop).toBe(12);
+    expect(listener.onFrame).toHaveBeenCalled();
+  });
+
+  it('redraws when anything scrolls while dragging, and stops listening after the drop', () => {
+    const { listener } = startSession(true);
+    document.body.dispatchEvent(new Event('scroll'));
+    vi.advanceTimersByTime(16);
+    expect(listener.onFrame).toHaveBeenCalledTimes(1);
+    pointer('pointerup', 50, 120);
+    document.body.dispatchEvent(new Event('scroll'));
+    vi.advanceTimersByTime(16);
+    expect(listener.onFrame).toHaveBeenCalledTimes(1);
   });
 
   it('can be cancelled from outside without dropping', () => {

@@ -1,11 +1,10 @@
 import type { DropTarget } from '@tracker/shared';
-import { AUTO_SCROLL_INTERVAL_MS, autoScrollStep } from './autoScroll';
-import { dropTargetAt, type GroupBox } from './dropTarget';
+import { AUTO_SCROLL_INTERVAL_MS } from './autoScroll';
+import type { Point } from './dropTarget';
 
 export const DRAG_START_DISTANCE = 6;
 
 export interface DragPress {
-  ticketId: string;
   /** The pressed element; it captures the pointer. */
   element: HTMLElement;
   pointerId: number;
@@ -15,10 +14,12 @@ export interface DragPress {
   immediate: boolean;
 }
 
+/** What the list or the board under the drag provides: targets and scrolling. */
 export interface DragEnvironment {
-  measure: () => GroupBox[];
-  scroller: () => HTMLElement | null;
-  isPhone: () => boolean;
+  /** Where the ticket would land with the pointer at `point`, measured now. */
+  targetAt: (point: Point) => DropTarget | null;
+  /** Runs every tick while dragging; scrolls whatever the pointer is near and says if it did. */
+  autoScroll: (point: Point, now: number) => boolean;
 }
 
 export interface DragStart {
@@ -40,11 +41,6 @@ export interface DragListener {
   onEnd: (end: { started: boolean; target: DropTarget | null }) => void;
 }
 
-interface Point {
-  x: number;
-  y: number;
-}
-
 // The pointer may already be gone (a very quick tap); the window listeners still finish.
 function capture(element: HTMLElement, pointerId: number): void {
   try {
@@ -62,7 +58,10 @@ function release(element: HTMLElement, pointerId: number): void {
   }
 }
 
-/** One press on a row or handle, from pointerdown until release or cancel. */
+// Scroll events don't bubble; a capturing listener on the document hears every scroller.
+const SCROLL_LISTENER = { capture: true, passive: true } as const;
+
+/** One press on a row, card or handle, from pointerdown until release or cancel. */
 export class DragSession {
   private started = false;
   private finished = false;
@@ -70,7 +69,6 @@ export class DragSession {
   private origin: Point;
   private frameId = 0;
   private scrollTimer = 0;
-  private scrollEl: HTMLElement | null = null;
 
   constructor(
     private readonly press: DragPress,
@@ -118,8 +116,7 @@ export class DragSession {
     const row = this.press.element.closest<HTMLElement>('[data-drop-row]') ?? this.press.element;
     const rect = row.getBoundingClientRect();
     window.getSelection()?.removeAllRanges();
-    this.scrollEl = this.env.scroller();
-    this.scrollEl?.addEventListener('scroll', this.schedule, { passive: true });
+    document.addEventListener('scroll', this.schedule, SCROLL_LISTENER);
     this.scrollTimer = window.setInterval(this.autoScroll, AUTO_SCROLL_INTERVAL_MS);
     this.listener.onStart({ left: rect.left, top: rect.top, width: rect.width });
   }
@@ -136,33 +133,26 @@ export class DragSession {
     this.listener.onFrame({
       dx: this.pointer.x - this.origin.x,
       dy: this.pointer.y - this.origin.y,
-      target: this.target(),
+      target: this.env.targetAt(this.pointer),
     });
   };
 
   private readonly autoScroll = (): void => {
-    const step = autoScrollStep(this.pointer.y, window.innerHeight, this.env.isPhone());
-    if (step === 0 || !this.scrollEl) return;
-    this.scrollEl.scrollTop += step;
-    this.schedule();
+    if (this.env.autoScroll(this.pointer, performance.now())) this.schedule();
   };
-
-  private target(): DropTarget | null {
-    return dropTargetAt(this.env.measure(), this.pointer.y, this.press.ticketId);
-  }
 
   private finish(drop: boolean): void {
     if (this.finished) return;
     this.finished = true;
     const { started } = this;
-    const target = started && drop ? this.target() : null;
+    const target = started && drop ? this.env.targetAt(this.pointer) : null;
     this.started = false;
     window.removeEventListener('pointermove', this.onMove);
     window.removeEventListener('pointerup', this.onUp);
     window.removeEventListener('pointercancel', this.onCancel);
+    document.removeEventListener('scroll', this.schedule, SCROLL_LISTENER);
     cancelAnimationFrame(this.frameId);
     window.clearInterval(this.scrollTimer);
-    this.scrollEl?.removeEventListener('scroll', this.schedule);
     release(this.press.element, this.press.pointerId);
     this.listener.onEnd({ started, target });
   }

@@ -5,12 +5,7 @@
   will-change: transform;
 }
 
-.card {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  min-height: 44px;
-  padding: 8px 16px 8px 8px;
+.lifted {
   border: 1px solid var(--line);
   border-radius: var(--radius-container);
   background: var(--surface);
@@ -20,6 +15,14 @@
   box-shadow: var(--shadow-lifted);
   transform: scale(1.02);
   animation: lift var(--duration-fast) var(--ease-out) backwards;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: 44px;
+  padding: 8px 16px 8px 8px;
 }
 
 .grip {

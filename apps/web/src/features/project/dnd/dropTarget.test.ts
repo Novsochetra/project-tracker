@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
+  columnAt,
+  columnDropTarget,
   dropEdgeFor,
   dropTargetAt,
   groupAt,
@@ -14,6 +16,8 @@ const groups: GroupBox[] = [
     statusId: 'todo',
     top: 100,
     bottom: 189,
+    left: 0,
+    right: 600,
     rows: [
       { id: 'a', top: 101, height: 44 },
       { id: 'b', top: 145, height: 44 },
@@ -23,6 +27,8 @@ const groups: GroupBox[] = [
     statusId: 'done',
     top: 205,
     bottom: 294,
+    left: 0,
+    right: 600,
     rows: [
       { id: 'c', top: 206, height: 44 },
       { id: 'd', top: 250, height: 44 },
@@ -88,7 +94,14 @@ describe('dropTargetAt', () => {
   });
 
   it('targets an empty group as a whole', () => {
-    const empty: GroupBox = { statusId: 'review', top: 310, bottom: 374, rows: [] };
+    const empty: GroupBox = {
+      statusId: 'review',
+      top: 310,
+      bottom: 374,
+      left: 0,
+      right: 600,
+      rows: [],
+    };
     expect(dropTargetAt([...groups, empty], 340, 'a')).toEqual({
       statusId: 'review',
       beforeId: null,
@@ -99,6 +112,71 @@ describe('dropTargetAt', () => {
   it('drops into the nearer group from the gap between groups', () => {
     expect(dropTargetAt(groups, 200, 'a')?.statusId).toBe('done');
     expect(dropTargetAt(groups, 192, 'c')?.statusId).toBe('todo');
+  });
+});
+
+// Three 260px board columns 12px apart, cards 60px tall with 8px gaps from y 150.
+const column = (statusId: string, left: number, ids: string[]): GroupBox => ({
+  statusId,
+  top: 100,
+  bottom: 700,
+  left,
+  right: left + 260,
+  rows: ids.map((id, index) => ({ id, top: 150 + index * 68, height: 60 })),
+});
+const columns = [
+  column('todo', 32, ['a', 'b']),
+  column('doing', 304, ['c']),
+  column('done', 576, []),
+];
+
+describe('columnAt', () => {
+  it('picks the column under the pointer by x, whatever the y', () => {
+    expect(columnAt(columns, 40)?.statusId).toBe('todo');
+    expect(columnAt(columns, 400)?.statusId).toBe('doing');
+    expect(columnAt(columns, 700)?.statusId).toBe('done');
+  });
+
+  it('picks the nearest column beside or between columns', () => {
+    expect(columnAt(columns, 0)?.statusId).toBe('todo');
+    expect(columnAt(columns, 295)?.statusId).toBe('todo');
+    expect(columnAt(columns, 300)?.statusId).toBe('doing');
+    expect(columnAt(columns, 2000)?.statusId).toBe('done');
+  });
+
+  it('has no column without columns', () => {
+    expect(columnAt([], 100)).toBeNull();
+  });
+});
+
+describe('columnDropTarget', () => {
+  it('lands in the column under the pointer, before the card whose midpoint is below it', () => {
+    expect(columnDropTarget(columns, { x: 400, y: 160 }, 'a')).toEqual({
+      statusId: 'doing',
+      beforeId: 'c',
+      afterId: null,
+    });
+    expect(columnDropTarget(columns, { x: 400, y: 200 }, 'a')).toEqual({
+      statusId: 'doing',
+      beforeId: null,
+      afterId: 'c',
+    });
+  });
+
+  it('reorders within a column, ignoring the dragged card', () => {
+    expect(columnDropTarget(columns, { x: 100, y: 260 }, 'a')).toEqual({
+      statusId: 'todo',
+      beforeId: null,
+      afterId: 'b',
+    });
+  });
+
+  it('targets an empty column as a whole, even far below its cards', () => {
+    expect(columnDropTarget(columns, { x: 650, y: 690 }, 'a')).toEqual({
+      statusId: 'done',
+      beforeId: null,
+      afterId: null,
+    });
   });
 });
 

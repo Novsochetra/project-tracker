@@ -9,13 +9,14 @@ export interface GroupHeaderProps {
   count: number;
   tint: boolean;
   onAdd: () => void;
+  className?: string | undefined;
 }
 
-export function GroupHeader({ status, count, tint, onAdd }: GroupHeaderProps) {
+export function GroupHeader({ status, count, tint, onAdd, className }: GroupHeaderProps) {
   return (
-    <div className={styles.header} data-tint={tint || undefined}>
+    <div className={clsx(styles.header, className)} data-tint={tint || undefined}>
       <StatusGlyph category={status.category} color={status.color} />
-      <span className={styles.name}>{status.name}</span>
+      <span className={styles.name}>{status.name}</span>{' '}
       <span className={styles.count}>{count}</span>
       <IconButton
         size="sm"

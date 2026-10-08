@@ -4,6 +4,11 @@
   padding-bottom: 96px;
 }
 
+/* The board fills the screen below the filters and its columns scroll on their own. */
+.page[data-view='board'] {
+  padding-bottom: 0;
+}
+
 .toolbar {
   display: flex;
   flex-wrap: wrap;
@@ -42,6 +47,18 @@
   padding: 14px 32px 16px;
 }
 
+.tools {
+  display: flex;
+  align-items: stretch;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.tools .viewSwitch {
+  flex: none;
+  width: 136px;
+}
+
 .groups {
   display: flex;
   flex-direction: column;
@@ -77,6 +94,14 @@
   .groups {
     padding-right: var(--space-4);
     padding-left: var(--space-4);
+  }
+
+  .tools {
+    flex: 1 1 100%;
+  }
+
+  .tools .viewSwitch {
+    width: 132px;
   }
 }
 

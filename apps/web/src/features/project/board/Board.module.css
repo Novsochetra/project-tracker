@@ -1,0 +1,155 @@
+.frame {
+  position: relative;
+  height: var(--board-height, auto);
+}
+
+.board {
+  display: flex;
+  align-items: stretch;
+  gap: var(--space-3);
+  height: 100%;
+  padding: 0 32px 24px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+}
+
+.column {
+  display: flex;
+  flex: 1 0 260px;
+  flex-direction: column;
+  min-width: 0;
+  max-width: 340px;
+  min-height: 0;
+  border-radius: var(--radius-group);
+  background: var(--fill);
+  transition: background-color var(--duration-fast) var(--ease-out);
+  animation: global(rise) var(--duration-rise) var(--ease-out) backwards;
+}
+
+.column[data-tint] {
+  background: var(--drop-tint);
+}
+
+.column .header {
+  flex: none;
+  min-height: 38px;
+  padding: 0 6px 0 14px;
+  border-bottom: 0;
+  background: transparent;
+}
+
+.body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-height: 0;
+  /* Room above the first card for the drop line, which the scrolling body would clip. */
+  padding: 8px 8px 12px;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+}
+
+.empty {
+  margin: 0;
+  padding: 16px 8px;
+  color: var(--subtle);
+  font-size: var(--size-secondary);
+  text-align: center;
+  animation: global(fade-up) var(--duration-fade) var(--ease-out) backwards;
+}
+
+/* Phones: a strip along the left edge where the board doesn't pan, so edge swipes go back. */
+.edgeGuard {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 1;
+  width: 20px;
+  touch-action: pan-y;
+}
+
+.pager {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: 0 20px 10px;
+  font-size: var(--size-secondary);
+}
+
+.pagerLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.pagerName {
+  overflow: hidden;
+  font-weight: var(--weight-medium);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pagerCount {
+  flex: none;
+  color: var(--subtle);
+  font-variant-numeric: tabular-nums;
+}
+
+.dots {
+  display: inline-flex;
+  flex: none;
+  gap: 6px;
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: var(--radius-full);
+  background: var(--bar-off);
+  transition: background-color var(--duration-fast) var(--ease-out);
+}
+
+.dot[data-current] {
+  background: var(--ink);
+}
+
+/*
+ * Phones page through the columns: one fills most of the width and the next peeks in. The gap
+ * matches the side padding, so the previous column sits fully off screen, and the spacer lets
+ * the last column snap to the start like the others.
+ */
+@media (max-width: 767px) {
+  .board {
+    --peek: 26px;
+    gap: var(--space-4);
+    padding: 0 var(--space-4);
+    scroll-padding-inline: var(--space-4);
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+  }
+
+  .board::-webkit-scrollbar {
+    display: none;
+  }
+
+  .board::after {
+    content: '';
+    flex: 0 0 calc(var(--peek) - var(--space-4));
+  }
+
+  .column {
+    flex: 0 0 calc(100% - var(--peek));
+    max-width: none;
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+  }
+
+  .body {
+    padding-bottom: calc(96px + var(--safe-bottom));
+  }
+}

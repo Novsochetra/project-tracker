@@ -4,6 +4,7 @@ import { useSheets } from '../../app/sheets/context';
 import { useScreen } from '../../navigation';
 import { buildGroups, nextStatus } from './buildGroups';
 import { DragGhost } from './dnd/DragGhost';
+import { listEnvironment } from './dnd/listEnvironment';
 import { useKeyboardMove } from './dnd/useKeyboardMove';
 import { useTicketDrag } from './dnd/useTicketDrag';
 import { NoMatches, NoTickets } from './ListEmptyStates';
@@ -23,8 +24,8 @@ export function TicketList({ board }: { board: ProjectBoard }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const moveTicket = useTicketMove(project.key);
   const { drag, ghostRef, startDrag } = useTicketDrag({
-    containerRef,
-    scrollRef,
+    environment: (ticket) =>
+      listEnvironment({ groups: containerRef, scroller: scrollRef }, ticket.id),
     onDrop: (ticket, target) => moveTicket(ticket.id, target),
   });
   const handleKeyDown = useKeyboardMove(project.key, view.filter, moveTicket);

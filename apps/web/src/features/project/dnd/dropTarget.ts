@@ -1,5 +1,10 @@
 import type { DropTarget } from '@tracker/shared';
 
+export interface Point {
+  x: number;
+  y: number;
+}
+
 export interface RowBox {
   id: string;
   top: number;
@@ -10,42 +15,55 @@ export interface GroupBox {
   statusId: string;
   top: number;
   bottom: number;
+  left: number;
+  right: number;
   rows: RowBox[];
 }
 
 export type DropEdge = 'before' | 'after';
 
-const distanceTo = (group: GroupBox, y: number): number => {
-  if (y < group.top) return group.top - y;
-  return y > group.bottom ? y - group.bottom : 0;
+const distanceTo = (start: number, end: number, value: number): number => {
+  if (value < start) return start - value;
+  return value > end ? value - end : 0;
 };
 
-/** The group under `y`, or the nearest one when `y` is above, below or between groups. */
-export function groupAt(groups: readonly GroupBox[], y: number): GroupBox | null {
-  let nearest: GroupBox | null = null;
+function nearest<T>(
+  items: readonly T[],
+  value: number,
+  span: (item: T) => readonly [number, number],
+): T | null {
+  let found: T | null = null;
   let best = Infinity;
-  for (const group of groups) {
-    const distance = distanceTo(group, y);
+  for (const item of items) {
+    const [start, end] = span(item);
+    const distance = distanceTo(start, end, value);
     if (distance < best) {
-      nearest = group;
+      found = item;
       best = distance;
     }
   }
-  return nearest;
+  return found;
 }
+
+/** The group under `y`, or the nearest one when `y` is above, below or between groups. */
+export const groupAt = <T extends { top: number; bottom: number }>(
+  groups: readonly T[],
+  y: number,
+): T | null => nearest(groups, y, (group) => [group.top, group.bottom]);
+
+/** The board column under `x`, or the nearest one when `x` is beside or between columns. */
+export const columnAt = <T extends { left: number; right: number }>(
+  columns: readonly T[],
+  x: number,
+): T | null => nearest(columns, x, (column) => [column.left, column.right]);
 
 export function insertionIndex(rows: readonly RowBox[], y: number): number {
   const index = rows.findIndex((row) => y < row.top + row.height / 2);
   return index < 0 ? rows.length : index;
 }
 
-export function dropTargetAt(
-  groups: readonly GroupBox[],
-  y: number,
-  draggedId: string,
-): DropTarget | null {
-  const group = groupAt(groups, y);
-  if (!group) return null;
+/** Lands before the first row whose midpoint is below `y`, ignoring the dragged row. */
+export function targetInGroup(group: GroupBox, y: number, draggedId: string): DropTarget {
   const rows = group.rows.filter((row) => row.id !== draggedId);
   const index = insertionIndex(rows, y);
   return {
@@ -53,6 +71,26 @@ export function dropTargetAt(
     beforeId: rows[index]?.id ?? null,
     afterId: rows[index - 1]?.id ?? null,
   };
+}
+
+/** List: the group by the pointer's y, the slot by row midpoints. */
+export function dropTargetAt(
+  groups: readonly GroupBox[],
+  y: number,
+  draggedId: string,
+): DropTarget | null {
+  const group = groupAt(groups, y);
+  return group ? targetInGroup(group, y, draggedId) : null;
+}
+
+/** Board: the column by the pointer's x, the slot by card midpoints. */
+export function columnDropTarget(
+  columns: readonly GroupBox[],
+  point: Point,
+  draggedId: string,
+): DropTarget | null {
+  const column = columnAt(columns, point.x);
+  return column ? targetInGroup(column, point.y, draggedId) : null;
 }
 
 export const sameTarget = (a: DropTarget | null, b: DropTarget | null): boolean =>

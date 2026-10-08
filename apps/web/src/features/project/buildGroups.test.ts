@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { listItem, STATUS, statuses } from '../../api/test/fixtures';
 import {
+  buildColumns,
   buildGroups,
   groupRiseDelay,
   nextStatus,
@@ -68,6 +69,28 @@ describe('buildGroups', () => {
     expect(
       buildGroups(input({ dragging: true, filter: 'active' })).map((group) => group.status.name),
     ).not.toContain('Done');
+  });
+});
+
+describe('buildColumns', () => {
+  it('keeps a column for every status the filter shows, empty or not', () => {
+    expect(shape(buildColumns(input()))).toEqual([
+      ['To do', ['MOB-2', 'MOB-1']],
+      ['In progress', []],
+      ['Need review', ['MOB-3']],
+      ['Reviewed', []],
+      ['Done', ['MOB-4']],
+    ]);
+    expect(shape(buildColumns(input({ filter: 'done' })))).toEqual([['Done', ['MOB-4']]]);
+  });
+
+  it('narrows every column to the search without dropping any', () => {
+    expect(shape(buildColumns(input({ filter: 'active', query: 'crash' })))).toEqual([
+      ['To do', ['MOB-2']],
+      ['In progress', []],
+      ['Need review', []],
+      ['Reviewed', []],
+    ]);
   });
 });
 
