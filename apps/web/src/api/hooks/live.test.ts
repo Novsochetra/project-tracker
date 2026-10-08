@@ -85,6 +85,21 @@ describe('useLiveUpdates', () => {
     expect(isInvalidated(queryClient, queryKeys.session())).toBe(false);
   });
 
+  it('signs out when the server refuses the stream because the session is gone', async () => {
+    const signedOut = { authRequired: true, authenticated: false };
+    const getSession = vi.fn().mockResolvedValue(signedOut);
+    const { queryClient, wrapper } = setupApi({ getSession });
+    seed(queryClient);
+    renderHook(() => useLiveUpdates(), { wrapper });
+    const source = MockEventSource.latest();
+    act(() => source.open());
+
+    act(() => source.fail(true));
+
+    await waitFor(() => expect(queryClient.getQueryData(queryKeys.session())).toEqual(signedOut));
+    expect(getSession).toHaveBeenCalledTimes(1);
+  });
+
   it('closes the stream on unmount', () => {
     const { wrapper } = setupApi();
     const { unmount } = renderHook(() => useLiveUpdates(), { wrapper });

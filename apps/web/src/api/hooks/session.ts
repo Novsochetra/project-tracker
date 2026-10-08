@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query';
 import type { TrackerClient } from '@tracker/client';
 import type { SessionState } from '@tracker/shared';
 import { useApi } from '../context';
@@ -41,4 +41,16 @@ export function useLogin(): TrackerMutation<SessionState, LoginVariables> {
       });
     },
   });
+}
+
+// Stores only a signed-out answer and never refetches the query: the session gate blanks the app
+// while a session it could not load is fetching, and an unreachable server signs nobody out.
+export async function recheckSession(
+  client: TrackerClient,
+  queryClient: QueryClient,
+): Promise<void> {
+  const session = await readSession(client).catch(() => null);
+  if (session?.authRequired && !session.authenticated) {
+    queryClient.setQueryData(queryKeys.session(), session);
+  }
 }

@@ -1,20 +1,20 @@
-import type { ChangeEvent } from '@tracker/shared';
+import { LIVE_STALE_MS, type ChangeEvent } from '@tracker/shared';
 import { retryDelay } from './backoff';
 import { parseChangeEvent } from './changeEvent';
-
-// The server sends a `ping` event every 15 s. A stream that misses two is dead even when it still
-// looks open, as when the dev proxy keeps the browser's side open after the API server crashes.
-export const LIVE_STALE_MS = 35_000;
+import { pauseWhileHidden } from './pauseWhileHidden';
 
 export interface LiveHandlers {
   onChange: (event: ChangeEvent) => void;
   onReconnect: () => void;
+  // EventSource hides the HTTP status, so a 401 for a lost session looks like a proxy's 502.
+  onRefused: () => void;
 }
 
 type Timer = ReturnType<typeof setTimeout> | undefined;
 
 // EventSource retries network drops by itself but gives up for good on an HTTP error (a restarting
-// server behind a proxy, or a 401 before sign-in), so a closed or silent stream is reopened here.
+// server behind a proxy, or a 401 once the session is gone), so a closed or silent stream is
+// reopened here.
 export function connectLiveUpdates(url: string, handlers: LiveHandlers): () => void {
   if (typeof EventSource === 'undefined') return () => undefined;
   let source: EventSource | undefined;
@@ -24,14 +24,14 @@ export function connectLiveUpdates(url: string, handlers: LiveHandlers): () => v
   // Changes made while no stream was open are lost, including before a first connect that failed.
   let reconnecting = false;
 
-  const stopTimers = () => {
+  const close = () => {
+    source?.close();
     clearTimeout(retry);
     clearTimeout(silence);
+    reconnecting = true;
   };
   const reopenLater = () => {
-    source?.close();
-    stopTimers();
-    reconnecting = true;
+    close();
     retry = setTimeout(connect, retryDelay(failedAttempts));
     failedAttempts += 1;
   };
@@ -52,7 +52,9 @@ export function connectLiveUpdates(url: string, handlers: LiveHandlers): () => v
   };
   const onError = () => {
     reconnecting = true;
-    if (source?.readyState === EventSource.CLOSED) reopenLater();
+    if (source?.readyState !== EventSource.CLOSED) return;
+    reopenLater();
+    handlers.onRefused();
   };
   function connect() {
     source = new EventSource(url);
@@ -65,8 +67,10 @@ export function connectLiveUpdates(url: string, handlers: LiveHandlers): () => v
   }
 
   connect();
+  // Resuming opens a new stream like any reconnect, so the page catches up on what it missed.
+  const stopWatching = pauseWhileHidden({ pause: close, resume: connect });
   return () => {
-    stopTimers();
-    source?.close();
+    stopWatching();
+    close();
   };
 }

@@ -1,10 +1,11 @@
 import { once } from 'node:events';
 import type { AddressInfo } from 'node:net';
 import { serve } from '@hono/node-server';
-import type { Attachment, ChangeEvent } from '@tracker/shared';
-import { describe, expect, it, vi } from 'vitest';
+import { LIVE_STALE_MS, type Attachment, type ChangeEvent } from '@tracker/shared';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createApp } from '../../src/app';
-import { HEARTBEAT_MS } from '../../src/http/routes/events';
+import { createBroadcaster } from '../../src/events/broadcaster';
+import { eventRoutes } from '../../src/http/routes/events';
 import { agent, imageForm, statusOf } from '../helpers/fixtures';
 import { DIALECTS, useTestServer } from '../helpers/server';
 
@@ -219,8 +220,23 @@ describe.each(DIALECTS)('change events (%s)', (dialect) => {
 });
 
 describe('heartbeat', () => {
-  // The web app reopens a stream that stays silent for 35 s (LIVE_STALE_MS in apps/web/src/api/live).
-  it('pings at least twice before a client gives up on a silent stream', () => {
-    expect(2 * HEARTBEAT_MS).toBeLessThan(35_000);
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('pings at least twice before the web app gives up on a silent stream', async () => {
+    vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval'] });
+    const events = createBroadcaster();
+    const res = await eventRoutes(events).request('/events');
+    const reader = res.body!.getReader();
+    await readUntil(reader, /: connected\n\n/);
+
+    vi.advanceTimersByTime(LIVE_STALE_MS - 1);
+    // A change written after the pings ends the read even when a ping is missing.
+    events.publish({ type: 'changed', projectId: 'p-1', ticketId: null });
+    const text = await readUntil(reader, /^data: \{.+\n\n/m);
+
+    expect(text.match(/^event: ping$/gm)?.length ?? 0).toBeGreaterThanOrEqual(2);
+    await reader.cancel();
   });
 });

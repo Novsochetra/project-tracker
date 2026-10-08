@@ -5,12 +5,13 @@ import { errorMessage } from '../errors';
 import { queryKeys } from '../queryKeys';
 import { setupApi } from '../test/render';
 import { useProjects } from './projects';
-import { useLogin, useSession } from './session';
+import { recheckSession, useLogin, useSession } from './session';
 import { useDeleteTicket } from './tickets';
 
 const unauthorized = () => new ApiError(401, 'unauthorized', 'Enter the access token.');
 const signedOut = { authRequired: true, authenticated: false };
 const signedIn = { authRequired: true, authenticated: true };
+const open = { authRequired: false, authenticated: true };
 
 describe('useSession', () => {
   it('loads the auth state', async () => {
@@ -78,5 +79,46 @@ describe('useLogin', () => {
     act(() => result.current.mutate({ token: 'nope' }));
     await waitFor(() => expect(result.current.isError).toBe(true));
     expect(errorMessage(result.current.error)).toBe('That token is wrong.');
+  });
+});
+
+describe('recheckSession', () => {
+  async function recheck(getSession: () => Promise<unknown>) {
+    const { client, queryClient } = setupApi({ getSession: vi.fn(getSession) });
+    queryClient.setQueryData(queryKeys.session(), open);
+    await recheckSession(client, queryClient);
+    return queryClient.getQueryData(queryKeys.session());
+  }
+
+  it('signs out when the server now asks for a token', async () => {
+    expect(await recheck(() => Promise.resolve(signedOut))).toEqual(signedOut);
+  });
+
+  it('signs out when the session check itself is refused', async () => {
+    expect(await recheck(() => Promise.reject(unauthorized()))).toEqual(signedOut);
+  });
+
+  it('keeps the app open when the server is unreachable or still lets the user in', async () => {
+    expect(await recheck(() => Promise.reject(new TypeError('Failed to fetch')))).toEqual(open);
+    const proxyAnswer = new ApiError(502, 'http_error', 'Bad Gateway');
+    expect(await recheck(() => Promise.reject(proxyAnswer))).toEqual(open);
+    expect(await recheck(() => Promise.resolve(signedIn))).toEqual(open);
+  });
+
+  it('never blanks the app by refetching a session it could not load', async () => {
+    const getSession = vi.fn().mockRejectedValue(new TypeError('Failed to fetch'));
+    const { client, queryClient, wrapper } = setupApi({ getSession });
+    const { result } = renderHook(() => useSession(), { wrapper });
+    await waitFor(() => expect(result.current.isError).toBe(true));
+    const fetchStatuses: string[] = [];
+    const stop = queryClient.getQueryCache().subscribe(({ query }) => {
+      fetchStatuses.push(query.state.fetchStatus);
+    });
+
+    await recheckSession(client, queryClient);
+
+    stop();
+    expect(fetchStatuses).not.toContain('fetching');
+    expect(result.current.data).toBeUndefined();
   });
 });

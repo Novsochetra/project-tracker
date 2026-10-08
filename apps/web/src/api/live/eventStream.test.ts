@@ -1,15 +1,25 @@
+import { LIVE_STALE_MS } from '@tracker/shared';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { MockEventSource } from '../test/mockEventSource';
 import { LIVE_RETRY_MS, retryDelay } from './backoff';
-import { connectLiveUpdates, LIVE_STALE_MS } from './eventStream';
+import { connectLiveUpdates } from './eventStream';
+import { HIDDEN_GRACE_MS } from './pauseWhileHidden';
 
 const event = { type: 'changed', projectId: 'p-mob', ticketId: 't-1' };
 
+// Every connection watches the page's visibility until it is stopped.
+let connections: Array<() => void> = [];
+
 function connect() {
-  const onChange = vi.fn();
-  const onReconnect = vi.fn();
-  const stop = connectLiveUpdates('/api/events', { onChange, onReconnect });
-  return { stop, onChange, onReconnect, source: MockEventSource.latest() };
+  const handlers = { onChange: vi.fn(), onReconnect: vi.fn(), onRefused: vi.fn() };
+  const stop = connectLiveUpdates('/api/events', handlers);
+  connections.push(stop);
+  return { stop, ...handlers, source: MockEventSource.latest() };
+}
+
+function setVisibility(state: DocumentVisibilityState) {
+  vi.spyOn(document, 'visibilityState', 'get').mockReturnValue(state);
+  document.dispatchEvent(new Event('visibilitychange'));
 }
 
 describe('connectLiveUpdates', () => {
@@ -20,8 +30,11 @@ describe('connectLiveUpdates', () => {
   });
 
   afterEach(() => {
+    connections.forEach((stop) => stop());
+    connections = [];
     vi.useRealTimers();
     vi.unstubAllGlobals();
+    vi.restoreAllMocks();
   });
 
   it('passes change events from unnamed and named messages', () => {
@@ -133,6 +146,68 @@ describe('connectLiveUpdates', () => {
     expect(onReconnect).toHaveBeenCalledTimes(1);
   });
 
+  it('reports a stream the browser gives up on, not a drop it retries itself', () => {
+    const { source, onRefused } = connect();
+    source.open();
+    source.fail(false);
+    expect(onRefused).not.toHaveBeenCalled();
+
+    source.fail(true);
+
+    expect(onRefused).toHaveBeenCalledTimes(1);
+    vi.advanceTimersByTime(LIVE_RETRY_MS);
+    MockEventSource.latest().fail(true);
+    expect(onRefused).toHaveBeenCalledTimes(2);
+  });
+
+  it('closes the stream while the page stays hidden and reopens it with a refresh', () => {
+    const { source, onReconnect } = connect();
+    source.open();
+    setVisibility('hidden');
+    vi.advanceTimersByTime(HIDDEN_GRACE_MS - 1);
+    expect(source.readyState).toBe(MockEventSource.OPEN);
+
+    vi.advanceTimersByTime(1);
+
+    expect(source.readyState).toBe(MockEventSource.CLOSED);
+    vi.advanceTimersByTime(LIVE_STALE_MS * 20);
+    expect(MockEventSource.instances).toHaveLength(1);
+    setVisibility('visible');
+    expect(MockEventSource.instances).toHaveLength(2);
+    expect(onReconnect).not.toHaveBeenCalled();
+    MockEventSource.latest().open();
+    expect(onReconnect).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps the stream through a quick switch to another app', () => {
+    const { source, onReconnect } = connect();
+    source.open();
+    setVisibility('hidden');
+    vi.advanceTimersByTime(HIDDEN_GRACE_MS - 1);
+    setVisibility('visible');
+    source.emit('', 'ping');
+    vi.advanceTimersByTime(HIDDEN_GRACE_MS);
+    expect(source.readyState).toBe(MockEventSource.OPEN);
+    expect(MockEventSource.instances).toHaveLength(1);
+    expect(onReconnect).not.toHaveBeenCalled();
+  });
+
+  it('stops retrying while hidden and tries again as soon as the page is visible', () => {
+    const { source, onRefused } = connect();
+    source.fail(true);
+    setVisibility('hidden');
+    vi.advanceTimersByTime(HIDDEN_GRACE_MS);
+    const attempts = MockEventSource.instances.length;
+    expect(MockEventSource.latest().readyState).toBe(MockEventSource.CLOSED);
+
+    vi.advanceTimersByTime(LIVE_STALE_MS * 20);
+
+    expect(MockEventSource.instances).toHaveLength(attempts);
+    expect(onRefused).toHaveBeenCalledTimes(1);
+    setVisibility('visible');
+    expect(MockEventSource.instances).toHaveLength(attempts + 1);
+  });
+
   it('closes the stream and cancels pending timers on cleanup', () => {
     const { source, stop } = connect();
     source.fail(true);
@@ -148,9 +223,23 @@ describe('connectLiveUpdates', () => {
     expect(MockEventSource.instances).toHaveLength(2);
   });
 
+  it('stops watching the page once cleaned up', () => {
+    const { source, stop } = connect();
+    source.open();
+    stop();
+    setVisibility('hidden');
+    vi.advanceTimersByTime(HIDDEN_GRACE_MS);
+    setVisibility('visible');
+    expect(MockEventSource.instances).toHaveLength(1);
+  });
+
   it('does nothing where EventSource is missing', () => {
     vi.stubGlobal('EventSource', undefined);
-    const stop = connectLiveUpdates('/api/events', { onChange: vi.fn(), onReconnect: vi.fn() });
+    const stop = connectLiveUpdates('/api/events', {
+      onChange: vi.fn(),
+      onReconnect: vi.fn(),
+      onRefused: vi.fn(),
+    });
     expect(() => stop()).not.toThrow();
   });
 });

@@ -1,3 +1,4 @@
+import { HEARTBEAT_MS } from '@tracker/shared';
 import { Hono } from 'hono';
 import { streamSSE } from 'hono/streaming';
 import type { Broadcaster } from '../../events/broadcaster';
@@ -5,8 +6,6 @@ import type { AppEnv } from '../env';
 
 // Browsers never hand SSE comments to the page, so the heartbeat is a named event: the web app
 // reopens a stream that misses two of them, which is how it notices a proxy holding a dead stream.
-export const HEARTBEAT_MS = 15_000;
-
 const PING = { event: 'ping', data: '' };
 
 export const eventRoutes = (events: Broadcaster, heartbeatMs = HEARTBEAT_MS) =>
