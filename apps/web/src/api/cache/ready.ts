@@ -1,5 +1,5 @@
 import type { Status, TicketListItem, TicketsAcrossProjects } from '@tracker/shared';
-import { entriesOf, isEntry } from '../../lib/entries';
+import { entriesOf, isEntry, isList } from '../../lib/entries';
 
 const sameKey = (a: unknown, b: string): boolean =>
   typeof a === 'string' && a.toUpperCase() === b.toUpperCase();
@@ -18,7 +18,7 @@ export function withoutMovedTicket(
   ticketKey: string,
   statusId: string | undefined,
 ): TicketsAcrossProjects {
-  if (statusId === undefined || !isEntry(list) || !Array.isArray(list.tickets)) return list;
+  if (statusId === undefined || !isEntry(list) || !isList(list.tickets)) return list;
   const tickets = list.tickets.filter((ticket) => !movesAway(ticket, ticketKey, statusId));
   return tickets.length === list.tickets.length ? list : { ...list, tickets };
 }

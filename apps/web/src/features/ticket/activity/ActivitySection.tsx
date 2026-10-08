@@ -2,7 +2,7 @@ import { findStatusByCategory, type TicketDetail } from '@tracker/shared';
 import clsx from 'clsx';
 import { useMemo, useState, type Ref } from 'react';
 import { useNow } from '../../../lib/useNow';
-import { activityItems, type ActivityItem } from './activityItems';
+import { activityItems, rowKeys, type ActivityItem } from './activityItems';
 import type { RiseProps } from './ActivityCard';
 import { ActivityRow } from './ActivityRow';
 import styles from './ActivitySection.module.css';
@@ -30,6 +30,7 @@ const riseProps = (delay: number | null | undefined): RiseProps =>
 
 export function ActivitySection({ detail, composerRef, className }: ActivitySectionProps) {
   const items = useMemo(() => activityItems(detail.activity), [detail.activity]);
+  const keys = useMemo(() => rowKeys(items), [items]);
   const plan = useRisePlan(items);
   const now = useNow();
   const actions = useActivityActions(detail.ticket.key);
@@ -38,9 +39,9 @@ export function ActivitySection({ detail, composerRef, className }: ActivitySect
     <section aria-label="Activity" className={clsx(styles.section, className)}>
       <div className={styles.inner}>
         <h2 className={styles.heading}>Activity</h2>
-        {items.map((item) => (
+        {items.map((item, index) => (
           <ActivityRow
-            key={item.id}
+            key={keys[index]}
             item={item}
             now={now}
             actions={actions}

@@ -6,7 +6,7 @@ export const isEntry = (entry: unknown): entry is object =>
 
 export const readableEntries = <T>(entries: readonly T[]): T[] => entries.filter(isEntry);
 
-const isList = <T>(list: readonly T[] | null | undefined): list is readonly T[] =>
+export const isList = <T>(list: readonly T[] | null | undefined): list is readonly T[] =>
   Array.isArray(list);
 
 // A list field the tracker sent as something else, such as { tickets: null }, has no entries.

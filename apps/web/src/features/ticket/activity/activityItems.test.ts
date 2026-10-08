@@ -1,7 +1,7 @@
 import { HUMAN, type Activity, type Actor } from '@tracker/shared';
 import { describe, expect, it } from 'vitest';
 import { attachment, comment } from '../../../api/test/fixtures';
-import { activityItems, lastReportAt, reportTitle } from './activityItems';
+import { activityItems, lastReportAt, reportTitle, rowKeys } from './activityItems';
 
 const CLAUDE = { kind: 'agent', name: 'Claude' } as const;
 
@@ -115,5 +115,14 @@ describe('lastReportAt', () => {
     const activity = [entry('a', 'report', 5), entry('b', 'report', 9), entry('c', 'event', 12)];
     expect(lastReportAt(activity)).toBe(9);
     expect(lastReportAt([entry('c', 'event', 12)])).toBeNull();
+  });
+});
+
+describe('rowKeys', () => {
+  it('keys rows by id, and numbers those without one among themselves', () => {
+    const noId = { ...entry('x', 'event', 2), id: undefined } as unknown as Activity;
+    const nullId = { ...entry('x', 'event', 4), id: null } as unknown as Activity;
+    const items = activityItems([entry('a', 'event', 1), noId, entry('b', 'event', 3), nullId]);
+    expect(rowKeys(items)).toEqual(['a', 'no-id-0', 'b', 'no-id-1']);
   });
 });

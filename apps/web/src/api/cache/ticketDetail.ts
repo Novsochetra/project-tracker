@@ -6,7 +6,7 @@ import {
   type TicketDetail,
   type UpdateTicketInput,
 } from '@tracker/shared';
-import { isEntry } from '../../lib/entries';
+import { isEntry, isList } from '../../lib/entries';
 import { ticketFields } from './fields';
 
 export const TEMPORARY_ID_PREFIX = 'temp-';
@@ -73,16 +73,21 @@ export const editActivityText = (
   ),
 });
 
+// A file entry this app can't read, such as null, stays in the cache as it came (the file lists
+// leave it out), and adding or removing a file passes over it.
+const matchesFile = (item: Attachment, attachmentId: string): boolean =>
+  isEntry(item) && item.id === attachmentId;
+
 export const addTicketAttachment = (detail: TicketDetail, attachment: Attachment): TicketDetail =>
-  detail.attachments.some((item) => item.id === attachment.id)
+  detail.attachments.some((item) => matchesFile(item, attachment.id))
     ? detail
     : { ...detail, attachments: [...detail.attachments, attachment] };
 
-// An activity entry without a list of files, or a file this app can't read, stays as it came.
+// An activity entry without a list of files stays as it came too.
 export function removeAttachment(detail: TicketDetail, attachmentId: string): TicketDetail {
-  const keep = (attachment: Attachment) => !isEntry(attachment) || attachment.id !== attachmentId;
+  const keep = (attachment: Attachment) => !matchesFile(attachment, attachmentId);
   const holdsIt = (item: Activity) =>
-    isEntry(item) && Array.isArray(item.attachments) && !item.attachments.every(keep);
+    isEntry(item) && isList(item.attachments) && !item.attachments.every(keep);
   return {
     ...detail,
     attachments: detail.attachments.filter(keep),
