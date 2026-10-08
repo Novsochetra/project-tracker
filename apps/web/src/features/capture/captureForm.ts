@@ -1,4 +1,4 @@
-import { createTicketInput, type CreateTicketInput, type Priority } from '@tracker/shared';
+import { TICKET_DESCRIPTION_MAX, type CreateTicketInput, type Priority } from '@tracker/shared';
 import type { QueuedCapture } from './captureQueue';
 import type { CaptureText } from './captureText';
 import { clipTitle } from './clipTitle';
@@ -18,8 +18,7 @@ export const CAPTURE_TIMEOUT_MS = 8_000;
 // at 375px.
 const DROPPED_TITLE_WIDTH = 24;
 
-export const DESCRIPTION_MAX_LENGTH =
-  createTicketInput.shape.description.unwrap().maxLength ?? undefined;
+export const DESCRIPTION_MAX_LENGTH = TICKET_DESCRIPTION_MAX;
 
 export const TITLE_REQUIRED = 'Add a title to create the ticket.';
 export const NO_PROJECTS = 'Create a project first.';

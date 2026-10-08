@@ -1,9 +1,9 @@
 import { act, screen } from '@testing-library/react';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { HIDDEN_GRACE_MS } from '../../src/api/live/pauseWhileHidden';
 import { MockEventSource } from '../../src/api/test/mockEventSource';
 import { skipAnimations } from '../../src/overlays/testing';
-import { advance, ONE_EACH, RENAMED, renderApp, setVisibility } from './countedReads';
+import { advance, loadScreens, ONE_EACH, RENAMED, renderApp, setVisibility } from './countedReads';
 
 // After the page was hidden for more than 30 s, TanStack Query's focus refetch read every open
 // query, and the refresh when the reopened live stream opened read them all again. A phone that
@@ -14,6 +14,8 @@ import { advance, ONE_EACH, RENAMED, renderApp, setVisibility } from './countedR
 const HIDDEN_MS = HIDDEN_GRACE_MS + 10_000;
 
 let restore: Array<() => void> = [];
+
+beforeAll(loadScreens);
 
 beforeEach(() => {
   vi.useFakeTimers({ shouldAdvanceTime: true });

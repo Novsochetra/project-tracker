@@ -1,7 +1,7 @@
 import {
-  createTicketInput,
   PRIORITIES,
   sortStatuses,
+  TICKET_TITLE_MAX,
   type Attachment,
   type CreateTicketInput,
   type Priority,
@@ -22,7 +22,7 @@ export interface NewTicketForm {
 
 export const TITLE_REQUIRED = 'Add a title to create the ticket.';
 // The API's limit, so an overlong paste is cut short in the field instead of failing to create.
-export const TITLE_MAX_LENGTH = createTicketInput.shape.title.maxLength ?? undefined;
+export const TITLE_MAX_LENGTH = TICKET_TITLE_MAX;
 
 export const blankForm = (): NewTicketForm => ({
   title: '',

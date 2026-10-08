@@ -1,10 +1,11 @@
 import { cleanup, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ApiError } from '@tracker/client';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { queryKeys } from '../../src/api';
 import { listItem, makeBoard, STATUS } from '../../src/api/test/fixtures';
 import { setupApi } from '../../src/api/test/render';
+import { NewTicketSheet } from '../../src/app/lazyParts';
 import { useSheets } from '../../src/app/sheets/context';
 import { SheetsProvider } from '../../src/app/sheets/SheetsProvider';
 import { ToastProvider } from '../../src/components';
@@ -79,6 +80,9 @@ async function typeIdea(user: ReturnType<typeof userEvent.setup>) {
 }
 
 let restore: () => void = () => undefined;
+
+// The app loads this code when it is first needed; here it is in before the first render.
+beforeAll(() => NewTicketSheet.preload());
 
 beforeEach(() => {
   restore = sheetTestSetup(true);

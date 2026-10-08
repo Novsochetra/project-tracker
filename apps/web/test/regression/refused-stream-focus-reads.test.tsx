@@ -1,10 +1,10 @@
 import { act, screen } from '@testing-library/react';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { retryDelay } from '../../src/api/live/backoff';
 import { STALE_TIME_MS } from '../../src/api/queryClient';
 import { MockEventSource } from '../../src/api/test/mockEventSource';
 import { skipAnimations } from '../../src/overlays/testing';
-import { advance, ONE_EACH, renderApp, setVisibility } from './countedReads';
+import { advance, loadScreens, ONE_EACH, renderApp, setVisibility } from './countedReads';
 
 // Behind a proxy that refuses the live stream while the API answers, the stream never opened, so
 // the refresh its opening brings never came, and focus reads waited for it for good: coming back
@@ -13,6 +13,8 @@ import { advance, ONE_EACH, renderApp, setVisibility } from './countedReads';
 const STALE_MS = STALE_TIME_MS + 1_000;
 
 let restore: Array<() => void> = [];
+
+beforeAll(loadScreens);
 
 beforeEach(() => {
   vi.useFakeTimers({ shouldAdvanceTime: true });

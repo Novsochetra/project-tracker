@@ -1,9 +1,19 @@
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router';
-import { afterEach, beforeEach, describe, expect, it, vi, type MockInstance } from 'vitest';
+import {
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+  type MockInstance,
+} from 'vitest';
 import { fakeClient } from '../../src/api/test/fakeClient';
 import { createTestQueryClient } from '../../src/api/test/render';
+import { ProjectScreen, TicketScreen } from '../../src/app/lazyParts';
 import { renderScreen } from '../../src/app/renderScreen';
 import { LocationProbe } from '../../src/app/test/LocationProbe';
 import { currentPath } from '../../src/app/test/harness';
@@ -40,6 +50,9 @@ vi.mock('../../src/features/ticket/TicketScreen', () => ({
 
 let restore: Array<() => void> = [];
 let consoleError: MockInstance<typeof console.error>;
+
+// The app loads this code when it is first needed; here it is in before the first render.
+beforeAll(() => Promise.all([ProjectScreen.preload(), TicketScreen.preload()]));
 
 beforeEach(() => {
   crashing.projects = false;

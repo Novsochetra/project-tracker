@@ -1,10 +1,11 @@
 import { lazy, Suspense } from 'react';
 import { TrackerApp } from './TrackerApp';
 
-const Gallery = lazy(() => import('../dev/Gallery'));
+// Only the dev server has it, so a production build doesn't carry or precache its code.
+const Gallery = import.meta.env.DEV ? lazy(() => import('../dev/Gallery')) : null;
 
 export function App() {
-  if (import.meta.env.DEV && window.location.pathname.startsWith('/__gallery')) {
+  if (Gallery && window.location.pathname.startsWith('/__gallery')) {
     return (
       <Suspense fallback={null}>
         <Gallery />

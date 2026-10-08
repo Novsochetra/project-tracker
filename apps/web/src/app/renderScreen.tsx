@@ -1,9 +1,8 @@
 import type { ReactNode } from 'react';
-import { ProjectScreen } from '../features/project/ProjectScreen';
 import { ProjectsScreen } from '../features/projects/ProjectsScreen';
-import { TicketScreen } from '../features/ticket/TicketScreen';
 import { ErrorBoundary } from '../lib/ErrorBoundary';
 import { routePath, type Route } from '../navigation';
+import { ProjectScreen, TicketScreen } from './lazyParts';
 import { ScreenError } from './ScreenError';
 
 function screenFor(route: Route): ReactNode {

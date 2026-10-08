@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { REVIEW_VERDICTS } from '../domain/activity';
+import { COMMENT_TEXT_MAX, REVIEW_VERDICTS } from '../domain/activity';
 import {
   MAX_NEW_ATTACHMENTS,
   tooManyFilesMessage,
@@ -7,6 +7,7 @@ import {
 } from '../domain/attachment';
 import { PRIORITIES } from '../domain/priority';
 import { STATUS_CATEGORIES } from '../domain/status';
+import { TICKET_ASSIGNEE_MAX, TICKET_DESCRIPTION_MAX, TICKET_TITLE_MAX } from '../domain/ticket';
 import { toYmd } from '../logic/format';
 
 const hexColor = z.string().regex(/^#[0-9A-Fa-f]{6}$/, 'Use a hex color like #5B5BD6');
@@ -55,11 +56,11 @@ export const reorderStatusesInput = z.object({ ids: z.array(id).min(1) });
 export type ReorderStatusesInput = z.input<typeof reorderStatusesInput>;
 
 export const createTicketInput = z.object({
-  title: z.string().trim().min(1, 'Add a title to create the ticket.').max(300),
-  description: z.string().max(50_000).default(''),
+  title: z.string().trim().min(1, 'Add a title to create the ticket.').max(TICKET_TITLE_MAX),
+  description: z.string().max(TICKET_DESCRIPTION_MAX).default(''),
   statusId: id.optional(),
   priority: z.enum(PRIORITIES).default('medium'),
-  assignee: z.string().trim().max(80).default(''),
+  assignee: z.string().trim().max(TICKET_ASSIGNEE_MAX).default(''),
   due: dueDate.default(''),
   attachmentIds: attachmentIds('ticket').default([]),
   // From a client that may send the same create again: a repeat gets the ticket the first one made.
@@ -68,11 +69,11 @@ export const createTicketInput = z.object({
 export type CreateTicketInput = z.input<typeof createTicketInput>;
 
 export const updateTicketInput = z.object({
-  title: z.string().max(300).optional(),
-  description: z.string().max(50_000).optional(),
+  title: z.string().max(TICKET_TITLE_MAX).optional(),
+  description: z.string().max(TICKET_DESCRIPTION_MAX).optional(),
   statusId: id.optional(),
   priority: z.enum(PRIORITIES).optional(),
-  assignee: z.string().trim().max(80).optional(),
+  assignee: z.string().trim().max(TICKET_ASSIGNEE_MAX).optional(),
   due: dueDate.optional(),
 });
 export type UpdateTicketInput = z.input<typeof updateTicketInput>;
@@ -89,7 +90,7 @@ export type MarkSentInput = z.input<typeof markSentInput>;
 
 export const createCommentInput = z
   .object({
-    text: z.string().max(20_000).default(''),
+    text: z.string().max(COMMENT_TEXT_MAX).default(''),
     attachmentIds: attachmentIds('comment').default([]),
   })
   .refine((v) => v.text.trim().length > 0 || v.attachmentIds.length > 0, {
@@ -97,7 +98,9 @@ export const createCommentInput = z
   });
 export type CreateCommentInput = z.input<typeof createCommentInput>;
 
-export const updateCommentInput = z.object({ text: z.string().trim().min(1).max(20_000) });
+export const updateCommentInput = z.object({
+  text: z.string().trim().min(1).max(COMMENT_TEXT_MAX),
+});
 export type UpdateCommentInput = z.input<typeof updateCommentInput>;
 
 export const reportInput = z.object({

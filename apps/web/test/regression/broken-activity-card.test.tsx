@@ -1,9 +1,10 @@
 import { act, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { Activity, Actor, ReviewVerdict, TicketDetail } from '@tracker/shared';
-import { afterEach, beforeEach, expect, it, vi, type MockInstance } from 'vitest';
+import { afterEach, beforeAll, beforeEach, expect, it, vi, type MockInstance } from 'vitest';
 import { queryKeys } from '../../src/api';
 import { comment, listItem, makeTicketDetail, STATUS } from '../../src/api/test/fixtures';
+import { TicketScreen } from '../../src/app/lazyParts';
 import { renderScreen } from '../../src/app/renderScreen';
 import { readMenuConfirm } from '../../src/components/Popover/testing';
 import type { ReportSections } from '../../src/features/ticket/activity/reportSections';
@@ -18,6 +19,9 @@ import { readActionSheet, skipAnimations } from '../../src/overlays/testing';
 // edit fixed it.
 
 const CRASH = 'crashes the parser';
+
+// The app loads this code when it is first needed; here it is in before the first render.
+beforeAll(() => TicketScreen.preload());
 
 vi.mock('../../src/lib/linkify', async () => {
   const actual = await vi.importActual<{ linkParts: (text: string) => LinkPart[] }>(

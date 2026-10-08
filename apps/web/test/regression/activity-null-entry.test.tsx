@@ -1,7 +1,8 @@
 import { screen, within } from '@testing-library/react';
 import type { Activity } from '@tracker/shared';
-import { afterEach, beforeEach, expect, it, vi, type MockInstance } from 'vitest';
+import { afterEach, beforeAll, beforeEach, expect, it, vi, type MockInstance } from 'vitest';
 import { comment, listItem, makeTicketDetail, STATUS } from '../../src/api/test/fixtures';
+import { TicketScreen } from '../../src/app/lazyParts';
 import { renderScreen } from '../../src/app/renderScreen';
 import { renderTicket } from '../../src/features/ticket/test/renderTicket';
 import { skipAnimations } from '../../src/overlays/testing';
@@ -13,6 +14,9 @@ const CLAUDE = { kind: 'agent', name: 'Claude' } as const;
 
 let cleanups: Array<() => void> = [];
 let consoleError: MockInstance<typeof console.error>;
+
+// The app loads this code when it is first needed; here it is in before the first render.
+beforeAll(() => TicketScreen.preload());
 
 beforeEach(() => {
   localStorage.clear();

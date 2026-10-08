@@ -12,6 +12,7 @@ import {
   statuses,
 } from '../../src/api/test/fixtures';
 import { createTestQueryClient } from '../../src/api/test/render';
+import { ProjectScreen, TicketScreen } from '../../src/app/lazyParts';
 import { projectSummary } from '../../src/app/test/harness';
 import { TrackerApp } from '../../src/app/TrackerApp';
 
@@ -60,6 +61,11 @@ export function fakeServer() {
     renameFirstTicket: () => void (first = { ...first, title: RENAMED }),
   };
 }
+
+// The app loads the screens' code when first needed, and a screen mounted after it arrives
+// subscribes to its reads later, on a timer these tests fake. They count the reads of a settled
+// page, so the code is in before the first render: run this in beforeAll.
+export const loadScreens = () => Promise.all([ProjectScreen.preload(), TicketScreen.preload()]);
 
 export function renderApp(path: string, server = fakeServer()) {
   window.history.replaceState(null, '', path);

@@ -1,4 +1,5 @@
 import clsx from 'clsx';
+import { Suspense } from 'react';
 import { useLiveUpdates } from '../api';
 import { useToastRaise } from '../components';
 import { QuickCapture } from '../features/capture';
@@ -9,6 +10,7 @@ import { LiveRegion } from './LiveRegion';
 import { OfflineBanner } from './OfflineBanner';
 import { renderScreen } from './renderScreen';
 import { RouteFallback } from './RouteFallback';
+import { ScreenLoading } from './ScreenLoading';
 import { HeaderError, ShellBoundary, SidebarError } from './ShellError';
 import styles from './Shell.module.css';
 import { Sidebar } from './Sidebar';
@@ -35,7 +37,12 @@ export function Shell() {
         )}
         {unreachable && <OfflineBanner />}
         <main className={clsx(styles.stack, unreachable && styles.belowBanner)}>
-          <StackNavigator renderScreen={renderScreen} />
+          {/* Above the stack, so a push to a screen whose code is still on its way keeps the
+              current screen until it arrives (navigations are transitions) instead of sliding
+              in a blank one. Only a first load straight into such a screen shows the fallback. */}
+          <Suspense fallback={<ScreenLoading />}>
+            <StackNavigator renderScreen={renderScreen} />
+          </Suspense>
         </main>
       </div>
       <RouteFallback />

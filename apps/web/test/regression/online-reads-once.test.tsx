@@ -1,11 +1,19 @@
 import { act, screen } from '@testing-library/react';
 import { onlineManager } from '@tanstack/react-query';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { HIDDEN_GRACE_MS } from '../../src/api/live/pauseWhileHidden';
 import { STALE_TIME_MS } from '../../src/api/queryClient';
 import { MockEventSource } from '../../src/api/test/mockEventSource';
 import { skipAnimations } from '../../src/overlays/testing';
-import { advance, ONE_EACH, RENAMED, renderApp, setOnline, setVisibility } from './countedReads';
+import {
+  advance,
+  loadScreens,
+  ONE_EACH,
+  RENAMED,
+  renderApp,
+  setOnline,
+  setVisibility,
+} from './countedReads';
 
 // A phone that lost its network while it was locked read every stale query twice on return:
 // TanStack Query's refetch when the browser is online again wasn't held back like its focus
@@ -17,6 +25,8 @@ const HIDDEN_MS = HIDDEN_GRACE_MS + 10_000;
 const STALE_MS = STALE_TIME_MS + 1_000;
 
 let restore: Array<() => void> = [];
+
+beforeAll(loadScreens);
 
 beforeEach(() => {
   vi.useFakeTimers({ shouldAdvanceTime: true });

@@ -1,11 +1,14 @@
+import { Suspense } from 'react';
 import { CaptureSheet } from '../../features/capture/CaptureSheet';
-import { PromptSheet } from '../../features/claude/PromptSheet';
-import { ReportSheet } from '../../features/claude/ReportSheet';
-import { ConnectSheet } from '../../features/connect/ConnectSheet';
-import { NewTicketSheet } from '../../features/project/NewTicketSheet';
 import { ProjectSheet } from '../../features/projects/ProjectSheet';
-import { StatusManagerSheet } from '../../features/statuses/StatusManagerSheet';
 import { ErrorBoundary } from '../../lib/ErrorBoundary';
+import {
+  ConnectSheet,
+  NewTicketSheet,
+  PromptSheet,
+  ReportSheet,
+  StatusManagerSheet,
+} from '../lazyParts';
 import { SheetError } from './SheetError';
 import type { SheetProps, SheetRequest } from './types';
 
@@ -21,7 +24,10 @@ export function SheetHost({ request, open, onClose }: Props) {
       name={`Sheet ${request.type}`}
       fallback={<SheetError open={open} onClose={onClose} />}
     >
-      <RequestedSheet request={request} open={open} onClose={onClose} />
+      {/* A sheet whose code is still on its way slides in once it arrives. */}
+      <Suspense fallback={null}>
+        <RequestedSheet request={request} open={open} onClose={onClose} />
+      </Suspense>
     </ErrorBoundary>
   );
 }
