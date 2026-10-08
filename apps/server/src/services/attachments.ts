@@ -52,15 +52,23 @@ function dimensions(head: Uint8Array, kind: AttachmentKind): Dimensions {
   }
 }
 
-// Cut by code points: half of a surrogate pair can't be encoded in a download header.
-const fileNameOf = (name: string, extension: string): string =>
-  Array.from(name.trim()).slice(0, MAX_NAME_LENGTH).join('') || `attachment.${extension}`;
+const TABS_AND_LINE_BREAKS = /[\t\n\v\f\r]+/g;
+
+// Postgres refuses a NUL in text, and no control character (C0, DEL or C1) means anything in a
+// name.
+const CONTROL_CHARACTERS = /\p{Cc}/gu;
+
+// A tab or line break becomes a space so the words around it stay apart. Cut by code points: half
+// of a surrogate pair can't be encoded in a download header.
+function fileNameOf(name: string, extension: string): string {
+  const plain = name.replace(TABS_AND_LINE_BREAKS, ' ').replace(CONTROL_CHARACTERS, '').trim();
+  return Array.from(plain).slice(0, MAX_NAME_LENGTH).join('') || `attachment.${extension}`;
+}
 
 export interface UploadInput {
   body: ReadableStream<Uint8Array> | null;
   name: string;
   type: string;
-  // The Content-Length, when the client sent one.
   size: number | null;
   ticketKey?: string | undefined;
 }
@@ -124,7 +132,8 @@ async function insertUploaded(
   });
 }
 
-// The file streams to storage as it arrives, so an upload holds a chunk in memory, not the file.
+// Streamed rather than read whole first: reading a 95 MB video whole took the server from 76 MB
+// to 660 MB.
 export async function uploadAttachment(
   ctx: ServiceContext,
   input: UploadInput,

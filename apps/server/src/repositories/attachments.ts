@@ -27,7 +27,6 @@ export const listActivityAttachments = (db: Db, activityId: string) =>
     .orderBy('id')
     .execute();
 
-// A file added to a ticket goes after the ticket's own files.
 export async function nextTicketPosition(db: Db, ticketId: string): Promise<number> {
   const row = await db
     .selectFrom('attachments')
@@ -38,7 +37,8 @@ export async function nextTicketPosition(db: Db, ticketId: string): Promise<numb
   return row?.last === null || row?.last === undefined ? 0 : Number(row.last) + 1;
 }
 
-// Each file takes its place in `ids`, so the files list in the order they were picked.
+// Files upload side by side and arrive in any order, so their place comes from `ids`, the order
+// they were picked in.
 export async function linkAttachments(
   db: Db,
   ids: readonly string[],
