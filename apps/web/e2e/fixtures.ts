@@ -1,7 +1,6 @@
 import { test as base, expect } from '@playwright/test';
 import { TrackerClient } from '@tracker/client';
-
-const API_URL = 'http://localhost:4199';
+import { API_URL } from './ports';
 
 interface Fixtures {
   api: TrackerClient;

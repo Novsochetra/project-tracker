@@ -20,6 +20,7 @@ Read `docs/architecture.md` before changing anything. The approved visual design
 npm run dev          # server on :4100 + web on :5173
 npm run verify       # format check, lint, typecheck, unit + integration tests
 npm run test:e2e     # Playwright at 375x812 and 1280x800
+npm run test:e2e:clean  # the same on a clean copy of HEAD; E2E_API_PORT/E2E_WEB_PORT let two runs share a machine
 ```
 
 ## Code rules

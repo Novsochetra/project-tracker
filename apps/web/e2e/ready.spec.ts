@@ -2,9 +2,10 @@ import type { Locator, Page } from '@playwright/test';
 import { TrackerClient } from '@tracker/client';
 import { expect, isPhone, test } from './fixtures';
 import { seedProject, toast } from './helpers';
+import { API_URL } from './ports';
 
 const reviewer = new TrackerClient({
-  baseUrl: 'http://localhost:4199',
+  baseUrl: API_URL,
   actor: { kind: 'agent', name: 'Reviewer' },
 });
 
