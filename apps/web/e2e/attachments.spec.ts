@@ -19,6 +19,58 @@ const isRangedFileAnswer = (response: Response): boolean =>
   /\/api\/attachments\/[^/]+\/file$/.test(new URL(response.url()).pathname) &&
   response.request().headers().range !== undefined;
 
+const crashLogs = (count: number) =>
+  Array.from({ length: count }, (_, index) => ({
+    name: `crash-report-${index + 1}.log`,
+    mimeType: 'text/plain',
+    buffer: Buffer.from('boom\n'),
+  }));
+
+const PHONE = { width: 375, height: 812 };
+const SMALL_PHONE = { width: 320, height: 568 };
+
+const NEW_TICKET_SHEETS = [
+  {
+    name: 'New ticket',
+    open: async (page: Page) => {
+      await page.goto('/p/MOB');
+      await openNewTicketIn(page, 'To do');
+    },
+  },
+  {
+    name: 'quick capture',
+    open: async (page: Page) => {
+      await page.goto('/');
+      await expect(page.getByRole('button', { name: /^Mobile app/ }).last()).toBeVisible();
+      await page.locator('[data-bottom-bar]').getByRole('button', { name: 'New ticket' }).click();
+    },
+  },
+];
+
+const images = (count: number) =>
+  Array.from({ length: count }, (_, index) => ({
+    name: `shot-${index + 1}.png`,
+    mimeType: 'image/png',
+    buffer: PNG_1X1,
+  }));
+
+const DRAFT_FILE_AREAS = [
+  ...NEW_TICKET_SHEETS.map((surface) => ({
+    ...surface,
+    area: newTicketSheet,
+    input: 'Add files to ticket',
+  })),
+  {
+    name: 'the comment box',
+    open: async (page: Page) => {
+      await page.goto('/p/MOB/1');
+    },
+    area: (page: Page) =>
+      page.locator('form').filter({ has: page.getByLabel('Comment', { exact: true }) }),
+    input: 'Attach files to comment',
+  },
+];
+
 async function swipeDown(page: Page): Promise<void> {
   const { width, height } = page.viewportSize() ?? { width: 375, height: 812 };
   await page.mouse.move(width / 2, height / 2);
@@ -169,6 +221,96 @@ test.describe('attachments', () => {
     await sheet.getByRole('button', { name: 'Create' }).click();
     await expect(toast(page, 'MOB-2 created')).toBeVisible();
     expect((await api.getTicket('MOB-2')).attachments).toHaveLength(20);
+  });
+
+  for (const surface of NEW_TICKET_SHEETS) {
+    test(`small phone: a file left out of a big pick in ${surface.name} is said in view`, async ({
+      page,
+      api,
+    }, info) => {
+      test.skip(!isPhone(info.project.name), 'The fold of a 320×568 phone.');
+      await page.setViewportSize(SMALL_PHONE);
+      await seedProject(api, 'Mobile app', 'MOB', [{ title: 'Existing ticket' }]);
+      await surface.open(page);
+      const sheet = newTicketSheet(page);
+      const input = sheet.getByLabel('Add files to ticket');
+      const note = sheet.getByRole('alert');
+
+      await input.setInputFiles(crashLogs(21));
+      await expect(note).toContainText("crash-report-21.log can't be attached.");
+      await expect(note).toBeInViewport({ ratio: 1 });
+      // Shown where Add files was, without moving the sheet.
+      await expect(sheet.getByLabel('Ticket title')).toBeInViewport();
+      await expect(sheet.getByRole('progressbar')).toHaveCount(0);
+
+      // From the Add tile under 19 files the top of the file area is out of sight.
+      await note.getByRole('button', { name: 'Dismiss' }).tap();
+      await sheet.getByRole('button', { name: 'Remove crash-report-20.log' }).tap();
+      const addTile = sheet.locator('[data-add-tile]');
+      await addTile.scrollIntoViewIfNeeded();
+      await expect(sheet.getByLabel('Ticket title')).not.toBeInViewport();
+      await input.setInputFiles(crashLogs(3));
+      await expect(note).toContainText("crash-report-2.log and 1 more can't be attached.");
+      await expect(note).toBeInViewport({ ratio: 1 });
+    });
+  }
+
+  for (const [surface, size] of DRAFT_FILE_AREAS.flatMap((area) =>
+    [PHONE, SMALL_PHONE].map((viewport) => [area, viewport] as const),
+  )) {
+    test(`phone ${size.width}: a double tap on a file's x in ${surface.name} removes one file`, async ({
+      page,
+      api,
+    }, info) => {
+      test.skip(!isPhone(info.project.name), 'A double tap on a phone; desktop clicks are below.');
+      await page.setViewportSize(size);
+      await seedProject(api, 'Mobile app', 'MOB', [{ title: 'Existing ticket' }]);
+      await surface.open(page);
+      const area = surface.area(page);
+      await area.getByLabel(surface.input).setInputFiles(images(3));
+      await expect(area.getByRole('progressbar')).toHaveCount(0);
+      const removes = area.getByRole('button', { name: /^Remove image/ });
+      await expect(removes).toHaveCount(3);
+      await removes.first().scrollIntoViewIfNeeded();
+      const box = (await removes.first().boundingBox())!;
+      const spot = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+      const underSpot = () =>
+        page.evaluate(
+          ({ x, y }) =>
+            document.elementFromPoint(x, y)?.closest('button')?.getAttribute('aria-label'),
+          spot,
+        );
+
+      await page.touchscreen.tap(spot.x, spot.y);
+      await page.waitForTimeout(150);
+      await expect(removes).toHaveCount(2);
+      // The next image has slid under the finger and is now image 1.
+      expect(await underSpot()).toBe('Remove image 1');
+      await page.touchscreen.tap(spot.x, spot.y);
+      await page.waitForTimeout(600);
+      await expect(removes).toHaveCount(2);
+
+      await page.touchscreen.tap(spot.x, spot.y);
+      await expect(removes).toHaveCount(1);
+    });
+  }
+
+  test("desktop: the x's take one click after another at once, as before", async ({
+    page,
+    api,
+  }, info) => {
+    test.skip(isPhone(info.project.name), 'Phones hold back a double tap above.');
+    await seedProject(api, 'Mobile app', 'MOB', [{ title: 'Existing ticket' }]);
+    await page.goto('/p/MOB');
+    await openNewTicketIn(page, 'To do');
+    const sheet = newTicketSheet(page);
+    await sheet.getByLabel('Add files to ticket').setInputFiles(images(3));
+    await expect(sheet.getByRole('progressbar')).toHaveCount(0);
+    const removes = sheet.getByRole('button', { name: /^Remove image/ });
+    await removes.first().click();
+    await expect(removes).toHaveCount(2);
+    await removes.first().click();
+    await expect(removes).toHaveCount(1);
   });
 
   test('desktop: a file dropped on the New ticket sheet is attached', async ({

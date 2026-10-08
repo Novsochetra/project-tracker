@@ -1,7 +1,7 @@
 import type { Attachment } from '@tracker/shared';
 import clsx from 'clsx';
 import { Paperclip } from 'lucide-react';
-import { useId, useRef, type FocusEvent } from 'react';
+import { useEffect, useId, useRef, type FocusEvent } from 'react';
 import { Button, pastFold, ShowMoreButton, useFold } from '../../components';
 import styles from './AttachmentPicker.module.css';
 import { FileInput } from './FileInput';
@@ -31,6 +31,24 @@ function AddFilesButton({ onClick }: { onClick: () => void }) {
   );
 }
 
+// It tops the file area, where Add files was, so a big pick doesn't push it below the fold. A pick
+// from the Add tile under many files can leave that top out of sight, so a refusal, which answers
+// the pick just made, is brought into view; a failed upload comes later, while the person may be
+// scrolling, and leaves the page where it is.
+function PickNote({ uploads }: { uploads: AttachmentUploads }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const { notice } = uploads;
+  useEffect(() => {
+    // At once: WebKit keeps what is on screen in place when the note lands above it, and that
+    // shift could cut a smooth scroll off before it began.
+    if (notice?.problem === 'refused') ref.current?.scrollIntoView?.({ block: 'nearest' });
+  }, [notice]);
+  if (!notice) return null;
+  return (
+    <FileNote ref={ref} notice={notice} onDismiss={uploads.dismissNotice} className={styles.note} />
+  );
+}
+
 export function AttachmentPicker({
   attachments,
   uploads,
@@ -55,6 +73,7 @@ export function AttachmentPicker({
   };
   return (
     <div className={clsx(styles.picker, className)}>
+      <PickNote uploads={uploads} />
       {empty ? (
         <AddFilesButton onClick={pick} />
       ) : (
@@ -88,13 +107,6 @@ export function AttachmentPicker({
           />
           {fold.folded && <AddFilesButton onClick={pick} />}
         </div>
-      )}
-      {uploads.notice && (
-        <FileNote
-          notice={uploads.notice}
-          onDismiss={uploads.dismissNotice}
-          className={styles.note}
-        />
       )}
       <FileInput ref={inputRef} label={inputLabel} onFiles={uploads.add} />
     </div>

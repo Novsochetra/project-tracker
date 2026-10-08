@@ -1,5 +1,6 @@
 import clsx from 'clsx';
 import { CircleAlert, X } from 'lucide-react';
+import type { Ref } from 'react';
 import { Icon, IconButton } from '../../components';
 import styles from './FileNote.module.css';
 import { noticeDetail, noticeTitle, type FileNotice } from './fileNotice';
@@ -8,11 +9,12 @@ export interface FileNoteProps {
   notice: FileNotice;
   onDismiss: () => void;
   className?: string | undefined;
+  ref?: Ref<HTMLDivElement>;
 }
 
-export function FileNote({ notice, onDismiss, className }: FileNoteProps) {
+export function FileNote({ notice, onDismiss, className, ref }: FileNoteProps) {
   return (
-    <div role="alert" className={clsx(styles.note, 'fade-in', className)}>
+    <div ref={ref} role="alert" className={clsx(styles.note, 'fade-in', className)}>
       <Icon icon={CircleAlert} size={14} className={styles.icon} />
       <p className={styles.text}>
         <span className={styles.title}>{noticeTitle(notice)}</span>

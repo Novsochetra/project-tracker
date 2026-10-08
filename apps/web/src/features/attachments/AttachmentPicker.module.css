@@ -37,14 +37,19 @@
   margin-top: var(--space-2);
 }
 
+/* Brought into view with room to spare: it fades in from a little lower, and a phone's dismiss
+   target reaches past its top. */
 .note {
   flex: 1 0 100%;
-  margin-top: var(--space-2);
+  margin-bottom: var(--space-2);
+  scroll-margin: var(--space-4);
 }
 
 @media (max-width: 767px) {
-  /* Clear of the thumbnails above for the dismiss button's touch target. */
+  /* Clear of the field above for the dismiss button's touch target. Below, the grid's room for the
+     tiles' x is gap enough. */
   .note {
     margin-top: var(--space-3);
+    margin-bottom: 0;
   }
 }

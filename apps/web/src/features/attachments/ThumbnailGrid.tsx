@@ -9,6 +9,7 @@ import { thumbnailLabels } from './thumbnailLabels';
 import './tokens.css';
 import { UploadThumbnail } from './UploadThumbnail';
 import type { UploadingFile } from './useAttachmentUploads';
+import { useRemoveShield } from './useRemoveShield';
 
 export interface ThumbnailGridProps {
   attachments: readonly Attachment[];
@@ -38,8 +39,13 @@ export function ThumbnailGrid({
 }: ThumbnailGridProps) {
   const labels = thumbnailLabels(attachments);
   const removable = onRemove !== undefined || (onCancel !== undefined && uploading.length > 0);
+  const shield = useRemoveShield();
   return (
-    <div className={clsx(styles.grid, styles[size], removable && styles.removable, className)}>
+    <div
+      className={clsx(styles.grid, styles[size], removable && styles.removable, className)}
+      onMouseDownCapture={shield.guard}
+      onClickCapture={shield.guard}
+    >
       {attachments.map((attachment, index) => (
         <SavedThumbnail
           key={attachment.id}
@@ -47,14 +53,26 @@ export function ThumbnailGrid({
           label={labels[index] ?? attachment.fileName}
           marked={attachment.id === markedId}
           onOpen={onOpen && (() => onOpen(index))}
-          onRemove={onRemove && (() => onRemove(attachment.id, index))}
+          onRemove={
+            onRemove &&
+            (() => {
+              shield.removed();
+              onRemove(attachment.id, index);
+            })
+          }
         />
       ))}
       {uploading.map((file) => (
         <UploadThumbnail
           key={file.key}
           file={file}
-          onCancel={onCancel && (() => onCancel(file.key))}
+          onCancel={
+            onCancel &&
+            (() => {
+              shield.removed();
+              onCancel(file.key);
+            })
+          }
         />
       ))}
       {children}
