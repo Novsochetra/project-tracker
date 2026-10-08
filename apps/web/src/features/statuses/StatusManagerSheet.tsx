@@ -1,5 +1,6 @@
 import { sortStatuses, type ProjectBoard, type Status } from '@tracker/shared';
 import { Plus } from 'lucide-react';
+import { useInstantLayoutTransition } from 'motion/react';
 import { useState } from 'react';
 import { flushSync } from 'react-dom';
 import { errorMessage, useBoard, type TrackerQuery } from '../../api';
@@ -66,12 +67,16 @@ function StatusManagerBody({ projectKey, board, onDirtyChange }: StatusManagerBo
   const { addRef, rowRef, focusRow } = useRowFocus();
   const editingId = editing?.kind === 'edit' && byId.has(editing.id) ? editing.id : null;
   const adding = editing?.kind === 'new';
+  // Rows animate layout changes so reorders slide. An editor opening or closing isn't one, so
+  // the rows around it move at once instead of sliding over it.
+  const inPlace = useInstantLayoutTransition();
 
   // The editor replaces the row (or the Add button), so focus goes back once it is gone.
   const close = (update: () => void, focusId?: string) => {
-    flushSync(update);
+    flushSync(() => inPlace(update));
     focusRow(focusId);
   };
+  const open = (next: Editing) => inPlace(() => setEditing(next));
   const finish = (focusId?: string) => close(() => setEditing(null), focusId);
   const removed = (id: string) =>
     close(() => {
@@ -97,7 +102,7 @@ function StatusManagerBody({ projectKey, board, onDirtyChange }: StatusManagerBo
         counts={counts}
         editingId={editingId}
         dragDisabled={editing !== null}
-        onEdit={(id) => setEditing({ kind: 'edit', id })}
+        onEdit={(id) => open({ kind: 'edit', id })}
         renderEditor={editor}
         rowRef={rowRef}
       >
@@ -113,7 +118,7 @@ function StatusManagerBody({ projectKey, board, onDirtyChange }: StatusManagerBo
           ref={addRef}
           icon={Plus}
           className={styles.add}
-          onClick={() => setEditing({ kind: 'new' })}
+          onClick={() => open({ kind: 'new' })}
         >
           Add status
         </Button>

@@ -40,12 +40,16 @@ export function StatusList(props: StatusListProps) {
         Drag, or press the up and down arrow keys, to change the order.
       </span>
       <GroupedCard>
+        {/* Rows animate relative to the list: the phone sheet grows and shrinks upward with
+            its content, which would otherwise read as every row above the change moving. */}
         <Reorder.Group
           as="ul"
           axis="y"
           values={order.ids}
           onReorder={order.preview}
           className={styles.list}
+          layout
+          layoutRoot
         >
           {items.map((status) => (
             <StatusListRow

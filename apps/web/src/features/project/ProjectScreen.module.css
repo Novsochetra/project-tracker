@@ -89,6 +89,10 @@
   flex-grow: 1.35;
 }
 
+.sendShortLabel {
+  display: none;
+}
+
 @media (max-width: 767px) {
   .filters,
   .groups {
@@ -102,6 +106,22 @@
 
   .tools .viewSwitch {
     width: 132px;
+  }
+}
+
+/* Narrow phones such as 320 and 360: "Send open tickets" needs about 367px beside "Paste
+   report", and at 320 the search field's 160px minimum leaves the switch 120px. */
+@media (max-width: 374px) {
+  .tools .viewSwitch {
+    width: 120px;
+  }
+
+  .sendLabel {
+    display: none;
+  }
+
+  .sendShortLabel {
+    display: inline;
   }
 }
 

@@ -48,6 +48,65 @@
   white-space: nowrap;
 }
 
+/* The SPEC's ghost has no due date; only the phone row's second line shows one. */
+.row .due {
+  display: none;
+}
+
+@media (max-width: 767px) {
+  /* Mirrors the phone row: the title beside the avatar, then priority, key and due date. The
+     padding is 1px short of the row's on every side because the border sits inside the row's
+     width, so the title gets the row's column and breaks into the same lines. */
+  .row {
+    display: grid;
+    grid-template-columns: 20px auto auto minmax(0, 1fr) auto;
+    grid-template-areas:
+      'grip title title title assignee'
+      'grip priority key due assignee';
+    gap: 2px var(--space-3);
+    min-height: var(--row-height);
+    padding: 7px 15px 7px 7px;
+  }
+
+  .grip {
+    grid-area: grip;
+  }
+
+  .priority {
+    grid-area: priority;
+  }
+
+  .key {
+    grid-area: key;
+  }
+
+  .status {
+    display: none;
+  }
+
+  /* The row's regular weight: the SPEC's medium one wraps titles the row fits on a line. */
+  .title {
+    display: -webkit-box;
+    grid-area: title;
+    font-weight: var(--weight-regular);
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+    white-space: normal;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+  }
+
+  .row .due {
+    display: inline-flex;
+    grid-area: due;
+  }
+
+  .assignee {
+    grid-area: assignee;
+  }
+}
+
 :global(html[data-ticket-drag]),
 :global(html[data-ticket-drag] *) {
   cursor: grabbing !important;

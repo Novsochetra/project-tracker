@@ -50,10 +50,12 @@ export function ProjectBottomBar({ projectKey }: { projectKey: string }) {
         variant="primary"
         size="bar"
         icon={Terminal}
+        aria-label="Send open tickets"
         className={styles.barSend}
         onClick={() => sheets.open({ type: 'prompt', scope })}
       >
-        Send open tickets
+        <span className={styles.sendLabel}>Send open tickets</span>
+        <span className={styles.sendShortLabel}>Send all</span>
       </Button>
     </BottomBar>
   );
