@@ -5,7 +5,8 @@ interface Entry {
   path: string;
 }
 
-/** Mirrors the history entries seen in this session so back() knows what history.back() reveals. */
+// The browser doesn't list its history entries, so the ones seen in this session are mirrored
+// here for back() to know what history.back() reveals.
 export class SessionHistory {
   private entries: Entry[] = [];
   private index = -1;

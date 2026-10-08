@@ -18,7 +18,7 @@ export type TrackerApi = Pick<
   | 'fetchAttachmentText'
   | 'attachmentFileUrl'
 > & {
-  /** Set when requests carry TRACKER_TOKEN, which download links then need too. */
+  // Download links need the token too, so replies note it when requests carry one.
   readonly usesToken?: boolean;
 };
 

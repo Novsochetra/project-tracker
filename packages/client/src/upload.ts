@@ -1,6 +1,5 @@
 export interface UploadOptions {
-  /** Bytes of the file sent so far and in all. */
-  onProgress?: (sent: number, total: number) => void;
+  onProgress?: (sentBytes: number, totalBytes: number) => void;
   signal?: AbortSignal;
 }
 
@@ -41,7 +40,7 @@ export const canReportProgress = (): boolean => typeof requestClass() === 'funct
 
 const stopped = () => new DOMException('The upload was stopped.', 'AbortError');
 
-/** Posts a form with XMLHttpRequest, which, unlike fetch, reports how much of the body went out. */
+// XMLHttpRequest because, unlike fetch, it reports how much of the body went out.
 export function postWithProgress(
   url: string,
   headers: Headers,

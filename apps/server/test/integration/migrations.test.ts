@@ -7,11 +7,11 @@ import { migrateToLatest } from '../../src/db/migrator';
 import type { Db } from '../../src/db/schema';
 import { createBroadcaster } from '../../src/events/broadcaster';
 import { createMemoryStorage } from '../../src/storage/memoryStorage';
-import { clientFor, DIALECTS, openTestDatabase, type TestDialect } from '../helpers/server';
+import { clientFor, DIALECTS, openEmptyDatabase, type TestDialect } from '../helpers/server';
 
 // A database from before client ids, with a project and two tickets in it, like the real one.
 async function databaseWithTickets(dialect: TestDialect): Promise<Db> {
-  const db = openTestDatabase(dialect);
+  const db = openEmptyDatabase(dialect);
   const migrator = new Migrator({
     db: db.withoutPlugins(),
     provider: { getMigrations: () => Promise.resolve({ '0001_initial': initial }) },

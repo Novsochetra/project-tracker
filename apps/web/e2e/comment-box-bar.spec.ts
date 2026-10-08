@@ -31,7 +31,6 @@ async function openTicket(page: Page, api: Parameters<typeof seedProject>[0]) {
   await expect(commentButton(page)).toBeDisabled();
 }
 
-// Waits for the bar's slide and for the screen's scrolling to end.
 async function settle(page: Page) {
   await bar(page).evaluate((element) =>
     Promise.all(element.getAnimations().map((animation) => animation.finished)),
@@ -72,7 +71,6 @@ const hitAtCenter = (target: Locator) =>
 
 const scrollTop = (page: Page) => scroller(page).evaluate((element) => element.scrollTop);
 
-// From the bottom of the comment box to the top of the bar.
 const gapAboveBar = (page: Page) =>
   commentField(page).evaluate((field) => {
     const bar = document.querySelector('[data-bottom-bar]')!.getBoundingClientRect();

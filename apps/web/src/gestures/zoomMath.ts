@@ -5,7 +5,7 @@ export interface Size {
   height: number;
 }
 
-/** Scale and pan of a centred image; x and y are measured from the viewport centre. */
+// x and y are measured from the viewport centre, so a centred image has no pan.
 export interface ZoomState {
   scale: number;
   x: number;

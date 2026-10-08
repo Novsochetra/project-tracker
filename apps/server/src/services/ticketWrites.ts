@@ -67,7 +67,6 @@ export interface TicketWrite {
   actor: Actor;
   changes?: TicketChanges;
   entries?: readonly ActivityEntry[];
-  /** Fail instead of overwriting when another request moved the ticket since it was read. */
   guardStatus?: boolean;
 }
 

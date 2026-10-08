@@ -18,7 +18,6 @@ const isRangedFileAnswer = (response: Response): boolean =>
   /\/api\/attachments\/[^/]+\/file$/.test(new URL(response.url()).pathname) &&
   response.request().headers().range !== undefined;
 
-// A drag at a finger's pace from the middle of the screen, as a swipe down.
 async function swipeDown(page: Page): Promise<void> {
   const { width, height } = page.viewportSize() ?? { width: 375, height: 812 };
   await page.mouse.move(width / 2, height / 2);

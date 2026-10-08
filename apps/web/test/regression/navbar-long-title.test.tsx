@@ -37,7 +37,6 @@ function renderBar() {
   return { bar: back.closest('header')!, back, label: screen.getByText('Projects'), title };
 }
 
-// Splits a track list at its top-level spaces: "minmax(0, 1fr) auto" → ["minmax(0, 1fr)", "auto"].
 function tracks(list = ''): string[] {
   return list.match(/(?:[^\s(]+\([^)]*\)|[^\s()]+)/g) ?? [];
 }

@@ -36,7 +36,7 @@ export function webkitInsertText(field: HTMLTextAreaElement, text: string): void
   }
 }
 
-/** Gives jsdom the browser's insert command, which it lacks; returns the undo. */
+// jsdom lacks the browser's insert command.
 export function installExecCommand(): () => void {
   const execCommand = (command: string, _showUi?: boolean, text = ''): boolean => {
     const field = document.activeElement;

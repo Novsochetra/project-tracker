@@ -4,7 +4,6 @@ export type ToastKind = 'success' | 'error';
 
 export interface ToastOptions {
   kind?: ToastKind;
-  /** Offers Undo, which runs this once; the toast stays up longer to give time for it. */
   undo?: () => void;
 }
 
@@ -26,9 +25,7 @@ export interface ToastStore {
   subscribe: (listener: () => void) => () => void;
   getSnapshot: () => ToastState;
   show: (text: string, options?: ToastOptions) => void;
-  /** Runs the undo of the toast with this id, once, while that toast shows. */
   undo: (id: number) => void;
-  /** Keeps the toast with this id up while it is hovered or has focus. */
   hold: (id: number, held: boolean) => void;
   raise: () => () => void;
   dispose: () => void;

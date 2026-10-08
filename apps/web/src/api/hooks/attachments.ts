@@ -12,7 +12,6 @@ import type { TrackerMutation, TrackerQuery } from '../types';
 export interface UploadAttachmentVariables {
   file: File;
   ticketKey?: string | undefined;
-  /** The part of the file sent so far, from 0 to 1. */
   onProgress?: ((fraction: number) => void) | undefined;
   signal?: AbortSignal | undefined;
 }
@@ -61,7 +60,6 @@ export function useDeleteAttachment(): TrackerMutation<void, DeleteAttachmentVar
   });
 }
 
-/** A text attachment's content, read while attachmentId is set. */
 export function useAttachmentText(attachmentId: string | null): TrackerQuery<string> {
   const client = useApi();
   return useQuery({

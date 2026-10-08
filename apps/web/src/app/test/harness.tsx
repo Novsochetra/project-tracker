@@ -31,7 +31,6 @@ export interface HarnessOptions {
   sheets?: FakeSheets;
 }
 
-/** Renders `ui` with the API, toasts, a memory router, navigation and a spy for sheet requests. */
 export function renderWithApp(ui: ReactNode, options: HarnessOptions = {}) {
   const { path = '/', client = {}, projects, sheets = fakeSheets() } = options;
   const api = setupApi(client);

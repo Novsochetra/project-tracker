@@ -12,11 +12,9 @@ function focusLost(): boolean {
   return !active || active === document.body || active.closest('[inert]') !== null;
 }
 
-/**
- * After a navigation the old screen turns inert and takes focus with it. Coming back, return to
- * what was focused there (like VoiceOver returning to the tapped row); otherwise focus the screen.
- * Text fields are skipped so going back never pops the keyboard up.
- */
+// After a navigation the old screen turns inert and takes focus with it, so coming back returns
+// focus there, like VoiceOver returning to the tapped row. Never to a text field: going back would
+// pop the keyboard up.
 export function useLayerFocus(
   layerRef: RefObject<HTMLElement | null>,
   scrollRef: RefObject<HTMLElement | null>,

@@ -10,7 +10,6 @@ import { createReachability, watchApiTraffic, type Reachability } from './reacha
 
 const NETWORK_DOWN = new TypeError('Failed to fetch');
 const fromNetwork = () => new Response('[]');
-// What the service worker sends when it answers a read from its cache.
 const fromCache = () => new Response('[]', { headers: { [SAVED_ANSWER_HEADER]: '1' } });
 
 describe('signalOf', () => {

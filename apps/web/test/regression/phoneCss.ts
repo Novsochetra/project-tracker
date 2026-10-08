@@ -31,7 +31,6 @@ function rulesOf(css: string): Rule[] {
   return rules;
 }
 
-// Plain rules and the `max-width` queries a phone this wide falls under, such as the 767px one.
 function appliesAt(rule: Rule, width: number): boolean {
   const maxWidth = /^@media \(max-width: (\d+)px\)$/.exec(rule.media);
   return rule.media === '' || (maxWidth !== null && width <= Number(maxWidth[1]));
@@ -65,7 +64,7 @@ const styles = (selector: string, element: Element): boolean =>
   });
 
 // A small cascade is enough: CSS modules style elements with plain class rules, so the last
-// matching declaration at phone width wins. Values come back with tokens resolved.
+// matching declaration at phone width wins.
 export function phoneStyle(
   element: Element,
   cssModule: string,
@@ -98,7 +97,6 @@ export function phoneRule(
 
 export const pixels = (value: string | undefined): number => Number.parseFloat(value ?? '');
 
-// A box shorthand such as `inset` or `padding`, as [top, right, bottom, left] in pixels.
 export function edges(value: string | undefined): [number, number, number, number] {
   const [top = 0, right = top, bottom = top, left = right] = (value ?? '')
     .trim()

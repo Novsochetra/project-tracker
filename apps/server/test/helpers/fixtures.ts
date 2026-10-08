@@ -16,7 +16,7 @@ function pngChunk(type: string, data: Buffer): Buffer {
   return Buffer.concat([length, body, checksum]);
 }
 
-/** A valid RGB PNG of the given size, so image-size can read real dimensions. */
+// A valid PNG, so image-size reads real dimensions from it.
 export function pngBytes(width = 3, height = 2): Uint8Array {
   const header = Buffer.alloc(13);
   header.writeUInt32BE(width, 0);
@@ -41,7 +41,7 @@ export interface FileFormOptions {
   ticketKey?: string;
 }
 
-/** An upload form; an empty type reaches the server as application/octet-stream, as in browsers. */
+// An empty type reaches the server as application/octet-stream, as in browsers.
 export function fileForm(options: FileFormOptions = {}): FormData {
   const form = new FormData();
   const bytes = options.bytes ?? new TextEncoder().encode('hello');

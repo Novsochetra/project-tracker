@@ -11,7 +11,7 @@ export type AttachmentKind = keyof typeof ATTACHMENT_KINDS;
 
 interface AttachmentType {
   kind: AttachmentKind;
-  /** The first extension is the one stored files get. */
+  // The first extension is the one stored files get.
   extensions: readonly [string, ...string[]];
 }
 
@@ -56,10 +56,9 @@ export const MAX_ATTACHMENT_BYTES = Math.max(
   ...Object.values(ATTACHMENT_KINDS).map((kind) => kind.maxBytes),
 );
 
-/** How long an upload waits for a ticket or comment to use it before the server deletes it. */
 export const PENDING_ATTACHMENT_TTL_MS = 24 * 60 * 60 * 1000;
 
-/** For file inputs: every type and extension, since some systems give .log or .md no type. */
+// Extensions too, since some systems give .log or .md files no type.
 export const ATTACHMENT_ACCEPT = [
   ...Object.keys(ATTACHMENT_TYPES),
   ...[...TYPE_OF_EXTENSION.keys()].map((extension) => `.${extension}`),
@@ -87,13 +86,14 @@ export function typeFromFileName(fileName: string): AttachmentMimeType | null {
   return TYPE_OF_EXTENSION.get(extension) ?? null;
 }
 
-/** The allowed type of a file, or null. The browser's type wins, so an SVG named x.png stays out. */
+// The browser's type wins, so an SVG named x.png stays out.
 export function resolveAttachmentType(type: string, fileName: string): AttachmentMimeType | null {
   const declared = bareType(type);
   if (TYPES.has(declared)) return declared as AttachmentMimeType;
   return UNCLEAR_TYPES.has(declared) ? typeFromFileName(fileName) : null;
 }
 
+// `File` objects fit, so the web app checks them as they are.
 export interface FileFacts {
   type: string;
   name: string;
@@ -103,7 +103,6 @@ export interface FileFacts {
 export type AttachmentCheck =
   { ok: true; mimeType: AttachmentMimeType; kind: AttachmentKind } | { ok: false; message: string };
 
-/** Whether a file can be attached; `File` objects fit `FileFacts`. */
 export function checkAttachment(file: FileFacts): AttachmentCheck {
   const mimeType = resolveAttachmentType(file.type, file.name);
   if (!mimeType) return { ok: false, message: UNSUPPORTED_ATTACHMENT_MESSAGE };

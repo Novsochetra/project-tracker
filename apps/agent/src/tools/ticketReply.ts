@@ -15,7 +15,6 @@ async function fileView(client: TrackerApi, detail: TicketDetail): Promise<FileV
   };
 }
 
-/** The ticket in full for an agent: text files inline, links to other files, images to show. */
 export async function ticketReply(
   client: TrackerApi,
   detail: TicketDetail,

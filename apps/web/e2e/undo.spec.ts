@@ -18,7 +18,6 @@ async function swipeRight(row: Locator): Promise<void> {
   await row.dispatchEvent('pointerup', at(start + 300));
 }
 
-/** The keys in a status, in the order the tracker keeps them. */
 async function savedOrder(api: TrackerClient, statusName: string): Promise<string[]> {
   const board = await api.getBoard('MOB');
   const status = board.statuses.find((candidate) => candidate.name === statusName);

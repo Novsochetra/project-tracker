@@ -63,8 +63,7 @@ function subscribe(listener: () => void): () => void {
 
 const snapshot = (): boolean => isTouchDevice() && (held || isEditable(document.activeElement));
 
-/** On touch devices the on-screen keyboard is up while a text field has focus. */
+// On touch devices the on-screen keyboard is up while a text field has focus.
 export const useEditingText = (): boolean => useSyncExternalStore(subscribe, snapshot, () => false);
 
-/** The text field edited last, which the bottom bar keeps in sight when it comes back. */
 export const lastEditedField = (): HTMLElement | null => lastField;

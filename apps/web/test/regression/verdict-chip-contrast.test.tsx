@@ -8,7 +8,7 @@ import { contrast, mix, parseHex, WHITE } from '../../src/lib/contrast';
 const SRC = join(import.meta.dirname, '../../src');
 const TEAL = '#12A594';
 
-// The text color the chip's stylesheet ends up with: its own text color, else the status color.
+// Like the stylesheet: the chip's own text color, else the status color.
 function chipText(label: string): string {
   const chip = screen.getByText(label).closest<HTMLElement>('[style]')!;
   const own = chip.style.getPropertyValue('--verdict-text');

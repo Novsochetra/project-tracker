@@ -14,18 +14,14 @@ const FOLLOW_SENT_MS = 1000;
 
 type Plan = (box: Edges, view: Edges, barHeight: number) => number;
 
-/**
- * How far to scroll up so `box` ends 8px above a bar `barHeight` tall at the bottom of `view`.
- * A box taller than the room between `view`'s top and the bar stays where it is: its end would
- * only come up by pushing the part just edited off the top.
- */
+// A box taller than the room between `view`'s top and the bar stays where it is: its end would
+// only come up by pushing the part just edited off the top.
 export const scrollToClearBar: Plan = (box, view, barHeight) => {
   const limit = view.bottom - barHeight - GAP_ABOVE_BAR;
   const fits = box.bottom - box.top <= limit - view.top;
   return fits && box.bottom > limit ? Math.ceil(box.bottom - limit) : 0;
 };
 
-/** The same once editing ends, except for a field scrolled below the screen meanwhile. */
 export const scrollAfterEditing: Plan = (box, view, barHeight) =>
   box.top >= view.bottom ? 0 : scrollToClearBar(box, view, barHeight);
 
@@ -45,7 +41,6 @@ function keepInSight(box: HTMLElement, bar: HTMLElement, scroller: HTMLElement, 
 // A field's actions, such as the comment box's Comment button, sit in its form below it.
 const boxOf = (field: HTMLElement): HTMLElement => field.closest('form') ?? field;
 
-/** When the bar comes back after editing, the field that was edited ends up above it. */
 export function useKeepFieldInSight(
   bar: RefObject<HTMLElement | null>,
   scroller: RefObject<HTMLElement | null> | undefined,
@@ -70,9 +65,8 @@ export function useKeepFieldInSight(
   }, [bar, scroller, editing]);
 }
 
-// For a moment after it is sent, and until the user touches or scrolls the screen, `form` is kept
-// above the bar each time the content around it changes size, also when that pushed it below the
-// screen.
+// What the form sent lands above it and pushes it down, even below the screen. A touch or a
+// scroll ends the hold: the user has taken over.
 function holdInSight(form: HTMLElement, bar: HTMLElement, scroller: HTMLElement): () => void {
   if (typeof ResizeObserver === 'undefined') return () => undefined;
   const observer = new ResizeObserver(() => {
@@ -94,10 +88,7 @@ function holdInSight(form: HTMLElement, bar: HTMLElement, scroller: HTMLElement)
   return release;
 }
 
-/**
- * A form sent on the screen stays above the bar while what it sent lands above it, such as the new
- * comment above the comment box, also when the keyboard closed long before the send.
- */
+// Follows the send itself, since the keyboard may have closed long before it.
 export function useKeepSentFormInSight(
   bar: RefObject<HTMLElement | null>,
   scroller: RefObject<HTMLElement | null> | undefined,

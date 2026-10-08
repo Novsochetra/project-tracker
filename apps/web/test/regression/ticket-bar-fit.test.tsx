@@ -45,7 +45,6 @@ function renderBar(reviewed: boolean) {
 const shows = (element: Element, width: number) =>
   phoneStyle(element, SCREEN, width).get('display') !== 'none';
 
-// The text a button shows at `width`: every text in it that no hidden element holds.
 function visibleLabel(button: HTMLElement, width: number): string {
   const hidden = [...button.querySelectorAll('*')].filter((element) => !shows(element, width));
   const texts = document.createTreeWalker(button, NodeFilter.SHOW_TEXT);
@@ -56,7 +55,6 @@ function visibleLabel(button: HTMLElement, width: number): string {
   return label;
 }
 
-// A bar button's content: its padding, borders, icon, gap and visible label.
 function contentWidth(button: HTMLElement, width: number): number {
   const style = new Map([
     ...phoneStyle(button, BUTTON, width),

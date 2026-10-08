@@ -39,10 +39,8 @@ export function swallowTapClick(pointerId: number): void {
   window.addEventListener('pointercancel', onCancel, true);
 }
 
-/**
- * A mouse or pen drag that ends over its start element fires a click in the same task as the
- * pointerup; swallow only that one, so a quick genuine tap afterwards still works.
- */
+// A drag that ends over its start element fires a click in the same task as the pointerup;
+// only that one is swallowed, so a quick real tap right after still works.
 export function suppressNextClick(): void {
   const block = (event: MouseEvent) => {
     event.preventDefault();

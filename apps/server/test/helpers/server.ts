@@ -19,8 +19,7 @@ export type TestDialect = (typeof DIALECTS)[number];
 
 export const BASE_URL = 'http://tracker.test';
 
-/** An empty database without any tables. */
-export const openTestDatabase = (dialect: TestDialect): Db =>
+export const openEmptyDatabase = (dialect: TestDialect): Db =>
   dialect === 'sqlite'
     ? createDatabase(':memory:')
     : createKysely(
@@ -28,7 +27,7 @@ export const openTestDatabase = (dialect: TestDialect): Db =>
       );
 
 export async function createTestDatabase(dialect: TestDialect): Promise<Db> {
-  const db = openTestDatabase(dialect);
+  const db = openEmptyDatabase(dialect);
   await migrateToLatest(db);
   return db;
 }

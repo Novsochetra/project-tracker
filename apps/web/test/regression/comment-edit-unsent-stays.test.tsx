@@ -31,7 +31,6 @@ function open(server: FakeTicketServer, options: RenderTicketOptions = {}) {
   return rendered;
 }
 
-// Opens the comment's editor, types and leaves the ticket without Save or Cancel.
 async function typeAnEditAndLeave() {
   const user = userEvent.setup();
   const server = fakeTicketServer(
@@ -46,7 +45,7 @@ async function typeAnEditAndLeave() {
   return { user, server };
 }
 
-// Lets the app-wide sync run and whatever it starts settle; requests answer within 5 ms.
+// Requests answer within 5 ms, so 50 ms lets the sync and whatever it starts settle.
 async function letDraftsSync() {
   act(() => {
     window.dispatchEvent(new Event('online'));

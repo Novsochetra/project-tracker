@@ -33,8 +33,7 @@ function trimLink(candidate: string): string {
   return candidate.slice(0, end);
 }
 
-// Splits plain text into text and http(s) links, so the text can be shown as React nodes and
-// never becomes markup.
+// Parts rather than HTML, so the text is shown as React nodes and never becomes markup.
 export function linkParts(text: string): LinkPart[] {
   const parts: LinkPart[] = [];
   let start = 0;

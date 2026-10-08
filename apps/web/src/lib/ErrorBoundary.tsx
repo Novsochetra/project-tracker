@@ -1,7 +1,6 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react';
 
 export interface ErrorBoundaryProps {
-  /** Names what failed in the console, such as "Activity item c1". */
   name: string;
   fallback: ReactNode;
   children: ReactNode;

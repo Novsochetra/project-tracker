@@ -51,8 +51,6 @@ function openOnSlowConnection() {
   return { server, updateTicket, rendered, release };
 }
 
-// Types " now" and " please", each sent by an autosave that is still on its way, then deletes
-// " please" again.
 async function typeAndUndo(updateTicket: ReturnType<typeof vi.fn>) {
   const user = userEvent.setup();
   const field = screen.getByLabelText('Description');

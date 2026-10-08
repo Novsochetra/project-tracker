@@ -1,4 +1,4 @@
-/** Inclusive byte positions, like an HTTP range. */
+// Both ends inclusive, like an HTTP range.
 export interface ByteRange {
   start: number;
   end: number;

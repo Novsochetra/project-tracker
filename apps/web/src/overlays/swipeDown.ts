@@ -18,11 +18,8 @@ export interface SwipeDown {
   up: (event: PointerEvent) => void;
 }
 
-/**
- * Swipe down to close, for a viewer whose content handles its own touches, like a video's native
- * controls: it takes a drag only once the drag is clearly downward, so taps and sideways scrubs
- * reach the content untouched.
- */
+// For a viewer whose content handles its own touches, like a video's native controls: a drag is
+// taken only once it is clearly downward, so taps and sideways scrubs reach the content untouched.
 export function createSwipeDown(read: () => SwipeDownContext): SwipeDown {
   const tracker = new VelocityTracker();
   let pointerId: number | null = null;

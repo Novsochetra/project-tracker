@@ -9,7 +9,6 @@ function removeTarget() {
   const x = phoneRule(MODULE, '.remove');
   const [top, right, bottom, left] = edges(phoneRule(MODULE, '.remove::before').get('inset'));
   const size = { width: pixels(x.get('width')), height: pixels(x.get('height')) };
-  // How far the x sits outside its thumbnail's top-right corner.
   const overhang = { top: -pixels(x.get('top')), right: -pixels(x.get('right')) };
   return {
     width: size.width - left - right,

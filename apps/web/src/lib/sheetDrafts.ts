@@ -1,7 +1,6 @@
 import { draftStorage } from './draftStorage';
 
-// The fields of a sheet that sends nothing until its button is pressed, such as New ticket.
-// The sheet reads them back itself, so here they are any object.
+// A sheet such as New ticket reads its fields back itself, so here they are any object.
 export type SheetValues = Readonly<Record<string, unknown>>;
 
 export const SHEET_DRAFTS_STORAGE_KEY = 'tracker.sheetDrafts';

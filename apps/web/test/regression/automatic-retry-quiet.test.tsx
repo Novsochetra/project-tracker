@@ -18,7 +18,7 @@ afterEach(() => {
   cleanups.forEach((undo) => undo());
 });
 
-// Counts the toasts that appear with this text; each toast is a new element.
+// Each toast is a new element, so counting added nodes counts toasts.
 function countToasts(text: string): () => number {
   let count = 0;
   const observer = new MutationObserver((records) => {

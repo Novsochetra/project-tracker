@@ -58,7 +58,6 @@ describe('regression: two tabs without Web Locks sync the same capture at once',
     expect(navigator.locks).toBeUndefined();
     window.localStorage.setItem(QUEUE_STORAGE_KEY, WAITING);
     const { tracker, createTicket } = renderTab();
-    // The first tab sends the capture.
     expect(await screen.findByText('1 ticket added')).toBeInTheDocument();
 
     // The second tab read the lease and the queue before the first tab's writes reached it.

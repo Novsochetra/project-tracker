@@ -95,10 +95,7 @@ export function momentumDuration(distance: number, settings: MomentumSettings): 
   return Math.min(settings.maxMs, Math.max(settings.minMs, ideal));
 }
 
-/**
- * Finishes a released drag so the motion carries on at the finger's speed without a jump and
- * still ends at a known time (a spring's long tail would delay what comes after it).
- */
+// Not a spring: a spring's long tail would delay what comes after the release.
 export function momentum(
   value: MotionValue<number>,
   to: number,

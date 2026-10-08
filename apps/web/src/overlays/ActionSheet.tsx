@@ -109,7 +109,7 @@ function ActionSheetPanel(props: ActionSheetProps & { onExited: () => void }) {
   );
 }
 
-/** Phone menu sheet. Selecting an action does not close it: call `onClose` or swap the actions. */
+// Selecting an action leaves the sheet open, so the owner can swap the actions or close it.
 export function ActionSheet(props: ActionSheetProps) {
   const { mounted, onExited } = usePresence(props.open);
   if (!mounted) return null;

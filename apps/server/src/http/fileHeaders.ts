@@ -14,7 +14,7 @@ const percentEncode = (value: string): string =>
     (char) => `%${char.charCodeAt(0).toString(16).toUpperCase()}`,
   );
 
-/** RFC 6266 with an RFC 5987 `filename*`, and a plain ASCII `filename` for old clients. */
+// RFC 6266 with an RFC 5987 `filename*`, and a plain ASCII `filename` for old clients.
 export function contentDisposition(fileName: string): string {
   const name = fileName.replace(LONE_SURROGATE, '\uFFFD');
   const fallback = name.replace(NOT_PLAIN_ASCII, '_');

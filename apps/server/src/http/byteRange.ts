@@ -7,10 +7,8 @@ function suffixRange(length: number, size: number): ByteRange | 'unsatisfiable' 
   return { start: Math.max(0, size - length), end: size - 1 };
 }
 
-/**
- * The part of a file a `Range` header asks for. Null means send the whole file: RFC 9110 lets a
- * server ignore ranges it doesn't serve, and players only ask for one range at a time.
- */
+// Null sends the whole file: RFC 9110 lets a server ignore ranges it doesn't serve, and players
+// only ask for one range at a time.
 export function parseByteRange(
   header: string | undefined,
   size: number,

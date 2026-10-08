@@ -17,7 +17,6 @@ import { skipAnimations } from '../../src/overlays/testing';
 // a reload, while the server was down, and quick capture started syncing again.
 
 const SAVED_DATA_MESSAGE = 'Offline — showing saved data';
-// What the service worker adds to an answer it took from its cache.
 const SAVED_ANSWER_HEADER = 'x-tracker-saved';
 const OPEN_SESSION: SessionState = { authRequired: false, authenticated: true };
 const ANSWERS: Record<string, unknown> = {

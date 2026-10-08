@@ -13,7 +13,6 @@ const showBoard = async (page: Page): Promise<void> => {
 const board = (page: Page) => page.locator('[data-board]');
 const pager = (page: Page) => page.locator('[data-board-pager]');
 
-/** How far the column at `index` starts from the board's left edge. */
 const columnOffset = (page: Page, index: number) =>
   board(page).evaluate((element, at) => {
     const column = element.querySelectorAll('[data-drop-group]')[at];

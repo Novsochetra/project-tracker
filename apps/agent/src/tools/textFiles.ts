@@ -28,7 +28,6 @@ async function loadText(client: TrackerApi, file: Attachment, room: number): Pro
   }
 }
 
-/** Reads the text files in order until TEXT_BUDGET_CHARS are shown; the rest are only linked. */
 export async function loadTextFiles(
   client: TrackerApi,
   files: readonly Attachment[],

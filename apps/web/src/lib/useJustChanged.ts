@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 
-/** True from the render where `value` changes until `ms` later; false on the first render. */
 export function useJustChanged(value: unknown, ms: number): boolean {
   const [seen, setSeen] = useState(value);
   const [changed, setChanged] = useState(false);

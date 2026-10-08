@@ -20,7 +20,6 @@ async function prepareImage(file: File): Promise<PreparedUpload> {
   return prepared;
 }
 
-/** Photos are scaled down and converted first; every other file goes as it is. */
 export async function prepareUpload(file: File): Promise<PreparedUpload> {
   const type = resolveAttachmentType(file.type, file.name);
   if (type && attachmentKind(type) === 'image') return prepareImage(file);

@@ -29,7 +29,6 @@ const NUMBER = new Intl.NumberFormat('en-US');
 
 const SKIPPED_NOTE = `(not shown: the ${NUMBER.format(TEXT_BUDGET_CHARS)}-character limit for text files is used up)`;
 
-/** Every attachment once: the ticket's own first, then each comment's, oldest comment first. */
 export function ticketFiles(detail: TicketDetail): Attachment[] {
   const candidates = [
     ...detail.attachments.filter((file) => file.activityId === null),
@@ -81,7 +80,6 @@ function contentsOf(file: Attachment, view: FileView): string | null {
   return `${block}\n(Cut after ${shown} characters. The whole file: ${view.fileUrl(file)})`;
 }
 
-/** One line per file, then the contents of each text file shown inline. */
 export function formatAttachments(files: readonly Attachment[], view: FileView): string[] {
   const list = files.map((file) => `- ${describeAttachment(file, view)}`);
   const contents = files.flatMap((file) => {

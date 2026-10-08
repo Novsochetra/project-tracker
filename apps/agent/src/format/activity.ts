@@ -1,11 +1,6 @@
-import type { Activity, Review, ReviewVerdict } from '@tracker/shared';
+import { VERDICT_LABELS, type Activity, type Review } from '@tracker/shared';
 import { formatAttachments, NO_FILE_CONTENT, type FileView } from './attachments';
 import { authorName, formatTime, SEP } from './text';
-
-const VERDICT_LABELS: Record<ReviewVerdict, string> = {
-  approved: 'Approved',
-  changes_requested: 'Changes requested',
-};
 
 export const formatVerdict = (review: Review): string =>
   `${VERDICT_LABELS[review.verdict]}${SEP}★ ${review.rating}/5`;

@@ -25,7 +25,7 @@ function readInset(): number {
 
 const readHeight = (): number => Math.round(window.visualViewport?.height ?? window.innerHeight);
 
-/** iOS keeps the layout viewport behind the keyboard, so fixed sheets must lift themselves. */
+// iOS keeps the layout viewport behind the keyboard, so fixed sheets must lift themselves.
 export function useKeyboardInset(): KeyboardInset {
   const inset = useSyncExternalStore(subscribe, readInset, () => 0);
   const viewportHeight = useSyncExternalStore(subscribe, readHeight, () => 0);

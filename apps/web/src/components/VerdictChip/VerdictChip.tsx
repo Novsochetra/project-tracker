@@ -10,7 +10,7 @@ export interface VerdictChipProps {
   verdict: ReviewVerdict;
   // The Reviewed status color, so an approval looks like where it moved the ticket.
   approvedColor?: string | undefined;
-  // For a ticket row's narrow line: below 1024px only the icon shows.
+  // A ticket row's line is narrow, so there only the icon shows below 1024px.
   compact?: boolean;
   className?: string | undefined;
 }

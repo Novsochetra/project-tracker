@@ -14,7 +14,6 @@ const ticket = (id: string, statusId: string, rank: number, num: number): Placea
   num,
 });
 
-// To do: A, B, C · Doing: D, E · Done: empty
 const board: Placeable[] = [
   ticket('A', 'todo', 0, 1),
   ticket('B', 'todo', 1000, 2),

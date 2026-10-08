@@ -5,7 +5,6 @@ export type DraftField = 'title' | 'description' | 'assignee' | 'comment' | 'com
 export interface DraftTarget {
   ticketKey: string;
   field: DraftField;
-  // The comment being edited, for comment-edit drafts.
   activityId?: string;
 }
 

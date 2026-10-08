@@ -6,7 +6,7 @@ import { assertMayEnter, eventEntry, writeTicket } from './ticketWrites';
 
 export interface GroupMove {
   from: StatusRow;
-  /** Only asked when the group has tickets, so an empty status needs no target. */
+  // Only asked when the group has tickets, so an empty status needs no target.
   to: () => StatusRow;
 }
 

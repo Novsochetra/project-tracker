@@ -5,8 +5,11 @@ import reactHooks from 'eslint-plugin-react-hooks';
 import reactRefresh from 'eslint-plugin-react-refresh';
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
+import noJsdocBlocks from './eslint/no-jsdoc-blocks.js';
 
 const testFiles = ['**/*.test.{ts,tsx}', '**/test/**/*.{ts,tsx}', '**/e2e/**/*.{ts,tsx}'];
+
+const local = { rules: { 'no-jsdoc-blocks': noJsdocBlocks } };
 
 export default tseslint.config(
   {
@@ -74,6 +77,12 @@ export default tseslint.config(
       'react-hooks/exhaustive-deps': 'error',
       'react-refresh/only-export-components': ['error', { allowConstantExport: true }],
     },
+  },
+  {
+    files: ['apps/*/src/**/*.{ts,tsx}', 'packages/*/src/**/*.{ts,tsx}'],
+    ignores: testFiles,
+    plugins: { local },
+    rules: { 'local/no-jsdoc-blocks': 'error' },
   },
   {
     files: ['apps/agent/src/cli.ts', 'apps/agent/src/cli/**/*.ts', 'apps/server/src/main.ts'],

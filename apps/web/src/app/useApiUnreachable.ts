@@ -4,7 +4,7 @@ import { lastAnswerWasSaved, subscribeSavedAnswers, watchSavedAnswers } from '..
 import { createReachability, watchApiTraffic, type Reachability } from './reachability';
 import { useOnline } from './useOnline';
 
-/** One store for the app, watching every request; the banner and capture sync both follow it. */
+// Called once for the app, so the banner and capture sync follow the same store.
 export function useReachability(): Reachability {
   const queryClient = useQueryClient();
   const [reachability] = useState(createReachability);

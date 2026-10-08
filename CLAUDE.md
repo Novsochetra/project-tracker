@@ -27,6 +27,7 @@ npm run test:e2e:clean  # the same on a clean copy of HEAD; E2E_API_PORT/E2E_WEB
 
 - Simplest solution that works. Small files and functions with one job each. Lint enforces size and complexity limits; split code instead of raising limits.
 - No comments that say what code does. Only write a comment to explain **why** something non-obvious is done.
+- Lint enforces this for `/** */` blocks in app and package source (`local/no-jsdoc-blocks` in `eslint.config.js`): write a why as a short `//` comment.
 - No `TODO`/`FIXME` comments. Put follow-up work in the tracker as a ticket instead.
 - Put logic in plain functions with unit tests. Components and route handlers stay thin.
 - All colors, type, radii, shadows and motion come from `apps/web/src/design/tokens.css`. No raw hex values in components.

@@ -5,8 +5,7 @@ import styles from './ScreenError.module.css';
 
 const reload = () => window.location.reload();
 
-// Takes the place of a screen that failed to render. The stack around it is untouched, so Back
-// and the edge swipe still leave it.
+// The stack around a failed screen is untouched, so Back and the edge swipe still leave it.
 export function ScreenError() {
   const { canGoBack, back } = useNavigation();
   return (

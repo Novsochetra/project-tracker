@@ -55,7 +55,6 @@ function sourceFiles(dir: string): string[] {
   });
 }
 
-// The text of each `show(…)` call, up to its closing parenthesis.
 function showCalls(code: string): string[] {
   return [...code.matchAll(/\bshow\(/g)].map(({ index }) => {
     let depth = 0;
