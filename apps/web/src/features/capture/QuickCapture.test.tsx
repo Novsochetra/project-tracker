@@ -156,9 +156,7 @@ describe('QuickCapture sync', () => {
     const refused = new ApiError(404, 'not_found', 'Project OLD was not found.');
     renderQuickCapture({ createTicket: vi.fn().mockRejectedValue(refused) });
 
-    expect(
-      await screen.findByText("Couldn't add “Lost idea”. Project OLD was not found."),
-    ).toBeInTheDocument();
+    expect(await screen.findByText("Couldn't add “Lost idea”")).toBeInTheDocument();
     expect(readQueue().items).toEqual([]);
   });
 });

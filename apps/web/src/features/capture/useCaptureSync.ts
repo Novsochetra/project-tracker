@@ -5,10 +5,11 @@ import { queryKeys, useApi } from '../../api';
 import type { Reachability } from '../../app/reachability';
 import { useToast, type ToastApi } from '../../components';
 import { addedToast, createInputOf, droppedToast } from './captureForm';
+import { matchesCapture, searchTextFor } from './captureLookup';
 import type { QueuedCapture } from './captureQueue';
 import { queueStore } from './queueStore';
-import { matchesCapture, syncCaptures, type SyncReport } from './syncCaptures';
-import { capturesSending, runCaptureSync } from './syncRunner';
+import { syncCaptures, type SyncReport } from './syncCaptures';
+import { claimCapture, runCaptureSync } from './syncRunner';
 
 // Through the mutation cache, so an app update waits for the write and reachability hears of it.
 // No refetch after a failure: a cached answer from the service worker would count as reachable
@@ -19,12 +20,13 @@ const sendWith = (queryClient: QueryClient, client: TrackerClient) => (capture: 
   }).mutate();
 
 const existsWith = (client: TrackerClient) => async (capture: QueuedCapture) => {
-  const tickets = await client.listTickets(capture.projectKey, { q: capture.title });
+  const q = searchTextFor(capture.title);
+  const tickets = await client.listTickets(capture.projectKey, { q });
   return tickets.some((ticket) => matchesCapture(ticket, capture));
 };
 
 function refreshAfter(queryClient: QueryClient, report: SyncReport): void {
-  const settled = [...report.added, ...report.dropped.map(({ capture }) => capture)];
+  const settled = [...report.added, ...report.dropped];
   if (settled.length === 0) return;
   void queryClient.invalidateQueries({ queryKey: queryKeys.projects(), exact: true });
   for (const projectKey of new Set(settled.map((capture) => capture.projectKey))) {
@@ -34,11 +36,11 @@ function refreshAfter(queryClient: QueryClient, report: SyncReport): void {
 
 function announce(report: SyncReport, show: ToastApi['show']): void {
   const [dropped] = report.dropped;
-  if (dropped) show(droppedToast(dropped.capture.title, dropped.message));
+  if (dropped) show(droppedToast(dropped.title));
   else if (report.added.length > 0) show(addedToast(report.added.length));
 }
 
-/** Sends the captures waiting on this device; calls while one runs join it. */
+// Sends the captures waiting on this device; calls while one runs join it.
 function useSyncCaptures(): () => Promise<void> {
   const client = useApi();
   const queryClient = useQueryClient();
@@ -50,7 +52,7 @@ function useSyncCaptures(): () => Promise<void> {
         queue: queueStore,
         send: sendWith(queryClient, client),
         exists: existsWith(client),
-        busy: capturesSending,
+        claim: claimCapture,
       });
       refreshAfter(queryClient, report);
       announce(report, show);
@@ -71,7 +73,7 @@ function onReturn(sync: () => void): () => void {
   };
 }
 
-/** Syncs on start, when the tracker can be reached again, and when the device or app returns. */
+// Syncs on start, when the tracker can be reached again, and when the device or app returns.
 export function useCaptureSync(reachability: Reachability): void {
   const runSync = useSyncCaptures();
   useEffect(() => {

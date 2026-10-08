@@ -12,7 +12,7 @@ const NON_TEXT_INPUTS = new Set([
   'submit',
 ]);
 
-/** Fields where a typed letter is text: inputs, textareas, selects and editable content. */
+// Fields where a typed letter is text: inputs, textareas, selects and editable content.
 export function isTypingTarget(element: Element | null): boolean {
   if (!(element instanceof HTMLElement)) return false;
   if (element.isContentEditable) return true;
@@ -25,12 +25,25 @@ export type ShortcutKey = Pick<
   'key' | 'ctrlKey' | 'metaKey' | 'altKey' | 'repeat' | 'isComposing' | 'defaultPrevented'
 >;
 
-/** C, with no modifier, while no text field has focus. */
+// C, with no modifier, while no text field has focus.
 export function isCaptureShortcut(event: ShortcutKey, focused: Element | null): boolean {
   if (event.defaultPrevented || event.repeat || event.isComposing) return false;
   if (event.ctrlKey || event.metaKey || event.altKey) return false;
   return event.key.toLowerCase() === 'c' && !isTypingTarget(focused);
 }
+
+// Sheets, action sheets and the image viewer are modal; dropdowns are listboxes. Popover menus
+// leave focus on their trigger, so only their invisible "Close menu" layer shows they are open,
+// and that layer would also take the next click, even one meant for the capture sheet.
+const OPEN_OVERLAY = [
+  '[aria-modal="true"]',
+  '[role="listbox"]',
+  '[role="menu"]',
+  'button[aria-label="Close menu"]',
+].join(', ');
+
+export const hasOpenOverlay = (root: ParentNode): boolean =>
+  root.querySelector(OPEN_OVERLAY) !== null;
 
 export const asksForCapture = (search: string): boolean =>
   new URLSearchParams(search).has(CAPTURE_PARAM);

@@ -1,16 +1,19 @@
 import { useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router';
-import { asksForCapture, isCaptureShortcut, withoutCaptureParam } from './captureTriggers';
+import {
+  asksForCapture,
+  hasOpenOverlay,
+  isCaptureShortcut,
+  withoutCaptureParam,
+} from './captureTriggers';
 
-const OPEN_OVERLAY = '[aria-modal="true"], [role="listbox"]';
-
-/** C opens quick capture from anywhere, unless a text field, sheet or menu has the keyboard. */
+// C opens quick capture from anywhere, unless a text field, sheet or menu has the keyboard.
 export function useCaptureShortcut(openCapture: () => void, enabled: boolean): void {
   useEffect(() => {
     if (!enabled) return;
     const onKeyDown = (event: KeyboardEvent) => {
       if (!isCaptureShortcut(event, document.activeElement)) return;
-      if (document.querySelector(OPEN_OVERLAY)) return;
+      if (hasOpenOverlay(document)) return;
       // Otherwise the letter lands in the title field, which has focus by the time it is typed.
       event.preventDefault();
       openCapture();
@@ -20,7 +23,7 @@ export function useCaptureShortcut(openCapture: () => void, enabled: boolean): v
   }, [openCapture, enabled]);
 }
 
-/** `?capture` (the app shortcut's link) opens quick capture once, then leaves the address clean. */
+// `?capture` (the app shortcut's link) opens quick capture once, then leaves the address clean.
 export function useCaptureLink(openCapture: () => void): void {
   const { key, pathname, search, hash } = useLocation();
   const navigate = useNavigate();

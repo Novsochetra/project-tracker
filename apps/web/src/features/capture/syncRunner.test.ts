@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { deferred } from '../../api/test/deferred';
 import type { SyncReport } from './syncCaptures';
-import { capturesSending, runCaptureSync, trackSending } from './syncRunner';
+import { claimCapture, runCaptureSync, trackSending } from './syncRunner';
 
 const REPORT: SyncReport = { added: [], dropped: [], stopped: false };
 
@@ -29,10 +29,12 @@ describe('runCaptureSync', () => {
 });
 
 describe('trackSending', () => {
-  it('lists captures while their request is out', () => {
+  it('keeps syncs from claiming a capture while its request is out', async () => {
     const untrack = trackSending('a');
-    expect(capturesSending().has('a')).toBe(true);
+    await expect(claimCapture('a')).resolves.toBeNull();
     untrack();
-    expect(capturesSending().has('a')).toBe(false);
+    const claimed = await claimCapture('a');
+    expect(claimed).toBeTypeOf('function');
+    claimed?.();
   });
 });

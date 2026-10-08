@@ -3,6 +3,7 @@ import {
   addCapture,
   dropCapture,
   EMPTY_QUEUE,
+  findWaiting,
   markAttempted,
   markCreated,
   nextCapture,
@@ -53,6 +54,16 @@ describe('capture queue', () => {
     const queue = { items: [capture('a', 1), capture('b', 2)], created: ['a'] };
     expect(nextCapture(queue, NONE)?.id).toBe('b');
     expect(waitingCount(queue)).toBe(1);
+  });
+
+  it('finds a capture by id only while it still waits', () => {
+    const queue = {
+      items: [capture('a', 1), capture('b', 2, { attempted: true })],
+      created: ['a'],
+    };
+    expect(findWaiting(queue, 'b')).toEqual(capture('b', 2, { attempted: true }));
+    expect(findWaiting(queue, 'a')).toBeUndefined();
+    expect(findWaiting(queue, 'gone')).toBeUndefined();
   });
 
   it('marks a capture as attempted without touching the others', () => {

@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState, type RefObject } from 'react';
 import type { SheetProps } from '../../app/sheets/types';
 import { clearDraft, markDraft } from '../../lib/drafts';
-import { Sheet, SheetActionButton, SheetTextButton } from '../../overlays';
+import { Sheet, SheetActionButton, SheetCancelButton } from '../../overlays';
 import { DropOverlay, useImageDrop } from '../attachments';
 import { BLANK_CAPTURE, CAPTURE_DRAFT_ID, hasContent, type CaptureValues } from './captureForm';
 import { CaptureDetails, CaptureText } from './CaptureFields';
@@ -27,7 +27,7 @@ function useCaptureDraft(active: boolean): void {
   }, [active]);
 }
 
-/** Quick capture: a title is enough; the project defaults to the last one used. */
+// Quick capture: a title is enough; the project defaults to the last one used.
 export function CaptureSheet({ open, onClose }: SheetProps) {
   const titleRef = useRef<HTMLInputElement>(null);
   const [values, setValues] = useState<CaptureValues>(BLANK_CAPTURE);
@@ -41,8 +41,10 @@ export function CaptureSheet({ open, onClose }: SheetProps) {
     onDone: onClose,
   });
   const drop = useImageDrop(photos.add);
+  // A photo still uploading counts too: the person chose it.
+  const dirty = hasContent(values, photos.items.length + photos.uploading);
   useFocusWhenOpen(titleRef, open);
-  useCaptureDraft(open && hasContent(values, photos.items.length));
+  useCaptureDraft(open && dirty);
   const update = (patch: Partial<CaptureValues>) => {
     setValues((current) => ({ ...current, ...patch }));
     flow.clearError();
@@ -57,7 +59,8 @@ export function CaptureSheet({ open, onClose }: SheetProps) {
       onClose={onClose}
       label="New ticket"
       title="New ticket"
-      left={<SheetTextButton onClick={onClose}>Cancel</SheetTextButton>}
+      dirty={dirty}
+      left={<SheetCancelButton />}
       right={
         <SheetActionButton type="submit" disabled={!flow.canSubmit}>
           Create

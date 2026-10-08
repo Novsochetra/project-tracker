@@ -15,11 +15,11 @@ export type SubmitOutcome =
 
 export interface SubmitDeps {
   create: (draft: CaptureDraft) => Promise<Ticket>;
-  /** Puts the capture in the queue on this device; false when storage refused it. */
+  // Puts the capture in the queue on this device; false when storage refused it.
   save: (capture: QueuedCapture) => boolean;
-  /** Marks the capture as being sent and returns the function that unmarks it. */
+  // Marks the capture as being sent, in every tab, and returns the function that unmarks it.
   track: (id: string) => () => void;
-  /** A request that outlived the timeout settled: its ticket, or null when it failed. */
+  // A request that outlived the timeout settled: its ticket, or null when it failed.
   onLateResult: (capture: QueuedCapture, ticket: Ticket | null) => void;
   timeoutMs: number;
   isOffline: () => boolean;
@@ -67,18 +67,20 @@ async function keepSending(
     untrack();
     return afterSettled(draft, settled, deps);
   }
+  // Unmarked only once the result is recorded, so no tab sends the queued copy in between.
   void settle(request).then((settled) => {
-    untrack();
-    deps.onLateResult(capture, settled.kind === 'created' ? settled.ticket : null);
+    try {
+      deps.onLateResult(capture, settled.kind === 'created' ? settled.ticket : null);
+    } finally {
+      untrack();
+    }
   });
   return { kind: 'saved' };
 }
 
-/**
- * Creates the ticket. When the tracker can't be reached, or doesn't answer in time, a text-only
- * capture waits in the queue on this device instead; the slow request may still land, and then
- * the queued copy is marked created rather than sent again.
- */
+// When the tracker can't be reached, or doesn't answer in time, a text-only capture waits in the
+// queue on this device; a slow request may still land, and then the queued copy is marked created
+// rather than sent again.
 export async function submitCapture(draft: CaptureDraft, deps: SubmitDeps): Promise<SubmitOutcome> {
   const untrack = deps.track(draft.capture.id);
   const request = deps.create(draft);

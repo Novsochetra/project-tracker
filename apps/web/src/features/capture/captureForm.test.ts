@@ -41,9 +41,14 @@ describe('capture form', () => {
   it('counts tickets added in words', () => {
     expect(addedToast(1)).toBe('1 ticket added');
     expect(addedToast(3)).toBe('3 tickets added');
-    expect(droppedToast('Idea', 'Project OLD was not found.')).toBe(
-      "Couldn't add “Idea”. Project OLD was not found.",
+  });
+
+  it('names a dropped capture in one short line, clipping a long title', () => {
+    expect(droppedToast('Idea')).toBe("Couldn't add “Idea”");
+    expect(droppedToast('Fix the login button on the iPad')).toBe(
+      "Couldn't add “Fix the login button on…”",
     );
+    expect(droppedToast('x'.repeat(300))).toHaveLength(39);
   });
 
   it('has content once anything is typed or attached', () => {

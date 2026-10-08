@@ -1,5 +1,6 @@
 import { createTicketInput, type CreateTicketInput, type Priority } from '@tracker/shared';
 import type { QueuedCapture } from './captureQueue';
+import { clipTitle } from './clipTitle';
 
 export interface CaptureValues {
   title: string;
@@ -10,8 +11,10 @@ export interface CaptureValues {
 export const BLANK_CAPTURE: CaptureValues = { title: '', description: '', priority: 'medium' };
 
 export const CAPTURE_DRAFT_ID = 'capture';
-/** Long enough for a slow but working connection; after it the capture waits on the phone. */
+// Long enough for a slow but working connection; after it the capture waits on the phone.
 export const CAPTURE_TIMEOUT_MS = 8_000;
+// Toasts stay on one line (SPEC §5.6); with the title clipped to this width one fits at 375px.
+const DROPPED_TITLE_WIDTH = 24;
 
 export const TITLE_MAX_LENGTH = createTicketInput.shape.title.maxLength ?? undefined;
 export const DESCRIPTION_MAX_LENGTH =
@@ -28,8 +31,8 @@ export const createdToast = (ticketKey: string): string => `${ticketKey} created
 export const addedToast = (count: number): string =>
   `${count} ${count === 1 ? 'ticket' : 'tickets'} added`;
 
-export const droppedToast = (title: string, reason: string): string =>
-  `Couldn't add “${title}”. ${reason}`;
+export const droppedToast = (title: string): string =>
+  `Couldn't add “${clipTitle(title, DROPPED_TITLE_WIDTH)}”`;
 
 export const hasContent = (values: CaptureValues, photoCount: number): boolean =>
   values.title.trim() !== '' || values.description.trim() !== '' || photoCount > 0;

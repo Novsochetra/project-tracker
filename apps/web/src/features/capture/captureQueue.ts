@@ -1,20 +1,20 @@
 import { PRIORITIES, type Priority } from '@tracker/shared';
 
 export interface QueuedCapture {
-  /** Client id: once the ticket for it exists, the capture is never sent again. */
+  // Client id: once the ticket for it exists, the capture is never sent again.
   id: string;
   projectKey: string;
   title: string;
   description: string;
   priority: Priority;
   capturedAt: number;
-  /** A request for it may have reached the server, so look for the ticket before sending again. */
+  // A request for it may have reached the server, so look for the ticket before sending again.
   attempted: boolean;
 }
 
 export interface CaptureQueue {
   items: readonly QueuedCapture[];
-  /** Ids already created, so a stale copy of a capture is skipped instead of sent twice. */
+  // Ids already created, so a stale copy of a capture is skipped instead of sent twice.
   created: readonly string[];
 }
 
@@ -29,7 +29,7 @@ export function addCapture(queue: CaptureQueue, capture: QueuedCapture): Capture
   return isKnown(queue, capture.id) ? queue : { ...queue, items: [...queue.items, capture] };
 }
 
-/** Captures still to send, oldest first. */
+// Captures still to send, oldest first.
 export function waitingCaptures(queue: CaptureQueue): QueuedCapture[] {
   return queue.items
     .filter((item) => !queue.created.includes(item.id))
@@ -42,6 +42,9 @@ export const nextCapture = (
   queue: CaptureQueue,
   skip: ReadonlySet<string>,
 ): QueuedCapture | undefined => waitingCaptures(queue).find((item) => !skip.has(item.id));
+
+export const findWaiting = (queue: CaptureQueue, id: string): QueuedCapture | undefined =>
+  queue.created.includes(id) ? undefined : queue.items.find((item) => item.id === id);
 
 export function markAttempted(queue: CaptureQueue, id: string): CaptureQueue {
   const items = queue.items.map((item) => (item.id === id ? { ...item, attempted: true } : item));
@@ -85,7 +88,7 @@ function toCapture(value: unknown): QueuedCapture[] {
   ];
 }
 
-/** Reads what storage holds, keeping every capture that is still readable. */
+// Reads what storage holds, keeping every capture that is still readable.
 export function parseQueue(text: string | null): CaptureQueue {
   if (!text) return EMPTY_QUEUE;
   let value: unknown;
