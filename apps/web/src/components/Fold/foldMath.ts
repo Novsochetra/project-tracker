@@ -11,12 +11,23 @@ export interface FoldBox {
   lineHeight: number;
   // Padding and borders, which the folded box keeps around its lines.
   frame: number;
+  // Where the text's lines end, from its top, when the browser lays them out where they can be
+  // read (not in a field).
+  lineEnds?: readonly number[];
 }
 
-export function foldedHeight({ text, lineHeight, frame }: FoldBox): number | null {
+// Text in a box can run on other lines than the box's own (a report's 20px lines in a card of
+// 21px), so the fold ends where the last line that fits does, instead of through the next one.
+function lastLineEnd(limit: number, lineEnds: readonly number[]): number {
+  const within = lineEnds.filter((end) => end <= limit);
+  return within.length > 0 ? Math.max(...within) : limit;
+}
+
+export function foldedHeight({ text, lineHeight, frame, lineEnds = [] }: FoldBox): number | null {
   if (!(lineHeight > 0)) return null;
   const shown = FOLD_LINES * lineHeight;
-  return text > shown + SLACK_LINES * lineHeight ? Math.round(shown + frame) : null;
+  if (text <= shown + SLACK_LINES * lineHeight) return null;
+  return Math.round(lastLineEnd(shown, lineEnds) + frame);
 }
 
 export function lineHeightOf(lineHeight: string, fontSize: string): number {

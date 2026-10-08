@@ -76,8 +76,6 @@ describe('the phone details chips', () => {
     const { client } = setup();
     const assignee = within(chips()).getByLabelText('Assignee');
     expect(assignee).toHaveAttribute('placeholder', 'Unassigned');
-    // Only while editing: iOS Safari keeps room for its suggestions button, cutting the name.
-    expect(assignee).not.toHaveAttribute('list');
     await user.click(assignee);
     const suggestions = () => document.getElementById(assignee.getAttribute('list') ?? '');
     await waitFor(() => expect(suggestions()?.querySelectorAll('option')).toHaveLength(2));
@@ -138,7 +136,7 @@ describe('the chips’ size at 320px', () => {
     expect(phoneRule(CHIPS, '.chips', 320).get('flex-wrap')).toBe('wrap');
     expect(phoneRule(CHIPS, '.chip', 320).get('max-width')).toBe('100%');
     expect(phoneRule(CHIPS, '.value', 320).get('text-overflow')).toBe('ellipsis');
-    expect(phoneRule(CHIPS, '.input', 320).get('text-overflow')).toBe('ellipsis');
+    expect(phoneRule(CHIPS, '.name', 320).get('text-overflow')).toBe('ellipsis');
   });
 
   it('keep 16px text, so iOS doesn’t zoom into the assignee field', () => {

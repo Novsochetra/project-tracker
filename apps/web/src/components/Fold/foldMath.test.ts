@@ -19,6 +19,13 @@ describe('foldedHeight', () => {
     expect(foldedHeight({ text: 30 * lineHeight, lineHeight, frame: 14 })).toBe(225);
   });
 
+  it('ends on the last line that fits when the text runs on lines of its own', () => {
+    const reportLines = Array.from({ length: 30 }, (_, index) => index * 20 + 18);
+    expect(foldedHeight({ text: 600, lineHeight: LINE, frame: 0, lineEnds: reportLines })).toBe(
+      158,
+    );
+  });
+
   it('never folds when the line height is unknown', () => {
     expect(foldedHeight({ text: 1000, lineHeight: Number.NaN, frame: 0 })).toBeNull();
     expect(foldedHeight({ text: 1000, lineHeight: 0, frame: 0 })).toBeNull();

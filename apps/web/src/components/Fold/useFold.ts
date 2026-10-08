@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState, type RefObject } from 'react';
 import { foldedHeight, lineHeightOf } from './foldMath';
+import { lineEnds } from './lineEnds';
 
 export interface FoldState {
   // The folded box's height while the text is long enough to fold, else null.
@@ -11,9 +12,13 @@ export interface FoldState {
   toggle: (button: HTMLElement) => void;
 }
 
+// Text folds by its lines; other content, such as rows of files, brings its own rule. Null when
+// the content is short enough to show whole.
+export type FoldMeasure = (element: HTMLElement) => number | null;
+
 const px = (value: string): number => Number.parseFloat(value) || 0;
 
-function measure(element: HTMLElement): number | null {
+function measureText(element: HTMLElement): number | null {
   const style = getComputedStyle(element);
   const padding = px(style.paddingTop) + px(style.paddingBottom);
   const border = px(style.borderTopWidth) + px(style.borderBottomWidth);
@@ -21,6 +26,7 @@ function measure(element: HTMLElement): number | null {
     text: element.scrollHeight - padding,
     lineHeight: lineHeightOf(style.lineHeight, style.fontSize),
     frame: padding + border,
+    lineEnds: lineEnds(element),
   });
 }
 
@@ -38,6 +44,7 @@ export function useFold(
   ref: RefObject<HTMLElement | null>,
   enabled: boolean,
   content?: unknown,
+  measure: FoldMeasure = measureText,
 ): FoldState {
   const [height, setHeight] = useState<number | null>(null);
   const [expanded, setExpanded] = useState(false);
@@ -46,7 +53,7 @@ export function useFold(
   useLayoutEffect(() => {
     const element = ref.current;
     if (element && enabled) setHeight(measure(element));
-  }, [ref, enabled, content]);
+  }, [ref, enabled, content, measure]);
 
   // Fonts arriving, a turned phone and new text change the height without a render here.
   useEffect(() => {
@@ -55,7 +62,7 @@ export function useFold(
     const observer = new ResizeObserver(() => setHeight(measure(element)));
     observer.observe(element);
     return () => observer.disconnect();
-  }, [ref, enabled]);
+  }, [ref, enabled, measure]);
 
   useLayoutEffect(() => {
     const pending = anchor.current;
@@ -63,10 +70,13 @@ export function useFold(
     if (pending) keepInPlace(pending.button, pending.top);
   }, [expanded]);
 
+  // A window that grows past phone width turns folding off; the height measured before would
+  // leave a Show more under the whole text.
+  const shownHeight = enabled ? height : null;
   return {
-    height,
+    height: shownHeight,
     expanded,
-    folded: enabled && height !== null && !expanded,
+    folded: shownHeight !== null && !expanded,
     expand: () => setExpanded(true),
     toggle: (button) => {
       if (expanded) anchor.current = { button, top: button.getBoundingClientRect().top };

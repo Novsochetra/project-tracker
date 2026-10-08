@@ -12,6 +12,11 @@ const LONG_TITLE =
   'Phone ticket screen: Details should stay at the top instead of the middle, long comments need folding';
 const LONG_STATUS = 'Waiting on design review from the team';
 const LONG_NAME = 'Claude (worker 55, the very long assignee name)';
+const NAME = 'Claude (lead)';
+const PNG_1X1 = Buffer.from(
+  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
+  'base64',
+);
 // About as long as PT-61's comments (500 to 1,900 characters).
 const LONG_COMMENT = (n: number) =>
   `Decisions (worker ${n}): the calendar shows with a mouse on a window 768px or wider. `.repeat(
@@ -44,6 +49,10 @@ async function settle(page: Page) {
       await frame();
     }
   });
+}
+
+async function scrollTo(page: Page, top: number) {
+  await scroller(page).evaluate((element, to) => element.scrollTo({ top: to }), top);
 }
 
 async function noSidewaysScroll(page: Page) {
@@ -115,7 +124,12 @@ test.describe('ticket screen on a phone', () => {
     await seedProject(api, 'Mobile app', 'MOB', [{ title: 'Date picker', description: 'Bad.' }]);
     for (let n = 1; n <= 8; n += 1) await agent.addComment('MOB-1', { text: LONG_COMMENT(n) });
     await page.goto('/p/MOB/1');
+    await settle(page);
+    // The first screen stays uncovered until the reader scrolls down a little.
+    await expect(jump(page)).toHaveCount(0);
+    await scrollTo(page, 300);
     await expect(jump(page)).toBeVisible();
+    await scrollTo(page, 0);
     await settle(page);
 
     const first = activity(page).locator('article').first();
@@ -135,7 +149,9 @@ test.describe('ticket screen on a phone', () => {
     const after = (await first.getByRole('button', { name: 'Show more' }).boundingBox())!.y;
     expect(Math.abs(after - before)).toBeLessThanOrEqual(2);
 
-    await scroller(page).evaluate((element) => (element.scrollTop = 0));
+    await scrollTo(page, 0);
+    await expect(jump(page)).toHaveCount(0);
+    await scrollTo(page, 300);
     await expect(jump(page)).toBeVisible();
     await jump(page).tap();
     await expect(commentField(page)).toBeFocused();
@@ -151,6 +167,81 @@ test.describe('ticket screen on a phone', () => {
     await expect(jump(page)).toHaveCount(0);
     await page.getByRole('button', { name: 'Comment', exact: true }).click();
     await expect(activity(page)).toContainText('Reached the box in one tap');
+  });
+
+  test('keeps the whole assignee name after an edit and places the caret where tapped', async ({
+    page,
+    api,
+  }, info) => {
+    test.skip(!isPhone(info.project.name), PHONE_ONLY);
+    await seedProject(api, 'Mobile app', 'MOB', [{ title: 'Date picker', assignee: NAME }]);
+    await page.goto('/p/MOB/1');
+    const assignee = chips(page).getByLabel('Assignee', { exact: true });
+    await assignee.tap();
+    await expect(assignee).toBeFocused();
+    await assignee.press('Enter');
+    await expect(assignee).not.toBeFocused();
+    // iOS Safari cut the field's own text ("Claude (le…"), so the chip shows a copy of the name.
+    const shown = await assignee.evaluate((field) => {
+      const name = field.nextElementSibling!;
+      return {
+        text: name.textContent,
+        cut: name.scrollWidth > name.clientWidth,
+        visible: getComputedStyle(name).visibility,
+        fieldText: getComputedStyle(field).color,
+      };
+    });
+    expect(shown).toEqual({
+      text: NAME,
+      cut: false,
+      visible: 'visible',
+      fieldText: 'rgba(0, 0, 0, 0)',
+    });
+
+    const box = (await assignee.boundingBox())!;
+    await page.touchscreen.tap(box.x + 4, box.y + box.height / 2);
+    await expect(assignee).toBeFocused();
+    const caret = await assignee.evaluate((field: HTMLInputElement) => field.selectionStart);
+    expect(caret).toBeLessThan(NAME.length);
+  });
+
+  test('folds many files to two rows with Show all', async ({ page, api }, info) => {
+    test.skip(!isPhone(info.project.name), PHONE_ONLY);
+    await seedProject(api, 'Mobile app', 'MOB', [{ title: 'Screenshots' }]);
+    for (let n = 1; n <= 12; n += 1) {
+      await api.uploadAttachment(
+        new Blob([PNG_1X1], { type: 'image/png' }),
+        `shot-${n}.png`,
+        'MOB-1',
+      );
+    }
+    for (const size of [
+      { width: 320, height: 568 },
+      { width: 375, height: 812 },
+    ]) {
+      await page.setViewportSize(size);
+      await page.goto('/p/MOB/1');
+      const showAll = page.getByRole('button', { name: 'Show all 12 files' });
+      await expect(showAll).toBeVisible();
+      const files = page.locator(`[id="${await showAll.getAttribute('aria-controls')}"]`);
+      const tiles = files.getByRole('button', { name: /^Open image/ });
+      const firstRow = (await tiles.first().boundingBox())!.y;
+      const box = (await files.boundingBox())!;
+      // Two rows of 72px thumbnails, 24px apart, under the 24px left for the x buttons.
+      expect(box.height, `${size.width}px`).toBeCloseTo(24 + 72 + 24 + 72, 0);
+      expect(firstRow - box.y).toBeCloseTo(24, 0);
+      await expect(page.getByRole('button', { name: 'Add files', exact: true })).toHaveText(
+        'Add files',
+      );
+      await noSidewaysScroll(page);
+    }
+    const showAll = page.getByRole('button', { name: 'Show all 12 files' });
+    const files = page.locator(`[id="${await showAll.getAttribute('aria-controls')}"]`);
+    await showAll.tap();
+    await expect(page.getByRole('button', { name: 'Show less' })).toBeVisible();
+    // Twelve files and the Add tile, four to a row.
+    expect((await files.boundingBox())!.height).toBeCloseTo(24 + 4 * 72 + 3 * 24, 0);
+    await expect(page.getByRole('button', { name: 'Add files', exact: true })).toHaveText('');
   });
 
   test('desktop keeps the side panel and shows text whole', async ({ page, api, agent }, info) => {

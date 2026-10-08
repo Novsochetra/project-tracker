@@ -45,7 +45,9 @@
   transform: scale(0.97);
 }
 
-.chip:has(:focus-visible) {
+/* The assignee field shows its focus with its accent border instead, as text fields do; both
+   showed two rings. */
+.chip:not(.field):has(:focus-visible) {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
@@ -86,21 +88,30 @@
   flex: 1;
 }
 
-/* An unseen copy of the name sizes the grid cell, and the field fills it. */
+/* The name and the field share one grid cell, which the name sizes. */
 .sizer {
   display: inline-grid;
   min-width: 0;
 }
 
-.sizer::after {
-  content: attr(data-text) ' ';
+/* The name shows from this copy unless the field is edited: iOS Safari keeps room inside the
+   field for its suggestions button, which cut the field's own text short ("Claude (le…"). */
+.name {
   grid-area: 1 / 1;
+  min-width: 0;
   overflow: hidden;
-  visibility: hidden;
+  text-overflow: ellipsis;
   white-space: pre;
+  pointer-events: none;
 }
 
+.field:focus-within .name {
+  visibility: hidden;
+}
+
+/* Above the chip's tap area, so a tap in the name places the caret where it lands. */
 .input {
+  position: relative;
   grid-area: 1 / 1;
   width: 100%;
   min-width: 0;
@@ -108,14 +119,25 @@
   padding: 0;
   border: 0;
   background: transparent;
-  color: var(--ink);
+  color: transparent;
   font: inherit;
-  text-overflow: ellipsis;
 }
 
-/* Chromium and iOS Safari reserve room for a datalist arrow, which pushed the name out of the
-   chip ("Claude (le…"); Chromium's UA rule is !important, so these have to be too. Two rules: a
-   browser that doesn't know one of the pseudo-elements drops a list holding it whole. */
+.input::placeholder {
+  color: transparent;
+}
+
+.field:focus-within .input {
+  color: var(--ink);
+}
+
+.field:focus-within .input::placeholder {
+  color: var(--placeholder);
+}
+
+/* No suggestions arrow in the chip: the list opens as the name is typed. Chromium's UA rule is
+   !important, so these have to be too. Two rules: a browser that doesn't know one of the
+   pseudo-elements drops a list holding it whole. */
 .input::-webkit-calendar-picker-indicator {
   display: none !important;
 }

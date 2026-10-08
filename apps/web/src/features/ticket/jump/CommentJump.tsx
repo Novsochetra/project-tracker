@@ -5,10 +5,12 @@ import { prefersReducedMotionNow } from '../../../lib/media';
 import { useEditingText, useOptionalScreen } from '../../../navigation';
 import styles from './CommentJump.module.css';
 import { isFarBelow, NEAR_MARGIN } from './farBelow';
+import { isScrolledDown } from './scrolledDown';
 
 type BoxRef = RefObject<HTMLFormElement | null>;
+type ScrollerRef = RefObject<HTMLElement | null> | undefined;
 
-function useFarBelow(box: BoxRef, scroller: RefObject<HTMLElement | null> | undefined): boolean {
+function useFarBelow(box: BoxRef, scroller: ScrollerRef): boolean {
   const [far, setFar] = useState(false);
   useEffect(() => {
     const target = box.current;
@@ -32,6 +34,18 @@ function useFarBelow(box: BoxRef, scroller: RefObject<HTMLElement | null> | unde
   return far;
 }
 
+function useScrolledDown(scroller: ScrollerRef): boolean {
+  const [down, setDown] = useState(false);
+  useEffect(() => {
+    const root = scroller?.current;
+    if (!root) return;
+    const update = () => setDown(isScrolledDown(root.scrollTop, root.clientHeight));
+    root.addEventListener('scroll', update, { passive: true });
+    return () => root.removeEventListener('scroll', update);
+  }, [scroller]);
+  return down;
+}
+
 // Focus comes first, inside the tap: iOS opens the keyboard only for a focus the tap itself made.
 // The bar then slides away as for any field (docs/architecture.md §1.5).
 function jumpTo(box: HTMLFormElement | null): void {
@@ -45,14 +59,16 @@ function jumpTo(box: HTMLFormElement | null): void {
 }
 
 // Sits above the phone's bottom bar while the comment box is far below, as on a ticket with long
-// comments. It leaves the spot to a toast, which shows there, and goes with the bar while a field
-// is edited: sliding the bar away would only bring it down to where the bar was.
+// comments, once the reader has scrolled down a little: on the first screen it covered the ends
+// of the description's lines. It leaves the spot to a toast, which shows there, and goes with the
+// bar while a field is edited: sliding the bar away would only bring it down to where the bar was.
 export function CommentJump({ boxRef }: { boxRef: BoxRef }) {
   const screen = useOptionalScreen();
   const far = useFarBelow(boxRef, screen?.scrollRef);
+  const down = useScrolledDown(screen?.scrollRef);
   const toastShowing = useToastShowing();
   const editing = useEditingText();
-  if (!far || toastShowing || editing) return null;
+  if (!far || !down || toastShowing || editing) return null;
   return (
     <button
       type="button"
@@ -60,7 +76,7 @@ export function CommentJump({ boxRef }: { boxRef: BoxRef }) {
       aria-label="Go to the comment box"
       onClick={() => jumpTo(boxRef.current)}
     >
-      <Icon icon={ArrowDown} className={styles.arrow} />
+      <Icon icon={ArrowDown} size={14} className={styles.arrow} />
       Comment
     </button>
   );

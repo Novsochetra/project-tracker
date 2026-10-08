@@ -1,6 +1,7 @@
 import clsx from 'clsx';
 import { useId, useRef, type FocusEvent, type ReactNode } from 'react';
 import styles from './Fold.module.css';
+import { pastFold } from './pastFold';
 import { ShowMoreButton } from './ShowMoreButton';
 import { useFold } from './useFold';
 
@@ -10,10 +11,6 @@ export interface FoldProps {
   children: ReactNode;
   className?: string | undefined;
 }
-
-// A link Tab reaches under the fade would have focus where nobody can see it.
-const pastFold = (target: Element, box: Element): boolean =>
-  target.getBoundingClientRect().bottom > box.getBoundingClientRect().bottom;
 
 export function Fold({ enabled, children, className }: FoldProps) {
   const textRef = useRef<HTMLDivElement>(null);

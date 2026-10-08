@@ -1,22 +1,22 @@
 /* Above the bar it belongs to, on the right, where it covers least: text, chips and Show more
-   start on the left. */
+   start on the left. Small, with secondary text, because it floats over the text being read. */
 .jump {
   position: absolute;
   right: calc(var(--space-4) + var(--safe-right));
   bottom: calc(100% + var(--space-3));
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  height: 36px;
+  gap: var(--space-1);
+  height: 32px;
   margin: 0;
-  padding: 0 14px 0 12px;
+  padding: 0 var(--space-3) 0 10px;
   border: 1px solid var(--line);
   border-radius: var(--radius-full);
   background: var(--surface);
   box-shadow: var(--shadow-floating);
   color: var(--ink);
   font-family: var(--font-sans);
-  font-size: var(--size-body);
+  font-size: var(--size-secondary);
   font-weight: var(--weight-medium);
   white-space: nowrap;
   cursor: pointer;
@@ -24,11 +24,11 @@
   transition: transform var(--duration-press) ease-out;
 }
 
-/* The 36px pill answers taps across 44px. */
+/* The 32px pill answers taps across 44px. */
 .jump::before {
   content: '';
   position: absolute;
-  inset: -4px 0;
+  inset: -6px 0;
 }
 
 .jump:active {

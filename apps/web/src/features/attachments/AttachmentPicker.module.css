@@ -15,6 +15,28 @@
   }
 }
 
+/* Its own line, as the grid had: tiles wrap in the full width. */
+.files {
+  flex: 1 0 100%;
+  min-width: 0;
+}
+
+/* A clean cut after the second row: a fade over thumbnails reads as a broken image. The x of a
+   tile on the right edge reaches past the box, so only the bottom clips. */
+.folded {
+  overflow-x: visible;
+  overflow-y: clip;
+}
+
+.foldRow {
+  flex: 1 0 100%;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: var(--space-4);
+  margin-top: var(--space-2);
+}
+
 .note {
   flex: 1 0 100%;
   margin-top: var(--space-2);

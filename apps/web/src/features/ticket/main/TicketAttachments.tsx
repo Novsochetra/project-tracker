@@ -1,4 +1,5 @@
 import type { Attachment } from '@tracker/shared';
+import { useIsPhone } from '../../../lib/media';
 import {
   AttachmentPicker,
   thumbnailLabels,
@@ -16,6 +17,7 @@ export interface TicketAttachmentsProps {
 }
 
 export function TicketAttachments({ ticketKey, attachments, uploads }: TicketAttachmentsProps) {
+  const isPhone = useIsPhone();
   const viewer = useAttachmentViewer();
   const removal = useAttachmentRemoval(ticketKey);
   const labels = thumbnailLabels(attachments);
@@ -32,6 +34,7 @@ export function TicketAttachments({ ticketKey, attachments, uploads }: TicketAtt
           if (attachment) removal.ask(attachment, labels[index] ?? attachment.fileName);
         }}
         markedId={removal.asking ? removal.target?.id : null}
+        foldRows={isPhone}
         className={empty ? undefined : styles.attachments}
       />
       {/* Stays mounted when the last attachment goes, so the phone sheet can finish closing. */}

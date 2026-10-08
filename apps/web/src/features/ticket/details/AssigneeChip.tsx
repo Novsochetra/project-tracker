@@ -1,5 +1,5 @@
 import clsx from 'clsx';
-import { useId, useState } from 'react';
+import { useId } from 'react';
 import { usePeople } from '../../../api';
 import { Avatar } from '../../../components';
 import type { FieldDraftState } from '../fields/useFieldDraft';
@@ -13,36 +13,28 @@ export interface AssigneeChipProps {
 
 const PLACEHOLDER = 'Unassigned';
 
-// The chip is as wide as the name: an unseen copy of it sizes the cell the field fills. iOS Safari
-// keeps room for a hidden suggestions button in a field with a list, which cut the name short
-// ("Claude (le…"), so the list is only there while the name is being edited; the chip then takes
-// its whole row.
+// The name shows from a plain copy of it, which also sizes the chip; the field's own text shows
+// only while it is edited. iOS Safari keeps room for the suggestions button inside a field with a
+// list, even after the list is gone, which cut the field's text short ("Claude (le…").
 export function AssigneeChip({ draft, describedBy }: AssigneeChipProps) {
   const people = usePeople().data;
   const listId = useId();
-  const [editing, setEditing] = useState(false);
-  const input = assigneeInput(draft);
   return (
     <label className={clsx(styles.chip, styles.field)}>
       <Avatar name={draft.value} size={20} decorative />
-      <span className={styles.sizer} data-text={draft.value || PLACEHOLDER}>
+      <span className={styles.sizer}>
         <input
           className={styles.input}
           size={1}
           aria-label="Assignee"
           placeholder={PLACEHOLDER}
           aria-describedby={describedBy}
-          {...input}
-          list={editing && people ? listId : undefined}
-          onFocus={(event) => {
-            setEditing(true);
-            input.onFocus?.(event);
-          }}
-          onBlur={(event) => {
-            setEditing(false);
-            input.onBlur?.(event);
-          }}
+          list={people ? listId : undefined}
+          {...assigneeInput(draft)}
         />
+        <span className={clsx(styles.name, !draft.value && styles.unset)} aria-hidden="true">
+          {draft.value || PLACEHOLDER}
+        </span>
       </span>
       {people && (
         <datalist id={listId}>

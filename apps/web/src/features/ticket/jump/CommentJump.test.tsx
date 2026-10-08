@@ -47,6 +47,17 @@ function boxAt(top: number) {
   });
 }
 
+const scroller = () =>
+  document.querySelector<HTMLElement>('[data-stack-path="/p/MOB/1"] [data-stack-scroller]')!;
+
+// jsdom's screen has no height, so any scroll down counts as past its first quarter.
+function scrollTo(top: number) {
+  act(() => {
+    scroller().scrollTop = top;
+    scroller().dispatchEvent(new Event('scroll'));
+  });
+}
+
 let cleanups: Array<() => void> = [];
 
 beforeEach(() => {
@@ -101,18 +112,29 @@ describe('the jump to the comment box', () => {
       candidate.targets.some((target) => target.tagName === 'FORM'),
     );
     expect(observer?.options.rootMargin).toBe('0px 0px 50% 0px');
-    expect(observer?.options.root).toBe(
-      document.querySelector('[data-stack-path="/p/MOB/1"] [data-stack-scroller]'),
-    );
+    expect(observer?.options.root).toBe(scroller());
     expect(jump()).not.toBeInTheDocument();
     boxAt(4000);
+    scrollTo(300);
     expect(jump()).toHaveTextContent('Comment');
+  });
+
+  it('leaves the first screen uncovered until the reader scrolls down', async () => {
+    setup();
+    await screen.findByLabelText('Comment');
+    boxAt(4000);
+    expect(jump()).not.toBeInTheDocument();
+    scrollTo(300);
+    expect(jump()).toBeInTheDocument();
+    scrollTo(0);
+    expect(jump()).not.toBeInTheDocument();
   });
 
   it('hides near the bottom', async () => {
     setup();
     await screen.findByLabelText('Comment');
     boxAt(4000);
+    scrollTo(300);
     expect(jump()).toBeInTheDocument();
     boxAt(900);
     expect(jump()).not.toBeInTheDocument();
@@ -126,6 +148,7 @@ describe('the jump to the comment box', () => {
     setup();
     const field = await screen.findByLabelText('Comment');
     boxAt(4000);
+    scrollTo(300);
     await user.click(jump()!);
     expect(field).toHaveFocus();
     expect(scrolled).toHaveBeenCalledWith({ block: 'center', behavior: 'smooth' });
@@ -141,6 +164,7 @@ describe('the jump to the comment box', () => {
     mockMedia([PHONE_QUERY, REDUCED_MOTION_QUERY]);
     await screen.findByLabelText('Comment');
     boxAt(4000);
+    scrollTo(300);
     await user.click(jump()!);
     expect(scrolled).toHaveBeenCalledWith({ block: 'center', behavior: 'instant' });
   });
@@ -151,6 +175,7 @@ describe('the jump to the comment box', () => {
     mockMedia([PHONE_QUERY, NO_HOVER_QUERY]);
     await screen.findByLabelText('Comment');
     boxAt(4000);
+    scrollTo(300);
     expect(jump()).toBeInTheDocument();
     await user.click(screen.getByLabelText('Title'));
     expect(bar()).toHaveAttribute('data-hidden');
@@ -164,6 +189,7 @@ describe('the jump to the comment box', () => {
     setup(STATUS.todo);
     await screen.findByLabelText('Comment');
     boxAt(4000);
+    scrollTo(300);
     await user.click(screen.getByRole('button', { name: /^Priority/ }));
     await user.click(screen.getByRole('option', { name: 'High' }));
     await user.click(screen.getByRole('button', { name: /^Status/ }));
