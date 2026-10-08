@@ -33,6 +33,7 @@ import {
 } from '../../src/features/project/newTicketForm';
 import { draftChanged, draftOf } from '../../src/features/statuses/statusForm';
 import { StatusManagerSheet } from '../../src/features/statuses/StatusManagerSheet';
+import { readActionSheet } from '../../src/overlays/testing';
 
 let restore: () => void = () => undefined;
 
@@ -122,6 +123,7 @@ describe('regression: sheets threw typed text away on swipe-down or tap outside'
     await user.type(ticketTitle(), IDEA);
     await user.click(scrimOf(newTicket()));
     expect(confirm()).toBeInTheDocument();
+    await readActionSheet();
     await user.click(screen.getByRole('button', { name: 'Discard changes' }));
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
 
@@ -264,6 +266,7 @@ describe('regression: New project and Edit project threw typed text away', () =>
 
     await user.click(within(projectSheet()).getByRole('button', { name: 'Cancel' }));
     expect(confirm()).toBeInTheDocument();
+    await readActionSheet();
     await user.click(screen.getByRole('button', { name: 'Discard changes' }));
     await sheetClosed();
     await user.click(screen.getByRole('button', { name: 'Open sheet' }));
@@ -326,6 +329,7 @@ describe('regression: New project and Edit project threw typed text away', () =>
     await user.type(screen.getByLabelText('Description'), ' and blog');
     await user.keyboard('{Escape}');
     expect(confirm()).toBeInTheDocument();
+    await readActionSheet();
     await user.click(screen.getByRole('button', { name: 'Discard changes' }));
     await sheetClosed();
 

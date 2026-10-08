@@ -6,7 +6,7 @@ import { attachment, listItem, STATUS } from '../../src/api/test/fixtures';
 import { useSheets } from '../../src/app/sheets/context';
 import { SheetsProvider } from '../../src/app/sheets/SheetsProvider';
 import { projectSummary, renderWithApp, type HarnessOptions } from '../../src/app/test/harness';
-import { mockPhone, skipAnimations } from '../../src/overlays/testing';
+import { mockPhone, readActionSheet, skipAnimations } from '../../src/overlays/testing';
 
 // Quick capture closed on a swipe-down, a tap on the dimmed area, Escape or a click outside, and
 // the typed idea was gone; the other sheets with input already asked first (PT-24).
@@ -107,6 +107,7 @@ describe('regression: quick capture threw typed text away on a swipe or a tap ou
 
     await user.click(within(capture()).getByRole('button', { name: 'Cancel' }));
     expect(asking()).toBeInTheDocument();
+    await readActionSheet();
     await user.click(screen.getByRole('button', { name: 'Discard changes' }));
     await closed();
   });

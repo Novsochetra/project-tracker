@@ -9,6 +9,7 @@ import { useSheets } from '../../src/app/sheets/context';
 import { SheetsProvider } from '../../src/app/sheets/SheetsProvider';
 import { ToastProvider } from '../../src/components';
 import { sheetTestSetup } from '../../src/features/claude/test/renderWithApi';
+import { readActionSheet } from '../../src/overlays/testing';
 
 // Text typed in the New ticket sheet lived only in the sheet, so an app update, a crash or iOS
 // stopping the app threw it away (PT-11).
@@ -126,6 +127,7 @@ describe('regression: the New ticket sheet keeps typed text across a reload', ()
     await user.click(screen.getByRole('button', { name: 'New ticket in MOB' }));
     expect(title()).toHaveValue(TITLE);
     await user.click(within(sheet()).getByRole('button', { name: 'Cancel' }));
+    await readActionSheet();
     await user.click(screen.getByRole('button', { name: 'Discard changes' }));
     await sheetClosed();
 

@@ -1,7 +1,7 @@
 import type { Locator, Page } from '@playwright/test';
 import type { TrackerClient } from '@tracker/client';
 import { expect, isPhone, test } from './fixtures';
-import { createTicketInSheet, group, seedProject, ticketRow } from './helpers';
+import { createTicketInSheet, group, readActionSheet, seedProject, ticketRow } from './helpers';
 
 const tabs = (page: Page) => page.getByRole('toolbar', { name: 'Filter tickets' });
 const tab = (page: Page, name: string) =>
@@ -113,6 +113,7 @@ test.describe('status tabs', () => {
     await page.goto('/p/MOB');
     await tab(page, 'To do').click();
     await page.getByRole('button', { name: 'Project options' }).first().click();
+    await readActionSheet(page);
     await page.getByRole('button', { name: 'Manage statuses' }).click();
     const sheet = page.getByRole('dialog', { name: 'Statuses' });
     await sheet.getByRole('button', { name: /^To do/ }).click();

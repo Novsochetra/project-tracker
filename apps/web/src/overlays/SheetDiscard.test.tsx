@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { Sheet } from './Sheet';
 import { SheetCancelButton } from './SheetButtons';
-import { mockPhone, skipAnimations } from './testing';
+import { mockPhone, readActionSheet, skipAnimations } from './testing';
 
 function Harness({ onClose }: { onClose: () => void }) {
   const [open, setOpen] = useState(false);
@@ -129,7 +129,9 @@ describe('Sheet with unsaved changes on phones', () => {
     const { onClose, user } = await openSheet(true);
     await user.type(titleField(), 'Half-typed idea');
     swipeDown(grabArea());
-    await user.click(await screen.findByRole('button', { name: 'Discard changes' }));
+    await screen.findByRole('button', { name: 'Discard changes' });
+    await readActionSheet();
+    await user.click(screen.getByRole('button', { name: 'Discard changes' }));
 
     expect(onClose).toHaveBeenCalledTimes(1);
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
@@ -187,6 +189,7 @@ describe('Sheet with unsaved changes on desktop', () => {
     const { onClose, user } = await openSheet(false);
     await user.type(titleField(), 'Half-typed idea');
     await user.keyboard('{Escape}');
+    await readActionSheet();
     await user.click(screen.getByRole('button', { name: 'Discard changes' }));
     expect(onClose).toHaveBeenCalledTimes(1);
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());

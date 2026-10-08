@@ -1,4 +1,5 @@
 import { MotionGlobalConfig } from 'motion/react';
+import { CLICK_SHIELD_MS } from '../lib/clickShield';
 import { PHONE_QUERY } from '../lib/media';
 
 const fakeQueryList = (query: string, matches: boolean): MediaQueryList =>
@@ -32,3 +33,8 @@ export function skipAnimations(): () => void {
     MotionGlobalConfig.skipAnimations = false;
   };
 }
+
+// An action sheet's rows take no taps right after they appear (ActionSheet), so a test waits like a
+// person reading them before tapping one.
+export const readActionSheet = (): Promise<void> =>
+  new Promise((resolve) => setTimeout(resolve, CLICK_SHIELD_MS));

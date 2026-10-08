@@ -1,6 +1,6 @@
 import { TrackerClient } from '@tracker/client';
 import { expect, test } from './fixtures';
-import { activity, seedProject } from './helpers';
+import { activity, readActionSheet, seedProject } from './helpers';
 import { API_URL, WEB_PORT } from './ports';
 
 const reviewer = new TrackerClient({
@@ -51,6 +51,7 @@ test.describe('links in activity', () => {
     await opened.close();
 
     await log.getByRole('button', { name: 'Comment options' }).click();
+    await readActionSheet(page);
     await page.getByRole('button', { name: 'Edit comment' }).click();
     await expect(page.getByLabel('Edit comment')).toHaveValue(
       `Opened a PR: ${board} - preview at (${board}/1).`,

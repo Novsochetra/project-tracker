@@ -23,7 +23,7 @@ import { attachment, listItem, makeBoard, STATUS } from '../../api/test/fixtures
 import { setupApi } from '../../api/test/render';
 import { ToastProvider } from '../../components';
 import { sheetDraft } from '../../lib/sheetDrafts';
-import { mockPhone, skipAnimations } from '../../overlays/testing';
+import { mockPhone, readActionSheet, skipAnimations } from '../../overlays/testing';
 import { NewTicketSheet } from './NewTicketSheet';
 
 const { commentCount: _c, attachmentCount: _a, ...created } = listItem(5, STATUS.todo, -1000);
@@ -175,6 +175,7 @@ describe('New ticket attachments', () => {
 
     await user.click(within(dialog()).getByRole('button', { name: 'Cancel' }));
     const ask = screen.getByRole('dialog', { name: 'Discard changes?' });
+    await readActionSheet();
     await user.click(within(ask).getByRole('button', { name: 'Discard changes' }));
     await waitFor(() =>
       expect(screen.queryByRole('dialog', { name: 'New ticket' })).not.toBeInTheDocument(),
@@ -195,6 +196,7 @@ describe('New ticket attachments', () => {
 
     await user.click(within(dialog()).getByRole('button', { name: 'Cancel' }));
     const ask = screen.getByRole('dialog', { name: 'Discard changes?' });
+    await readActionSheet();
     await user.click(within(ask).getByRole('button', { name: 'Discard changes' }));
     expect(signal?.aborted).toBe(true);
   });

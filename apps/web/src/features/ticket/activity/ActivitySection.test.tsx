@@ -6,7 +6,7 @@ import { attachment, comment, makeTicketDetail } from '../../../api/test/fixture
 import { deferred } from '../../../api/test/deferred';
 import { readMenuConfirm } from '../../../components/Popover/testing';
 import { hasDrafts } from '../../../lib/drafts';
-import { skipAnimations } from '../../../overlays/testing';
+import { readActionSheet, skipAnimations } from '../../../overlays/testing';
 import { renderTicket } from '../test/renderTicket';
 
 const CLAUDE = { kind: 'agent', name: 'Claude' } as const;
@@ -252,6 +252,7 @@ describe('comments', () => {
     });
     await user.click(screen.getByRole('button', { name: 'Comment options' }));
     const sheet = screen.getByRole('dialog', { name: 'Comment options' });
+    await readActionSheet();
     await user.click(within(sheet).getByRole('button', { name: 'Edit comment' }));
     await user.type(screen.getByLabelText('Edit comment'), '!');
     await user.click(screen.getByRole('button', { name: 'Save' }));
@@ -259,8 +260,10 @@ describe('comments', () => {
 
     await user.click(await screen.findByRole('button', { name: 'Comment options' }));
     const again = screen.getByRole('dialog', { name: 'Comment options' });
+    await readActionSheet();
     await user.click(within(again).getByRole('button', { name: 'Delete comment' }));
     expect(again).toHaveTextContent("Delete this comment? This can't be undone.");
+    await readActionSheet();
     await user.click(within(again).getByRole('button', { name: 'Delete' }));
     await waitFor(() => expect(client.deleteActivity).toHaveBeenCalledWith('c1'));
   });

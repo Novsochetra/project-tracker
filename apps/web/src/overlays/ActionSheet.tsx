@@ -3,6 +3,7 @@ import { motion } from 'motion/react';
 import { useCallback, useRef, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { useAxisDrag } from '../gestures/useAxisDrag';
+import { useClickShield } from '../lib/clickShield';
 import { usePrefersReducedMotion } from '../lib/media';
 import styles from './ActionSheet.module.css';
 import { useDismissDrag } from './useDismissDrag';
@@ -25,6 +26,9 @@ export interface ActionSheetProps {
   actions: ActionSheetAction[];
   cancelLabel?: string;
 }
+
+const rowsOf = (actions: ActionSheetAction[]): string =>
+  actions.map((action) => [action.label, action.tone, action.bold].join(' ')).join('\n');
 
 function ActionSheetPanel(props: ActionSheetProps & { onExited: () => void }) {
   const { open, onClose, label, caption, actions, cancelLabel = 'Cancel', onExited } = props;
@@ -58,6 +62,10 @@ function ActionSheetPanel(props: ActionSheetProps & { onExited: () => void }) {
   });
   useAxisDrag(panelRef, { ...drag, axis: 'y' });
   const trapKeys = useOverlayBehavior({ active: open, panelRef, onClose, focusInitial: false });
+  // A tap opens the sheet, which slides up under the finger, or turns it into its next step, whose
+  // row can take the tapped row's place (a delete confirm), so a double tap's second tap would
+  // press the row that just arrived. Cancel stays where it was and keeps taking taps.
+  const shield = useClickShield(open && rowsOf(actions));
 
   return (
     <div className={styles.overlay} inert={!open} data-action-sheet="">
@@ -79,7 +87,12 @@ function ActionSheetPanel(props: ActionSheetProps & { onExited: () => void }) {
         style={{ y, opacity: values.opacity }}
         onKeyDown={trapKeys}
       >
-        <div className={styles.card}>
+        <div
+          role="presentation"
+          className={styles.card}
+          onMouseDownCapture={shield}
+          onClickCapture={shield}
+        >
           {caption !== undefined && (
             <div key={typeof caption === 'string' ? caption : undefined} className={styles.caption}>
               {caption}

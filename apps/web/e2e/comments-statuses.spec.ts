@@ -1,5 +1,5 @@
 import { expect, isPhone, test } from './fixtures';
-import { activity, group, readMenuConfirm, seedProject } from './helpers';
+import { activity, group, readActionSheet, readMenuConfirm, seedProject } from './helpers';
 
 const PNG_1X1 = Buffer.from(
   'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
@@ -19,6 +19,7 @@ test.describe('comments', () => {
     await expect(activity(page)).toContainText('First thought');
 
     await page.getByRole('button', { name: 'Comment options' }).first().click();
+    await readActionSheet(page);
     await page.getByRole('button', { name: 'Edit comment' }).click();
     const editor = page.getByLabel('Edit comment', { exact: true });
     await editor.fill('Second thought');
@@ -27,6 +28,7 @@ test.describe('comments', () => {
     await expect(activity(page)).toContainText('edited');
 
     await page.getByRole('button', { name: 'Comment options' }).first().click();
+    await readActionSheet(page);
     await page.getByRole('button', { name: 'Delete comment' }).click();
     await readMenuConfirm(page);
     await page.getByRole('button', { name: 'Delete', exact: true }).last().click();
@@ -83,6 +85,38 @@ test.describe('comments', () => {
     await expect(activity(page)).not.toContainText('Thought 10');
   });
 
+  // On phones the sheet's confirm puts its Delete row where Delete comment was.
+  test('a double tap on Delete comment in the action sheet keeps the confirm', async ({
+    page,
+    api,
+  }, info) => {
+    test.skip(!isPhone(info.project.name), 'Desktop shows a menu');
+    await seedProject(api, 'Mobile app', 'MOB', [{ title: 'Login error' }]);
+    await api.addComment('MOB-1', { text: 'First thought' });
+    await page.goto('/p/MOB/1');
+    await page.getByRole('button', { name: 'Comment options' }).click();
+    await readActionSheet(page);
+    const item = (await page.getByRole('button', { name: 'Delete comment' }).boundingBox())!;
+    const spot = { x: item.x + item.width / 2, y: item.y + item.height / 2 };
+    const underSpot = () =>
+      page.evaluate(
+        ({ x, y }) => document.elementFromPoint(x, y)?.closest('button')?.textContent,
+        spot,
+      );
+
+    await page.touchscreen.tap(spot.x, spot.y);
+    await page.waitForTimeout(150);
+    expect(await underSpot()).toBe('Delete');
+    await page.touchscreen.tap(spot.x, spot.y);
+
+    await page.waitForTimeout(600);
+    const sheet = page.getByRole('dialog', { name: 'Comment options' });
+    await expect(sheet).toContainText("Delete this comment? This can't be undone.");
+    await expect(activity(page)).toContainText('First thought');
+    await page.touchscreen.tap(spot.x, spot.y);
+    await expect(activity(page)).not.toContainText('First thought');
+  });
+
   test('a double-click on Edit comment leaves the editor open', async ({ page, api }, info) => {
     test.skip(isPhone(info.project.name), 'Phones show an action sheet');
     await seedProject(api, 'Mobile app', 'MOB', [{ title: 'Login error' }]);
@@ -123,6 +157,7 @@ test.describe('statuses', () => {
     await seedProject(api, 'Mobile app', 'MOB', [{ title: 'Waiting on design' }]);
     await page.goto('/p/MOB');
     await page.getByRole('button', { name: 'Project options' }).first().click();
+    await readActionSheet(page);
     await page.getByRole('button', { name: 'Manage statuses' }).click();
     const sheet = page.getByRole('dialog', { name: 'Statuses' });
     await expect(sheet).toBeVisible();

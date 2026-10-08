@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { attachment, makeTicketDetail } from '../../src/api/test/fixtures';
 import { renderTicket } from '../../src/features/ticket/test/renderTicket';
-import { skipAnimations } from '../../src/overlays/testing';
+import { readActionSheet, skipAnimations } from '../../src/overlays/testing';
 
 let cleanups: Array<() => void> = [];
 
@@ -52,6 +52,7 @@ it('asks with an action sheet on phones', async () => {
   const sheet = screen.getByRole('dialog', { name: 'Remove image' });
   expect(sheet).toHaveTextContent("Remove image 1? This can't be undone.");
   expect(client.deleteAttachment).not.toHaveBeenCalled();
+  await readActionSheet();
   await user.click(within(sheet).getByRole('button', { name: 'Remove image' }));
   expect(client.deleteAttachment).toHaveBeenCalledWith('a');
 });

@@ -64,3 +64,7 @@ export const activity = (page: Page) => page.getByRole('region', { name: 'Activi
 // A ••• menu's delete confirm takes no clicks for 500 ms after it appears (CLICK_SHIELD_MS in
 // components/FloatingPanel), so a test reads it first, like a person.
 export const readMenuConfirm = (page: Page): Promise<void> => page.waitForTimeout(500);
+
+// A phone's action sheet takes no taps on its rows for 500 ms after they appear (lib/clickShield),
+// so a test reads them first, like a person. Desktop menus take clicks at once; the wait is harmless.
+export const readActionSheet = (page: Page): Promise<void> => page.waitForTimeout(500);

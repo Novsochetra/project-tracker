@@ -6,7 +6,7 @@ import { listItem, otherProject, STATUS } from '../../src/api/test/fixtures';
 import { useSheets } from '../../src/app/sheets/context';
 import { SheetsProvider } from '../../src/app/sheets/SheetsProvider';
 import { projectSummary, renderWithApp } from '../../src/app/test/harness';
-import { mockPhone, skipAnimations } from '../../src/overlays/testing';
+import { mockPhone, readActionSheet, skipAnimations } from '../../src/overlays/testing';
 
 // Quick capture's text lived only in the sheet, so a reload, a crash or iOS stopping the app lost
 // it, while New ticket already kept its fields (PT-11 review).
@@ -135,6 +135,7 @@ describe('regression: quick capture keeps typed text across a reload', () => {
     let next = loadApp();
     await openCapture(next.user);
     await next.user.click(within(dialog()).getByRole('button', { name: 'Cancel' }));
+    await readActionSheet();
     await next.user.click(screen.getByRole('button', { name: 'Discard changes' }));
     await sheetClosed();
     next = loadApp();

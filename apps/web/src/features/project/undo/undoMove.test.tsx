@@ -8,7 +8,7 @@ import { deferred } from '../../../api/test/deferred';
 import { listItem, makeBoard, project, STATUS, statuses } from '../../../api/test/fixtures';
 import { announce } from '../../../app/announce';
 import { renderWithApp } from '../../../app/test/harness';
-import { mockPhone, skipAnimations } from '../../../overlays/testing';
+import { mockPhone, readActionSheet, skipAnimations } from '../../../overlays/testing';
 import { readyItems } from '../../ready/readyItems';
 import { ReadySection } from '../../ready/ReadySection';
 import { dropRowOf } from '../dnd/dropRow';
@@ -155,6 +155,7 @@ describe('Undo after a swipe on the Project screen', () => {
 
     swipeAction('MOB-1', 'Status');
     const sheet = await screen.findByRole('dialog', { name: 'Status' });
+    await readActionSheet();
     await user.click(within(sheet).getByRole('button', { name: 'Done' }));
     expect(toast('MOB-1 moved to Done')).toBeInTheDocument();
     await waitFor(() => expect(server.client.updateTicket).toHaveBeenCalled());

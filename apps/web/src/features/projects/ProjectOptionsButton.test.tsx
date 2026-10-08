@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { currentPath, projectSummary, renderWithApp } from '../../app/test/harness';
 import { readMenuConfirm } from '../../components/Popover/testing';
-import { mockPhone, skipAnimations } from '../../overlays/testing';
+import { mockPhone, readActionSheet, skipAnimations } from '../../overlays/testing';
 import { ProjectOptionsButton } from './ProjectOptionsButton';
 
 let restore: Array<() => void> = [];
@@ -138,6 +138,7 @@ describe('Project options in the phone nav bar', () => {
     const user = userEvent.setup();
     const { sheets } = renderOptions('navbar');
     await user.click(screen.getByRole('button', { name: 'Project options' }));
+    await readActionSheet();
     await user.click(screen.getByRole('button', { name: 'Edit project' }));
     await waitFor(() =>
       expect(sheets.open).toHaveBeenCalledWith({ type: 'editProject', projectKey: 'MOB' }),
@@ -149,6 +150,7 @@ describe('Project options in the phone nav bar', () => {
     const user = userEvent.setup();
     const { deleteProject } = renderOptions('navbar');
     await user.click(screen.getByRole('button', { name: 'Project options' }));
+    await readActionSheet();
     await user.click(screen.getByRole('button', { name: 'Delete project' }));
     const sheet = screen.getByRole('dialog', { name: 'Project options' });
     expect(within(sheet).getByRole('alert')).toHaveTextContent(
@@ -156,6 +158,7 @@ describe('Project options in the phone nav bar', () => {
     );
     const confirm = within(sheet).getByRole('button', { name: 'Delete project' });
     expect(confirm).toHaveClass('bold');
+    await readActionSheet();
     await user.click(confirm);
     expect(deleteProject).toHaveBeenCalledWith('MOB');
     expect(await screen.findByText('“Mobile app” deleted')).toBeInTheDocument();
@@ -169,7 +172,9 @@ describe('Project options in the phone nav bar', () => {
       vi.fn(() => Promise.reject(new ApiError(500, 'internal', 'Database is locked'))),
     );
     await user.click(screen.getByRole('button', { name: 'Project options' }));
+    await readActionSheet();
     await user.click(screen.getByRole('button', { name: 'Delete project' }));
+    await readActionSheet();
     await user.click(screen.getByRole('button', { name: 'Delete project' }));
     const sheet = screen.getByRole('dialog', { name: 'Project options' });
     await waitFor(() =>

@@ -9,7 +9,7 @@ import { readMenuConfirm } from '../../src/components/Popover/testing';
 import type { ReportSections } from '../../src/features/ticket/activity/reportSections';
 import { renderTicket } from '../../src/features/ticket/test/renderTicket';
 import type { LinkPart } from '../../src/lib/linkify';
-import { skipAnimations } from '../../src/overlays/testing';
+import { readActionSheet, skipAnimations } from '../../src/overlays/testing';
 
 // A comment that crashed the link parser (PT-28) blanked the whole app, and the comment couldn't
 // be deleted, because nothing caught the error. Any card that fails to render did the same. Then
@@ -170,6 +170,7 @@ it('edits a comment that fails from its menu on a phone', async () => {
   const { client } = setup({ phone: true });
   const [badComment] = unshown();
   await user.click(within(badComment!).getByRole('button', { name: 'Comment options' }));
+  await readActionSheet();
   await user.click(screen.getByRole('button', { name: 'Edit comment' }));
   const editor = within(badComment!).getByLabelText('Edit comment');
   expect(editor).toHaveValue(BAD);
@@ -200,6 +201,7 @@ it.each([
       expect.anything(),
     );
     await user.click(within(latest()).getByRole('button', { name: 'Review options' }));
+    if (phone) await readActionSheet();
     await user.click(screen.getByRole('button', { name: 'Delete review' }));
     await readMenuConfirm();
     await user.click(screen.getByRole('button', { name: 'Delete' }));

@@ -1,10 +1,9 @@
 import { useEffect, useLayoutEffect, useState, type RefObject } from 'react';
+import { CLICK_SHIELD_MS } from '../../lib/clickShield';
 import { useLatest } from '../../lib/useLatest';
 import type { FloatingPlacement } from './placeFloating';
 
-// Longer than the 160ms exit and than a double-click, whose second click can come 200ms or more
-// after the first (like the toast's TOAST_SHIELD_MS).
-export const CLICK_SHIELD_MS = 500;
+export { CLICK_SHIELD_MS };
 
 export interface FloatingPresence {
   mounted: boolean;
