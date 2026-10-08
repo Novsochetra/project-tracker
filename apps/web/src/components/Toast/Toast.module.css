@@ -17,6 +17,16 @@
   pointer-events: auto;
 }
 
+/* Undo's target hangs 1.5px below the band, and a second tap drifts a few px past it, so the band
+   catches taps 8px past its top and bottom: 6.5px or more past the target, still clear of the
+   bottom bar 20px below. Behind the toast, so a toast shown meanwhile keeps its own taps. */
+.shielded::before {
+  content: '';
+  position: absolute;
+  inset: calc(-1 * var(--space-2)) 0;
+  z-index: -1;
+}
+
 .toast {
   display: flex;
   align-items: flex-start;

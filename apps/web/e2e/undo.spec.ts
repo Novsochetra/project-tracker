@@ -2,7 +2,7 @@ import type { Locator, Page } from '@playwright/test';
 import type { TrackerClient } from '@tracker/client';
 import { byRank } from '@tracker/shared';
 import { expect, isPhone, test } from './fixtures';
-import { group, seedProject, ticketRow, toast } from './helpers';
+import { group, seedProject, settled, ticketRow, toast } from './helpers';
 
 // Playwright can't drive a touch drag in WebKit, so the swipe is synthetic touch pointer events.
 async function swipeRight(row: Locator): Promise<void> {
@@ -98,50 +98,62 @@ const seedBehindToast = (api: TrackerClient) =>
     })),
   ]);
 
-// The toast's entrance moves Undo; the taps go where it rests. An animation cancelled meanwhile
-// rejects its promise, and has nothing left to wait for.
-const settled = (page: Page) =>
-  page.evaluate(() =>
-    Promise.allSettled(document.getAnimations().map((animation) => animation.finished)),
-  );
-
 const PHONE_SIZES = [
   { width: 375, height: 812 },
   { width: 320, height: 568 },
 ];
 
-test.describe('a double tap on Undo', () => {
+interface Box {
+  y: number;
+  height: number;
+}
+
+// Where a double tap's second tap lands on, or just past, Undo's 44px target.
+const SECOND_TAPS: { name: string; y: (undo: Box) => number }[] = [
   // WebKit gave the second tap at the top of Undo's target to the row behind the toast (PT-67).
-  test('at the top edge of its target runs Undo once and opens nothing behind it', async ({
-    page,
-    api,
-  }, info) => {
-    test.skip(!isPhone(info.project.name), 'Touch taps');
-    await seedBehindToast(api);
-    for (const size of PHONE_SIZES) {
-      await page.setViewportSize(size);
-      for (const offset of [4, 6, 8]) {
-        const where = `${size.width}px, ${offset}px below the top`;
+  ...[4, 6, 8].map((offset) => ({
+    name: `${offset}px below its top`,
+    y: (undo: Box) => undo.y + offset,
+  })),
+  // The target hung 1.5px below the band that catches the second tap, and a second tap that
+  // drifted 2px past the target's top or bottom opened the row behind the toast (PT-87).
+  { name: '1px above its bottom', y: (undo) => undo.y + undo.height - 1 },
+  { name: '2px above it', y: (undo) => undo.y - 2 },
+  { name: '2px below it', y: (undo) => undo.y + undo.height + 2 },
+];
+
+// The first tap runs Undo, so it lands on the target, at its nearest edge to the second tap.
+const onTarget = (undo: Box, y: number) =>
+  Math.min(Math.max(y, undo.y + 1), undo.y + undo.height - 1);
+
+test.describe('a double tap on Undo runs it once and opens nothing behind the toast', () => {
+  for (const size of PHONE_SIZES) {
+    for (const second of SECOND_TAPS) {
+      test(`${size.width}px, second tap ${second.name}`, async ({ page, api }, info) => {
+        test.skip(!isPhone(info.project.name), 'Touch taps');
+        await seedBehindToast(api);
+        await page.setViewportSize(size);
         await page.goto('/p/MOB');
         await swipeRight(ticketRow(page, 'MOB-6'));
         const undo = page.getByRole('button', { name: 'Undo' });
-        await expect(undo, where).toBeVisible();
-        await settled(page);
+        await expect(undo).toBeVisible();
+        // The toast's entrance moves Undo; the taps go where it rests.
+        await settled(undo);
         const box = (await undo.boundingBox())!;
-        const [x, y] = [box.x + box.width / 2, box.y + offset];
+        const [x, y] = [box.x + box.width / 2, second.y(box)];
 
-        await page.touchscreen.tap(x, y);
+        await page.touchscreen.tap(x, onTarget(box, y));
         await page.waitForTimeout(150);
         await page.touchscreen.tap(x, y);
-        await expect(toast(page, 'MOB-6 moved to To do'), where).toBeVisible();
+        await expect(toast(page, 'MOB-6 moved to To do')).toBeVisible();
         await page.waitForTimeout(500);
-        await expect(page, where).toHaveURL(/\/p\/MOB$/);
-        await expect(group(page, 'To do'), where).toContainText('Ticket 6');
+        await expect(page).toHaveURL(/\/p\/MOB$/);
+        await expect(group(page, 'To do')).toContainText('Ticket 6');
 
         // Once the double tap is over, a tap there opens the row behind the toast again.
         await page.touchscreen.tap(x, y);
-        await expect(page, where).toHaveURL(/\/p\/MOB\/\d+$/);
-      }
+        await expect(page).toHaveURL(/\/p\/MOB\/\d+$/);
+      });
     }
-  });
+  }
 });
