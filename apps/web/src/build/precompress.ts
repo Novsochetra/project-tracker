@@ -4,8 +4,8 @@ import { promisify } from 'node:util';
 import { brotliCompress, constants, gzip } from 'node:zlib';
 import type { Plugin } from 'vite';
 
-// The text types the API sends compressed (apps/server/src/http/static.ts). Images, fonts and
-// videos are compressed already.
+// Images, fonts and videos are compressed already. A type added here goes in ENCODABLE_TYPE in
+// apps/server/src/http/static.ts too, so its plain answers say Vary: Accept-Encoding.
 const TEXT_FILE = /\.(?:js|mjs|css|html|svg|json|webmanifest|txt|xml)$/;
 
 const brotliAsync = promisify(brotliCompress);
@@ -41,13 +41,17 @@ export async function precompressFolder(folder: string): Promise<void> {
   await Promise.all(files.map((entry) => precompressFile(join(entry.parentPath, entry.name))));
 }
 
-// Writes a .br and a .gz copy next to each text file of the build, which the API sends to
-// browsers that take them. It runs after the PWA plugin has written sw.js.
+// check:first-load (scripts/check-first-load.ts) measures a build it then deletes; copies would
+// only slow it down.
+export const SKIP_PRECOMPRESS = 'TRACKER_SKIP_PRECOMPRESS';
+
+// Last of all (enforce and order post): the PWA plugin writes sw.js when the bundle closes, and
+// sw.js needs copies too.
 export function precompress(): Plugin {
   let outDir = '';
   return {
     name: 'tracker-precompress',
-    apply: 'build',
+    apply: (_config, { command }) => command === 'build' && !process.env[SKIP_PRECOMPRESS],
     enforce: 'post',
     configResolved(config) {
       outDir = resolve(config.root, config.build.outDir);

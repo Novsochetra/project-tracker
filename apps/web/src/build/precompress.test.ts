@@ -2,8 +2,8 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { brotliDecompressSync, gunzipSync } from 'node:zlib';
-import { afterEach, describe, expect, it } from 'vitest';
-import { isTextFile, precompressFolder } from './precompress';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { isTextFile, precompress, precompressFolder, SKIP_PRECOMPRESS } from './precompress';
 
 const SCRIPT = `export const answer = ${JSON.stringify('forty-two '.repeat(200))};\n`;
 
@@ -17,6 +17,7 @@ describe('precompress', () => {
 
   afterEach(() => {
     folders.splice(0).forEach((folder) => rmSync(folder, { recursive: true, force: true }));
+    vi.unstubAllEnvs();
   });
 
   it('picks the text files of a build', () => {
@@ -50,5 +51,14 @@ describe('precompress', () => {
     await precompressFolder(folder);
     expect(existsSync(join(folder, 'tiny.js.br'))).toBe(false);
     expect(existsSync(join(folder, 'tiny.js.gz'))).toBe(false);
+  });
+
+  it('runs in builds, but not in the one check:first-load makes', () => {
+    const { apply } = precompress();
+    if (typeof apply !== 'function') throw new Error('apply should be a function');
+    expect(apply({}, { command: 'build', mode: 'production' })).toBe(true);
+    expect(apply({}, { command: 'serve', mode: 'development' })).toBe(false);
+    vi.stubEnv(SKIP_PRECOMPRESS, '1');
+    expect(apply({}, { command: 'build', mode: 'production' })).toBe(false);
   });
 });

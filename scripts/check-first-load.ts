@@ -9,6 +9,7 @@ import { fileURLToPath } from 'node:url';
 import { gzipSync } from 'node:zlib';
 import { build } from 'vite';
 import { firstLoadProblems, readFirstLoad, type Manifest } from '../apps/web/src/build/firstLoad';
+import { SKIP_PRECOMPRESS } from '../apps/web/src/build/precompress';
 
 // Gzipped kB: 262.5 with every screen in one script, 206.5 after the split (PT-48). The room left
 // is for small changes; one that needs more should load later, or raise this on purpose.
@@ -17,6 +18,7 @@ const WEB_ROOT = fileURLToPath(new URL('../apps/web', import.meta.url));
 
 const partName = (key: string) => basename(key).replace(/\.[^.]+$/, '');
 
+process.env[SKIP_PRECOMPRESS] = '1';
 const outDir = mkdtempSync(join(tmpdir(), 'tracker-first-load-'));
 try {
   // Warnings stay on: Vite's names the module when something imports a lazy part statically.
