@@ -39,6 +39,19 @@ button.barPrimary {
   flex-grow: 1.35;
 }
 
+/* A long done name shrinks the Move to Done button, but not its icon. */
+.barPrimary svg {
+  flex: none;
+}
+
+/* Below 360px "Paste report" beside "Send to Claude" or "Move to Done" needs about 347px, so it
+   shows "Paste"; its accessible name stays "Paste report". */
+@media (max-width: 359px) {
+  .reportWord {
+    display: none;
+  }
+}
+
 @media (max-width: 767px) {
   .grid {
     grid-template-columns: minmax(0, 1fr);

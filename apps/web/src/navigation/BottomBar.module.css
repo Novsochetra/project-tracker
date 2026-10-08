@@ -13,10 +13,12 @@
   backdrop-filter: var(--glass-filter);
   border-top: 1px solid var(--line);
   animation: global(bar-up) var(--duration-sheet-in) var(--ease-out) backwards;
-  transition: transform var(--duration-sheet-in) var(--ease-out);
+  transition: translate var(--duration-sheet-in) var(--ease-out);
 }
 
+/* `translate`, not `transform`: the entrance animation owns `transform` while it runs, and a field
+   focused meanwhile must still send the bar away. */
 .bar[data-hidden] {
-  transform: translateY(100%);
-  transition: transform var(--duration-sheet-out) var(--ease-in);
+  translate: 0 100%;
+  transition: translate var(--duration-sheet-out) var(--ease-in);
 }

@@ -1,0 +1,125 @@
+import type { Locator, Page } from '@playwright/test';
+import { expect, isPhone, test } from './fixtures';
+import { activity, seedProject } from './helpers';
+
+// The phone bottom bar slides away while a text field has focus. It came back over the comment
+// box's Comment button: mid-tap (the release landed on "Send to Claude") and when the keyboard
+// closed with the box at the bottom of the screen.
+
+const screenOf = (page: Page) => page.locator('[data-stack-path="/p/MOB/1"]');
+const bar = (page: Page) => screenOf(page).locator('[data-bottom-bar]');
+const scroller = (page: Page) => screenOf(page).locator('[data-stack-scroller]');
+const commentField = (page: Page) => page.getByLabel('Comment', { exact: true });
+const commentButton = (page: Page) => page.getByRole('button', { name: 'Comment', exact: true });
+const HOLD_ENTRANCE =
+  '[data-bottom-bar] { animation-delay: -170ms !important; animation-play-state: paused !important; }';
+
+async function openTicket(page: Page, api: Parameters<typeof seedProject>[0]) {
+  await seedProject(api, 'Mobile app', 'MOB', [{ title: 'Login error' }]);
+  await page.goto('/p/MOB/1');
+  await expect(commentButton(page)).toBeDisabled();
+}
+
+// Waits for the bar's slide and for the screen's scrolling to end.
+async function settle(page: Page) {
+  await bar(page).evaluate((element) =>
+    Promise.all(element.getAnimations().map((animation) => animation.finished)),
+  );
+  await scroller(page).evaluate(async (element) => {
+    const frame = () => new Promise((resolve) => requestAnimationFrame(resolve));
+    let last = Number.NaN;
+    while (element.scrollTop !== last) {
+      last = element.scrollTop;
+      await frame();
+      await frame();
+    }
+  });
+}
+
+// Where the box sat when the E2E failed: its bottom on the screen's bottom edge, under the bar.
+async function boxAtScreenBottom(page: Page) {
+  await settle(page);
+  await scroller(page).evaluate((element) => {
+    const box = element.querySelector('textarea[aria-label="Comment"]')!.closest('form')!;
+    element.scrollTop +=
+      box.getBoundingClientRect().bottom - element.getBoundingClientRect().bottom;
+  });
+}
+
+async function typeComment(page: Page, text: string) {
+  await commentField(page).fill(text);
+  await expect(bar(page)).toHaveAttribute('data-hidden');
+  await settle(page);
+}
+
+const hitAtCenter = (target: Locator) =>
+  target.evaluate((element) => {
+    const box = element.getBoundingClientRect();
+    const hit = document.elementFromPoint(box.left + box.width / 2, box.top + box.height / 2);
+    return hit !== null && element.contains(hit);
+  });
+
+const PHONE_ONLY = 'The bottom bar is phone only';
+
+test.describe('phone bottom bar and the comment box', () => {
+  test('closing the keyboard leaves the comment box and its Comment button uncovered', async ({
+    page,
+    api,
+  }, info) => {
+    test.skip(!isPhone(info.project.name), PHONE_ONLY);
+    await openTicket(page, api);
+    await boxAtScreenBottom(page);
+    await typeComment(page, 'Kept in sight');
+
+    await commentField(page).blur();
+    await expect(bar(page)).not.toHaveAttribute('data-hidden');
+    await settle(page);
+    expect(await hitAtCenter(commentButton(page))).toBe(true);
+    expect(await hitAtCenter(commentField(page))).toBe(true);
+    await commentButton(page).click();
+    await expect(activity(page)).toContainText('Kept in sight');
+  });
+
+  test('a slow tap on Comment sends the comment while the bar waits', async ({
+    page,
+    api,
+  }, info) => {
+    test.skip(!isPhone(info.project.name), PHONE_ONLY);
+    await openTicket(page, api);
+    await boxAtScreenBottom(page);
+    await typeComment(page, 'A slow tap');
+
+    const box = (await commentButton(page).boundingBox())!;
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    await page.mouse.down();
+    // A press long enough for a bar coming back on mousedown to slide over the button.
+    await page.waitForTimeout(250);
+    await page.mouse.up();
+    await expect(commentField(page)).toHaveValue('');
+    await expect(activity(page)).toContainText('A slow tap');
+
+    await settle(page);
+    expect(await hitAtCenter(commentButton(page))).toBe(true);
+  });
+
+  test('a field focused while the bar is still sliding in sends it away', async ({
+    page,
+    api,
+  }, info) => {
+    test.skip(!isPhone(info.project.name), PHONE_ONLY);
+    // Freezes the bar halfway through its entrance, as if the field got focus while it came in.
+    await page.addInitScript((css) => {
+      document.addEventListener('DOMContentLoaded', () => {
+        const style = document.createElement('style');
+        style.textContent = css;
+        document.head.append(style);
+      });
+    }, HOLD_ENTRANCE);
+    await openTicket(page, api);
+    await commentField(page).fill('Typed early');
+    await expect(bar(page)).toHaveAttribute('data-hidden');
+    await expect
+      .poll(() => bar(page).evaluate((element) => element.getBoundingClientRect().top))
+      .toBeGreaterThanOrEqual(812);
+  });
+});
