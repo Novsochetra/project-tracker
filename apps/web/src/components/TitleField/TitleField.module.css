@@ -1,0 +1,10 @@
+/* Borderless like the design: the caret shows focus. Five lines hold a 150-character title on a
+   375px phone; longer ones scroll. */
+.title {
+  max-height: calc(5lh + 2 * var(--space-1));
+  padding: var(--space-1) 0;
+  overflow-y: auto;
+  color: var(--ink);
+  font: var(--text-heading);
+  letter-spacing: -0.01em;
+}

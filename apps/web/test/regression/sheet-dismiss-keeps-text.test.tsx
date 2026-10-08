@@ -38,6 +38,8 @@ let restore: () => void = () => undefined;
 
 afterEach(() => {
   restore();
+  // The New ticket sheet keeps typed text in storage until it is created or discarded.
+  localStorage.clear();
 });
 
 const touch = { pointerId: 9, pointerType: 'touch', isPrimary: true, button: 0, clientX: 160 };

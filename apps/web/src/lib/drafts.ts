@@ -1,18 +1,23 @@
 import { hasStoredDrafts } from './storedDrafts';
 
-const drafts = new Set<string>();
+// Counted per id: two mounted components can mark the same draft, and the first to let go
+// must not clear the other's mark.
+const marks = new Map<string, number>();
 
 // Marks unsent text a reload would lose, so an app update waits until clearDraft(id).
 export function markDraft(id: string): void {
-  drafts.add(id);
+  marks.set(id, (marks.get(id) ?? 0) + 1);
 }
 
 export function clearDraft(id: string): void {
-  drafts.delete(id);
+  const count = marks.get(id) ?? 0;
+  if (count > 1) marks.set(id, count - 1);
+  else marks.delete(id);
 }
 
-// Text kept in the drafts store survives a reload but isn't saved yet, so it counts too.
-export const hasDrafts = (): boolean => drafts.size > 0 || hasStoredDrafts();
+// Text kept in the ticket drafts store survives a reload but isn't saved yet, so it counts too.
+// Sheet drafts don't: a reload loses nothing, since the sheet opens with them again.
+export const hasDrafts = (): boolean => marks.size > 0 || hasStoredDrafts();
 
 function askBeforeUnload(event: BeforeUnloadEvent): void {
   if (!hasDrafts()) return;

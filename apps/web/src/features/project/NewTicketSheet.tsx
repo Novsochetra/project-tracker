@@ -3,10 +3,10 @@ import { useRef, useState } from 'react';
 import { useBoard } from '../../api';
 import type { SheetProps } from '../../app/sheets/types';
 import { Sheet, SheetActionButton, SheetCancelButton } from '../../overlays';
+import { forgetKeptForm, keptForm, useKeepForm } from './keptForm';
 import { NewTicketFields } from './NewTicketFields';
 import styles from './NewTicketSheet.module.css';
 import {
-  blankForm,
   chosenStatusId,
   defaultStatusId,
   hasChanges,
@@ -35,19 +35,25 @@ function ProjectSubtitle({ project }: { project: Project }) {
 export function NewTicketSheet({ open, onClose, projectKey, statusId }: NewTicketSheetProps) {
   const board = useBoard(projectKey).data;
   const statuses = board?.statuses ?? NO_STATUSES;
-  const titleRef = useRef<HTMLInputElement>(null);
-  const [form, setForm] = useState(blankForm);
+  const titleRef = useRef<HTMLTextAreaElement>(null);
+  const [form, setForm] = useState(() => keptForm(projectKey));
   const [error, setError] = useState('');
-  // The host keeps this sheet mounted between openings: each opening starts a blank form.
+  // The host keeps this sheet mounted between openings: each opening starts from the kept fields.
   const [openedAs, setOpenedAs] = useState(open);
   if (open !== openedAs) {
     setOpenedAs(open);
     if (open) {
-      setForm(blankForm());
+      setForm(keptForm(projectKey));
       setError('');
     }
   }
-  const flow = useCreateTicketFlow({ projectKey, statuses, onCreated: onClose, onError: setError });
+  const changed = hasChanges(form, defaultStatusId(statuses, statusId));
+  useKeepForm({ projectKey, form, open, changed });
+  const close = () => {
+    forgetKeptForm(projectKey);
+    onClose();
+  };
+  const flow = useCreateTicketFlow({ projectKey, statuses, onCreated: close, onError: setError });
   const status = chosenStatusId(form, statuses, statusId);
   const update = (patch: Partial<NewTicketForm>) => {
     setForm((current) => ({ ...current, ...patch }));
@@ -60,7 +66,7 @@ export function NewTicketSheet({ open, onClose, projectKey, statusId }: NewTicke
   return (
     <Sheet
       open={open}
-      onClose={onClose}
+      onClose={close}
       label="New ticket"
       title="New ticket"
       subtitle={board && <ProjectSubtitle project={board.project} />}
@@ -75,7 +81,7 @@ export function NewTicketSheet({ open, onClose, projectKey, statusId }: NewTicke
         event.preventDefault();
         submit();
       }}
-      dirty={hasChanges(form, defaultStatusId(statuses, statusId))}
+      dirty={changed}
     >
       <NewTicketFields
         form={form}

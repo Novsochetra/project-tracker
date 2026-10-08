@@ -1,4 +1,11 @@
-import { sortStatuses, type CreateTicketInput, type Priority, type Status } from '@tracker/shared';
+import {
+  createTicketInput,
+  PRIORITIES,
+  sortStatuses,
+  type CreateTicketInput,
+  type Priority,
+  type Status,
+} from '@tracker/shared';
 
 export interface NewTicketForm {
   title: string;
@@ -11,6 +18,8 @@ export interface NewTicketForm {
 }
 
 export const TITLE_REQUIRED = 'Add a title to create the ticket.';
+// The API's limit, so an overlong paste is cut short in the field instead of failing to create.
+export const TITLE_MAX_LENGTH = createTicketInput.shape.title.maxLength ?? undefined;
 
 export const blankForm = (): NewTicketForm => ({
   title: '',
@@ -20,6 +29,29 @@ export const blankForm = (): NewTicketForm => ({
   assignee: '',
   due: '',
 });
+
+export const newTicketDraftId = (projectKey: string): string => `new-ticket:${projectKey}`;
+
+const textOf = (value: unknown): string => (typeof value === 'string' ? value : '');
+
+const isPriority = (value: unknown): value is Priority =>
+  typeof value === 'string' && (PRIORITIES as readonly string[]).includes(value);
+
+// Kept fields come from storage, which an older build or another tab may have written.
+export function formFromDraft(
+  values: Readonly<Record<string, unknown>> | undefined,
+): NewTicketForm {
+  const blank = blankForm();
+  if (!values) return blank;
+  return {
+    title: textOf(values.title),
+    description: textOf(values.description),
+    statusId: typeof values.statusId === 'string' ? values.statusId : blank.statusId,
+    priority: isPriority(values.priority) ? values.priority : blank.priority,
+    assignee: textOf(values.assignee),
+    due: textOf(values.due),
+  };
+}
 
 const hasText = (value: string): boolean => value.trim() !== '';
 
@@ -39,12 +71,15 @@ export function defaultStatusId(
   return sortStatuses(statuses)[0]?.id;
 }
 
+// A kept draft can name a status that was deleted since.
 export function chosenStatusId(
   form: NewTicketForm,
   statuses: readonly Status[],
   requested: string | undefined,
 ): string | undefined {
-  return form.statusId ?? defaultStatusId(statuses, requested);
+  const picked = form.statusId;
+  if (picked !== null && statuses.some((status) => status.id === picked)) return picked;
+  return defaultStatusId(statuses, requested);
 }
 
 export function toCreateInput(

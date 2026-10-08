@@ -1,3 +1,5 @@
+import { draftStorage, readDrafts, type DraftMap } from './draftStorage';
+
 export type DraftField = 'title' | 'description' | 'assignee' | 'comment' | 'comment-edit';
 
 export interface DraftTarget {
@@ -14,7 +16,7 @@ export interface StoredDraft extends DraftTarget {
   text: string;
 }
 
-type Drafts = Readonly<Record<string, StoredDraft>>;
+type Drafts = DraftMap<StoredDraft>;
 
 export const DRAFTS_STORAGE_KEY = 'tracker.drafts';
 
@@ -43,46 +45,9 @@ function isStoredDraft(value: unknown): value is StoredDraft {
   );
 }
 
-export function parseDrafts(raw: string | null): Drafts {
-  try {
-    const parsed: unknown = JSON.parse(raw ?? '{}');
-    if (typeof parsed !== 'object' || parsed === null) return {};
-    return Object.fromEntries(Object.entries(parsed).filter(([, draft]) => isStoredDraft(draft)));
-  } catch {
-    return {};
-  }
-}
+export const parseDrafts = (raw: string | null): Drafts => readDrafts(raw, isStoredDraft);
 
-let cached: { raw: string | null; drafts: Drafts } = { raw: null, drafts: {} };
-// Takes over once storage fails (private mode, full), so drafts still outlive the screen.
-let memory: Drafts | null = null;
-
-function load(): Drafts {
-  if (memory) return memory;
-  try {
-    const raw = window.localStorage.getItem(DRAFTS_STORAGE_KEY);
-    if (raw !== cached.raw) cached = { raw, drafts: parseDrafts(raw) };
-    return cached.drafts;
-  } catch {
-    memory = {};
-    return memory;
-  }
-}
-
-function persist(drafts: Drafts): boolean {
-  try {
-    if (Object.keys(drafts).length === 0) window.localStorage.removeItem(DRAFTS_STORAGE_KEY);
-    else window.localStorage.setItem(DRAFTS_STORAGE_KEY, JSON.stringify(drafts));
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-function store(drafts: Drafts): void {
-  if (!memory && persist(drafts)) return;
-  memory = drafts;
-}
+const { load, store } = draftStorage(DRAFTS_STORAGE_KEY, isStoredDraft);
 
 export const storedDraft = (id: string): StoredDraft | undefined => load()[id];
 

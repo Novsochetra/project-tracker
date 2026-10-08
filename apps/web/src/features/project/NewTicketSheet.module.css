@@ -5,23 +5,6 @@
   padding: 18px 20px 6px;
 }
 
-.title {
-  width: 100%;
-  margin: 0;
-  padding: 4px 0;
-  border: 0;
-  background: transparent;
-  color: var(--ink);
-  font-family: var(--font-sans);
-  font-size: var(--size-heading);
-  font-weight: var(--weight-semibold);
-  letter-spacing: -0.01em;
-}
-
-.title:focus-visible {
-  outline: none;
-}
-
 .description {
   min-height: 72px;
   max-height: 40vh;

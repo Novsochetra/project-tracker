@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ApiError } from '@tracker/client';
 import { useState } from 'react';
@@ -7,6 +7,7 @@ import { queryKeys } from '../../api';
 import { listItem, makeBoard, STATUS } from '../../api/test/fixtures';
 import { setupApi } from '../../api/test/render';
 import { ToastProvider } from '../../components';
+import { sheetDraft } from '../../lib/sheetDrafts';
 import { mockPhone, skipAnimations } from '../../overlays/testing';
 import { getListView, resetListView, setListFilter, setListQuery } from './listViewStore';
 import { NewTicketSheet } from './NewTicketSheet';
@@ -75,6 +76,7 @@ beforeEach(() => {
 afterEach(() => {
   restore.forEach((undo) => undo());
   resetListView('MOB');
+  localStorage.clear();
 });
 
 describe('NewTicketSheet', () => {
@@ -131,6 +133,20 @@ describe('NewTicketSheet', () => {
     expect(createTicket).toHaveBeenCalledWith(
       'MOB',
       expect.objectContaining({ title: 'Cache avatars', statusId: STATUS.review }),
+    );
+  });
+
+  it('wraps the title but keeps it one line of text, as long as the API takes', async () => {
+    const { user, createTicket } = renderSheet();
+    expect(titleField()).toBeInstanceOf(HTMLTextAreaElement);
+    expect(titleField()).toHaveAttribute('maxlength', '300');
+    await user.click(titleField());
+    await user.paste('Crash on rotate\nin landscape');
+    expect(titleField()).toHaveValue('Crash on rotate in landscape');
+    await user.keyboard('{Enter}');
+    expect(createTicket).toHaveBeenCalledWith(
+      'MOB',
+      expect.objectContaining({ title: 'Crash on rotate in landscape' }),
     );
   });
 
@@ -191,7 +207,34 @@ describe('NewTicketSheet', () => {
     await user.type(titleField(), 'Draft');
     await user.click(within(dialog()).getByRole('button', { name: 'Cancel' }));
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    expect(sheetDraft('new-ticket:MOB')).toBeUndefined();
     await user.click(screen.getByRole('button', { name: 'Open sheet' }));
     expect(titleField()).toHaveValue('');
+  });
+
+  it('opens with the fields typed before the page went away', async () => {
+    const first = renderSheet({ statusId: STATUS.progress });
+    await first.user.type(titleField(), 'Half an idea');
+    await first.user.click(screen.getByRole('button', { name: /^Status/ }));
+    await first.user.click(screen.getByRole('option', { name: 'Done' }));
+    cleanup();
+
+    renderSheet({ statusId: STATUS.progress });
+    expect(titleField()).toHaveValue('Half an idea');
+    expect(screen.getByRole('button', { name: /^Status/ })).toHaveTextContent('Done');
+    expect(createButton()).toBeEnabled();
+    expect(titleField()).toHaveFocus();
+    expect((titleField() as HTMLTextAreaElement).selectionStart).toBe('Half an idea'.length);
+  });
+
+  it('lets the kept fields go once they are emptied or the ticket is created', async () => {
+    const { user } = renderSheet();
+    await user.type(titleField(), 'Typo');
+    expect(sheetDraft('new-ticket:MOB')).toMatchObject({ title: 'Typo' });
+    await user.clear(titleField());
+    expect(sheetDraft('new-ticket:MOB')).toBeUndefined();
+    await user.type(titleField(), 'Cache avatars{Enter}');
+    expect(await screen.findByText('MOB-5 created')).toBeInTheDocument();
+    expect(sheetDraft('new-ticket:MOB')).toBeUndefined();
   });
 });

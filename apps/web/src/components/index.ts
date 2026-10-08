@@ -19,4 +19,5 @@ export * from './Spinner';
 export * from './StarRating';
 export * from './StatusGlyph';
 export * from './Switch';
+export * from './TitleField';
 export * from './Toast';

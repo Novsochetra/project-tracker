@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { STATUS, statuses } from '../../api/test/fixtures';
-import { blankForm, chosenStatusId, defaultStatusId, toCreateInput } from './newTicketForm';
+import {
+  blankForm,
+  chosenStatusId,
+  defaultStatusId,
+  formFromDraft,
+  newTicketDraftId,
+  toCreateInput,
+} from './newTicketForm';
 
 describe('defaultStatusId', () => {
   it('uses the status of the group the sheet was opened from', () => {
@@ -26,6 +33,38 @@ describe('chosenStatusId', () => {
     const form = { ...blankForm(), statusId: STATUS.done };
     expect(chosenStatusId(form, statuses, STATUS.review)).toBe(STATUS.done);
     expect(chosenStatusId(blankForm(), statuses, STATUS.review)).toBe(STATUS.review);
+  });
+
+  it('falls back to the default when the picked status is gone, as in an old draft', () => {
+    const form = { ...blankForm(), statusId: 'deleted-status' };
+    expect(chosenStatusId(form, statuses, STATUS.review)).toBe(STATUS.review);
+  });
+});
+
+describe('new ticket drafts', () => {
+  it('are kept per project', () => {
+    expect(newTicketDraftId('MOB')).toBe('new-ticket:MOB');
+    expect(newTicketDraftId('WEB')).not.toBe(newTicketDraftId('MOB'));
+  });
+
+  it('read back into the form they were kept from', () => {
+    const form = {
+      title: 'Crash on rotate',
+      description: 'Steps',
+      statusId: STATUS.done,
+      priority: 'high' as const,
+      assignee: 'Dara',
+      due: '2026-10-09',
+    };
+    expect(formFromDraft({ ...form })).toEqual(form);
+  });
+
+  it('fill what they lack or cannot read from a blank form', () => {
+    expect(formFromDraft(undefined)).toEqual(blankForm());
+    expect(formFromDraft({ title: 'Typed', statusId: 7, priority: 'urgent', due: null })).toEqual({
+      ...blankForm(),
+      title: 'Typed',
+    });
   });
 });
 

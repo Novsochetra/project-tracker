@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { clearDraft, guardUnload, hasDrafts, markDraft } from './drafts';
+import { forgetSheetDraft, keepSheetDraft } from './sheetDrafts';
 import { forgetDraft, keepDraft } from './storedDrafts';
 
 afterEach(() => {
@@ -20,9 +21,11 @@ describe('drafts', () => {
     expect(hasDrafts()).toBe(false);
   });
 
-  it('keeps one entry per id, so marking twice needs one clear', () => {
+  it('counts marks per id, so each mark needs its own clear', () => {
     markDraft('comment:PT-1');
     markDraft('comment:PT-1');
+    clearDraft('comment:PT-1');
+    expect(hasDrafts()).toBe(true);
     clearDraft('comment:PT-1');
     expect(hasDrafts()).toBe(false);
   });
@@ -37,6 +40,10 @@ describe('drafts', () => {
   it('ignores clearing a draft that was never marked', () => {
     clearDraft('comment:PT-1');
     expect(hasDrafts()).toBe(false);
+    markDraft('comment:PT-1');
+    expect(hasDrafts()).toBe(true);
+    clearDraft('comment:PT-1');
+    expect(hasDrafts()).toBe(false);
   });
 });
 
@@ -46,6 +53,12 @@ describe('stored drafts', () => {
     expect(hasDrafts()).toBe(true);
     forgetDraft('title:PT-1');
     expect(hasDrafts()).toBe(false);
+  });
+
+  it('leave out sheet drafts, which a reload brings back', () => {
+    keepSheetDraft('new-ticket:PT', { title: 'Typed' });
+    expect(hasDrafts()).toBe(false);
+    forgetSheetDraft('new-ticket:PT');
   });
 });
 

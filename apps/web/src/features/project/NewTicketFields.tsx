@@ -1,17 +1,25 @@
 import { isDoneCategory, isOverdue, type Status } from '@tracker/shared';
-import type { KeyboardEvent, RefObject } from 'react';
+import { useLayoutEffect, type RefObject } from 'react';
 import { usePeople } from '../../api';
-import { AutoTextarea, Avatar, DateRow, GroupedCard, InputRow, SelectRow } from '../../components';
+import {
+  AutoTextarea,
+  Avatar,
+  DateRow,
+  GroupedCard,
+  InputRow,
+  SelectRow,
+  TitleField,
+} from '../../components';
 import { PRIORITY_OPTIONS, statusOptions } from './fieldOptions';
 import styles from './NewTicketSheet.module.css';
-import type { NewTicketForm } from './newTicketForm';
+import { TITLE_MAX_LENGTH, type NewTicketForm } from './newTicketForm';
 
 export interface NewTicketFieldsProps {
   form: NewTicketForm;
   statuses: readonly Status[];
   statusId: string | undefined;
   error: string;
-  titleRef: RefObject<HTMLInputElement | null>;
+  titleRef: RefObject<HTMLTextAreaElement | null>;
   onChange: (patch: Partial<NewTicketForm>) => void;
   onEnter: () => void;
 }
@@ -21,23 +29,22 @@ export function NewTicketFields(props: NewTicketFieldsProps) {
   const people = usePeople().data;
   const status = statuses.find((candidate) => candidate.id === statusId);
   const isDone = status ? isDoneCategory(status.category) : false;
-  // Enter must reach the validation even while Create is disabled, which blocks implicit submit.
-  const onTitleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
-    if (event.key !== 'Enter' || event.nativeEvent.isComposing) return;
-    event.preventDefault();
-    onEnter();
-  };
+  // Before the sheet focuses the title on desktop, so typing goes on after a kept title.
+  useLayoutEffect(() => {
+    const field = titleRef.current;
+    field?.setSelectionRange(field.value.length, field.value.length);
+  }, [titleRef]);
   return (
     <>
       <div className={styles.text}>
-        <input
+        <TitleField
           ref={titleRef}
-          className={styles.title}
           aria-label="Ticket title"
           placeholder="Ticket title"
+          maxLength={TITLE_MAX_LENGTH}
           value={form.title}
-          onChange={(event) => onChange({ title: event.currentTarget.value })}
-          onKeyDown={onTitleKeyDown}
+          onChange={(title) => onChange({ title })}
+          onEnter={onEnter}
         />
         <AutoTextarea
           className={styles.description}

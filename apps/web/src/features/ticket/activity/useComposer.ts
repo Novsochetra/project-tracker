@@ -10,7 +10,7 @@ import {
   type DraftTarget,
 } from '../../../lib/storedDrafts';
 import { useImageUploads, type ImageUploads } from '../../attachments';
-import { useDraftMark } from '../fields/useDraftMark';
+import { useDraftMark } from '../../../lib/useDraftMark';
 import { canSendComment } from './commentRules';
 
 export interface ComposerState {

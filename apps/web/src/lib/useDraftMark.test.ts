@@ -1,6 +1,6 @@
 import { renderHook } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { hasDrafts } from '../../../lib/drafts';
+import { hasDrafts } from './drafts';
 import { useDraftMark } from './useDraftMark';
 
 describe('useDraftMark', () => {
@@ -18,6 +18,15 @@ describe('useDraftMark', () => {
     expect(hasDrafts()).toBe(false);
     rerender({ active: true });
     unmount();
+    expect(hasDrafts()).toBe(false);
+  });
+
+  it('keeps the draft while another component with the same id still marks it', () => {
+    const first = renderHook(() => useDraftMark('comment:MOB-1', true));
+    const second = renderHook(() => useDraftMark('comment:MOB-1', true));
+    first.unmount();
+    expect(hasDrafts()).toBe(true);
+    second.unmount();
     expect(hasDrafts()).toBe(false);
   });
 });
