@@ -25,7 +25,7 @@ export function ReportCard({ item, now, actions, rise, statuses }: ReportCardPro
       menu={<ItemMenu noun="report" onDelete={() => actions.remove(item.id)} />}
       {...rise}
     >
-      <ReportBody text={item.text} sections={item.sections} statuses={statuses} />
+      <ReportBody text={item.text} statuses={statuses} />
       <CardImages images={item.images} />
     </ActivityCard>
   );

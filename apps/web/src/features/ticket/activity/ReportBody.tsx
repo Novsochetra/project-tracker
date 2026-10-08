@@ -1,19 +1,21 @@
 import { findStatusByCategory, type Status } from '@tracker/shared';
 import clsx from 'clsx';
-import type { ReactNode } from 'react';
+import { useMemo, type ReactNode } from 'react';
 import { StatusGlyph } from '../../../components';
 import cardStyles from './ActivityCard.module.css';
 import { LinkedText } from './LinkedText';
 import styles from './ReportBody.module.css';
-import type { ReportSections } from './reportSections';
+import { ReportFiles } from './ReportFiles';
+import { reportSections, type ReportSections } from './reportSections';
 
 export interface ReportBodyProps {
   text: string;
-  sections: ReportSections | null;
   statuses: readonly Status[];
 }
 
-export function ReportBody({ text, sections, statuses }: ReportBodyProps) {
+// Read here, inside the card, so a report the reader trips on only takes down its own card.
+export function ReportBody({ text, statuses }: ReportBodyProps) {
+  const sections = useMemo(() => reportSections(text), [text]);
   if (!sections) {
     return (
       <p className={cardStyles.reportBody}>
@@ -43,13 +45,7 @@ function SectionList({ sections: { summary, next, files } }: { sections: ReportS
       )}
       {files.length > 0 && (
         <Section label="Files">
-          <ul className={styles.files}>
-            {files.map((file, index) => (
-              <li key={index}>
-                <LinkedText text={file} />
-              </li>
-            ))}
-          </ul>
+          <ReportFiles files={files} />
         </Section>
       )}
     </dl>

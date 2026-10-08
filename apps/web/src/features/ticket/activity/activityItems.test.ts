@@ -43,18 +43,8 @@ describe('activityItems', () => {
     ]);
     expect(event).toMatchObject({ kind: 'event', text: 'event e', at: 1 });
     expect(edited).toMatchObject({ kind: 'comment', editedAt: 5, draft: false, images: [image] });
-    expect(report).toMatchObject({ kind: 'report', title: 'Claude report', sections: null });
+    expect(report).toMatchObject({ kind: 'report', title: 'Claude report', text: 'report r' });
     expect(review).toMatchObject({ kind: 'review', review: { verdict: 'approved', rating: 4 } });
-  });
-
-  it('reads a report’s sections once, with the items', () => {
-    const [report] = activityItems([
-      entry('r', 'report', 1, { text: 'TICKET: MOB-1\nSTATUS: done\nSUMMARY: Fixed it.' }),
-    ]);
-    expect(report).toMatchObject({
-      kind: 'report',
-      sections: { status: { category: 'in_review' }, summary: 'Fixed it.', files: [], next: null },
-    });
   });
 });
 

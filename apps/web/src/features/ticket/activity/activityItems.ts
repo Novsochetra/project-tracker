@@ -6,7 +6,6 @@ import {
   type Review,
 } from '@tracker/shared';
 import { isTemporaryId } from '../../../api';
-import { reportSections, type ReportSections } from './reportSections';
 
 interface ItemBase {
   id: string;
@@ -20,7 +19,7 @@ interface ItemBase {
 export type ActivityItem =
   | (ItemBase & { kind: 'event' })
   | (ItemBase & { kind: 'comment'; editedAt: number | null; draft: boolean })
-  | (ItemBase & { kind: 'report'; title: string; sections: ReportSections | null })
+  | (ItemBase & { kind: 'report'; title: string })
   | (ItemBase & { kind: 'review'; review: Review | null });
 
 export const reportTitle = (actor: Actor): string =>
@@ -46,12 +45,7 @@ function toItem(activity: Activity): ActivityItem {
         draft: isTemporaryId(activity.id),
       };
     case 'report':
-      return {
-        ...base,
-        kind: 'report',
-        title: reportTitle(activity.actor),
-        sections: reportSections(activity.text),
-      };
+      return { ...base, kind: 'report', title: reportTitle(activity.actor) };
     case 'review':
       return { ...base, kind: 'review', review: activity.review };
   }

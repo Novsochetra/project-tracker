@@ -54,3 +54,38 @@
   font-size: var(--size-report);
   line-height: 1.6;
 }
+
+/* A quiet text button under the list, with the 44px target small controls get (SPEC §12). The
+   negative margins keep the list's rhythm while the target stays full size. */
+.more {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-height: var(--touch-target);
+  margin: -4px 0 -10px -8px;
+  padding: 0 var(--space-2);
+  border: 0;
+  border-radius: var(--radius-control);
+  background: transparent;
+  color: var(--muted);
+  font-family: var(--font-sans);
+  font-size: var(--size-secondary);
+  font-weight: var(--weight-medium);
+  cursor: pointer;
+  transition: color var(--duration-fast) ease-out;
+}
+
+@media (hover: hover) {
+  .more:hover {
+    color: var(--ink);
+  }
+}
+
+.chevron {
+  flex: none;
+  transition: transform var(--duration-fade) var(--ease-out);
+}
+
+.more[aria-expanded='true'] .chevron {
+  transform: rotate(180deg);
+}

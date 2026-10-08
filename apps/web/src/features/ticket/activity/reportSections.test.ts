@@ -101,6 +101,60 @@ describe('reportSections', () => {
     });
   });
 
+  it.each(['**none**', '*None.*', '__n/a__', '`nothing`', '**none**.'])(
+    'leaves out files and next steps that say none in Markdown: %s',
+    (none) => {
+      const sections = reportSections(
+        lines('SUMMARY: Added dark mode.', `FILES: ${none}`, `NEXT: ${none}`),
+      );
+      expect(sections).toMatchObject({ files: [], next: null });
+    },
+  );
+
+  it('splits files on commas outside brackets, so notes in brackets stay with their file', () => {
+    const text = lines(
+      'SUMMARY: Fixed the parser.',
+      'FILES: src/a.ts (parser, tests), src/b.ts [new, small], `src/c.ts`',
+    );
+    expect(reportSections(text)?.files).toEqual([
+      'src/a.ts (parser, tests)',
+      'src/b.ts [new, small]',
+      'src/c.ts',
+    ]);
+  });
+
+  it('reads a list written one file per line by its lines, commas and all', () => {
+    const text = lines(
+      'SUMMARY: Fixed the parser.',
+      'FILES:',
+      '- src/a.ts: parser, tests',
+      '- src/b.ts',
+    );
+    expect(reportSections(text)?.files).toEqual(['src/a.ts: parser, tests', 'src/b.ts']);
+  });
+
+  it('keeps summary lines that start like a field in the summary', () => {
+    const text = lines(
+      'TICKET: PT-52',
+      'STATUS: done',
+      'SUMMARY: Fixed the parser.',
+      'Status: all tests pass.',
+      'Next: the reviewer checks 320px.',
+      'FILES: src/a.ts',
+      'NEXT: none',
+    );
+    expect(reportSections(text)).toEqual({
+      status: { category: 'in_review', text: 'done' },
+      summary: 'Fixed the parser.\nStatus: all tests pass.\nNext: the reviewer checks 320px.',
+      files: ['src/a.ts'],
+      next: null,
+    });
+  });
+
+  it('still reads a field written like a sentence when no capital label claims it', () => {
+    expect(reportSections(lines('SUMMARY: Fixed it.', 'Next: ship it'))?.next).toBe('ship it');
+  });
+
   it.each([
     ['no summary', lines('TICKET: MOB-1', 'STATUS: done')],
     ['an empty summary', lines('TICKET: MOB-1', 'SUMMARY:', 'NEXT: none')],

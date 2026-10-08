@@ -1,6 +1,7 @@
 import { findStatusByCategory, type Status, type TicketDetail } from '@tracker/shared';
 import clsx from 'clsx';
 import { useMemo, useState } from 'react';
+import { ErrorBoundary } from '../../../lib/ErrorBoundary';
 import { useNow } from '../../../lib/useNow';
 import { activityItems, type ActivityItem } from './activityItems';
 import type { RiseProps } from './ActivityCard';
@@ -11,6 +12,7 @@ import { EventLine } from './EventLine';
 import { ReportCard } from './ReportCard';
 import { ReviewCard } from './ReviewCard';
 import { firstRise, nextRise, type RisePlan } from './risePlan';
+import { UnshownItem } from './UnshownItem';
 import { useActivityActions, type ActivityActions } from './useActivityActions';
 
 export interface ActivitySectionProps {
@@ -66,7 +68,21 @@ interface ActivityRowProps {
   statuses: readonly Status[];
 }
 
-function ActivityRow({ item, now, actions, rise, approvedColor, statuses }: ActivityRowProps) {
+// An item that fails to render stands in as its plain text with its menu, and the rest of the
+// ticket stays usable.
+function ActivityRow(props: ActivityRowProps) {
+  const { item, actions } = props;
+  return (
+    <ErrorBoundary
+      name={`Activity item ${item.id}`}
+      fallback={<UnshownItem item={item} actions={actions} />}
+    >
+      <ActivityContent {...props} />
+    </ErrorBoundary>
+  );
+}
+
+function ActivityContent({ item, now, actions, rise, approvedColor, statuses }: ActivityRowProps) {
   switch (item.kind) {
     case 'event':
       return <EventLine item={item} now={now} rise={rise} />;

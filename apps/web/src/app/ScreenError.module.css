@@ -1,0 +1,10 @@
+/* The screen's nav bar went with it, so the message keeps clear of the status bar itself. */
+.error {
+  padding-top: calc(64px + var(--safe-top));
+}
+
+.actions {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-2);
+}
