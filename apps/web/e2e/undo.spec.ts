@@ -86,3 +86,62 @@ test.describe('undo a status move', () => {
     await expect(handle).toBeFocused();
   });
 });
+
+// Rows sit behind the toast, above the bottom bar, at 375×812 and 320×568. Groups of six show
+// all their rows.
+const seedBehindToast = (api: TrackerClient) =>
+  seedProject(api, 'Mobile app', 'MOB', [
+    ...Array.from({ length: 6 }, (_, index) => ({ title: `Ticket ${index + 1}` })),
+    ...Array.from({ length: 6 }, (_, index) => ({
+      title: `Busy ticket ${index + 1}`,
+      status: 'In progress',
+    })),
+  ]);
+
+// The toast's entrance moves Undo; the taps go where it rests. An animation cancelled meanwhile
+// rejects its promise, and has nothing left to wait for.
+const settled = (page: Page) =>
+  page.evaluate(() =>
+    Promise.allSettled(document.getAnimations().map((animation) => animation.finished)),
+  );
+
+const PHONE_SIZES = [
+  { width: 375, height: 812 },
+  { width: 320, height: 568 },
+];
+
+test.describe('a double tap on Undo', () => {
+  // WebKit gave the second tap at the top of Undo's target to the row behind the toast (PT-67).
+  test('at the top edge of its target runs Undo once and opens nothing behind it', async ({
+    page,
+    api,
+  }, info) => {
+    test.skip(!isPhone(info.project.name), 'Touch taps');
+    await seedBehindToast(api);
+    for (const size of PHONE_SIZES) {
+      await page.setViewportSize(size);
+      for (const offset of [4, 6, 8]) {
+        const where = `${size.width}px, ${offset}px below the top`;
+        await page.goto('/p/MOB');
+        await swipeRight(ticketRow(page, 'MOB-6'));
+        const undo = page.getByRole('button', { name: 'Undo' });
+        await expect(undo, where).toBeVisible();
+        await settled(page);
+        const box = (await undo.boundingBox())!;
+        const [x, y] = [box.x + box.width / 2, box.y + offset];
+
+        await page.touchscreen.tap(x, y);
+        await page.waitForTimeout(150);
+        await page.touchscreen.tap(x, y);
+        await expect(toast(page, 'MOB-6 moved to To do'), where).toBeVisible();
+        await page.waitForTimeout(500);
+        await expect(page, where).toHaveURL(/\/p\/MOB$/);
+        await expect(group(page, 'To do'), where).toContainText('Ticket 6');
+
+        // Once the double tap is over, a tap there opens the row behind the toast again.
+        await page.touchscreen.tap(x, y);
+        await expect(page, where).toHaveURL(/\/p\/MOB\/\d+$/);
+      }
+    }
+  });
+});

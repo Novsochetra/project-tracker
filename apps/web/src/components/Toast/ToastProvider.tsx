@@ -5,6 +5,7 @@ import styles from './Toast.module.css';
 import { ToastCard } from './ToastCard';
 import { createToastStore, type ToastMessage, type ToastStore } from './toastStore';
 import { isUndoShortcut } from './undoShortcut';
+import { useTapCatcher } from './useTapCatcher';
 
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [store] = useState(createToastStore);
@@ -36,8 +37,10 @@ function useUndoShortcut(store: ToastStore, toast: ToastMessage | null): void {
 function ToastViewport({ store }: { store: ToastStore }) {
   const { toast, raised, shielded } = useSyncExternalStore(store.subscribe, store.getSnapshot);
   useUndoShortcut(store, toast);
+  const catchTaps = useTapCatcher(shielded);
   return (
     <div
+      ref={catchTaps}
       role="status"
       className={clsx(styles.region, raised > 0 && styles.raised, shielded && styles.shielded)}
     >
