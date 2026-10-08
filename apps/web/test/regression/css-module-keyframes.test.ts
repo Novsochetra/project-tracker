@@ -163,7 +163,7 @@ describe('regression: CSS animations only use keyframes they can see', () => {
 
 describe('the CSS animation checks', () => {
   it('read the fill of each animation in a list', () => {
-    const list = sheet('a.module.css', '.a { animation: a 1s backwards, b 1s both; }');
+    const list = sheet('a.module.css', '.a { animation: a 1s backwards, b 1s BOTH; }');
     expect(entranceProblems([list])).toEqual(['a.module.css uses "b" with fill both']);
   });
 
