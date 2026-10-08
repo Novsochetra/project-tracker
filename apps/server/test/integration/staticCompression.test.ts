@@ -25,7 +25,6 @@ writeWithCopies(join(dist, 'index.html'), PAGE);
 writeWithCopies(join(dist, 'sw.js'), SCRIPT);
 writeWithCopies(join(dist, 'manifest.webmanifest'), MANIFEST);
 writeWithCopies(join(dist, 'assets', 'app-1234.js'), SCRIPT);
-writeWithCopies(join(dist, 'workbox-1a2b3c4d.js'), SCRIPT);
 writeFileSync(join(dist, 'assets', 'plain-5678.js'), SCRIPT);
 writeFileSync(join(dist, 'icon-192.png'), 'not really a png');
 
@@ -195,21 +194,6 @@ describe('web app files over the wire', () => {
     expect((await get('/assets/app-1234.js', BROWSER, {}, { 'if-none-match': '*' })).status).toBe(
       200,
     );
-  });
-
-  it('caches the Workbox runtime that sw.js imports like a hashed asset', async () => {
-    const res = await get('/workbox-1a2b3c4d.js', BROWSER);
-    expect(res.status).toBe(200);
-    expect(res.headers.get('content-encoding')).toBe('br');
-    expect(res.headers.get('cache-control')).toBe(IMMUTABLE);
-    expect(res.headers.has('etag')).toBe(false);
-    expect(brotliDecompressSync(await bytesOf(res)).toString()).toBe(SCRIPT);
-    const gone = await get('/workbox-0000ffff.js', BROWSER);
-    expect(gone.status).toBe(404);
-    expect(gone.headers.get('content-type')).toContain('application/json');
-    const worker = await get('/sw.js', BROWSER);
-    expect(worker.headers.get('cache-control')).toBe('no-cache');
-    expect(worker.headers.get('etag')).toMatch(/^W\//);
   });
 
   it('answers HEAD with the headers of the encoded file and no body', async () => {

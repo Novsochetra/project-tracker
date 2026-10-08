@@ -67,6 +67,9 @@ export default defineConfig({
         // The plugin only sets these for autoUpdate when it injects its own register script.
         skipWaiting: true,
         clientsClaim: true,
+        // In a file of its own, a runtime missing from a deploy didn't fail the install: Workbox's
+        // loader swallows the failed importScripts, and a worker with no handlers took over (PT-99).
+        inlineWorkboxRuntime: true,
         // Workbox copies each urlPattern into sw.js as source text, so they must be self-contained.
         // Routes only match GET, so writes always go straight to the network.
         runtimeCaching: [

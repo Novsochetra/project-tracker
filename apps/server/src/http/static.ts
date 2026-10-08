@@ -20,12 +20,9 @@ const KEPT_ON_304 = ['cache-control', 'etag', 'vary'];
 
 const isApiPath = (path: string): boolean => path === '/api' || path.startsWith('/api/');
 
-// The Workbox runtime that sw.js imports is named by a hash of its content too. Cached for a year,
-// the browser's update check reads it from its own cache instead of asking again after each sw.js.
-const WORKBOX_RUNTIME = /^\/workbox-[\da-f]{8,}\.js$/;
-
-const isHashedPath = (path: string): boolean =>
-  path.startsWith('/assets/') || WORKBOX_RUNTIME.test(path);
+// Only /assets/ holds files named by their content: the build puts the Workbox runtime inside
+// sw.js (PT-99), so the service worker is one file the update check revalidates.
+const isHashedPath = (path: string): boolean => path.startsWith('/assets/');
 
 const unless =
   (
