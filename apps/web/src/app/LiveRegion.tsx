@@ -1,10 +1,10 @@
 import { useAnnouncement } from './announce';
 
 export function LiveRegion() {
-  const text = useAnnouncement();
+  const { id, text } = useAnnouncement();
   return (
     <div role="status" aria-live="polite" className="visually-hidden">
-      {text}
+      {text ? <div key={id}>{text}</div> : null}
     </div>
   );
 }

@@ -1,7 +1,6 @@
-import { ApiError } from '@tracker/client';
 import { describe, expect, it } from 'vitest';
+import { canonicalPath } from './canonicalPath';
 import { breadcrumbFor, projectKeyOf } from './crumbs';
-import { isApiUnreachable } from './offline';
 import { gateFor } from './sessionGate';
 
 describe('gateFor', () => {
@@ -67,18 +66,26 @@ describe('projectKeyOf', () => {
   });
 });
 
-describe('isApiUnreachable', () => {
-  it('is true offline', () => {
-    expect(isApiUnreachable(false, null)).toBe(true);
+describe('canonicalPath', () => {
+  it('keeps the paths of real routes', () => {
+    for (const path of ['/', '/p/MOB', '/p/mob', '/p/MOB/3', '/p/A%20B', '/p/caf%C3%A9']) {
+      expect(canonicalPath(path)).toBeNull();
+    }
   });
 
-  it('is true when the request could not reach the server', () => {
-    expect(isApiUnreachable(true, new TypeError('Failed to fetch'))).toBe(true);
-    expect(isApiUnreachable(true, new ApiError(502, 'http_error', 'Bad Gateway'))).toBe(true);
+  it('replaces paths that are not a route with the screen they show', () => {
+    expect(canonicalPath('/x/y/z')).toBe('/');
+    expect(canonicalPath('/p/MOB/3/extra')).toBe('/');
+    expect(canonicalPath('/p/%E0%A4%A')).toBe('/');
+    expect(canonicalPath('/p/MOB/abc')).toBe('/p/MOB');
+    expect(canonicalPath('/p/MOB/3/')).toBe('/p/MOB/3');
   });
 
-  it('is false for answers from the server', () => {
-    expect(isApiUnreachable(true, null)).toBe(false);
-    expect(isApiUnreachable(true, new ApiError(404, 'not_found', 'No such project'))).toBe(false);
+  it('settles on one path, so replacing never loops', () => {
+    for (const path of ['/x', '/p/MOB/', '/p/MOB%2D1', '/p/A@B', '/p/%20MOB']) {
+      const target = canonicalPath(path);
+      expect(target).not.toBeNull();
+      expect(canonicalPath(target ?? '')).toBeNull();
+    }
   });
 });
