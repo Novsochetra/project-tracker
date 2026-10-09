@@ -132,3 +132,16 @@ describe.each([NEW_TICKET, CAPTURE, TICKET_SCREEN])(
     });
   },
 );
+
+// On a ticket with no files the ticket screen sized the file area by the files still uploading,
+// so a lone failed tile lost the room above it that tiles get (PT-95 review).
+describe('a late failure of the only file on the ticket screen', () => {
+  it('keeps the room the file area has with tiles', async () => {
+    const fail = showWithLateFailure(TICKET_SCREEN);
+    await userEvent.setup().upload(shown!.input(), text('late.txt'));
+    expect(shown!.area()).toHaveClass('attachments');
+    fail();
+    await waitFor(() => expect(failedTile()).toBeInTheDocument());
+    expect(shown!.area()).toHaveClass('attachments');
+  });
+});

@@ -4,6 +4,7 @@ import type { Locator, Page, Response } from '@playwright/test';
 import { FILE_NAME_HEADER } from '@tracker/shared';
 import { expect, isPhone, test } from './fixtures';
 import { openNewTicketIn, seedProject, ticketRow, toast } from './helpers';
+import { API_URL } from './ports';
 
 const PNG_1X1 = Buffer.from(
   'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
@@ -106,6 +107,48 @@ const controlAt = (page: Page, spot: { x: number; y: number }) =>
     const control = document.elementFromPoint(x, y)?.closest('button, textarea, input, a');
     return control ? (control.getAttribute('aria-label') ?? control.textContent) : null;
   }, spot);
+
+// How long the page holds back taps after a note's Dismiss (CLICK_SHIELD_MS in lib/clickShield).
+const HELD_MS = 500;
+
+interface TapClicks {
+  tapClicks: number[];
+}
+
+// The page's clock at each click, from its first load on.
+const recordClicks = () => {
+  const clicks: number[] = [];
+  Object.assign(window, { tapClicks: clicks } satisfies TapClicks);
+  window.addEventListener('click', () => clicks.push(performance.now()), true);
+};
+
+// Picks a refused file, then taps its note's Dismiss twice, `gap` ms apart. Playwright's tap
+// returns once the page has handled it, so a page busy for a moment sends the second tap later
+// than that, past the hold, where it rightly acts: `held` tells whether it came in time, by the
+// page's clock.
+async function doubleTapDismiss(page: Page, input: Locator, note: Locator, gap: number) {
+  await input.setInputFiles([SVG]);
+  const dismiss = note.getByRole('button', { name: 'Dismiss' });
+  // Centred once it has risen into place: centred on the way, it ends up to 6px higher, and on a
+  // slow first load at 320 the spot then missed the Comment that slides under it (PT-95 review).
+  await note.evaluate((element) =>
+    Promise.all(element.getAnimations().map((animation) => animation.finished)),
+  );
+  // Clear of the phone's bottom bar, which covers the end of the screen.
+  await dismiss.evaluate((button) => button.scrollIntoView({ block: 'center' }));
+  await page.waitForTimeout(400);
+  const spot = await spotOf(dismiss);
+  await page.evaluate(() => {
+    (window as unknown as TapClicks).tapClicks.length = 0;
+  });
+  await page.touchscreen.tap(spot.x, spot.y);
+  await page.waitForTimeout(gap);
+  await page.touchscreen.tap(spot.x, spot.y);
+  await page.waitForTimeout(700);
+  const [first, second] = await page.evaluate(() => (window as unknown as TapClicks).tapClicks);
+  const held = first !== undefined && second !== undefined && second - first < HELD_MS;
+  return { spot, held };
+}
 
 async function swipeDown(page: Page): Promise<void> {
   const { width, height } = page.viewportSize() ?? { width: 375, height: 812 };
@@ -370,34 +413,43 @@ test.describe('attachments', () => {
     test(`phone ${size.width}: a double tap on the note's Dismiss in ${surface.name} only dismisses it`, async ({
       page,
       api,
+      request,
     }, info) => {
       test.skip(!isPhone(info.project.name), 'A double tap on a phone.');
       await page.setViewportSize(size);
-      await seedProject(api, 'Mobile app', 'MOB', [{ title: 'Existing ticket' }]);
-      await surface.open(page);
+      await page.addInitScript(recordClicks);
       const area = surface.area(page);
       const input = area.getByLabel(surface.input);
-      await input.setInputFiles(images(8));
-      await expect(area.getByRole('progressbar')).toHaveCount(0);
       const removes = area.getByRole('button', { name: /^Remove image/ });
-      await expect(removes).toHaveCount(8);
+      const note = area.getByRole('alert').filter({ hasText: "can't be attached" });
       let chooser = 0;
       page.on('filechooser', () => (chooser += 1));
-      const note = area.getByRole('alert').filter({ hasText: "can't be attached" });
-      // The photo picker closes the keyboard, so no field has focus when the note comes.
-      await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
+      const setUp = async () => {
+        await seedProject(api, 'Mobile app', 'MOB', [{ title: 'Existing ticket' }]);
+        await surface.open(page);
+        await input.setInputFiles(images(8));
+        await expect(area.getByRole('progressbar')).toHaveCount(0);
+        await expect(removes).toHaveCount(8);
+        // The photo picker closes the keyboard, so no field has focus when the note comes.
+        await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
+      };
+      // After a second tap that came too late, and may have acted, from a clean tracker.
+      const startOver = async () => {
+        await page.evaluate(() => localStorage.clear());
+        expect((await request.post(`${API_URL}/api/test/reset`)).status()).toBe(204);
+        chooser = 0;
+        page.once('dialog', (dialog) => void dialog.accept());
+        await setUp();
+      };
+      await setUp();
 
       for (const gap of [0, 60, 120, 200]) {
-        await input.setInputFiles([SVG]);
-        const dismiss = note.getByRole('button', { name: 'Dismiss' });
-        // Clear of the phone's bottom bar, which covers the end of the screen.
-        await dismiss.evaluate((button) => button.scrollIntoView({ block: 'center' }));
-        await page.waitForTimeout(400);
-        const spot = await spotOf(dismiss);
-        await page.touchscreen.tap(spot.x, spot.y);
-        await page.waitForTimeout(gap);
-        await page.touchscreen.tap(spot.x, spot.y);
-        await page.waitForTimeout(700);
+        let tapped = await doubleTapDismiss(page, input, note, gap);
+        for (let tries = 1; !tapped.held && tries < 3; tries += 1) {
+          await startOver();
+          tapped = await doubleTapDismiss(page, input, note, gap);
+        }
+        expect(tapped.held, `the second tap within ${HELD_MS} ms, in 3 tries`).toBe(true);
         await expect(note).toHaveCount(0);
         // Nothing that slid under the finger took the second tap: no file removed or asked about,
         // no comment sent (it would take the files along), no file picker, no field focused for
@@ -410,7 +462,7 @@ test.describe('attachments', () => {
         );
         // Though there was something to press: a file's x or Comment, slid up from below, or in
         // a sheet that fits the screen, a field slid down from above as the sheet shrank.
-        expect(await controlAt(page, spot)).toMatch(
+        expect(await controlAt(page, tapped.spot)).toMatch(
           /^(Remove image \d|Comment|Description|Ticket title)$/,
         );
       }

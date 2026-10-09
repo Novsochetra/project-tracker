@@ -21,7 +21,7 @@ export function TicketAttachments({ ticketKey, attachments, uploads }: TicketAtt
   const viewer = useAttachmentViewer();
   const removal = useAttachmentRemoval(ticketKey);
   const labels = thumbnailLabels(attachments);
-  const empty = attachments.length === 0 && uploads.uploading.length === 0;
+  const empty = attachments.length === 0 && uploads.tiles.length === 0;
   return (
     <>
       <AttachmentPicker

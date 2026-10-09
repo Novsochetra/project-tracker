@@ -1,9 +1,10 @@
 import clsx from 'clsx';
 import { CircleAlert, X } from 'lucide-react';
 import type { MouseEvent, Ref } from 'react';
+import { flushSync } from 'react-dom';
 import { Icon, IconButton } from '../../components';
 import styles from './FileNote.module.css';
-import { focusAfter } from './focusAfter';
+import { controlsAfter, focusFirst } from './focusAfter';
 import {
   noticeDetail,
   noticeTitle,
@@ -26,15 +27,20 @@ export interface FileNoteProps {
 // tap aimed at what the gap showed (PT-95). So it goes with the tap, and the page holds back a
 // pointer's presses while what moved settles under the finger (holdPresses). A key press moves
 // nothing under a finger, but the focus it takes away with the note would fall to the page body.
+// Focus moves once the note has gone: the failed tiles go with it, and when they were the only
+// ones the Add tile gives way to the Add files button.
 function dismissal(onDismiss: () => void, focusTo: FileNoteProps['focusTo']) {
   return (event: MouseEvent<HTMLButtonElement>) => {
-    if (event.detail !== 0) holdPresses(event.currentTarget);
-    else {
-      const target = focusTo?.();
-      if (target) target.focus();
-      else focusAfter(event.currentTarget.closest('[role="alert"]') ?? event.currentTarget);
+    if (event.detail !== 0) {
+      holdPresses(event.currentTarget);
+      onDismiss();
+      return;
     }
-    onDismiss();
+    const next = controlsAfter(
+      event.currentTarget.closest('[role="alert"]') ?? event.currentTarget,
+    );
+    flushSync(onDismiss);
+    focusFirst([focusTo?.(), ...next]);
   };
 }
 

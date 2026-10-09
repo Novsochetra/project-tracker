@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import { focusAfter } from './focusAfter';
+import { controlsAfter, focusFirst } from './focusAfter';
 
 afterEach(() => {
   document.body.replaceChildren();
@@ -10,32 +10,42 @@ function page(html: string) {
   return document.getElementById('note')!;
 }
 
-describe('focusAfter', () => {
-  it('focuses the first control after the element, not one inside it or before it', () => {
+const names = (controls: readonly HTMLElement[]) => controls.map((control) => control.textContent);
+
+describe('controlsAfter', () => {
+  it('lists the controls after the element, not those inside it or before it', () => {
     const note = page(`
       <button>Before</button>
       <div id="note"><button>Dismiss</button></div>
       <button>Attach files</button>
-      <button>Comment</button>
-    `);
-    focusAfter(note);
-    expect(document.activeElement?.textContent).toBe('Attach files');
-  });
-
-  it('passes over controls that take no focus', () => {
-    const note = page(`
-      <div id="note"><button>Dismiss</button></div>
-      <button disabled>Comment</button>
       <video tabindex="-1"></video>
       <a href="/next">Next</a>
     `);
-    focusAfter(note);
+    expect(names(controlsAfter(note))).toEqual(['Attach files', 'Next']);
+  });
+});
+
+describe('focusFirst', () => {
+  it('focuses the first control that takes focus', () => {
+    const note = page(`
+      <div id="note"><button>Dismiss</button></div>
+      <button disabled>Comment</button>
+      <a href="/next">Next</a>
+    `);
+    focusFirst([null, ...controlsAfter(note)]);
     expect(document.activeElement?.textContent).toBe('Next');
   });
 
-  it('leaves focus alone when nothing after the element takes it', () => {
-    const note = page(`<button>Before</button><div id="note"><button>Dismiss</button></div>`);
-    focusAfter(note);
+  it('passes over a control that has left the page', () => {
+    const note = page(`<div id="note"></div><button>Gone</button><button>Kept</button>`);
+    const controls = controlsAfter(note);
+    controls[0]!.remove();
+    focusFirst(controls);
+    expect(document.activeElement?.textContent).toBe('Kept');
+  });
+
+  it('leaves focus alone when none takes it', () => {
+    focusFirst([undefined, null]);
     expect(document.activeElement).toBe(document.body);
   });
 });

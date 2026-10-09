@@ -93,3 +93,23 @@ describe.each([NEW_TICKET, CAPTURE, TICKET_SCREEN, COMMENT_BOX])(
     });
   },
 );
+
+// The failed file was the only tile: the Dismiss that let it go emptied the files, so the Add tile
+// that had just taken focus gave way to the Add files button, and focus fell to the body again
+// (PT-95 review).
+describe.each([NEW_TICKET, CAPTURE, TICKET_SCREEN])(
+  'Dismiss from the keyboard of the only file failing in $name',
+  (surface) => {
+    it('hands focus to Add files', async () => {
+      const fail = showWithLateFailure(surface);
+      const user = userEvent.setup();
+      await user.upload(shown!.input(), text('late.txt'));
+      fail();
+      await waitFor(() => expect(noteSaying("didn't upload")).toBeDefined());
+
+      await dismissByKey(user, noteSaying("didn't upload"));
+      expect(area().queryByRole('img', { name: "late.txt didn't upload" })).toBeNull();
+      expect(area().getByRole('button', { name: 'Add files' })).toHaveFocus();
+    });
+  },
+);

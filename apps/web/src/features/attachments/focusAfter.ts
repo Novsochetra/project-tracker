@@ -8,11 +8,16 @@ const after = (element: Element, candidate: Element): boolean => {
   );
 };
 
-// The first control after `element` in reading order that takes focus: a hidden, disabled or
-// inert one doesn't, so it is passed over.
-export function focusAfter(element: Element): void {
-  for (const candidate of document.querySelectorAll<HTMLElement>(CONTROLS)) {
-    if (candidate.tabIndex < 0 || !after(element, candidate)) continue;
+// The controls after `element` in reading order, found while it is still in the page.
+export const controlsAfter = (element: Element): HTMLElement[] =>
+  [...document.querySelectorAll<HTMLElement>(CONTROLS)].filter(
+    (candidate) => candidate.tabIndex >= 0 && after(element, candidate),
+  );
+
+// Focuses the first that takes it: one gone from the page, hidden, disabled or inert doesn't.
+export function focusFirst(candidates: readonly (HTMLElement | null | undefined)[]): void {
+  for (const candidate of candidates) {
+    if (!candidate?.isConnected) continue;
     candidate.focus();
     if (document.activeElement === candidate) return;
   }
