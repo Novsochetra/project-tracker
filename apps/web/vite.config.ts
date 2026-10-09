@@ -4,6 +4,7 @@ import { VitePWA } from 'vite-plugin-pwa';
 import { precompress } from './src/build/precompress.ts';
 import { isSavedApiRead } from './src/pwa/apiReadRoute.ts';
 import { attachmentCachePlugin, isCachedAttachmentFile } from './src/pwa/attachmentFileRoute.ts';
+import { API_CACHE, ATTACHMENT_CACHE } from './src/pwa/cacheNames.ts';
 import { savedAnswerPlugin } from './src/pwa/savedAnswerPlugin.ts';
 
 const apiTarget = process.env.TRACKER_API_URL ?? 'http://localhost:4100';
@@ -77,7 +78,7 @@ export default defineConfig({
             urlPattern: isCachedAttachmentFile,
             handler: 'CacheFirst',
             options: {
-              cacheName: 'attachments',
+              cacheName: ATTACHMENT_CACHE,
               cacheableResponse: { statuses: [200] },
               expiration: {
                 maxEntries: 100,
@@ -91,7 +92,7 @@ export default defineConfig({
             urlPattern: isSavedApiRead,
             handler: 'NetworkFirst',
             options: {
-              cacheName: 'api',
+              cacheName: API_CACHE,
               networkTimeoutSeconds: 3,
               cacheableResponse: { statuses: [200] },
               expiration: { maxEntries: 100, maxAgeSeconds: 7 * DAY_SECONDS },

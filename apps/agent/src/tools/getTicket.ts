@@ -14,7 +14,7 @@ export const getTicket = defineTool({
     'with verdict and rating). Up to 4 image attachments are returned as images so you can see screenshots. ' +
     `Text files (txt, log, md, csv, json) are shown inline, up to ${thousands(MAX_TEXT_CHARS)} ` +
     `characters each and ${thousands(TEXT_BUDGET_CHARS)} in all. Videos and PDFs, and text that was cut or ` +
-    'left out, are listed with a download URL; when the tracker uses an access token, downloads need it as ' +
+    'left out, are listed with a download URL; when the agent uses an API token, downloads need it as ' +
     '"Authorization: Bearer <token>". Read the ticket like this before you work on it or review it.',
   input: z.object({ ticket: ticketKey }),
   readOnly: true,

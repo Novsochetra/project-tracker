@@ -1,15 +1,11 @@
 import { useMutation, useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query';
 import type { TrackerClient } from '@tracker/client';
-import type { SessionState } from '@tracker/shared';
+import type { LoginInput, SessionState } from '@tracker/shared';
 import { useApi } from '../context';
 import { isUnauthorized } from '../errors';
 import { queryKeys, rootOf } from '../queryKeys';
 import type { TrackerMutation, TrackerQuery } from '../types';
 import { SIGNED_OUT } from '../unauthorized';
-
-export interface LoginVariables {
-  token: string;
-}
 
 async function readSession(client: TrackerClient): Promise<SessionState> {
   try {
@@ -29,11 +25,24 @@ export function useSession(): TrackerQuery<SessionState> {
   });
 }
 
-export function useLogin(): TrackerMutation<SessionState, LoginVariables> {
+// The session the gate loaded, without asking the server again. A new reader of a session that
+// failed to load (offline) would fetch it again, and the gate blanks the app while it fetches.
+export function useKnownSession(): SessionState | undefined {
+  const client = useApi();
+  return useQuery({
+    queryKey: queryKeys.session(),
+    queryFn: () => readSession(client),
+    staleTime: Infinity,
+    enabled: false,
+  }).data;
+}
+
+export function useLogin(): TrackerMutation<SessionState, LoginInput> {
   const client = useApi();
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ token }: LoginVariables) => client.login(token.trim()),
+    mutationFn: ({ email, password }: LoginInput) =>
+      client.login({ email: email.trim(), password }),
     onSuccess: (session) => {
       queryClient.setQueryData(queryKeys.session(), session);
       // Read through the service worker so its saved answer, which still says signed out, is
@@ -58,3 +67,19 @@ export async function recheckSession(
     queryClient.setQueryData(queryKeys.session(), session);
   }
 }
+
+// The new session clears the service worker's caches and what the app holds (watchSignedOut).
+function useSignOutWith(
+  signOut: (client: TrackerClient) => Promise<SessionState>,
+): TrackerMutation<SessionState, void> {
+  const client = useApi();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: () => signOut(client),
+    onSuccess: (session) => queryClient.setQueryData(queryKeys.session(), session),
+  });
+}
+
+export const useLogout = () => useSignOutWith((client) => client.logout());
+
+export const useSignOutEverywhere = () => useSignOutWith((client) => client.signOutEverywhere());

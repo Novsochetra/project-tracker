@@ -67,4 +67,8 @@ export interface ServerMeta {
 export interface SessionState {
   authRequired: boolean;
   authenticated: boolean;
+  // The owner's email, while signed in with the session cookie.
+  email?: string;
+  // Sign-in is required but nobody has set up the owner account yet (npm run owner:set).
+  setupRequired?: boolean;
 }

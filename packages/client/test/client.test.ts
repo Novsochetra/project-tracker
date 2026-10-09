@@ -251,6 +251,35 @@ const routes: Route[] = [
   },
   { name: 'listPeople', method: 'GET', path: '/api/people', call: (c) => c.listPeople() },
   { name: 'checkHealth', method: 'GET', path: '/api/health', call: (c) => c.checkHealth() },
+  { name: 'getSession', method: 'GET', path: '/api/session', call: (c) => c.getSession() },
+  {
+    name: 'login',
+    method: 'POST',
+    path: '/api/session',
+    body: { email: 'owner@example.com', password: 'a long password' },
+    call: (c) => c.login({ email: 'owner@example.com', password: 'a long password' }),
+  },
+  { name: 'logout', method: 'DELETE', path: '/api/session', call: (c) => c.logout() },
+  {
+    name: 'signOutEverywhere',
+    method: 'DELETE',
+    path: '/api/sessions',
+    call: (c) => c.signOutEverywhere(),
+  },
+  { name: 'listApiTokens', method: 'GET', path: '/api/tokens', call: (c) => c.listApiTokens() },
+  {
+    name: 'createApiToken',
+    method: 'POST',
+    path: '/api/tokens',
+    body: { name: 'Claude laptop' },
+    call: (c) => c.createApiToken({ name: 'Claude laptop' }),
+  },
+  {
+    name: 'revokeApiToken',
+    method: 'DELETE',
+    path: '/api/tokens/t%2F1',
+    call: (c) => c.revokeApiToken('t/1'),
+  },
 ];
 
 afterEach(() => {

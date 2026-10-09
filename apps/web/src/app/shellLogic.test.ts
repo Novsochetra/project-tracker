@@ -7,9 +7,9 @@ describe('gateFor', () => {
     expect(gateFor({ data: undefined, fetchStatus: 'fetching' })).toBe('loading');
   });
 
-  it('asks for the token only when the server needs one and has none', () => {
+  it('asks to sign in only when the server needs it and the app is signed out', () => {
     const data = { authRequired: true, authenticated: false };
-    expect(gateFor({ data, fetchStatus: 'idle' })).toBe('token');
+    expect(gateFor({ data, fetchStatus: 'idle' })).toBe('login');
     expect(gateFor({ data: { ...data, authenticated: true }, fetchStatus: 'idle' })).toBe('app');
     expect(
       gateFor({ data: { authRequired: false, authenticated: true }, fetchStatus: 'idle' }),

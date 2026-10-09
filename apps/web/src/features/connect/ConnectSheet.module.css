@@ -63,34 +63,11 @@
   font-weight: var(--weight-medium);
 }
 
-.command {
-  margin: 0;
-  padding: 12px 14px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-group);
-  background: var(--fill);
-  color: var(--ink-2);
-  font: var(--text-mono);
-  line-height: 1.6;
-  white-space: pre-wrap;
-  overflow-wrap: anywhere;
-  user-select: all;
-  -webkit-user-select: all;
-}
-
 .inlineCode {
   color: var(--ink-2);
   font-family: var(--font-mono);
   font-size: var(--size-caption);
   overflow-wrap: anywhere;
-}
-
-.nowrap {
-  white-space: nowrap;
-}
-
-button.copy {
-  align-self: flex-start;
 }
 
 .rows {

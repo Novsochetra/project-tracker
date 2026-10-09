@@ -13,7 +13,8 @@ export type SheetRequest =
   | { type: 'prompt'; scope: PromptScope }
   | { type: 'report'; scope: ReportScope }
   | { type: 'statuses'; projectKey: string }
-  | { type: 'connect' };
+  | { type: 'connect' }
+  | { type: 'account' };
 
 export interface SheetProps {
   open: boolean;

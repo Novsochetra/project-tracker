@@ -1,0 +1,212 @@
+import { sql } from 'kysely';
+import { NO_MIGRATIONS, type MigrationResultSet } from 'kysely/migration';
+import { describe, expect, it } from 'vitest';
+import { MIGRATIONS } from '../../src/db/migrations';
+import { createMigrator, migrateToLatest } from '../../src/db/migrator';
+import type { Db } from '../../src/db/schema';
+import { exactSchema, portableSchema, type SchemaShape } from '../helpers/schemaShape';
+import { DIALECTS, openEmptyDatabase, type TestDialect } from '../helpers/server';
+
+const NAMES = Object.keys(MIGRATIONS).sort();
+
+async function expectRan(run: Promise<MigrationResultSet>, names: string[]): Promise<void> {
+  const { error, results } = await run;
+  expect(error).toBeUndefined();
+  expect(results?.map((result) => [result.migrationName, result.status])).toEqual(
+    names.map((name) => [name, 'Success']),
+  );
+}
+
+// Every migration in turn: up, down (the schema must be what it was before), up again (the schema
+// must be what the first up made). Gives the portable schema after each.
+async function stepThrough(db: Db, dialect: TestDialect): Promise<SchemaShape[]> {
+  const migrator = createMigrator(db);
+  let before = await exactSchema(db, dialect);
+  const steps = [await portableSchema(db, dialect)];
+  for (const name of NAMES) {
+    await expectRan(migrator.migrateUp(), [name]);
+    const after = await exactSchema(db, dialect);
+    await expectRan(migrator.migrateDown(), [name]);
+    expect(await exactSchema(db, dialect), `${name} down() undoes its up()`).toEqual(before);
+    await expectRan(migrator.migrateUp(), [name]);
+    expect(await exactSchema(db, dialect), `${name} up() after its down()`).toEqual(after);
+    before = after;
+    steps.push(await portableSchema(db, dialect));
+  }
+  return steps;
+}
+
+async function withDatabase<T>(dialect: TestDialect, work: (db: Db) => Promise<T>): Promise<T> {
+  const db = openEmptyDatabase(dialect);
+  try {
+    return await work(db);
+  } finally {
+    await db.destroy();
+  }
+}
+
+const appliedNames = async (db: Db) =>
+  (await sql<{ name: string }>`select name from kysely_migration`.execute(db)).rows
+    .map((row) => row.name)
+    .sort();
+
+describe.each(DIALECTS)('every migration up and down (%s)', (dialect) => {
+  it('undoes each migration exactly, and applies it again the same way', async () => {
+    const steps = await withDatabase(dialect, (db) => stepThrough(db, dialect));
+    expect(steps).toHaveLength(NAMES.length + 1);
+  });
+
+  it('goes all the way down to an empty database and back up to the same schema', async () => {
+    await withDatabase(dialect, async (db) => {
+      await migrateToLatest(db);
+      const latest = await exactSchema(db, dialect);
+
+      await expectRan(createMigrator(db).migrateTo(NO_MIGRATIONS), [...NAMES].reverse());
+      expect(await exactSchema(db, dialect)).toEqual({});
+      expect(await appliedNames(db)).toEqual([]);
+
+      expect(await migrateToLatest(db)).toEqual(NAMES);
+      expect(await exactSchema(db, dialect)).toEqual(latest);
+      expect(await appliedNames(db)).toEqual(NAMES);
+    });
+  });
+
+  it('keeps the rows of the tables a rollback leaves in place', async () => {
+    await withDatabase(dialect, async (db) => {
+      await migrateToLatest(db);
+      await sql`insert into projects (id, name, key, description, repo, color, next_num, created_at,
+        updated_at) values ('p', 'Mobile', 'MOB', '', '', '#5B5BD6', 2, 1000, 1000)`.execute(db);
+      await sql`insert into statuses (id, project_id, name, category, color, position, created_at)
+        values ('s', 'p', 'To do', 'todo', '#8E8E99', 0, 1000)`.execute(db);
+      await sql`insert into tickets (id, project_id, num, status_id, rank, title, description,
+        priority, assignee, due, created_at, updated_at, client_id) values ('t', 'p', 1, 's', 0,
+        'Crash', '', 'high', '', '', 1000, 1000, 'c-1')`.execute(db);
+      await sql`insert into attachments (id, ticket_id, file_name, mime_type, size, storage_key,
+        created_at, position) values ('f', 't', 'a.txt', 'text/plain', 5, 'f.txt', 1000, 3)`.execute(
+        db,
+      );
+
+      await expectRan(
+        createMigrator(db).migrateTo('0001_initial'),
+        NAMES.filter((name) => name > '0001_initial').reverse(),
+      );
+      await migrateToLatest(db);
+
+      const ticket = await sql<{ title: string; clientId: string | null }>`
+        select title, client_id from tickets`.execute(db);
+      expect(ticket.rows).toEqual([{ title: 'Crash', clientId: null }]);
+      const file = await sql<{ id: string; position: number }>`
+        select id, position from attachments`.execute(db);
+      expect(file.rows).toEqual([{ id: 'f', position: 0 }]);
+    });
+  });
+});
+
+// The data model of docs/architecture.md §2, as both databases report it.
+const DATA_MODEL: SchemaShape = {
+  projects: {
+    columns: [
+      'id text primary key',
+      'name text not null',
+      'key text not null',
+      'description text not null',
+      'repo text not null',
+      'color text not null',
+      'next_num integer not null',
+      'created_at bigint not null',
+      'updated_at bigint not null',
+    ],
+    indexes: ['unique (key)'],
+    foreignKeys: [],
+  },
+  statuses: {
+    columns: [
+      'id text primary key',
+      'project_id text not null',
+      'name text not null',
+      'category text not null',
+      'color text not null',
+      'position integer not null',
+      'created_at bigint not null',
+    ],
+    indexes: ['index (project_id, position)'],
+    foreignKeys: ['project_id -> projects.id on delete cascade'],
+  },
+  tickets: {
+    columns: [
+      'id text primary key',
+      'project_id text not null',
+      'num integer not null',
+      'status_id text not null',
+      'rank integer not null',
+      'title text not null',
+      'description text not null',
+      'priority text not null',
+      'assignee text not null',
+      'due text not null',
+      'created_at bigint not null',
+      'updated_at bigint not null',
+      'client_id text',
+    ],
+    indexes: [
+      'index (project_id, status_id, rank)',
+      'unique (project_id, client_id)',
+      'unique (project_id, num)',
+    ],
+    foreignKeys: [
+      'project_id -> projects.id on delete cascade',
+      'status_id -> statuses.id on delete restrict',
+    ],
+  },
+  activities: {
+    columns: [
+      'id text primary key',
+      'ticket_id text not null',
+      'type text not null',
+      'actor_kind text not null',
+      'actor_name text not null',
+      'text text not null',
+      'review_verdict text',
+      'review_rating integer',
+      'created_at bigint not null',
+      'edited_at bigint',
+    ],
+    indexes: ['index (ticket_id, created_at)'],
+    foreignKeys: ['ticket_id -> tickets.id on delete cascade'],
+  },
+  attachments: {
+    columns: [
+      'id text primary key',
+      'ticket_id text',
+      'activity_id text',
+      'file_name text not null',
+      'mime_type text not null',
+      'size integer not null',
+      'width integer',
+      'height integer',
+      'storage_key text not null',
+      'created_at bigint not null',
+      'position integer not null default 0',
+    ],
+    indexes: ['index (activity_id)', 'index (ticket_id)'],
+    foreignKeys: [
+      'activity_id -> activities.id on delete cascade',
+      'ticket_id -> tickets.id on delete cascade',
+    ],
+  },
+};
+
+describe('migrations on SQLite and on Postgres', () => {
+  it('build the same schema at every step', async () => {
+    const sqlite = await withDatabase('sqlite', (db) => stepThrough(db, 'sqlite'));
+    const postgres = await withDatabase('pglite', (db) => stepThrough(db, 'pglite'));
+    expect(postgres).toEqual(sqlite);
+  });
+
+  it.each(DIALECTS)('build the data model the architecture describes (%s)', async (dialect) => {
+    await withDatabase(dialect, async (db) => {
+      await migrateToLatest(db);
+      expect(await portableSchema(db, dialect)).toMatchObject(DATA_MODEL);
+    });
+  });
+});

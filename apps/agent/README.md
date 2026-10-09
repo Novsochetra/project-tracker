@@ -18,7 +18,17 @@ That registers the server for the current project. Add `-s user` to use it in al
 claude mcp add tracker -s user --env TRACKER_URL=http://localhost:4100 --env TRACKER_AGENT_NAME=Claude -- node /absolute/path/to/project-tracker/apps/agent/dist/mcp.js
 ```
 
-If the tracker runs with an access token, also pass `--env TRACKER_TOKEN=<token>`.
+## API tokens
+
+A tracker with an owner account (always the case online) lets agents in with an API token, sent as `Authorization: Bearer trk_…`. The owner makes one in the app: **Connect Claude Code** → **API tokens** → **Create token**, shown once. Then, on the computer the agents run on:
+
+```bash
+node apps/agent/dist/cli.js login --url https://your-tracker.up.railway.app
+```
+
+`login` asks for the token without echoing it (or reads the first line of a pipe: `pbpaste | tracker login --url …`), checks it with the tracker (`GET /api/session`) and saves it in `~/.config/project-tracker/config.json` (`$XDG_CONFIG_HOME/project-tracker/`, or the path in `TRACKER_CONFIG`). The file is written with mode `0600` in a `0700` folder. It keeps one token per tracker URL and the last tracker logged in to as the default, and a saved token is only ever sent to the tracker it was saved for. The MCP server and the CLI both read it, so Claude Code needs no token in its settings and the token stays out of shell history. `tracker logout [--url URL]` forgets the saved token; revoking it in the app is what stops it working.
+
+Revoke a token in **Connect Claude Code** → **API tokens** → **Revoke**. The next request with it gets `401`, and the CLI and MCP tools say which token was refused and where a new one goes.
 
 ## Slash commands
 
@@ -33,21 +43,26 @@ Tools: `list_projects`, `list_statuses`, `list_tickets`, `get_ticket` (with up t
 
 ## Environment
 
-| Variable             | Default                 | Meaning                                    |
-| -------------------- | ----------------------- | ------------------------------------------ |
-| `TRACKER_URL`        | `http://localhost:4100` | Tracker server                             |
-| `TRACKER_TOKEN`      | none                    | Access token, when the server requires one |
-| `TRACKER_AGENT_NAME` | `Claude`                | Name shown on the agent's activity         |
+| Variable             | Default                                                | Meaning                                                                        |
+| -------------------- | ------------------------------------------------------ | ------------------------------------------------------------------------------ |
+| `TRACKER_URL`        | the tracker logged in to, else `http://localhost:4100` | Tracker server                                                                 |
+| `TRACKER_API_TOKEN`  | the token `tracker login` saved for that URL           | API token; wins over the saved one. `TRACKER_TOKEN`, its old name, still works |
+| `TRACKER_AGENT_NAME` | `Claude`                                               | Name shown on the agent's activity                                             |
+| `TRACKER_CONFIG`     | `~/.config/project-tracker/config.json`                | Where `tracker login` saves tokens                                             |
+
+Errors say what to do: a `401` names the tracker and whether the token was missing or which one (`--token`, `TRACKER_API_TOKEN`, `TRACKER_TOKEN` or the saved one) it refused; an answer that isn't the tracker's (a `403`, `404` or `5xx` from a proxy, or a web page), a `429` and a network failure name the URL. The token itself is never printed.
 
 ## CLI
 
-The same operations for shells and agents without MCP. Flags `--url`, `--as <name>` and `--token` override the environment; `--json` prints the raw API response.
+The same operations for shells and agents without MCP. Flags `--url` (one-off: another tracker), `--as <name>` and `--token` override the environment; `--json` prints the raw API response. A `--token` stays in shell history, so prefer `tracker login`.
 
 ```bash
 alias tracker="node $PWD/apps/agent/dist/cli.js"   # from the repo root
 
 tracker help
+tracker login --url https://your-tracker.up.railway.app   # paste the API token
 tracker projects
+tracker projects --url http://localhost:4100              # one-off: another tracker
 tracker tickets MOB --status "In progress"
 tracker show MOB-3
 tracker claim MOB                     # or: tracker claim MOB-3

@@ -1,13 +1,17 @@
 import { readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { loadAuthConfig, type AuthConfig } from './authConfig';
+import { withRailwayDefaults } from './railway';
+import { loadS3Config, type S3Config } from './storage/s3Config';
 
 export interface Config {
   port: number;
   host: string;
   databaseUrl: string;
   uploadsDir: string;
-  token: string | null;
+  s3: S3Config | null;
+  auth: AuthConfig;
   webDist: string;
   testReset: boolean;
   repoRoot: string;
@@ -47,17 +51,23 @@ function parsePublicUrl(value: string | undefined): string | null {
   return `${url.origin}${url.pathname}`.replace(/\/+$/, '');
 }
 
-export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
+export const databaseUrlOf = (env: NodeJS.ProcessEnv): string =>
+  env.DATABASE_URL || join(REPO_ROOT, 'data', 'tracker.db');
+
+export function loadConfig(given: NodeJS.ProcessEnv = process.env): Config {
+  const env = withRailwayDefaults(given);
+  const host = env.HOST || '127.0.0.1';
   return {
     port: parsePort(env.PORT),
-    host: env.HOST || '127.0.0.1',
-    databaseUrl: env.DATABASE_URL || join(REPO_ROOT, 'data', 'tracker.db'),
+    host,
+    databaseUrl: databaseUrlOf(env),
     uploadsDir: env.UPLOADS_DIR || join(REPO_ROOT, 'data', 'uploads'),
-    token: env.TRACKER_TOKEN || null,
+    s3: loadS3Config(env),
     webDist: env.WEB_DIST || join(REPO_ROOT, 'apps', 'web', 'dist'),
     testReset: env.TRACKER_TEST_RESET === '1',
     repoRoot: REPO_ROOT,
     version: readVersion(),
     publicUrl: parsePublicUrl(env.PUBLIC_URL),
+    auth: loadAuthConfig(env, host),
   };
 }

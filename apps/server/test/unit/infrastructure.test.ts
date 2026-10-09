@@ -1,14 +1,10 @@
-import { mkdtempSync, rmSync } from 'node:fs';
-import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { afterAll, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { createClock } from '../../src/clock';
 import { DEFAULT_PORT, REPO_ROOT, loadConfig } from '../../src/config';
 import { isPostgresUrl } from '../../src/db/createDatabase';
 import { isUniqueViolation } from '../../src/db/errors';
 import { createBroadcaster } from '../../src/events/broadcaster';
-import { createDiskStorage } from '../../src/storage/diskStorage';
-import { createMemoryStorage } from '../../src/storage/memoryStorage';
 
 describe('createClock', () => {
   it('never repeats or goes back within a millisecond', () => {
@@ -39,7 +35,7 @@ describe('loadConfig', () => {
       databaseUrl: join(REPO_ROOT, 'data', 'tracker.db'),
       uploadsDir: join(REPO_ROOT, 'data', 'uploads'),
       webDist: join(REPO_ROOT, 'apps', 'web', 'dist'),
-      token: null,
+      auth: { openWithoutOwner: true, trustedProxies: 0, secureCookies: false, legacyToken: false },
       testReset: false,
       repoRoot: REPO_ROOT,
       publicUrl: null,
@@ -62,7 +58,7 @@ describe('loadConfig', () => {
       host: '0.0.0.0',
       databaseUrl: ':memory:',
       uploadsDir: '/tmp/u',
-      token: 'secret',
+      auth: { openWithoutOwner: false, legacyToken: true },
       webDist: '/tmp/web',
       testReset: true,
     });
@@ -126,73 +122,5 @@ describe('createBroadcaster', () => {
     expect(received).toHaveLength(1);
     expect(broadcaster.listenerCount()).toBe(1);
     error.mockRestore();
-  });
-});
-
-const textOf = async (stream: Promise<ReadableStream<Uint8Array> | null>) =>
-  new Response(await stream).text();
-
-describe('createDiskStorage', () => {
-  const dir = mkdtempSync(join(tmpdir(), 'tracker-uploads-'));
-  const storage = createDiskStorage(join(dir, 'nested'));
-  afterAll(() => rmSync(dir, { recursive: true, force: true }));
-
-  it('writes, streams and removes files', async () => {
-    await storage.write('a.png', new Blob([new Uint8Array([1, 2, 3])]).stream());
-    const stream = await storage.read('a.png');
-    expect(new Uint8Array(await new Response(stream).arrayBuffer())).toEqual(
-      new Uint8Array([1, 2, 3]),
-    );
-    await storage.remove('a.png');
-    expect(await storage.read('a.png')).toBeNull();
-    await expect(storage.remove('a.png')).resolves.toBeUndefined();
-  });
-
-  it('reads only the asked bytes', async () => {
-    await storage.write('b.txt', new Blob(['0123456789']).stream());
-    expect(await textOf(storage.read('b.txt', { start: 2, end: 4 }))).toBe('234');
-    expect(await textOf(storage.read('b.txt', { start: 9, end: 9 }))).toBe('9');
-    expect(await textOf(storage.read('b.txt'))).toBe('0123456789');
-    expect(await storage.read('missing.txt', { start: 0, end: 1 })).toBeNull();
-  });
-
-  it('keeps nothing of a file whose stream fails part way', async () => {
-    const failing = new ReadableStream<Uint8Array>({
-      start(controller) {
-        controller.enqueue(new Uint8Array([1, 2, 3]));
-        controller.error(new Error('The connection closed.'));
-      },
-    });
-    await expect(storage.write('c.mp4', failing)).rejects.toThrow('The connection closed.');
-    expect(await storage.read('c.mp4')).toBeNull();
-  });
-
-  it('refuses keys that could escape the folder', async () => {
-    await expect(storage.write('../evil', new Blob([]).stream())).rejects.toThrow(
-      'Invalid storage key',
-    );
-    await expect(storage.read('.hidden')).rejects.toThrow('Invalid storage key');
-  });
-});
-
-describe('createMemoryStorage', () => {
-  it('keeps nothing of a file whose stream fails part way', async () => {
-    const storage = createMemoryStorage();
-    const failing = new ReadableStream<Uint8Array>({
-      start(controller) {
-        controller.enqueue(new Uint8Array([1, 2, 3]));
-        controller.error(new Error('The connection closed.'));
-      },
-    });
-    await expect(storage.write('c.mp4', failing)).rejects.toThrow('The connection closed.');
-    expect(storage.files.size).toBe(0);
-  });
-
-  it('reads only the asked bytes', async () => {
-    const storage = createMemoryStorage();
-    await storage.write('b.txt', new Blob(['0123456789']).stream());
-    expect(await textOf(storage.read('b.txt', { start: 2, end: 4 }))).toBe('234');
-    expect(await textOf(storage.read('b.txt'))).toBe('0123456789');
-    expect(await storage.read('missing.txt', { start: 0, end: 1 })).toBeNull();
   });
 });

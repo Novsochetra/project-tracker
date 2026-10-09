@@ -1,37 +1,81 @@
-import { createHash, createHmac, timingSafeEqual } from 'node:crypto';
 import type { Context } from 'hono';
-import { getCookie } from 'hono/cookie';
 import { createMiddleware } from 'hono/factory';
-import { AppError } from '../errors';
+import { OPEN_ACCESS, type Access } from '../auth/access';
+import { authenticateApiToken } from '../auth/apiTokens';
+import { ownerExists } from '../auth/owner';
+import { resumeSession } from '../auth/sessions';
+import type { Clock } from '../clock';
+import type { Db } from '../db/schema';
+import { AppError, forbidden } from '../errors';
+import type { AuthOptions } from './authOptions';
 import type { AppEnv } from './env';
+import { clearSessionCookie, readSessionCookie, setSessionCookie } from './sessionCookie';
 
-export const SESSION_COOKIE = 'tracker_session';
+export const HEALTH_PATH = '/api/health';
 
-const PUBLIC_ROUTES = new Set(['GET /api/session', 'POST /api/session', 'GET /api/health']);
+// Signing in and out, and asking whether one is signed in, work without a session.
+const PUBLIC_ROUTES = new Set(['GET /api/session', 'POST /api/session', 'DELETE /api/session']);
 
-// Hashing first gives equal-length buffers, which timingSafeEqual requires.
-const digest = (value: string): Buffer => createHash('sha256').update(value).digest();
+const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
 
-export const safeEqual = (a: string, b: string): boolean => timingSafeEqual(digest(a), digest(b));
-
-// Derived rather than the raw token, so the cookie never holds the token itself.
-export const sessionValue = (token: string): string =>
-  createHmac('sha256', token).update('tracker-session-v1').digest('base64url');
-
-export function isAuthenticated(c: Context, token: string): boolean {
-  const bearer = /^Bearer\s+(.+)$/i.exec(c.req.header('authorization') ?? '')?.[1]?.trim();
-  if (bearer && safeEqual(bearer, token)) return true;
-  const cookie = getCookie(c, SESSION_COOKIE);
-  return cookie !== undefined && safeEqual(cookie, sessionValue(token));
+export interface AuthDeps {
+  db: Db;
+  now: Clock;
+  options: AuthOptions;
 }
 
 export const unauthorized = (): AppError =>
-  new AppError('unauthorized', 'Enter the access token to use this tracker.');
+  new AppError('unauthorized', 'Sign in to use this tracker.');
 
-export function authMiddleware(token: string | null) {
+const bearerToken = (c: Context): string | null =>
+  /^Bearer\s+(\S+)\s*$/i.exec(c.req.header('authorization') ?? '')?.[1] ?? null;
+
+// SameSite=Lax already keeps the cookie off other sites' form posts. Browsers also say where a
+// request came from, which covers sites that count as the same site, like another subdomain.
+function rejectCrossSiteWrite(c: Context): void {
+  if (SAFE_METHODS.has(c.req.method)) return;
+  const site = c.req.header('sec-fetch-site');
+  if (site && site !== 'same-origin' && site !== 'none') {
+    throw forbidden('This request came from another site.');
+  }
+}
+
+async function sessionAccess(c: Context, { db, now, options }: AuthDeps, secret: string) {
+  const at = now();
+  const session = await resumeSession(db, secret, at);
+  if (!session) {
+    clearSessionCookie(c, options);
+    return null;
+  }
+  if (session.renewed) setSessionCookie(c, secret, session.expiresAt - at, options);
+  const { userId, sessionId, email } = session;
+  return { kind: 'session', userId, sessionId, email } satisfies Access;
+}
+
+async function tokenAccess({ db, now }: AuthDeps, secret: string): Promise<Access | null> {
+  const owner = await authenticateApiToken(db, secret, now());
+  return owner && { kind: 'token', ...owner };
+}
+
+// A token that isn't known gets no further than no token at all: a local tracker without an owner
+// stays open to agents still configured with an old TRACKER_TOKEN.
+export async function resolveAccess(c: Context, deps: AuthDeps): Promise<Access | null> {
+  const bearer = bearerToken(c);
+  const token = bearer !== null ? await tokenAccess(deps, bearer) : null;
+  if (token) return token;
+  const secret = readSessionCookie(c);
+  const session = secret ? await sessionAccess(c, deps, secret) : null;
+  if (session) return session;
+  return deps.options.openWithoutOwner && !(await ownerExists(deps.db)) ? OPEN_ACCESS : null;
+}
+
+export function authMiddleware(deps: AuthDeps) {
   return createMiddleware<AppEnv>(async (c, next) => {
-    const route = `${c.req.method} ${c.req.path}`;
-    if (token && !PUBLIC_ROUTES.has(route) && !isAuthenticated(c, token)) throw unauthorized();
+    if (c.req.path === HEALTH_PATH) return next();
+    rejectCrossSiteWrite(c);
+    const access = await resolveAccess(c, deps);
+    if (!access && !PUBLIC_ROUTES.has(`${c.req.method} ${c.req.path}`)) throw unauthorized();
+    c.set('access', access);
     await next();
   });
 }

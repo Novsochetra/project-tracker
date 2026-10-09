@@ -15,6 +15,6 @@ export async function callTool<Input extends z.ZodObject>(
     const images = reply.images ? await imageContent(client, reply.images) : [];
     return { content: [{ type: 'text', text: reply.text }, ...images] };
   } catch (error) {
-    return { content: [{ type: 'text', text: describeError(error) }], isError: true };
+    return { content: [{ type: 'text', text: describeError(error, client) }], isError: true };
   }
 }

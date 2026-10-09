@@ -155,7 +155,8 @@ describe.each(DIALECTS)('change events (%s)', (dialect) => {
     const res = await api.app.request('/api/events');
     expect(res.status).toBe(200);
     expect(res.headers.get('content-type')).toBe('text/event-stream');
-    expect(res.headers.get('cache-control')).toBe('no-cache');
+    // no-transform: a proxy (Railway's) must not buffer or compress it (http/responseHeaders.ts).
+    expect(res.headers.get('cache-control')).toBe('no-cache, no-transform');
     const reader = res.body!.getReader();
     await readUntil(reader, /: connected\n\n/);
     expect(api.broadcaster.listenerCount()).toBe(baseline + 1);

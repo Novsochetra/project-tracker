@@ -6,6 +6,7 @@ import type {
   StatusCategory,
 } from '@tracker/shared';
 import type { Kysely } from 'kysely';
+import type { AuthTables } from './authTables';
 
 export interface ProjectRow {
   id: string;
@@ -73,7 +74,7 @@ export interface AttachmentRow {
   createdAt: number;
 }
 
-export interface Database {
+export interface Database extends AuthTables {
   projects: ProjectRow;
   statuses: StatusRow;
   tickets: TicketRow;

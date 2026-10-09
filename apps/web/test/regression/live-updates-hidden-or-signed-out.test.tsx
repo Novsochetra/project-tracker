@@ -102,22 +102,20 @@ describe('regression: live updates pause while the page is hidden', () => {
 });
 
 describe('regression: live updates notice a lost session', () => {
-  it('shows the token screen by itself when the server refuses the stream', async () => {
+  it('shows the sign-in screen by itself when the server refuses the stream', async () => {
     const server = renderApp('/p/MOB');
     expect(await screen.findByText('Ticket 1')).toBeInTheDocument();
     const first = MockEventSource.latest();
     act(() => first.open());
 
-    // The server restarts with a new token: the browser's own retry of the stream gets a 401.
+    // The session ended (signed out everywhere): the browser's own retry of the stream gets a 401.
     server.requireToken();
     act(() => {
       first.fail(false);
       first.fail(true);
     });
 
-    expect(
-      await screen.findByRole('heading', { name: 'Enter your access token' }),
-    ).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Sign in to Tracker' })).toBeInTheDocument();
     const streams = MockEventSource.instances.length;
     await advance(TEN_MINUTES);
     expect(MockEventSource.instances).toHaveLength(streams);

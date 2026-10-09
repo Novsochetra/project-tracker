@@ -4,6 +4,7 @@ import { LayoutGrid, Plus } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { useProjects, useReadyForYou } from '../api';
 import { Icon, IconButton, LogoGlyph } from '../components';
+import { AccountRow } from '../features/account';
 import { sameProjectKey } from '../features/projects/projectLookup';
 import { useOpenProject } from '../features/projects/useOpenProject';
 import { readyCounts, readyItems } from '../features/ready/readyItems';
@@ -115,6 +116,7 @@ export function Sidebar() {
           <ReadyProjectItems projects={projects} />
         </ErrorBoundary>
       </div>
+      <AccountRow />
     </aside>
   );
 }

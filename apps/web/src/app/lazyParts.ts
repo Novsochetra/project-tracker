@@ -23,6 +23,9 @@ export const StatusManagerSheet = lazyWithPreload(() =>
 export const ConnectSheet = lazyWithPreload(() =>
   import('../features/connect/ConnectSheet').then((module) => module.ConnectSheet),
 );
+export const AccountSheet = lazyWithPreload(() =>
+  import('../features/account/AccountSheet').then((module) => module.AccountSheet),
+);
 
 interface Part {
   preload: () => Promise<unknown>;
@@ -34,7 +37,14 @@ const SCREENS: Record<Route['name'], Part | null> = {
   project: ProjectScreen,
   ticket: TicketScreen,
 };
-const SHEETS: Part[] = [NewTicketSheet, PromptSheet, ReportSheet, StatusManagerSheet, ConnectSheet];
+const SHEETS: Part[] = [
+  NewTicketSheet,
+  PromptSheet,
+  ReportSheet,
+  StatusManagerSheet,
+  ConnectSheet,
+  AccountSheet,
+];
 
 // A part that fails to load fails again where it renders, which shows and reports it.
 const preloadQuietly = (part: Part): Promise<unknown> => part.preload().catch(() => undefined);

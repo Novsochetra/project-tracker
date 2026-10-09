@@ -3,6 +3,7 @@ import { TrackerClient } from '@tracker/client';
 import { useEffect, useState, type ReactNode } from 'react';
 import { ApiContext } from './context';
 import { createQueryClient } from './queryClient';
+import { watchSignedOut } from './signedOut';
 import { watchUnauthorized } from './unauthorized';
 
 export interface ApiProviderProps {
@@ -22,6 +23,7 @@ export function ApiProvider({ client, queryClient, children }: ApiProviderProps)
   const activeQueryClient = queryClient ?? defaults.queryClient;
 
   useEffect(() => watchUnauthorized(activeQueryClient), [activeQueryClient]);
+  useEffect(() => watchSignedOut(activeQueryClient), [activeQueryClient]);
 
   return (
     <QueryClientProvider client={activeQueryClient}>

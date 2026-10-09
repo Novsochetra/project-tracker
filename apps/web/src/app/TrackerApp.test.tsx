@@ -150,30 +150,87 @@ describe('phone shell', () => {
   });
 });
 
-describe('access token', () => {
-  it('asks for the token, explains a wrong one and opens the app after a right one', async () => {
+describe('sign in', () => {
+  const SIGNED_OUT: SessionState = { authRequired: true, authenticated: false };
+  const OWNER: SessionState = { authRequired: true, authenticated: true, email: 'me@example.com' };
+
+  it('signs in on the page it was asked for, after explaining a wrong password', async () => {
     const user = userEvent.setup();
     const login = vi
       .fn()
-      .mockRejectedValueOnce(new ApiError(401, 'unauthorized', 'That access token is not right.'))
-      .mockResolvedValueOnce({ authRequired: true, authenticated: true });
-    renderApp('/', {
-      getSession: () => Promise.resolve({ authRequired: true, authenticated: false }),
-      login,
-    });
-    expect(
-      await screen.findByRole('heading', { name: 'Enter your access token' }),
-    ).toBeInTheDocument();
-    const input = screen.getByLabelText('Access token');
-    const submit = screen.getByRole('button', { name: 'Continue' });
-    expect(submit).toBeDisabled();
-    await user.type(input, 'wrong');
-    await user.click(submit);
-    expect(await screen.findByRole('alert')).toHaveTextContent('That access token is not right.');
-    await user.clear(input);
+      .mockRejectedValueOnce(new ApiError(401, 'unauthorized', 'Email or password is incorrect.'))
+      .mockResolvedValueOnce(OWNER);
+    renderApp('/p/MOB/3', { getSession: () => Promise.resolve(SIGNED_OUT), login });
+    expect(await screen.findByRole('heading', { name: 'Sign in to Tracker' })).toBeInTheDocument();
+    expect(screen.queryByText('Ticket screen MOB-3')).not.toBeInTheDocument();
+
+    await user.type(screen.getByLabelText('Email'), 'me@example.com');
+    await user.type(screen.getByLabelText('Password'), 'wrong{Enter}');
+    expect(await screen.findByRole('alert')).toHaveTextContent('Email or password is incorrect.');
+    await user.clear(screen.getByLabelText('Password'));
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
-    await user.type(input, 'secret{Enter}');
-    expect(login).toHaveBeenLastCalledWith('secret');
-    expect(await within(sidebar()).findByRole('button', { name: 'All projects' })).toBeVisible();
+    await user.type(screen.getByLabelText('Password'), 'correct horse battery{Enter}');
+
+    expect(login).toHaveBeenLastCalledWith({
+      email: 'me@example.com',
+      password: 'correct horse battery',
+    });
+    expect(await screen.findByText('Ticket screen MOB-3')).toBeInTheDocument();
+    expect(path()).toBe('/p/MOB/3');
+  });
+
+  it('says how to set up the owner when there is none yet', async () => {
+    renderApp('/', {
+      getSession: () => Promise.resolve({ ...SIGNED_OUT, setupRequired: true }),
+    });
+    expect(await screen.findByText(/No owner account yet/)).toHaveTextContent(
+      'npm run owner:set -- --email you@example.com',
+    );
+  });
+
+  it('signs out from the sidebar on desktop, back to the sign-in screen', async () => {
+    const user = userEvent.setup();
+    const logout = vi.fn().mockResolvedValue(SIGNED_OUT);
+    renderApp('/', { getSession: () => Promise.resolve(OWNER), logout });
+    await screen.findByRole('complementary', { name: 'Projects' });
+    await user.click(await within(sidebar()).findByRole('button', { name: 'Account' }));
+    const sheet = await screen.findByRole('dialog', { name: 'Account' });
+    expect(sheet).toHaveTextContent('Signed in as me@example.com');
+    await user.click(within(sheet).getByRole('button', { name: 'Sign out' }));
+    expect(await screen.findByRole('heading', { name: 'Sign in to Tracker' })).toBeInTheDocument();
+    expect(logout).toHaveBeenCalledTimes(1);
+    await waitFor(() =>
+      expect(screen.queryByRole('dialog', { name: 'Account' })).not.toBeInTheDocument(),
+    );
+  });
+
+  it('signs out everywhere after a confirm, from the Projects nav bar on a phone', async () => {
+    restore.push(mockPhone(true));
+    const user = userEvent.setup();
+    const signOutEverywhere = vi.fn().mockResolvedValue(SIGNED_OUT);
+    renderApp('/', {
+      getSession: () => Promise.resolve(OWNER),
+      listProjects: () => Promise.resolve([]),
+      signOutEverywhere,
+    });
+    await user.click(await screen.findByRole('button', { name: 'Account' }));
+    const sheet = await screen.findByRole('dialog', { name: 'Account' });
+    await user.click(within(sheet).getByRole('button', { name: 'Sign out everywhere' }));
+    expect(signOutEverywhere).not.toHaveBeenCalled();
+    expect(within(sheet).getByRole('alert')).toHaveTextContent(
+      'Sign out every phone and browser, this one too?',
+    );
+    await user.click(within(sheet).getByRole('button', { name: 'Sign out everywhere' }));
+    expect(await screen.findByRole('heading', { name: 'Sign in to Tracker' })).toBeInTheDocument();
+    expect(signOutEverywhere).toHaveBeenCalledTimes(1);
+  });
+
+  it('offers no account where the tracker is open without an owner', async () => {
+    renderApp('/');
+    await within(await screen.findByRole('complementary', { name: 'Projects' })).findByRole(
+      'button',
+      { name: 'Mobile app 3 open' },
+    );
+    expect(screen.queryByRole('button', { name: 'Account' })).not.toBeInTheDocument();
   });
 });

@@ -1,0 +1,122 @@
+.name {
+  color: var(--ink);
+  font-size: var(--size-body);
+  font-weight: var(--weight-medium);
+  overflow-wrap: anywhere;
+}
+
+.confirmRow {
+  padding: 6px;
+}
+
+.confirmRow + li,
+li + .confirmRow {
+  border-top: 1px solid var(--line);
+}
+
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--row-height);
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.formRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.input {
+  flex: 1 1 180px;
+  min-width: 0;
+  height: var(--control-height);
+  margin: 0;
+  padding: 0 10px;
+  border: 1px solid var(--control-line);
+  border-radius: var(--radius-control);
+  background: var(--surface);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: var(--size-body);
+}
+
+.input::placeholder {
+  color: var(--placeholder);
+}
+
+.input:focus-visible {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
+}
+
+.input[aria-describedby] {
+  border-color: var(--danger-line);
+}
+
+.created {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: 12px 14px;
+  border: 1px solid var(--report-line);
+  border-radius: var(--radius-group);
+  background: var(--report-bg);
+  outline: none;
+}
+
+.createdTitle {
+  margin: 0;
+  color: var(--ink);
+  font: var(--text-headline);
+  overflow-wrap: anywhere;
+}
+
+.secret {
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-control);
+  background: var(--surface);
+  color: var(--ink);
+  font: var(--text-mono);
+  overflow-wrap: anywhere;
+  user-select: all;
+  -webkit-user-select: all;
+}
+
+.warning {
+  margin: 0;
+  color: var(--ink);
+  font-size: var(--size-secondary);
+  font-weight: var(--weight-medium);
+}
+
+.createdActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+@media (width < 768px),
+  (pointer: coarse) and (device-width < 600px),
+  (pointer: coarse) and (device-height < 600px) {
+  .name {
+    font-size: var(--size-headline);
+  }
+
+  .input {
+    height: var(--touch-target);
+    font-size: var(--size-input);
+  }
+
+  .formRow > button {
+    flex: 1 1 100%;
+  }
+}

@@ -3,6 +3,7 @@ import { CaptureSheet } from '../../features/capture/CaptureSheet';
 import { ProjectSheet } from '../../features/projects/ProjectSheet';
 import { ErrorBoundary } from '../../lib/ErrorBoundary';
 import {
+  AccountSheet,
   ConnectSheet,
   NewTicketSheet,
   PromptSheet,
@@ -53,5 +54,7 @@ function RequestedSheet({ request, open, onClose }: SheetProps & { request: Shee
       return <StatusManagerSheet {...sheet} projectKey={request.projectKey} />;
     case 'connect':
       return <ConnectSheet {...sheet} />;
+    case 'account':
+      return <AccountSheet {...sheet} />;
   }
 }

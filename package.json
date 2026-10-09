@@ -7,7 +7,7 @@
     "apps/*"
   ],
   "engines": {
-    "node": ">=22"
+    "node": "22.x"
   },
   "scripts": {
     "dev": "concurrently -k -n server,web -c blue,magenta \"npm run dev -w @tracker/server\" \"npm run dev -w @tracker/web\"",
@@ -25,6 +25,10 @@
     "check:first-load": "tsx scripts/check-first-load.ts",
     "prepare": "husky",
     "seed": "tsx scripts/seed.ts",
+    "owner:set": "npm run owner:set -w @tracker/server --",
+    "db:migrate": "tsx apps/server/src/db/cli.ts migrate",
+    "db:rollback": "tsx apps/server/src/db/cli.ts rollback",
+    "db:status": "tsx apps/server/src/db/cli.ts status",
     "test:e2e:clean": "bash scripts/e2e-clean.sh"
   },
   "lint-staged": {

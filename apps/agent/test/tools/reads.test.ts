@@ -151,7 +151,7 @@ describe('get_ticket', () => {
         '## Activity (oldest first)',
       ].join('\n'),
     );
-    expect(reply.text).not.toContain('access token');
+    expect(reply.text).not.toContain('API token');
     expect(reply.images).toEqual([]);
   });
 
@@ -169,7 +169,7 @@ describe('get_ticket', () => {
     );
   });
 
-  it('says that download links need the access token when the agent uses one', async () => {
+  it('says that download links need the API token when the agent uses one', async () => {
     const client = fakeClient({
       getTicket: returns(detail({ attachments: [file('pdf', 'spec.pdf', 'application/pdf')] })),
       attachmentFileUrl,
@@ -177,7 +177,7 @@ describe('get_ticket', () => {
     });
     const reply = await run(getTicket, client, { ticket: 'MOB-3' });
     expect(reply.text.split('\n').at(-1)).toBe(
-      'Download links need the access token: send the header "Authorization: Bearer <TRACKER_TOKEN>".',
+      'Download links need the API token: send the header "Authorization: Bearer <API token>" (the token in TRACKER_API_TOKEN, or the one tracker login saved).',
     );
   });
 
@@ -187,6 +187,6 @@ describe('get_ticket', () => {
       usesToken: true,
     });
     const reply = await run(getTicket, client, { ticket: 'MOB-3' });
-    expect(reply.text).not.toContain('access token');
+    expect(reply.text).not.toContain('API token');
   });
 });

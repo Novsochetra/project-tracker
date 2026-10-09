@@ -1,6 +1,6 @@
 import type { SessionState } from '@tracker/shared';
 
-export type Gate = 'loading' | 'token' | 'app';
+export type Gate = 'loading' | 'login' | 'app';
 
 export interface SessionSnapshot {
   data: SessionState | undefined;
@@ -8,7 +8,7 @@ export interface SessionSnapshot {
 }
 
 export function gateFor({ data, fetchStatus }: SessionSnapshot): Gate {
-  if (data) return data.authRequired && !data.authenticated ? 'token' : 'app';
+  if (data) return data.authRequired && !data.authenticated ? 'login' : 'app';
   // Offline the session request pauses or fails; the app still works from the offline cache.
   return fetchStatus === 'fetching' ? 'loading' : 'app';
 }

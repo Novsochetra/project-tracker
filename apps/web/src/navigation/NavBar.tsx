@@ -12,10 +12,12 @@ export interface NavBarProps {
   mono?: boolean;
   backLabel?: string;
   onBack?: () => void;
+  // Shown on the leading side of a screen without a back button, such as Projects.
+  left?: ReactNode;
   right?: ReactNode;
 }
 
-export function NavBar({ title, mono = false, backLabel, onBack, right }: NavBarProps) {
+export function NavBar({ title, mono = false, backLabel, onBack, left, right }: NavBarProps) {
   const isPhone = useIsPhone();
   const navigation = useOptionalNavigation();
   const largeTitle = useLargeTitleState();
@@ -32,6 +34,7 @@ export function NavBar({ title, mono = false, backLabel, onBack, right }: NavBar
       data-expanded={expanded || undefined}
     >
       <div className={clsx(styles.side, styles.lead)}>
+        {backLabel === undefined && left}
         {backLabel !== undefined && handleBack && (
           <button
             type="button"

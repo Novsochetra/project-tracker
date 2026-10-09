@@ -23,7 +23,7 @@ export const NO_FILE_CONTENT: FileView = {
 };
 
 export const TOKEN_NOTE =
-  'Download links need the access token: send the header "Authorization: Bearer <TRACKER_TOKEN>".';
+  'Download links need the API token: send the header "Authorization: Bearer <API token>" (the token in TRACKER_API_TOKEN, or the one tracker login saved).';
 
 const NUMBER = new Intl.NumberFormat('en-US');
 

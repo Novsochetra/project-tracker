@@ -4,8 +4,8 @@
   justify-content: center;
   min-height: 100vh;
   min-height: 100dvh;
-  padding: calc(var(--space-6) + var(--safe-top)) var(--space-4)
-    calc(var(--space-6) + var(--safe-bottom));
+  padding: calc(var(--space-6) + var(--safe-top)) calc(var(--space-4) + var(--safe-right))
+    calc(var(--space-6) + var(--safe-bottom)) calc(var(--space-4) + var(--safe-left));
 }
 
 .form {
@@ -14,7 +14,7 @@
   align-items: center;
   gap: var(--space-3);
   width: 100%;
-  max-width: 320px;
+  max-width: 340px;
 }
 
 .logo {
@@ -26,6 +26,41 @@
   font: var(--text-heading);
   letter-spacing: -0.015em;
   text-align: center;
+}
+
+.setup {
+  margin: 0 0 var(--space-2);
+  color: var(--muted);
+  font: var(--text-secondary);
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+.command {
+  padding: 1px var(--space-1);
+  border-radius: var(--radius-square);
+  background: var(--fill-2);
+  color: var(--ink);
+  font: var(--text-mono);
+}
+
+.fields {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  align-self: stretch;
+  margin-bottom: var(--space-1);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.label {
+  color: var(--muted);
+  font: var(--text-caption);
 }
 
 .input {
@@ -40,6 +75,10 @@
   transition:
     border-color var(--duration-fast) ease-out,
     box-shadow var(--duration-fast) ease-out;
+}
+
+.input[aria-describedby] {
+  border-color: var(--danger-line);
 }
 
 .input:focus-visible {
@@ -57,12 +96,23 @@
   animation: error-in var(--duration-fade) var(--ease-out) backwards;
 }
 
+/* 16px text keeps iOS from zooming into the field it focuses. */
 @media (width < 768px),
   (pointer: coarse) and (device-width < 600px),
   (pointer: coarse) and (device-height < 600px) {
   .input {
     min-height: var(--touch-target);
     font-size: var(--size-input);
+  }
+
+  .label {
+    font-size: var(--size-secondary);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .error {
+    animation: none;
   }
 }
 

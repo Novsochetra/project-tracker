@@ -17,6 +17,7 @@ export const queryKeys = {
     ['reportPreview', ticketKey ? canonical(ticketKey) : '', text] as const,
   session: () => ['session'] as const,
   meta: () => ['meta'] as const,
+  apiTokens: () => ['apiTokens'] as const,
   attachmentText: (attachmentId: string) => ['attachmentText', attachmentId] as const,
 };
 

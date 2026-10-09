@@ -7,10 +7,10 @@ import { useFileDropGuard } from '../features/attachments';
 import { useTicketDrafts } from '../features/ticket/drafts/useTicketDrafts';
 import { NavigationProvider } from '../navigation';
 import { screensOnTheirWay } from './lazyParts';
+import { LoginScreen } from './LoginScreen';
 import { gateFor } from './sessionGate';
 import { SheetsProvider } from './sheets/SheetsProvider';
 import { Shell } from './Shell';
-import { TokenScreen } from './TokenScreen';
 
 export interface TrackerAppProps {
   client?: TrackerClient;
@@ -41,8 +41,8 @@ function SessionGate() {
   switch (gate) {
     case 'loading':
       return null;
-    case 'token':
-      return <TokenScreen />;
+    case 'login':
+      return <LoginScreen setupRequired={data?.setupRequired === true} />;
     case 'app':
       return <Shell />;
   }

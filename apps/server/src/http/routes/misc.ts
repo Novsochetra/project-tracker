@@ -8,15 +8,15 @@ import type { AppEnv } from '../env';
 export interface MetaOptions {
   version: string;
   repoRoot: string;
-  authRequired: boolean;
   publicUrl: string | null;
 }
 
 // The page's origin is no use to agents: under `npm run dev` it is Vite's. Vite's proxy sends
 // API requests here with this server's host, so the request's own origin is the API's address.
 export const serverMeta = (
-  { version, repoRoot, authRequired, publicUrl }: MetaOptions,
+  { version, repoRoot, publicUrl }: MetaOptions,
   requestUrl: string,
+  authRequired: boolean,
 ): ServerMeta => ({
   version,
   serverUrl: publicUrl ?? new URL(requestUrl).origin,
@@ -29,7 +29,7 @@ export const serverMeta = (
 export const miscRoutes = (ctx: ServiceContext, meta: MetaOptions) =>
   new Hono<AppEnv>()
     .get('/health', (c) => c.json({ ok: true }))
-    .get('/meta', (c) => c.json(serverMeta(meta, c.req.url)))
+    .get('/meta', (c) => c.json(serverMeta(meta, c.req.url, c.get('access')?.kind !== 'open')))
     .get('/people', async (c) => c.json(await listPeople(ctx)));
 
 export const testResetRoutes = (ctx: ServiceContext) =>

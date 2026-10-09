@@ -127,7 +127,7 @@ describe('MCP server', () => {
     for (const words of ['returned as images', 'Text files', '20,000', 'Videos and PDFs']) {
       expect(description).toContain(words);
     }
-    expect(description).toContain('access token');
+    expect(description).toContain('API token');
   });
 
   it('returns API errors as error results', async () => {

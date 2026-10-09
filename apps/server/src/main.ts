@@ -1,27 +1,32 @@
 import type { Server } from 'node:http';
 import { serve } from '@hono/node-server';
 import { createApp } from './app';
+import { authNotice } from './auth/startupNotice';
 import { loadConfig } from './config';
 import { createDatabase, isPostgresUrl } from './db/createDatabase';
-import { migrateToLatest } from './db/migrator';
+import { prepareDatabase } from './db/startup';
 import { createBroadcaster } from './events/broadcaster';
 import { REQUEST_TIMEOUT_MS, endSlowRequests, isUploadRequest } from './http/slowRequests';
 import { removeStalePendingAttachments } from './services/attachments';
-import { createDiskStorage } from './storage/diskStorage';
+import { stopOnSignals } from './shutdown';
+import { describeStorage, openFileStorage } from './storage/openFileStorage';
 
 const config = loadConfig();
 const db = createDatabase(config.databaseUrl);
-await migrateToLatest(db);
+for (const name of await prepareDatabase(db, config.databaseUrl)) console.log(`Migrated ${name}`);
 
-const storage = createDiskStorage(config.uploadsDir);
+const storage = await openFileStorage(config);
+console.log(`Files in ${describeStorage(config)}`);
 const removed = await removeStalePendingAttachments({ db, storage }, Date.now());
 if (removed > 0) console.log(`Removed ${removed} unused upload(s).`);
+
+for (const line of await authNotice(db, config.auth)) console.log(line);
 
 const app = createApp({
   db,
   storage,
   events: createBroadcaster(),
-  token: config.token,
+  auth: config.auth,
   webDist: config.webDist,
   testReset: config.testReset,
   repoRoot: config.repoRoot,
@@ -45,7 +50,6 @@ const server = serve(
   (info) => {
     const database = isPostgresUrl(config.databaseUrl) ? 'Postgres' : config.databaseUrl;
     console.log(`Tracker API on http://${config.host}:${info.port} (database: ${database})`);
-    if (config.token) console.log('Access token required.');
     if (config.publicUrl) console.log(`Agents connect at ${config.publicUrl}`);
     if (config.testReset) console.log('Test reset route enabled: POST /api/test/reset');
   },
@@ -53,12 +57,4 @@ const server = serve(
 
 endSlowRequests(server as Server, REQUEST_TIMEOUT_MS, isUploadRequest);
 
-function shutdown(): void {
-  // Open SSE streams would keep close() waiting forever.
-  if ('closeAllConnections' in server) server.closeAllConnections();
-  server.close();
-  void db.destroy().finally(() => process.exit(0));
-}
-
-process.once('SIGINT', shutdown);
-process.once('SIGTERM', shutdown);
+stopOnSignals(server as Server, db);

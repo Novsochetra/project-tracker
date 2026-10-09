@@ -7,6 +7,7 @@ import { PullToRefresh } from '../../gestures';
 import { ErrorBoundary } from '../../lib/ErrorBoundary';
 import { useIsPhone } from '../../lib/media';
 import { LargeTitle, NavBar, NavBarButton, useScreen } from '../../navigation';
+import { AccountButton } from '../account';
 import { CaptureBar, CaptureButton, canCapture, WaitingToSync } from '../capture';
 import { readyCounts, readyItems, ReadySection } from '../ready';
 import { ProjectList } from './ProjectList';
@@ -25,6 +26,7 @@ export function ProjectsScreen() {
     <>
       <NavBar
         title="Projects"
+        left={<AccountButton />}
         right={
           <NavBarButton aria-label="New project" onClick={openNew}>
             <Icon icon={Plus} size={20} />

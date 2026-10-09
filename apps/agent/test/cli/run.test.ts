@@ -5,6 +5,7 @@ import { USAGE } from '../../src/cli/usage';
 import type { Config, Env } from '../../src/config';
 import { fakeClient, rejectWith, returns } from '../fakeClient';
 import { attachment, detail, projectSummary } from '../fixtures';
+import { memoryStore } from '../memoryStore';
 
 async function cli(argv: string[], tracker: TrackerApi = fakeClient({}), env: Env = {}) {
   const stdout: string[] = [];
@@ -12,6 +13,7 @@ async function cli(argv: string[], tracker: TrackerApi = fakeClient({}), env: En
   const configs: Config[] = [];
   const code = await runCli(argv, {
     env,
+    store: memoryStore(),
     stdout: (text) => stdout.push(text),
     stderr: (text) => stderr.push(text),
     connect: (config) => {
@@ -44,6 +46,9 @@ describe('tracker help', () => {
     for (const flag of ['--url URL', '--as NAME', '--token TOKEN', '--json']) {
       expect(USAGE).toContain(flag);
     }
+    expect(USAGE).toContain('\n  login [--url URL]\n');
+    expect(USAGE).toContain('\n  logout [--url URL]\n');
+    expect(USAGE).toContain('TRACKER_API_TOKEN');
   });
 });
 
@@ -143,17 +148,62 @@ describe('configuration', () => {
   it('uses the environment', async () => {
     const env = {
       TRACKER_URL: 'http://tracker:9000',
-      TRACKER_TOKEN: 't0k',
+      TRACKER_API_TOKEN: 't0k',
       TRACKER_AGENT_NAME: 'Worker',
     };
     const { configs } = await cli(['projects'], projects, env);
-    expect(configs).toEqual([{ url: 'http://tracker:9000', token: 't0k', agentName: 'Worker' }]);
+    expect(configs).toEqual([
+      {
+        url: 'http://tracker:9000',
+        token: 't0k',
+        tokenSource: 'TRACKER_API_TOKEN',
+        agentName: 'Worker',
+      },
+    ]);
   });
 
   it('lets --url, --token and --as override the environment', async () => {
     const env = { TRACKER_URL: 'http://tracker:9000', TRACKER_AGENT_NAME: 'Worker' };
     const argv = ['projects', '--url', 'http://other:1', '--token', 'abc', '--as', 'Reviewer'];
     const { configs } = await cli(argv, projects, env);
-    expect(configs).toEqual([{ url: 'http://other:1', token: 'abc', agentName: 'Reviewer' }]);
+    expect(configs).toEqual([
+      { url: 'http://other:1', token: 'abc', tokenSource: '--token', agentName: 'Reviewer' },
+    ]);
+  });
+
+  it('says which tracker refused which token, without printing it', async () => {
+    const tracker = fakeClient({
+      listProjects: rejectWith(401, 'unauthorized', 'Sign in to use this tracker.'),
+      trackerUrl: 'https://t.example',
+      tokenSource: 'TRACKER_API_TOKEN',
+    });
+    const env = { TRACKER_URL: 'https://t.example', TRACKER_API_TOKEN: 'trk_secret' };
+    const result = await cli(['projects'], tracker, env);
+    expect(result.code).toBe(EXIT_ERROR);
+    expect(result.stderr).toMatch(
+      /^Error: The tracker at https:\/\/t\.example refused the token in TRACKER_API_TOKEN: it was revoked/,
+    );
+    expect(result.stderr).not.toContain('trk_secret');
+  });
+
+  it('reports a broken config file without calling the tracker', async () => {
+    const store = memoryStore();
+    store.read = () => {
+      throw new Error('/home/dara/.config/project-tracker/config.json is not valid JSON.');
+    };
+    const stderr: string[] = [];
+    const code = await runCli(['projects'], {
+      env: {},
+      store,
+      stdout: () => undefined,
+      stderr: (text) => stderr.push(text),
+      connect: () => {
+        throw new Error('not called');
+      },
+    });
+    expect(code).toBe(EXIT_ERROR);
+    expect(stderr).toEqual([
+      'Error: /home/dara/.config/project-tracker/config.json is not valid JSON.',
+    ]);
   });
 });

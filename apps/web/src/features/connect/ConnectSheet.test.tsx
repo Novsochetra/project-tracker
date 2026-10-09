@@ -43,11 +43,24 @@ describe('ConnectSheet', () => {
       'Reviewers check the work against the ticket and rate it 1–5. They approve it to Reviewed or send it back to To do.',
       'You move reviewed work to Done. Agents never can.',
     ]);
+    expect(within(sheet()).getByText('http://localhost:4100')).toBeInTheDocument();
     expect(within(sheet()).getByText('npm run build -w @tracker/agent')).toBeInTheDocument();
+    expect(within(sheet()).getByText(meta.repoRoot)).toBeInTheDocument();
     expect(within(sheet()).getByText('/mcp__tracker__work <PROJECT KEY>')).toBeInTheDocument();
     expect(within(sheet()).getByText('/mcp__tracker__review <PROJECT KEY>')).toBeInTheDocument();
     expect(within(sheet()).getByText(`node ${meta.cliEntry} help`)).toBeInTheDocument();
     expect(within(sheet()).queryByText(/TRACKER_TOKEN/)).not.toBeInTheDocument();
+  });
+
+  it('says an open tracker needs no token and leaves out the login step', async () => {
+    renderWithApi(<ConnectSheet open onClose={() => undefined} />, {
+      getMeta: vi.fn().mockResolvedValue(meta),
+    });
+    expect(
+      await within(sheet()).findByText(/This tracker has no owner account, so it lets agents in/),
+    ).toBeInTheDocument();
+    expect(within(sheet()).queryByText(/ login --url /)).not.toBeInTheDocument();
+    expect(within(sheet()).queryByRole('textbox', { name: 'Token name' })).not.toBeInTheDocument();
   });
 
   it('fills in the key of the project behind the sheet', async () => {
@@ -64,29 +77,36 @@ describe('ConnectSheet', () => {
     ).toBeInTheDocument();
   });
 
-  it('adds the token to the command when the tracker needs one', async () => {
+  it('with sign-in, shows the tokens and the step that saves one', async () => {
     renderWithApi(<ConnectSheet open onClose={() => undefined} />, {
       getMeta: vi.fn().mockResolvedValue({ ...meta, authRequired: true }),
+      listApiTokens: vi.fn().mockResolvedValue([]),
     });
     expect(
-      await within(sheet()).findByText(/--env TRACKER_TOKEN=<your token> -- node/),
+      await within(sheet()).findByText(`node ${meta.cliEntry} login --url http://localhost:4100`),
     ).toBeInTheDocument();
-    expect(within(sheet()).getByText(/with this tracker’s access token/)).toBeInTheDocument();
+    expect(within(sheet()).getByText(COMMAND)).toBeInTheDocument();
+    expect(await within(sheet()).findByText('No tokens yet.')).toBeInTheDocument();
+    expect(within(sheet()).getByRole('textbox', { name: 'Token name' })).toBeInTheDocument();
   });
 
-  it('copies the command and confirms with a toast', async () => {
+  it('copies the commands and the address and confirms with a toast', async () => {
     renderWithApi(<ConnectSheet open onClose={() => undefined} />, {
       getMeta: vi.fn().mockResolvedValue(meta),
     });
     const user = userEvent.setup();
     const writeText = vi.fn().mockResolvedValue(undefined);
     setClipboard({ writeText });
-    await user.click(await within(sheet()).findByRole('button', { name: 'Copy command' }));
+    await user.click(await within(sheet()).findByRole('button', { name: 'Copy MCP command' }));
     expect(writeText).toHaveBeenCalledWith(COMMAND);
     expect(await screen.findByText('Command copied')).toBeInTheDocument();
 
     await user.click(within(sheet()).getByRole('button', { name: 'Copy review command' }));
     expect(writeText).toHaveBeenLastCalledWith('/mcp__tracker__review <PROJECT KEY>');
+
+    await user.click(within(sheet()).getByRole('button', { name: 'Copy address' }));
+    expect(writeText).toHaveBeenLastCalledWith('http://localhost:4100');
+    expect(await screen.findByText('Address copied')).toBeInTheDocument();
   });
 
   it('says so when copying is blocked', async () => {

@@ -5,9 +5,11 @@ import { REPO_ROOT } from './config';
 import type { Db } from './db/schema';
 import type { Broadcaster } from './events/broadcaster';
 import { actorMiddleware } from './http/actor';
-import { authMiddleware } from './http/auth';
+import { authMiddleware, type AuthDeps } from './http/auth';
+import { DEFAULT_AUTH_OPTIONS, type AuthOptions } from './http/authOptions';
 import type { AppEnv } from './http/env';
 import { handleError, handleNotFound } from './http/errors';
+import { securityHeaders, unbufferedStreams } from './http/responseHeaders';
 import { activityRoutes } from './http/routes/activity';
 import { attachmentRoutes } from './http/routes/attachments';
 import { eventRoutes } from './http/routes/events';
@@ -17,6 +19,7 @@ import { reportRoutes } from './http/routes/reports';
 import { sessionRoutes } from './http/routes/session';
 import { statusRoutes } from './http/routes/statuses';
 import { ticketRoutes } from './http/routes/tickets';
+import { tokenRoutes } from './http/routes/tokens';
 import { workflowRoutes } from './http/routes/workflow';
 import { mountWebApp } from './http/static';
 import type { ServiceContext } from './services/context';
@@ -27,7 +30,7 @@ export interface AppDeps {
   storage: FileStorage;
   events: Broadcaster;
   now?: Clock;
-  token?: string | null;
+  auth?: Partial<AuthOptions>;
   webDist?: string | null;
   testReset?: boolean;
   repoRoot?: string;
@@ -37,17 +40,21 @@ export interface AppDeps {
 }
 
 function createApi(ctx: ServiceContext, deps: AppDeps): Hono<AppEnv> {
-  const token = deps.token ?? null;
+  const auth: AuthDeps = {
+    db: ctx.db,
+    now: ctx.now,
+    options: { ...DEFAULT_AUTH_OPTIONS, ...deps.auth },
+  };
   const api = new Hono<AppEnv>()
     .use(actorMiddleware)
-    .use(authMiddleware(token))
-    .route('/', sessionRoutes(token))
+    .use(authMiddleware(auth))
+    .route('/', sessionRoutes(auth))
+    .route('/', tokenRoutes(auth))
     .route(
       '/',
       miscRoutes(ctx, {
         version: deps.version ?? '0.0.0',
         repoRoot: deps.repoRoot ?? REPO_ROOT,
-        authRequired: token !== null,
         publicUrl: deps.publicUrl ?? null,
       }),
     )
@@ -73,6 +80,7 @@ export function createApp(deps: AppDeps): Hono<AppEnv> {
   const app = new Hono<AppEnv>();
   app.onError(handleError);
   app.notFound(handleNotFound);
+  app.use(securityHeaders(), unbufferedStreams);
   app.route('/api', createApi(ctx, deps));
   if (deps.webDist && existsSync(deps.webDist)) mountWebApp(app, deps.webDist);
   return app;

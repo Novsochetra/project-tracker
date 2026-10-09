@@ -1,6 +1,9 @@
 import type {
   Activity,
+  ApiToken,
   Attachment,
+  CreateApiTokenInput,
+  CreatedApiToken,
   CreateCommentInput,
   CreateProjectInput,
   CreateStatusInput,
@@ -9,6 +12,7 @@ import type {
   ExpectedComment,
   ExpectedFields,
   ListTicketsQuery,
+  LoginInput,
   MarkSentInput,
   MoveTicketInput,
   Project,
@@ -198,8 +202,20 @@ export class TrackerClient {
 
   getSession = () => this.http.request<SessionState>('GET', '/api/session');
 
-  login = (token: string) =>
-    this.http.request<SessionState>('POST', '/api/session', { body: { token } });
+  login = (input: LoginInput) =>
+    this.http.request<SessionState>('POST', '/api/session', { body: input });
+
+  logout = () => this.http.request<SessionState>('DELETE', '/api/session');
+
+  // Ends every session of the owner, this one too. API tokens keep working.
+  signOutEverywhere = () => this.http.request<SessionState>('DELETE', '/api/sessions');
+
+  listApiTokens = () => this.http.request<ApiToken[]>('GET', '/api/tokens');
+
+  createApiToken = (input: CreateApiTokenInput) =>
+    this.http.request<CreatedApiToken>('POST', '/api/tokens', { body: input });
+
+  revokeApiToken = (id: string) => this.http.request<void>('DELETE', `/api/tokens/${segment(id)}`);
 
   eventsUrl = () => this.http.url('/api/events');
 }

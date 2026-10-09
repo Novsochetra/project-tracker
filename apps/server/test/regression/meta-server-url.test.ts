@@ -1,8 +1,9 @@
 import type { ServerMeta } from '@tracker/shared';
 import type { Hono } from 'hono';
-import { afterAll, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createApp } from '../../src/app';
 import { createDatabase } from '../../src/db/createDatabase';
+import { migrateToLatest } from '../../src/db/migrator';
 import { createBroadcaster } from '../../src/events/broadcaster';
 import type { AppEnv } from '../../src/http/env';
 import { createMemoryStorage } from '../../src/storage/memoryStorage';
@@ -12,6 +13,11 @@ import { createMemoryStorage } from '../../src/storage/memoryStorage';
 describe('regression: /api/meta tells agents the server’s own URL', () => {
   const db = createDatabase(':memory:');
   const deps = { db, storage: createMemoryStorage(), events: createBroadcaster() };
+
+  // Without an owner the API stays open, which it finds out from the database.
+  beforeAll(async () => {
+    await migrateToLatest(db);
+  });
 
   afterAll(async () => {
     await db.destroy();

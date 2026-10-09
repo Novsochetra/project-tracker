@@ -1,38 +1,86 @@
-import type { SessionState } from '@tracker/shared';
+import { LOGIN_FAILED_MESSAGE, loginInput, type SessionState } from '@tracker/shared';
 import { Hono, type Context } from 'hono';
-import { setCookie } from 'hono/cookie';
-import { z } from 'zod';
-import { AppError } from '../../errors';
-import { SESSION_COOKIE, isAuthenticated, safeEqual, sessionValue } from '../auth';
+import type { Access } from '../../auth/access';
+import { clientAddress } from '../../auth/clientAddress';
+import { createLoginLimits, type LoginAttempt, type LoginLimits } from '../../auth/loginLimits';
+import { checkLogin, ownerExists } from '../../auth/owner';
+import { endAllSessions, endSession, startSession } from '../../auth/sessions';
+import { AppError, forbidden } from '../../errors';
+import type { AuthDeps } from '../auth';
 import type { AppEnv } from '../env';
+import { clearSessionCookie, readSessionCookie, setSessionCookie } from '../sessionCookie';
 import { jsonBody } from '../validation';
 
-const SESSION_MAX_AGE_SECONDS = 180 * 24 * 60 * 60;
+// The browser also drops its HTTP cache for the tracker, where attachment files are kept for a
+// year. The service worker's caches are the page's to clear (api/hooks/session.ts).
+const CLEAR_SITE_DATA = '"cache"';
 
-const sessionInput = z.object({ token: z.string().max(1000) });
+async function stateFor(deps: AuthDeps, access: Access | null): Promise<SessionState> {
+  if (access?.kind === 'open') return { authRequired: false, authenticated: true };
+  if (access?.kind === 'session')
+    return { authRequired: true, authenticated: true, email: access.email };
+  if (access) return { authRequired: true, authenticated: true };
+  if (await ownerExists(deps.db)) return { authRequired: true, authenticated: false };
+  return { authRequired: true, authenticated: false, setupRequired: true };
+}
 
-const isHttps = (c: Context): boolean =>
-  new URL(c.req.url).protocol === 'https:' || c.req.header('x-forwarded-proto') === 'https';
+function tooManyAttempts(c: Context, waitMs: number): AppError {
+  const minutes = Math.ceil(waitMs / 60_000);
+  c.header('Retry-After', String(Math.ceil(waitMs / 1000)));
+  const when = minutes === 1 ? 'a minute' : `${minutes} minutes`;
+  return new AppError('rate_limited', `Too many sign-in attempts. Try again in ${when}.`);
+}
 
-export const sessionRoutes = (token: string | null) =>
-  new Hono<AppEnv>()
-    .get('/session', (c) =>
-      c.json<SessionState>({
-        authRequired: token !== null,
-        authenticated: token === null || isAuthenticated(c, token),
-      }),
-    )
-    .post('/session', jsonBody(sessionInput), (c) => {
-      if (token === null) return c.json<SessionState>({ authRequired: false, authenticated: true });
-      if (!safeEqual(c.req.valid('json').token.trim(), token)) {
-        throw new AppError('unauthorized', 'That access token is not right.');
-      }
-      setCookie(c, SESSION_COOKIE, sessionValue(token), {
-        httpOnly: true,
-        sameSite: 'Lax',
-        path: '/',
-        maxAge: SESSION_MAX_AGE_SECONDS,
-        secure: isHttps(c),
-      });
-      return c.json<SessionState>({ authRequired: true, authenticated: true });
-    });
+async function signIn(
+  c: Context<AppEnv>,
+  deps: AuthDeps,
+  limits: LoginLimits,
+  input: LoginAttempt & { password: string },
+) {
+  const at = deps.now();
+  const wait = limits.waitFor(input, at);
+  if (wait > 0) throw tooManyAttempts(c, wait);
+  // Counted before the check, so attempts sent side by side can't all slip past the limit.
+  limits.failed(input, at);
+  const owner = await checkLogin(deps.db, input.email, input.password);
+  if (!owner) throw new AppError('unauthorized', LOGIN_FAILED_MESSAGE);
+  limits.succeeded(input);
+  const previous = readSessionCookie(c);
+  if (previous) await endSession(deps.db, previous);
+  const session = await startSession(deps.db, owner.id, deps.now());
+  setSessionCookie(c, session.secret, session.expiresAt - at, deps.options);
+  return c.json<SessionState>({ authRequired: true, authenticated: true, email: owner.email });
+}
+
+async function signOut(c: Context<AppEnv>, deps: AuthDeps) {
+  const secret = readSessionCookie(c);
+  if (secret) await endSession(deps.db, secret);
+  clearSessionCookie(c, deps.options);
+  c.header('Clear-Site-Data', CLEAR_SITE_DATA);
+  const access = c.get('access');
+  return c.json(await stateFor(deps, access?.kind === 'open' ? access : null));
+}
+
+async function signOutEverywhere(c: Context<AppEnv>, deps: AuthDeps) {
+  const access = c.get('access');
+  if (access?.kind !== 'session') {
+    throw forbidden('Sign in with your email and password to sign out everywhere.');
+  }
+  await endAllSessions(deps.db, access.userId);
+  clearSessionCookie(c, deps.options);
+  c.header('Clear-Site-Data', CLEAR_SITE_DATA);
+  return c.json(await stateFor(deps, null));
+}
+
+export function sessionRoutes(deps: AuthDeps) {
+  const limits = createLoginLimits(deps.options.loginLimits);
+  return new Hono<AppEnv>()
+    .get('/session', async (c) => c.json(await stateFor(deps, c.get('access'))))
+    .post('/session', jsonBody(loginInput), async (c) => {
+      const { email, password } = c.req.valid('json');
+      const address = clientAddress(c, deps.options.trustedProxies);
+      return signIn(c, deps, limits, { address, email, password });
+    })
+    .delete('/session', (c) => signOut(c, deps))
+    .delete('/sessions', (c) => signOutEverywhere(c, deps));
+}

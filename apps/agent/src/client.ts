@@ -1,8 +1,9 @@
 import { TrackerClient } from '@tracker/client';
-import type { Config } from './config';
+import type { Config, TokenSource } from './config';
 
 export type TrackerApi = Pick<
   TrackerClient,
+  | 'getSession'
   | 'listProjects'
   | 'getProject'
   | 'listTickets'
@@ -20,6 +21,9 @@ export type TrackerApi = Pick<
 > & {
   // Download links need the token too, so replies note it when requests carry one.
   readonly usesToken?: boolean;
+  // For error messages: which tracker refused, and which token it refused.
+  readonly trackerUrl?: string;
+  readonly tokenSource?: TokenSource | undefined;
 };
 
 export const createTrackerClient = (config: Config): TrackerApi =>
@@ -29,5 +33,9 @@ export const createTrackerClient = (config: Config): TrackerApi =>
       token: config.token,
       actor: { kind: 'agent', name: config.agentName },
     }),
-    { usesToken: config.token !== undefined },
+    {
+      usesToken: config.token !== undefined,
+      trackerUrl: config.url,
+      tokenSource: config.tokenSource,
+    },
   );

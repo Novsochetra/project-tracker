@@ -1,5 +1,6 @@
 export * from './domain/activity';
 export * from './domain/actor';
+export * from './domain/apiToken';
 export * from './domain/attachment';
 export * from './domain/events';
 export * from './domain/liveUpdates';
@@ -7,6 +8,7 @@ export * from './domain/priority';
 export * from './domain/project';
 export * from './domain/status';
 export * from './domain/ticket';
+export * from './api/auth';
 export * from './api/dto';
 export * from './api/schemas';
 export * from './logic/avatar';

@@ -80,10 +80,21 @@ export type AttachmentOwner = 'ticket' | 'comment';
 export const tooManyFilesMessage = (owner: AttachmentOwner): string =>
   `${owner === 'ticket' ? 'A new ticket' : 'A comment'} can have up to ${MAX_NEW_ATTACHMENTS} files.`;
 
+// iOS Safari converts a picked photo to the first type a file input lists, unless the list takes
+// the photo's HEIC as it is. The server can neither shrink a HEIC nor strip its GPS location
+// (PT-127), so the picker lists JPEG first and leaves HEIC out: iPhones then send JPEG. A HEIC that
+// arrives another way (dropped on a Mac, sent by an agent) is still taken and stored as it came.
+const PICKER_TYPES: readonly AttachmentMimeType[] = [
+  'image/jpeg',
+  ...(Object.keys(ATTACHMENT_TYPES) as AttachmentMimeType[]).filter(
+    (type) => type !== 'image/jpeg' && type !== 'image/heic' && type !== 'image/heif',
+  ),
+];
+
 // Extensions too, since some systems give .log or .md files no type.
 export const ATTACHMENT_ACCEPT = [
-  ...Object.keys(ATTACHMENT_TYPES),
-  ...[...TYPE_OF_EXTENSION.keys()].map((extension) => `.${extension}`),
+  ...PICKER_TYPES,
+  ...PICKER_TYPES.flatMap((type) => ATTACHMENT_TYPES[type].extensions.map((ext) => `.${ext}`)),
 ].join(',');
 
 export const UNSUPPORTED_ATTACHMENT_MESSAGE =

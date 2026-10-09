@@ -37,25 +37,81 @@ Data lives in `data/` (SQLite database and uploaded images).
 
 The server listens on `127.0.0.1` by default. To reach it from your phone:
 
-1. Start it on all interfaces with a token:
+1. Set up the owner account once (see Sign-in below), then start it on all interfaces:
 
    ```bash
-   HOST=0.0.0.0 TRACKER_TOKEN=pick-a-long-secret npm start
+   npm run owner:set -- --email you@example.com
+   HOST=0.0.0.0 npm start
    ```
 
-2. Open `http://<your-computer's-LAN-IP>:4100` on the phone and enter the token once.
+2. Open `http://<your-computer's-LAN-IP>:4100` on the phone and sign in.
 3. Add it to the home screen (Safari: Share → Add to Home Screen). It opens full screen like an app.
+
+## Sign-in
+
+One owner account signs in, with an email and password. There is no sign-up. Set it up, or change its email or password, with:
+
+```bash
+npm run owner:set -- --email you@example.com   # asks for the password twice, hidden
+```
+
+The password is typed (or piped in as the first line of standard input), never put in env vars or arguments; the database keeps only a scrypt hash. It uses the server's database: the local SQLite file, or `DATABASE_URL` (a Postgres database must be migrated first). In a built deploy the same command is `node apps/server/dist/owner-set.js --email you@example.com`. Running it again signs out every device; API tokens keep working.
+
+Without an owner, a server on `127.0.0.1` (and not behind a proxy) stays open, as it always did for local use. Anywhere else it refuses every request until the owner is set. Claude Code agents use API tokens the owner creates in the app (`Authorization: Bearer trk_…`, saved with `tracker login` or set as `TRACKER_API_TOKEN`; see Connect Claude Code below). Details: `docs/architecture.md` §3.1.
 
 For HTTPS (needed for offline support and the clipboard API), the easiest route is [Tailscale](https://tailscale.com): `tailscale serve --bg 4100`, then open the `https://…ts.net` address on your phone. Start the server with `PUBLIC_URL=https://<your-machine>.ts.net` so Connect Claude Code shows that address.
 
+## Database
+
+SQLite by default (`data/tracker.db`), migrated when the server starts. For Postgres (Railway), set `DATABASE_URL=postgres://…` and migrate before the server starts; it refuses a database that isn't at its migrations.
+
+```bash
+npm run db:status              # each migration: applied, pending, or from a newer build
+npm run db:migrate             # run the pending ones, all in one transaction
+npm run db:rollback -- --yes   # undo the last one (without --yes it only says which)
+```
+
+A deploy runs `node apps/server/dist/db.js migrate` before starting the new server. Postgres settings: `sslmode` in the URL or `PGSSLMODE` (`require` for an address with a self-signed certificate), `DATABASE_POOL_MAX` (10), `DATABASE_STATEMENT_TIMEOUT_MS` (30000), `MIGRATE_ON_START=1` to migrate on start instead. How it works and the rules for a new migration: `docs/architecture.md` §2.1.
+
+## Deploy to Railway
+
+To use the tracker from anywhere, deploy it to [Railway](https://railway.com) from a private GitHub repo; each push to `main` deploys again. `railway.json` holds the build (`npm run build`, then dev dependencies pruned), the pre-deploy migration, the start command and the health check (`/api/health`). In short:
+
+1. Push the repo to a private GitHub repo.
+2. In Railway: a new project with PostgreSQL, then add the GitHub repo as a service (one replica).
+3. Set the service's variables: `DATABASE_URL=${{Postgres.DATABASE_URL}}`, `NODE_ENV=production`, `HOST=0.0.0.0`, `TRUST_PROXY=1`, and the S3 bucket and keys (`docs/s3-storage.md`). Every variable: `.env.example`.
+4. Generate a domain, deploy, then set the owner once inside the service: `railway ssh`, `node apps/server/dist/owner-set.js --email you@example.com`.
+5. Open the address on your phone and add it to the home screen.
+
+Step by step, with backups and rollback: `docs/deploy-railway.md`.
+
 ## Connect Claude Code
 
-Build the agent tools once, then register the MCP server (user scope makes it available in every project):
+The app's project menu (•••) → **Connect Claude Code** shows this tracker's address, its API tokens and these commands with copy buttons. Run them once on your computer, in your project-tracker folder.
+
+On this computer, with the tracker open (no owner yet), build the agent tools and register the MCP server (user scope makes it available in every project):
 
 ```bash
 npm run build -w @tracker/agent
 claude mcp add tracker -s user --env TRACKER_URL=http://localhost:4100 --env TRACKER_AGENT_NAME=Claude -- node "$(pwd)/apps/agent/dist/mcp.js"
 ```
+
+To an online tracker (Railway), or any tracker with an owner, agents need an API token:
+
+1. In the app, open **Connect Claude Code** → **API tokens**, name a token (like "Claude laptop") and **Create token**. **Copy token**: it is shown only once.
+2. On your computer, in your project-tracker folder:
+
+   ```bash
+   npm run build -w @tracker/agent
+   node apps/agent/dist/cli.js login --url https://your-tracker.up.railway.app   # paste the token when asked
+   claude mcp add tracker -s user --env TRACKER_URL=https://your-tracker.up.railway.app --env TRACKER_AGENT_NAME=Claude -- node "$(pwd)/apps/agent/dist/mcp.js"
+   ```
+
+   `login` checks the token with the tracker and saves it in `~/.config/project-tracker/config.json`, which only you can read; the MCP server and the CLI both read it, so the token stays out of your shell history and Claude Code's settings. Instead you can set `TRACKER_API_TOKEN` (and `TRACKER_URL`) in the environment, which wins over the saved file. Registered `tracker` before? Run `claude mcp remove tracker -s user` first.
+
+3. Restart Claude Code (or run `/mcp`) and check with `node apps/agent/dist/cli.js projects`.
+
+To revoke: **Connect Claude Code** → **API tokens** → **Revoke** next to the token. Agents using it get "refused the token … it was revoked" at once. `node apps/agent/dist/cli.js logout --url …` removes the saved copy from your computer.
 
 In any repository, Claude Code then has tracker tools and two slash commands:
 
@@ -77,4 +133,4 @@ npm run test:e2e   # Playwright: iPhone-sized WebKit, desktop Chromium, and an i
 - Code rules: `CLAUDE.md`
 - Original design hand-off: `init-design/`
 
-Configuration (environment variables): `PORT` (4100), `HOST` (127.0.0.1), `DATABASE_URL` (SQLite file path, `:memory:`, or `postgres://…`), `UPLOADS_DIR`, `TRACKER_TOKEN`, `WEB_DIST`, `PUBLIC_URL` (the address agents should use, shown in Connect Claude Code; defaults to the address the request reached).
+Configuration (environment variables): `PORT` (4100), `HOST` (127.0.0.1), `DATABASE_URL` (SQLite file path, `:memory:`, or `postgres://…`), `UPLOADS_DIR`, `S3_BUCKET` with `AWS_REGION`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` and an optional `S3_ENDPOINT` (files in S3 instead of `UPLOADS_DIR`: `docs/s3-storage.md`), `WEB_DIST`, `PUBLIC_URL` (the address agents should use, shown in Connect Claude Code; defaults to the address the request reached), `TRUST_PROXY` (how many proxies in front add to `X-Forwarded-For`, `1` on Railway: sign-in limits then count the client's address, and `X-Forwarded-Proto: https` makes the session cookie Secure), `NODE_ENV=production` (session cookie always Secure). The server no longer reads `TRACKER_TOKEN`; agents use it for their API token.

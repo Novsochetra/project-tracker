@@ -214,13 +214,39 @@ describe('messages', () => {
 });
 
 describe('ATTACHMENT_ACCEPT', () => {
-  it('lists every type and every extension for file inputs', () => {
+  const accepted = ATTACHMENT_ACCEPT.split(',');
+
+  it('lists every type and extension but HEIC and HEIF for file inputs, JPEG first', () => {
     expect(ATTACHMENT_ACCEPT).toBe(
-      'image/png,image/jpeg,image/gif,image/webp,image/heic,image/heif,' +
+      'image/jpeg,image/png,image/gif,image/webp,' +
         'video/mp4,video/quicktime,video/webm,' +
         'text/plain,text/markdown,text/csv,application/json,application/pdf,' +
-        '.png,.jpg,.jpeg,.gif,.webp,.heic,.heif,.mp4,.mov,.webm,' +
+        '.jpg,.jpeg,.png,.gif,.webp,.mp4,.mov,.webm,' +
         '.txt,.log,.md,.csv,.json,.pdf',
     );
+  });
+
+  // iOS Safari converts a picked photo to the first type listed unless the list takes its HEIC.
+  it('starts with JPEG, so an iPhone sends a picked photo as JPEG', () => {
+    expect(accepted[0]).toBe('image/jpeg');
+  });
+
+  // Listed, HEIC would arrive as it is, which the server can neither shrink nor strip of its GPS.
+  it('leaves HEIC and HEIF out in every spelling', () => {
+    expect(accepted.filter((entry) => /heic|heif/i.test(entry))).toEqual([]);
+  });
+
+  it('keeps every other type and extension', () => {
+    const others = Object.entries(ATTACHMENT_TYPES).filter(([, { kind }]) => kind !== 'image');
+    for (const [type, { extensions }] of others) {
+      expect(accepted, type).toContain(type);
+      for (const extension of extensions) expect(accepted, type).toContain(`.${extension}`);
+    }
+    for (const type of ['image/png', 'image/gif', 'image/webp']) expect(accepted).toContain(type);
+  });
+
+  it('still takes a HEIC that arrives some other way, such as dropped on a Mac', () => {
+    const photo = { type: 'image/heic', name: 'IMG_0006.HEIC', size: 3 * MB };
+    expect(checkAttachment(photo)).toEqual({ ok: true, mimeType: 'image/heic', kind: 'image' });
   });
 });

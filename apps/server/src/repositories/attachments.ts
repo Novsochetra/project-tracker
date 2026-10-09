@@ -1,7 +1,19 @@
 import type { AttachmentRow, Db } from '../db/schema';
 
+// A Postgres integer stops at 2^31 - 1 where SQLite's goes on, and a corrupt image can claim up to
+// 2^32 - 1 pixels (a 500 on Postgres only). No real image is that large, so it counts as unknown.
+const INTEGER_MAX = 2_147_483_647;
+
+const storableDimension = (value: number | null): number | null =>
+  value !== null && value <= INTEGER_MAX ? value : null;
+
 export async function insertAttachment(db: Db, row: AttachmentRow): Promise<void> {
-  await db.insertInto('attachments').values(row).execute();
+  const width = storableDimension(row.width);
+  const height = storableDimension(row.height);
+  await db
+    .insertInto('attachments')
+    .values({ ...row, width, height })
+    .execute();
 }
 
 export const findAttachmentById = (db: Db, id: string) =>

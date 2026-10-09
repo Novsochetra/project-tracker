@@ -36,10 +36,16 @@ describe('callTool', () => {
     );
   });
 
-  it('adds a token hint to 401 errors', async () => {
-    const client = fakeClient({ listProjects: rejectWith(401, 'unauthorized', 'Unauthorized.') });
+  it('explains 401 errors in terms of API tokens', async () => {
+    const client = fakeClient({
+      listProjects: rejectWith(401, 'unauthorized', 'Sign in to use this tracker.'),
+      trackerUrl: 'https://t.example',
+    });
     expect(await callTool(listProjects, client, {})).toEqual(
-      errorResult("Unauthorized. Set TRACKER_TOKEN (or --token) to the tracker's access token."),
+      errorResult(
+        'The tracker at https://t.example needs an API token. Create one in the app: Connect Claude Code → API tokens. ' +
+          'Then run "tracker login --url https://t.example" and paste it, or set TRACKER_API_TOKEN.',
+      ),
     );
   });
 
@@ -57,7 +63,7 @@ describe('callTool', () => {
     const client = fakeClient({ listProjects: () => Promise.reject(failure) });
     expect(await callTool(listProjects, client, {})).toEqual(
       errorResult(
-        'Could not reach the tracker server (connect ECONNREFUSED 127.0.0.1:4100). Is it running? Check TRACKER_URL.',
+        'Could not reach the tracker (connect ECONNREFUSED 127.0.0.1:4100). Is it running? Check TRACKER_URL (or --url).',
       ),
     );
   });

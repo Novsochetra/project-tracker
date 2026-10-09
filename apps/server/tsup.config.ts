@@ -1,7 +1,9 @@
 import { defineConfig } from 'tsup';
 
 export default defineConfig({
-  entry: ['src/main.ts'],
+  // Each sits right in dist/, one level below the package root, as config.ts expects.
+  // db.js runs migrations: node apps/server/dist/db.js migrate, a deploy's pre-deploy step.
+  entry: { main: 'src/main.ts', 'owner-set': 'src/cli/setOwner.ts', db: 'src/db/cli.ts' },
   format: ['esm'],
   platform: 'node',
   target: 'node22',

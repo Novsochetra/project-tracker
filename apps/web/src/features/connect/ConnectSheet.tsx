@@ -1,6 +1,4 @@
 import type { ServerMeta } from '@tracker/shared';
-import { Copy } from 'lucide-react';
-import { useId, type ReactNode } from 'react';
 import { errorMessage, type TrackerQuery } from '../../api';
 import { useMeta } from '../../api/hooks/meta';
 import type { SheetProps } from '../../app/sheets/types';
@@ -9,18 +7,21 @@ import { useOptionalNavigation } from '../../navigation/useNavigation';
 import { Sheet, SheetTextButton } from '../../overlays';
 import { CommandRow } from './CommandRow';
 import {
-  BUILD_COMMAND,
-  COMMAND_COPY_BLOCKED,
-  TOKEN_PLACEHOLDER,
   cliHelpCommand,
-  mcpAddCommand,
+  isLocalTracker,
   projectKeyNote,
   routeProjectKey,
   slashCommand,
+  trackerAddress,
+  type ConnectInfo,
 } from './connectCommand';
 import styles from './ConnectSheet.module.css';
 import { ConnectSteps } from './ConnectSteps';
-import { useCopyCommand } from './useCopyCommand';
+import { Section } from './Section';
+import { SetupCommands } from './SetupCommands';
+import { ADDRESS_COPY } from './tokenText';
+import { OpenTrackerNote, TokensSection } from './TokensSection';
+import { useCopyCommand, type CopyHandler } from './useCopyCommand';
 
 export function ConnectSheet({ open, onClose }: SheetProps) {
   const meta = useMeta();
@@ -48,49 +49,45 @@ export function ConnectSheet({ open, onClose }: SheetProps) {
   );
 }
 
-function Section({ title, children }: { title: string; children: ReactNode }) {
-  const headingId = useId();
-  return (
-    <section aria-labelledby={headingId} className={styles.section}>
-      <h2 id={headingId} className={styles.heading}>
-        {title}
-      </h2>
-      {children}
-    </section>
-  );
-}
+const connectInfo = (meta: ServerMeta): ConnectInfo => ({
+  ...meta,
+  serverUrl: trackerAddress(meta.serverUrl, window.location.origin),
+});
 
 function Setup({ meta, projectKey }: { meta: ServerMeta; projectKey: string | null }) {
   const { copy, blocked } = useCopyCommand();
-  const command = mcpAddCommand(meta);
+  const info = connectInfo(meta);
   return (
     <>
-      <Section title="Add the tracker to Claude Code">
-        <p className={styles.help}>Run this once in a terminal. It works in all your projects.</p>
-        <pre className={styles.command}>
-          <code>{command}</code>
-        </pre>
-        <Button size="sm" icon={Copy} className={styles.copy} onClick={() => copy(command)}>
-          Copy command
-        </Button>
-        {meta.authRequired && (
-          <p className={styles.note}>
-            Replace <code className={styles.inlineCode}>{TOKEN_PLACEHOLDER}</code> with this
-            tracker’s access token.
-          </p>
-        )}
-        <p className={styles.note}>
-          It runs the tracker’s MCP server, which you build once with{' '}
-          <code className={`${styles.inlineCode} ${styles.nowrap}`}>{BUILD_COMMAND}</code> in{' '}
-          <code className={styles.inlineCode}>{meta.repoRoot}</code>.
-        </p>
+      <Section title="This tracker">
+        <GroupedCard>
+          <ul className={styles.rows}>
+            <CommandRow
+              command={info.serverUrl}
+              description={
+                isLocalTracker(info.serverUrl)
+                  ? 'Agents on this computer reach the tracker here.'
+                  : 'Agents reach the tracker here, from any computer.'
+              }
+              copyLabel="Copy address"
+              onCopy={(address) => copy(address, ADDRESS_COPY)}
+            />
+          </ul>
+        </GroupedCard>
       </Section>
+      {meta.authRequired ? <TokensSection /> : <OpenTrackerNote />}
+      <SetupCommands
+        info={info}
+        repoRoot={meta.repoRoot}
+        authRequired={meta.authRequired}
+        onCopy={copy}
+      />
       <SlashCommands projectKey={projectKey} onCopy={copy} />
       <Section title="Without MCP">
         <GroupedCard>
           <ul className={styles.rows}>
             <CommandRow
-              command={cliHelpCommand(meta.cliEntry)}
+              command={cliHelpCommand(info)}
               description="The same tools as a command line, for shells and agents without MCP."
               copyLabel="Copy CLI command"
               onCopy={copy}
@@ -100,7 +97,7 @@ function Setup({ meta, projectKey }: { meta: ServerMeta; projectKey: string | nu
       </Section>
       {blocked && (
         <p role="alert" className={`${styles.error} fade-in`}>
-          {COMMAND_COPY_BLOCKED}
+          {blocked}
         </p>
       )}
     </>
@@ -109,7 +106,7 @@ function Setup({ meta, projectKey }: { meta: ServerMeta; projectKey: string | nu
 
 interface SlashCommandsProps {
   projectKey: string | null;
-  onCopy: (command: string) => void;
+  onCopy: CopyHandler;
 }
 
 function SlashCommands({ projectKey, onCopy }: SlashCommandsProps) {

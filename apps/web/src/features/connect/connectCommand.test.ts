@@ -1,39 +1,77 @@
 import { describe, expect, it } from 'vitest';
 import {
   cliHelpCommand,
+  isLocalTracker,
+  loginCommand,
   mcpAddCommand,
   projectKeyNote,
   routeProjectKey,
   shellQuote,
   slashCommand,
+  trackerAddress,
 } from './connectCommand';
 
 const MCP = '/Users/dara/code/project-tracker/apps/agent/dist/mcp.js';
+const CLI = '/Users/dara/code/project-tracker/apps/agent/dist/cli.js';
+const local = { serverUrl: 'http://localhost:4100', mcpEntry: MCP, cliEntry: CLI };
+const RAILWAY = 'https://tracker.up.railway.app';
+const online = { serverUrl: RAILWAY, mcpEntry: '/app/apps/agent/dist/mcp.js', cliEntry: '/app/x' };
 
 describe('mcpAddCommand', () => {
-  it('registers the MCP server for every project with the server’s URL', () => {
-    expect(
-      mcpAddCommand({ serverUrl: 'http://localhost:4100', mcpEntry: MCP, authRequired: false }),
-    ).toBe(
+  it('registers the MCP server on this computer for every project with the server’s URL', () => {
+    expect(mcpAddCommand(local)).toBe(
       `claude mcp add tracker -s user --env TRACKER_URL=http://localhost:4100 --env TRACKER_AGENT_NAME=Claude -- node ${MCP}`,
     );
   });
 
-  it('adds a token placeholder when the tracker needs one', () => {
-    expect(
-      mcpAddCommand({ serverUrl: 'https://tracker.lan', mcpEntry: MCP, authRequired: true }),
-    ).toBe(
-      `claude mcp add tracker -s user --env TRACKER_URL=https://tracker.lan --env TRACKER_AGENT_NAME=Claude --env TRACKER_TOKEN=<your token> -- node ${MCP}`,
+  it('points at the person’s own checkout for a tracker elsewhere, with no token in it', () => {
+    expect(mcpAddCommand(online)).toBe(
+      `claude mcp add tracker -s user --env TRACKER_URL=${RAILWAY} --env TRACKER_AGENT_NAME=Claude -- node "$(pwd)/apps/agent/dist/mcp.js"`,
     );
   });
 
   it('quotes an entry path with spaces', () => {
-    const command = mcpAddCommand({
-      serverUrl: 'http://localhost:4100',
-      mcpEntry: '/Users/dara/My Code/mcp.js',
-      authRequired: false,
-    });
+    const command = mcpAddCommand({ ...local, mcpEntry: '/Users/dara/My Code/mcp.js' });
     expect(command.endsWith("-- node '/Users/dara/My Code/mcp.js'")).toBe(true);
+  });
+});
+
+describe('loginCommand', () => {
+  it('saves a token for this tracker with the CLI', () => {
+    expect(loginCommand(local)).toBe(`node ${CLI} login --url http://localhost:4100`);
+    expect(loginCommand(online)).toBe(`node apps/agent/dist/cli.js login --url ${RAILWAY}`);
+  });
+});
+
+describe('cliHelpCommand', () => {
+  it('runs the CLI’s help', () => {
+    expect(cliHelpCommand(local)).toBe(`node ${CLI} help`);
+    expect(cliHelpCommand(online)).toBe('node apps/agent/dist/cli.js help');
+  });
+});
+
+describe('trackerAddress', () => {
+  it('takes the page’s address when the server names the same host behind a TLS proxy', () => {
+    expect(trackerAddress('http://tracker.up.railway.app', RAILWAY)).toBe(RAILWAY);
+  });
+
+  it('keeps the server’s address under the dev server, which is on another port', () => {
+    expect(trackerAddress('http://localhost:4100', 'http://localhost:5173')).toBe(
+      'http://localhost:4100',
+    );
+    expect(trackerAddress('https://t.ts.net', 'http://192.168.1.4:5173')).toBe('https://t.ts.net');
+  });
+});
+
+describe('isLocalTracker', () => {
+  it('knows a tracker on this computer', () => {
+    expect(isLocalTracker('http://localhost:4100')).toBe(true);
+    expect(isLocalTracker('http://127.0.0.1:4100')).toBe(true);
+    expect(isLocalTracker('http://[::1]:4100')).toBe(true);
+    expect(isLocalTracker('http://tracker.localhost')).toBe(true);
+    expect(isLocalTracker(RAILWAY)).toBe(false);
+    expect(isLocalTracker('http://192.168.1.4:4100')).toBe(false);
+    expect(isLocalTracker('not a url')).toBe(false);
   });
 });
 
@@ -65,14 +103,6 @@ describe('slash commands', () => {
     );
     expect(projectKeyNote(null)).toBe(
       'Use the project’s key, like MOB. Leave it out and the agent finds the project by its repository.',
-    );
-  });
-});
-
-describe('cliHelpCommand', () => {
-  it('runs the CLI’s help', () => {
-    expect(cliHelpCommand('/repo/apps/agent/dist/cli.js')).toBe(
-      'node /repo/apps/agent/dist/cli.js help',
     );
   });
 });

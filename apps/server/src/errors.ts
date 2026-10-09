@@ -6,6 +6,7 @@ export const ERROR_STATUS = {
   conflict: 409,
   stale: 409,
   no_match: 422,
+  rate_limited: 429,
 } as const;
 
 export type ErrorCode = keyof typeof ERROR_STATUS;

@@ -1,5 +1,4 @@
 import { randomUUID } from 'node:crypto';
-import { imageSize } from 'image-size';
 import {
   ATTACHMENT_KINDS,
   PENDING_ATTACHMENT_TTL_MS,
@@ -12,6 +11,8 @@ import {
 } from '@tracker/shared';
 import type { AttachmentRow, Db } from '../db/schema';
 import { invalidInput, notFound } from '../errors';
+import { compressImage } from '../images/compressImage';
+import { renamedFor } from '../images/imageFileName';
 import {
   deleteAttachmentRows,
   findAttachmentById,
@@ -24,7 +25,7 @@ import { removeFiles, type ByteRange, type FileStorage } from '../storage/fileSt
 import { inTransaction, notify, type ServiceContext } from './context';
 import { requireTicket, type TicketRef } from './lookups';
 import { toAttachment } from './mappers';
-import { IMAGE_HEAD_BYTES, measureUpload } from './uploadStream';
+import { measureUpload, readWhole, type MeasuredUpload } from './uploadStream';
 
 const NOT_FOUND_MESSAGE = 'Attachment was not found.';
 
@@ -36,21 +37,6 @@ const FORM_MESSAGE = 'Reload the page and add the file again.';
 export const PENDING_TTL_MS = PENDING_ATTACHMENT_TTL_MS;
 
 const MAX_NAME_LENGTH = 200;
-
-interface Dimensions {
-  width: number | null;
-  height: number | null;
-}
-
-function dimensions(head: Uint8Array, kind: AttachmentKind): Dimensions {
-  if (kind !== 'image') return { width: null, height: null };
-  try {
-    const { width, height } = imageSize(head);
-    return { width: width || null, height: height || null };
-  } catch {
-    return { width: null, height: null };
-  }
-}
 
 const TABS_AND_LINE_BREAKS = /[\t\n\v\f\r]+/g;
 
@@ -80,11 +66,41 @@ interface CheckedUpload {
 
 type StoredFile = Omit<AttachmentRow, 'ticketId' | 'activityId' | 'position' | 'createdAt'>;
 
+interface StoredContent extends Omit<StoredFile, 'id' | 'fileName' | 'mimeType'> {
+  mimeType: AttachmentMimeType;
+}
+
 function checkUpload(input: UploadInput): CheckedUpload {
   if (input.type.toLowerCase().startsWith('multipart/form-data')) throw invalidInput(FORM_MESSAGE);
   const check = checkAttachment({ type: input.type, name: input.name, size: input.size ?? 0 });
   if (!check.ok) throw invalidInput(check.message);
   return check;
+}
+
+async function storeStreamed(
+  ctx: ServiceContext,
+  id: string,
+  upload: MeasuredUpload,
+  mimeType: AttachmentMimeType,
+): Promise<StoredContent> {
+  const storageKey = `${id}.${storedExtension(mimeType)}`;
+  await ctx.storage.write(storageKey, upload.body);
+  return { storageKey, mimeType, size: upload.size(), width: null, height: null };
+}
+
+// Images are read whole (up to their 15 MB) to be turned upright, stripped of their metadata and
+// made smaller, and only what comes out is stored (images/compressImage).
+async function storeImage(
+  ctx: ServiceContext,
+  id: string,
+  upload: MeasuredUpload,
+  mimeType: AttachmentMimeType,
+): Promise<StoredContent> {
+  const image = await compressImage(await readWhole(upload.body), mimeType);
+  const storageKey = `${id}.${storedExtension(image.mimeType)}`;
+  await ctx.storage.write(storageKey, new Blob([image.bytes]).stream());
+  const { width, height } = image;
+  return { storageKey, mimeType: image.mimeType, size: image.bytes.byteLength, width, height };
 }
 
 async function storeFile(
@@ -93,24 +109,18 @@ async function storeFile(
   { mimeType, kind }: CheckedUpload,
 ): Promise<StoredFile> {
   const id = randomUUID();
-  const extension = storedExtension(mimeType);
-  const storageKey = `${id}.${extension}`;
   const upload = measureUpload(input.body ?? new Blob([]).stream(), {
     maxBytes: ATTACHMENT_KINDS[kind].maxBytes,
     expectedBytes: input.size,
-    headBytes: kind === 'image' ? IMAGE_HEAD_BYTES : 0,
     tooLarge: () => invalidInput(tooLargeMessage(kind)),
     incomplete: () => invalidInput(INCOMPLETE_MESSAGE),
   });
-  await ctx.storage.write(storageKey, upload.body);
-  return {
-    id,
-    fileName: fileNameOf(input.name, extension),
-    mimeType,
-    size: upload.size(),
-    ...dimensions(upload.head(), kind),
-    storageKey,
-  };
+  const stored =
+    kind === 'image'
+      ? await storeImage(ctx, id, upload, mimeType)
+      : await storeStreamed(ctx, id, upload, mimeType);
+  const name = renamedFor(input.name, mimeType, stored.mimeType);
+  return { id, fileName: fileNameOf(name, storedExtension(stored.mimeType)), ...stored };
 }
 
 async function insertUploaded(
@@ -167,6 +177,15 @@ export async function readAttachmentFile(
   const body = await ctx.storage.read(row.storageKey, range);
   if (!body) throw notFound(NOT_FOUND_MESSAGE);
   return body;
+}
+
+// For HEAD: asks storage whether the file is there without opening it, which on S3 would start a
+// download only to drop it.
+export async function requireAttachmentFile(
+  ctx: ServiceContext,
+  row: AttachmentRow,
+): Promise<void> {
+  if (!(await ctx.storage.stat(row.storageKey))) throw notFound(NOT_FOUND_MESSAGE);
 }
 
 export async function deleteAttachment(ctx: ServiceContext, id: string): Promise<void> {

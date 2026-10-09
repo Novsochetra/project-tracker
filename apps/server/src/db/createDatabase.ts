@@ -1,16 +1,16 @@
 import { mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
 import SQLite from 'better-sqlite3';
-import { CamelCasePlugin, Kysely, PostgresDialect, SqliteDialect, type Dialect } from 'kysely';
-import pg from 'pg';
+import { CamelCasePlugin, Kysely, PostgresDialect, type Dialect } from 'kysely';
+import { createPostgresPool } from './postgresPool';
 import type { Database, Db } from './schema';
-
-const INT8_OID = 20;
+import { TrackerSqliteDialect } from './sqliteDialect';
+import { StripNulPlugin } from './stripNul';
 
 export const isPostgresUrl = (url: string): boolean => /^postgres(ql)?:\/\//i.test(url);
 
 export function createKysely(dialect: Dialect): Db {
-  return new Kysely<Database>({ dialect, plugins: [new CamelCasePlugin()] });
+  return new Kysely<Database>({ dialect, plugins: [new CamelCasePlugin(), new StripNulPlugin()] });
 }
 
 function sqliteDialect(file: string): Dialect {
@@ -20,16 +20,15 @@ function sqliteDialect(file: string): Dialect {
   if (!inMemory) database.pragma('journal_mode = WAL');
   database.pragma('foreign_keys = ON');
   database.pragma('busy_timeout = 5000');
-  return new SqliteDialect({ database });
+  return new TrackerSqliteDialect(database);
 }
 
-function postgresDialect(connectionString: string): Dialect {
-  const types = new pg.TypeOverrides();
-  // Timestamps are epoch-ms bigints; they fit safely in a JS number.
-  types.setTypeParser(INT8_OID, (value: string) => Number(value));
-  return new PostgresDialect({ pool: new pg.Pool({ connectionString, types }) });
-}
-
-export function createDatabase(url: string): Db {
-  return createKysely(isPostgresUrl(url) ? postgresDialect(url) : sqliteDialect(url));
+// env carries the Postgres pool settings (DATABASE_POOL_MAX, DATABASE_STATEMENT_TIMEOUT_MS,
+// PGSSLMODE); SQLite needs none.
+export function createDatabase(url: string, env: NodeJS.ProcessEnv = process.env): Db {
+  return createKysely(
+    isPostgresUrl(url)
+      ? new PostgresDialect({ pool: createPostgresPool(url, env) })
+      : sqliteDialect(url),
+  );
 }

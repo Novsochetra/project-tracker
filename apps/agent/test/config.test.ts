@@ -2,6 +2,9 @@ import { TrackerClient } from '@tracker/client';
 import { describe, expect, it, vi } from 'vitest';
 import { createTrackerClient } from '../src/client';
 import { DEFAULT_AGENT_NAME, DEFAULT_URL, loadConfig } from '../src/config';
+import { NO_SAVED_CONFIG, withToken } from '../src/savedConfig';
+
+const RAILWAY = 'https://tracker.up.railway.app';
 
 describe('loadConfig', () => {
   it('has defaults for the URL and the agent name', () => {
@@ -14,21 +17,68 @@ describe('loadConfig', () => {
     expect(DEFAULT_AGENT_NAME).toBe('Claude');
   });
 
-  it('reads TRACKER_URL, TRACKER_TOKEN and TRACKER_AGENT_NAME', () => {
+  it('reads TRACKER_URL, TRACKER_API_TOKEN and TRACKER_AGENT_NAME', () => {
     const env = {
       TRACKER_URL: 'http://t:1',
-      TRACKER_TOKEN: 'secret',
+      TRACKER_API_TOKEN: 'trk_new',
+      TRACKER_TOKEN: 'old',
       TRACKER_AGENT_NAME: 'Reviewer',
     };
-    expect(loadConfig(env)).toEqual({ url: 'http://t:1', token: 'secret', agentName: 'Reviewer' });
+    expect(loadConfig(env)).toEqual({
+      url: 'http://t:1',
+      token: 'trk_new',
+      tokenSource: 'TRACKER_API_TOKEN',
+      agentName: 'Reviewer',
+    });
+  });
+
+  it('still takes the token from TRACKER_TOKEN, its old name', () => {
+    expect(loadConfig({ TRACKER_TOKEN: ' secret ' })).toMatchObject({
+      token: 'secret',
+      tokenSource: 'TRACKER_TOKEN',
+    });
   });
 
   it('prefers overrides and ignores blank values', () => {
-    const env = { TRACKER_URL: '  ', TRACKER_AGENT_NAME: 'Worker' };
+    const env = { TRACKER_URL: '  ', TRACKER_API_TOKEN: ' ', TRACKER_AGENT_NAME: 'Worker' };
     expect(loadConfig(env, { as: ' Bot ', token: '' })).toEqual({
       url: DEFAULT_URL,
       token: undefined,
       agentName: 'Bot',
+    });
+    expect(loadConfig({ TRACKER_API_TOKEN: 'env' }, { token: 'flag' })).toMatchObject({
+      token: 'flag',
+      tokenSource: '--token',
+    });
+  });
+
+  it('uses the tracker and token saved by tracker login', () => {
+    const saved = withToken(NO_SAVED_CONFIG, RAILWAY, 'trk_saved');
+    expect(loadConfig({}, {}, saved)).toEqual({
+      url: RAILWAY,
+      token: 'trk_saved',
+      tokenSource: 'tracker login',
+      agentName: 'Claude',
+    });
+    expect(loadConfig({ TRACKER_URL: `${RAILWAY}/` }, {}, saved).token).toBe('trk_saved');
+  });
+
+  it('never sends a saved token to another tracker', () => {
+    const saved = withToken(NO_SAVED_CONFIG, RAILWAY, 'trk_saved');
+    expect(loadConfig({ TRACKER_URL: 'http://localhost:4100' }, {}, saved)).toEqual({
+      url: 'http://localhost:4100',
+      token: undefined,
+      agentName: 'Claude',
+    });
+    expect(loadConfig({}, { url: 'https://evil.example' }, saved).token).toBeUndefined();
+  });
+
+  it('lets a token in the environment win over the saved one', () => {
+    const saved = withToken(NO_SAVED_CONFIG, RAILWAY, 'trk_saved');
+    expect(loadConfig({ TRACKER_API_TOKEN: 'trk_env' }, {}, saved)).toMatchObject({
+      url: RAILWAY,
+      token: 'trk_env',
+      tokenSource: 'TRACKER_API_TOKEN',
     });
   });
 });
@@ -40,6 +90,16 @@ describe('createTrackerClient', () => {
     expect(client.attachmentFileUrl('a 1')).toBe('http://t:1/api/attachments/a%201/file');
     expect(client.usesToken).toBe(true);
     expect(createTrackerClient({ ...config, token: undefined }).usesToken).toBe(false);
+  });
+
+  it('knows its tracker and where its token came from, for error messages', () => {
+    const client = createTrackerClient({
+      url: RAILWAY,
+      token: 'trk_x',
+      tokenSource: 'tracker login',
+      agentName: 'Claude',
+    });
+    expect(client).toMatchObject({ trackerUrl: RAILWAY, tokenSource: 'tracker login' });
   });
 
   it('talks to the configured URL as an agent', async () => {
