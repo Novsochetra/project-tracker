@@ -13,6 +13,9 @@ export const listApiTokenRows = (db: Db, userId: string) =>
 export const findApiTokenByHash = (db: Db, tokenHash: string) =>
   db.selectFrom('apiTokens').selectAll().where('tokenHash', '=', tokenHash).executeTakeFirst();
 
+export const findApiTokenById = (db: Db, id: string) =>
+  db.selectFrom('apiTokens').select('id').where('id', '=', id).executeTakeFirst();
+
 export async function insertApiToken(db: Db, row: ApiTokenRow): Promise<void> {
   await db.insertInto('apiTokens').values(row).execute();
 }

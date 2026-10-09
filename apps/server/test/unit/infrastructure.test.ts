@@ -35,7 +35,12 @@ describe('loadConfig', () => {
       databaseUrl: join(REPO_ROOT, 'data', 'tracker.db'),
       uploadsDir: join(REPO_ROOT, 'data', 'uploads'),
       webDist: join(REPO_ROOT, 'apps', 'web', 'dist'),
-      auth: { openWithoutOwner: true, trustedProxies: 0, secureCookies: false, legacyToken: false },
+      auth: {
+        openWithoutOwner: 'local',
+        trustedProxies: 0,
+        secureCookies: false,
+        legacyToken: false,
+      },
       testReset: false,
       repoRoot: REPO_ROOT,
       publicUrl: null,

@@ -14,6 +14,9 @@ export const findSessionWithEmail = (db: Db, id: string): Promise<SessionWithEma
     .where('sessions.id', '=', id)
     .executeTakeFirst();
 
+export const findSessionRow = (db: Db, id: string) =>
+  db.selectFrom('sessions').selectAll().where('id', '=', id).executeTakeFirst();
+
 export async function insertSession(db: Db, row: SessionRow): Promise<void> {
   await db.insertInto('sessions').values(row).execute();
 }

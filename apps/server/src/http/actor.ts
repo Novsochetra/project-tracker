@@ -20,6 +20,8 @@ export function parseActor(kind: string | undefined, rawName: string | undefined
   return { kind: 'human', name };
 }
 
+export const asAgent = ({ name }: Actor): Actor => ({ kind: 'agent', name: name || 'Agent' });
+
 export const actorMiddleware = createMiddleware<AppEnv>(async (c, next) => {
   c.set('actor', parseActor(c.req.header('x-actor-kind'), c.req.header('x-actor-name')));
   await next();

@@ -110,7 +110,9 @@ export default defineConfig({
     host: true,
     port: 5173,
     proxy: {
-      '/api': { target: apiTarget, changeOrigin: true },
+      // xfwd says whose request it is (X-Forwarded-For): a tracker without an owner answers only
+      // requests made on its own machine, and this server also takes them from the LAN.
+      '/api': { target: apiTarget, changeOrigin: true, xfwd: true },
     },
   },
 });

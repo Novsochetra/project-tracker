@@ -1,14 +1,17 @@
 import type { Context } from 'hono';
 import { createMiddleware } from 'hono/factory';
 import { OPEN_ACCESS, type Access } from '../auth/access';
+import { accessStillValid } from '../auth/accessCheck';
 import { authenticateApiToken } from '../auth/apiTokens';
 import { ownerExists } from '../auth/owner';
 import { resumeSession } from '../auth/sessions';
 import type { Clock } from '../clock';
 import type { Db } from '../db/schema';
 import { AppError, forbidden } from '../errors';
+import { asAgent } from './actor';
 import type { AuthOptions } from './authOptions';
 import type { AppEnv } from './env';
+import { isLocalRequest } from './localRequest';
 import { clearSessionCookie, readSessionCookie, setSessionCookie } from './sessionCookie';
 
 export const HEALTH_PATH = '/api/health';
@@ -57,6 +60,12 @@ async function tokenAccess({ db, now }: AuthDeps, secret: string): Promise<Acces
   return owner && { kind: 'token', ...owner };
 }
 
+async function openAccess(c: Context, { db, options }: AuthDeps): Promise<Access | null> {
+  const { openWithoutOwner } = options;
+  const open = openWithoutOwner === 'any' || (openWithoutOwner === 'local' && isLocalRequest(c));
+  return open && !(await ownerExists(db)) ? OPEN_ACCESS : null;
+}
+
 // A token that isn't known gets no further than no token at all: a local tracker without an owner
 // stays open to agents still configured with an old TRACKER_TOKEN.
 export async function resolveAccess(c: Context, deps: AuthDeps): Promise<Access | null> {
@@ -65,9 +74,11 @@ export async function resolveAccess(c: Context, deps: AuthDeps): Promise<Access 
   if (token) return token;
   const secret = readSessionCookie(c);
   const session = secret ? await sessionAccess(c, deps, secret) : null;
-  if (session) return session;
-  return deps.options.openWithoutOwner && !(await ownerExists(deps.db)) ? OPEN_ACCESS : null;
+  return session ?? openAccess(c, deps);
 }
+
+export const stillHasAccess = ({ db, now }: AuthDeps, access: Access | null | undefined) =>
+  accessStillValid(db, access, now());
 
 export function authMiddleware(deps: AuthDeps) {
   return createMiddleware<AppEnv>(async (c, next) => {
@@ -76,6 +87,9 @@ export function authMiddleware(deps: AuthDeps) {
     const access = await resolveAccess(c, deps);
     if (!access && !PUBLIC_ROUTES.has(`${c.req.method} ${c.req.path}`)) throw unauthorized();
     c.set('access', access);
+    // Only the owner's own session acts as the person; a token is an agent whatever it says, so it
+    // can never move a ticket to Done.
+    if (access?.kind === 'token') c.set('actor', asAgent(c.get('actor')));
     await next();
   });
 }

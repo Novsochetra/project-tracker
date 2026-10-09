@@ -23,10 +23,11 @@ describe('auth config', () => {
     expect(parseTrustProxy('lots')).toBe(0);
   });
 
-  it('skips sign-in without an owner only on loopback and not behind a proxy', () => {
-    expect(loadAuthConfig({}, '127.0.0.1').openWithoutOwner).toBe(true);
+  it('skips sign-in without an owner only on loopback, not behind a proxy, without a token', () => {
+    expect(loadAuthConfig({}, '127.0.0.1').openWithoutOwner).toBe('local');
     expect(loadAuthConfig({}, '0.0.0.0').openWithoutOwner).toBe(false);
     expect(loadAuthConfig({ TRUST_PROXY: '1' }, '127.0.0.1').openWithoutOwner).toBe(false);
+    expect(loadAuthConfig({ TRACKER_TOKEN: 'x' }, '127.0.0.1').openWithoutOwner).toBe(false);
   });
 
   it('makes cookies Secure in production and notes a leftover TRACKER_TOKEN', () => {
@@ -36,7 +37,7 @@ describe('auth config', () => {
   });
 
   it('is part of the server config, from HOST', () => {
-    expect(loadConfig({}).auth.openWithoutOwner).toBe(true);
+    expect(loadConfig({}).auth.openWithoutOwner).toBe('local');
     expect(loadConfig({ HOST: '0.0.0.0', TRUST_PROXY: '1' }).auth).toEqual({
       openWithoutOwner: false,
       trustedProxies: 1,

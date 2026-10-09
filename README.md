@@ -57,7 +57,7 @@ npm run owner:set -- --email you@example.com   # asks for the password twice, hi
 
 The password is typed (or piped in as the first line of standard input), never put in env vars or arguments; the database keeps only a scrypt hash. It uses the server's database: the local SQLite file, or `DATABASE_URL` (a Postgres database must be migrated first). In a built deploy the same command is `node apps/server/dist/owner-set.js --email you@example.com`. Running it again signs out every device; API tokens keep working.
 
-Without an owner, a server on `127.0.0.1` (and not behind a proxy) stays open, as it always did for local use. Anywhere else it refuses every request until the owner is set. Claude Code agents use API tokens the owner creates in the app (`Authorization: Bearer trk_…`, saved with `tracker login` or set as `TRACKER_API_TOKEN`; see Connect Claude Code below). Details: `docs/architecture.md` §3.1.
+Without an owner, a server on `127.0.0.1` (not behind a proxy, and without `TRACKER_TOKEN` set) answers requests made on this machine only, as local use always did; other devices, including a phone using `npm run dev` over the LAN, must sign in. Anywhere else it refuses every request until the owner is set. Claude Code agents use API tokens the owner creates in the app (`Authorization: Bearer trk_…`, saved with `tracker login` or set as `TRACKER_API_TOKEN`; see Connect Claude Code below). Details: `docs/architecture.md` §3.1.
 
 For HTTPS (needed for offline support and the clipboard API), the easiest route is [Tailscale](https://tailscale.com): `tailscale serve --bg 4100`, then open the `https://…ts.net` address on your phone. Start the server with `PUBLIC_URL=https://<your-machine>.ts.net` so Connect Claude Code shows that address.
 

@@ -5,8 +5,9 @@ import { REPO_ROOT } from './config';
 import type { Db } from './db/schema';
 import type { Broadcaster } from './events/broadcaster';
 import { actorMiddleware } from './http/actor';
-import { authMiddleware, type AuthDeps } from './http/auth';
+import { authMiddleware, stillHasAccess, type AuthDeps } from './http/auth';
 import { DEFAULT_AUTH_OPTIONS, type AuthOptions } from './http/authOptions';
+import { limitBodies } from './http/bodyLimits';
 import type { AppEnv } from './http/env';
 import { handleError, handleNotFound } from './http/errors';
 import { securityHeaders, unbufferedStreams } from './http/responseHeaders';
@@ -48,6 +49,7 @@ function createApi(ctx: ServiceContext, deps: AppDeps): Hono<AppEnv> {
   const api = new Hono<AppEnv>()
     .use(actorMiddleware)
     .use(authMiddleware(auth))
+    .use(limitBodies)
     .route('/', sessionRoutes(auth))
     .route('/', tokenRoutes(auth))
     .route(
@@ -65,7 +67,10 @@ function createApi(ctx: ServiceContext, deps: AppDeps): Hono<AppEnv> {
     .route('/', activityRoutes(ctx))
     .route('/', attachmentRoutes(ctx))
     .route('/', reportRoutes(ctx))
-    .route('/', eventRoutes(deps.events, deps.heartbeatMs));
+    .route(
+      '/',
+      eventRoutes(deps.events, deps.heartbeatMs, (access) => stillHasAccess(auth, access)),
+    );
   if (deps.testReset) api.route('/', testResetRoutes(ctx));
   return api;
 }
