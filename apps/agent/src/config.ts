@@ -1,3 +1,4 @@
+import { plainHttpProblem, PlainHttpError } from './plainHttp';
 import { NO_SAVED_CONFIG, savedToken, type SavedConfig } from './savedConfig';
 
 export const DEFAULT_URL = 'http://localhost:4100';
@@ -48,9 +49,12 @@ export function loadConfig(
   saved: SavedConfig = NO_SAVED_CONFIG,
 ): Config {
   const url = trackerUrl(env, overrides, saved);
+  const token = findToken(env, overrides, saved, url);
+  const problem = token.token === undefined ? undefined : plainHttpProblem(url);
+  if (problem) throw new PlainHttpError(problem);
   return {
     url,
-    ...findToken(env, overrides, saved, url),
+    ...token,
     agentName: firstSet(overrides.as, env.TRACKER_AGENT_NAME) ?? DEFAULT_AGENT_NAME,
   };
 }

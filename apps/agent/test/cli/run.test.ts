@@ -147,14 +147,14 @@ describe('tracker <command>', () => {
 describe('configuration', () => {
   it('uses the environment', async () => {
     const env = {
-      TRACKER_URL: 'http://tracker:9000',
+      TRACKER_URL: 'https://tracker.example',
       TRACKER_API_TOKEN: 't0k',
       TRACKER_AGENT_NAME: 'Worker',
     };
     const { configs } = await cli(['projects'], projects, env);
     expect(configs).toEqual([
       {
-        url: 'http://tracker:9000',
+        url: 'https://tracker.example',
         token: 't0k',
         tokenSource: 'TRACKER_API_TOKEN',
         agentName: 'Worker',
@@ -164,11 +164,21 @@ describe('configuration', () => {
 
   it('lets --url, --token and --as override the environment', async () => {
     const env = { TRACKER_URL: 'http://tracker:9000', TRACKER_AGENT_NAME: 'Worker' };
-    const argv = ['projects', '--url', 'http://other:1', '--token', 'abc', '--as', 'Reviewer'];
+    const argv = ['projects', '--url', 'https://other:1', '--token', 'abc', '--as', 'Reviewer'];
     const { configs } = await cli(argv, projects, env);
     expect(configs).toEqual([
-      { url: 'http://other:1', token: 'abc', tokenSource: '--token', agentName: 'Reviewer' },
+      { url: 'https://other:1', token: 'abc', tokenSource: '--token', agentName: 'Reviewer' },
     ]);
+  });
+
+  it('sends no token over plain http to another computer', async () => {
+    const env = { TRACKER_URL: 'http://tracker.up.railway.app', TRACKER_API_TOKEN: 'trk_secret' };
+    const result = await cli(['projects'], projects, env);
+    expect(result).toMatchObject({ code: EXIT_ERROR, stdout: '', configs: [] });
+    expect(result.stderr).toBe(
+      'Error: Not sending an API token to http://tracker.up.railway.app: on plain http anyone on the network can read it. ' +
+        "Use the tracker's https:// address. Only a tracker on this computer (localhost) gets a token over http.",
+    );
   });
 
   it('says which tracker refused which token, without printing it', async () => {

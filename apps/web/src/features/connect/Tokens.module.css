@@ -70,6 +70,7 @@ li + .confirmRow {
   border-radius: var(--radius-group);
   background: var(--report-bg);
   outline: none;
+  scroll-margin: var(--space-4);
 }
 
 .createdTitle {

@@ -2,6 +2,7 @@ import { createTrackerClient, type TrackerApi } from '../client';
 import { trackerUrl, type Config, type Env } from '../config';
 import type { ConfigStore } from '../configFile';
 import { describeError } from '../errors';
+import { plainHttpProblem } from '../plainHttp';
 import { savedToken, trackerKey, withoutToken, withToken } from '../savedConfig';
 import { EXIT_ERROR, EXIT_OK, EXIT_USAGE } from './exitCodes';
 import type { GlobalValues } from './options';
@@ -56,6 +57,12 @@ function savedText(url: string, path: string, notes: (string | false | undefined
 export async function login(global: GlobalValues, io: LoginIo): Promise<number> {
   const saved = io.store.read();
   const url = trackerKey(trackerUrl(io.env, global, saved));
+  // Asked before the token is pasted, so it is never typed in for a tracker it can't go to.
+  const insecure = plainHttpProblem(url);
+  if (insecure) {
+    io.stderr(`Error: ${insecure}`);
+    return EXIT_USAGE;
+  }
   const token = (await io.readSecret(`Paste the API token for ${url}: `)).trim();
   if (!token || !isTokenShaped(token)) {
     io.stderr(token ? 'That is not a token: it has spaces in it.' : NO_TOKEN_GIVEN);

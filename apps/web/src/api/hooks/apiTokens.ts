@@ -16,12 +16,14 @@ function patchTokens(queryClient: QueryClient, change: (tokens: ApiToken[]) => A
   void queryClient.invalidateQueries({ queryKey: queryKeys.apiTokens() });
 }
 
-// The secret is only in this answer; the list never holds it.
+// The secret is only in this answer; the list never holds it. With no gcTime the answer leaves the
+// mutation cache as soon as nothing shows it: after reset() or once the sheet closes.
 export function useCreateApiToken(): TrackerMutation<CreatedApiToken, CreateApiTokenInput> {
   const client = useApi();
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (input: CreateApiTokenInput) => client.createApiToken(input),
+    gcTime: 0,
     onSuccess: ({ token }) =>
       patchTokens(queryClient, (tokens) => [...tokens.filter(({ id }) => id !== token.id), token]),
   });

@@ -1,4 +1,4 @@
-import { API_TOKEN_NAME_MAX, type CreatedApiToken } from '@tracker/shared';
+import { API_TOKEN_NAME_MAX } from '@tracker/shared';
 import { Plus } from 'lucide-react';
 import { useId, useState, type FormEvent } from 'react';
 import { errorMessage } from '../../api';
@@ -11,22 +11,14 @@ import styles from './Tokens.module.css';
 export function NewToken() {
   const create = useCreateApiToken();
   const [name, setName] = useState('');
-  const [created, setCreated] = useState<CreatedApiToken | null>(null);
   const errorId = useId();
-  if (created) return <CreatedToken created={created} onDone={() => setCreated(null)} />;
+  // The secret lives only in the mutation, so Done's reset drops it from memory.
+  if (create.data) return <CreatedToken created={create.data} onDone={() => create.reset()} />;
   const trimmed = name.trim();
   const submit = (event: FormEvent) => {
     event.preventDefault();
     if (!trimmed || create.isPending) return;
-    create.mutate(
-      { name: trimmed },
-      {
-        onSuccess: (answer) => {
-          setName('');
-          setCreated(answer);
-        },
-      },
-    );
+    create.mutate({ name: trimmed }, { onSuccess: () => setName('') });
   };
   return (
     <form className={styles.form} onSubmit={submit} noValidate aria-label="New API token">

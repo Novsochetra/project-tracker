@@ -2,6 +2,7 @@ import { TrackerClient } from '@tracker/client';
 import { describe, expect, it, vi } from 'vitest';
 import { createTrackerClient } from '../src/client';
 import { DEFAULT_AGENT_NAME, DEFAULT_URL, loadConfig } from '../src/config';
+import { PlainHttpError } from '../src/plainHttp';
 import { NO_SAVED_CONFIG, withToken } from '../src/savedConfig';
 
 const RAILWAY = 'https://tracker.up.railway.app';
@@ -19,13 +20,13 @@ describe('loadConfig', () => {
 
   it('reads TRACKER_URL, TRACKER_API_TOKEN and TRACKER_AGENT_NAME', () => {
     const env = {
-      TRACKER_URL: 'http://t:1',
+      TRACKER_URL: 'https://t.example',
       TRACKER_API_TOKEN: 'trk_new',
       TRACKER_TOKEN: 'old',
       TRACKER_AGENT_NAME: 'Reviewer',
     };
     expect(loadConfig(env)).toEqual({
-      url: 'http://t:1',
+      url: 'https://t.example',
       token: 'trk_new',
       tokenSource: 'TRACKER_API_TOKEN',
       agentName: 'Reviewer',
@@ -79,6 +80,29 @@ describe('loadConfig', () => {
       url: RAILWAY,
       token: 'trk_env',
       tokenSource: 'TRACKER_API_TOKEN',
+    });
+  });
+
+  it('refuses to send a token over plain http to another computer', () => {
+    const env = { TRACKER_URL: 'http://tracker.up.railway.app', TRACKER_API_TOKEN: 'trk_env' };
+    expect(() => loadConfig(env)).toThrow(
+      'Not sending an API token to http://tracker.up.railway.app: on plain http anyone on the network can read it.',
+    );
+    expect(() => loadConfig({}, { url: 'http://192.168.1.20:4100', token: 'trk_flag' })).toThrow(
+      PlainHttpError,
+    );
+    const saved = withToken(NO_SAVED_CONFIG, 'http://192.168.1.20:4100', 'trk_old');
+    expect(() => loadConfig({}, {}, saved)).toThrow(PlainHttpError);
+  });
+
+  it('still reaches a plain http tracker on this computer, or one elsewhere without a token', () => {
+    expect(loadConfig({ TRACKER_API_TOKEN: 'trk_env' }).token).toBe('trk_env');
+    const env = { TRACKER_URL: 'http://127.0.0.1:4662', TRACKER_TOKEN: 'old' };
+    expect(loadConfig(env).token).toBe('old');
+    expect(loadConfig({ TRACKER_URL: 'http://192.168.1.20:4100' })).toEqual({
+      url: 'http://192.168.1.20:4100',
+      token: undefined,
+      agentName: 'Claude',
     });
   });
 });

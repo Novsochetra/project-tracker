@@ -67,9 +67,19 @@ describe('tracker login', () => {
   });
 
   it('logs in to TRACKER_URL, or the default tracker, without --url', async () => {
-    const env = { TRACKER_URL: 'http://192.168.1.20:4100' };
-    expect((await cli({ argv: ['login'], env })).saved.url).toBe('http://192.168.1.20:4100');
+    const env = { TRACKER_URL: 'https://192.168.1.20:4100' };
+    expect((await cli({ argv: ['login'], env })).saved.url).toBe('https://192.168.1.20:4100');
     expect((await cli({ argv: ['login'] })).saved.url).toBe('http://localhost:4100');
+  });
+
+  it('refuses plain http to another computer before asking for the token', async () => {
+    const result = await cli({ argv: ['login', '--url', 'http://tracker.up.railway.app'] });
+    expect(result).toMatchObject({ code: EXIT_USAGE, stdout: '', prompts: [], configs: [] });
+    expect(result.saved).toEqual(NO_SAVED_CONFIG);
+    expect(result.stderr).toBe(
+      'Error: Not sending an API token to http://tracker.up.railway.app: on plain http anyone on the network can read it. ' +
+        "Use the tracker's https:// address. Only a tracker on this computer (localhost) gets a token over http.",
+    );
   });
 
   it('keeps the tokens of other trackers', async () => {

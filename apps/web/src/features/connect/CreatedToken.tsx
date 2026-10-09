@@ -2,6 +2,7 @@ import type { CreatedApiToken } from '@tracker/shared';
 import { Copy } from 'lucide-react';
 import { useEffect, useRef } from 'react';
 import { Button } from '../../components';
+import { prefersReducedMotionNow } from '../../lib/media';
 import shared from './ConnectSheet.module.css';
 import { TOKEN_COPY } from './tokenText';
 import styles from './Tokens.module.css';
@@ -16,8 +17,16 @@ export interface CreatedTokenProps {
 export function CreatedToken({ created, onDone }: CreatedTokenProps) {
   const { copy, blocked } = useCopyCommand();
   const cardRef = useRef<HTMLDivElement>(null);
-  // The form that made it is gone, so focus moves to the card, which also reads it out.
-  useEffect(() => cardRef.current?.focus({ preventScroll: true }), []);
+  // The form that made it is gone, so focus moves to the card, which also reads it out. On a phone
+  // the card opens below the fold; focus would jump to it, so it glides in unless motion is reduced.
+  useEffect(() => {
+    const card = cardRef.current;
+    card?.focus({ preventScroll: true });
+    card?.scrollIntoView?.({
+      block: 'nearest',
+      behavior: prefersReducedMotionNow() ? 'instant' : 'smooth',
+    });
+  }, []);
   return (
     <div
       ref={cardRef}

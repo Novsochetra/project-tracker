@@ -58,6 +58,7 @@ test.describe('API tokens for agents', () => {
     await sheet.getByRole('button', { name: 'Create token' }).click();
     const card = sheet.getByRole('group', { name: 'New token E2E laptop' });
     await expect(card).toContainText('You won’t see this token again.');
+    await expect(card).toBeInViewport({ ratio: 1 });
     const secret = (await card.locator('code').textContent()) ?? '';
     expect(secret).toMatch(/^trk_\S{20,}$/);
 
