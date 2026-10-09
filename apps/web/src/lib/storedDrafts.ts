@@ -50,8 +50,8 @@ export const hasStoredDrafts = (): boolean => heldRecords().length > 0;
 
 // This tab's new record outdates every record of the draft it has read.
 function replace(held: readonly Held[], record: DraftRecord): void {
-  putRecord(record);
-  held.forEach(({ key }) => dropRecord(key));
+  const outdated = held.map(({ key }) => key);
+  putRecord(record, outdated);
   notifyRecords();
 }
 
