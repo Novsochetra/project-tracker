@@ -73,8 +73,8 @@ function write(key: string, record: DraftRecord): boolean {
   }
 }
 
-// Once storage takes a write again, the records it refused go there too, oldest first, so a
-// reload keeps them and storage refusing again is told again.
+// Once storage takes a write again, or a record leaves it, the records it refused go there too,
+// oldest first, so a reload keeps them and storage refusing again is told again.
 function storeUnstored(): void {
   for (const [key, record] of unstored) {
     if (!write(key, record)) return;
@@ -82,21 +82,25 @@ function storeUnstored(): void {
   }
 }
 
-export function putRecord(record: DraftRecord): void {
-  const key = `${PREFIX}${TAB}:${(written++).toString(36)}`;
-  if (write(key, record)) {
-    storeUnstored();
-    return;
-  }
+let hearsOtherTabs = false;
+
+function keepUnstored(key: string, record: DraftRecord): void {
   const allKept = unstored.size === 0;
   unstored.set(key, record);
   if (allKept) draftsNotKept();
+  // Another tab removing records frees room too, also while no screen here shows a draft.
+  if (hearsOtherTabs) return;
+  window.addEventListener('storage', storeUnstored);
+  hearsOtherTabs = true;
 }
 
-// Any tab may remove a record it has read: it never changes, so a newer one, put meanwhile by
-// another tab, is a record of its own and stays.
-export function dropRecord(key: string): void {
-  if (unstored.delete(key)) return;
+export function putRecord(record: DraftRecord): void {
+  const key = `${PREFIX}${TAB}:${(written++).toString(36)}`;
+  if (write(key, record)) storeUnstored();
+  else keepUnstored(key, record);
+}
+
+function removeStored(key: string): void {
   if (key.startsWith(SHARED)) {
     const { [key.slice(SHARED.length)]: dropped, ...rest } = shared.read();
     if (dropped) shared.write(rest);
@@ -109,11 +113,19 @@ export function dropRecord(key: string): void {
   }
 }
 
+// Any tab may remove a record it has read: it never changes, so a newer one, put meanwhile by
+// another tab, is a record of its own and stays.
+export function dropRecord(key: string): void {
+  if (unstored.delete(key)) return;
+  removeStored(key);
+  storeUnstored();
+}
+
 // Tests start with no records, also none that full storage left in the page's memory.
 export function clearRecords(): void {
-  recordKeys().forEach(dropRecord);
-  shared.write({});
   unstored.clear();
+  recordKeys().forEach(removeStored);
+  shared.write({});
 }
 
 const listeners = new Set<() => void>();
