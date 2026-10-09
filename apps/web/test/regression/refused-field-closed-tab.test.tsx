@@ -14,20 +14,26 @@ const STALE = new ApiError(409, 'stale', 'The ticket changed since this edit was
 
 let cleanups: Array<() => void> = [];
 
+const MARK_LEFT_MS = 60_000;
+
+// The clock moves on as usual, and a test can also jump it to when tab A's mark runs out, which
+// a loaded machine could otherwise reach before this tab has typed.
 beforeEach(() => {
+  vi.useFakeTimers({ shouldAdvanceTime: true });
   localStorage.clear();
   cleanups = [skipAnimations()];
 });
 
 afterEach(() => {
   cleanups.forEach((undo) => undo());
+  vi.useRealTimers();
 });
 
 // Tab A typed ' from A' and closed while its save was on its way: its kept text and its mark stay,
-// and the mark counts until `until`. Its save never reached the tracker.
-function tabAClosedMidSave(until: number) {
+// and the mark counts for another minute. Its save never reached the tracker.
+function tabAClosedMidSave() {
   keepDraft(ID, { ticketKey: 'MOB-1', field: 'title', text: 'Ticket 1 from A' }, 'Ticket 1');
-  const mark = { draft: ID, page: 'closed-tab', until };
+  const mark = { draft: ID, page: 'closed-tab', until: Date.now() + MARK_LEFT_MS };
   localStorage.setItem(`${SAVE_MARKS_STORAGE_KEY}:closed-tab:${ID}`, JSON.stringify(mark));
   act(() => {
     window.dispatchEvent(new StorageEvent('storage', { key: DRAFTS_STORAGE_KEY }));
@@ -56,25 +62,26 @@ async function typeAndLeave(user: ReturnType<typeof userEvent.setup>) {
 // happened (Retry, going online), though that tab's mark had run out.
 it('checks a refused field by itself once a closed tab’s mark runs out', async () => {
   const tracker = typeOverRefused();
-  tabAClosedMidSave(Date.now() + 1_000);
+  tabAClosedMidSave();
   await typeAndLeave(tracker.user);
   expect(tracker.updateTicket).toHaveBeenCalledTimes(1);
 
-  await waitFor(
-    () =>
-      expect(tracker.updateTicket).toHaveBeenLastCalledWith(
-        'MOB-1',
-        { title: 'Ticket 1 from A and B' },
-        { title: 'Ticket 1' },
-      ),
-    { timeout: 3_000 },
+  act(() => {
+    vi.advanceTimersByTime(MARK_LEFT_MS);
+  });
+  await waitFor(() =>
+    expect(tracker.updateTicket).toHaveBeenLastCalledWith(
+      'MOB-1',
+      { title: 'Ticket 1 from A and B' },
+      { title: 'Ticket 1' },
+    ),
   );
   await waitFor(() => expect(screen.queryByText(NOTE)).not.toBeInTheDocument());
 });
 
 it('says why Retry waits while another tab is still saving the field', async () => {
   const tracker = typeOverRefused();
-  tabAClosedMidSave(Date.now() + 60_000);
+  tabAClosedMidSave();
   await typeAndLeave(tracker.user);
 
   await tracker.user.click(screen.getByRole('button', { name: 'Retry saving title' }));

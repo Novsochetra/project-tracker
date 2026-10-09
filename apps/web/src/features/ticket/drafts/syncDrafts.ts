@@ -55,6 +55,10 @@ function closedTicketDrafts(scope: SyncScope): Map<string, Entry[]> {
 export const hasClosedDrafts = (scope: SyncScope = 'all'): boolean =>
   closedTicketDrafts(scope).size > 0;
 
+// Comments a page that went left on their way, which no tab is sending any more.
+export const hasLeftSends = (): boolean =>
+  storedDrafts().some(([id, draft]) => draft.field === 'comment-send' && !isSavingAnywhere(id));
+
 // The text of each draft the tracker refused (a 4xx other than 404). It isn't sent again by later
 // runs, which would only be refused again, until its text changes; on its ticket's screen the
 // field says it isn't saved and retries it there.

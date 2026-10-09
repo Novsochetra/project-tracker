@@ -8,8 +8,10 @@ import { onDraftsNotKept } from '../../../lib/draftStorage';
 import { guardUnload } from '../../../lib/drafts';
 import type { StoredDraft } from '../../../lib/storedDrafts';
 import { useLatest } from '../../../lib/useLatest';
+import { onOtherTabsMarks } from '../fields/saveMarks';
 import {
   hasClosedDrafts,
+  hasLeftSends,
   runDraftSync,
   syncDrafts,
   type DraftSyncDeps,
@@ -150,6 +152,11 @@ function syncOnReconnect(queryClient: QueryClient, sync: Sync, check: TrackerChe
     scope.add(projectKey);
     runs.soon();
   });
+  // A page killed while it sent a comment leaves its mark until it runs out; the comment is then
+  // checked at once, not at the next start or reconnect.
+  const stopMarks = onOtherTabsMarks(() => {
+    if (hasLeftSends()) all.soon();
+  });
   window.addEventListener('online', all.now);
   all.now();
   return () => {
@@ -158,6 +165,7 @@ function syncOnReconnect(queryClient: QueryClient, sync: Sync, check: TrackerChe
     stopWatching();
     stopListening();
     stopChanges();
+    stopMarks();
     window.removeEventListener('online', all.now);
   };
 }

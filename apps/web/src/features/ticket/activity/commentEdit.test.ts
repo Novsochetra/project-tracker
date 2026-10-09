@@ -119,7 +119,6 @@ describe('a comment edit whose save settled', () => {
   it('keeps a new edit typed meanwhile open', () => {
     expect(afterSave(edit('editing'), 'saved')).toEqual(edit('editing'));
     expect(afterSave(edit('editing'), 'failed')).toEqual(edit('editing', true));
-    expect(afterSave(edit('editing'), 'stale')).toEqual(edit('editing', true));
   });
 
   it('reopens failed, and the next Save checks the tracker first', () => {
@@ -127,9 +126,11 @@ describe('a comment edit whose save settled', () => {
     expect(afterSave(withPhase(STARTED, 'closed'), 'failed')).toEqual(edit('failed', true));
   });
 
-  // The tracker refused it: the comment changed since the edit was typed.
+  // The tracker refused it: the comment changed since the edit was typed, also for text typed
+  // since Save, which was typed over the same text.
   it('reopens as changed elsewhere once refused', () => {
     expect(afterSave(edit('saving'), 'stale')).toEqual(edit('changed', true));
+    expect(afterSave(edit('editing'), 'stale')).toEqual(edit('changed', true));
     expect(afterSave(withPhase(STARTED, 'closed'), 'stale')).toEqual(edit('changed', true));
   });
 });

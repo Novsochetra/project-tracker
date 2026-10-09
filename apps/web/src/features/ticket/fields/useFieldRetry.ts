@@ -62,8 +62,12 @@ export function useFieldRetry(input: RetryInput) {
       return;
     }
     // Saves on their way, also from before the field opened, settle the text, and the tracker
-    // may already have one of them without having answered it.
-    if (isSavingAnywhere(id)) return;
+    // may already have one of them without having answered it. The retry waits for them: one
+    // of older text landing leaves the field's newer text unsaved.
+    if (isSavingAnywhere(id)) {
+      retryOnceSettled(id);
+      return;
+    }
     checkingRef.current = true;
     const shown = draft.value;
     if (!storedDraft(id) && ownTextOf(id)?.text !== shown) {

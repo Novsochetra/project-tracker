@@ -45,9 +45,17 @@ const resultOf = (error: unknown): SendResult => (isStaleEdit(error) ? 'stale' :
 
 // Once Save is pressed, the app may send the text for the user until it is saved. It names the
 // text the edit was typed over: the kept base, which Save in 'changed' moves to theirs.
-function useEditSend({ id, target, base, setEdit, editComment }: SendingInput) {
+function useEditSend(input: SendingInput) {
+  const { id, target, base, setEdit, editComment } = input;
   const saveDraft = useDraftSave();
+  const latest = useLatest(input);
   const submit = (text: string) => keepDraft(id, { ...target, text, submitted: true }, base);
+  // What the editor shows now: text typed since Save is newer than the text sent. An emptied
+  // editor keeps the sent text, as a comment needs text.
+  const keepShown = (sent: string) => {
+    const shown = latest.current.text;
+    keepDraft(id, { ...target, text: shown.trim() ? shown : sent }, base);
+  };
   const send: Send = (text, by) => {
     submit(text);
     const expected = storedDraft(id)?.base ?? base;
@@ -60,7 +68,7 @@ function useEditSend({ id, target, base, setEdit, editComment }: SendingInput) {
       if (result === 'saved') draftSaved(id, text);
       // Another tab's edit landed first. This one is kept, without Save pressed for it, so it
       // isn't sent for the user again: they pick a version (afterSave).
-      else if (result === 'stale') keepDraft(id, { ...target, text }, base);
+      else if (result === 'stale') keepShown(text);
       // Cancelling mid-save dropped the kept text, but a failed edit reopens the editor with it.
       else if (!storedDraft(id)) submit(text);
       setEdit((current) => afterSave(current, result));
