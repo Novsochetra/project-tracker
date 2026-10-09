@@ -56,7 +56,9 @@ it('checks a later bare 5xx once the tracker answers again', async () => {
 
   await settle(() => Promise.resolve('saved'));
   expect(result.current).toBe(false);
+  // While it was unreachable, the tracker was checked again every few seconds (PT-113).
+  const checksBefore = checkHealth.mock.calls.length;
   await settle(() => Promise.reject(bare500()));
 
-  expect(checkHealth).toHaveBeenCalledTimes(2);
+  expect(checkHealth).toHaveBeenCalledTimes(checksBefore + 1);
 });

@@ -2,6 +2,7 @@ import { hashKey, type QueryClient } from '@tanstack/react-query';
 import { queryKeys } from '../api';
 import { lastAnswerWasSaved } from '../pwa/savedAnswers';
 import { signalOf, type ApiSignal } from './offline';
+import { recheckWhileUnreachable } from './recheck';
 import type { TrackerCheck } from './trackerCheck';
 
 export interface Reachability {
@@ -30,10 +31,17 @@ export function createReachability(): Reachability {
 
 const PROJECTS_HASH = hashKey(queryKeys.projects());
 
+export interface TrafficOptions {
+  // Only the banner's watcher asks the tracker again while it can't be reached (app/recheck): a
+  // schedule in each watcher would send twice the checks.
+  recheck?: boolean;
+}
+
 export function watchApiTraffic(
   queryClient: QueryClient,
   reachability: Reachability,
   check: TrackerCheck,
+  options: TrafficOptions = {},
 ): () => void {
   let stopped = false;
   let checking = false;
@@ -59,6 +67,13 @@ export function watchApiTraffic(
   };
   const apply = (signal: ApiSignal | null, fromProjects: boolean) =>
     signal === 'unsure' ? confirm() : settle(signal, fromProjects);
+  const recheck = () =>
+    check().then((signal) => {
+      if (!stopped) settle(signal, false);
+    });
+  const stopRechecks = options.recheck
+    ? recheckWhileUnreachable(reachability, recheck)
+    : () => undefined;
   const stopQueries = queryClient.getQueryCache().subscribe((event) => {
     if (event.type === 'updated') {
       const signal = signalOf(event.action, lastAnswerWasSaved());
@@ -73,5 +88,6 @@ export function watchApiTraffic(
     stopped = true;
     stopQueries();
     stopMutations();
+    stopRechecks();
   };
 }

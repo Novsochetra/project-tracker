@@ -14,7 +14,7 @@ export function useReachability(): Reachability {
   // A layout effect, so it is in place before the screens' first requests start in their effects.
   useLayoutEffect(() => watchSavedAnswers(window), []);
   useEffect(
-    () => watchApiTraffic(queryClient, reachability, trackerCheckOf(client)),
+    () => watchApiTraffic(queryClient, reachability, trackerCheckOf(client), { recheck: true }),
     [client, queryClient, reachability],
   );
   return reachability;

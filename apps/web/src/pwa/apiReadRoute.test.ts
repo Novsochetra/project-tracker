@@ -22,6 +22,12 @@ describe('isSavedApiRead', () => {
     expect(matches('/api/projects', {}, false)).toBe(false);
   });
 
+  // A check the page stops after CHECK_TIMEOUT_MS then ends its request too (PT-113).
+  it('leaves the health check to the network', () => {
+    expect(matches('/api/health')).toBe(false);
+    expect(matches('/api/health', { [FRESH_READ_HEADER]: '1' })).toBe(false);
+  });
+
   // Their answers keep the saved copies current; savedAnswerPlugin never answers them from it.
   it('takes fresh reads too', () => {
     expect(matches('/api/tickets/MOB-1', { [FRESH_READ_HEADER]: '1' })).toBe(true);

@@ -8,6 +8,7 @@ import { createTestQueryClient, isInvalidated } from '../api/test/render';
 import { noteAnswer, SAVED_ANSWER_HEADER } from '../pwa/savedAnswers';
 import { signalOf } from './offline';
 import { createReachability, watchApiTraffic, type Reachability } from './reachability';
+import { RECHECK_MAX_MS, RECHECK_MS } from './recheck';
 import { sharedCheck } from './trackerCheck';
 
 const NETWORK_DOWN = new TypeError('Failed to fetch');
@@ -202,6 +203,39 @@ describe('watchApiTraffic', () => {
       await settled();
 
       expect(reachability.isUnreachable()).toBe(false);
+    });
+  });
+
+  describe('rechecks while the tracker cannot be reached', () => {
+    beforeEach(() => {
+      vi.useFakeTimers();
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it('asks again, and refreshes the project list once the tracker answers', async () => {
+      stop();
+      stop = watchApiTraffic(queryClient, reachability, sharedCheck(check), { recheck: true });
+      queryClient.setQueryData(queryKeys.projects(), []);
+      check.mockRejectedValue(NETWORK_DOWN);
+      await write(() => Promise.reject(NETWORK_DOWN));
+      await vi.advanceTimersByTimeAsync(RECHECK_MS);
+      expect(check).toHaveBeenCalledTimes(1);
+      expect(reachability.isUnreachable()).toBe(true);
+
+      check.mockResolvedValue({ ok: true });
+      await vi.advanceTimersByTimeAsync(RECHECK_MAX_MS);
+
+      expect(reachability.isUnreachable()).toBe(false);
+      expect(isInvalidated(queryClient, queryKeys.projects())).toBe(true);
+    });
+
+    it('only when asked to: one schedule for the banner, not one per watcher', async () => {
+      await write(() => Promise.reject(NETWORK_DOWN));
+      await vi.advanceTimersByTimeAsync(30_000);
+      expect(check).not.toHaveBeenCalled();
     });
   });
 
