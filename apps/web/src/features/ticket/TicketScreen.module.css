@@ -54,7 +54,9 @@ button.barPrimary {
   }
 }
 
-@media (max-width: 767px) {
+@media (max-width: 767px), (pointer: coarse) and (max-height: 500px) {
+  /* A phone turned sideways has its camera on one side; the text keeps clear of it, as the bars
+     do. Upright, both insets are 0. */
   .grid {
     grid-template-columns: minmax(0, 1fr);
     grid-template-rows: auto;
@@ -63,5 +65,7 @@ button.barPrimary {
       'act'
       'foot';
     min-height: 0;
+    padding-right: var(--safe-right);
+    padding-left: var(--safe-left);
   }
 }

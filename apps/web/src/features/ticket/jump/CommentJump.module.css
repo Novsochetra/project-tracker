@@ -1,19 +1,21 @@
-/* Above the bar it belongs to, on the right, where it covers least: text, chips and Show more
-   start on the left. Small, with secondary text, because it floats over the text being read. */
+/* A tab of the bar it belongs to, on the right, where it covers least: text, chips and Show more
+   start on the left. Floating 12px above the bar, it sat on the end of each line passing between
+   the two; standing on the bar's edge with the bar's border around it, it lets text go under it as
+   under the bar. Small, with secondary text. */
 .jump {
   position: absolute;
   right: calc(var(--space-4) + var(--safe-right));
-  bottom: calc(100% + var(--space-3));
+  bottom: 100%;
   display: inline-flex;
   align-items: center;
   gap: var(--space-1);
-  height: 32px;
+  height: 28px;
   margin: 0;
   padding: 0 var(--space-3) 0 10px;
   border: 1px solid var(--line);
-  border-radius: var(--radius-full);
+  border-bottom: 0;
+  border-radius: var(--radius-container) var(--radius-container) 0 0;
   background: var(--surface);
-  box-shadow: var(--shadow-floating);
   color: var(--ink);
   font-family: var(--font-sans);
   font-size: var(--size-secondary);
@@ -24,15 +26,17 @@
   transition: transform var(--duration-press) ease-out;
 }
 
-/* The 32px pill answers taps across 44px. */
+/* The 28px tab answers taps across 44px: 6px above it and the bar's 10px above its buttons. */
 .jump::before {
   content: '';
   position: absolute;
-  inset: -6px 0;
+  inset: -6px 0 -10px;
 }
 
+/* From its foot, so the press doesn't lift it off the bar. */
 .jump:active {
   transform: scale(0.97);
+  transform-origin: 50% 100%;
 }
 
 .arrow {

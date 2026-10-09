@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState, type RefObject } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type RefObject } from 'react';
 import { foldedHeight, lineHeightOf } from './foldMath';
 import { lineEnds } from './lineEnds';
 
@@ -49,6 +49,8 @@ export function useFold(
   const [height, setHeight] = useState<number | null>(null);
   const [expanded, setExpanded] = useState(false);
   const anchor = useRef<{ button: HTMLElement; top: number } | null>(null);
+  // Stable, so an effect can open the fold when something lands past it.
+  const expand = useCallback(() => setExpanded(true), []);
 
   useLayoutEffect(() => {
     const element = ref.current;
@@ -77,7 +79,7 @@ export function useFold(
     height: shownHeight,
     expanded,
     folded: shownHeight !== null && !expanded,
-    expand: () => setExpanded(true),
+    expand,
     toggle: (button) => {
       if (expanded) anchor.current = { button, top: button.getBoundingClientRect().top };
       setExpanded(!expanded);

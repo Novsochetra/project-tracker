@@ -389,7 +389,7 @@
   }
 }
 
-@media (max-width: 767px) {
+@media (max-width: 767px), (pointer: coarse) and (max-height: 500px) {
   .page {
     padding: var(--space-3) var(--space-4) 120px;
   }

@@ -36,7 +36,7 @@
   margin: 0;
 }
 
-@media (max-width: 767px) {
+@media (max-width: 767px), (pointer: coarse) and (max-height: 500px) {
   /* The bottom padding clears the New ticket bar. */
   .page {
     padding: 28px calc(var(--space-4) + var(--safe-right)) calc(96px + var(--safe-bottom))

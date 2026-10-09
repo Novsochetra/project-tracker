@@ -34,7 +34,7 @@
   padding-top: var(--space-1);
 }
 
-@media (max-width: 767px) {
+@media (max-width: 767px), (pointer: coarse) and (max-height: 500px) {
   .main {
     padding-right: var(--space-4);
     padding-left: var(--space-4);

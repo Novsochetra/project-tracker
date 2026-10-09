@@ -120,7 +120,7 @@
   transform: rotate(180deg);
 }
 
-@media (max-width: 767px) {
+@media (max-width: 767px), (pointer: coarse) and (max-height: 500px) {
   .more {
     min-height: 48px;
   }

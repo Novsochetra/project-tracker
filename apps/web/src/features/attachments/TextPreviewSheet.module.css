@@ -49,7 +49,9 @@
 
 /* The page behind the dialog scrolls on desktop, so long text scrolls inside it instead and the
    header stays in view. */
-@media (min-width: 768px) {
+@media (min-width: 768px) and (pointer: fine),
+  (min-width: 768px) and (pointer: none),
+  (min-width: 768px) and (min-height: 501px) {
   .body {
     max-height: 70vh;
     overflow-y: auto;

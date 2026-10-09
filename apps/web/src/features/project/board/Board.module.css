@@ -123,7 +123,7 @@
  * matches the side padding, so the previous column sits fully off screen, and the spacer lets
  * the last column snap to the start like the others.
  */
-@media (max-width: 767px) {
+@media (max-width: 767px), (pointer: coarse) and (max-height: 500px) {
   .board {
     --peek: 26px;
     gap: var(--space-4);

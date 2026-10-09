@@ -97,7 +97,14 @@
   display: none;
 }
 
-@media (max-width: 767px) {
+@media (max-width: 767px), (pointer: coarse) and (max-height: 500px) {
+  /* A phone turned sideways has its camera on one side; the tickets keep clear of it, as the bars
+     do. Upright, both insets are 0. */
+  .page {
+    padding-right: var(--safe-right);
+    padding-left: var(--safe-left);
+  }
+
   .filters,
   .groups {
     padding-right: var(--space-4);

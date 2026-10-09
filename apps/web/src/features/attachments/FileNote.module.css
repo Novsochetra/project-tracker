@@ -37,7 +37,7 @@
   margin: -3px -4px 0 0;
 }
 
-@media (max-width: 767px) {
+@media (max-width: 767px), (pointer: coarse) and (max-height: 500px) {
   .note .dismiss {
     margin: -12px -12px -12px 0;
   }

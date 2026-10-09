@@ -32,7 +32,7 @@ function rulesOf(css: string): Rule[] {
 }
 
 function appliesAt(rule: Rule, width: number): boolean {
-  const maxWidth = /^@media \(max-width: (\d+)px\)$/.exec(rule.media);
+  const maxWidth = /^@media \(max-width: (\d+)px\)(?:, |$)/.exec(rule.media);
   return rule.media === '' || (maxWidth !== null && width <= Number(maxWidth[1]));
 }
 

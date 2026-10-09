@@ -1,4 +1,4 @@
-import type { Page } from '@playwright/test';
+import type { Locator, Page } from '@playwright/test';
 import { toYmd } from '@tracker/shared';
 import { expect, isPhone, test } from './fixtures';
 import { activity, seedProject, settled, toast } from './helpers';
@@ -60,6 +60,18 @@ async function noSidewaysScroll(page: Page) {
   ]);
   expect(scrollWidth).toBeLessThanOrEqual(clientWidth);
 }
+
+// The size of a button's label and where its line of text sits.
+const textLine = (button: Locator) =>
+  button.evaluate((element) => {
+    const label = [...element.childNodes].find((node) => node.nodeType === Node.TEXT_NODE)!;
+    const range = document.createRange();
+    range.selectNodeContents(label);
+    return {
+      fontSize: getComputedStyle(element).fontSize,
+      bottom: range.getBoundingClientRect().bottom,
+    };
+  });
 
 test.describe('ticket screen on a phone', () => {
   test('shows the details as chips under the title that fit 320px and change each field', async ({
@@ -127,6 +139,11 @@ test.describe('ticket screen on a phone', () => {
     await expect(jump(page)).toHaveCount(0);
     await scrollTo(page, 300);
     await expect(jump(page)).toBeVisible();
+    // PT-84: a tab standing on the bar's top edge, so no line passes between it and the bar.
+    await settle(page);
+    const tab = (await jump(page).boundingBox())!;
+    const barTop = (await bar(page).boundingBox())!.y;
+    expect(Math.abs(tab.y + tab.height - (barTop + 1))).toBeLessThanOrEqual(1);
     await scrollTo(page, 0);
     await settle(page);
 
@@ -228,9 +245,12 @@ test.describe('ticket screen on a phone', () => {
       // Two rows of 72px thumbnails, 24px apart, under the 24px left for the x buttons.
       expect(box.height, `${size.width}px`).toBeCloseTo(24 + 72 + 24 + 72, 0);
       expect(firstRow - box.y).toBeCloseTo(24, 0);
-      await expect(page.getByRole('button', { name: 'Add files', exact: true })).toHaveText(
-        'Add files',
-      );
+      const add = page.getByRole('button', { name: 'Add files', exact: true });
+      await expect(add).toHaveText('Add files');
+      // PT-84: one size and one baseline for the two buttons under the files.
+      const [addText, showAllText] = [await textLine(add), await textLine(showAll)];
+      expect(addText.fontSize, `${size.width}px`).toBe(showAllText.fontSize);
+      expect(addText.bottom).toBeCloseTo(showAllText.bottom, 0);
       await noSidewaysScroll(page);
     }
     const showAll = page.getByRole('button', { name: 'Show all 12 files' });
@@ -240,6 +260,25 @@ test.describe('ticket screen on a phone', () => {
     // Twelve files and the Add tile, four to a row.
     expect((await files.boundingBox())!.height).toBeCloseTo(24 + 4 * 72 + 3 * 24, 0);
     await expect(page.getByRole('button', { name: 'Add files', exact: true })).toHaveText('');
+  });
+
+  // PT-84: an iPhone turned sideways is wider than 768px and got the desktop layout with the
+  // sidebar; a tablet keeps it.
+  test('keeps the phone layout on a phone turned sideways', async ({ page, api }, info) => {
+    test.skip(!isPhone(info.project.name), PHONE_ONLY);
+    await seedProject(api, 'Mobile app', 'MOB', [{ title: 'Date picker', assignee: NAME }]);
+    await page.setViewportSize({ width: 844, height: 390 });
+    await page.goto('/p/MOB/1');
+    await expect(chips(page)).toBeVisible();
+    await expect(bar(page)).toBeVisible();
+    await expect(page.getByRole('complementary', { name: 'Projects' })).toHaveCount(0);
+    await expect(page.getByRole('complementary', { name: 'Ticket details' })).toHaveCount(0);
+    await noSidewaysScroll(page);
+
+    await page.setViewportSize({ width: 768, height: 1024 });
+    await expect(page.getByRole('complementary', { name: 'Projects' })).toBeVisible();
+    await expect(page.getByRole('complementary', { name: 'Ticket details' })).toBeVisible();
+    await expect(chips(page)).toHaveCount(0);
   });
 
   test('desktop keeps the side panel and shows text whole', async ({ page, api, agent }, info) => {

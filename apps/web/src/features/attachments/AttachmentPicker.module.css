@@ -37,6 +37,15 @@
   margin-top: var(--space-2);
 }
 
+/* Show all and Add files side by side read as one pair: Show more's size and weight, and none of
+   the vertical margins that fit Show more under a card's text, which set it 3px lower. */
+.foldRow .foldButton {
+  margin-top: 0;
+  margin-bottom: 0;
+  font-size: var(--size-secondary);
+  font-weight: var(--weight-medium);
+}
+
 /* Brought into view with room to spare: it fades in from a little lower, and a phone's dismiss
    target reaches past its top. */
 .note {
@@ -52,7 +61,7 @@
   margin-top: var(--space-2);
 }
 
-@media (max-width: 767px) {
+@media (max-width: 767px), (pointer: coarse) and (max-height: 500px) {
   /* Clear of what is above for the dismiss button's touch target: the field over a pick's note,
      the tiles over a late one. Below a pick's note, the grid's room for the tiles' x is gap
      enough. */

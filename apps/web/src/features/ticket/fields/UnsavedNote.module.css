@@ -46,7 +46,7 @@
   }
 }
 
-@media (max-width: 767px) {
+@media (max-width: 767px), (pointer: coarse) and (max-height: 500px) {
   /* Room for the actions' touch targets, so they stay clear of the field above and of
      what follows, such as the thumbnails' remove buttons. */
   .note {

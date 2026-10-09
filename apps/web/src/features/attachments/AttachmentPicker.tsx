@@ -1,7 +1,7 @@
 import type { Attachment } from '@tracker/shared';
 import clsx from 'clsx';
 import { Paperclip } from 'lucide-react';
-import { useEffect, useId, useRef, type FocusEvent, type Ref } from 'react';
+import { useEffect, useId, useLayoutEffect, useRef, type FocusEvent, type Ref } from 'react';
 import { Button, pastFold, ShowMoreButton, useFold } from '../../components';
 import styles from './AttachmentPicker.module.css';
 import { FileInput } from './FileInput';
@@ -25,14 +25,20 @@ export interface AttachmentPickerProps {
   className?: string | undefined;
 }
 
-function AddFilesButton({ onClick, ref }: { onClick: () => void; ref: Ref<HTMLButtonElement> }) {
+interface AddFilesButtonProps {
+  onClick: () => void;
+  ref: Ref<HTMLButtonElement>;
+  className?: string | undefined;
+}
+
+function AddFilesButton({ onClick, ref, className }: AddFilesButtonProps) {
   return (
     <Button
       ref={ref}
       variant="text"
       size="sm"
       icon={Paperclip}
-      className={styles.attach}
+      className={clsx(styles.attach, className)}
       onClick={onClick}
     >
       Add files
@@ -106,8 +112,13 @@ export function AttachmentPicker({
   const pick = () => inputRef.current?.click();
   const empty = attachments.length === 0 && uploads.tiles.length === 0;
   const fold = useFold(filesRef, foldRows && !empty, attachments.length, measureRows);
-  // Files added while folded (a drop, a paste) land past the fold, so it opens for good.
-  if (fold.folded && uploads.uploading.length > 0) fold.expand();
+  const uploading = uploads.uploading.length > 0;
+  const { expand } = fold;
+  // Files added (a drop, a paste) land past the fold, so it opens when they start uploading, before
+  // paint. Only then: Show less still folds it while they upload.
+  useLayoutEffect(() => {
+    if (uploading) expand();
+  }, [uploading, expand]);
   const onFocus = (event: FocusEvent<HTMLDivElement>) => {
     if (fold.folded && pastFold(event.target, event.currentTarget)) fold.expand();
   };
@@ -148,8 +159,11 @@ export function AttachmentPicker({
             controls={filesId}
             moreLabel={`Show all ${attachments.length} files`}
             onClick={(event) => fold.toggle(event.currentTarget)}
+            className={styles.foldButton}
           />
-          {fold.folded && <AddFilesButton ref={addRef} onClick={pick} />}
+          {fold.folded && (
+            <AddFilesButton ref={addRef} onClick={pick} className={styles.foldButton} />
+          )}
         </div>
       )}
       <LateNote

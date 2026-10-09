@@ -145,7 +145,7 @@
   --z-viewer: 100;
 }
 
-@media (max-width: 767px) {
+@media (max-width: 767px), (pointer: coarse) and (max-height: 500px) {
   :root {
     --control-height: 44px;
     --icon-button: 44px;

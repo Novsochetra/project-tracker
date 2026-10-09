@@ -101,7 +101,7 @@
   width: 100%;
 }
 
-@media (max-width: 767px) {
+@media (max-width: 767px), (pointer: coarse) and (max-height: 500px) {
   .sm,
   .md,
   .lg {

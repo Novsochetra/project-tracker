@@ -49,7 +49,7 @@
   margin-right: auto;
 }
 
-@media (max-width: 767px) {
+@media (max-width: 767px), (pointer: coarse) and (max-height: 500px) {
   .composer .input {
     font-size: var(--size-input);
   }

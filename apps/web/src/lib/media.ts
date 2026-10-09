@@ -1,6 +1,11 @@
 import { useSyncExternalStore } from 'react';
 
-export const PHONE_QUERY = '(max-width: 767px)';
+// A phone turned sideways is wider than 768px (844×390), so a touch screen under 500px tall gets
+// the phone layout too; tablets are at least 744px tall. The desktop query is the exact opposite,
+// and the stylesheets repeat both word for word (test/regression/landscape-phone-layout).
+export const PHONE_QUERY = '(max-width: 767px), (pointer: coarse) and (max-height: 500px)';
+export const DESKTOP_QUERY =
+  '(min-width: 768px) and (pointer: fine), (min-width: 768px) and (pointer: none), (min-width: 768px) and (min-height: 501px)';
 export const REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)';
 export const NO_HOVER_QUERY = '(hover: none)';
 

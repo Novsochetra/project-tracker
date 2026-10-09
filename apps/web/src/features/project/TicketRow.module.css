@@ -182,7 +182,7 @@
   background: var(--surface);
 }
 
-@media (max-width: 767px) {
+@media (max-width: 767px), (pointer: coarse) and (max-height: 500px) {
   .handle {
     left: 2px;
     opacity: 1;

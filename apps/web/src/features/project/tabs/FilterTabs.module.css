@@ -91,7 +91,7 @@
   font-variant-numeric: tabular-nums;
 }
 
-@media (max-width: 767px) {
+@media (max-width: 767px), (pointer: coarse) and (max-height: 500px) {
   .track {
     flex: 1 1 100%;
   }

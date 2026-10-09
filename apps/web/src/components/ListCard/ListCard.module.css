@@ -44,7 +44,7 @@
   }
 }
 
-@media (max-width: 767px) {
+@media (max-width: 767px), (pointer: coarse) and (max-height: 500px) {
   .card {
     border-radius: var(--radius-group);
   }

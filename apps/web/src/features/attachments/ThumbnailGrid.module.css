@@ -156,7 +156,7 @@
   }
 }
 
-@media (max-width: 767px) {
+@media (max-width: 767px), (pointer: coarse) and (max-height: 500px) {
   /* The x sits on the corner and part of its touch target lies outside the image, so the
      tiles leave room around them for it, more above them than beside them. */
   .grid.removable {
