@@ -7,6 +7,7 @@ import {
   ProjectScreen,
   PromptSheet,
   ReportSheet,
+  screensOnTheirWay,
   StatusManagerSheet,
   TicketScreen,
 } from './lazyParts';
@@ -53,6 +54,27 @@ describe('preloadRoute', () => {
     await new Promise((resolve) => setTimeout(resolve, 0));
     process.off('unhandledRejection', unhandled);
     expect(unhandled).not.toHaveBeenCalled();
+  });
+});
+
+describe('screensOnTheirWay', () => {
+  it('is nothing for Projects, or once every screen of the route is in', () => {
+    expect(screensOnTheirWay({ name: 'projects' })).toBeNull();
+    vi.spyOn(ProjectScreen, 'isLoaded').mockReturnValue(true);
+    vi.spyOn(TicketScreen, 'isLoaded').mockReturnValue(true);
+    expect(screensOnTheirWay({ name: 'ticket', key: 'MOB', num: 3 })).toBeNull();
+  });
+
+  it('waits for every screen of the route still on its way', async () => {
+    const spies = spyAll();
+    vi.spyOn(ProjectScreen, 'isLoaded').mockReturnValue(true);
+    await screensOnTheirWay({ name: 'ticket', key: 'MOB', num: 3 });
+    expect(spies.order).toEqual(['ticket']);
+  });
+
+  it('settles when a screen fails to load, so the screen shows its error', async () => {
+    vi.spyOn(ProjectScreen, 'preload').mockRejectedValue(new Error('offline'));
+    await expect(screensOnTheirWay({ name: 'project', key: 'MOB' })).resolves.toEqual([undefined]);
   });
 });
 

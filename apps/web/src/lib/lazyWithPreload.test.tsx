@@ -67,6 +67,17 @@ describe('lazyWithPreload', () => {
     expect(load).toHaveBeenCalledTimes(1);
   });
 
+  it('says whether its code is in', async () => {
+    const code = deferred<typeof Greeting>();
+    const Part = lazyWithPreload(() => code.promise);
+    expect(Part.isLoaded()).toBe(false);
+    const preloaded = Part.preload();
+    expect(Part.isLoaded()).toBe(false);
+    code.resolve(Greeting);
+    await preloaded;
+    expect(Part.isLoaded()).toBe(true);
+  });
+
   it('hands a failed load to the error boundary, and preload rejects with it', async () => {
     const code = deferred<typeof Greeting>();
     const Part = lazyWithPreload(() => code.promise);

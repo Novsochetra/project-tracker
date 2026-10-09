@@ -6,6 +6,7 @@ import { ToastProvider } from '../components';
 import { useFileDropGuard } from '../features/attachments';
 import { useTicketDrafts } from '../features/ticket/drafts/useTicketDrafts';
 import { NavigationProvider } from '../navigation';
+import { screensOnTheirWay } from './lazyParts';
 import { gateFor } from './sessionGate';
 import { SheetsProvider } from './sheets/SheetsProvider';
 import { Shell } from './Shell';
@@ -22,7 +23,7 @@ export function TrackerApp({ client, queryClient }: TrackerAppProps) {
     <ApiProvider client={client} queryClient={queryClient}>
       <ToastProvider>
         <BrowserRouter>
-          <NavigationProvider>
+          <NavigationProvider prepare={screensOnTheirWay}>
             <SheetsProvider>
               <SessionGate />
             </SheetsProvider>

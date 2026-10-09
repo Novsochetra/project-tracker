@@ -10,10 +10,19 @@ import {
 import { toNavigationKind } from './navigationKind';
 import { useOpeningStore } from './openingStore';
 import type { NavigationIntent } from './resolveTransition';
-import { parentRoute, parseRoute, routePath } from './routes';
+import { parentRoute, parseRoute, routePath, type Route } from './routes';
 import { SessionHistory } from './sessionHistory';
 
-export function NavigationProvider({ children }: { children: ReactNode }) {
+export interface NavigationProviderProps {
+  children: ReactNode;
+  // What a push to the route waits for before it touches the history (its screens' code), or null
+  // when it can go at once.
+  prepare?: (route: Route) => Promise<unknown> | null;
+}
+
+const READY = () => null;
+
+export function NavigationProvider({ children, prepare = READY }: NavigationProviderProps) {
   const { key, pathname } = useLocation();
   const navigationType = useNavigationType();
   const navigate = useNavigate();
@@ -29,16 +38,28 @@ export function NavigationProvider({ children }: { children: ReactNode }) {
   const value = useMemo<NavigationState>(() => {
     const route = parseRoute(pathname);
     const parent = parentRoute(route);
+    // The history only ever holds screens that were on show (PT-100): a push waits for its
+    // screen's code first, so a second place, the screen on show or a Back while it waits has no
+    // entry of it to take over or step past.
     const go = (target: NavigationTarget, replace: boolean) => {
       const path = targetPath(target);
-      if (path === (opening.get() ?? pathname)) return;
-      opening.set(path);
-      void navigate(path, { replace });
+      if (path === opening.get()) return;
+      if (path === pathname) {
+        opening.clear();
+        return;
+      }
+      const stillOpening = opening.open(path);
+      const send = () => {
+        if (stillOpening()) void navigate(path, { replace });
+      };
+      const waiting = prepare(parseRoute(path));
+      if (waiting) void waiting.then(send);
+      else send();
     };
     const goBack = (animate: boolean) => {
       if (parent === null) return;
       const parentPath = routePath(parent);
-      opening.set(null);
+      opening.clear();
       setIntent({ fromKey: key, toPath: parentPath, animate });
       // Deep links have no parent entry behind them, so replace instead of leaving the app.
       if (historyRef.current?.previousPath() === parentPath) void navigate(-1);
@@ -53,7 +74,7 @@ export function NavigationProvider({ children }: { children: ReactNode }) {
       back: () => goBack(true),
       finishSwipeBack: () => goBack(false),
     };
-  }, [pathname, key, intent, navigate, opening]);
+  }, [pathname, key, intent, navigate, opening, prepare]);
 
   return (
     <NavigationContext value={value}>

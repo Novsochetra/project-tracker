@@ -83,7 +83,8 @@ describe('screens whose code loads when opened', () => {
     renderApp('/');
     const sidebar = await screen.findByRole('complementary', { name: 'Projects' });
     await user.click(await within(sidebar).findByRole('button', { name: 'Mobile app 3 open' }));
-    expect(window.location.pathname).toBe('/p/MOB');
+    // The push waits for the code before it touches the history (PT-100).
+    expect(window.location.pathname).toBe('/');
     expect(layerPaths()).toEqual(['/']);
     expect(screen.queryByText('Loading')).not.toBeInTheDocument();
 
@@ -92,6 +93,7 @@ describe('screens whose code loads when opened', () => {
       await gates.project.arrived;
     });
     expect(await screen.findByText('Project screen MOB')).toBeInTheDocument();
+    expect(window.location.pathname).toBe('/p/MOB');
     expect(layerPaths()).toEqual(['/', '/p/MOB']);
   });
 
