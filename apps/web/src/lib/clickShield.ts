@@ -1,10 +1,12 @@
 import {
   useCallback,
+  useEffect,
   useLayoutEffect,
   useMemo,
   useRef,
   type MouseEvent,
   type PointerEvent,
+  type RefObject,
 } from 'react';
 
 // Longer than a 160ms exit and than a double-click or double tap, whose second press can come
@@ -35,12 +37,37 @@ export function useClickShield(shown?: unknown): (event: MouseEvent) => void {
 export const isAimedClick = (pointerType: string | null, detail: number): boolean =>
   pointerType === 'mouse' && detail === 1;
 
+// A press can end without a click: dragged off the row, or dragging the sheet down. Its pointer
+// must not stand for a later click that has none (VoiceOver's). The click a press makes comes in
+// the same task as its pointerup, so it still finds the pointer; the press may end anywhere.
+function useForgetEndedPress(pointerType: RefObject<string | null>): void {
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const forget = () => {
+      clearTimeout(timer);
+      pointerType.current = null;
+    };
+    const forgetAfterClick = () => {
+      clearTimeout(timer);
+      timer = setTimeout(forget);
+    };
+    window.addEventListener('pointerup', forgetAfterClick, true);
+    window.addEventListener('pointercancel', forget, true);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('pointerup', forgetAfterClick, true);
+      window.removeEventListener('pointercancel', forget, true);
+    };
+  }, [pointerType]);
+}
+
 // Like useClickShield, but a mouse's single click goes through at once: on desktop, an action sheet
 // such as Discard changes ignored a click aimed at it for 500 ms. Not every browser's click says
 // which pointer made it, so the pointerdown before it tells.
 export function useTapShield(shown?: unknown) {
   const shield = useClickShield(shown);
   const pointerType = useRef<string | null>(null);
+  useForgetEndedPress(pointerType);
   return useMemo(() => {
     const hold = (event: MouseEvent) => {
       if (!isAimedClick(pointerType.current, event.detail)) shield(event);

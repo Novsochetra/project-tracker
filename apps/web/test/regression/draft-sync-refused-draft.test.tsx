@@ -76,9 +76,11 @@ it('saves the other drafts when the tracker refuses one', async () => {
   );
   const { client } = renderDrafts();
   await waitFor(() =>
-    expect(client.updateTicket).toHaveBeenCalledWith('MOB-2', {
-      description: 'Typed offline in C',
-    }),
+    expect(client.updateTicket).toHaveBeenCalledWith(
+      'MOB-2',
+      { description: 'Typed offline in C' },
+      { description: '' },
+    ),
   );
   await waitFor(() => expect(storedDraft('description:MOB-2')).toBeUndefined());
   expect(client.updateComment).toHaveBeenCalledTimes(1);

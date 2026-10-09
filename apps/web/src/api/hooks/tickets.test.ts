@@ -47,6 +47,25 @@ describe('useCreateTicket', () => {
     );
     expect(isInvalidated(queryClient, queryKeys.projects())).toBe(true);
   });
+
+  it('counts only the files a repeated create attached, and keeps its answer off the board', async () => {
+    const created = { ...ticketOf(5, STATUS.todo, -1000), leftOutAttachmentIds: ['img-2'] };
+    const { queryClient, wrapper } = setupApi({ createTicket: vi.fn().mockResolvedValue(created) });
+    seedTicket(queryClient);
+    const { result } = renderHook(() => useCreateTicket(), { wrapper });
+
+    act(() =>
+      result.current.mutate({
+        projectKey: 'MOB',
+        input: { title: 'Ticket 5', attachmentIds: ['img-1', 'img-2'], clientId: 'c-1' },
+      }),
+    );
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(result.current.data?.leftOutAttachmentIds).toEqual(['img-2']);
+    expect(boardTicket(queryClient, 'MOB-5')).toMatchObject({ attachmentCount: 1 });
+    expect(boardTicket(queryClient, 'MOB-5')).not.toHaveProperty('leftOutAttachmentIds');
+  });
 });
 
 describe('useDeleteTicket', () => {

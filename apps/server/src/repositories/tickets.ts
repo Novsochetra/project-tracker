@@ -107,21 +107,33 @@ export async function updateTicketRow(db: Db, id: string, changes: TicketChanges
   await db.updateTable('tickets').set(changes).where('id', '=', id).execute();
 }
 
+export type TicketMatch = Partial<
+  Pick<TicketRow, 'statusId' | 'title' | 'description' | 'assignee'>
+>;
+
+// Writes only while the row still has the matched values, which another connection may have
+// changed since it was read. Says whether it wrote.
+export async function updateTicketMatching(
+  db: Db,
+  id: string,
+  match: TicketMatch,
+  changes: TicketChanges,
+): Promise<boolean> {
+  let update = db.updateTable('tickets').set(changes).where('id', '=', id);
+  for (const [column, value] of Object.entries(match)) {
+    update = update.where(column as keyof TicketMatch, '=', value);
+  }
+  const result = await update.executeTakeFirst();
+  return Number(result.numUpdatedRows) > 0;
+}
+
 // Conditional on the old status so two agents can't claim the same ticket at once.
-export async function updateTicketInStatus(
+export const updateTicketInStatus = (
   db: Db,
   id: string,
   statusId: string,
   changes: TicketChanges,
-): Promise<boolean> {
-  const result = await db
-    .updateTable('tickets')
-    .set(changes)
-    .where('id', '=', id)
-    .where('statusId', '=', statusId)
-    .executeTakeFirst();
-  return Number(result.numUpdatedRows) > 0;
-}
+): Promise<boolean> => updateTicketMatching(db, id, { statusId }, changes);
 
 export async function deleteTicketRow(db: Db, id: string): Promise<void> {
   await db.deleteFrom('tickets').where('id', '=', id).execute();

@@ -1,5 +1,5 @@
 import { ApiError } from '@tracker/client';
-import type { Ticket, UpdateTicketInput } from '@tracker/shared';
+import type { CreatedTicket, Ticket, UpdateTicketInput } from '@tracker/shared';
 import { isNetworkError } from '../../api';
 import { textNotSaved } from './captureForm';
 import type { CaptureText } from './captureText';
@@ -10,7 +10,7 @@ export interface SentCapture extends CaptureText {
 }
 
 export interface CaptureSteps {
-  create: () => Promise<Ticket>;
+  create: () => Promise<CreatedTicket>;
   update: (ticketKey: string, input: UpdateTicketInput) => Promise<Ticket>;
 }
 
@@ -48,12 +48,18 @@ function plainly(error: unknown, ticketKey: string): unknown {
 
 // The capture stays one ticket and the person's later text wins: when a create gets back the
 // ticket an earlier Create made, what the person changed since is saved to it as an ordinary edit.
-export async function sendCapture(capture: SentCapture, steps: CaptureSteps): Promise<Ticket> {
+export async function sendCapture(
+  capture: SentCapture,
+  steps: CaptureSteps,
+): Promise<CreatedTicket> {
   const ticket = await steps.create();
   const changes = laterText(ticket, capture);
   if (!changes) return ticket;
   try {
-    return await steps.update(ticket.key, changes);
+    const updated = await steps.update(ticket.key, changes);
+    // The files the create left out are still to be told.
+    const { leftOutAttachmentIds } = ticket;
+    return leftOutAttachmentIds ? { ...updated, leftOutAttachmentIds } : updated;
   } catch (error) {
     throw plainly(error, ticket.key);
   }

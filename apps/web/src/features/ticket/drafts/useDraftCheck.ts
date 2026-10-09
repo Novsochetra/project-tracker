@@ -2,7 +2,7 @@ import { useQueryClient, type QueryClient } from '@tanstack/react-query';
 import type { TicketDetail } from '@tracker/shared';
 import { useCallback } from 'react';
 import { isNotFound, queryKeys, useApi } from '../../../api';
-import { storedDraft } from '../../../lib/storedDrafts';
+import { rebaseDraft, storedDraft, type StoredDraft } from '../../../lib/storedDrafts';
 import { checkDraft, serverText, type DraftCheck } from './draftCheck';
 
 // Null when nothing is kept for the draft (the user dropped it meanwhile).
@@ -30,16 +30,33 @@ function showOnScreen(
   if (saving.length === 0) queryClient.setQueryData(queryKeys.ticket(ticketKey), detail);
 }
 
+// The base other tabs keep in step may not have caught up with a save that just landed elsewhere,
+// so text the field knows its own text was typed over counts too, and becomes the base.
+function checkWith(
+  id: string,
+  draft: StoredDraft,
+  now: string | undefined,
+  typedOver?: string,
+): DraftCheck {
+  const result = checkDraft(draft, now);
+  if (result !== 'changed' || typedOver === undefined) return result;
+  if (checkDraft({ ...draft, base: typedOver }, now) !== 'unchanged') return result;
+  rebaseDraft(id, typedOver);
+  return 'unchanged';
+}
+
 // Compares a kept draft with what the tracker has now. Neither the cache nor a saved answer can
 // be trusted for this: rolled-back optimistic saves leave old typed text in the cache, and an
 // answer saved before someone else's change would let the retry save over it. So the read is
 // fresh: from the tracker, or a failed check that saves nothing. It is a query of its own, so
 // checks running together share it and the offline banner hears how it went.
-export function useDraftCheck(ticketKey: string): (id: string) => Promise<CheckResult> {
+export function useDraftCheck(
+  ticketKey: string,
+): (id: string, typedOver?: string) => Promise<CheckResult> {
   const client = useApi();
   const queryClient = useQueryClient();
   return useCallback(
-    async (id: string) => {
+    async (id: string, typedOver?: string) => {
       const draft = storedDraft(id);
       if (!draft) return null;
       if (navigator.onLine === false) return 'unreachable';
@@ -53,7 +70,7 @@ export function useDraftCheck(ticketKey: string): (id: string) => Promise<CheckR
           retry: false,
         });
         showOnScreen(queryClient, ticketKey, detail, since);
-        return checkDraft(draft, serverText(detail, draft));
+        return checkWith(id, draft, serverText(detail, draft), typedOver);
       } catch (error) {
         return isNotFound(error) ? 'gone' : 'unreachable';
       }

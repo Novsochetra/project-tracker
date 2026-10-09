@@ -3,21 +3,26 @@ import type { StoredDraft } from '../../../lib/storedDrafts';
 
 export type DraftSave = (draft: StoredDraft) => Promise<unknown>;
 
-// Saves kept text for retries the app starts on its own. Through the same mutations as the
-// screen, so the caches follow, the offline banner hears of failures and an app update waits for
-// the write, but without a toast: the field's note or the app-wide toast says what happened.
+// Saves kept text. Through the same mutations as the rest of the screen, so the caches follow, the
+// offline banner hears of failures and an app update waits for the write, but without a toast:
+// the caller says what happened. A field's save names the text it was typed over (`base`), so it
+// can't overwrite newer text when it lands late.
 export function useDraftSave(): DraftSave {
   const updateTicket = useUpdateTicket().mutateAsync;
   const updateComment = useUpdateComment().mutateAsync;
   return (draft) => {
-    const { ticketKey, text } = draft;
+    const { ticketKey, text, base } = draft;
     switch (draft.field) {
       case 'title':
-        return updateTicket({ ticketKey, input: { title: text } });
+        return updateTicket({ ticketKey, input: { title: text }, expected: { title: base } });
       case 'description':
-        return updateTicket({ ticketKey, input: { description: text } });
+        return updateTicket({
+          ticketKey,
+          input: { description: text },
+          expected: { description: base },
+        });
       case 'assignee':
-        return updateTicket({ ticketKey, input: { assignee: text } });
+        return updateTicket({ ticketKey, input: { assignee: text }, expected: { assignee: base } });
       case 'comment-edit':
         return updateComment({ ticketKey, activityId: draft.activityId ?? '', text });
       case 'comment':

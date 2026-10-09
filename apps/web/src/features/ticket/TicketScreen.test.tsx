@@ -47,9 +47,11 @@ describe('TicketScreen fields', () => {
     await user.clear(title);
     await user.type(title, 'Fix the login error');
     await user.tab();
-    expect(client.updateTicket).toHaveBeenLastCalledWith('MOB-1', {
-      title: 'Fix the login error',
-    });
+    expect(client.updateTicket).toHaveBeenLastCalledWith(
+      'MOB-1',
+      { title: 'Fix the login error' },
+      { title: 'Ticket 1' },
+    );
     expect(title).toHaveValue('Fix the login error');
   });
 
@@ -93,7 +95,11 @@ describe('TicketScreen fields', () => {
     await user.type(assignee, ' Dara ');
     expect(client.updateTicket).not.toHaveBeenCalled();
     await user.tab();
-    expect(client.updateTicket).toHaveBeenCalledWith('MOB-1', { assignee: 'Dara' });
+    expect(client.updateTicket).toHaveBeenCalledWith(
+      'MOB-1',
+      { assignee: 'Dara' },
+      { assignee: '' },
+    );
   });
 
   it('shows an overdue date in red and clears it', async () => {

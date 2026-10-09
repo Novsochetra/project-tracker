@@ -1,4 +1,4 @@
-import type { Attachment, Ticket } from '@tracker/shared';
+import type { Attachment, CreatedTicket, Ticket } from '@tracker/shared';
 import { useRef, useState } from 'react';
 import {
   useCreateTicket,
@@ -14,6 +14,7 @@ import {
   createdToast,
   createInputOf,
   FILES_NEED_CONNECTION,
+  leftOutToast,
   SAVED_ON_PHONE,
   TITLE_REQUIRED,
   toQueuedCapture,
@@ -45,7 +46,7 @@ export interface CaptureSubmit {
 }
 
 interface Writes {
-  create: (variables: CreateTicketVariables) => Promise<Ticket>;
+  create: (variables: CreateTicketVariables) => Promise<CreatedTicket>;
   update: (variables: UpdateTicketVariables) => Promise<Ticket>;
 }
 
@@ -68,6 +69,12 @@ function submitDeps({ create, update }: Writes, show: ToastApi['show']): SubmitD
   };
 }
 
+function showCreated(show: ToastApi['show'], ticket: CreatedTicket): void {
+  const leftOut = ticket.leftOutAttachmentIds?.length ?? 0;
+  if (leftOut === 0) show(createdToast(ticket.key));
+  else show(leftOutToast(ticket.key, leftOut), { kind: 'error' });
+}
+
 export function useCaptureSubmit(input: CaptureSubmitInput): CaptureSubmit {
   const { values, project, attachments, uploading, identity, onDone } = input;
   const { mutateAsync: create } = useCreateTicket();
@@ -88,8 +95,12 @@ export function useCaptureSubmit(input: CaptureSubmitInput): CaptureSubmit {
       return;
     }
     rememberProject(chosen);
-    if (outcome.kind === 'created') flashRows([outcome.ticket.key]);
-    show(outcome.kind === 'created' ? createdToast(outcome.ticket.key) : SAVED_ON_PHONE);
+    if (outcome.kind === 'created') {
+      flashRows([outcome.ticket.key]);
+      showCreated(show, outcome.ticket);
+    } else {
+      show(SAVED_ON_PHONE);
+    }
     onDone();
   };
 

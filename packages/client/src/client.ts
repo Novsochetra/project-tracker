@@ -4,7 +4,9 @@ import type {
   CreateCommentInput,
   CreateProjectInput,
   CreateStatusInput,
+  CreatedTicket,
   CreateTicketInput,
+  ExpectedFields,
   ListTicketsQuery,
   MarkSentInput,
   MoveTicketInput,
@@ -97,7 +99,7 @@ export class TrackerClient {
     this.http.request<TicketsAcrossProjects>('GET', '/api/tickets', { query: listQuery(query) });
 
   createTicket = (projectKey: string, input: CreateTicketInput) =>
-    this.http.request<Ticket>('POST', `/api/projects/${segment(projectKey)}/tickets`, {
+    this.http.request<CreatedTicket>('POST', `/api/projects/${segment(projectKey)}/tickets`, {
       body: input,
     });
 
@@ -106,8 +108,12 @@ export class TrackerClient {
       fresh: read.fresh,
     });
 
-  updateTicket = (ticketKey: string, input: UpdateTicketInput) =>
-    this.http.request<Ticket>('PATCH', `/api/tickets/${segment(ticketKey)}`, { body: input });
+  // `expected`: the text each field was typed over, so the tracker refuses a save that lands after
+  // a newer one (409 `stale`).
+  updateTicket = (ticketKey: string, input: UpdateTicketInput, expected?: ExpectedFields) =>
+    this.http.request<Ticket>('PATCH', `/api/tickets/${segment(ticketKey)}`, {
+      body: expected ? { ...input, expected } : input,
+    });
 
   moveTicket = (ticketKey: string, input: MoveTicketInput) =>
     this.http.request<Ticket>('POST', `/api/tickets/${segment(ticketKey)}/move`, { body: input });

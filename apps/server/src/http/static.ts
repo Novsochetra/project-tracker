@@ -24,6 +24,13 @@ const isApiPath = (path: string): boolean => path === '/api' || path.startsWith(
 // sw.js (PT-99), so the service worker is one file the update check revalidates.
 const isHashedPath = (path: string): boolean => path.startsWith('/assets/');
 
+// Answered with the app page, a missing script or stylesheet would fail to parse instead of to
+// load, and a service worker's install would count the 200 as the file it asked for (PT-102).
+const SCRIPT_OR_STYLE = /\.(?:m?js|css)$/i;
+
+const hasNoAppPage = (path: string): boolean =>
+  isApiPath(path) || isHashedPath(path) || SCRIPT_OR_STYLE.test(path);
+
 const unless =
   (
     skip: (path: string) => boolean,
@@ -97,8 +104,5 @@ function webFiles(root: string, path?: string): MiddlewareHandler<AppEnv> {
 
 export function mountWebApp(app: Hono<AppEnv>, root: string): void {
   app.get('*', unless(isApiPath, webFiles(root)));
-  app.get(
-    '*',
-    unless((path) => isApiPath(path) || isHashedPath(path), webFiles(root, 'index.html')),
-  );
+  app.get('*', unless(hasNoAppPage, webFiles(root, 'index.html')));
 }

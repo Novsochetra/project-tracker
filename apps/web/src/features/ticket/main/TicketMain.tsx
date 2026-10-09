@@ -8,7 +8,6 @@ import { DetailChips } from '../details/DetailChips';
 import { AutosaveTextarea } from '../fields/AutosaveTextarea';
 import { TITLE_MAX_LENGTH } from '../fields/limits';
 import type { MoveToDone } from '../useMoveToDone';
-import { useTicketUpdate } from '../useTicketUpdate';
 import { DescriptionField } from './DescriptionField';
 import { LatestReview } from './LatestReview';
 import { TicketAttachments } from './TicketAttachments';
@@ -28,7 +27,6 @@ function keepOneLine(event: KeyboardEvent<HTMLTextAreaElement>) {
 export function TicketMain({ detail, done, className }: TicketMainProps) {
   const { ticket } = detail;
   const isPhone = useIsPhone();
-  const update = useTicketUpdate(ticket.key);
   const uploads = useAttachmentUploads({ ticketKey: ticket.key });
   const drop = useFileDrop(uploads.add);
   // This runs outside the error boundaries, so a file entry this app can't read, such as null or
@@ -46,7 +44,6 @@ export function TicketMain({ detail, done, className }: TicketMainProps) {
           maxLength={TITLE_MAX_LENGTH}
           value={ticket.title}
           onKeyDown={keepOneLine}
-          onSave={(title) => update({ title })}
         />
         {isPhone && <DetailChips detail={detail} />}
         {/* Above the description, which often runs long enough to push it below a phone's fold. */}
@@ -55,7 +52,6 @@ export function TicketMain({ detail, done, className }: TicketMainProps) {
           ticketKey={ticket.key}
           value={ticket.description}
           onPaste={(event) => pasteFiles(event, uploads.add)}
-          onSave={(description) => update({ description })}
         />
         <TicketAttachments ticketKey={ticket.key} attachments={attachments} uploads={uploads} />
       </div>

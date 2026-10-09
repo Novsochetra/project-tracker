@@ -39,12 +39,20 @@ describe('draft ids', () => {
 describe('stored drafts', () => {
   it('keep typed text with the server value it was first typed over', () => {
     keepDraft(TITLE_ID, { ...TITLE, text: 'Fix the' }, 'Fix login');
+    const first = storedDraft(TITLE_ID)?.at ?? 0;
     keepDraft(TITLE_ID, { ...TITLE, text: 'Fix the login' }, 'Fix the');
-    expect(storedDraft(TITLE_ID)).toEqual({ ...TITLE, base: 'Fix login', text: 'Fix the login' });
+    const kept = { ...TITLE, base: 'Fix login', text: 'Fix the login', at: expect.any(Number) };
+    expect(storedDraft(TITLE_ID)).toEqual(kept);
     expect(JSON.parse(localStorage.getItem(DRAFTS_STORAGE_KEY) ?? '')).toEqual({
-      [TITLE_ID]: { ...TITLE, base: 'Fix login', text: 'Fix the login' },
+      [TITLE_ID]: kept,
     });
     expect(hasStoredDrafts()).toBe(true);
+    // Each new text is later than the one before, also within one millisecond; a new base keeps
+    // the time the text was typed.
+    const typedAt = storedDraft(TITLE_ID)?.at;
+    expect(typedAt).toBeGreaterThan(first);
+    rebaseDraft(TITLE_ID, 'Fix it');
+    expect(storedDraft(TITLE_ID)?.at).toBe(typedAt);
   });
 
   it('are done once the server has the kept text, and move their base when it has older text', () => {

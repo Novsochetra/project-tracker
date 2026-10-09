@@ -15,6 +15,10 @@ export const isUnauthorized = (error: unknown): boolean => hasStatus(error, 401)
 
 export const isNotFound = (error: unknown): boolean => hasStatus(error, 404);
 
+// The tracker refused a save because a field it changes has newer text than it was typed over.
+export const isStaleEdit = (error: unknown): boolean =>
+  isApiError(error) && error.status === 409 && error.code === 'stale';
+
 export const isClientError = (error: unknown): boolean =>
   isApiError(error) && error.status >= 400 && error.status < 500;
 

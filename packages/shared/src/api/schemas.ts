@@ -83,6 +83,20 @@ export const updateTicketInput = z.object({
 });
 export type UpdateTicketInput = z.input<typeof updateTicketInput>;
 
+// The text a save was typed over, per field. The tracker refuses the save (409 `stale`) when a
+// field it changes has other text now, so an older save that lands late can't overwrite a newer
+// one. Agents send none.
+export const expectedFields = z.object({
+  title: z.string().max(TICKET_TITLE_MAX).optional(),
+  description: z.string().max(TICKET_DESCRIPTION_MAX).optional(),
+  assignee: z.string().trim().max(TICKET_ASSIGNEE_MAX).optional(),
+});
+export type ExpectedFields = z.input<typeof expectedFields>;
+
+export const updateTicketRequest = updateTicketInput.extend({
+  expected: expectedFields.optional(),
+});
+
 export const moveTicketInput = z.object({
   statusId: id,
   beforeId: id.nullable().optional(),

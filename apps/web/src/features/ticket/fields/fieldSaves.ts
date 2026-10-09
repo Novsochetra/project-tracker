@@ -19,16 +19,31 @@ export type SaveStep = 'skip' | 'unchanged' | 'send';
 
 export interface SaveRequest {
   value: string;
-  // What the cache shows for the field, which may be the optimistic copy of a save.
+  // What the tracker has for the field as far as this tab knows: the cache, which may be the
+  // optimistic copy of a save, or the text another tab's save landed before this tab read it.
   shown: string;
   checked: boolean;
+  // Another tab has a save of the field on its way, so the tracker may have that save's text by
+  // now, whatever this tab shows.
+  sentElsewhere?: boolean;
+  // The base of the kept text: what the tracker had when a save of it last landed, in any tab.
+  // When it disagrees with `shown`, either may be out of date, so the save goes and the tracker
+  // decides (it refuses one typed over text it no longer has).
+  base?: string | undefined;
 }
 
-export function saveStep(saves: SentSaves, { value, shown, checked }: SaveRequest): SaveStep {
+export function saveStep(saves: SentSaves, request: SaveRequest): SaveStep {
+  const { value, shown, checked, sentElsewhere = false, base = value } = request;
   if (checked) return 'send';
   if (carries(saves, value)) return 'skip';
-  return saves.onTheirWay.size === 0 && value === shown ? 'unchanged' : 'send';
+  const settled = saves.onTheirWay.size === 0 && !sentElsewhere;
+  return settled && value === shown && value === base ? 'unchanged' : 'send';
 }
+
+// The text the tracker has just before the next save lands, as far as this tab knows: the latest
+// save still on its way, else the text the kept text was typed over.
+export const typedOver = (saves: SentSaves, base: string): string =>
+  saves.onTheirWay.get(saves.latest) ?? base;
 
 export function sendSave(saves: SentSaves, value: string): SentSaves {
   const latest = saves.latest + 1;
@@ -99,6 +114,42 @@ export function finishSave(id: string, number: number, saved: boolean): void {
   update(id, saves);
 }
 
+// The text this tab typed last into each draft, and when it was kept (StoredDraft.at), until the
+// tracker has it (useKeptText).
+export interface OwnText {
+  text: string;
+  at: number;
+}
+
+const ownTexts = new Map<string, OwnText>();
+
+export const ownTextOf = (id: string): OwnText | undefined => ownTexts.get(id);
+
+export function typedHere(id: string, own: OwnText | null): void {
+  if (own) ownTexts.set(id, own);
+  else ownTexts.delete(id);
+}
+
+const waiting = new Map<string, () => void>();
+
+// Runs `run` once no save of the draft is on its way, in this tab or another (a closed tab's marks
+// stop counting after a minute, but nothing says when). One wait per draft: its callers all ask
+// for the same retry.
+export function whenSettled(id: string, run: () => void): void {
+  if (!isSavingAnywhere(id)) {
+    run();
+    return;
+  }
+  if (waiting.has(id)) return;
+  const stop = subscribeSaves(() => {
+    if (isSavingAnywhere(id)) return;
+    stop();
+    waiting.delete(id);
+    run();
+  });
+  waiting.set(id, stop);
+}
+
 export function subscribeSaves(listener: () => void): () => void {
   listeners.add(listener);
   const stopMarks = onOtherTabsMarks(listener);
@@ -112,4 +163,7 @@ export function subscribeSaves(listener: () => void): () => void {
 export function clearSaves(): void {
   for (const id of sent.keys()) markSending(id, false);
   sent.clear();
+  waiting.forEach((stop) => stop());
+  waiting.clear();
+  ownTexts.clear();
 }

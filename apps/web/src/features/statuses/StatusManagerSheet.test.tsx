@@ -5,6 +5,7 @@ import type { CreateStatusInput, ProjectBoard, Status, UpdateStatusInput } from 
 import { useState } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { makeBoard, project, STATUS, statuses } from '../../api/test/fixtures';
+import { CLICK_SHIELD_MS } from '../../lib/clickShield';
 import { renderWithApi, sheetTestSetup } from '../claude/test/renderWithApi';
 import { StatusManagerSheet } from './StatusManagerSheet';
 
@@ -53,6 +54,13 @@ const sheet = () => screen.getByRole('dialog', { name: 'Statuses' });
 const row = (name: string) => within(sheet()).getByRole('button', { name: new RegExp(`^${name}`) });
 const nameField = () => within(sheet()).getByRole('textbox', { name: 'Status name' });
 const saveButton = () => within(sheet()).getByRole('button', { name: 'Save status' });
+
+// The sheet holds presses right after the confirm appears (StatusEditor), so a test reads it
+// first, like a person.
+async function askDelete(user: ReturnType<typeof userEvent.setup>) {
+  await user.click(within(sheet()).getByRole('button', { name: 'Delete status' }));
+  await new Promise((resolve) => setTimeout(resolve, CLICK_SHIELD_MS));
+}
 
 async function openSheet(server = fakeStatusServer()) {
   const view = renderWithApi(<Harness />, server);
@@ -163,7 +171,7 @@ describe('StatusManagerSheet', () => {
   it('deletes an empty status after confirming', async () => {
     const { server, user } = await openSheet();
     await user.click(row('Need review'));
-    await user.click(within(sheet()).getByRole('button', { name: 'Delete status' }));
+    await askDelete(user);
     expect(within(sheet()).getByText("Delete “Need review”? This can't be undone.")).toBeVisible();
     expect(within(sheet()).queryByRole('button', { name: /^Move tickets to/ })).toBeNull();
     await user.click(within(sheet()).getByRole('button', { name: 'Delete' }));
@@ -178,7 +186,7 @@ describe('StatusManagerSheet', () => {
     const { server, user } = await openSheet();
     server.getBoard.mockReturnValue(new Promise(() => undefined));
     await user.click(row('Reviewed'));
-    await user.click(within(sheet()).getByRole('button', { name: 'Delete status' }));
+    await askDelete(user);
     await user.click(within(sheet()).getByRole('button', { name: 'Delete' }));
     await waitFor(() =>
       expect(within(sheet()).queryByText('Reviewed', { exact: true })).not.toBeInTheDocument(),
@@ -189,7 +197,7 @@ describe('StatusManagerSheet', () => {
   it('asks where the tickets of a status go before deleting it', async () => {
     const { server, user } = await openSheet();
     await user.click(row('To do'));
-    await user.click(within(sheet()).getByRole('button', { name: 'Delete status' }));
+    await askDelete(user);
     expect(
       within(sheet()).getByText('Delete “To do” and move its 2 tickets to In progress?'),
     ).toBeInTheDocument();

@@ -7,6 +7,7 @@ export {
   FALLBACK_ERROR_MESSAGE,
   isNetworkError,
   isNotFound,
+  isStaleEdit,
   isUnauthorized,
   NETWORK_ERROR_MESSAGE,
 } from './errors';

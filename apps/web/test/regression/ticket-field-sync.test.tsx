@@ -42,7 +42,12 @@ it('saves the typed title on blur when an agent changed it after the last autosa
   agentChanges({ title: 'Renamed by Claude' });
   await user.tab();
   expect(client.updateTicket).toHaveBeenCalledTimes(2);
-  expect(client.updateTicket).toHaveBeenLastCalledWith('MOB-1', { title: 'Ticket 1 fixed' });
+  // Typed over the agent's title, which the field showed, so that is what it expects.
+  expect(client.updateTicket).toHaveBeenLastCalledWith(
+    'MOB-1',
+    { title: 'Ticket 1 fixed' },
+    { title: 'Renamed by Claude' },
+  );
   expect(title).toHaveValue('Ticket 1 fixed');
 });
 

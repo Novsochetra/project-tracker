@@ -66,6 +66,15 @@ describe('sendCapture', () => {
     expect(update).toHaveBeenCalledWith('MOB-7', { title: 'Idea', description: 'Steps' });
   });
 
+  it('still names the files the create left out once the later text is saved', async () => {
+    const saved = ticketWith(capture);
+    const update = vi.fn().mockResolvedValue(saved);
+    const created = { ...earlierText, leftOutAttachmentIds: ['a-2'] };
+    await expect(
+      sendCapture(capture, { create: () => Promise.resolve(created), update }),
+    ).resolves.toEqual({ ...saved, leftOutAttachmentIds: ['a-2'] });
+  });
+
   it('says plainly that the ticket has the earlier text when the tracker refuses the edit', async () => {
     const update = vi.fn().mockRejectedValue(new ApiError(404, 'not_found', 'Ticket not found.'));
     const sent = sendCapture(capture, { create: () => Promise.resolve(earlierText), update });

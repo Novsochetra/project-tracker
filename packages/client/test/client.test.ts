@@ -138,6 +138,13 @@ const routes: Route[] = [
     call: (c) => c.updateTicket('MOB-3', { priority: 'low', due: '2026-10-09' }),
   },
   {
+    name: 'updateTicket with the text it was typed over',
+    method: 'PATCH',
+    path: '/api/tickets/MOB-3',
+    body: { title: 'Fix login now', expected: { title: 'Fix login' } },
+    call: (c) => c.updateTicket('MOB-3', { title: 'Fix login now' }, { title: 'Fix login' }),
+  },
+  {
     name: 'moveTicket',
     method: 'POST',
     path: '/api/tickets/MOB-3/move',

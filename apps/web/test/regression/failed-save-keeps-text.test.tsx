@@ -53,9 +53,11 @@ it('keeps a description typed offline, says it is not saved, and saves it once b
   await waitFor(() =>
     expect(screen.queryByText("Description isn't saved yet.")).not.toBeInTheDocument(),
   );
-  expect(client.updateTicket).toHaveBeenLastCalledWith('MOB-1', {
-    description: 'Steps to reproduce',
-  });
+  expect(client.updateTicket).toHaveBeenLastCalledWith(
+    'MOB-1',
+    { description: 'Steps to reproduce' },
+    { description: '' },
+  );
   expect(description).toHaveValue('Steps to reproduce');
   expect(hasDrafts()).toBe(false);
 });
@@ -76,7 +78,11 @@ it('keeps an assignee typed offline and saves it from the retry button', async (
   await waitFor(() =>
     expect(screen.queryByText("Assignee isn't saved yet.")).not.toBeInTheDocument(),
   );
-  expect(client.updateTicket).toHaveBeenLastCalledWith('MOB-1', { assignee: 'Dara' });
+  expect(client.updateTicket).toHaveBeenLastCalledWith(
+    'MOB-1',
+    { assignee: 'Dara' },
+    { assignee: '' },
+  );
   expect(assignee).toHaveValue('Dara');
   expect(hasDrafts()).toBe(false);
 });

@@ -1,9 +1,17 @@
 import clsx from 'clsx';
 import { Trash2 } from 'lucide-react';
-import { useEffect, useRef, useState, type FormEvent, type RefObject } from 'react';
+import {
+  useEffect,
+  useRef,
+  useState,
+  type FormEvent,
+  type MouseEvent,
+  type RefObject,
+} from 'react';
 import { errorMessage } from '../../api';
 import { Button, GroupedCard, SelectRow, StatusGlyph } from '../../components';
 import { isPhoneNow } from '../../lib/media';
+import { holdPresses } from '../attachments/holdPresses';
 import { ColorSwatches } from './ColorSwatches';
 import { DeleteStatus } from './DeleteStatus';
 import styles from './StatusEditor.module.css';
@@ -46,6 +54,12 @@ export function StatusEditor(props: StatusEditorProps) {
     event.preventDefault();
     editor.save();
   };
+  // The confirm is shorter than the editor it replaces, so Add status below moves up under the
+  // finger, or the confirm's Delete lands there: a double tap's second tap pressed either.
+  const askDelete = (event: MouseEvent<HTMLButtonElement>) => {
+    if (event.detail !== 0) holdPresses(event.currentTarget);
+    setDeleting(true);
+  };
   return (
     <form
       ref={formRef}
@@ -63,12 +77,7 @@ export function StatusEditor(props: StatusEditorProps) {
           onDeleted={() => props.onDeleted(status.id)}
         />
       ) : (
-        <EditorFields
-          {...props}
-          editor={editor}
-          nameRef={nameRef}
-          onDelete={() => setDeleting(true)}
-        />
+        <EditorFields {...props} editor={editor} nameRef={nameRef} onDelete={askDelete} />
       )}
     </form>
   );
@@ -77,7 +86,7 @@ export function StatusEditor(props: StatusEditorProps) {
 interface EditorFieldsProps extends StatusEditorProps {
   editor: StatusEditorState;
   nameRef: RefObject<HTMLInputElement | null>;
-  onDelete: () => void;
+  onDelete: (event: MouseEvent<HTMLButtonElement>) => void;
 }
 
 function EditorFields({ editor, nameRef, status, statuses, onDone, onDelete }: EditorFieldsProps) {

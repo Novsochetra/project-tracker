@@ -275,4 +275,23 @@ describe('createToastStore', () => {
     store.dispose();
     vi.useRealTimers();
   });
+
+  // Reviewer 61 (PT-76): a toast shown while the important one faded out showed at once, and the
+  // older one waiting behind it came after it.
+  it('keeps the order of toasts shown while an important toast fades out', () => {
+    vi.useFakeTimers();
+    const store = createToastStore();
+    const text = () => store.getSnapshot().toast?.text;
+    store.show("Text can't be kept", { kind: 'error', important: true });
+    store.show("Can't reach the tracker", { kind: 'error' });
+    vi.advanceTimersByTime(TOAST_UNDO_MS);
+    expect(store.getSnapshot().toast?.leaving).toBe(true);
+    store.show('MOB-3 moved to Done');
+    vi.advanceTimersByTime(TOAST_EXIT_MS);
+    expect(text()).toBe('MOB-3 moved to Done');
+    vi.advanceTimersByTime(TOAST_VISIBLE_MS + TOAST_EXIT_MS);
+    expect(store.getSnapshot().toast).toBeNull();
+    store.dispose();
+    vi.useRealTimers();
+  });
 });

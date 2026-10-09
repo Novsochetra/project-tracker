@@ -66,5 +66,9 @@ it('sends a refused draft once, and again only once its text changed', async () 
   keep('Less text');
   await runAgain(client);
   expect(client.updateTicket).toHaveBeenCalledTimes(2);
-  expect(client.updateTicket).toHaveBeenLastCalledWith('MOB-2', { description: 'Less text' });
+  expect(client.updateTicket).toHaveBeenLastCalledWith(
+    'MOB-2',
+    { description: 'Less text' },
+    { description: '' },
+  );
 });

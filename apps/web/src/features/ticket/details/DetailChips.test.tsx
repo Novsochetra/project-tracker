@@ -81,7 +81,11 @@ describe('the phone details chips', () => {
     await waitFor(() => expect(suggestions()?.querySelectorAll('option')).toHaveLength(2));
     await user.type(assignee, ' Sophea {Enter}');
     expect(assignee).not.toHaveFocus();
-    expect(client.updateTicket).toHaveBeenCalledWith('MOB-3', { assignee: 'Sophea' });
+    expect(client.updateTicket).toHaveBeenCalledWith(
+      'MOB-3',
+      { assignee: 'Sophea' },
+      { assignee: '' },
+    );
   });
 
   it('say under the chips when the assignee is not saved', async () => {

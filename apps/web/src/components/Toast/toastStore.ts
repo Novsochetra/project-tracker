@@ -68,8 +68,8 @@ export function createToastStore(): ToastStore {
   const showNext = () => {
     const next = waiting;
     waiting = null;
+    update({ toast: null });
     if (next) show(next.text, next.options);
-    else update({ toast: null });
   };
 
   const leave = () => {
@@ -79,7 +79,8 @@ export function createToastStore(): ToastStore {
 
   function show(text: string, options: ToastOptions = {}) {
     const { kind = 'success', undo, important = false } = options;
-    if (state.toast?.important && !state.toast.leaving && !important) {
+    // Also while it fades out, so toasts shown meanwhile keep their order.
+    if (state.toast?.important && !important) {
       waiting = { text, options };
       return;
     }

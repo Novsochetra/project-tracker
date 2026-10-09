@@ -8,13 +8,15 @@ import {
 } from '@tracker/shared';
 import type { Clock } from '../clock';
 import type { ActivityRow, Db, StatusRow, TicketRow } from '../db/schema';
-import { conflict, forbidden } from '../errors';
+import { conflict, forbidden, staleEdit } from '../errors';
 import { insertActivity } from '../repositories/activities';
 import {
   listGroupRanks,
   updateTicketInStatus,
+  updateTicketMatching,
   updateTicketRow,
   type TicketChanges,
+  type TicketMatch,
 } from '../repositories/tickets';
 
 export interface ActivityEntry {
@@ -68,9 +70,15 @@ export interface TicketWrite {
   changes?: TicketChanges;
   entries?: readonly ActivityEntry[];
   guardStatus?: boolean;
+  // Field values the edit was typed over (expectedMatch).
+  match?: TicketMatch;
 }
 
 async function saveChanges(db: Db, write: TicketWrite, changes: TicketChanges): Promise<void> {
+  if (write.match) {
+    if (!(await updateTicketMatching(db, write.ticket.id, write.match, changes))) throw staleEdit();
+    return;
+  }
   if (!write.guardStatus) return updateTicketRow(db, write.ticket.id, changes);
   const saved = await updateTicketInStatus(db, write.ticket.id, write.ticket.statusId, changes);
   if (!saved) throw conflict('Someone else changed this ticket at the same time. Try again.');

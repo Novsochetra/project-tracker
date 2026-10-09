@@ -4,20 +4,18 @@ import { foldedClass, ShowMoreButton, useFold } from '../../../components';
 import { useIsPhone } from '../../../lib/media';
 import { AutosaveTextarea } from '../fields/AutosaveTextarea';
 import { DESCRIPTION_MAX_LENGTH } from '../fields/limits';
-import type { FieldSave } from '../fields/useFieldSave';
 import styles from './TicketMain.module.css';
 
 export interface DescriptionFieldProps {
   ticketKey: string;
   value: string;
-  onSave: FieldSave;
   onPaste: (event: ClipboardEvent<HTMLTextAreaElement>) => void;
 }
 
 // On phones a long description folds while it isn't being edited, so the files and the activity
 // below it stay near. A tap on it still edits, and opens it for good: folding again when the
 // keyboard closed would pull the text just edited away from under the reader.
-export function DescriptionField({ ticketKey, value, onSave, onPaste }: DescriptionFieldProps) {
+export function DescriptionField({ ticketKey, value, onPaste }: DescriptionFieldProps) {
   const isPhone = useIsPhone();
   const ref = useRef<HTMLTextAreaElement>(null);
   const fold = useFold(ref, isPhone, value);
@@ -36,7 +34,6 @@ export function DescriptionField({ ticketKey, value, onSave, onPaste }: Descript
         value={value}
         onFocus={fold.expand}
         onPaste={onPaste}
-        onSave={onSave}
       />
       {fold.height !== null && (
         <ShowMoreButton

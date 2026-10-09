@@ -14,6 +14,8 @@ import {
   settleSave,
   startSave,
   subscribeSaves,
+  typedOver,
+  whenSettled,
   type SentSaves,
 } from './fieldSaves';
 import { SAVE_MARKS_STORAGE_KEY } from './saveMarks';
@@ -31,6 +33,22 @@ describe('the step a field save takes', () => {
     expect(saveStep(NO_SAVES, { value: 'Fix login', shown: 'Fix login', checked: false })).toBe(
       'unchanged',
     );
+  });
+
+  it('sends text the cache shows when the kept text was typed over other text', () => {
+    const request = { value: 'Fix login', shown: 'Fix login', checked: false, base: 'Fix it' };
+    expect(saveStep(NO_SAVES, request)).toBe('send');
+  });
+
+  // Reviewer 61 (PT-76): the other tab's save may already have changed the tracker's text.
+  it('sends text the tracker shows while another tab has a save of the field on its way', () => {
+    const request = { value: 'Fix login', shown: 'Fix login', checked: false, sentElsewhere: true };
+    expect(saveStep(NO_SAVES, request)).toBe('send');
+  });
+
+  it('names what it was typed over: the latest save on its way, else the kept text’s base', () => {
+    expect(typedOver(NO_SAVES, 'Fix login')).toBe('Fix login');
+    expect(typedOver(sent('Fix login now', 'Fix login now!'), 'Fix login')).toBe('Fix login now!');
   });
 
   it('leaves text to the latest save when that save carries it and is on its way', () => {
@@ -231,5 +249,51 @@ describe('the saves of a field on their way in another tab', () => {
     clearSaves();
     expect(isSaving(ID)).toBe(false);
     expect(localStorage.getItem(SAVE_MARKS_STORAGE_KEY)).toBeNull();
+  });
+
+  it('run what waits for them once none of the draft is on its way, here or there, once', async () => {
+    const run = vi.fn();
+    whenSettled(ID, run);
+    expect(run).toHaveBeenCalledTimes(1);
+
+    const tab = await otherTab();
+    const theirs = tab.startSave(ID, 'Fix login now');
+    const mine = startSave(ID, 'Fix login now, please');
+    whenSettled(ID, run);
+    whenSettled(ID, run);
+    finishSave(ID, mine, false);
+    expect(run).toHaveBeenCalledTimes(1);
+    tab.finishSave(ID, theirs, true);
+    window.dispatchEvent(new StorageEvent('storage', { key: SAVE_MARKS_STORAGE_KEY }));
+    expect(run).toHaveBeenCalledTimes(2);
+  });
+
+  // Lead (PT-90, WebKit under load): each tab wrote every tab's marks back as one value. One that
+  // hadn't yet heard of another tab removing its mark put that mark back, so this tab waited a
+  // minute for a save that had landed, and its refused edit was never checked again.
+  it('are written by each tab for its own saves only', async () => {
+    const tab = await otherTab();
+    const theirs = tab.startSave(ID, 'Fix login now');
+    const setItem = vi.spyOn(Storage.prototype, 'setItem');
+    const mine = startSave(ID, 'Fix login now, please');
+    finishSave(ID, mine, false);
+    const written = setItem.mock.calls.filter(([key]) => key.startsWith(SAVE_MARKS_STORAGE_KEY));
+    const pages = new Set(written.map(([, value]) => (JSON.parse(value) as { page: string }).page));
+    expect(written.length).toBe(1);
+    expect(pages.size).toBe(1);
+    setItem.mockRestore();
+    expect(isSavingElsewhere(ID)).toBe(true);
+    tab.finishSave(ID, theirs, true);
+    expect(isSavingElsewhere(ID)).toBe(false);
+  });
+
+  it('drop what waits for them once tests reset this tab’s record', () => {
+    const run = vi.fn();
+    startSave(ID, 'Fix login now');
+    whenSettled(ID, run);
+    clearSaves();
+    startSave(ID, 'Again');
+    clearSaves();
+    expect(run).not.toHaveBeenCalled();
   });
 });

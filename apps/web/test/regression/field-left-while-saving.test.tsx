@@ -55,7 +55,13 @@ const kept = () => storedDraft('description:MOB-1');
 // retry said someone else had changed the description.
 it('keeps the draft while its save is on its way, and retries it without a false conflict', async () => {
   const { user, server, fail } = await typeWhileSaving();
-  expect(kept()).toEqual({ ticketKey: 'MOB-1', field: 'description', base: '', text: 'Steps' });
+  expect(kept()).toEqual({
+    ticketKey: 'MOB-1',
+    field: 'description',
+    base: '',
+    text: 'Steps',
+    at: expect.any(Number),
+  });
   expect(hasDrafts()).toBe(true);
 
   await fail();

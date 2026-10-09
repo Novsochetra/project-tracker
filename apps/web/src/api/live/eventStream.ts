@@ -26,11 +26,15 @@ export function connectLiveUpdates(url: string, handlers: LiveHandlers): () => v
   let source: EventSource | undefined;
   let retry: Timer;
   let silence: Timer;
-  let failedAttempts = 0;
+  // The wait before the app's next reopening grows with its own reopenings only. The browser's own
+  // tries count toward LIVE_WAIT_ATTEMPTS: counted into the wait too, an outage longer than the
+  // silence check left 15 s before the app's first try.
+  let reopenings = 0;
+  let failedTries = 0;
   // Changes made while no stream was open are lost, including before a first connect that failed.
   let reconnecting = false;
   const reportPending = () =>
-    handlers.onRefreshPending(reconnecting && failedAttempts < LIVE_WAIT_ATTEMPTS);
+    handlers.onRefreshPending(reconnecting && failedTries < LIVE_WAIT_ATTEMPTS);
   const setReconnecting = (value: boolean) => {
     reconnecting = value;
     reportPending();
@@ -44,8 +48,9 @@ export function connectLiveUpdates(url: string, handlers: LiveHandlers): () => v
   };
   const reopenLater = () => {
     close();
-    retry = setTimeout(connect, retryDelay(failedAttempts));
-    failedAttempts += 1;
+    retry = setTimeout(connect, retryDelay(reopenings));
+    reopenings += 1;
+    failedTries += 1;
     reportPending();
   };
   const alive = () => {
@@ -54,7 +59,8 @@ export function connectLiveUpdates(url: string, handlers: LiveHandlers): () => v
   };
   const onOpen = () => {
     alive();
-    failedAttempts = 0;
+    reopenings = 0;
+    failedTries = 0;
     const missed = reconnecting;
     setReconnecting(false);
     if (missed) handlers.onReconnect();
@@ -71,7 +77,7 @@ export function connectLiveUpdates(url: string, handlers: LiveHandlers): () => v
       return;
     }
     // The browser tries a dropped stream again by itself, and each try that fails counts too.
-    failedAttempts += 1;
+    failedTries += 1;
     setReconnecting(true);
   };
   function connect() {

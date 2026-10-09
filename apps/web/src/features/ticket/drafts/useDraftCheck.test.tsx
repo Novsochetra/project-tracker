@@ -4,7 +4,7 @@ import { queryKeys } from '../../../api';
 import { deferred } from '../../../api/test/deferred';
 import { listItem, makeTicketDetail, STATUS } from '../../../api/test/fixtures';
 import { cachedTicket, seedTicket, setupApi } from '../../../api/test/render';
-import { keepDraft } from '../../../lib/storedDrafts';
+import { keepDraft, storedDraft } from '../../../lib/storedDrafts';
 import { useDraftCheck } from './useDraftCheck';
 
 const ID = 'description:MOB-1';
@@ -46,6 +46,15 @@ describe('useDraftCheck', () => {
     read.resolve(theirs);
     expect(await checking).toBe('changed');
     expect(cachedTicket(queryClient).ticket.description).toBe('');
+  });
+
+  // Another tab's save of 'Theirs' just landed, and the base it keeps in step hasn't reached this
+  // tab yet; the field typed 'Mine' over 'Theirs'.
+  it('counts text the field says it typed over as unchanged, and makes it the base', async () => {
+    const { check } = setup();
+    expect(await check(ID, 'Theirs')).toBe('unchanged');
+    expect(storedDraft(ID)?.base).toBe('Theirs');
+    expect(await check(ID, 'Something else')).toBe('unchanged');
   });
 
   it('says the tracker cannot be reached when the read fails, and keeps the cache', async () => {

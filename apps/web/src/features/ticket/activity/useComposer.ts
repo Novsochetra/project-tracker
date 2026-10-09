@@ -32,7 +32,9 @@ const keptForm = (text: string): string | undefined => (text.trim() ? text : und
 function useComposerText(ticketKey: string) {
   const target: DraftTarget = { ticketKey, field: 'comment' };
   const id = draftIdOf(target);
-  const kept = useSyncExternalStore(subscribeStoredDrafts, () => storedDraft(id)?.text);
+  // Kept text of spaces only (the app never keeps one) counts as none.
+  const keptText = () => keptForm(storedDraft(id)?.text ?? '');
+  const kept = useSyncExternalStore(subscribeStoredDrafts, keptText);
   const [text, setText] = useState(kept ?? '');
   if (keptForm(text) !== kept) setText(kept ?? '');
   const keep = (next: string) => {
@@ -45,9 +47,10 @@ function useComposerText(ticketKey: string) {
       keep(next);
       setText(next);
     },
-    // Unless something new was typed meanwhile, also after the screen has closed.
+    // Before anything typed meanwhile, here or in another tab, also after the screen has closed.
     handBack: (sent: string) => {
-      if (!storedDraft(id)) keep(sent);
+      const typed = keptText();
+      if (typed !== sent) keep(typed ? `${sent}\n${typed}` : sent);
     },
   };
 }

@@ -175,4 +175,45 @@ test.describe('statuses', () => {
     expect(statuses.map((status) => status.name)).toContain('Blocked');
     await expect(group(page, 'Blocked')).toHaveCount(0);
   });
+
+  // The delete confirm is shorter than the editor, so Add status moves up under the finger.
+  test('a double tap on Delete status keeps its confirm', async ({ page, api }, info) => {
+    await seedProject(api, 'Mobile app', 'MOB', [{ title: 'Waiting on design' }]);
+    const { statuses } = await api.getProject('MOB');
+    await api.createStatus('MOB', {
+      name: 'Blocked',
+      category: 'in_progress',
+      color: statuses[1]!.color,
+    });
+    await page.goto('/p/MOB');
+    await page.getByRole('button', { name: 'Project options' }).first().click();
+    await readActionSheet(page);
+    await page.getByRole('button', { name: 'Manage statuses' }).click();
+    const sheet = page.getByRole('dialog', { name: 'Statuses' });
+    await sheet.getByText('Blocked', { exact: true }).click();
+    const button = sheet.getByRole('button', { name: 'Delete status' });
+    await settled(button);
+    const box = (await button.boundingBox())!;
+    const spot = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+
+    if (isPhone(info.project.name)) {
+      await page.touchscreen.tap(spot.x, spot.y);
+      await page.waitForTimeout(150);
+      await page.touchscreen.tap(spot.x, spot.y);
+    } else {
+      // A double-click: its second click comes with detail 2.
+      await page.mouse.click(spot.x, spot.y);
+      await page.waitForTimeout(150);
+      await page.mouse.down({ clickCount: 2 });
+      await page.mouse.up({ clickCount: 2 });
+    }
+
+    await page.waitForTimeout(600);
+    await expect(sheet).toContainText("Delete “Blocked”? This can't be undone.");
+    await expect(sheet.getByLabel('Status name')).toHaveCount(0);
+    const names = (await api.getProject('MOB')).statuses.map((status) => status.name);
+    expect(names).toContain('Blocked');
+    await sheet.getByRole('button', { name: 'Delete', exact: true }).click();
+    await expect(sheet.getByText('Blocked', { exact: true })).toHaveCount(0);
+  });
 });

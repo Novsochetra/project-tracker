@@ -1,4 +1,4 @@
-import type { Ticket } from '@tracker/shared';
+import type { CreatedTicket, Ticket } from '@tracker/shared';
 import { errorMessage, isNetworkError, NETWORK_ERROR_MESSAGE } from '../../api';
 import type { QueuedCapture } from './captureQueue';
 
@@ -8,28 +8,28 @@ export interface CaptureDraft {
 }
 
 export type SubmitOutcome =
-  | { kind: 'created'; ticket: Ticket }
+  | { kind: 'created'; ticket: CreatedTicket }
   | { kind: 'saved' }
   | { kind: 'needsConnection' }
   | { kind: 'failed'; message: string };
 
 export interface SubmitDeps {
-  create: (draft: CaptureDraft) => Promise<Ticket>;
+  create: (draft: CaptureDraft) => Promise<CreatedTicket>;
   save: (capture: QueuedCapture) => boolean;
   track: (id: string) => () => void;
   onLateResult: (capture: QueuedCapture, ticket: Ticket | null) => void;
   timeoutMs: number;
 }
 
-type Settled = { kind: 'created'; ticket: Ticket } | { kind: 'error'; error: unknown };
+type Settled = { kind: 'created'; ticket: CreatedTicket } | { kind: 'error'; error: unknown };
 
-const settle = (request: Promise<Ticket>): Promise<Settled> =>
+const settle = (request: Promise<CreatedTicket>): Promise<Settled> =>
   request.then(
     (ticket) => ({ kind: 'created', ticket }),
     (error: unknown) => ({ kind: 'error', error }),
   );
 
-function within(request: Promise<Ticket>, ms: number | null): Promise<Settled | 'late'> {
+function within(request: Promise<CreatedTicket>, ms: number | null): Promise<Settled | 'late'> {
   if (ms === null) return settle(request);
   let timer: ReturnType<typeof setTimeout> | undefined;
   const late = new Promise<'late'>((resolve) => {
@@ -51,7 +51,7 @@ function afterSettled(draft: CaptureDraft, settled: Settled, deps: SubmitDeps): 
 
 async function keepSending(
   draft: CaptureDraft,
-  request: Promise<Ticket>,
+  request: Promise<CreatedTicket>,
   deps: SubmitDeps,
   untrack: () => void,
 ): Promise<SubmitOutcome> {

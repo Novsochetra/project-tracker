@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 import {
   planMove,
   type Actor,
+  type CreatedTicket,
   type createTicketInput,
   type moveTicketInput,
   type Ticket,
@@ -26,6 +27,7 @@ import { removeFiles } from '../storage/fileStorage';
 import { isEmpty } from '../util';
 import { attachLaterUploads, attachUploads } from './attachmentLinks';
 import { inTransaction, notify, type ServiceContext } from './context';
+import { expectedMatch, type ExpectedValues } from './expectedFields';
 import {
   requireProject,
   requireStatusIn,
@@ -41,12 +43,12 @@ type CreateTicketValues = z.output<typeof createTicketInput>;
 type UpdateTicketValues = z.output<typeof updateTicketInput>;
 type MoveTicketValues = z.output<typeof moveTicketInput>;
 
-interface Outcome {
-  ticket: Ticket;
+interface Outcome<T extends Ticket = Ticket> {
+  ticket: T;
   changed: boolean;
 }
 
-function finish(ctx: ServiceContext, outcome: Outcome): Ticket {
+function finish<T extends Ticket>(ctx: ServiceContext, outcome: Outcome<T>): T {
   if (outcome.changed) notify(ctx, outcome.ticket.projectId, outcome.ticket.id);
   return outcome.ticket;
 }
@@ -100,17 +102,21 @@ interface Repeat {
 
 // The repeat's text is left alone: the client saves what the person changed with an update, so an
 // edit made in between stays. Its files have no other way onto the ticket, being pending uploads.
-async function repeatCreate(trx: Db, now: Clock, repeat: Repeat): Promise<Outcome> {
+async function repeatCreate(trx: Db, now: Clock, repeat: Repeat): Promise<Outcome<CreatedTicket>> {
   const { project, earlier, attachmentIds } = repeat;
-  if (!(await attachLaterUploads(trx, earlier.id, attachmentIds))) {
-    return { ticket: toTicket(earlier, project.key), changed: false };
-  }
-  const updatedAt = now();
-  await updateTicketRow(trx, earlier.id, { updatedAt });
-  return { ticket: toTicket({ ...earlier, updatedAt }, project.key), changed: true };
+  const { attached, leftOut } = await attachLaterUploads(trx, earlier.id, attachmentIds);
+  const updatedAt = attached ? now() : earlier.updatedAt;
+  if (attached) await updateTicketRow(trx, earlier.id, { updatedAt });
+  const ticket = toTicket({ ...earlier, updatedAt }, project.key);
+  if (leftOut.length === 0) return { ticket, changed: attached };
+  return { ticket: { ...ticket, leftOutAttachmentIds: leftOut }, changed: attached };
 }
 
-async function createOrRepeat(trx: Db, now: Clock, request: CreateRequest): Promise<Outcome> {
+async function createOrRepeat(
+  trx: Db,
+  now: Clock,
+  request: CreateRequest,
+): Promise<Outcome<CreatedTicket>> {
   const { actor, projectKey, input } = request;
   const project = await requireProject(trx, projectKey);
   const earlier = input.clientId
@@ -133,7 +139,7 @@ export async function createTicket(
   actor: Actor,
   projectKey: string,
   input: CreateTicketValues,
-): Promise<Ticket> {
+): Promise<CreatedTicket> {
   const attempt = () =>
     inTransaction(ctx, (trx) => createOrRepeat(trx, ctx.now, { actor, projectKey, input }));
   const outcome = await attempt().catch((error: unknown) => {
@@ -157,14 +163,18 @@ async function statusChange(
   };
 }
 
-export async function updateTicket(
-  ctx: ServiceContext,
-  actor: Actor,
-  key: string,
-  input: UpdateTicketValues,
-): Promise<Ticket> {
+export interface TicketUpdate {
+  actor: Actor;
+  key: string;
+  input: UpdateTicketValues;
+  expected?: ExpectedValues | undefined;
+}
+
+export async function updateTicket(ctx: ServiceContext, update: TicketUpdate): Promise<Ticket> {
+  const { actor, key, input, expected } = update;
   const outcome = await inTransaction(ctx, async (trx): Promise<Outcome> => {
     const scope = await requireTicketScope(trx, key);
+    const match = expectedMatch(scope.ticket, input, expected);
     const plan = mergeChanges([
       await statusChange(trx, actor, scope, input.statusId),
       fieldChanges(scope.ticket, input, new Date()),
@@ -172,7 +182,12 @@ export async function updateTicket(
     if (isEmpty(plan.changes)) {
       return { ticket: toTicket(scope.ticket, scope.project.key), changed: false };
     }
-    const written = await writeTicket(trx, ctx.now, { ticket: scope.ticket, actor, ...plan });
+    const written = await writeTicket(trx, ctx.now, {
+      ticket: scope.ticket,
+      actor,
+      ...plan,
+      match,
+    });
     return { ticket: toTicket(written.ticket, scope.project.key), changed: true };
   });
   return finish(ctx, outcome);

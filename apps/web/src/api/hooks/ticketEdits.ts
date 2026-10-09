@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import type { MoveTicketInput, Ticket, UpdateTicketInput } from '@tracker/shared';
+import type { ExpectedFields, MoveTicketInput, Ticket, UpdateTicketInput } from '@tracker/shared';
 import { moveBoardTicket, patchBoardTicket } from '../cache/board';
 import { patchTicketDetail } from '../cache/ticketDetail';
 import { boardChanges, readyChanges, ticketChange } from '../cacheChanges';
@@ -11,6 +11,8 @@ import type { TrackerMutation } from '../types';
 export interface UpdateTicketVariables {
   ticketKey: string;
   input: UpdateTicketInput;
+  // The text each field was typed over: the tracker refuses the save once it has newer text.
+  expected?: ExpectedFields;
 }
 
 export interface MoveTicketVariables {
@@ -22,8 +24,10 @@ export function useUpdateTicket(): TrackerMutation<Ticket, UpdateTicketVariables
   const client = useApi();
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ ticketKey, input }: UpdateTicketVariables) =>
-      client.updateTicket(ticketKey, input),
+    mutationFn: ({ ticketKey, input, expected }: UpdateTicketVariables) =>
+      expected
+        ? client.updateTicket(ticketKey, input, expected)
+        : client.updateTicket(ticketKey, input),
     onMutate: ({ ticketKey, input }) =>
       applyOptimistic(queryClient, [
         ...boardChanges(ticketKey, (board) => patchBoardTicket(board, ticketKey, input)),

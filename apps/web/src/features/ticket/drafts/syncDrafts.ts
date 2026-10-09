@@ -1,6 +1,6 @@
 import { ApiError } from '@tracker/client';
 import type { TicketDetail } from '@tracker/shared';
-import { isNotFound, projectOfTicket } from '../../../api';
+import { isNotFound, isStaleEdit, projectOfTicket } from '../../../api';
 import {
   draftSaved,
   forgetDraft,
@@ -81,7 +81,8 @@ async function save([id, draft]: Entry, run: Run): Promise<boolean> {
   } catch (error) {
     finishSave(id, number, false);
     if (isNotFound(error)) forgetDraft(id);
-    else if (!endsRun(error)) refused.set(id, draft.text);
+    // Newer text landed after the check, which the next run's check finds; nothing refused this.
+    else if (!endsRun(error) && !isStaleEdit(error)) refused.set(id, draft.text);
     return !endsRun(error);
   }
   finishSave(id, number, true);

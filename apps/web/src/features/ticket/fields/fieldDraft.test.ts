@@ -5,6 +5,7 @@ import {
   endSave,
   keepMine,
   markSaved,
+  refuseSave,
   restoreDraft,
   startDraft,
   syncDraft,
@@ -227,5 +228,31 @@ describe('field drafts whose text another tab typed', () => {
     expect(syncDraft(landed, 'Renamed by Claude', IDLE)).toEqual(startDraft('Renamed by Claude'));
     const typed = editDraft(landed, `${kept}!`);
     expect(syncDraft(typed, 'Fix login', FOCUSED).value).toBe(`${kept}!`);
+  });
+
+  it('compare their saves with the text that tab saved, until their own save lands', () => {
+    const landed = syncDraft(restoreDraft(kept, true), 'Fix login', IDLE);
+    const back = editDraft(landed, 'Fix login');
+    expect(back.landed?.text).toBe(kept);
+    expect(markSaved(editDraft(landed, kept), kept).landed?.text).toBe(kept);
+    const saved = endSave(back, 'Fix login', true);
+    expect(saved.landed).toBeUndefined();
+    expect(syncDraft(saved, 'Fix login', IDLE)).toEqual(startDraft('Fix login'));
+  });
+
+  it('remember text that tab was still sending when typed over, since the tracker may have it', () => {
+    const typed = editDraft(restoreDraft(kept, true), '');
+    expect(typed).toMatchObject({ value: '', carried: false, landed: { text: kept } });
+    // Refused while that tab still sends: it keeps its note, and what it typed over, until a
+    // check settles it, also when the kept text goes.
+    const refused = refuseSave(typed, '');
+    const elsewhere = { ...IDLE, sentElsewhere: true, kept: '' };
+    expect(syncDraft(refused, 'Fix login', elsewhere)).toBe(refused);
+    expect(syncDraft(refused, 'Fix login', IDLE)).toMatchObject({
+      value: '',
+      failed: true,
+      landed: { text: kept },
+    });
+    expect(checkedDraft(refused, '', 'saved')).toMatchObject({ failed: false, refused: undefined });
   });
 });

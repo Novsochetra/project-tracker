@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query';
 import type { TrackerClient } from '@tracker/client';
 import type {
+  CreatedTicket,
   CreateTicketInput,
   MarkSentInput,
   ProjectBoard,
@@ -61,16 +62,18 @@ export function useTicket(ticketKey: string): TrackerQuery<TicketDetail> {
   });
 }
 
-export function useCreateTicket(): TrackerMutation<Ticket, CreateTicketVariables> {
+export function useCreateTicket(): TrackerMutation<CreatedTicket, CreateTicketVariables> {
   const client = useApi();
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ projectKey, input }: CreateTicketVariables) =>
       client.createTicket(projectKey, input),
-    onSuccess: (ticket, { projectKey, input }) =>
+    onSuccess: ({ leftOutAttachmentIds: leftOut = [], ...ticket }, { projectKey, input }) =>
       patchCaches(queryClient, [
         cacheChange<ProjectBoard>(queryKeys.board(projectKey), (board) =>
-          upsertBoardTicket(board, ticket, { attachmentCount: input.attachmentIds?.length ?? 0 }),
+          upsertBoardTicket(board, ticket, {
+            attachmentCount: (input.attachmentIds?.length ?? 0) - leftOut.length,
+          }),
         ),
         cacheChange<ProjectDetail>(queryKeys.project(projectKey), (detail) =>
           withNextNum(detail, ticket.num),

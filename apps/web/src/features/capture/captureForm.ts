@@ -33,6 +33,10 @@ export const createdToast = (ticketKey: string): string => `${ticketKey} created
 export const earlierTextToast = (ticketKey: string): string =>
   `${ticketKey} created with your earlier text`;
 
+// A Create again gets the ticket an earlier Create made, without the files that were gone by then.
+export const leftOutToast = (ticketKey: string, count: number): string =>
+  `${ticketKey} created, but ${count} ${count === 1 ? 'file' : 'files'} couldn't be attached`;
+
 export const addedToast = (count: number): string =>
   `${count} ${count === 1 ? 'ticket' : 'tickets'} added`;
 

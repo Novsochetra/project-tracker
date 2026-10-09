@@ -16,11 +16,7 @@ export function useDetailFields(detail: TicketDetail): DetailFields {
   const { ticket } = detail;
   const update = useTicketUpdate(ticket.key);
   const moveTo = useStatusMove(detail);
-  const assignee = useFieldDraft(
-    ticket.assignee,
-    { ticketKey: ticket.key, field: 'assignee' },
-    (name) => update({ assignee: name }),
-  );
+  const assignee = useFieldDraft(ticket.assignee, { ticketKey: ticket.key, field: 'assignee' });
   return {
     assignee,
     overdue: isOverdue(ticket.due, isDoneCategory(detail.status.category)),

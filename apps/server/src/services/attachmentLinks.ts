@@ -25,22 +25,31 @@ export async function attachUploads(
   }
 }
 
+export interface LaterUploads {
+  attached: boolean;
+  // Named files that are gone, in the order named.
+  leftOut: string[];
+}
+
 // A repeated create may name files chosen after the first one, when its answer was lost; they go
 // after the ticket's other files, as a file uploaded to it later would. It also names the files the
-// first one attached, and one removed from the ticket since is gone: a file that is gone is left
-// out instead of refusing the rest. One that can't be attached otherwise (on another ticket or a
-// comment) refuses the repeat, as it would a create.
+// first one attached, and one removed from the ticket since is gone, as is a later upload that
+// expired: a file that is gone is left out instead of refusing the rest, and the answer says so.
+// One that can't be attached otherwise (on another ticket or a comment) refuses the repeat, as it
+// would a create.
 export async function attachLaterUploads(
   db: Db,
   ticketId: string,
   ids: readonly string[],
-): Promise<boolean> {
+): Promise<LaterUploads> {
   const own = await listTicketAttachments(db, ticketId);
   const attached = new Set(own.filter((row) => row.activityId === null).map((row) => row.id));
-  const existing = await existingAttachmentIds(db, ids);
-  const later = ids.filter((id) => existing.has(id) && !attached.has(id));
-  if (later.length === 0) return false;
+  const named = [...new Set(ids)];
+  const existing = await existingAttachmentIds(db, named);
+  const leftOut = named.filter((id) => !existing.has(id));
+  const later = named.filter((id) => existing.has(id) && !attached.has(id));
+  if (later.length === 0) return { attached: false, leftOut };
   const target = { ticketId, activityId: null };
   await attachUploads(db, later, target, await nextTicketPosition(db, ticketId));
-  return true;
+  return { attached: true, leftOut };
 }

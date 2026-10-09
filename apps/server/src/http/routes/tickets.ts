@@ -3,7 +3,7 @@ import {
   listTicketsQuery,
   markSentInput,
   moveTicketInput,
-  updateTicketInput,
+  updateTicketRequest,
 } from '@tracker/shared';
 import { Hono } from 'hono';
 import type { ServiceContext } from '../../services/context';
@@ -31,9 +31,11 @@ export const ticketRoutes = (ctx: ServiceContext) =>
       c.json(await createTicket(ctx, c.get('actor'), c.req.param('key'), c.req.valid('json')), 201),
     )
     .get('/tickets/:key', async (c) => c.json(await getTicketDetail(ctx, c.req.param('key'))))
-    .patch('/tickets/:key', jsonBody(updateTicketInput), async (c) =>
-      c.json(await updateTicket(ctx, c.get('actor'), c.req.param('key'), c.req.valid('json'))),
-    )
+    .patch('/tickets/:key', jsonBody(updateTicketRequest), async (c) => {
+      const { expected, ...input } = c.req.valid('json');
+      const update = { actor: c.get('actor'), key: c.req.param('key'), input, expected };
+      return c.json(await updateTicket(ctx, update));
+    })
     .delete('/tickets/:key', async (c) => {
       await deleteTicket(ctx, c.req.param('key'));
       return c.body(null, 204);

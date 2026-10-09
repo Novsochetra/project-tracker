@@ -64,6 +64,9 @@ it('keeps showing the text another tab saved until its own read lands, and types
   await user.type(title, ' and B');
   await user.click(screen.getByLabelText('Description'));
   await waitFor(() => expect(updateTicket).toHaveBeenCalled());
-  expect(updateTicket).toHaveBeenLastCalledWith('MOB-1', { title: 'Ticket 1 from A and B' });
-  expect(updateTicket).not.toHaveBeenCalledWith('MOB-1', { title: 'Ticket 1 and B' });
+  expect(updateTicket).toHaveBeenLastCalledWith(
+    'MOB-1',
+    { title: 'Ticket 1 from A and B' },
+    { title: 'Ticket 1 from A' },
+  );
 });

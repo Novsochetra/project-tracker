@@ -51,7 +51,11 @@ describe('useTicketDrafts', () => {
     expect(client.getTicket).not.toHaveBeenCalled();
     enable();
     await waitFor(() => expect(kept()).toEqual([]));
-    expect(client.updateTicket).toHaveBeenCalledWith('MOB-1', { title: 'Fix the login' });
+    expect(client.updateTicket).toHaveBeenCalledWith(
+      'MOB-1',
+      { title: 'Fix the login' },
+      { title: 'Ticket 1' },
+    );
   });
 
   it('waits while the device is offline and saves when it comes back online', async () => {

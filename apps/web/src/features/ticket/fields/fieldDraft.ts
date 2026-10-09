@@ -11,10 +11,17 @@ export interface FieldDraft {
   // The tracker's value changed since the text was typed, so nothing saves it until the user
   // picks a version.
   conflict: boolean;
-  // Another tab's save of `value` landed while this tab's copy of the ticket still had this text.
-  // The field shows `value` until that copy changes: typing over the older text would save it
-  // over the newer one.
-  staleServer?: string;
+  // Text the tracker has, or may have, that this tab's copy of the ticket may not show: another
+  // tab's save of it landed while that copy still had `stale`, or was on its way when the field
+  // was typed over. Saves compare with it and name it as typed over: an edit back to the older
+  // text must not look like no change, nor let that save land after it. While the copy still has
+  // `stale`, the field keeps showing `text`, so typing goes on top of it.
+  landed?: { text: string; stale?: string };
+  // The tracker refused the save of `value` because it was typed over text the tracker didn't
+  // have yet (another tab's save still on its way). Only a check settles it: the drafts store
+  // letting the text go doesn't, because another tab can drop it from a copy of the store that
+  // hadn't heard of this text yet.
+  refused?: boolean;
 }
 
 export interface FieldContext {
@@ -42,13 +49,18 @@ export const restoreDraft = (text: string, carried: boolean): FieldDraft => ({
   carried,
 });
 
-export const editDraft = (draft: FieldDraft, value: string): FieldDraft =>
-  draft.edited && draft.value === value ? draft : { ...draft, value, edited: true, carried: false };
+export function editDraft(draft: FieldDraft, value: string): FieldDraft {
+  if (draft.edited && draft.value === value) return draft;
+  const landed = draft.carried ? { text: draft.value } : draft.landed;
+  return { ...draft, value, edited: true, carried: false, landed };
+}
 
 // The save of the shown text landed, so the tracker has it, though this tab's copy of the ticket
 // may not yet.
 const landedDraft = (value: string, server: string): FieldDraft =>
-  value === server ? startDraft(value) : { ...startDraft(value), staleServer: server };
+  value === server
+    ? startDraft(value)
+    : { ...startDraft(value), landed: { text: value, stale: server } };
 
 // What the drafts store says once nothing is on its way. This tab keeps the store in step with
 // what it types, so other kept text was typed in another tab: the field shows it, unsaved, like
@@ -62,16 +74,17 @@ function settledDraft(draft: FieldDraft, kept: string | undefined, server: strin
       ? landedDraft(draft.value, server)
       : { ...draft, carried: false, failed: true };
   }
-  if (kept === undefined && (draft.failed || draft.conflict)) {
+  if (kept === undefined && (draft.failed || draft.conflict) && !draft.refused) {
     return { ...draft, failed: false, conflict: false };
   }
   return draft;
 }
 
 // While another tab sends the kept text, the field shows it without a note, and that save's
-// outcome settles it, as for a field opened while a save of its text is on its way.
+// outcome settles it, as for a field opened while a save of its text is on its way. A refused
+// edit waits for that save with its note: it isn't the text being sent.
 function sentElsewhere(draft: FieldDraft, kept: string | undefined): FieldDraft {
-  if (kept === undefined || draft.conflict) return draft;
+  if (kept === undefined || draft.conflict || draft.refused) return draft;
   return draft.value === kept && !draft.failed ? draft : restoreDraft(kept, true);
 }
 
@@ -82,19 +95,24 @@ export function syncDraft(draft: FieldDraft, server: string, context: FieldConte
   if (context.saving) return draft;
   if (context.sentElsewhere) return sentElsewhere(draft, context.kept);
   const settled = settledDraft(draft, context.kept, server);
-  if (context.focused || settled.failed || settled.staleServer === server) return settled;
-  const inStep = !settled.edited && settled.value === server && settled.staleServer === undefined;
+  if (context.focused || settled.failed || settled.landed?.stale === server) return settled;
+  const inStep = !settled.edited && settled.value === server && settled.landed === undefined;
   return inStep ? settled : startDraft(server);
-}
-
-// Only the outcome for the text the field still shows says whether that text is saved.
-export function endSave(draft: FieldDraft, value: string, saved: boolean): FieldDraft {
-  return draft.value === value ? { ...draft, failed: !saved, carried: false } : draft;
 }
 
 // The tracker already has `value`, so nothing was sent for it.
 export const markSaved = (draft: FieldDraft, value: string): FieldDraft =>
-  endSave(draft, value, true);
+  draft.value === value ? { ...draft, failed: false, carried: false, refused: undefined } : draft;
+
+// Only the outcome for the text the field still shows says whether that text is saved. Once its
+// own save landed, the field's copy has it, so another tab's landed text no longer counts.
+export function endSave(draft: FieldDraft, value: string, saved: boolean): FieldDraft {
+  if (!saved) return draft.value === value ? { ...draft, failed: true, carried: false } : draft;
+  return draft.value === value ? { ...markSaved(draft, value), landed: undefined } : draft;
+}
+
+export const refuseSave = (draft: FieldDraft, value: string): FieldDraft =>
+  draft.value === value ? { ...endSave(draft, value, false), refused: true } : draft;
 
 // A check counts only while the field still shows the text it was made for.
 export function checkedDraft(
@@ -103,7 +121,8 @@ export function checkedDraft(
   check: 'saved' | 'changed',
 ): FieldDraft {
   if (draft.value !== value) return draft;
-  return check === 'saved' ? { ...draft, failed: false } : { ...draft, conflict: true };
+  const checked = { ...draft, refused: undefined };
+  return check === 'saved' ? { ...checked, failed: false } : { ...checked, conflict: true };
 }
 
 export const keepMine = (draft: FieldDraft): FieldDraft => ({ ...draft, conflict: false });

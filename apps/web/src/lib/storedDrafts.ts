@@ -16,6 +16,9 @@ export interface StoredDraft extends DraftTarget {
   text: string;
   // Save was pressed for this text. A comment edit is only ever sent for the user after that.
   submitted?: boolean;
+  // When the text was typed. Another tab that writes the store back from a copy that hadn't heard
+  // of newer text keeps the older time, so the tab that typed the newer text can tell.
+  at?: number;
 }
 
 type Drafts = StoredMap<StoredDraft>;
@@ -44,7 +47,8 @@ function isStoredDraft(value: unknown): value is StoredDraft {
     isText(draft.base) &&
     isText(draft.text) &&
     (draft.activityId === undefined || isText(draft.activityId)) &&
-    (draft.submitted === undefined || typeof draft.submitted === 'boolean')
+    (draft.submitted === undefined || typeof draft.submitted === 'boolean') &&
+    (draft.at === undefined || typeof draft.at === 'number')
   );
 }
 
@@ -98,7 +102,8 @@ export function keepDraft(
   const drafts = load();
   const current = drafts[id];
   if (current?.text === draft.text && current.submitted === draft.submitted) return;
-  store({ ...drafts, [id]: { ...draft, base: current?.base ?? base } });
+  const at = Math.max(Date.now(), (current?.at ?? 0) + 1);
+  store({ ...drafts, [id]: { ...draft, base: current?.base ?? base, at } });
 }
 
 export function rebaseDraft(id: string, base: string): void {

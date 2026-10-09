@@ -3,7 +3,7 @@ import { AutoTextarea, type AutoTextareaProps } from '../../../components';
 import { FieldNote } from './FieldNote';
 import { useAutosave } from './useAutosave';
 import { useFieldDraft } from './useFieldDraft';
-import type { FieldSave, FieldTarget } from './useFieldSave';
+import type { FieldTarget } from './useFieldSave';
 
 export interface AutosaveTextareaProps extends Omit<
   AutoTextareaProps,
@@ -13,18 +13,16 @@ export interface AutosaveTextareaProps extends Omit<
   target: FieldTarget;
   // The saved value; edits stay local until they are saved.
   value: string;
-  onSave: FieldSave;
 }
 
 export function AutosaveTextarea({
   label,
   target,
   value,
-  onSave,
   onFocus,
   ...rest
 }: AutosaveTextareaProps) {
-  const draft = useFieldDraft(value, target, onSave);
+  const draft = useFieldDraft(value, target);
   const autosave = useAutosave(draft.save);
   const noteId = useId();
   return (

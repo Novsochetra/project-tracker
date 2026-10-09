@@ -24,6 +24,8 @@ export function retryLiveDrafts(): void {
   live.forEach((holder) => holder.retry());
 }
 
+export const retryLiveDraft = (id: string): void => live.get(id)?.retry();
+
 // A draft shown on screen is retried by its field, which shows the outcome; the app-wide sync
 // only asks it to. Text kept from an earlier visit is tried as soon as the field shows it.
 export function useLiveDraft(id: string, retry: () => void): void {
