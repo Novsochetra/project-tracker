@@ -1,6 +1,7 @@
 import type { Locator, Page } from '@playwright/test';
 import type { TrackerClient } from '@tracker/client';
 import { byRank } from '@tracker/shared';
+import { TOAST_SHIELD_MS } from '../src/components/Toast/toastStore';
 import { expect, isPhone, isTablet, test } from './fixtures';
 import { group, seedProject, settled, ticketRow, toast } from './helpers';
 
@@ -167,32 +168,95 @@ test.describe('a double tap on Undo runs it once and opens nothing behind the to
   }
 
   // The toast centers in the window, but a click in the sidebar right after Undo is no second
-  // click on it (PT-92).
-  test('on desktop, only the content column catches clicks right after Undo', async ({
-    page,
-    api,
-  }, info) => {
+  // click on it (PT-92): it opens what is there, while the content column catches clicks.
+  test('on desktop, a click in the sidebar right after Undo acts', async ({ page, api }, info) => {
     test.skip(isPhone(info.project.name), 'The sidebar is on desktop');
+    await page.addInitScript(recordClicks);
     await seed(api);
-    await page.goto('/p/MOB');
-    await moveOnBoard(page);
-    const undo = page.getByRole('button', { name: 'Undo' });
-    await settled(undo);
-    const box = (await undo.boundingBox())!;
+    await fillSidebar(api);
+    const showUndo = async () => {
+      await moveOnBoard(page);
+      const undo = page.getByRole('button', { name: 'Undo' });
+      await settled(undo);
+      return (await undo.boundingBox())!;
+    };
 
-    await undo.click();
-    const hits = await page.evaluate(
-      (y) =>
-        [120, 1100].map((x) => {
-          const hit = document.elementFromPoint(x, y);
-          if (hit?.closest('aside')) return 'sidebar';
-          return hit?.closest('[role="status"]') ? 'band' : 'page';
-        }),
-      box.y + box.height / 2,
-    );
-    expect(hits).toEqual(['sidebar', 'band']);
+    await expectSidebarRightAfterUndo(page, showUndo, (x, y) => page.mouse.click(x, y));
+    await expect(toast(page, 'MOB-2 moved to To do')).toBeVisible();
   });
 });
+
+// Projects past the end of the sidebar, so one sits beside the toast for a press there to open.
+async function fillSidebar(api: TrackerClient): Promise<void> {
+  for (let n = 1; n <= 30; n += 1) {
+    await api.createProject({ name: `Side ${n}`, key: `SD${n}`, repo: '~/code/demo' });
+  }
+}
+
+interface TapClicks {
+  tapClicks: number[];
+}
+
+// The page's clock at each click, from its first load on.
+const recordClicks = () => {
+  const clicks: number[] = [];
+  Object.assign(window, { tapClicks: clicks } satisfies TapClicks);
+  window.addEventListener('click', () => clicks.push(performance.now()), true);
+};
+
+const SIDEBAR_X = 40;
+
+interface Pressed {
+  inTime: boolean;
+  caught: boolean;
+}
+
+// Undo, then at once a press in the sidebar beside the toast, which opens the project there.
+// `caught` tells whether the content column caught presses meanwhile, and `inTime`, by the page's
+// clock, whether the second press came while it did: a busy page can take it later, where it
+// proves nothing.
+async function sidebarRightAfterUndo(
+  page: Page,
+  showUndo: () => Promise<Box & { x: number; width: number }>,
+  press: (x: number, y: number) => Promise<void>,
+): Promise<Pressed> {
+  await page.goto('/p/MOB');
+  const undo = await showUndo();
+  const [x, y] = [undo.x + undo.width / 2, undo.y + undo.height / 2];
+  const side = await page.evaluate(
+    ({ x, y }) =>
+      /^Side (\d+)/.exec(
+        document.elementFromPoint(x, y)?.closest('button')?.textContent ?? '',
+      )?.[1],
+    { x: SIDEBAR_X, y },
+  );
+  expect(side, 'a project in the sidebar beside the toast').toBeDefined();
+  await page.evaluate(() => {
+    (window as unknown as TapClicks).tapClicks.length = 0;
+  });
+
+  await press(x, y);
+  const caught = await page.evaluate(
+    ({ x, y }) => Boolean(document.elementFromPoint(x, y)?.closest('[role="status"]')),
+    { x: undo.x + undo.width + 40, y },
+  );
+  await press(SIDEBAR_X, y);
+
+  await expect(page).toHaveURL(new RegExp(`/p/SD${side}$`));
+  const [first, second] = await page.evaluate(() => (window as unknown as TapClicks).tapClicks);
+  return { inTime: second! - first! < TOAST_SHIELD_MS, caught };
+}
+
+async function expectSidebarRightAfterUndo(
+  ...args: Parameters<typeof sidebarRightAfterUndo>
+): Promise<void> {
+  let pressed = await sidebarRightAfterUndo(...args);
+  for (let tries = 1; !pressed.inTime && tries < 3; tries += 1) {
+    pressed = await sidebarRightAfterUndo(...args);
+  }
+  expect(pressed.inTime, `the sidebar's press within ${TOAST_SHIELD_MS} ms, in 3 tries`).toBe(true);
+  expect(pressed.caught, 'the content column caught presses meanwhile').toBe(true);
+}
 
 // Four groups of six fill a tablet's list past the toast. MOB-6 moves on the board, where the
 // keyboard moves cards, and back to the list, whose rows go behind the toast.
@@ -242,7 +306,9 @@ test('a double tap on Undo on a tablet opens nothing behind the toast @tablet', 
   api,
 }, info) => {
   test.skip(!isTablet(info.project.name), 'Touch taps on the desktop layout');
+  await page.addInitScript(recordClicks);
   await seedTablet(api);
+  await fillSidebar(api);
   await page.goto('/p/MOB');
   for (const second of SECOND_TAPS) {
     const undo = await undoOnList(page);
@@ -250,19 +316,21 @@ test('a double tap on Undo on a tablet opens nothing behind the toast @tablet', 
     await rowAt(page, y);
 
     await page.touchscreen.tap(x, onTarget(undo, y));
-    const sidebar = await page.evaluate(
-      (y) => Boolean(document.elementFromPoint(40, y)?.closest('aside')),
-      y,
-    );
     await page.waitForTimeout(150);
     await page.touchscreen.tap(x, y);
     await expect(toast(page, 'MOB-6 moved to To do')).toBeVisible();
     await page.waitForTimeout(500);
     await expect(page, `second tap ${second.name}`).toHaveURL(/\/p\/MOB$/);
-    expect(sidebar, 'the sidebar takes taps right after Undo').toBe(true);
 
     await page.touchscreen.tap(x, y);
     await expect(page, `a later tap ${second.name} opens the row`).toHaveURL(/\/p\/MOB\/\d+$/);
     await page.goBack();
   }
+
+  await expectSidebarRightAfterUndo(
+    page,
+    () => undoOnList(page),
+    (x, y) => page.touchscreen.tap(x, y),
+  );
+  await expect(toast(page, 'MOB-6 moved to To do')).toBeVisible();
 });

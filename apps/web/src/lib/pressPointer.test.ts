@@ -5,6 +5,8 @@ let presses: Presses;
 let area: HTMLDivElement;
 let button: HTMLButtonElement;
 
+const primary = (pointerType: string) => ({ pointerType, button: 0 });
+
 const pointer = (type: 'pointerup' | 'pointercancel', target: EventTarget) =>
   target.dispatchEvent(new PointerEvent(type, { bubbles: true, pointerType: 'mouse' }));
 
@@ -23,32 +25,40 @@ afterEach(() => {
 
 describe('followPresses', () => {
   it('tells the pointer of a press, until it is forgotten', () => {
-    presses.press('pen', area);
+    presses.press(primary('pen'), area);
     expect(presses.pointer()).toBe('pen');
     presses.forget();
     expect(presses.pointer()).toBeNull();
   });
 
   it('keeps a press released on its element for the click that follows', () => {
-    presses.press('mouse', area);
+    presses.press(primary('mouse'), area);
     pointer('pointerup', button);
     expect(presses.pointer()).toBe('mouse');
   });
 
   it('forgets a press released off its element at once', () => {
-    presses.press('mouse', area);
+    presses.press(primary('mouse'), area);
     pointer('pointerup', document.body);
     expect(presses.pointer()).toBeNull();
   });
 
   it('forgets a cancelled press at once', () => {
-    presses.press('touch', area);
+    presses.press(primary('touch'), area);
     pointer('pointercancel', button);
     expect(presses.pointer()).toBeNull();
   });
 
+  it("takes no press of another button for a click's, and keeps the one before it", () => {
+    presses.press({ pointerType: 'mouse', button: 2 }, area);
+    expect(presses.pointer()).toBeNull();
+    presses.press(primary('touch'), area);
+    presses.press({ pointerType: 'pen', button: 5 }, area);
+    expect(presses.pointer()).toBe('touch');
+  });
+
   it('stops following releases once stopped', () => {
-    presses.press('mouse', area);
+    presses.press(primary('mouse'), area);
     presses.stop();
     pointer('pointercancel', button);
     expect(presses.pointer()).toBe('mouse');

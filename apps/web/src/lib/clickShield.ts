@@ -48,7 +48,7 @@ export function useTapShield(shown?: unknown) {
     };
     return {
       onPointerDownCapture: (event: PointerEvent) =>
-        presses.current?.press(event.pointerType, event.currentTarget),
+        presses.current?.press(event, event.currentTarget),
       onMouseDownCapture: hold,
       onClickCapture: (event: MouseEvent) => {
         hold(event);

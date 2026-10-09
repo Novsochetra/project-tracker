@@ -1,9 +1,9 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import type { Dialog, Locator, Page, Response } from '@playwright/test';
+import type { APIRequestContext, Dialog, Locator, Page, Response } from '@playwright/test';
 import { FILE_NAME_HEADER } from '@tracker/shared';
 import { CLICK_SHIELD_MS } from '../src/lib/clickShield';
-import { expect, isPhone, test } from './fixtures';
+import { expect, isPhone, isTablet, test } from './fixtures';
 import { openNewTicketIn, seedProject, ticketRow, toast } from './helpers';
 import { API_URL } from './ports';
 
@@ -144,11 +144,82 @@ const recordClicks = () => {
   window.addEventListener('click', () => clicks.push(performance.now()), true);
 };
 
-// Picks a refused file, then taps its note's Dismiss twice, `gap` ms apart. Playwright's tap
-// returns once the page has handled it, so a page busy for a moment sends the second tap later
-// than that, past the hold, where it rightly acts: `held` tells whether it came in time, by the
-// page's clock.
-async function doubleTapDismiss(page: Page, input: Locator, note: Locator, gap: number) {
+const clearClicks = (page: Page) =>
+  page.evaluate(() => {
+    (window as unknown as TapClicks).tapClicks.length = 0;
+  });
+
+// Whether the page took the second click within CLICK_SHIELD_MS of the first, by its clock.
+async function secondInTime(page: Page): Promise<boolean> {
+  const [first, second] = await page.evaluate(() => (window as unknown as TapClicks).tapClicks);
+  return first !== undefined && second !== undefined && second - first < CLICK_SHIELD_MS;
+}
+
+interface DoubleTap {
+  spot: { x: number; y: number };
+  held: boolean;
+}
+
+// Playwright's tap returns once the page has handled it, so a page busy for a moment sends a
+// double tap's second tap later than that, past the hold, where it rightly acts. So a double tap
+// whose second tap came too late, and may have acted, is tried again from a clean start.
+async function heldInThreeTries(
+  doubleTap: () => Promise<DoubleTap>,
+  startOver: () => Promise<void>,
+): Promise<DoubleTap> {
+  let tapped = await doubleTap();
+  for (let tries = 1; !tapped.held && tries < 3; tries += 1) {
+    await startOver();
+    tapped = await doubleTap();
+  }
+  expect(tapped.held, `the second tap within ${CLICK_SHIELD_MS} ms, in 3 tries`).toBe(true);
+  return tapped;
+}
+
+// A clean tracker and storage, set up again. Leaving a sheet with files asks first; the ticket
+// screen doesn't, and a listener left behind would pile up with each try.
+async function startAfresh(
+  page: Page,
+  request: APIRequestContext,
+  setUp: () => Promise<void>,
+): Promise<void> {
+  await page.evaluate(() => localStorage.clear());
+  expect((await request.post(`${API_URL}/api/test/reset`)).status()).toBe(204);
+  const leave = (dialog: Dialog) => void dialog.accept();
+  page.on('dialog', leave);
+  await setUp();
+  page.off('dialog', leave);
+}
+
+// Picks three images, then taps the first one's x twice, 150 ms apart; `held` tells whether the
+// second tap came in time, by the page's clock (heldInThreeTries).
+async function doubleTapFirstX(page: Page, area: Locator, input: string): Promise<DoubleTap> {
+  const removes = area.getByRole('button', { name: /^Remove image/ });
+  await area.getByLabel(input).setInputFiles(images(3));
+  await expect(area.getByRole('progressbar')).toHaveCount(0);
+  await expect(removes).toHaveCount(3);
+  await removes.first().scrollIntoViewIfNeeded();
+  const spot = await spotOf(removes.first());
+  await clearClicks(page);
+
+  await page.touchscreen.tap(spot.x, spot.y);
+  await page.waitForTimeout(150);
+  await expect(removes).toHaveCount(2);
+  // The next image has slid under the finger and is now image 1.
+  expect(await controlAt(page, spot)).toBe('Remove image 1');
+  await page.touchscreen.tap(spot.x, spot.y);
+  await page.waitForTimeout(600);
+  return { spot, held: await secondInTime(page) };
+}
+
+// Picks a refused file, then taps its note's Dismiss twice, `gap` ms apart; `held` as in
+// doubleTapFirstX.
+async function doubleTapDismiss(
+  page: Page,
+  input: Locator,
+  note: Locator,
+  gap: number,
+): Promise<DoubleTap> {
   await input.setInputFiles([SVG]);
   const dismiss = note.getByRole('button', { name: 'Dismiss' });
   // Centred once it has risen into place: centred on the way, it ends up to 6px higher, and on a
@@ -160,16 +231,12 @@ async function doubleTapDismiss(page: Page, input: Locator, note: Locator, gap: 
   await dismiss.evaluate((button) => button.scrollIntoView({ block: 'center' }));
   await page.waitForTimeout(400);
   const spot = await spotOf(dismiss);
-  await page.evaluate(() => {
-    (window as unknown as TapClicks).tapClicks.length = 0;
-  });
+  await clearClicks(page);
   await page.touchscreen.tap(spot.x, spot.y);
   await page.waitForTimeout(gap);
   await page.touchscreen.tap(spot.x, spot.y);
   await page.waitForTimeout(700);
-  const [first, second] = await page.evaluate(() => (window as unknown as TapClicks).tapClicks);
-  const held = first !== undefined && second !== undefined && second - first < CLICK_SHIELD_MS;
-  return { spot, held };
+  return { spot, held: await secondInTime(page) };
 }
 
 async function swipeDown(page: Page): Promise<void> {
@@ -370,33 +437,23 @@ test.describe('attachments', () => {
     test(`touch ${size.width}: a double tap on a file's x in ${surface.name} removes one file`, async ({
       page,
       api,
+      request,
     }, info) => {
       test.skip(!isPhone(info.project.name), 'A double tap on a touch screen; clicks are below.');
       await page.setViewportSize(size);
-      await seedProject(api, 'Mobile app', 'MOB', [{ title: 'Existing ticket' }]);
-      await surface.open(page);
+      await page.addInitScript(recordClicks);
       const area = surface.area(page);
-      await area.getByLabel(surface.input).setInputFiles(images(3));
-      await expect(area.getByRole('progressbar')).toHaveCount(0);
       const removes = area.getByRole('button', { name: /^Remove image/ });
-      await expect(removes).toHaveCount(3);
-      await removes.first().scrollIntoViewIfNeeded();
-      const box = (await removes.first().boundingBox())!;
-      const spot = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
-      const underSpot = () =>
-        page.evaluate(
-          ({ x, y }) =>
-            document.elementFromPoint(x, y)?.closest('button')?.getAttribute('aria-label'),
-          spot,
-        );
+      const setUp = async () => {
+        await seedProject(api, 'Mobile app', 'MOB', [{ title: 'Existing ticket' }]);
+        await surface.open(page);
+      };
+      await setUp();
 
-      await page.touchscreen.tap(spot.x, spot.y);
-      await page.waitForTimeout(150);
-      await expect(removes).toHaveCount(2);
-      // The next image has slid under the finger and is now image 1.
-      expect(await underSpot()).toBe('Remove image 1');
-      await page.touchscreen.tap(spot.x, spot.y);
-      await page.waitForTimeout(600);
+      const { spot } = await heldInThreeTries(
+        () => doubleTapFirstX(page, area, surface.input),
+        () => startAfresh(page, request, setUp),
+      );
       await expect(removes).toHaveCount(2);
 
       await page.touchscreen.tap(spot.x, spot.y);
@@ -455,27 +512,17 @@ test.describe('attachments', () => {
         // The photo picker closes the keyboard, so no field has focus when the note comes.
         await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
       };
-      // After a second tap that came too late, and may have acted, from a clean tracker.
       const startOver = async () => {
-        await page.evaluate(() => localStorage.clear());
-        expect((await request.post(`${API_URL}/api/test/reset`)).status()).toBe(204);
         chooser = 0;
-        // Leaving a sheet with files asks first; the ticket screen doesn't, and a listener left
-        // behind would pile up with each try.
-        const leave = (dialog: Dialog) => void dialog.accept();
-        page.on('dialog', leave);
-        await setUp();
-        page.off('dialog', leave);
+        await startAfresh(page, request, setUp);
       };
       await setUp();
 
       for (const gap of [0, 60, 120, 200]) {
-        let tapped = await doubleTapDismiss(page, input, note, gap);
-        for (let tries = 1; !tapped.held && tries < 3; tries += 1) {
-          await startOver();
-          tapped = await doubleTapDismiss(page, input, note, gap);
-        }
-        expect(tapped.held, `the second tap within ${CLICK_SHIELD_MS} ms, in 3 tries`).toBe(true);
+        const tapped = await heldInThreeTries(
+          () => doubleTapDismiss(page, input, note, gap),
+          startOver,
+        );
         await expect(note).toHaveCount(0);
         // Nothing that slid under the finger took the second tap: no file removed or asked about,
         // no comment sent (it would take the files along), no file picker, no field focused for
@@ -494,6 +541,45 @@ test.describe('attachments', () => {
       }
     });
   }
+
+  // An iPad has the desktop layout with touch taps. In a comment box with only text, Comment
+  // rises under Dismiss as the note goes, and the screen holds it there as on a phone.
+  test("touch tablet: a double tap on the note's Dismiss in the comment box only dismisses it @tablet", async ({
+    page,
+    api,
+    request,
+  }, info) => {
+    test.skip(!isTablet(info.project.name), 'Touch taps on the desktop layout');
+    await page.addInitScript(recordClicks);
+    const commentBox = DRAFT_FILE_AREAS.find((area) => area.name === 'the comment box')!;
+    const area = commentBox.area(page);
+    const field = area.getByLabel('Comment', { exact: true });
+    const note = area.getByRole('alert').filter({ hasText: "can't be attached" });
+    const typed = 'Seen on the iPad too';
+    const setUp = async () => {
+      await seedProject(api, 'Mobile app', 'MOB', [{ title: 'Existing ticket' }]);
+      await commentBox.open(page);
+      await field.fill(typed);
+      // The file picker takes focus from the field.
+      await field.blur();
+    };
+    await setUp();
+
+    for (const gap of [0, 60, 120, 200]) {
+      const tapped = await heldInThreeTries(
+        () => doubleTapDismiss(page, area.getByLabel(commentBox.input), note, gap),
+        () => startAfresh(page, request, setUp),
+      );
+      await expect(note).toHaveCount(0);
+      // No comment sent, which would empty the box, and no field focused for the keyboard,
+      await expect(field).toHaveValue(typed);
+      expect(await page.evaluate(() => document.activeElement?.matches('textarea, input'))).toBe(
+        false,
+      );
+      // though Comment rose under the finger.
+      expect(await controlAt(page, tapped.spot)).toBe('Comment');
+    }
+  });
 
   for (const size of [PHONE, SMALL_PHONE]) {
     test(`phone ${size.width}: a tap aimed at a file's x just after Dismiss on the ticket screen acts on that file`, async ({

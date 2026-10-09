@@ -88,7 +88,7 @@ export function holdPresses(within: Element): void {
       ([bar, box]) => bar.contains(target) && sameBox(box, bar.getBoundingClientRect()),
     );
   const see = (event: PointerEvent) => {
-    if (inLayer(event)) presses.press(event.pointerType, layer);
+    if (inLayer(event)) presses.press(event, layer);
   };
   const drop = (event: MouseEvent) => {
     if (!inLayer(event)) return;

@@ -1,4 +1,7 @@
+/* Positioned, so the projects' visually hidden counts (absolute) stay inside its scroller: past
+   its end they made the whole page taller than the window and let it scroll. */
 .sidebar {
+  position: relative;
   flex: none;
   display: flex;
   flex-direction: column;

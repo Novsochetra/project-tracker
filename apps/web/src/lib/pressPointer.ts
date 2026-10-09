@@ -5,9 +5,11 @@ interface Press {
   on: Element;
 }
 
+type PressEvent = Pick<PointerEvent, 'pointerType' | 'button'>;
+
 export interface Presses {
   // A pointerdown on `on`, the element whose clicks are asked about.
-  press: (pointerType: string, on: Element) => void;
+  press: (event: PressEvent, on: Element) => void;
   // The pointer of the press that the click being handled comes from, if any.
   pointer: () => string | null;
   forget: () => void;
@@ -22,6 +24,8 @@ export interface Presses {
 // click forgets it. A timer after the pointerup forgot them before: a busy page could take a later
 // click first (PT-106), and a finger's click can come a task after it lifts (Chromium). A finger's
 // pointerup lands where it went down, wherever it lifts, since that element keeps its pointer.
+// Only the primary button's press makes a click: a right-click opens a menu and makes none, so
+// it was kept until the next click and lent it its pointer (PT-115).
 export function followPresses(): Presses {
   let current: Press | null = null;
   const forget = () => {
@@ -33,8 +37,8 @@ export function followPresses(): Presses {
   window.addEventListener('pointerup', release, true);
   window.addEventListener('pointercancel', forget, true);
   return {
-    press: (pointerType, on) => {
-      current = { pointerType, on };
+    press: ({ pointerType, button }, on) => {
+      if (button === 0) current = { pointerType, on };
     },
     pointer: () => current?.pointerType ?? null,
     forget,

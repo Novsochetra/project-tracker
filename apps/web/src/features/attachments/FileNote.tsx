@@ -41,7 +41,7 @@ function useDismissal(onDismiss: () => void, focusTo: FileNoteProps['focusTo']) 
   };
   return {
     onPointerDown: (event: PointerEvent<HTMLButtonElement>) =>
-      presses.current?.press(event.pointerType, event.currentTarget),
+      presses.current?.press(event, event.currentTarget),
     onClick: (event: MouseEvent<HTMLButtonElement>) => {
       // A key's click (detail 0) while a pointer is pressed on the button finds that press.
       const byPointer = (presses.current?.pointer() ?? null) !== null && event.detail !== 0;
