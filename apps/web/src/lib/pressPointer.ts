@@ -25,7 +25,9 @@ export interface Presses {
 // click first (PT-106), and a finger's click can come a task after it lifts (Chromium). A finger's
 // pointerup lands where it went down, wherever it lifts, since that element keeps its pointer.
 // Only the primary button's press makes a click: a right-click opens a menu and makes none, so
-// it was kept until the next click and lent it its pointer (PT-115).
+// it was kept until the next click and lent it its pointer (PT-115). A Mac's ctrl+click is the
+// primary button's but opens the menu too, and Chromium sends no click for it, so a press that
+// opens a context menu is forgotten (PT-130).
 export function followPresses(): Presses {
   let current: Press | null = null;
   const forget = () => {
@@ -34,18 +36,19 @@ export function followPresses(): Presses {
   const release = ({ target }: Event) => {
     if (!(target instanceof Node && current?.on.contains(target))) forget();
   };
-  window.addEventListener('pointerup', release, true);
-  window.addEventListener('pointercancel', forget, true);
+  const ends = [
+    ['pointerup', release],
+    ['pointercancel', forget],
+    ['contextmenu', forget],
+  ] as const;
+  ends.forEach(([type, end]) => window.addEventListener(type, end, true));
   return {
     press: ({ pointerType, button }, on) => {
       if (button === 0) current = { pointerType, on };
     },
     pointer: () => current?.pointerType ?? null,
     forget,
-    stop: () => {
-      window.removeEventListener('pointerup', release, true);
-      window.removeEventListener('pointercancel', forget, true);
-    },
+    stop: () => ends.forEach(([type, end]) => window.removeEventListener(type, end, true)),
   };
 }
 

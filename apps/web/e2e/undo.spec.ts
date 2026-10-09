@@ -3,7 +3,16 @@ import type { TrackerClient } from '@tracker/client';
 import { byRank } from '@tracker/shared';
 import { TOAST_SHIELD_MS } from '../src/components/Toast/toastStore';
 import { expect, isPhone, isTablet, test } from './fixtures';
-import { group, seedProject, settled, ticketRow, toast } from './helpers';
+import {
+  clearClicks,
+  clickTimes,
+  group,
+  recordClicks,
+  seedProject,
+  settled,
+  ticketRow,
+  toast,
+} from './helpers';
 
 // Playwright can't drive a touch drag in WebKit, so the swipe is synthetic touch pointer events.
 async function swipeRight(row: Locator): Promise<void> {
@@ -193,17 +202,6 @@ async function fillSidebar(api: TrackerClient): Promise<void> {
   }
 }
 
-interface TapClicks {
-  tapClicks: number[];
-}
-
-// The page's clock at each click, from its first load on.
-const recordClicks = () => {
-  const clicks: number[] = [];
-  Object.assign(window, { tapClicks: clicks } satisfies TapClicks);
-  window.addEventListener('click', () => clicks.push(performance.now()), true);
-};
-
 const SIDEBAR_X = 40;
 
 interface Pressed {
@@ -231,9 +229,7 @@ async function sidebarRightAfterUndo(
     { x: SIDEBAR_X, y },
   );
   expect(side, 'a project in the sidebar beside the toast').toBeDefined();
-  await page.evaluate(() => {
-    (window as unknown as TapClicks).tapClicks.length = 0;
-  });
+  await clearClicks(page);
 
   await press(x, y);
   const caught = await page.evaluate(
@@ -243,7 +239,7 @@ async function sidebarRightAfterUndo(
   await press(SIDEBAR_X, y);
 
   await expect(page).toHaveURL(new RegExp(`/p/SD${side}$`));
-  const [first, second] = await page.evaluate(() => (window as unknown as TapClicks).tapClicks);
+  const [first, second] = await clickTimes(page);
   return { inTime: second! - first! < TOAST_SHIELD_MS, caught };
 }
 

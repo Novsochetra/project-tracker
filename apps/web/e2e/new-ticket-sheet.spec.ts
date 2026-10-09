@@ -1,4 +1,5 @@
-import type { Locator } from '@playwright/test';
+import type { Locator, Page } from '@playwright/test';
+import { CLICK_SHIELD_MS } from '../src/lib/clickShield';
 import { expect, test, usesPhoneLayout } from './fixtures';
 import { openNewTicketIn, seedProject, toast } from './helpers';
 
@@ -142,4 +143,53 @@ test.describe('new ticket sheet', () => {
     await expect(discardRow).toBeVisible();
     await expect(title).toHaveValue('Crash on launch');
   });
+
+  // A Mac's ctrl+click opens a context menu with the primary button, and Chromium sends no click
+  // for it. It must not lend its pointer to VoiceOver's click, which has none (PT-130).
+  test('desktop Chromium on a Mac: a click with no pointer right after a ctrl+click on Discard changes is held', async ({
+    page,
+    api,
+  }, info) => {
+    test.skip(
+      info.project.name !== 'desktop' || process.platform !== 'darwin',
+      'Only Chromium on a Mac makes a ctrl+click a context menu click with no click',
+    );
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await seedProject(api, 'Mobile app', 'MOB', [{ title: 'Existing ticket' }]);
+    let inTime = await ctrlClickThenVoiceOver(page);
+    for (let tries = 1; !inTime && tries < 3; tries += 1) {
+      inTime = await ctrlClickThenVoiceOver(page);
+    }
+    expect(inTime, `the click within ${CLICK_SHIELD_MS} ms of the question, in 3 tries`).toBe(true);
+
+    await page.waitForTimeout(600);
+    await expect(discardChangesRow(page)).toBeVisible();
+    await expect(newTicketTitle(page)).toHaveValue('Crash on launch');
+  });
 });
+
+const newTicketTitle = (page: Page) =>
+  page.getByRole('dialog', { name: 'New ticket' }).getByLabel('Ticket title');
+
+const discardChangesRow = (page: Page) =>
+  page
+    .getByRole('dialog', { name: 'Discard changes?' })
+    .getByRole('button', { name: 'Discard changes' });
+
+// Asks to discard a title, ctrl+clicks Discard changes, then 50 ms later sends VoiceOver's click
+// (detail 1, no pointer before it). Whether that click came while the sheet held clicks, by the
+// page's clock: a busy page can take it later, where it rightly discards and proves nothing.
+async function ctrlClickThenVoiceOver(page: Page): Promise<boolean> {
+  await page.goto('/p/MOB');
+  await openNewTicketIn(page, 'To do');
+  await newTicketTitle(page).fill('Crash on launch');
+  const askedAt = await page.evaluate(() => performance.now());
+  await newTicketTitle(page).press('Escape');
+  await discardChangesRow(page).click({ modifiers: ['Control'] });
+  await page.waitForTimeout(50);
+  const clickedAt = await discardChangesRow(page).evaluate((row) => {
+    row.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, detail: 1 }));
+    return performance.now();
+  });
+  return clickedAt - askedAt < CLICK_SHIELD_MS;
+}

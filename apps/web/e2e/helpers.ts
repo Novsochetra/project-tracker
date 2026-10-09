@@ -61,6 +61,26 @@ export async function pickFromListbox(page: Page, trigger: string, option: strin
 
 export const activity = (page: Page) => page.getByRole('region', { name: 'Activity' });
 
+interface TapClicks {
+  tapClicks: number[];
+}
+
+// The page's clock at each click, from its first load on: an init script (page.addInitScript).
+export const recordClicks = () => {
+  const clicks: number[] = [];
+  Object.assign(window, { tapClicks: clicks } satisfies TapClicks);
+  window.addEventListener('click', () => clicks.push(performance.now()), true);
+};
+
+export const clearClicks = (page: Page): Promise<void> =>
+  page.evaluate(() => {
+    (window as unknown as TapClicks).tapClicks.length = 0;
+  });
+
+// The page's clock at each click since it loaded or clearClicks.
+export const clickTimes = (page: Page): Promise<number[]> =>
+  page.evaluate(() => (window as unknown as TapClicks).tapClicks);
+
 // A ••• menu's delete confirm takes no clicks for 500 ms after it appears (CLICK_SHIELD_MS in
 // components/FloatingPanel), so a test reads it first, like a person.
 export const readMenuConfirm = (page: Page): Promise<void> => page.waitForTimeout(500);

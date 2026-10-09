@@ -4,7 +4,15 @@ import type { APIRequestContext, Dialog, Locator, Page, Response } from '@playwr
 import { FILE_NAME_HEADER } from '@tracker/shared';
 import { CLICK_SHIELD_MS } from '../src/lib/clickShield';
 import { expect, isPhone, isTablet, test } from './fixtures';
-import { openNewTicketIn, seedProject, ticketRow, toast } from './helpers';
+import {
+  clearClicks,
+  clickTimes,
+  openNewTicketIn,
+  recordClicks,
+  seedProject,
+  ticketRow,
+  toast,
+} from './helpers';
 import { API_URL } from './ports';
 
 const PNG_1X1 = Buffer.from(
@@ -133,25 +141,9 @@ const controlAt = (page: Page, spot: { x: number; y: number }) =>
     return control ? (control.getAttribute('aria-label') ?? control.textContent) : null;
   }, spot);
 
-interface TapClicks {
-  tapClicks: number[];
-}
-
-// The page's clock at each click, from its first load on.
-const recordClicks = () => {
-  const clicks: number[] = [];
-  Object.assign(window, { tapClicks: clicks } satisfies TapClicks);
-  window.addEventListener('click', () => clicks.push(performance.now()), true);
-};
-
-const clearClicks = (page: Page) =>
-  page.evaluate(() => {
-    (window as unknown as TapClicks).tapClicks.length = 0;
-  });
-
 // Whether the page took the second click within CLICK_SHIELD_MS of the first, by its clock.
 async function secondInTime(page: Page): Promise<boolean> {
-  const [first, second] = await page.evaluate(() => (window as unknown as TapClicks).tapClicks);
+  const [first, second] = await clickTimes(page);
   return first !== undefined && second !== undefined && second - first < CLICK_SHIELD_MS;
 }
 
@@ -637,16 +629,14 @@ test.describe('attachments', () => {
       await page.waitForTimeout(400);
       const spot = await spotOf(dismiss);
       const target = await spotOf(page.getByRole('button', { name: bar }));
-      await page.evaluate(() => {
-        (window as unknown as TapClicks).tapClicks.length = 0;
-      });
+      await clearClicks(page);
 
       await page.touchscreen.tap(spot.x, spot.y);
       await page.waitForTimeout(150);
       await page.touchscreen.tap(target.x, target.y);
 
       await done(page);
-      const [first, second] = await page.evaluate(() => (window as unknown as TapClicks).tapClicks);
+      const [first, second] = await clickTimes(page);
       expect(second! - first!, 'the tap came while the screen held others').toBeLessThan(
         CLICK_SHIELD_MS,
       );
@@ -685,16 +675,14 @@ test.describe('attachments', () => {
       await page.waitForTimeout(400);
       const spot = await spotOf(dismiss);
       const target = await spotOf(control(page));
-      await page.evaluate(() => {
-        (window as unknown as TapClicks).tapClicks.length = 0;
-      });
+      await clearClicks(page);
 
       await page.touchscreen.tap(spot.x, spot.y);
       await page.waitForTimeout(150);
       await page.touchscreen.tap(target.x, target.y);
 
       await expect(page).toHaveURL(/\/p\/MOB$/);
-      const [first, second] = await page.evaluate(() => (window as unknown as TapClicks).tapClicks);
+      const [first, second] = await clickTimes(page);
       expect(second! - first!, 'the tap came while the screen held others').toBeLessThan(
         CLICK_SHIELD_MS,
       );

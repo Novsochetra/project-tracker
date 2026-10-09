@@ -49,6 +49,13 @@ describe('followPresses', () => {
     expect(presses.pointer()).toBeNull();
   });
 
+  // A Mac's ctrl+click: the primary button's press, a context menu and no click (Chromium).
+  it('forgets a press that opens a context menu', () => {
+    presses.press(primary('mouse'), area);
+    button.dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, ctrlKey: true }));
+    expect(presses.pointer()).toBeNull();
+  });
+
   it("takes no press of another button for a click's, and keeps the one before it", () => {
     presses.press({ pointerType: 'mouse', button: 2 }, area);
     expect(presses.pointer()).toBeNull();
@@ -57,10 +64,11 @@ describe('followPresses', () => {
     expect(presses.pointer()).toBe('touch');
   });
 
-  it('stops following releases once stopped', () => {
+  it('stops following releases and context menus once stopped', () => {
     presses.press(primary('mouse'), area);
     presses.stop();
     pointer('pointercancel', button);
+    button.dispatchEvent(new MouseEvent('contextmenu', { bubbles: true }));
     expect(presses.pointer()).toBe('mouse');
   });
 });
