@@ -87,7 +87,7 @@ describe('activity items', () => {
     ]);
     expect(log()).toHaveTextContent('edited');
     await user.click(within(log()).getByRole('button', { name: 'Open image 1' }));
-    expect(screen.getByRole('dialog', { name: 'Image viewer' })).toBeInTheDocument();
+    expect(await screen.findByRole('dialog', { name: 'Image viewer' })).toBeInTheDocument();
   });
 
   it('deletes a report after confirming', async () => {

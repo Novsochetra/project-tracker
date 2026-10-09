@@ -1,7 +1,8 @@
 import type { ServerMeta } from '@tracker/shared';
 import { Copy } from 'lucide-react';
 import { useId, type ReactNode } from 'react';
-import { errorMessage, useMeta, type TrackerQuery } from '../../api';
+import { errorMessage, type TrackerQuery } from '../../api';
+import { useMeta } from '../../api/hooks/meta';
 import type { SheetProps } from '../../app/sheets/types';
 import { Button, GroupedCard, Spinner } from '../../components';
 import { useOptionalNavigation } from '../../navigation/useNavigation';

@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { useProject, useProjectPrompt, useTicket, useTicketPrompt } from '../../api';
+import { useProject, useTicket } from '../../api';
+import { useProjectPrompt, useTicketPrompt } from '../../api/hooks/prompts';
 import type { PromptScope, SheetProps } from '../../app/sheets/types';
 import { PromptView } from './PromptView';
 import {

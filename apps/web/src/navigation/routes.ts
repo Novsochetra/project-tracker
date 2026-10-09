@@ -45,6 +45,12 @@ export function routePath(route: Route): string {
   }
 }
 
+// The one spelling of the screen a path shows, or null when the path is already it.
+export function canonicalPath(pathname: string): string | null {
+  const canonical = routePath(parseRoute(pathname));
+  return canonical === pathname ? null : canonical;
+}
+
 export function parentRoute(route: Route): Route | null {
   switch (route.name) {
     case 'projects':

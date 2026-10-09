@@ -1,4 +1,4 @@
-import { useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useLocation, useNavigate, useNavigationType } from 'react-router';
 import {
   NavigationContext,
@@ -9,8 +9,9 @@ import {
 } from './NavigationContext';
 import { toNavigationKind } from './navigationKind';
 import { useOpeningStore } from './openingStore';
+import { PUSH_WAIT_LIMIT_MS, waitAtMost } from './pushWait';
 import type { NavigationIntent } from './resolveTransition';
-import { parentRoute, parseRoute, routePath, type Route } from './routes';
+import { canonicalPath, parentRoute, parseRoute, routePath, type Route } from './routes';
 import { SessionHistory } from './sessionHistory';
 
 export interface NavigationProviderProps {
@@ -23,7 +24,7 @@ export interface NavigationProviderProps {
 const READY = () => null;
 
 export function NavigationProvider({ children, prepare = READY }: NavigationProviderProps) {
-  const { key, pathname } = useLocation();
+  const { key, pathname, search, hash } = useLocation();
   const navigationType = useNavigationType();
   const navigate = useNavigate();
   const historyRef = useRef<SessionHistory | null>(null);
@@ -34,6 +35,14 @@ export function NavigationProvider({ children, prepare = READY }: NavigationProv
     historyRef.current ??= new SessionHistory();
     historyRef.current.record(key, pathname, toNavigationKind(navigationType));
   }, [key, pathname, navigationType]);
+
+  // Before any screen's code, so a cold deep link to /p/MOB/ or /p/MOB/01 shows the right URL at
+  // once (PT-104); the screen on show is the same either way. Not a layout effect: the router
+  // starts listening to the history in its own, which runs after this one on the first render.
+  useEffect(() => {
+    const canonical = canonicalPath(pathname);
+    if (canonical !== null) void navigate({ pathname: canonical, search, hash }, { replace: true });
+  }, [pathname, search, hash, navigate]);
 
   const value = useMemo<NavigationState>(() => {
     const route = parseRoute(pathname);
@@ -53,7 +62,7 @@ export function NavigationProvider({ children, prepare = READY }: NavigationProv
         if (stillOpening()) void navigate(path, { replace });
       };
       const waiting = prepare(parseRoute(path));
-      if (waiting) void waiting.then(send);
+      if (waiting) void waitAtMost(waiting, PUSH_WAIT_LIMIT_MS).then(send);
       else send();
     };
     const goBack = (animate: boolean) => {

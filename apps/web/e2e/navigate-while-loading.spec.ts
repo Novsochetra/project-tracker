@@ -1,4 +1,5 @@
 import type { Page } from '@playwright/test';
+import { PUSH_WAIT_LIMIT_MS } from '../src/navigation/pushWait';
 import { expect, isPhone, test } from './fixtures';
 import { activity, seedProject, ticketRow } from './helpers';
 
@@ -102,5 +103,38 @@ test.describe('a navigation while a screen’s code is on its way', () => {
     await page.waitForTimeout(500);
     await expect(page).toHaveURL(/\/$/);
     await expect(activity(page)).toBeHidden();
+  });
+
+  // PT-104: a chunk request that never answered kept the row pressed and the screen unchanged
+  // until the browser gave up on it.
+  test('a screen whose code stalls opens in its loading state at the time limit', async ({
+    page,
+  }, info) => {
+    test.setTimeout(PUSH_WAIT_LIMIT_MS + 30_000);
+    const phone = isPhone(info.project.name);
+    const release = await holdScreen(page, PROJECT_SCREEN);
+    await page.goto('/');
+    const row = projectRow(page, 'Mobile app');
+    await expect(row).toBeVisible();
+    const entries = await historyLength(page);
+
+    await (phone ? row.tap() : row.click());
+    await page.waitForTimeout(PUSH_WAIT_LIMIT_MS / 2);
+    await expect(page).toHaveURL(/\/$/);
+    await expect(row).toHaveAttribute('data-opening');
+
+    await expect(page).toHaveURL(/\/p\/MOB$/, { timeout: PUSH_WAIT_LIMIT_MS });
+    const layer = page.locator('[data-stack-path="/p/MOB"]');
+    await expect(layer.getByRole('status')).toBeVisible();
+    await expect(page.locator('[data-opening]')).toHaveCount(0);
+    expect(await historyLength(page)).toBe(entries + 1);
+
+    release();
+    await expect(page.getByText('Login screen')).toBeVisible();
+    await expect(page).toHaveURL(/\/p\/MOB$/);
+    expect(await historyLength(page)).toBe(entries + 1);
+    await back(page, phone);
+    await expect(page).toHaveURL(/\/$/);
+    await expect(projectRow(page, 'Mobile app')).toBeVisible();
   });
 });

@@ -148,7 +148,7 @@ describe('TicketScreen info and images', () => {
     setup({ detail: makeTicketDetail(undefined, { attachments: images }) });
     expect(screen.getAllByRole('button', { name: /^Open image/ })).toHaveLength(2);
     await user.click(screen.getByRole('button', { name: 'Open image 2' }));
-    const viewer = screen.getByRole('dialog', { name: 'Image viewer' });
+    const viewer = await screen.findByRole('dialog', { name: 'Image viewer' });
     expect(within(viewer).getByText('2 / 2')).toBeInTheDocument();
   });
 

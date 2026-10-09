@@ -1,8 +1,6 @@
 import { useEffect } from 'react';
-import { useLocation } from 'react-router';
 import { isNotFound, useBoard, useTicket } from '../api';
 import { parentRoute, routePath, useNavigation, type Route } from '../navigation';
-import { canonicalPath } from './canonicalPath';
 
 // Same query keys as the screens, so these checks never cost an extra request.
 function useLeaveWhenMissing(missing: boolean, route: Route) {
@@ -12,14 +10,6 @@ function useLeaveWhenMissing(missing: boolean, route: Route) {
   useEffect(() => {
     if (missing && target) replace(target);
   }, [missing, target, replace]);
-}
-
-function useCanonicalPath() {
-  const { replace } = useNavigation();
-  const target = canonicalPath(useLocation().pathname);
-  useEffect(() => {
-    if (target) replace(target);
-  }, [target, replace]);
 }
 
 function ProjectCheck({ route }: { route: Extract<Route, { name: 'project' }> }) {
@@ -36,7 +26,6 @@ function TicketCheck({ route }: { route: Extract<Route, { name: 'ticket' }> }) {
 
 export function RouteFallback() {
   const { route } = useNavigation();
-  useCanonicalPath();
   switch (route.name) {
     case 'projects':
       return null;

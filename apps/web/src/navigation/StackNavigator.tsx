@@ -25,6 +25,10 @@ import { useSwipeBack } from './useSwipeBack';
 
 export interface StackNavigatorProps {
   renderScreen: (route: Route) => ReactNode;
+  // Given this, a screen the app opens (a push or replace) shows it while its code is on its way,
+  // instead of waiting above the stack like the browser's Back and Forward and the first screens.
+  // With NavigationProvider's prepare, that only happens once a push waited out its time limit.
+  loading?: ReactNode;
   className?: string;
 }
 
@@ -40,6 +44,7 @@ const readBrowserTraits = (): BrowserTraits => ({
 
 function StackView({
   renderScreen,
+  loading,
   className,
   navigation,
 }: StackNavigatorProps & { navigation: NavigationState }) {
@@ -87,6 +92,9 @@ function StackView({
   });
 
   const animation = swipe ? 'swipe' : model.animation;
+  // A navigation is a transition, which keeps the screen on show while a new one waits for its
+  // code above the stack; a boundary of the layer's own shows its loading state instead (PT-104).
+  const loadsInPlace = loading !== undefined && model.id > 0 && kind !== 'POP';
   return (
     <div ref={rootRef} className={clsx(styles.root, className)} data-stack-navigator="">
       {model.layers.map((layer) => (
@@ -99,6 +107,8 @@ function StackView({
           animation={animation}
           progress={progress}
           navigated={model.id > 0}
+          loadsInPlace={loadsInPlace}
+          loading={loading}
           renderScreen={renderScreen}
         />
       ))}

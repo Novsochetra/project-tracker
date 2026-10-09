@@ -1,10 +1,11 @@
 import { attachmentKind, type Attachment, type AttachmentKind } from '@tracker/shared';
 import clsx from 'clsx';
-import type { ReactNode } from 'react';
+import { use, type ReactNode } from 'react';
 import { RemoveButton } from './RemoveButton';
 import { FileFace, ImageFace, VideoFace } from './thumbnailFaces';
 import styles from './ThumbnailGrid.module.css';
 import { capitalized, isWide } from './thumbnailLabels';
+import { AttachmentViewerContext } from './viewerContext';
 
 export interface SavedThumbnailProps {
   attachment: Attachment;
@@ -32,11 +33,14 @@ function OpenButton({
   onOpen: () => void;
   children: ReactNode;
 }) {
+  const viewer = use(AttachmentViewerContext);
   return (
     <button
       type="button"
       className={clsx(styles.frame, styles.open, className)}
       aria-label={name}
+      onPointerDown={viewer?.prepare}
+      onKeyDown={viewer?.prepare}
       onClick={onOpen}
     >
       {children}

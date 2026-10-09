@@ -1,7 +1,8 @@
 import clsx from 'clsx';
 import { ClipboardCheck } from 'lucide-react';
 import { useMemo, useState, type FormEvent } from 'react';
-import { errorMessage, useApplyReport, useProject, useReportPreview } from '../../api';
+import { errorMessage, useProject } from '../../api';
+import { useApplyReport, useReportPreview } from '../../api/hooks/reports';
 import { flashRows } from '../../app/flash';
 import type { ReportScope, SheetProps } from '../../app/sheets/types';
 import { Button, useToast } from '../../components';

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  canonicalPath,
   parentRoute,
   parseRoute,
   routeDepth,
@@ -102,5 +103,30 @@ describe('transitionFor', () => {
     expect(transitionFor(mob3, mob4, 'PUSH')).toBe('push');
     expect(transitionFor(mob4, mob3, 'POP')).toBe('pop');
     expect(transitionFor(mob, web, 'REPLACE')).toBe('replace');
+  });
+});
+
+describe('canonicalPath', () => {
+  it('keeps the paths of real routes', () => {
+    for (const path of ['/', '/p/MOB', '/p/mob', '/p/MOB/3', '/p/A%20B', '/p/caf%C3%A9']) {
+      expect(canonicalPath(path)).toBeNull();
+    }
+  });
+
+  it('replaces paths that are not a route with the screen they show', () => {
+    expect(canonicalPath('/x/y/z')).toBe('/');
+    expect(canonicalPath('/p/MOB/3/extra')).toBe('/');
+    expect(canonicalPath('/p/%E0%A4%A')).toBe('/');
+    expect(canonicalPath('/p/MOB/abc')).toBe('/p/MOB');
+    expect(canonicalPath('/p/MOB/3/')).toBe('/p/MOB/3');
+    expect(canonicalPath('/p/MOB/03')).toBe('/p/MOB/3');
+  });
+
+  it('settles on one path, so replacing never loops', () => {
+    for (const path of ['/x', '/p/MOB/', '/p/MOB%2D1', '/p/A@B', '/p/%20MOB']) {
+      const target = canonicalPath(path);
+      expect(target).not.toBeNull();
+      expect(canonicalPath(target ?? '')).toBeNull();
+    }
   });
 });

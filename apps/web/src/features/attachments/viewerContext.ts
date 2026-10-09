@@ -5,6 +5,9 @@ import { capitalized, thumbnailLabels } from './thumbnailLabels';
 
 export interface AttachmentViewerApi {
   open: (attachments: readonly Attachment[], index: number) => void;
+  // Starts loading the viewers' code as a tile is pressed, so it is in by the time the press opens
+  // one and the viewer shows at once.
+  prepare: () => void;
 }
 
 export const AttachmentViewerContext = createContext<AttachmentViewerApi | null>(null);

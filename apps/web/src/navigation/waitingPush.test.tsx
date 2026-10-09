@@ -2,10 +2,11 @@ import { act, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { lazy, Suspense, use, type ComponentType } from 'react';
 import { MemoryRouter, useLocation, useNavigate } from 'react-router';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { skipAnimations } from '../overlays/testing';
 import { NavigationContext } from './NavigationContext';
 import { NavigationProvider } from './NavigationProvider';
+import { PUSH_WAIT_LIMIT_MS } from './pushWait';
 import { routeStack, type Route } from './routes';
 import { StackNavigator } from './StackNavigator';
 import { useIsOpening, useNavigation } from './useNavigation';
@@ -115,7 +116,7 @@ function renderStack(path = '/') {
     <MemoryRouter initialEntries={[path]}>
       <NavigationProvider prepare={prepare}>
         <Suspense fallback={<p>Loading</p>}>
-          <StackNavigator renderScreen={renderScreen} />
+          <StackNavigator renderScreen={renderScreen} loading={<p>Loading screen</p>} />
         </Suspense>
         <Probe />
       </NavigationProvider>
@@ -126,6 +127,7 @@ function renderStack(path = '/') {
 
 const location = () => screen.getByRole('status', { name: 'Location' }).textContent;
 const button = (name: string) => screen.getByRole('button', { name });
+const layer = (path: string) => document.querySelector(`[data-stack-path="${path}"]`);
 
 let restore: Array<() => void> = [];
 
@@ -264,5 +266,124 @@ describe('a Back while a push waits', () => {
     expect(location()).toBe('/');
     await stack.ticket.arrive();
     expect(location()).toBe('/');
+  });
+});
+
+// PT-104: a chunk that stalled kept the waiting push, and the pressed row, until the browser gave
+// up on the request, with nothing else on screen.
+describe('a push whose screen’s code stalls', () => {
+  const advance = (ms: number) => act(() => vi.advanceTimersByTimeAsync(ms));
+  const setup = () => userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+  const pressedRows = () => document.querySelectorAll('[data-opening]');
+
+  beforeEach(() => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('goes at its time limit to the screen’s loading state and lets its row go', async () => {
+    const user = setup();
+    const stack = renderStack();
+    stack.show();
+    await user.click(button('Open MOB'));
+    await advance(PUSH_WAIT_LIMIT_MS - 1_000);
+    expect(location()).toBe('/');
+    expect(button('Open MOB')).toHaveAttribute('data-opening');
+
+    await advance(1_000);
+    expect(location()).toBe('/p/MOB');
+    expect(layer('/p/MOB')).toHaveTextContent('Loading screen');
+    expect(pressedRows()).toHaveLength(0);
+
+    await user.click(button('Swipe back'));
+    expect(location()).toBe('/');
+    expect(button('Open MOB')).toBeInTheDocument();
+  });
+
+  it('shows the screen when the code comes later, with no second entry', async () => {
+    const user = setup();
+    const stack = renderStack();
+    stack.show();
+    await user.click(button('Open MOB'));
+    await advance(PUSH_WAIT_LIMIT_MS);
+    expect(location()).toBe('/p/MOB');
+
+    await stack.project.arrive();
+    expect(await screen.findByText('Project MOB')).toBeInTheDocument();
+    expect(location()).toBe('/p/MOB');
+    await user.click(button('Back'));
+    expect(location()).toBe('/');
+    await user.click(button('Browser back'));
+    expect(location()).toBe('/');
+  });
+
+  it('opens a ticket at its time limit on top of the project on show', async () => {
+    const user = setup();
+    const stack = await openProject(user);
+    await user.click(button('Open MOB-1'));
+    await advance(PUSH_WAIT_LIMIT_MS);
+    expect(location()).toBe('/p/MOB/1');
+    expect(layer('/p/MOB/1')).toHaveTextContent('Loading screen');
+    expect(pressedRows()).toHaveLength(0);
+
+    await stack.ticket.arrive();
+    expect(await screen.findByText('Ticket MOB-1')).toBeInTheDocument();
+    await user.click(button('Browser back'));
+    expect(location()).toBe('/p/MOB');
+  });
+
+  it('stays cancelled or replaced when its time is up', async () => {
+    const user = setup();
+    const stack = renderStack();
+    stack.show();
+    await user.click(button('Open MOB'));
+    await user.click(button('All projects'));
+    await advance(PUSH_WAIT_LIMIT_MS);
+    expect(location()).toBe('/');
+    expect(layer('/p/MOB')).toBeNull();
+
+    await user.click(button('Open MOB'));
+    await advance(PUSH_WAIT_LIMIT_MS / 2);
+    await user.click(button('Open WEB'));
+    await advance(PUSH_WAIT_LIMIT_MS / 2);
+    expect(location()).toBe('/');
+    await advance(PUSH_WAIT_LIMIT_MS / 2);
+    expect(location()).toBe('/p/WEB');
+    expect(layer('/p/MOB')).toBeNull();
+  });
+
+  it('leaves nothing for later when the code comes in time, and code in goes at once', async () => {
+    const user = setup();
+    const stack = renderStack();
+    stack.show();
+    await user.click(button('Open MOB'));
+    await stack.project.arrive();
+    expect(await screen.findByText('Project MOB')).toBeInTheDocument();
+    await advance(PUSH_WAIT_LIMIT_MS);
+    expect(location()).toBe('/p/MOB');
+
+    await user.click(button('Back'));
+    await user.click(button('Open MOB'));
+    expect(location()).toBe('/p/MOB');
+    await user.click(button('Back'));
+    await user.click(button('Browser back'));
+    expect(location()).toBe('/');
+  });
+});
+
+// PT-104: the Shell put an odd spelling of a path right through a replace, which waited for the
+// screen's code like any other, so a cold deep link kept the odd URL until the code arrived.
+describe('a deep link to an odd spelling of a path', () => {
+  it.each([
+    ['/p/MOB/', '/p/MOB'],
+    ['/p/MOB/01', '/p/MOB/1'],
+    ['/p/MOB/1/', '/p/MOB/1'],
+    ['/x/y', '/'],
+  ])('%s is put right at start, before any screen’s code', (path, canonical) => {
+    renderStack(path).show();
+    expect(location()).toBe(canonical);
   });
 });
