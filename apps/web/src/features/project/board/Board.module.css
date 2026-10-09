@@ -123,9 +123,9 @@
  * matches the side padding, so the previous column sits fully off screen, and the spacer lets
  * the last column snap to the start like the others.
  */
-@media (max-width: 767px),
-  (pointer: coarse) and (max-device-width: 500px),
-  (pointer: coarse) and (max-device-height: 500px) {
+@media (width < 768px),
+  (pointer: coarse) and (device-width < 600px),
+  (pointer: coarse) and (device-height < 600px) {
   .board {
     --peek: 26px;
     gap: var(--space-4);
@@ -167,8 +167,8 @@
 
 /* Sideways the column's own header names it, and the pager's row would put the cards under the
    bottom bar on a phone's short screen. */
-@media (pointer: coarse) and (max-device-width: 500px) and (min-width: 540px),
-  (pointer: coarse) and (max-device-height: 500px) and (min-width: 540px) {
+@media (pointer: coarse) and (device-width < 600px) and (width >= 600px),
+  (pointer: coarse) and (device-height < 600px) and (width >= 600px) {
   .pager {
     display: none;
   }

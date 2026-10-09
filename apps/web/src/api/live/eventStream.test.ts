@@ -2,7 +2,7 @@ import { LIVE_STALE_MS } from '@tracker/shared';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { MockEventSource } from '../test/mockEventSource';
 import { LIVE_RETRY_MS, retryDelay } from './backoff';
-import { connectLiveUpdates, LIVE_WAIT_ATTEMPTS } from './eventStream';
+import { connectLiveUpdates, LIVE_WAIT_ATTEMPTS, type TrackerReachability } from './eventStream';
 import { HIDDEN_GRACE_MS } from './pauseWhileHidden';
 
 const event = { type: 'changed', projectId: 'p-mob', ticketId: 't-1' };
@@ -10,14 +10,14 @@ const event = { type: 'changed', projectId: 'p-mob', ticketId: 't-1' };
 // Every connection watches the page's visibility until it is stopped.
 let connections: Array<() => void> = [];
 
-function connect() {
+function connect(tracker?: TrackerReachability) {
   const handlers = {
     onChange: vi.fn(),
     onReconnect: vi.fn(),
     onRefreshPending: vi.fn(),
     onRefused: vi.fn(),
   };
-  const stop = connectLiveUpdates('/api/events', handlers);
+  const stop = connectLiveUpdates('/api/events', handlers, tracker);
   connections.push(stop);
   return { stop, ...handlers, source: MockEventSource.latest() };
 }
@@ -25,6 +25,35 @@ function connect() {
 function setVisibility(state: DocumentVisibilityState) {
   vi.spyOn(document, 'visibilityState', 'get').mockReturnValue(state);
   document.dispatchEvent(new Event('visibilitychange'));
+}
+
+// The app's word on whether the tracker answers (app/reachability), here lost at first.
+function lostTracker() {
+  let unreachable = true;
+  const listeners = new Set<() => void>();
+  const set = (next: boolean) => {
+    unreachable = next;
+    listeners.forEach((listener) => listener());
+  };
+  return {
+    isUnreachable: () => unreachable,
+    subscribe: (listener: () => void) => {
+      listeners.add(listener);
+      return () => void listeners.delete(listener);
+    },
+    listening: () => listeners.size,
+    answers: () => set(false),
+    lost: () => set(true),
+  };
+}
+
+// The first stream and the next `tries` reopenings each get a 502; it then waits retryDelay(tries).
+function refuseTries(tries: number) {
+  MockEventSource.latest().fail(true);
+  for (let attempt = 0; attempt < tries; attempt += 1) {
+    vi.advanceTimersByTime(retryDelay(attempt));
+    MockEventSource.latest().fail(true);
+  }
 }
 
 describe('connectLiveUpdates', () => {
@@ -315,6 +344,105 @@ describe('connectLiveUpdates', () => {
     vi.advanceTimersByTime(HIDDEN_GRACE_MS);
     setVisibility('visible');
     expect(MockEventSource.instances).toHaveLength(1);
+  });
+
+  describe('when the tracker answers again', () => {
+    it('opens a stream waiting to reopen at once, and starts its backoff over', () => {
+      const tracker = lostTracker();
+      const { onReconnect } = connect(tracker);
+      refuseTries(4);
+      const tried = MockEventSource.instances.length;
+
+      tracker.answers();
+
+      expect(MockEventSource.instances).toHaveLength(tried + 1);
+      MockEventSource.latest().fail(true);
+      vi.advanceTimersByTime(LIVE_RETRY_MS - 1);
+      expect(MockEventSource.instances).toHaveLength(tried + 1);
+      vi.advanceTimersByTime(1);
+      expect(MockEventSource.instances).toHaveLength(tried + 2);
+      MockEventSource.latest().open();
+      expect(onReconnect).toHaveBeenCalledTimes(1);
+    });
+
+    it('drops the try it was waiting for', () => {
+      const tracker = lostTracker();
+      connect(tracker);
+      refuseTries(4);
+      tracker.answers();
+      const tried = MockEventSource.instances.length;
+
+      vi.advanceTimersByTime(retryDelay(4));
+
+      expect(MockEventSource.instances).toHaveLength(tried);
+    });
+
+    it('leaves an open stream alone', () => {
+      const tracker = lostTracker();
+      const { source, onReconnect } = connect(tracker);
+      source.open();
+
+      tracker.answers();
+      tracker.lost();
+      tracker.answers();
+
+      expect(MockEventSource.instances).toHaveLength(1);
+      expect(source.readyState).toBe(MockEventSource.OPEN);
+      expect(onReconnect).not.toHaveBeenCalled();
+    });
+
+    it('opens no second stream while one is on its way', () => {
+      const tracker = lostTracker();
+      const { source } = connect(tracker);
+      tracker.answers();
+      tracker.lost();
+      expect(MockEventSource.instances).toHaveLength(1);
+
+      source.open();
+      source.fail(false);
+      tracker.answers();
+
+      expect(MockEventSource.instances).toHaveLength(1);
+      expect(source.readyState).toBe(MockEventSource.CONNECTING);
+    });
+
+    it('waits on when the tracker is lost, not found', () => {
+      const tracker = lostTracker();
+      tracker.answers();
+      connect(tracker);
+      refuseTries(2);
+      const tried = MockEventSource.instances.length;
+
+      tracker.lost();
+
+      expect(MockEventSource.instances).toHaveLength(tried);
+    });
+
+    it('keeps a stream closed while the page is hidden', () => {
+      const tracker = lostTracker();
+      connect(tracker);
+      refuseTries(1);
+      setVisibility('hidden');
+      vi.advanceTimersByTime(HIDDEN_GRACE_MS);
+      const tried = MockEventSource.instances.length;
+
+      tracker.answers();
+
+      expect(MockEventSource.instances).toHaveLength(tried);
+    });
+
+    it('stops listening once stopped', () => {
+      const tracker = lostTracker();
+      const { stop } = connect(tracker);
+      refuseTries(1);
+      expect(tracker.listening()).toBe(1);
+
+      stop();
+      tracker.answers();
+
+      expect(tracker.listening()).toBe(0);
+      expect(MockEventSource.instances).toHaveLength(2);
+    });
   });
 
   it('does nothing where EventSource is missing', () => {

@@ -118,6 +118,31 @@ describe('useLiveUpdates', () => {
     expect(getSession).toHaveBeenCalledTimes(1);
   });
 
+  it('reopens a stream waiting to reopen as soon as the tracker answers again', () => {
+    const { queryClient, wrapper } = setupApi();
+    seed(queryClient);
+    let unreachable = true;
+    const listeners = new Set<() => void>();
+    const tracker = {
+      isUnreachable: () => unreachable,
+      subscribe: (listener: () => void) => {
+        listeners.add(listener);
+        return () => void listeners.delete(listener);
+      },
+    };
+    renderHook(() => useLiveUpdates(tracker), { wrapper });
+    act(() => MockEventSource.latest().fail(true));
+
+    act(() => {
+      unreachable = false;
+      listeners.forEach((listener) => listener());
+    });
+    expect(MockEventSource.instances).toHaveLength(2);
+    act(() => MockEventSource.latest().open());
+
+    expect(isInvalidated(queryClient, queryKeys.board('MOB'))).toBe(true);
+  });
+
   it('closes the stream on unmount', () => {
     const { wrapper } = setupApi();
     const { unmount } = renderHook(() => useLiveUpdates(), { wrapper });

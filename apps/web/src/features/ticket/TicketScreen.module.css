@@ -54,9 +54,9 @@ button.barPrimary {
   }
 }
 
-@media (max-width: 767px),
-  (pointer: coarse) and (max-device-width: 500px),
-  (pointer: coarse) and (max-device-height: 500px) {
+@media (width < 768px),
+  (pointer: coarse) and (device-width < 600px),
+  (pointer: coarse) and (device-height < 600px) {
   /* A phone turned sideways has its camera on one side; the text keeps clear of it, as the bars
      do. Upright, both insets are 0. */
   .grid {

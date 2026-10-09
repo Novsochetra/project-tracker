@@ -145,9 +145,9 @@
   --z-viewer: 100;
 }
 
-@media (max-width: 767px),
-  (pointer: coarse) and (max-device-width: 500px),
-  (pointer: coarse) and (max-device-height: 500px) {
+@media (width < 768px),
+  (pointer: coarse) and (device-width < 600px),
+  (pointer: coarse) and (device-height < 600px) {
   :root {
     --control-height: 44px;
     --icon-button: 44px;
@@ -161,8 +161,8 @@
 
 /* A phone held sideways has about 300px of height under Safari's bars: the bottom bar's buttons
    keep only the 44px every tap target gets. */
-@media (pointer: coarse) and (max-device-width: 500px) and (min-width: 540px),
-  (pointer: coarse) and (max-device-height: 500px) and (min-width: 540px) {
+@media (pointer: coarse) and (device-width < 600px) and (width >= 600px),
+  (pointer: coarse) and (device-height < 600px) and (width >= 600px) {
   :root {
     --bar-button: var(--touch-target);
   }

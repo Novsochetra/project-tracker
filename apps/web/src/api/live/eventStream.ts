@@ -12,6 +12,12 @@ export interface LiveHandlers {
   onRefused: () => void;
 }
 
+// The app's word on whether the tracker answers (app/reachability).
+export interface TrackerReachability {
+  isUnreachable: () => boolean;
+  subscribe: (listener: () => void) => () => void;
+}
+
 type Timer = ReturnType<typeof setTimeout> | undefined;
 
 // Reads wait for a reopening stream only while it is likely to open soon: behind a proxy that
@@ -21,7 +27,11 @@ export const LIVE_WAIT_ATTEMPTS = 3;
 // EventSource retries network drops by itself but gives up for good on an HTTP error (a restarting
 // server behind a proxy, or a 401 once the session is gone), so a closed or silent stream is
 // reopened here.
-export function connectLiveUpdates(url: string, handlers: LiveHandlers): () => void {
+export function connectLiveUpdates(
+  url: string,
+  handlers: LiveHandlers,
+  tracker?: TrackerReachability,
+): () => void {
   if (typeof EventSource === 'undefined') return () => undefined;
   let source: EventSource | undefined;
   let retry: Timer;
@@ -40,9 +50,13 @@ export function connectLiveUpdates(url: string, handlers: LiveHandlers): () => v
     reportPending();
   };
 
+  const cancelRetry = () => {
+    clearTimeout(retry);
+    retry = undefined;
+  };
   const close = () => {
     source?.close();
-    clearTimeout(retry);
+    cancelRetry();
     clearTimeout(silence);
     setReconnecting(true);
   };
@@ -81,6 +95,7 @@ export function connectLiveUpdates(url: string, handlers: LiveHandlers): () => v
     setReconnecting(true);
   };
   function connect() {
+    cancelRetry();
     source = new EventSource(url);
     source.addEventListener('open', onOpen);
     source.addEventListener('message', onMessage);
@@ -90,11 +105,23 @@ export function connectLiveUpdates(url: string, handlers: LiveHandlers): () => v
     alive();
   }
 
+  // The banner went within 3 s of the tracker answering again, but the screens' data waited for
+  // the stream's next try, up to 15 s later (PT-118). Only a stream waiting for that try has a
+  // retry timer: one that is open or on its way, one the browser retries itself and one paused
+  // while hidden are left alone, so no second stream opens.
+  const reopenNow = () => {
+    if (retry === undefined || tracker?.isUnreachable()) return;
+    reopenings = 0;
+    connect();
+  };
+
   connect();
   // Resuming opens a new stream like any reconnect, so the page catches up on what it missed.
   const stopWatching = pauseWhileHidden({ pause: close, resume: connect });
+  const stopFollowing = tracker?.subscribe(reopenNow);
   return () => {
     stopWatching();
+    stopFollowing?.();
     close();
     // A stopped stream never opens again, so nothing else would refresh the page.
     handlers.onRefreshPending(false);

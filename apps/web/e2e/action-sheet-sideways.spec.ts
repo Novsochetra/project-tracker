@@ -67,6 +67,26 @@ const scrollToEnd = (sheet: Locator): Promise<number> =>
     return card.scrollTop;
   });
 
+// How much of the row the card of rows ends in shows, as a share of it: 0 when the card ends on a
+// row line, so the list looks complete until scrolled (PT-117).
+const shareOfCutRow = (sheet: Locator): Promise<number> =>
+  cardOf(sheet).evaluate((card) => {
+    const bottom = card.getBoundingClientRect().bottom;
+    for (const row of card.querySelectorAll(':scope > button')) {
+      const box = row.getBoundingClientRect();
+      if (box.top < bottom - 0.5 && box.bottom > bottom + 0.5) {
+        return (bottom - box.top) / box.height;
+      }
+    }
+    return 0;
+  });
+
+async function expectRowCutAboutInHalf(sheet: Locator): Promise<void> {
+  const share = await shareOfCutRow(sheet);
+  expect(share).toBeGreaterThan(0.4);
+  expect(share).toBeLessThan(0.6);
+}
+
 // Playwright can't drive a touch drag in WebKit, so the swipe is synthetic touch pointer events.
 async function swipeLeft(row: Locator): Promise<void> {
   const box = await row.boundingBox();
@@ -127,6 +147,46 @@ test.describe('action sheets on a short phone screen', () => {
     });
   });
 
+  // PT-117: at exactly 874×296 the card ended 2.5px into Delete project, and 20px taller it showed
+  // most of it; either way the list looked complete.
+  for (const height of [UNDER_SAFARI_BARS.height, 320, 340]) {
+    test(`the project ••• sheet ends about halfway through a row at 874×${height}`, async ({
+      page,
+      api,
+    }) => {
+      await page.setViewportSize({ width: UNDER_SAFARI_BARS.width, height });
+      await seedProject(api, 'Mobile app', 'MOB', [{ title: 'Date picker' }]);
+      await page.goto('/p/MOB');
+      test.skip(!(await usesPhoneLayout(page)), 'Action sheets are the phone layout');
+      const sheet = await openProjectSheet(page);
+      await expectRowCutAboutInHalf(sheet);
+      await expectTopInSight(sheet, sheet.getByText('Mobile app', { exact: true }));
+      await expect(sheet.getByRole('button', { name: 'Edit project' })).toBeInViewport({
+        ratio: 1,
+      });
+    });
+  }
+
+  test('an open project ••• sheet ends about halfway through a row again when the screen changes', async ({
+    page,
+    api,
+  }) => {
+    await page.setViewportSize({ width: UNDER_SAFARI_BARS.width, height: 340 });
+    await seedProject(api, 'Mobile app', 'MOB', [{ title: 'Date picker' }]);
+    await page.goto('/p/MOB');
+    test.skip(!(await usesPhoneLayout(page)), 'Action sheets are the phone layout');
+    const sheet = await openProjectSheet(page);
+    await page.setViewportSize(UNDER_SAFARI_BARS);
+    await restingTop(sheet);
+    await expectRowCutAboutInHalf(sheet);
+    await page.setViewportSize({ width: UNDER_SAFARI_BARS.height, height: 640 });
+    await restingTop(sheet);
+    await expect(sheet.getByRole('button', { name: 'Delete project' })).toBeInViewport({
+      ratio: 1,
+    });
+    expect(await shareOfCutRow(sheet)).toBe(0);
+  });
+
   for (const size of [SIDEWAYS, SMALL_PHONE]) {
     test(`a row’s Status sheet with ten statuses scrolls to its last at ${size.width}×${size.height}`, async ({
       page,
@@ -147,6 +207,7 @@ test.describe('action sheets on a short phone screen', () => {
       await restingTop(sheet);
 
       await expectTopInSight(sheet, sheet.getByText('Move MOB-1 to'));
+      await expectRowCutAboutInHalf(sheet);
       await expect(sheet.getByRole('button', { name: 'In progress' })).toBeInViewport({ ratio: 1 });
       const last = sheet.getByRole('button', { name: 'Released' });
       await expect(last).not.toBeInViewport({ ratio: 1 });

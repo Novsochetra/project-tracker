@@ -104,8 +104,8 @@
 
 /* Sideways a phone has about 300px of height under Safari's bars, so the bar is as tall as its
    buttons, as iOS does for compact heights. */
-@media (pointer: coarse) and (max-device-width: 500px) and (min-width: 540px),
-  (pointer: coarse) and (max-device-height: 500px) and (min-width: 540px) {
+@media (pointer: coarse) and (device-width < 600px) and (width >= 600px),
+  (pointer: coarse) and (device-height < 600px) and (width >= 600px) {
   .bar {
     min-height: calc(var(--touch-target) + var(--safe-top));
     padding-top: var(--safe-top);

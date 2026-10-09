@@ -91,9 +91,9 @@
   font-variant-numeric: tabular-nums;
 }
 
-@media (max-width: 767px),
-  (pointer: coarse) and (max-device-width: 500px),
-  (pointer: coarse) and (max-device-height: 500px) {
+@media (width < 768px),
+  (pointer: coarse) and (device-width < 600px),
+  (pointer: coarse) and (device-height < 600px) {
   .track {
     flex: 1 1 100%;
   }
@@ -105,8 +105,8 @@
 }
 
 /* Sideways they share the row with the search (ProjectScreen) and scroll inside their track. */
-@media (pointer: coarse) and (max-device-width: 500px) and (min-width: 540px),
-  (pointer: coarse) and (max-device-height: 500px) and (min-width: 540px) {
+@media (pointer: coarse) and (device-width < 600px) and (width >= 600px),
+  (pointer: coarse) and (device-height < 600px) and (width >= 600px) {
   .track {
     flex: 1 1 auto;
   }

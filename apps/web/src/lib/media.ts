@@ -3,17 +3,19 @@ import { useSyncExternalStore } from 'react';
 // The phone layout is for windows under 768px and for phones, told by the screen: a phone turned
 // sideways is wider than 768px (844×390). Not by the window's height, which Android's keyboard
 // shrinks (interactive-widget=resizes-content): a tablet held sideways went from 1280×712 to
-// 1280×380 while typing and switched layouts under the field. Phones' screens are at most 500px on
-// their short side, tablets' at least 600; iOS reports the screen upright, Android as turned, so
-// both sides are asked. The desktop query is the exact opposite, the sideways one picks the phones
-// held sideways (wider than any phone upright), and the stylesheets repeat all three word for word
-// (test/regression/landscape-phone-layout).
+// 1280×380 while typing and switched layouts under the field. A screen under 600px on its short
+// side is a phone, Android's own tablet line (phones at a small display size reach 480 and more,
+// tablets start at 600, an iPad mini at 744); iOS reports the screen upright, Android as turned,
+// so both sides are asked. The desktop query is the exact opposite, each boundary written once as
+// `<` and `>=`, so no fractional size falls between them. The sideways query picks the phones
+// whose window is at least 600px wide, which none is upright. The stylesheets repeat all three
+// word for word (test/regression/landscape-phone-layout).
 export const PHONE_QUERY =
-  '(max-width: 767px), (pointer: coarse) and (max-device-width: 500px), (pointer: coarse) and (max-device-height: 500px)';
+  '(width < 768px), (pointer: coarse) and (device-width < 600px), (pointer: coarse) and (device-height < 600px)';
 export const DESKTOP_QUERY =
-  '(min-width: 768px) and (pointer: fine), (min-width: 768px) and (pointer: none), (min-width: 768px) and (min-device-width: 501px) and (min-device-height: 501px)';
+  '(width >= 768px) and (pointer: fine), (width >= 768px) and (pointer: none), (width >= 768px) and (device-width >= 600px) and (device-height >= 600px)';
 export const SIDEWAYS_QUERY =
-  '(pointer: coarse) and (max-device-width: 500px) and (min-width: 540px), (pointer: coarse) and (max-device-height: 500px) and (min-width: 540px)';
+  '(pointer: coarse) and (device-width < 600px) and (width >= 600px), (pointer: coarse) and (device-height < 600px) and (width >= 600px)';
 export const REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)';
 export const NO_HOVER_QUERY = '(hover: none)';
 

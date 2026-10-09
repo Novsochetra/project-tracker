@@ -21,10 +21,10 @@ const SCREEN_LOADING = <ScreenLoading />;
 const FIRST_LOAD = <ScreenLoading quiet />;
 
 export function Shell() {
-  useLiveUpdates();
+  const reachability = useReachability();
+  useLiveUpdates(reachability);
   useToastRaise(useBottomBarVisible());
   const isPhone = useIsPhone();
-  const reachability = useReachability();
   const unreachable = useApiUnreachable(reachability);
   return (
     <div className={styles.shell}>

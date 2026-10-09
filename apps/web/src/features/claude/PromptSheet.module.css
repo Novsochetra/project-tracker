@@ -71,9 +71,9 @@
 }
 
 /* The design's share button is 40×40 with a 20px icon; phones keep the 44px IconButton. */
-@media (min-width: 768px) and (pointer: fine),
-  (min-width: 768px) and (pointer: none),
-  (min-width: 768px) and (min-device-width: 501px) and (min-device-height: 501px) {
+@media (width >= 768px) and (pointer: fine),
+  (width >= 768px) and (pointer: none),
+  (width >= 768px) and (device-width >= 600px) and (device-height >= 600px) {
   button.share {
     width: 40px;
     height: 40px;
@@ -90,9 +90,9 @@
   }
 }
 
-@media (max-width: 767px),
-  (pointer: coarse) and (max-device-width: 500px),
-  (pointer: coarse) and (max-device-height: 500px) {
+@media (width < 768px),
+  (pointer: coarse) and (device-width < 600px),
+  (pointer: coarse) and (device-height < 600px) {
   .prompt {
     font-size: var(--size-input);
   }

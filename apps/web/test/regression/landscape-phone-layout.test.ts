@@ -10,7 +10,10 @@ import { DESKTOP_QUERY, PHONE_QUERY, SIDEWAYS_QUERY } from '../../src/lib/media'
 // held sideways (1280×712 under an 800px-tall screen) dropped to 1280×380 and switched to the phone
 // layout mid-typing, unmounting the Details panel and the field being typed in. The phone layout
 // now goes by the window's width or by the screen, which the keyboard doesn't change, and the CSS
-// must say the same as the code, or one screen would mix the two layouts.
+// must say the same as the code, or one screen would mix the two layouts. The next review: phones
+// set to a small display size reach 480px or more on their short side, so the line is Android's
+// own tablet line, 600px; and with max-…: 500px against min-…: 501px a fractional size between
+// matched neither query, so each boundary is written once, as `<` and `>=` of one number.
 
 interface Device {
   width: number;
@@ -20,7 +23,7 @@ interface Device {
   pointer: 'coarse' | 'fine' | 'none';
 }
 
-const RANGE = /^\((min|max)-(device-)?(width|height): (\d+)px\)$/;
+const RANGE = /^\((device-)?(width|height) (<|>=) (\d+)px\)$/;
 const POINTER = /^\(pointer: (coarse|fine|none)\)$/;
 
 function sizeOf(device: Device, screen: boolean, side: string): number {
@@ -32,9 +35,9 @@ function sizeOf(device: Device, screen: boolean, side: string): number {
 function holds(feature: string, device: Device): boolean {
   const range = RANGE.exec(feature);
   if (range) {
-    const [, bound, screen, side, value] = range;
+    const [, screen, side, operator, value] = range;
     const size = sizeOf(device, screen !== undefined, side!);
-    return bound === 'min' ? size >= Number(value) : size <= Number(value);
+    return operator === '<' ? size < Number(value) : size >= Number(value);
   }
   const pointer = POINTER.exec(feature);
   if (pointer) return device.pointer === pointer[1];
@@ -72,7 +75,20 @@ const devices: Array<[string, Device, string]> = [
   ['iPhone 13 sideways in Safari', touch(874, 296, [402, 874]), 'phone, sideways'],
   ['iPhone 13 sideways, keyboard open', touch(844, 150, IPHONE), 'phone, sideways'],
   ['iPhone Pro Max sideways', touch(932, 430, [430, 932]), 'phone, sideways'],
-  ['iPhone SE sideways', touch(568, 320, [320, 568]), 'phone, sideways'],
+  ['iPhone SE (2nd, 3rd gen) sideways', touch(667, 375, [375, 667]), 'phone, sideways'],
+  // Under 600px wide even sideways: the phone layout without the sideways rules.
+  ['iPhone SE (1st gen) sideways', touch(568, 320, [320, 568]), 'phone'],
+  ['Galaxy S9+ sideways', touch(658, 320, [658, 320]), 'phone, sideways'],
+  ['Galaxy A55 at a small display size, upright', touch(480, 1000, [480, 1040]), 'phone'],
+  [
+    'Galaxy A55 at a small display size, sideways',
+    touch(1040, 440, [1040, 480]),
+    'phone, sideways',
+  ],
+  ['a phone 560px on its short side, upright', touch(560, 1180, [560, 1240]), 'phone'],
+  ['a phone 560px on its short side, sideways', touch(1240, 520, [1240, 560]), 'phone, sideways'],
+  ['a screen 599.5px on its short side', touch(1000, 540, [1000, 599.5]), 'phone, sideways'],
+  ['a screen 600.5px on its short side', touch(1000, 540, [1000, 600.5]), 'desktop'],
   ['Android phone upright', touch(412, 915, ANDROID_UPRIGHT), 'phone'],
   ['Android phone upright, keyboard open', touch(412, 520, ANDROID_UPRIGHT), 'phone'],
   ['Android phone sideways', touch(915, 412, ANDROID_SIDEWAYS), 'phone, sideways'],
@@ -86,6 +102,9 @@ const devices: Array<[string, Device, string]> = [
   ['Android tablet sideways, keyboard open', touch(1280, 380, TABLET_SIDEWAYS), 'desktop'],
   ['Android tablet upright, keyboard open', touch(800, 900, [800, 1280]), 'desktop'],
   ['small Android tablet sideways, keyboard open', touch(960, 250, [960, 600]), 'desktop'],
+  ['7-inch Android tablet sideways', touch(1024, 552, [1024, 600]), 'desktop'],
+  // Under 768px wide, as before.
+  ['7-inch Android tablet upright', touch(600, 976, [600, 1024]), 'phone'],
   ['desktop', { width: 1280, height: 800, screen: [1920, 1080], pointer: 'fine' }, 'desktop'],
   [
     'short desktop window',
@@ -96,6 +115,16 @@ const devices: Array<[string, Device, string]> = [
     'narrow desktop window',
     { width: 600, height: 800, screen: [1440, 900], pointer: 'fine' },
     'phone',
+  ],
+  [
+    'desktop window 767.5px wide',
+    { width: 767.5, height: 800, screen: [1440, 900], pointer: 'fine' },
+    'phone',
+  ],
+  [
+    'desktop window 768.25px wide',
+    { width: 768.25, height: 800, screen: [1440, 900], pointer: 'fine' },
+    'desktop',
   ],
   [
     'small screen with no pointer',
@@ -112,7 +141,7 @@ describe('regression: a phone turned sideways keeps the phone layout, a tablet t
 
 const SRC = join(import.meta.dirname, '../../src');
 // The phone/desktop breakpoint, the screen's size, and the sideways phone's width.
-const LAYOUT_FEATURE = /76[78]px|device-|540px/;
+const LAYOUT_FEATURE = /76[78]px|device-|600px|540px/;
 const LAYOUT_QUERIES = [PHONE_QUERY, DESKTOP_QUERY, SIDEWAYS_QUERY];
 
 function cssFiles(dir: string): string[] {

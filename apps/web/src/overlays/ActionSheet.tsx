@@ -8,6 +8,7 @@ import { actionSheetContent } from './actionSheetContent';
 import { useActionSheetMotion } from './useActionSheetMotion';
 import { useOverlayBehavior } from './useOverlayBehavior';
 import { usePresence } from './usePresence';
+import { useRowPeek } from './useRowPeek';
 
 export interface ActionSheetAction {
   label: string;
@@ -29,12 +30,14 @@ function ActionSheetPanel(props: ActionSheetProps & { onExited: () => void }) {
   const { open, onClose, label, caption, actions, cancelLabel = 'Cancel', onExited } = props;
   const panelRef = useRef<HTMLDivElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
+  const content = actionSheetContent(caption, actions);
+  useRowPeek(cardRef, content);
   const values = useActionSheetMotion({ open, onClose, onExited, panelRef, cardRef });
   const trapKeys = useOverlayBehavior({ active: open, panelRef, onClose, focusInitial: false });
   // A tap opens the sheet, which slides up under the finger, or turns it into its next step, whose
   // row can take the tapped row's place (a delete confirm), so a double tap's second tap would
   // press the row that just arrived. Cancel stays where it was and keeps taking taps.
-  const shield = useTapShield(open && actionSheetContent(caption, actions));
+  const shield = useTapShield(open && content);
 
   return (
     <div className={styles.overlay} inert={!open} data-action-sheet="">

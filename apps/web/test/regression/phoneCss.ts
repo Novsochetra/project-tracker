@@ -31,9 +31,13 @@ function rulesOf(css: string): Rule[] {
   return rules;
 }
 
+// The phone query begins `(width < 768px)`; narrower phones' rules are `(max-width: 374px)`.
 function appliesAt(rule: Rule, width: number): boolean {
+  if (rule.media === '') return true;
+  const below = /^@media \(width < (\d+)px\)(?:,|$)/.exec(rule.media);
+  if (below) return width < Number(below[1]);
   const maxWidth = /^@media \(max-width: (\d+)px\)(?:,|$)/.exec(rule.media);
-  return rule.media === '' || (maxWidth !== null && width <= Number(maxWidth[1]));
+  return maxWidth !== null && width <= Number(maxWidth[1]);
 }
 
 function declarations(rule: Rule): [string, string][] {

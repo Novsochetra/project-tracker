@@ -2,6 +2,7 @@ import clsx from 'clsx';
 import { Spinner } from '../components';
 import { ProjectLoadingBar } from '../features/project/ProjectLoadingBar';
 import { TicketLoadingBar } from '../features/ticket/TicketLoadingBar';
+import { styleNow } from '../lib/styleNow';
 import { useNavigation, useOptionalScreen, type Route } from '../navigation';
 import styles from './ScreenLoading.module.css';
 
@@ -27,8 +28,9 @@ export function ScreenLoading({ quiet = false }: ScreenLoadingProps) {
   const { route: current } = useNavigation();
   // A layer's own route, which it keeps while it slides away after a Back.
   const route = useOptionalScreen()?.route ?? current;
+  // A deep link starts its screens' stylesheets as the app starts, and a stalled push its screen's.
   return (
-    <div className={clsx(quiet && 'quiet-in')}>
+    <div ref={styleNow} className={clsx(quiet && 'quiet-in')}>
       <LoadingBar route={route} />
       <div className={clsx(styles.loading, !quiet && 'quiet-in')}>
         <Spinner />

@@ -30,9 +30,9 @@
 
 /* The toast centers in the window, but a click in the sidebar right after Undo is no double click
    on it, so there only the content column catches clicks. */
-@media (min-width: 768px) and (pointer: fine),
-  (min-width: 768px) and (pointer: none),
-  (min-width: 768px) and (min-device-width: 501px) and (min-device-height: 501px) {
+@media (width >= 768px) and (pointer: fine),
+  (width >= 768px) and (pointer: none),
+  (width >= 768px) and (device-width >= 600px) and (device-height >= 600px) {
   .shielded {
     pointer-events: none;
   }
@@ -136,9 +136,9 @@
   }
 }
 
-@media (max-width: 767px),
-  (pointer: coarse) and (max-device-width: 500px),
-  (pointer: coarse) and (max-device-height: 500px) {
+@media (width < 768px),
+  (pointer: coarse) and (device-width < 600px),
+  (pointer: coarse) and (device-height < 600px) {
   .raised {
     bottom: calc(88px + var(--safe-bottom));
   }

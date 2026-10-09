@@ -34,9 +34,9 @@
   padding-top: var(--space-1);
 }
 
-@media (max-width: 767px),
-  (pointer: coarse) and (max-device-width: 500px),
-  (pointer: coarse) and (max-device-height: 500px) {
+@media (width < 768px),
+  (pointer: coarse) and (device-width < 600px),
+  (pointer: coarse) and (device-height < 600px) {
   .main {
     padding-right: var(--space-4);
     padding-left: var(--space-4);
@@ -55,8 +55,8 @@
 
 /* Sideways a phone has about 300px of height under Safari's bars: the title starts closer to the
    nav bar. */
-@media (pointer: coarse) and (max-device-width: 500px) and (min-width: 540px),
-  (pointer: coarse) and (max-device-height: 500px) and (min-width: 540px) {
+@media (pointer: coarse) and (device-width < 600px) and (width >= 600px),
+  (pointer: coarse) and (device-height < 600px) and (width >= 600px) {
   .main {
     padding-top: var(--space-4);
   }

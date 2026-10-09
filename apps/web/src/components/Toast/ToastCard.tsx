@@ -1,6 +1,7 @@
 import clsx from 'clsx';
 import { CircleAlert, CircleCheck } from 'lucide-react';
 import { useRef, type FocusEvent, type MouseEvent } from 'react';
+import { styleNow } from '../../lib/styleNow';
 import { Icon } from '../Icon';
 import styles from './Toast.module.css';
 import type { ToastMessage, ToastStore } from './toastStore';
@@ -47,8 +48,10 @@ export function ToastCard({ toast, store }: { toast: ToastMessage; store: ToastS
     if (event.currentTarget === document.activeElement) hold.returnFocus();
     store.undo(toast.id);
   };
+  // A toast can show on its own while a part's stylesheet loads, as after reconnecting.
   return (
     <div
+      ref={styleNow}
       className={clsx(
         styles.toast,
         toast.undo && styles.withAction,

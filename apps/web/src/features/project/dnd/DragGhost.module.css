@@ -57,9 +57,9 @@
   flex: none;
 }
 
-@media (max-width: 767px),
-  (pointer: coarse) and (max-device-width: 500px),
-  (pointer: coarse) and (max-device-height: 500px) {
+@media (width < 768px),
+  (pointer: coarse) and (device-width < 600px),
+  (pointer: coarse) and (device-height < 600px) {
   /* Mirrors the phone row. The padding is 1px short of the row's on every side because the border
      sits inside the row's width, so the title gets the row's column and breaks into the same
      lines. */

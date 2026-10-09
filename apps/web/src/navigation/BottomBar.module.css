@@ -25,8 +25,8 @@
 
 /* Sideways a phone has about 300px of height under Safari's bars: less room around the buttons,
    which end where the home indicator's area starts. */
-@media (pointer: coarse) and (max-device-width: 500px) and (min-width: 540px),
-  (pointer: coarse) and (max-device-height: 500px) and (min-width: 540px) {
+@media (pointer: coarse) and (device-width < 600px) and (width >= 600px),
+  (pointer: coarse) and (device-height < 600px) and (width >= 600px) {
   .bar {
     padding-top: 6px;
     padding-bottom: max(6px, var(--safe-bottom));

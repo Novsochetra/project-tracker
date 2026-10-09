@@ -36,9 +36,9 @@
   margin: 0;
 }
 
-@media (max-width: 767px),
-  (pointer: coarse) and (max-device-width: 500px),
-  (pointer: coarse) and (max-device-height: 500px) {
+@media (width < 768px),
+  (pointer: coarse) and (device-width < 600px),
+  (pointer: coarse) and (device-height < 600px) {
   /* The bottom padding clears the New ticket bar. */
   .page {
     padding: 28px calc(var(--space-4) + var(--safe-right)) calc(96px + var(--safe-bottom))
@@ -46,8 +46,8 @@
   }
 }
 
-@media (pointer: coarse) and (max-device-width: 500px) and (min-width: 540px),
-  (pointer: coarse) and (max-device-height: 500px) and (min-width: 540px) {
+@media (pointer: coarse) and (device-width < 600px) and (width >= 600px),
+  (pointer: coarse) and (device-height < 600px) and (width >= 600px) {
   .page {
     padding-top: var(--space-3);
   }
