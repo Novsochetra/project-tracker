@@ -1,7 +1,8 @@
 import { useQueryClient, type QueryClient, type QueryKey } from '@tanstack/react-query';
 import { useCallback, useEffect } from 'react';
 import { projectOfQuery, useApi } from '../../../api';
-import { createReachability, watchApiTraffic, type TrackerCheck } from '../../../app/reachability';
+import { createReachability, watchApiTraffic } from '../../../app/reachability';
+import { trackerCheckOf, type TrackerCheck } from '../../../app/trackerCheck';
 import { useToast } from '../../../components';
 import { onDraftsNotKept } from '../../../lib/draftStorage';
 import { guardUnload } from '../../../lib/drafts';
@@ -57,8 +58,8 @@ function useDraftSync(): (takeScope: () => SyncScope) => void {
 export const RETRY_GAP_MS = 10_000;
 
 // A retry that fails makes the tracker look unreachable, and the refetch after it reachable
-// again, which would start the next retry at once. So retries on that signal wait until
-// RETRY_GAP_MS after the last one.
+// again, or gets a bare 5xx that the check finds answered, which would start the next retry at
+// once. So retries on those signals wait until RETRY_GAP_MS after the last one.
 function spacedRuns(sync: () => void) {
   let last = Number.NEGATIVE_INFINITY;
   let timer: ReturnType<typeof setTimeout> | undefined;
@@ -110,6 +111,18 @@ function onReportedChange(queryClient: QueryClient, touch: (projectKey: string) 
 
 type Sync = (takeScope: () => SyncScope) => void;
 
+// A bare 5xx the tracker answers its check around may have been a kept draft's own save, through
+// a proxy whose connection broke. It is retried as after an outage, not at the next start,
+// `online` or change in its project (PT-109); one the tracker keeps answering that way, every
+// RETRY_GAP_MS.
+const retryingAfter =
+  (check: TrackerCheck, retry: () => void): TrackerCheck =>
+  async () => {
+    const signal = await check();
+    if (signal === 'reachable') retry();
+    return signal;
+  };
+
 function syncOnReconnect(queryClient: QueryClient, sync: Sync, check: TrackerCheck): () => void {
   const scope = scopeOfNextRun();
   const runs = spacedRuns(() => sync(scope.take));
@@ -123,8 +136,13 @@ function syncOnReconnect(queryClient: QueryClient, sync: Sync, check: TrackerChe
       runs.soon();
     },
   };
+  let stopped = false;
   const reachability = createReachability();
-  const stopWatching = watchApiTraffic(queryClient, reachability, check);
+  const stopWatching = watchApiTraffic(
+    queryClient,
+    reachability,
+    retryingAfter(check, () => !stopped && all.soon()),
+  );
   const stopListening = reachability.subscribe(() => {
     if (!reachability.isUnreachable()) all.soon();
   });
@@ -135,6 +153,7 @@ function syncOnReconnect(queryClient: QueryClient, sync: Sync, check: TrackerChe
   window.addEventListener('online', all.now);
   all.now();
   return () => {
+    stopped = true;
     runs.stop();
     stopWatching();
     stopListening();
@@ -169,6 +188,6 @@ export function useTicketDrafts(enabled: boolean): void {
   const client = useApi();
   useEffect(() => {
     if (!enabled) return;
-    return syncOnReconnect(queryClient, sync, () => client.checkHealth());
+    return syncOnReconnect(queryClient, sync, trackerCheckOf(client));
   }, [client, enabled, queryClient, sync]);
 }

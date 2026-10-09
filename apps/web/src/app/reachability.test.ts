@@ -8,6 +8,7 @@ import { createTestQueryClient, isInvalidated } from '../api/test/render';
 import { noteAnswer, SAVED_ANSWER_HEADER } from '../pwa/savedAnswers';
 import { signalOf } from './offline';
 import { createReachability, watchApiTraffic, type Reachability } from './reachability';
+import { sharedCheck } from './trackerCheck';
 
 const NETWORK_DOWN = new TypeError('Failed to fetch');
 const BARE_500 = new ApiError(500, 'http_error', 'Internal Server Error');
@@ -72,6 +73,7 @@ describe('createReachability', () => {
 describe('watchApiTraffic', () => {
   let queryClient: QueryClient;
   let reachability: Reachability;
+  // The health read the check sends.
   let check: Mock<() => Promise<unknown>>;
   let stop: () => void;
 
@@ -79,7 +81,7 @@ describe('watchApiTraffic', () => {
     queryClient = createTestQueryClient();
     reachability = createReachability();
     check = vi.fn(() => Promise.resolve({ ok: true }));
-    stop = watchApiTraffic(queryClient, reachability, check);
+    stop = watchApiTraffic(queryClient, reachability, sharedCheck(check));
   });
 
   afterEach(() => {

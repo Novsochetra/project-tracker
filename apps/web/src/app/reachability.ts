@@ -1,7 +1,8 @@
 import { hashKey, type QueryClient } from '@tanstack/react-query';
 import { queryKeys } from '../api';
 import { lastAnswerWasSaved } from '../pwa/savedAnswers';
-import { signalOf, signalOfError, type ApiSignal } from './offline';
+import { signalOf, type ApiSignal } from './offline';
+import type { TrackerCheck } from './trackerCheck';
 
 export interface Reachability {
   isUnreachable: () => boolean;
@@ -29,21 +30,6 @@ export function createReachability(): Reachability {
 
 const PROJECTS_HASH = hashKey(queryKeys.projects());
 
-// A read that only the tracker answers, never a saved copy (`checkHealth` in @tracker/client).
-export type TrackerCheck = () => Promise<unknown>;
-
-// The check goes around the query and mutation caches, so its answer is final: a bare 5xx to it
-// too means the proxy can't reach the API.
-async function checkedSignal(check: TrackerCheck): Promise<ApiSignal | null> {
-  try {
-    await check();
-    return 'reachable';
-  } catch (error) {
-    const signal = signalOfError(error);
-    return signal === 'unsure' ? 'unreachable' : signal;
-  }
-}
-
 export function watchApiTraffic(
   queryClient: QueryClient,
   reachability: Reachability,
@@ -66,7 +52,7 @@ export function watchApiTraffic(
   const confirm = () => {
     if (checking || reachability.isUnreachable()) return;
     checking = true;
-    void checkedSignal(check).then((signal) => {
+    void check().then((signal) => {
       checking = false;
       if (!stopped) settle(signal, false);
     });

@@ -1,7 +1,12 @@
 import { ApiError } from '@tracker/client';
 import { describe, expect, it } from 'vitest';
 import { NETWORK_ERROR_MESSAGE } from '../../api';
-import { TOO_BIG_FOR_SERVER_MESSAGE, TOO_SLOW_MESSAGE, uploadFailureReason } from './uploadFailure';
+import {
+  NOT_SAVED_MESSAGE,
+  TOO_BIG_FOR_SERVER_MESSAGE,
+  TOO_SLOW_MESSAGE,
+  uploadFailureReason,
+} from './uploadFailure';
 
 describe('uploadFailureReason', () => {
   it('puts the bare answers of Node and proxies in plain words', () => {
@@ -10,6 +15,18 @@ describe('uploadFailureReason', () => {
     );
     expect(uploadFailureReason(new ApiError(413, 'http_error', 'Payload Too Large'))).toBe(
       TOO_BIG_FOR_SERVER_MESSAGE,
+    );
+  });
+
+  it("says a bare 5xx wasn't saved: from a stopped API's proxy, or the tracker's own", () => {
+    expect(uploadFailureReason(new ApiError(500, 'http_error', 'Internal Server Error'))).toBe(
+      NOT_SAVED_MESSAGE,
+    );
+    expect(uploadFailureReason(new ApiError(502, 'http_error', 'Bad Gateway'))).toBe(
+      NOT_SAVED_MESSAGE,
+    );
+    expect(uploadFailureReason(new ApiError(500, 'internal', 'Database is locked.'))).toBe(
+      'Database is locked.',
     );
   });
 

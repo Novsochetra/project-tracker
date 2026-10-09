@@ -3,6 +3,7 @@ import { useEffect, useLayoutEffect, useState, useSyncExternalStore } from 'reac
 import { useApi } from '../api';
 import { lastAnswerWasSaved, subscribeSavedAnswers, watchSavedAnswers } from '../pwa/savedAnswers';
 import { createReachability, watchApiTraffic, type Reachability } from './reachability';
+import { trackerCheckOf } from './trackerCheck';
 import { useOnline } from './useOnline';
 
 // Called once for the app, so the banner and capture sync follow the same store.
@@ -13,7 +14,7 @@ export function useReachability(): Reachability {
   // A layout effect, so it is in place before the screens' first requests start in their effects.
   useLayoutEffect(() => watchSavedAnswers(window), []);
   useEffect(
-    () => watchApiTraffic(queryClient, reachability, () => client.checkHealth()),
+    () => watchApiTraffic(queryClient, reachability, trackerCheckOf(client)),
     [client, queryClient, reachability],
   );
   return reachability;
@@ -25,5 +26,13 @@ export function useApiUnreachable(reachability: Reachability): boolean {
   return !online || unreachable;
 }
 
-export const useShowsSavedData = (): boolean =>
-  useSyncExternalStore(subscribeSavedAnswers, lastAnswerWasSaved, () => false);
+// For the banner, which is up only while the tracker can't be reached. Once it said saved data is
+// shown, it says so until it goes: the tracker's first answer when it is back is noted a moment
+// before its request reports success, and for that moment it said "Can't reach the tracker"
+// (PT-109).
+export function useShowsSavedData(): boolean {
+  const saved = useSyncExternalStore(subscribeSavedAnswers, lastAnswerWasSaved, () => false);
+  const [shown, setShown] = useState(saved);
+  if (saved && !shown) setShown(true);
+  return saved || shown;
+}

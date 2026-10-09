@@ -567,6 +567,54 @@ test.describe('attachments', () => {
     });
   }
 
+  // From 768px the header and the sidebar sit beside the screen's scroller, so a note's going
+  // can't move them either; before PT-109 a tablet held taps on them for 500 ms.
+  for (const [part, control] of [
+    [
+      'the header',
+      (page: Page) =>
+        page.locator('header').getByRole('button', { name: 'Mobile app', exact: true }),
+    ],
+    [
+      'the sidebar',
+      (page: Page) =>
+        page
+          .getByRole('complementary', { name: 'Projects' })
+          .getByRole('button', { name: 'Mobile app 1 open' }),
+    ],
+  ] as const) {
+    test(`touch tablet: a tap on ${part} just after Dismiss on the ticket screen acts @tablet`, async ({
+      page,
+      api,
+    }, info) => {
+      test.skip(!info.project.use.hasTouch, 'A tap on a touch screen; a click goes through.');
+      if (isPhone(info.project.name)) await page.setViewportSize(TABLET);
+      await page.addInitScript(recordClicks);
+      await seedProject(api, 'Mobile app', 'MOB', [{ title: 'Existing ticket' }]);
+      await page.goto('/p/MOB/1');
+      await page.getByLabel('Add files to ticket').setInputFiles([...images(8), SVG]);
+      await expect(page.getByRole('progressbar')).toHaveCount(0);
+      const dismiss = page.getByRole('alert').getByRole('button', { name: 'Dismiss' });
+      await dismiss.evaluate((button) => button.scrollIntoView({ block: 'center' }));
+      await page.waitForTimeout(400);
+      const spot = await spotOf(dismiss);
+      const target = await spotOf(control(page));
+      await page.evaluate(() => {
+        (window as unknown as TapClicks).tapClicks.length = 0;
+      });
+
+      await page.touchscreen.tap(spot.x, spot.y);
+      await page.waitForTimeout(150);
+      await page.touchscreen.tap(target.x, target.y);
+
+      await expect(page).toHaveURL(/\/p\/MOB$/);
+      const [first, second] = await page.evaluate(() => (window as unknown as TapClicks).tapClicks);
+      expect(second! - first!, 'the tap came while the screen held others').toBeLessThan(
+        CLICK_SHIELD_MS,
+      );
+    });
+  }
+
   // Where a person may be when an upload fails: at the Add tile they picked from, at the bottom
   // of the screen, or back in the middle of the files.
   const LATE_SCROLLS = [
@@ -613,8 +661,10 @@ test.describe('attachments', () => {
       await expect(told).toHaveCount(noteSeen ? 0 : 1);
       if (!noteSeen) await expect(told).toBeInViewport();
       // One file's 500 says nothing about the tracker, which answers its check: no banner says,
-      // even for a moment, that the whole tracker can't be reached (PT-101).
+      // even for a moment, that the whole tracker can't be reached (PT-101), nor does the note
+      // (PT-109).
       expect(await page.evaluate(() => (window as unknown as BannerSaid).bannerSaid)).toBe(false);
+      await expect(note).toContainText("The tracker couldn't save it. Try again.");
     });
   }
 

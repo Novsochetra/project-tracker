@@ -193,7 +193,8 @@ export class TrackerClient {
   getMeta = () => this.http.request<ServerMeta>('GET', '/api/meta');
 
   // Fresh, so an answer the web app's service worker saved earlier can't stand in for the tracker.
-  checkHealth = () => this.http.request<{ ok: boolean }>('GET', '/api/health', { fresh: true });
+  checkHealth = ({ signal }: { signal?: AbortSignal } = {}) =>
+    this.http.request<{ ok: boolean }>('GET', '/api/health', { fresh: true, signal });
 
   getSession = () => this.http.request<SessionState>('GET', '/api/session');
 

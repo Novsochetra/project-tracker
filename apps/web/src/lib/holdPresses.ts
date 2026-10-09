@@ -12,27 +12,55 @@ function layerOf(element: Element): Element {
   return layer;
 }
 
-// The fixed or sticky bar of the layer that is on top at this point, if any.
-function barAt(x: number, y: number, layer: Element): Element | null {
-  for (let found = document.elementFromPoint(x, y); found && found !== layer;) {
-    const { position } = getComputedStyle(found);
-    if (position === 'fixed' || position === 'sticky') return layer.contains(found) ? found : null;
-    found = found.parentElement;
+const isPinned = (element: Element): boolean =>
+  /^(fixed|sticky)$/.test(getComputedStyle(element).position);
+
+const scrolls = (element: Element): boolean =>
+  /^(auto|scroll)$/.test(getComputedStyle(element).overflowY);
+
+function scrollerOf(note: Element, layer: Element): Element | null {
+  for (let found = note.parentElement; found && found !== layer; found = found.parentElement) {
+    if (scrolls(found)) return found;
   }
   return null;
 }
 
-// A screen's bars along the top and bottom, such as its nav bar and bottom bar, with where they
-// are now. A sheet has none: one that fits its content shrinks with the note, so its header moves
-// too, and the scrim it uncovers would close it. A page without layout (jsdom) can't tell.
+// What is on top at this point and stays put while the note's place closes: a fixed or sticky
+// bar, or the part of the page beside the scroller the note is in, which moves only with that
+// scroller's box, as desktop's header and sidebar (PT-109).
+function stillPartAt(x: number, y: number, scroller: Element | null): Element | null {
+  let beside: Element | null = null;
+  for (let found = document.elementFromPoint(x, y); found; found = found.parentElement) {
+    if (isPinned(found)) return found;
+    if (found === scroller) return null;
+    if (scroller && found.contains(scroller)) return beside;
+    beside = found;
+  }
+  return null;
+}
+
+// Along the top and the bottom, and on desktop the sidebar along the left.
+const edges = (): [number, number][] => [
+  [window.innerWidth / 2, 0],
+  [window.innerWidth / 2, window.innerHeight - 1],
+  [0, window.innerHeight / 2],
+];
+
+// A screen's bars and the parts of the page beside it, such as its nav bar and bottom bar or the
+// desktop header and sidebar, with where they are now. A sheet has none: one that fits its
+// content shrinks with the note, so its header moves too, and the scrim it uncovers would close
+// it. A page without layout (jsdom) can't tell.
 function stillBars(note: Element, layer: Element): Map<Element, DOMRect> {
   const bars = new Map<Element, DOMRect>();
   if (typeof document.elementFromPoint !== 'function' || note.closest('[role="dialog"]')) {
     return bars;
   }
-  for (const y of [0, window.innerHeight - 1]) {
-    const bar = barAt(window.innerWidth / 2, y, layer);
-    if (bar && !bar.contains(note)) bars.set(bar, bar.getBoundingClientRect());
+  const scroller = scrollerOf(note, layer);
+  for (const [x, y] of edges()) {
+    const bar = stillPartAt(x, y, scroller);
+    if (bar && layer.contains(bar) && !bar.contains(note)) {
+      bars.set(bar, bar.getBoundingClientRect());
+    }
   }
   return bars;
 }
@@ -45,8 +73,9 @@ const sameBox = (a: DOMRect, b: DOMRect): boolean =>
 // Comment. For CLICK_SHIELD_MS its screen or sheet drops the presses that may not be aimed at what
 // is there now, the second tap of a double tap among them: a touch or pen tap and a double-click's
 // later clicks. A mouse's single click and a key press go through, as on an action sheet (PT-82),
-// and preventing the mousedown leaves focus where it was. So do presses on a screen's bars while
-// they stay where they were (PT-101): nothing moves under the finger there.
+// and preventing the mousedown leaves focus where it was. So do presses on a screen's bars
+// (PT-101) and on desktop's header and sidebar (PT-109) while they stay where they were: nothing
+// moves under the finger there.
 export function holdPresses(within: Element): void {
   const layer = layerOf(within);
   const bars = stillBars(within, layer);

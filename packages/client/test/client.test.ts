@@ -435,6 +435,15 @@ describe('fresh reads', () => {
     expect(headersOf(last()).has(FRESH_READ_HEADER)).toBe(false);
     expect(last().init.cache).toBeUndefined();
   });
+
+  it('can stop a health check that waits too long', async () => {
+    const { client, last } = setup();
+    const controller = new AbortController();
+
+    await client.checkHealth({ signal: controller.signal });
+
+    expect(last().init.signal).toBe(controller.signal);
+  });
 });
 
 describe('uploadAttachment', () => {

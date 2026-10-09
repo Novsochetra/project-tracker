@@ -155,3 +155,97 @@ describe("holdPresses on a screen's bars", () => {
     expect(tapOn(scrim.control).defaultPrevented).toBe(true);
   });
 });
+
+// Desktop and tablets (768px and wider) keep the header and the sidebar outside the screen, whose
+// scroller holds the note: a note's going can't move them (PT-109).
+describe('holdPresses beside the scroller the note is in', () => {
+  let note: HTMLParagraphElement;
+  let scroller: HTMLDivElement;
+
+  const part = (tag: 'header' | 'aside', box: DOMRect) => {
+    const element = document.createElement(tag);
+    let now = box;
+    element.getBoundingClientRect = () => now;
+    const control = document.createElement('button');
+    control.addEventListener('click', pressed);
+    element.append(control);
+    return { element, control, move: () => void (now = new DOMRect(box.x, box.y + 10, 10, 10)) };
+  };
+
+  const tapOn = (target: Element) => {
+    target.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, pointerType: 'touch' }));
+    const event = new MouseEvent('click', { bubbles: true, cancelable: true, detail: 1 });
+    target.dispatchEvent(event);
+    return event;
+  };
+
+  // What the browser finds along the top, the bottom and the left of the screen.
+  const showing = (top: Element, bottom: Element, left: Element) => {
+    document.elementFromPoint = (x: number, y: number) => {
+      if (y === 0) return top;
+      return x === 0 ? left : bottom;
+    };
+  };
+
+  // Desktop's shell: the sidebar, then the header over the screen's scroller.
+  const desktop = () => {
+    const sidebar = part('aside', new DOMRect(0, 0, 260, 800));
+    const header = part('header', new DOMRect(260, 0, 1020, 52));
+    const column = document.createElement('div');
+    column.append(header.element, scroller);
+    screen.append(sidebar.element, column);
+    return { sidebar, header };
+  };
+
+  beforeEach(() => {
+    note = document.createElement('p');
+    scroller = document.createElement('div');
+    scroller.style.overflowY = 'auto';
+    scroller.append(note, button);
+  });
+
+  it('lets a tap on the header or the sidebar through while they stay where they were', () => {
+    const { sidebar, header } = desktop();
+    showing(header.control, button, sidebar.control);
+
+    holdPresses(note);
+
+    expect(tapOn(header.control).defaultPrevented).toBe(false);
+    expect(tapOn(sidebar.control).defaultPrevented).toBe(false);
+    expect(tapOn(button).defaultPrevented).toBe(true);
+    expect(pressed).toHaveBeenCalledTimes(2);
+  });
+
+  it('holds what scrolls with the note, though a hit test finds it at an edge', () => {
+    const { sidebar } = desktop();
+    showing(button, button, sidebar.control);
+
+    holdPresses(note);
+
+    expect(tapOn(button).defaultPrevented).toBe(true);
+  });
+
+  it('holds a part that moved', () => {
+    const { sidebar, header } = desktop();
+    showing(header.control, button, sidebar.control);
+
+    holdPresses(note);
+    header.move();
+
+    expect(tapOn(header.control).defaultPrevented).toBe(true);
+  });
+
+  it('holds all of a sheet, whatever lies beside its scroller', () => {
+    const { sidebar, header } = desktop();
+    const sheet = document.createElement('div');
+    sheet.setAttribute('role', 'dialog');
+    scroller.replaceWith(sheet);
+    sheet.append(scroller);
+    showing(header.control, button, sidebar.control);
+
+    holdPresses(note);
+
+    expect(tapOn(header.control).defaultPrevented).toBe(true);
+    expect(tapOn(sidebar.control).defaultPrevented).toBe(true);
+  });
+});
