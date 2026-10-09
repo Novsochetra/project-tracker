@@ -42,7 +42,7 @@ try {
   // loads at start, and its problem below says so.
   const opened = load.lazyParts.filter((key) => !load.files.includes(manifest[key]?.file ?? ''));
   process.stdout.write(`Loaded when opened: ${opened.map(partName).join(', ')}.\n`);
-  const problems = firstLoadProblems(load, { kB, budgetKB: BUDGET_KB, maxFiles: MAX_FILES });
+  const problems = firstLoadProblems({ ...load, kB }, { budgetKB: BUDGET_KB, maxFiles: MAX_FILES });
   problems.forEach((problem) => process.stdout.write(`${problem}\n`));
   if (problems.length > 0) process.exitCode = 1;
 } finally {

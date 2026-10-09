@@ -1,5 +1,6 @@
 import { filterTabs, resolveFilter, type ProjectBoard } from '@tracker/shared';
-import { SearchField, Segmented, type SegmentedOption } from '../../components';
+import { SearchField } from '../../components/SearchField';
+import { Segmented, type SegmentedOption } from '../../components/Segmented';
 import { setListFilter, setListQuery, useListView } from './listViewStore';
 import styles from './ProjectScreen.module.css';
 import { FilterTabs } from './tabs/FilterTabs';

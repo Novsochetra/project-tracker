@@ -2,7 +2,7 @@ import type { TicketDetail } from '@tracker/shared';
 import { useRef } from 'react';
 import { useIsPhone } from '../../lib/media';
 import { NavBar, NavBarSpacer } from '../../navigation';
-import { AttachmentViewerProvider } from '../attachments';
+import { AttachmentViewerProvider } from '../attachments/AttachmentViewerProvider';
 import { ActivitySection } from './activity/ActivitySection';
 import { TicketMain } from './main/TicketMain';
 import { TicketFooter } from './side/TicketFooter';

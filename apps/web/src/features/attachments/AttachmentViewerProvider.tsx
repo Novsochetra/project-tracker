@@ -1,6 +1,8 @@
 import type { Attachment } from '@tracker/shared';
 import { useMemo, useState, type ReactNode } from 'react';
-import { ImageViewer, VideoViewer, type ViewerImage } from '../../overlays';
+import type { ViewerImage } from '../../overlays';
+import { ImageViewer } from '../../overlays/ImageViewer';
+import { VideoViewer } from '../../overlays/VideoViewer';
 import { TextPreviewSheet } from './TextPreviewSheet';
 import { AttachmentViewerContext, toViewerImages, type AttachmentViewerApi } from './viewerContext';
 import { viewerTarget, type ViewerTarget } from './viewerTarget';

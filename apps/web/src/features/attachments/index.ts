@@ -1,5 +1,4 @@
 export { AttachmentPicker, type AttachmentPickerProps } from './AttachmentPicker';
-export { AttachmentViewerProvider } from './AttachmentViewerProvider';
 export { DropOverlay, type DropOverlayProps } from './DropOverlay';
 export { FileInput, type FileInputProps } from './FileInput';
 export { FileNote, FileNotes, type FileNoteProps, type FileNotesProps } from './FileNote';

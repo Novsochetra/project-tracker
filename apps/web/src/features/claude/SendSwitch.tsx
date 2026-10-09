@@ -1,5 +1,6 @@
 import clsx from 'clsx';
-import { GroupedCard, Switch } from '../../components';
+import { GroupedCard } from '../../components';
+import { Switch } from '../../components/Switch';
 import styles from './PromptSheet.module.css';
 
 export interface SendSwitchProps {

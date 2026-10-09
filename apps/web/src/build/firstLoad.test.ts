@@ -71,28 +71,34 @@ describe('readFirstLoad', () => {
 });
 
 describe('firstLoadProblems', () => {
-  const sizes = (kB: number, maxFiles = 3) => ({ kB, budgetKB: 215, maxFiles });
+  const LIMITS = { budgetKB: 215, maxFiles: 3 };
+  const measured = (manifest: Manifest, kB: number) => ({ ...readFirstLoad(manifest), kB });
 
   it('has none for a split build within its budget', () => {
-    expect(firstLoadProblems(readFirstLoad(SPLIT), sizes(206.5))).toEqual([]);
+    expect(firstLoadProblems(measured(SPLIT, 206.5), LIMITS)).toEqual([]);
+  });
+
+  it('has none for a first load of exactly its budget and its most files', () => {
+    expect(firstLoadProblems(measured(SPLIT, 215), { budgetKB: 215, maxFiles: 2 })).toEqual([]);
   });
 
   it('reports a first load past its budget', () => {
-    expect(firstLoadProblems(readFirstLoad(SPLIT), sizes(215.1))).toEqual([
+    expect(firstLoadProblems(measured(SPLIT, 215.1), LIMITS)).toEqual([
       'First-load JS is past its 215 kB budget: load more of it when its screen or sheet opens, or raise the budget.',
     ]);
   });
 
-  it('reports a first load split into more files than it allows', () => {
-    expect(firstLoadProblems(readFirstLoad(SPLIT), sizes(206.5, 1))).toEqual([
-      'First-load JS is 2 files, more than 1: code the first screen shares stopped folding into ' +
-        'the entry. A likely cause is a barrel the first load imports that re-exports a module ' +
-        'only a lazy part uses; import that module directly instead.',
+  it('reports a first load one file past its most, naming its files', () => {
+    expect(firstLoadProblems(measured(SPLIT, 206.5), { ...LIMITS, maxFiles: 1 })).toEqual([
+      'First-load JS is 2 files, more than 1 (assets/index-1.js, assets/shared-1.js): code the ' +
+        'first screen shares stopped folding into the entry. A likely cause is a barrel the first ' +
+        'load imports that re-exports a module only a lazy part uses; import that module directly ' +
+        'instead.',
     ]);
   });
 
   it('reports a lazy part loaded at start by the file that holds it', () => {
-    expect(firstLoadProblems(readFirstLoad(TAKEN), sizes(206.5))).toEqual([
+    expect(firstLoadProblems(measured(TAKEN, 206.5), LIMITS)).toEqual([
       "Loaded at start but meant to load when opened: a dynamic import of assets/index-1.js, which the first load holds. Something there imports the part statically; Vite's INEFFECTIVE_DYNAMIC_IMPORT warning above names it.",
     ]);
   });

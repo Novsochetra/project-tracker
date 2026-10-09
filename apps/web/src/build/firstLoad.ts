@@ -45,8 +45,11 @@ export function readFirstLoad(manifest: Manifest): FirstLoad {
   };
 }
 
-export interface FirstLoadLimits {
+export interface MeasuredFirstLoad extends FirstLoad {
   kB: number;
+}
+
+export interface FirstLoadLimits {
   budgetKB: number;
   maxFiles: number;
 }
@@ -59,8 +62,8 @@ const takenProblem = (file: string) =>
 // More files can cost more than their size shows: each is a request on a slow phone, and the split
 // that makes them can also grow the total (PT-93: 2 files became 7, 207.3 kB became 210.6 kB).
 export function firstLoadProblems(
-  { files, taken }: FirstLoad,
-  { kB, budgetKB, maxFiles }: FirstLoadLimits,
+  { files, taken, kB }: MeasuredFirstLoad,
+  { budgetKB, maxFiles }: FirstLoadLimits,
 ): string[] {
   const problems: string[] = [];
   if (kB > budgetKB)
@@ -70,9 +73,10 @@ export function firstLoadProblems(
     );
   if (files.length > maxFiles)
     problems.push(
-      `First-load JS is ${files.length} files, more than ${maxFiles}: code the first screen ` +
-        'shares stopped folding into the entry. A likely cause is a barrel the first load imports ' +
-        'that re-exports a module only a lazy part uses; import that module directly instead.',
+      `First-load JS is ${files.length} files, more than ${maxFiles} (${files.join(', ')}): ` +
+        'code the first screen shares stopped folding into the entry. A likely cause is a barrel ' +
+        'the first load imports that re-exports a module only a lazy part uses; import that ' +
+        'module directly instead.',
     );
   return [...problems, ...taken.map(takenProblem)];
 }

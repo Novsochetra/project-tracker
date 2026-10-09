@@ -2,7 +2,7 @@ import { DEFAULT_STATUSES, PRIORITIES, PRIORITY_LABELS, isOverdue } from '@track
 import type { Priority, StatusCategory } from '@tracker/shared';
 import * as I from 'lucide-react';
 import { useState, type CSSProperties, type ReactNode } from 'react';
-import * as C from '../components';
+import * as C from './galleryComponents';
 
 const css = (style: CSSProperties) => style;
 const row = css({ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 10 });
