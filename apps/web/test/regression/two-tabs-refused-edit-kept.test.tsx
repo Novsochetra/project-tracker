@@ -5,6 +5,7 @@ import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { listItem, makeTicketDetail, STATUS } from '../../src/api/test/fixtures';
 import { SAVE_MARKS_STORAGE_KEY } from '../../src/features/ticket/fields/saveMarks';
 import { renderTicket } from '../../src/features/ticket/test/renderTicket';
+import { actFromCopy, copyOfStorage } from '../../src/features/ticket/test/staleCopy';
 import { DRAFTS_STORAGE_KEY } from '../../src/lib/storedDrafts';
 import { skipAnimations } from '../../src/overlays/testing';
 
@@ -63,7 +64,8 @@ function trackerBehindTabA() {
 // Lead (PT-90 E2E, about 1 run in 16): tab B cleared the name tab A was still sending, and the
 // tracker refused B's save until A's landed. A's answer, worked out from a copy of the drafts store
 // that hadn't heard of B's clear yet, removed the kept text. B took that for "saved elsewhere": it
-// dropped its note, never sent the clear again, and the tracker kept 'Dara'.
+// dropped its note, never sent the clear again, and the tracker kept 'Dara'. Since PT-111 that
+// answer removes only the records A's copy has, so B's clear stays kept.
 it('keeps a refused edit with its note and saves it once the other tab lands, though the kept text went', async () => {
   const user = userEvent.setup();
   const tracker = trackerBehindTabA();
@@ -73,6 +75,7 @@ it('keeps a refused edit with its note and saves it once the other tab lands, th
   heard(DRAFTS_STORAGE_KEY, SAVE_MARKS_STORAGE_KEY);
   const assignee = screen.getByLabelText('Assignee');
   expect(assignee).toHaveValue('Dara');
+  const copyOfTabA = copyOfStorage();
 
   await user.clear(assignee);
   await user.click(screen.getByLabelText('Title'));
@@ -80,8 +83,7 @@ it('keeps a refused edit with its note and saves it once the other tab lands, th
   expect(await screen.findByText(NOTE)).toBeInTheDocument();
 
   tracker.land();
-  tabA.saves.finishSave(ID, save, true);
-  localStorage.removeItem(DRAFTS_STORAGE_KEY);
+  actFromCopy(copyOfTabA, () => tabA.saves.finishSave(ID, save, true));
   heard(DRAFTS_STORAGE_KEY, SAVE_MARKS_STORAGE_KEY);
   expect(assignee).toHaveValue('');
 

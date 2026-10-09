@@ -64,13 +64,29 @@ export const heldRecords = (): Held[] => [
   ...sharedRecords(),
 ];
 
-export function putRecord(record: DraftRecord): void {
-  const key = `${PREFIX}${TAB}:${(written++).toString(36)}`;
+function write(key: string, record: DraftRecord): boolean {
   try {
     localStorage.setItem(key, JSON.stringify(record));
-    return;
+    return true;
   } catch {
-    // Kept in memory instead: see `unstored`.
+    return false;
+  }
+}
+
+// Once storage takes a write again, the records it refused go there too, oldest first, so a
+// reload keeps them and storage refusing again is told again.
+function storeUnstored(): void {
+  for (const [key, record] of unstored) {
+    if (!write(key, record)) return;
+    unstored.delete(key);
+  }
+}
+
+export function putRecord(record: DraftRecord): void {
+  const key = `${PREFIX}${TAB}:${(written++).toString(36)}`;
+  if (write(key, record)) {
+    storeUnstored();
+    return;
   }
   const allKept = unstored.size === 0;
   unstored.set(key, record);

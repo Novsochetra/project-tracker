@@ -52,8 +52,14 @@ test('a save that hangs past a minute and lands after newer text leaves the newe
   await expect(note(b)).toHaveCount(0);
 });
 
+// The records of B's text that A has heard of, as A's copy of storage holds them.
+const recordsHeard = (page: Page): Promise<string[]> =>
+  page.evaluate(() => Object.keys(localStorage).filter((key) => key.startsWith('tracker.drafts:')));
+
 // Reviewer 77 (follow-up 2): another tab wrote the drafts store back without B's entry while B's
 // save was on its way, and that save then failed: B went back to the old title with no note.
+// Since PT-111 a tab drops text by removing the records it has read, here ones A heard of before
+// B typed more: B's newer text stays.
 test('a failed save keeps its text when another tab dropped it meanwhile', async ({
   page,
   context,
@@ -64,9 +70,12 @@ test('a failed save keeps its text when another tab dropped it meanwhile', async
   const b = await open(context);
   const release = await hold(b, 'PATCH', (url) => url.pathname === '/api/tickets/MOB-1');
 
-  await typeAtEnd(b, ' from B');
+  await typeAtEnd(b, ' from');
+  await expect(titleOf(a)).toHaveValue('Ticket 1 from');
+  const heard = await recordsHeard(a);
+  await typeAtEnd(b, ' B');
   await expect(titleOf(a)).toHaveValue('Ticket 1 from B');
-  await a.evaluate(() => localStorage.removeItem('tracker.drafts'));
+  await a.evaluate((keys) => keys.forEach((key) => localStorage.removeItem(key)), heard);
   release('fail');
 
   await expect(note(b)).toHaveText("Title isn't saved yet.");
