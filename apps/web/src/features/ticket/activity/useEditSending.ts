@@ -1,5 +1,5 @@
 import { useRef, type Dispatch, type SetStateAction } from 'react';
-import { NETWORK_ERROR_MESSAGE } from '../../../api';
+import { isStaleEdit, NETWORK_ERROR_MESSAGE } from '../../../api';
 import { useToast } from '../../../components';
 import {
   draftSaved,
@@ -18,6 +18,7 @@ import {
   checkStep,
   withPhase,
   type EditState,
+  type SendResult,
   type SentBy,
 } from './commentEdit';
 
@@ -28,7 +29,8 @@ export interface SendingInput {
   edit: EditState;
   text: string;
   setEdit: Dispatch<SetStateAction<EditState>>;
-  editComment: (text: string) => Promise<boolean>;
+  // `expected`: the text the edit was typed over.
+  editComment: (text: string, expected: string) => Promise<SendResult>;
 }
 
 export interface EditSending {
@@ -39,25 +41,29 @@ export interface EditSending {
 
 type Send = (text: string, by: SentBy) => void;
 
-// Once Save is pressed, the app may send the text for the user until it is saved.
+const resultOf = (error: unknown): SendResult => (isStaleEdit(error) ? 'stale' : 'failed');
+
+// Once Save is pressed, the app may send the text for the user until it is saved. It names the
+// text the edit was typed over: the kept base, which Save in 'changed' moves to theirs.
 function useEditSend({ id, target, base, setEdit, editComment }: SendingInput) {
   const saveDraft = useDraftSave();
   const submit = (text: string) => keepDraft(id, { ...target, text, submitted: true }, base);
   const send: Send = (text, by) => {
     submit(text);
+    const expected = storedDraft(id)?.base ?? base;
     setEdit((current) => withPhase(current, 'saving'));
     const request =
       by === 'app'
-        ? saveDraft({ ...target, text, base }).then(
-            () => true,
-            () => false,
-          )
-        : editComment(text);
-    void request.then((saved) => {
-      if (saved) draftSaved(id, text);
+        ? saveDraft({ ...target, text, base: expected }).then(() => 'saved' as const, resultOf)
+        : editComment(text, expected);
+    void request.then((result) => {
+      if (result === 'saved') draftSaved(id, text);
+      // Another tab's edit landed first. This one is kept, without Save pressed for it, so it
+      // isn't sent for the user again: they pick a version (afterSave).
+      else if (result === 'stale') keepDraft(id, { ...target, text }, base);
       // Cancelling mid-save dropped the kept text, but a failed edit reopens the editor with it.
       else if (!storedDraft(id)) submit(text);
-      setEdit((current) => afterSave(current, saved));
+      setEdit((current) => afterSave(current, result));
     });
   };
   return { submit, send };

@@ -11,7 +11,7 @@ import {
 import { errorMessage } from '../../api';
 import { Button, GroupedCard, SelectRow, StatusGlyph } from '../../components';
 import { isPhoneNow } from '../../lib/media';
-import { holdPresses } from '../attachments/holdPresses';
+import { holdPresses } from '../../lib/holdPresses';
 import { ColorSwatches } from './ColorSwatches';
 import { DeleteStatus } from './DeleteStatus';
 import styles from './StatusEditor.module.css';

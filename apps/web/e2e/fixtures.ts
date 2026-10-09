@@ -22,3 +22,5 @@ export const test = base.extend<Fixtures>({
 export { expect };
 
 export const isPhone = (projectName: string): boolean => projectName === 'phone';
+
+export const isTablet = (projectName: string): boolean => projectName === 'tablet';

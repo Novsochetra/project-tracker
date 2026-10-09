@@ -84,6 +84,10 @@ it('saves the other drafts when the tracker refuses one', async () => {
   );
   await waitFor(() => expect(storedDraft('description:MOB-2')).toBeUndefined());
   expect(client.updateComment).toHaveBeenCalledTimes(1);
-  expect(client.updateComment).toHaveBeenCalledWith('c2', { text: 'Refused' });
+  expect(client.updateComment).toHaveBeenCalledWith(
+    'c2',
+    { text: 'Refused' },
+    { text: 'Second thought' },
+  );
   expect(storedDraft('comment-edit:c2')?.text).toBe('Refused');
 });

@@ -13,6 +13,9 @@ export interface EditState {
 
 export type SentBy = 'user' | 'app';
 
+// stale: the tracker refused the edit, because the comment has other text than it was typed over.
+export type SendResult = 'saved' | 'failed' | 'stale';
+
 const OPEN_PHASES: ReadonlySet<EditPhase> = new Set(['editing', 'saving', 'failed', 'changed']);
 
 export const isOpen = (edit: EditState): boolean => OPEN_PHASES.has(edit.phase);
@@ -72,9 +75,13 @@ export function afterCheck(edit: EditState, step: CheckStep): EditState {
   return step === 'wait' && edit.phase === 'saving' ? withPhase(edit, 'failed') : edit;
 }
 
-// The editor stays open until the edit is saved, and a failed edit reopens it with its text.
-// Text typed since Save was pressed is a new edit, which waits for Save.
-export function afterSave(edit: EditState, saved: boolean): EditState {
-  if (saved) return { phase: edit.phase === 'saving' ? 'closed' : edit.phase, checkFirst: false };
-  return { phase: edit.phase === 'editing' ? 'editing' : 'failed', checkFirst: true };
+// The editor stays open until the edit is saved, and a failed edit reopens it with its text; a
+// refused one says the comment changed elsewhere. Text typed since Save was pressed is a new
+// edit, which waits for Save.
+export function afterSave(edit: EditState, result: SendResult): EditState {
+  if (result === 'saved') {
+    return { phase: edit.phase === 'saving' ? 'closed' : edit.phase, checkFirst: false };
+  }
+  if (edit.phase === 'editing') return { phase: 'editing', checkFirst: true };
+  return { phase: result === 'stale' ? 'changed' : 'failed', checkFirst: true };
 }

@@ -1,0 +1,49 @@
+/* Over the tile's middle, like a video's play badge, without hiding or blocking the tile. */
+.mark {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-full);
+  background: var(--media-badge);
+}
+
+.badge .spinner {
+  color: var(--text-inverse);
+}
+
+/* On a file's tile it takes the icon's place, as an upload's ring does, in the tile's own colours.
+   The icon's middle is 21px in (thumbnailFaces .file: 10px padding inside the 1px border, a 20px
+   icon), the badge's 12px. */
+.overIcon {
+  justify-content: flex-start;
+  padding-left: calc(21px - 12px);
+}
+
+.overIcon .badge {
+  width: 24px;
+  height: 24px;
+  background: var(--fill);
+}
+
+.overIcon .badge .spinner {
+  color: var(--muted);
+}
+
+/* The tile darkens under a mouse (ThumbnailGrid), and the badge with it; the mark follows the
+   tile's button. */
+@media (hover: hover) {
+  :hover + .overIcon .badge {
+    background: var(--fill-2);
+  }
+}

@@ -12,6 +12,10 @@ export interface AttachmentViewerApi {
 
 export const AttachmentViewerContext = createContext<AttachmentViewerApi | null>(null);
 
+// The id of the file whose viewer is opening: tapped while the viewers' code was on its way, and
+// not yet dropped. Its tile shows the spinner (OpeningMark).
+export const ViewerOpeningContext = createContext<string | null>(null);
+
 export function useAttachmentViewer(): AttachmentViewerApi {
   const api = use(AttachmentViewerContext);
   if (!api) throw new Error('useAttachmentViewer needs an <AttachmentViewerProvider> above it.');

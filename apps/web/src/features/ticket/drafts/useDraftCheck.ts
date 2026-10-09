@@ -45,36 +45,44 @@ function checkWith(
   return 'unchanged';
 }
 
-// Compares a kept draft with what the tracker has now. Neither the cache nor a saved answer can
-// be trusted for this: rolled-back optimistic saves leave old typed text in the cache, and an
+// Reads the ticket from the tracker and shows it. Neither the cache nor a saved answer can be
+// trusted for a check: rolled-back optimistic saves leave old typed text in the cache, and an
 // answer saved before someone else's change would let the retry save over it. So the read is
-// fresh: from the tracker, or a failed check that saves nothing. It is a query of its own, so
-// checks running together share it and the offline banner hears how it went.
+// fresh: from the tracker, or it fails. It is a query of its own, so checks running together share
+// it and the offline banner hears how it went.
+export function useFreshTicket(ticketKey: string): () => Promise<TicketDetail> {
+  const client = useApi();
+  const queryClient = useQueryClient();
+  return useCallback(async () => {
+    const since = Date.now();
+    const detail = await queryClient.fetchQuery({
+      queryKey: ['draftCheck', ticketKey],
+      queryFn: () => client.getTicket(ticketKey, { fresh: true }),
+      staleTime: 0,
+      gcTime: 0,
+      retry: false,
+    });
+    showOnScreen(queryClient, ticketKey, detail, since);
+    return detail;
+  }, [client, queryClient, ticketKey]);
+}
+
+// Compares a kept draft with what the tracker has now; a failed read saves nothing.
 export function useDraftCheck(
   ticketKey: string,
 ): (id: string, typedOver?: string) => Promise<CheckResult> {
-  const client = useApi();
-  const queryClient = useQueryClient();
+  const read = useFreshTicket(ticketKey);
   return useCallback(
     async (id: string, typedOver?: string) => {
       const draft = storedDraft(id);
       if (!draft) return null;
       if (navigator.onLine === false) return 'unreachable';
-      const since = Date.now();
       try {
-        const detail = await queryClient.fetchQuery({
-          queryKey: ['draftCheck', ticketKey],
-          queryFn: () => client.getTicket(ticketKey, { fresh: true }),
-          staleTime: 0,
-          gcTime: 0,
-          retry: false,
-        });
-        showOnScreen(queryClient, ticketKey, detail, since);
-        return checkWith(id, draft, serverText(detail, draft), typedOver);
+        return checkWith(id, draft, serverText(await read(), draft), typedOver);
       } catch (error) {
         return isNotFound(error) ? 'gone' : 'unreachable';
       }
     },
-    [client, queryClient, ticketKey],
+    [read],
   );
 }

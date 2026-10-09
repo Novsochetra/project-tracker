@@ -15,6 +15,7 @@ export function serverText(detail: TicketDetail, draft: StoredDraft): string | u
     case 'comment-edit':
       return detail.activity.find((item) => matchesActivity(item, draft.activityId))?.text;
     case 'comment':
+    case 'comment-send':
       return undefined;
   }
 }

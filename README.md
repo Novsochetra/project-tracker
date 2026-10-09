@@ -70,7 +70,7 @@ The app also keeps the copy/paste loop: **Send to Claude Code** copies a ready-m
 
 ```bash
 npm run verify     # format, lint, typecheck, unit + integration tests
-npm run test:e2e   # Playwright: iPhone-sized WebKit and desktop Chromium
+npm run test:e2e   # Playwright: iPhone-sized WebKit, desktop Chromium, and an iPad (WebKit) for the tap shields
 ```
 
 - Architecture and product decisions: `docs/architecture.md`

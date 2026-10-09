@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { firstLoadProblems, readFirstLoad, type Manifest } from './firstLoad';
+import { FIRST_LOAD_LIMITS, firstLoadProblems, readFirstLoad, type Manifest } from './firstLoad';
 
 // The shape of a real build's manifest (vite build --manifest), cut down.
 const SPLIT: Manifest = {
@@ -95,6 +95,29 @@ describe('firstLoadProblems', () => {
         'load imports that re-exports a module only a lazy part uses; import that module directly ' +
         'instead.',
     ]);
+  });
+
+  describe('with the limits check:first-load uses', () => {
+    // What the build wrote with the image and video viewers in a part without the text preview
+    // (PT-103): the code the first load shares with the parts split in two.
+    const SPLIT_IN_THREE: Manifest = {
+      ...SPLIT,
+      'index.html': { ...SPLIT['index.html']!, imports: ['_shared-1.js', '_shared-2.js'] },
+      '_shared-2.js': { file: 'assets/shared-2.js' },
+    };
+
+    it('passes a first load of 2 files', () => {
+      expect(firstLoadProblems(measured(SPLIT, 203.9), FIRST_LOAD_LIMITS)).toEqual([]);
+    });
+
+    it('fails a first load of 3 files, even within its budget', () => {
+      expect(firstLoadProblems(measured(SPLIT_IN_THREE, 204.5), FIRST_LOAD_LIMITS)).toEqual([
+        'First-load JS is 3 files, more than 2 (assets/index-1.js, assets/shared-1.js, ' +
+          'assets/shared-2.js): code the first screen shares stopped folding into the entry. A ' +
+          'likely cause is a barrel the first load imports that re-exports a module only a lazy ' +
+          'part uses; import that module directly instead.',
+      ]);
+    });
   });
 
   it('reports a lazy part loaded at start by the file that holds it', () => {

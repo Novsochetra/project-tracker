@@ -16,8 +16,9 @@ import styles from './Shell.module.css';
 import { Sidebar } from './Sidebar';
 import { useApiUnreachable, useReachability } from './useApiUnreachable';
 
-// One element, so the stack's layers don't render again each time the Shell does.
+// One element each, so the stack's layers don't render again each time the Shell does.
 const SCREEN_LOADING = <ScreenLoading />;
+const FIRST_LOAD = <ScreenLoading quiet />;
 
 export function Shell() {
   useLiveUpdates();
@@ -40,11 +41,10 @@ export function Shell() {
         )}
         {unreachable && <OfflineBanner />}
         <main className={clsx(styles.stack, unreachable && styles.belowBanner)}>
-          {/* Above the stack, so the browser's Back or Forward to a screen whose code is still
-              on its way keeps the current screen until it arrives (navigations are transitions)
-              instead of sliding in a blank one. Only a first load straight into such a screen
-              shows this fallback; a push that waited out its time limit shows the stack's. */}
-          <Suspense fallback={SCREEN_LOADING}>
+          {/* Above the stack, for a first load straight into a screen whose code is still on
+              its way: the first screens have no boundary of their own. A screen opened later
+              shows the stack's loading state in its own layer. */}
+          <Suspense fallback={FIRST_LOAD}>
             <StackNavigator renderScreen={renderScreen} loading={SCREEN_LOADING} />
           </Suspense>
         </main>

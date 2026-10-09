@@ -6,6 +6,7 @@ import type {
   CreateStatusInput,
   CreatedTicket,
   CreateTicketInput,
+  ExpectedComment,
   ExpectedFields,
   ListTicketsQuery,
   MarkSentInput,
@@ -132,8 +133,11 @@ export class TrackerClient {
       body: input,
     });
 
-  updateComment = (activityId: string, input: UpdateCommentInput) =>
-    this.http.request<Activity>('PATCH', `/api/activity/${segment(activityId)}`, { body: input });
+  // `expected`: the text the edit was typed over, as for updateTicket.
+  updateComment = (activityId: string, input: UpdateCommentInput, expected?: ExpectedComment) =>
+    this.http.request<Activity>('PATCH', `/api/activity/${segment(activityId)}`, {
+      body: expected ? { ...input, expected } : input,
+    });
 
   deleteActivity = (activityId: string) =>
     this.http.request<void>('DELETE', `/api/activity/${segment(activityId)}`);

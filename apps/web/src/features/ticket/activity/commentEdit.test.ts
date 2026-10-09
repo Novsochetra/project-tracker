@@ -113,16 +113,23 @@ describe('what a check of the tracker means for a comment edit', () => {
 
 describe('a comment edit whose save settled', () => {
   it('closes once saved, and the next Save sends at once', () => {
-    expect(afterSave(edit('saving', true), true)).toEqual(edit('closed'));
+    expect(afterSave(edit('saving', true), 'saved')).toEqual(edit('closed'));
   });
 
   it('keeps a new edit typed meanwhile open', () => {
-    expect(afterSave(edit('editing'), true)).toEqual(edit('editing'));
-    expect(afterSave(edit('editing'), false)).toEqual(edit('editing', true));
+    expect(afterSave(edit('editing'), 'saved')).toEqual(edit('editing'));
+    expect(afterSave(edit('editing'), 'failed')).toEqual(edit('editing', true));
+    expect(afterSave(edit('editing'), 'stale')).toEqual(edit('editing', true));
   });
 
   it('reopens failed, and the next Save checks the tracker first', () => {
-    expect(afterSave(edit('saving'), false)).toEqual(edit('failed', true));
-    expect(afterSave(withPhase(STARTED, 'closed'), false)).toEqual(edit('failed', true));
+    expect(afterSave(edit('saving'), 'failed')).toEqual(edit('failed', true));
+    expect(afterSave(withPhase(STARTED, 'closed'), 'failed')).toEqual(edit('failed', true));
+  });
+
+  // The tracker refused it: the comment changed since the edit was typed.
+  it('reopens as changed elsewhere once refused', () => {
+    expect(afterSave(edit('saving'), 'stale')).toEqual(edit('changed', true));
+    expect(afterSave(withPhase(STARTED, 'closed'), 'stale')).toEqual(edit('changed', true));
   });
 });

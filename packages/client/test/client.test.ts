@@ -185,6 +185,13 @@ const routes: Route[] = [
     call: (c) => c.updateComment('a1', { text: 'Edited' }),
   },
   {
+    name: 'updateComment with the text it was typed over',
+    method: 'PATCH',
+    path: '/api/activity/a1',
+    body: { text: 'Edited', expected: { text: 'First' } },
+    call: (c) => c.updateComment('a1', { text: 'Edited' }, { text: 'First' }),
+  },
+  {
     name: 'deleteActivity',
     method: 'DELETE',
     path: '/api/activity/a1',

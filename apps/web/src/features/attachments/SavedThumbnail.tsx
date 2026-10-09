@@ -1,11 +1,12 @@
 import { attachmentKind, type Attachment, type AttachmentKind } from '@tracker/shared';
 import clsx from 'clsx';
 import { use, type ReactNode } from 'react';
+import { OpeningMark } from './OpeningMark';
 import { RemoveButton } from './RemoveButton';
 import { FileFace, ImageFace, VideoFace } from './thumbnailFaces';
 import styles from './ThumbnailGrid.module.css';
 import { capitalized, isWide } from './thumbnailLabels';
-import { AttachmentViewerContext } from './viewerContext';
+import { AttachmentViewerContext, ViewerOpeningContext } from './viewerContext';
 
 export interface SavedThumbnailProps {
   attachment: Attachment;
@@ -107,9 +108,11 @@ export function SavedThumbnail({
 }: SavedThumbnailProps) {
   const kind = attachmentKind(attachment.mimeType);
   const props: FaceProps = { attachment, kind, label, onOpen };
+  const opening = use(ViewerOpeningContext) === attachment.id && onOpen !== undefined;
   return (
     <div className={clsx(styles.tile, isWide(kind) && styles.wide, marked && styles.marked)}>
       {isWide(kind) ? <DocumentFace {...props} /> : <MediaFace {...props} />}
+      {opening && <OpeningMark overIcon={isWide(kind)} />}
       {onRemove && <RemoveButton label={`Remove ${label}`} onRemove={onRemove} />}
     </div>
   );

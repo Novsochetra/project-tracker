@@ -1,13 +1,12 @@
 import {
   useCallback,
-  useEffect,
   useLayoutEffect,
   useMemo,
   useRef,
   type MouseEvent,
   type PointerEvent,
-  type RefObject,
 } from 'react';
+import { usePresses } from './pressPointer';
 
 // Longer than a 160ms exit and than a double-click or double tap, whose second press can come
 // 200ms or more after the first (like the toast's TOAST_SHIELD_MS).
@@ -37,50 +36,24 @@ export function useClickShield(shown?: unknown): (event: MouseEvent) => void {
 export const isAimedClick = (pointerType: string | null, detail: number): boolean =>
   pointerType === 'mouse' && detail === 1;
 
-// A press can end without a click: dragged off the row, or dragging the sheet down. Its pointer
-// must not stand for a later click that has none (VoiceOver's). The click a press makes comes in
-// the same task as its pointerup, so it still finds the pointer; the press may end anywhere.
-function useForgetEndedPress(pointerType: RefObject<string | null>): void {
-  useEffect(() => {
-    let timer: ReturnType<typeof setTimeout> | undefined;
-    const forget = () => {
-      clearTimeout(timer);
-      pointerType.current = null;
-    };
-    const forgetAfterClick = () => {
-      clearTimeout(timer);
-      timer = setTimeout(forget);
-    };
-    window.addEventListener('pointerup', forgetAfterClick, true);
-    window.addEventListener('pointercancel', forget, true);
-    return () => {
-      clearTimeout(timer);
-      window.removeEventListener('pointerup', forgetAfterClick, true);
-      window.removeEventListener('pointercancel', forget, true);
-    };
-  }, [pointerType]);
-}
-
 // Like useClickShield, but a mouse's single click goes through at once: on desktop, an action sheet
-// such as Discard changes ignored a click aimed at it for 500 ms. Not every browser's click says
-// which pointer made it, so the pointerdown before it tells.
+// such as Discard changes ignored a click aimed at it for 500 ms. The press before the click tells
+// its pointer (followPresses).
 export function useTapShield(shown?: unknown) {
   const shield = useClickShield(shown);
-  const pointerType = useRef<string | null>(null);
-  useForgetEndedPress(pointerType);
+  const presses = usePresses();
   return useMemo(() => {
     const hold = (event: MouseEvent) => {
-      if (!isAimedClick(pointerType.current, event.detail)) shield(event);
+      if (!isAimedClick(presses.current?.pointer() ?? null, event.detail)) shield(event);
     };
     return {
-      onPointerDownCapture: (event: PointerEvent) => {
-        pointerType.current = event.pointerType;
-      },
+      onPointerDownCapture: (event: PointerEvent) =>
+        presses.current?.press(event.pointerType, event.currentTarget),
       onMouseDownCapture: hold,
       onClickCapture: (event: MouseEvent) => {
         hold(event);
-        pointerType.current = null;
+        presses.current?.forget();
       },
     };
-  }, [shield]);
+  }, [shield, presses]);
 }

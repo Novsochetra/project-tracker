@@ -100,7 +100,7 @@ test.describe('new ticket sheet', () => {
     await expect(sheet.getByLabel('Ticket title')).toHaveValue('');
   });
 
-  test('desktop: Discard changes takes a click at once, and a double-click discards nothing', async ({
+  test('desktop: Discard changes takes a click at once, and a double-click or double tap discards nothing @tablet', async ({
     page,
     api,
   }, info) => {
@@ -126,10 +126,17 @@ test.describe('new ticket sheet', () => {
     const spot = (await discardRow.boundingBox())!;
     await discard.getByRole('button', { name: 'Keep editing' }).click();
     await expect(discard).toBeHidden();
-    await page.mouse.click(spot.x + spot.width / 2, spot.y + spot.height / 2);
-    await page.waitForTimeout(150);
-    await page.mouse.down({ clickCount: 2 });
-    await page.mouse.up({ clickCount: 2 });
+    const [x, y] = [spot.x + spot.width / 2, spot.y + spot.height / 2];
+    if (info.project.use.hasTouch) {
+      await page.touchscreen.tap(x, y);
+      await page.waitForTimeout(150);
+      await page.touchscreen.tap(x, y);
+    } else {
+      await page.mouse.click(x, y);
+      await page.waitForTimeout(150);
+      await page.mouse.down({ clickCount: 2 });
+      await page.mouse.up({ clickCount: 2 });
+    }
     await page.waitForTimeout(600);
     await expect(discardRow).toBeVisible();
     await expect(title).toHaveValue('Crash on launch');

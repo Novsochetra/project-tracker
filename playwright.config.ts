@@ -36,6 +36,13 @@ export default defineConfig({
         viewport: { width: 1280, height: 800 },
       },
     },
+    // An iPad gets the desktop layout (768px and wider) with touch taps, where the shields that
+    // hold a double tap's second tap must work too. Only their tests run there (PT-106).
+    {
+      name: 'tablet',
+      grep: /@tablet/,
+      use: { ...devices['iPad Mini'] },
+    },
   ],
   webServer: [
     {

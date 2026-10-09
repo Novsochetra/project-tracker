@@ -1,5 +1,5 @@
 import { act, fireEvent, render, screen, within } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import userEvent, { type UserEvent } from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi, type MockInstance } from 'vitest';
 import { attachment } from '../../api/test/fixtures';
 import { skipAnimations } from '../../overlays/testing';
@@ -30,12 +30,12 @@ function holdCode(): void {
   code.arrived = new Promise((resolve) => (code.arrive = resolve));
 }
 
-// Until the parts have it, which this test's fresh modules share with the screen.
+// Until the parts have it, or know it failed, which this test's fresh modules share with the screen.
 async function arrive(): Promise<void> {
   const { ImageViewer } = await import('./viewerParts');
   await act(async () => {
     code.arrive();
-    await ImageViewer.preload();
+    await ImageViewer.preload().catch(() => undefined);
   });
 }
 
@@ -67,7 +67,12 @@ async function renderTicketFiles() {
     ]);
   function Grid() {
     const viewer = useAttachmentViewer();
-    return <ThumbnailGrid attachments={FILES} onOpen={(index) => viewer.open(FILES, index)} />;
+    return (
+      <>
+        <ThumbnailGrid attachments={FILES} onOpen={(index) => viewer.open(FILES, index)} />
+        <textarea aria-label="Comment" />
+      </>
+    );
   }
   const Wrapper = api.setupApi({ fetchAttachmentText: () => Promise.resolve('line one') }).wrapper;
   render(
@@ -84,6 +89,13 @@ async function renderTicketFiles() {
 
 const tile = (name: string) => screen.getByRole('button', { name });
 const opening = () => screen.queryByText('Opening');
+const commentBox = () => screen.getByRole('textbox', { name: 'Comment' });
+
+function hidePage(): void {
+  const hidden = vi.spyOn(document, 'visibilityState', 'get').mockReturnValue('hidden');
+  act(() => void document.dispatchEvent(new Event('visibilitychange')));
+  hidden.mockRestore();
+}
 
 let restore: Array<() => void> = [];
 let consoleError: MockInstance<typeof console.error>;
@@ -186,5 +198,126 @@ describe('the attachment viewers load when a file is first opened', () => {
     ).toBeInTheDocument();
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     expect(tile('Open image 1')).toBeInTheDocument();
+  });
+});
+
+// Before PT-107 a viewer whose code came late opened over whatever the person did since and took
+// focus: keys typed in the comment box after it went to the viewer.
+const MOVING_ON: Array<[string, (user: UserEvent) => Promise<unknown> | void]> = [
+  ['another control takes focus', () => act(() => commentBox().focus())],
+  ['a key is pressed', (user) => user.keyboard('a')],
+  [
+    'the person presses where nothing takes focus',
+    (user) => user.pointer({ keys: '[MouseLeft]', target: document.body }),
+  ],
+  ['a wheel scrolls the screen', () => void fireEvent.wheel(commentBox(), { deltaY: 120 })],
+  [
+    'a touch starts a scroll',
+    () => void fireEvent.pointerDown(commentBox(), { pointerType: 'touch' }),
+  ],
+  ['Escape is pressed', (user) => user.keyboard('{Escape}')],
+  ['the page is hidden', () => hidePage()],
+  [
+    "the browser's Back leaves the screen",
+    () => act(() => void window.dispatchEvent(new PopStateEvent('popstate'))),
+  ],
+];
+
+describe('a viewer whose code is on its way', () => {
+  it('shows its spinner on the tapped tile, which moves to the next tile tapped', async () => {
+    holdCode();
+    const user = await renderTicketFiles();
+    await user.click(tile('Open notes.txt'));
+    expect(tile('Open notes.txt').parentElement).toContainElement(opening());
+    expect(opening()?.closest('.quiet-in')).toBeInTheDocument();
+    await user.click(tile('Open image 2'));
+    expect(screen.getAllByText('Opening')).toHaveLength(1);
+    expect(tile('Open image 2').parentElement).toContainElement(opening());
+  });
+
+  it.each(MOVING_ON)('is dropped when %s, and never opens or takes focus', async (_, moveOn) => {
+    holdCode();
+    const user = await renderTicketFiles();
+    await user.click(tile('Open image 1'));
+    expect(opening()).toBeInTheDocument();
+    await moveOn(user);
+    expect(opening()).not.toBeInTheDocument();
+    const focused = document.activeElement;
+    await arrive();
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(document.activeElement).toBe(focused);
+    await user.click(tile('Open image 1'));
+    expect(screen.getByRole('dialog', { name: 'Image viewer' })).toContainElement(
+      document.activeElement as HTMLElement,
+    );
+  });
+
+  it('keeps every key typed in the comment box after a tap, also once the code arrives', async () => {
+    holdCode();
+    const user = await renderTicketFiles();
+    await user.click(tile('Open image 1'));
+    await user.click(commentBox());
+    await user.keyboard('abc');
+    await arrive();
+    await user.keyboard('def');
+    expect(commentBox()).toHaveValue('abcdef');
+    expect(commentBox()).toHaveFocus();
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  it('is dropped by typing in a field that kept focus through the tap, as on iOS', async () => {
+    holdCode();
+    const user = await renderTicketFiles();
+    act(() => commentBox().focus());
+    fireEvent.click(tile('Open image 1'));
+    expect(opening()).toBeInTheDocument();
+    await user.keyboard('abc');
+    await arrive();
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(commentBox()).toHaveValue('abc');
+    expect(commentBox()).toHaveFocus();
+  });
+
+  it('uses up the Escape that drops it, and only that one', async () => {
+    const prevented: boolean[] = [];
+    const seeEscape = (event: KeyboardEvent) => void prevented.push(event.defaultPrevented);
+    window.addEventListener('keydown', seeEscape);
+    try {
+      holdCode();
+      const user = await renderTicketFiles();
+      await user.keyboard('{Escape}');
+      await user.click(tile('Open image 1'));
+      await user.keyboard('{Escape}');
+      await user.keyboard('{Escape}');
+      expect(prevented).toEqual([false, true, false]);
+    } finally {
+      window.removeEventListener('keydown', seeEscape);
+    }
+  });
+
+  it('still opens when the pointer only moves, or the same file is tapped again', async () => {
+    holdCode();
+    const user = await renderTicketFiles();
+    await user.click(tile('Open image 1'));
+    await user.hover(tile('Play video 1'));
+    await user.click(tile('Open image 1'));
+    expect(opening()).toBeInTheDocument();
+    await arrive();
+    const viewer = screen.getByRole('dialog', { name: 'Image viewer' });
+    expect(viewer).toContainElement(document.activeElement as HTMLElement);
+  });
+
+  it('says nothing when the code fails after the open was dropped, and so at the next open', async () => {
+    holdCode();
+    code.fails = true;
+    const user = await renderTicketFiles();
+    await user.click(tile('Open image 1'));
+    await user.keyboard('{Escape}');
+    await arrive();
+    expect(screen.queryByText("Couldn't open the image. Reload to try again.")).toBeNull();
+    await user.click(tile('Open image 1'));
+    expect(
+      await screen.findByText("Couldn't open the image. Reload to try again."),
+    ).toBeInTheDocument();
   });
 });

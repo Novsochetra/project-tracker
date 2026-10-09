@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import { controlsAfter, focusFirst } from './focusAfter';
+import { controlsAfter, focusFirst } from './focusFirst';
 
 afterEach(() => {
   document.body.replaceChildren();

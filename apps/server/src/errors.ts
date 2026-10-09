@@ -26,7 +26,8 @@ export const notFound = (message: string) => new AppError('not_found', message);
 
 export const conflict = (message: string) => new AppError('conflict', message);
 
-export const staleEdit = () =>
-  new AppError('stale', 'The ticket changed since this edit was typed. Read it again first.');
+export const staleEdit = (
+  message = 'The ticket changed since this edit was typed. Read it again first.',
+) => new AppError('stale', message);
 
 export const forbidden = (message: string) => new AppError('forbidden', message);

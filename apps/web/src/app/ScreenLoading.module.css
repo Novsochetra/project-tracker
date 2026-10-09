@@ -1,6 +1,5 @@
-/* The screen's nav bar comes with its code, so this keeps clear of the status bar itself. */
 .loading {
   display: flex;
   justify-content: center;
-  padding: calc(64px + var(--safe-top)) var(--space-6) 64px;
+  padding: 64px var(--space-6);
 }

@@ -1,13 +1,21 @@
 import type { Dispatch, SetStateAction } from 'react';
 import { errorMessage, isStaleEdit } from '../../../api';
 import { useToast, type ToastApi } from '../../../components';
-import { draftIdOf, draftSaved, keepDraft, storedDraft } from '../../../lib/storedDrafts';
+import {
+  draftIdOf,
+  draftSaved,
+  keepDraft,
+  storedDraft,
+  type StoredDraft,
+} from '../../../lib/storedDrafts';
 import { useLatest } from '../../../lib/useLatest';
 import { useDraftSave, type DraftSave } from '../drafts/useDraftSave';
 import { endSave, markSaved, refuseSave, type FieldDraft } from './fieldDraft';
 import {
+  claimText,
   finishSave,
   isSavingElsewhere,
+  ownTextOf,
   saveStep,
   savesOf,
   startSave,
@@ -64,6 +72,29 @@ async function request(
   }
 }
 
+interface Answered {
+  id: string;
+  number: number;
+  draft: StoredDraft;
+  result: SaveResult;
+}
+
+function afterAnswer({ id, number, draft, result }: Answered, input: SaveInput): void {
+  const { text, ticketKey, field, base } = draft;
+  // Another tab can drop the kept text from a copy of the store that hadn't heard of it while
+  // the save was on its way, which reads as saved elsewhere. A failed save keeps it again,
+  // unless newer text was typed since, here or in another tab.
+  if (result === 'failed' && !storedDraft(id) && ownTextOf(id)?.text === text) {
+    keepDraft(id, { ticketKey, field, text }, base);
+  }
+  input.setDraft((current) =>
+    result === 'stale' ? refuseSave(current, text) : endSave(current, text, result === 'saved'),
+  );
+  if (result === 'saved') input.onLanded(text);
+  finishSave(id, number, result === 'saved');
+  if (result === 'stale') input.onStale();
+}
+
 export function useFieldSave(input: SaveInput): SaveField {
   const { target, setDraft } = input;
   const { ticketKey, field } = target;
@@ -91,13 +122,9 @@ export function useFieldSave(input: SaveInput): SaveField {
       checked ? (base ?? shown) : (typedOverLanded ?? base ?? shown),
     );
     const number = startSave(id, value);
+    claimText(id, value);
     const draft = { ticketKey, field, text: value, base: expected };
     const result = await request(latest.current, draft, quiet);
-    setDraft((current) =>
-      result === 'stale' ? refuseSave(current, value) : endSave(current, value, result === 'saved'),
-    );
-    if (result === 'saved') latest.current.onLanded(value);
-    finishSave(id, number, result === 'saved');
-    if (result === 'stale') latest.current.onStale();
+    afterAnswer({ id, number, draft, result }, latest.current);
   };
 }

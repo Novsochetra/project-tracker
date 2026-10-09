@@ -1,7 +1,8 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import type { Locator, Page, Response } from '@playwright/test';
+import type { Dialog, Locator, Page, Response } from '@playwright/test';
 import { FILE_NAME_HEADER } from '@tracker/shared';
+import { CLICK_SHIELD_MS } from '../src/lib/clickShield';
 import { expect, isPhone, test } from './fixtures';
 import { openNewTicketIn, seedProject, ticketRow, toast } from './helpers';
 import { API_URL } from './ports';
@@ -132,9 +133,6 @@ const controlAt = (page: Page, spot: { x: number; y: number }) =>
     return control ? (control.getAttribute('aria-label') ?? control.textContent) : null;
   }, spot);
 
-// How long the page holds back taps after a note's Dismiss (CLICK_SHIELD_MS in lib/clickShield).
-const HELD_MS = 500;
-
 interface TapClicks {
   tapClicks: number[];
 }
@@ -170,7 +168,7 @@ async function doubleTapDismiss(page: Page, input: Locator, note: Locator, gap: 
   await page.touchscreen.tap(spot.x, spot.y);
   await page.waitForTimeout(700);
   const [first, second] = await page.evaluate(() => (window as unknown as TapClicks).tapClicks);
-  const held = first !== undefined && second !== undefined && second - first < HELD_MS;
+  const held = first !== undefined && second !== undefined && second - first < CLICK_SHIELD_MS;
   return { spot, held };
 }
 
@@ -462,8 +460,12 @@ test.describe('attachments', () => {
         await page.evaluate(() => localStorage.clear());
         expect((await request.post(`${API_URL}/api/test/reset`)).status()).toBe(204);
         chooser = 0;
-        page.once('dialog', (dialog) => void dialog.accept());
+        // Leaving a sheet with files asks first; the ticket screen doesn't, and a listener left
+        // behind would pile up with each try.
+        const leave = (dialog: Dialog) => void dialog.accept();
+        page.on('dialog', leave);
         await setUp();
+        page.off('dialog', leave);
       };
       await setUp();
 
@@ -473,7 +475,7 @@ test.describe('attachments', () => {
           await startOver();
           tapped = await doubleTapDismiss(page, input, note, gap);
         }
-        expect(tapped.held, `the second tap within ${HELD_MS} ms, in 3 tries`).toBe(true);
+        expect(tapped.held, `the second tap within ${CLICK_SHIELD_MS} ms, in 3 tries`).toBe(true);
         await expect(note).toHaveCount(0);
         // Nothing that slid under the finger took the second tap: no file removed or asked about,
         // no comment sent (it would take the files along), no file picker, no field focused for
@@ -559,7 +561,9 @@ test.describe('attachments', () => {
 
       await done(page);
       const [first, second] = await page.evaluate(() => (window as unknown as TapClicks).tapClicks);
-      expect(second! - first!, 'the tap came while the screen held others').toBeLessThan(HELD_MS);
+      expect(second! - first!, 'the tap came while the screen held others').toBeLessThan(
+        CLICK_SHIELD_MS,
+      );
     });
   }
 

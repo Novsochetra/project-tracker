@@ -1,4 +1,5 @@
-import { CLICK_SHIELD_MS, isAimedClick, isShielded } from '../../lib/clickShield';
+import { CLICK_SHIELD_MS, isAimedClick, isShielded } from './clickShield';
+import { followPresses } from './pressPointer';
 
 const PRESSES = ['mousedown', 'click'] as const;
 
@@ -50,8 +51,7 @@ export function holdPresses(within: Element): void {
   const layer = layerOf(within);
   const bars = stillBars(within, layer);
   const heldAt = performance.now();
-  // Not every browser's click says which pointer made it, so the pointerdown before it tells.
-  let pointerType: string | null = null;
+  const presses = followPresses();
   const inLayer = (event: Event) => event.target instanceof Node && layer.contains(event.target);
   const onStillBar = ({ target }: Event) =>
     target instanceof Node &&
@@ -59,12 +59,12 @@ export function holdPresses(within: Element): void {
       ([bar, box]) => bar.contains(target) && sameBox(box, bar.getBoundingClientRect()),
     );
   const see = (event: PointerEvent) => {
-    if (inLayer(event)) pointerType = event.pointerType;
+    if (inLayer(event)) presses.press(event.pointerType, layer);
   };
   const drop = (event: MouseEvent) => {
     if (!inLayer(event)) return;
-    const aimed = isAimedClick(pointerType, event.detail);
-    if (event.type === 'click') pointerType = null;
+    const aimed = isAimedClick(presses.pointer(), event.detail);
+    if (event.type === 'click') presses.forget();
     if (aimed || !isShielded(event.detail, heldAt, performance.now()) || onStillBar(event)) return;
     event.preventDefault();
     event.stopPropagation();
@@ -72,6 +72,7 @@ export function holdPresses(within: Element): void {
   document.addEventListener('pointerdown', see, true);
   PRESSES.forEach((type) => document.addEventListener(type, drop, true));
   setTimeout(() => {
+    presses.stop();
     document.removeEventListener('pointerdown', see, true);
     PRESSES.forEach((type) => document.removeEventListener(type, drop, true));
   }, CLICK_SHIELD_MS);

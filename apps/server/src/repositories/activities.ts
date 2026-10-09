@@ -35,6 +35,23 @@ export async function updateActivityRow(
   await db.updateTable('activities').set(changes).where('id', '=', id).execute();
 }
 
+// Conditional on the text the edit was typed over, so an edit can't overwrite one committed after
+// it read the row (Postgres with several connections).
+export async function updateActivityMatching(
+  db: Db,
+  id: string,
+  text: string,
+  changes: Pick<ActivityRow, 'text' | 'editedAt'>,
+): Promise<boolean> {
+  const result = await db
+    .updateTable('activities')
+    .set(changes)
+    .where('id', '=', id)
+    .where('text', '=', text)
+    .executeTakeFirst();
+  return Number(result.numUpdatedRows) > 0;
+}
+
 export async function deleteActivityRow(db: Db, id: string): Promise<void> {
   await db.deleteFrom('activities').where('id', '=', id).execute();
 }

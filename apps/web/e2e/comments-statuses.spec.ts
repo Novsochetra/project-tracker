@@ -37,11 +37,13 @@ test.describe('comments', () => {
 
   // The menu opens above a button near the bottom of the screen, and its delete confirm grows
   // upward from there, which puts the confirm's Delete button where Delete comment was.
-  test('a double-click on Delete comment in a menu above its button keeps the confirm', async ({
+  test('a double-click or double tap on Delete comment in a menu above its button keeps the confirm @tablet', async ({
     page,
     api,
   }, info) => {
     test.skip(isPhone(info.project.name), 'Phones show an action sheet');
+    const press = ({ x, y }: { x: number; y: number }) =>
+      info.project.use.hasTouch ? page.touchscreen.tap(x, y) : page.mouse.click(x, y);
     await seedProject(api, 'Mobile app', 'MOB', [{ title: 'Login error' }]);
     for (let n = 1; n <= 10; n += 1) await api.addComment('MOB-1', { text: `Thought ${n}` });
     await page.goto('/p/MOB/1');
@@ -71,17 +73,17 @@ test.describe('comments', () => {
         spot,
       );
 
-    await page.mouse.click(spot.x, spot.y);
+    await press(spot);
     await page.waitForTimeout(150);
     expect(await underSpot()).toBe('Delete');
-    await page.mouse.click(spot.x, spot.y);
+    await press(spot);
 
     await page.waitForTimeout(600);
     await expect(page.getByRole('alert')).toContainText(
       "Delete this comment? This can't be undone.",
     );
     await expect(activity(page)).toContainText('Thought 10');
-    await page.mouse.click(spot.x, spot.y);
+    await press(spot);
     await expect(activity(page)).not.toContainText('Thought 10');
   });
 
@@ -177,7 +179,7 @@ test.describe('statuses', () => {
   });
 
   // The delete confirm is shorter than the editor, so Add status moves up under the finger.
-  test('a double tap on Delete status keeps its confirm', async ({ page, api }, info) => {
+  test('a double tap on Delete status keeps its confirm @tablet', async ({ page, api }, info) => {
     await seedProject(api, 'Mobile app', 'MOB', [{ title: 'Waiting on design' }]);
     const { statuses } = await api.getProject('MOB');
     await api.createStatus('MOB', {
@@ -196,7 +198,7 @@ test.describe('statuses', () => {
     const box = (await button.boundingBox())!;
     const spot = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
 
-    if (isPhone(info.project.name)) {
+    if (info.project.use.hasTouch) {
       await page.touchscreen.tap(spot.x, spot.y);
       await page.waitForTimeout(150);
       await page.touchscreen.tap(spot.x, spot.y);

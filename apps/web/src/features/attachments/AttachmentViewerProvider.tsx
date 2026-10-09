@@ -1,7 +1,14 @@
 import type { Attachment } from '@tracker/shared';
-import { useMemo, useState, type ReactNode } from 'react';
+import { useCallback, useLayoutEffect, useMemo, useState, type ReactNode } from 'react';
 import type { ViewerImage } from '../../overlays';
-import { AttachmentViewerContext, toViewerImages, type AttachmentViewerApi } from './viewerContext';
+import { watchMovingOn } from './movingOn';
+import { useViewersSettled } from './useViewersSettled';
+import {
+  AttachmentViewerContext,
+  toViewerImages,
+  ViewerOpeningContext,
+  type AttachmentViewerApi,
+} from './viewerContext';
 import { ImageViewer, preloadViewers, TextPreviewSheet, VideoViewer } from './viewerParts';
 import { ViewerSlot } from './ViewerSlot';
 import { viewerTarget, type ViewerTarget } from './viewerTarget';
@@ -39,6 +46,12 @@ const fileOpened =
   (attachment: Attachment) =>
   (current: FileState): FileState => ({ attachment, open: true, opens: current.opens + 1 });
 
+function openId(images: ImagesState, video: FileState, text: FileState): string | null {
+  if (images.open) return images.images[images.index]?.id ?? null;
+  if (video.open) return video.attachment?.id ?? null;
+  return text.open ? (text.attachment?.id ?? null) : null;
+}
+
 // One set of viewers per screen: each keeps its own copy of what it shows, so a thumbnail that
 // re-renders or remounts underneath (a comment draft replaced by the saved comment) never
 // closes it.
@@ -62,13 +75,24 @@ export function AttachmentViewerProvider({ children }: { children: ReactNode }) 
       prepare: preloadViewers,
     };
   }, []);
+  const drop = useCallback(() => {
+    setImages(closed);
+    setVideo(closed);
+    setText(closed);
+  }, []);
+  const settled = useViewersSettled(images.opens + video.opens + text.opens > 0);
+  const opening = settled ? null : openId(images, video, text);
+  const pending = opening !== null;
+  // An open whose code is on its way is dropped once the person moves on (watchMovingOn). In the
+  // layout phase, so the watch ends before an arriving viewer takes focus, which would drop it.
+  useLayoutEffect(() => (pending ? watchMovingOn(drop) : undefined), [pending, drop]);
   const playing = video.attachment;
   return (
     <AttachmentViewerContext value={api}>
-      {children}
+      <ViewerOpeningContext value={opening}>{children}</ViewerOpeningContext>
       <ViewerSlot
         name="Image viewer"
-        part={ImageViewer}
+        settled={settled}
         opens={images.opens}
         open={images.open}
         failure="Couldn't open the image. Reload to try again."
@@ -83,7 +107,7 @@ export function AttachmentViewerProvider({ children }: { children: ReactNode }) 
       </ViewerSlot>
       <ViewerSlot
         name="Video viewer"
-        part={VideoViewer}
+        settled={settled}
         opens={video.opens}
         open={video.open}
         failure="Couldn't play the video. Reload to try again."
@@ -96,7 +120,7 @@ export function AttachmentViewerProvider({ children }: { children: ReactNode }) 
       </ViewerSlot>
       <ViewerSlot
         name="Text preview"
-        part={TextPreviewSheet}
+        settled={settled}
         opens={text.opens}
         open={text.open}
         failure="Couldn't open the file. Reload to try again."

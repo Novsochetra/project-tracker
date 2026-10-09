@@ -181,7 +181,11 @@ it('edits a comment that fails from its menu on a phone', async () => {
   await user.clear(editor);
   await user.type(editor, 'Fixed text');
   await user.click(within(badComment!).getByRole('button', { name: 'Save' }));
-  expect(client.updateComment).toHaveBeenCalledWith('c2', { text: 'Fixed text' });
+  expect(client.updateComment).toHaveBeenCalledWith(
+    'c2',
+    { text: 'Fixed text' },
+    { text: 'This crashes the parser: https://x.dev/a' },
+  );
 });
 
 it.each([
@@ -255,9 +259,11 @@ it('shows the card again once an edit from its stand-in is saved, focus on its m
   await user.clear(editor);
   await user.type(editor, 'Fixed, see https://x.dev/fixed');
   await user.click(within(badComment!).getByRole('button', { name: 'Save' }));
-  expect(client.updateComment).toHaveBeenCalledWith('c2', {
-    text: 'Fixed, see https://x.dev/fixed',
-  });
+  expect(client.updateComment).toHaveBeenCalledWith(
+    'c2',
+    { text: 'Fixed, see https://x.dev/fixed' },
+    { text: 'This crashes the parser: https://x.dev/a' },
+  );
   const link = await within(log()).findByRole('link', { name: 'https://x.dev/fixed' });
   const card = link.closest('article')!;
   expect(card).not.toHaveTextContent("Couldn't show this item");

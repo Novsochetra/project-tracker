@@ -1,4 +1,4 @@
-import { draftSaved, rebaseDraft } from '../../../lib/storedDrafts';
+import { draftSaved, rebaseDraft, storedDraft } from '../../../lib/storedDrafts';
 import { isSentElsewhere, markSending, onOtherTabsMarks } from './saveMarks';
 
 // On a slow connection several saves of one field can be on their way, and the tracker ends with
@@ -128,6 +128,12 @@ export const ownTextOf = (id: string): OwnText | undefined => ownTexts.get(id);
 export function typedHere(id: string, own: OwnText | null): void {
   if (own) ownTexts.set(id, own);
   else ownTexts.delete(id);
+}
+
+// A save sends text this tab may not have typed (kept from an earlier visit, or by another tab).
+// From then on it counts as this tab's, as if typed when it was kept.
+export function claimText(id: string, text: string): void {
+  if (!ownTexts.has(id)) typedHere(id, { text, at: storedDraft(id)?.at ?? Date.now() });
 }
 
 const waiting = new Map<string, () => void>();

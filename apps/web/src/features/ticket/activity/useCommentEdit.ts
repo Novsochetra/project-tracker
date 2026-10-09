@@ -51,7 +51,7 @@ export function useCommentEdit(
     edit,
     text,
     setEdit,
-    editComment: (value) => editComment(comment.id, value),
+    editComment: (value, expected) => editComment(comment.id, value, expected),
   });
   useLiveDraft(id, () => {
     if (edit.phase === 'failed') sending.retry();

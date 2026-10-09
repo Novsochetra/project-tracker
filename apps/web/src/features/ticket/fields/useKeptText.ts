@@ -15,22 +15,21 @@ export interface KeptText {
 // Another tab can write the drafts store back from a copy that hadn't heard of this field's newest
 // typing yet, putting older text back. While the field still shows the text it typed last and the
 // tracker doesn't have it, it keeps that text and puts it back in the store; text another tab
-// typed later is still taken. Text that goes from the store is left to the field's rules: saved
-// elsewhere, unless its save was refused (FieldDraft.refused).
+// typed later is still taken, and from then on this tab's text no longer counts as its own: it was
+// typed over. Text that goes from the store is left to the field's rules: saved elsewhere, unless
+// its save failed or was refused, which keeps this tab's own text again.
 export function useKeptText(id: string, target: FieldTarget, draft: FieldDraft, base: string) {
   const text = useSyncExternalStore(subscribeStoredDrafts, () => storedDraft(id)?.text);
   const at = useSyncExternalStore(subscribeStoredDrafts, () => storedDraft(id)?.at);
   const own = ownTextOf(id);
+  const other = own !== undefined && text !== undefined && text !== own.text;
   const lost =
-    own !== undefined &&
-    draft.edited &&
-    draft.value === own.text &&
-    text !== undefined &&
-    text !== own.text &&
-    (at === undefined || at < own.at);
+    other && draft.edited && draft.value === own.text && (at === undefined || at < own.at);
+  const typedOver = other && at !== undefined && at > own.at;
   const typed = (value: string) =>
     typedHere(id, { text: value, at: storedDraft(id)?.at ?? Date.now() });
   useEffect(() => {
+    if (typedOver) typedHere(id, null);
     if (!lost) return;
     keepDraft(id, { ...target, text: draft.value }, base);
     typed(draft.value);

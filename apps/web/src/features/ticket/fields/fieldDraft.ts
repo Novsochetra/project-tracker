@@ -126,3 +126,8 @@ export function checkedDraft(
 }
 
 export const keepMine = (draft: FieldDraft): FieldDraft => ({ ...draft, conflict: false });
+
+// Another tab typed over `value` and its newer text has gone from the store (saved there): the
+// field drops it and follows the tracker.
+export const supersededDraft = (draft: FieldDraft, value: string): FieldDraft =>
+  draft.value === value ? startDraft(value) : draft;

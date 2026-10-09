@@ -1,4 +1,4 @@
-import { act, render, screen } from '@testing-library/react';
+import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { lazy, Suspense, use, type ComponentType } from 'react';
 import { MemoryRouter, useLocation, useNavigate } from 'react-router';
@@ -96,7 +96,8 @@ function heldCode(Screen: ComponentType) {
   return { Lazy, waiting: () => (arrived ? null : code), arrive };
 }
 
-function renderStack(path = '/') {
+// `behind` are history entries before the first screen, for the browser's Back to reach.
+function renderStack(path = '/', behind: string[] = []) {
   const project = heldCode(Project);
   const ticket = heldCode(Ticket);
   const codeFor = (route: Route) => (route.name === 'project' ? project : ticket);
@@ -113,7 +114,7 @@ function renderStack(path = '/') {
     return <Lazy />;
   };
   const view = () => (
-    <MemoryRouter initialEntries={[path]}>
+    <MemoryRouter initialEntries={[...behind, path]} initialIndex={behind.length}>
       <NavigationProvider prepare={prepare}>
         <Suspense fallback={<p>Loading</p>}>
           <StackNavigator renderScreen={renderScreen} loading={<p>Loading screen</p>} />
@@ -371,6 +372,74 @@ describe('a push whose screen’s code stalls', () => {
     await user.click(button('Back'));
     await user.click(button('Browser back'));
     expect(location()).toBe('/');
+  });
+});
+
+// PT-108: the browser's Back or Forward to a screen whose code stalled changed the URL and showed
+// nothing of the screen: the boundary above the stack kept the screen on show (in a browser, which
+// renders a popstate's navigation at once, its spinner took the place of the whole stack) until
+// the code arrived.
+describe('the browser’s Back or Forward to a screen whose code is on its way', () => {
+  const advance = (ms: number) => act(() => vi.advanceTimersByTimeAsync(ms));
+  const setup = () => userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+
+  beforeEach(() => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  async function stalledEntryAhead(user: ReturnType<typeof setup>) {
+    const stack = renderStack();
+    stack.show();
+    await user.click(button('Open MOB'));
+    await advance(PUSH_WAIT_LIMIT_MS);
+    expect(layer('/p/MOB')).toHaveTextContent('Loading screen');
+    await user.click(button('Browser back'));
+    expect(location()).toBe('/');
+    await waitFor(() => expect(layer('/p/MOB')).toBeNull());
+    return stack;
+  }
+
+  it('Forward slides in the screen’s loading state at once, then the screen', async () => {
+    const user = setup();
+    const stack = await stalledEntryAhead(user);
+    await user.click(button('Browser forward'));
+    expect(location()).toBe('/p/MOB');
+    expect(layer('/p/MOB')).toHaveTextContent('Loading screen');
+    expect(screen.queryByText('Loading')).not.toBeInTheDocument();
+
+    await stack.project.arrive();
+    expect(await screen.findByText('Project MOB')).toBeInTheDocument();
+    await user.click(button('Back'));
+    expect(location()).toBe('/');
+  });
+
+  it('Back does the same', async () => {
+    const user = setup();
+    const stack = renderStack('/', ['/p/MOB']);
+    stack.show();
+    await user.click(button('Browser back'));
+    expect(location()).toBe('/p/MOB');
+    expect(layer('/p/MOB')).toHaveTextContent('Loading screen');
+
+    await stack.project.arrive();
+    expect(await screen.findByText('Project MOB')).toBeInTheDocument();
+  });
+
+  it('Back from that loading state returns, and the code coming later opens nothing', async () => {
+    const user = setup();
+    const stack = await stalledEntryAhead(user);
+    await user.click(button('Browser forward'));
+    await user.click(button('Browser back'));
+    expect(location()).toBe('/');
+    await waitFor(() => expect(layer('/p/MOB')).toBeNull());
+
+    await stack.project.arrive();
+    expect(location()).toBe('/');
+    expect(screen.queryByText('Project MOB')).not.toBeInTheDocument();
   });
 });
 

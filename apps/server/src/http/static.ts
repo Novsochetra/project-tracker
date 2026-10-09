@@ -24,12 +24,13 @@ const isApiPath = (path: string): boolean => path === '/api' || path.startsWith(
 // sw.js (PT-99), so the service worker is one file the update check revalidates.
 const isHashedPath = (path: string): boolean => path.startsWith('/assets/');
 
-// Answered with the app page, a missing script or stylesheet would fail to parse instead of to
-// load, and a service worker's install would count the 200 as the file it asked for (PT-102).
-const SCRIPT_OR_STYLE = /\.(?:m?js|css)$/i;
+// Answered with the app page, a missing file passes for the one asked for: a script or stylesheet
+// fails to parse instead of to load, a service worker's install counts the 200 as the file
+// (PT-102), and a cache keeps HTML as an icon or manifest (PT-106). App routes have no extension.
+const FILE_EXTENSION = /\.[a-z0-9]+$/i;
 
 const hasNoAppPage = (path: string): boolean =>
-  isApiPath(path) || isHashedPath(path) || SCRIPT_OR_STYLE.test(path);
+  isApiPath(path) || isHashedPath(path) || FILE_EXTENSION.test(path);
 
 const unless =
   (

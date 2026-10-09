@@ -1,18 +1,20 @@
-import type { Attachment } from '@tracker/shared';
+import { useQueryClient } from '@tanstack/react-query';
+import type { Attachment, TicketDetail } from '@tracker/shared';
 import { useState, useSyncExternalStore } from 'react';
-import { errorMessage, useAddComment } from '../../../api';
+import { errorMessage, queryKeys, useAddComment } from '../../../api';
 import { useToast } from '../../../components';
-import {
-  draftIdOf,
-  forgetDraft,
-  keepDraft,
-  storedDraft,
-  subscribeStoredDrafts,
-  type DraftTarget,
-} from '../../../lib/storedDrafts';
+import { subscribeStoredDrafts } from '../../../lib/storedDrafts';
 import { useAttachmentList, type AttachmentList } from '../../attachments';
 import { useDraftMark } from '../../../lib/useDraftMark';
-import { canSendComment } from './commentRules';
+import { canSendComment, tooLongMessage } from './commentRules';
+import {
+  commentsWithText,
+  endSend,
+  keepComment,
+  keptComment,
+  keptForm,
+  startSend,
+} from './sentComments';
 
 export interface ComposerState {
   text: string;
@@ -23,34 +25,19 @@ export interface ComposerState {
   submit: () => void;
 }
 
-// What the drafts store keeps for the text: spaces alone are not kept.
-const keptForm = (text: string): string | undefined => (text.trim() ? text : undefined);
-
 // Unsent text is kept in the drafts store until it is sent or emptied; it is never sent for
 // the user. The box shows what the store keeps, so a comment another tab types, sends or empties
 // shows here too, as in a field: neither tab types over a comment it hasn't shown.
 function useComposerText(ticketKey: string) {
-  const target: DraftTarget = { ticketKey, field: 'comment' };
-  const id = draftIdOf(target);
   // Kept text of spaces only (the app never keeps one) counts as none.
-  const keptText = () => keptForm(storedDraft(id)?.text ?? '');
-  const kept = useSyncExternalStore(subscribeStoredDrafts, keptText);
+  const kept = useSyncExternalStore(subscribeStoredDrafts, () => keptComment(ticketKey));
   const [text, setText] = useState(kept ?? '');
   if (keptForm(text) !== kept) setText(kept ?? '');
-  const keep = (next: string) => {
-    if (keptForm(next)) keepDraft(id, { ...target, text: next }, '');
-    else forgetDraft(id);
-  };
   return {
     text,
     change: (next: string) => {
-      keep(next);
+      keepComment(ticketKey, next);
       setText(next);
-    },
-    // Before anything typed meanwhile, here or in another tab, also after the screen has closed.
-    handBack: (sent: string) => {
-      const typed = keptText();
-      if (typed !== sent) keep(typed ? `${sent}\n${typed}` : sent);
     },
   };
 }
@@ -63,6 +50,7 @@ export function useComposer(ticketKey: string): ComposerState {
     attached: attachments.length,
   });
   const addComment = useAddComment();
+  const queryClient = useQueryClient();
   const { show } = useToast();
   const { text } = composer;
   const uploading = files.uploading.length;
@@ -73,16 +61,28 @@ export function useComposer(ticketKey: string): ComposerState {
   const submit = () => {
     if (!canSubmit) return;
     const sent = { text: text.trim(), attachments };
+    const tooLong = tooLongMessage(sent.text);
+    if (tooLong) {
+      show(tooLong, { kind: 'error' });
+      return;
+    }
+    const detail = queryClient.getQueryData<TicketDetail>(queryKeys.ticket(ticketKey));
+    const sending = startSend(
+      ticketKey,
+      sent.text,
+      detail ? commentsWithText(detail, sent.text) : 0,
+    );
     composer.change('');
     setAttachments([]);
     files.dismissNotice();
-    void addComment
-      .mutateAsync({ ticketKey, text: sent.text, attachments: sent.attachments })
-      .catch((error: unknown) => {
+    void addComment.mutateAsync({ ticketKey, text: sent.text, attachments: sent.attachments }).then(
+      () => endSend(sending, true),
+      (error: unknown) => {
         show(errorMessage(error), { kind: 'error' });
-        composer.handBack(sent.text);
+        endSend(sending, false);
         setAttachments((current) => [...sent.attachments, ...current]);
-      });
+      },
+    );
   };
 
   return { text, setText: composer.change, attachments, files, canSubmit, submit };

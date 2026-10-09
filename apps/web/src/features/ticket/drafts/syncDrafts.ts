@@ -8,6 +8,7 @@ import {
   storedDrafts,
   type StoredDraft,
 } from '../../../lib/storedDrafts';
+import { settleLeftSend } from '../activity/sentComments';
 import { finishSave, isSavingAnywhere, startSave } from '../fields/fieldSaves';
 import { checkDraft, serverText } from './draftCheck';
 import { isLeftToScreen, retryLiveDrafts } from './liveDrafts';
@@ -32,11 +33,12 @@ interface Run {
   report: DraftSyncReport;
 }
 
-// Drafts on screen retry themselves, so only drafts left in closed tickets are synced here. A
-// draft with saves on its way, in this tab or another, is theirs to settle: the tracker may have
-// the first of them without having answered, which a check would take for someone else's change.
-const isSettledElsewhere = (id: string, ticketKey: string): boolean =>
-  isLeftToScreen(id, ticketKey) || isSavingAnywhere(id);
+// Drafts on screen retry themselves, so only drafts left in closed tickets are synced here, and
+// comments left on their way by a page that went (no screen settles those). A draft with saves on
+// its way, in this tab or another, is theirs to settle: the tracker may have the first of them
+// without having answered, which a check would take for someone else's change.
+const isSettledElsewhere = (id: string, draft: StoredDraft): boolean =>
+  (draft.field !== 'comment-send' && isLeftToScreen(id, draft.ticketKey)) || isSavingAnywhere(id);
 
 const inScope = (ticketKey: string, scope: SyncScope): boolean =>
   scope === 'all' || scope.has(projectOfTicket(ticketKey) ?? '');
@@ -44,7 +46,7 @@ const inScope = (ticketKey: string, scope: SyncScope): boolean =>
 function closedTicketDrafts(scope: SyncScope): Map<string, Entry[]> {
   const byTicket = new Map<string, Entry[]>();
   for (const [id, draft] of storedDrafts()) {
-    if (!inScope(draft.ticketKey, scope) || isSettledElsewhere(id, draft.ticketKey)) continue;
+    if (!inScope(draft.ticketKey, scope) || isSettledElsewhere(id, draft)) continue;
     byTicket.set(draft.ticketKey, [...(byTicket.get(draft.ticketKey) ?? []), [id, draft]]);
   }
   return byTicket;
@@ -93,6 +95,10 @@ async function syncDraft(entry: Entry, detail: TicketDetail, run: Run): Promise<
   const [id, draft] = entry;
   // A save may have started while the ticket was read.
   if (draft.field === 'comment' || isSavingAnywhere(id)) return true;
+  if (draft.field === 'comment-send') {
+    settleLeftSend(id, draft, detail);
+    return true;
+  }
   const check = checkDraft(draft, serverText(detail, draft));
   if (check === 'gone') {
     forgetDraft(id);

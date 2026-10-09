@@ -74,18 +74,51 @@ export function markSending(id: string, sending: boolean): void {
   removeStale(now);
 }
 
-export function isSentElsewhere(id: string): boolean {
-  const now = Date.now();
-  return markKeys().some((key) => {
-    const mark = readMark(key);
-    return mark !== undefined && mark.draft === id && mark.page !== PAGE && mark.until > now;
-  });
+// Other tabs' marks that still count.
+function otherMarks(now: number): Mark[] {
+  return markKeys()
+    .map(readMark)
+    .filter((mark): mark is Mark => mark !== undefined && mark.page !== PAGE && mark.until > now);
 }
 
+export const isSentElsewhere = (id: string): boolean =>
+  otherMarks(Date.now()).some((mark) => mark.draft === id);
+
+// A tab that goes for good (closed, reloaded) takes its saves with it, so its marks go at once
+// rather than a minute later. Not one the browser keeps to show again: its saves may still answer.
+window.addEventListener('pagehide', (event) => {
+  if (event.persisted) return;
+  for (const key of markKeys()) {
+    if (readMark(key)?.page === PAGE) write(key, null);
+  }
+});
+
+// Nothing tells a tab when another tab's mark runs out (that tab closed without a word), so the
+// listener also hears when the next one does.
 export function onOtherTabsMarks(listener: () => void): () => void {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const wakeAtNextEnd = () => {
+    clearTimeout(timer);
+    const now = Date.now();
+    const ends = otherMarks(now).map((mark) => mark.until);
+    if (ends.length === 0) return;
+    timer = setTimeout(
+      () => {
+        wakeAtNextEnd();
+        listener();
+      },
+      Math.min(...ends) - now,
+    );
+  };
   const onStorage = (event: StorageEvent) => {
-    if (event.key === null || isMarkKey(event.key)) listener();
+    if (event.key !== null && !isMarkKey(event.key)) return;
+    wakeAtNextEnd();
+    listener();
   };
   window.addEventListener('storage', onStorage);
-  return () => window.removeEventListener('storage', onStorage);
+  wakeAtNextEnd();
+  return () => {
+    clearTimeout(timer);
+    window.removeEventListener('storage', onStorage);
+  };
 }

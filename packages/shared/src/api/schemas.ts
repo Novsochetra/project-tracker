@@ -122,6 +122,17 @@ export const updateCommentInput = z.object({
 });
 export type UpdateCommentInput = z.input<typeof updateCommentInput>;
 
+// The text an edit was typed over. The tracker refuses the edit (409 `stale`) once the comment has
+// other text, as for ticket fields (expectedFields). Agents send none.
+export const expectedComment = z.object({
+  text: z.string().trim().max(COMMENT_TEXT_MAX),
+});
+export type ExpectedComment = z.input<typeof expectedComment>;
+
+export const updateCommentRequest = updateCommentInput.extend({
+  expected: expectedComment.optional(),
+});
+
 export const reportInput = z.object({
   text: z.string().max(100_000),
   ticketKey: z.string().max(40).optional(),

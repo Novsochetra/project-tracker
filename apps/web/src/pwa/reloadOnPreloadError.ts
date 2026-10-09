@@ -1,3 +1,4 @@
+import { reloadPage } from '../lib/pageReload';
 import { reloadWhenSafe } from './reloadWhenSafe';
 
 export const CHUNK_RELOAD_KEY = 'tracker.chunkReloadAt';
@@ -48,7 +49,7 @@ export function reloadOnPreloadError(reload: () => void): () => void {
       return;
     }
     reloadWhenSafe(() => {
-      if (rememberReload(Date.now())) reload();
+      if (rememberReload(Date.now())) reloadPage(reload);
     });
   };
   window.addEventListener('vite:preloadError', onPreloadError);

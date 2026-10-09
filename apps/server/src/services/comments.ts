@@ -1,8 +1,19 @@
-import type { Activity, ActivityType, Actor, createCommentInput } from '@tracker/shared';
+import type {
+  Activity,
+  ActivityType,
+  Actor,
+  createCommentInput,
+  updateCommentRequest,
+} from '@tracker/shared';
 import type { z } from 'zod';
-import type { Db } from '../db/schema';
-import { conflict, notFound } from '../errors';
-import { deleteActivityRow, findActivityById, updateActivityRow } from '../repositories/activities';
+import type { ActivityRow, Db } from '../db/schema';
+import { conflict, notFound, staleEdit } from '../errors';
+import {
+  deleteActivityRow,
+  findActivityById,
+  updateActivityMatching,
+  updateActivityRow,
+} from '../repositories/activities';
 import { listActivityAttachments, storageKeysOfActivity } from '../repositories/attachments';
 import { updateTicketRow } from '../repositories/tickets';
 import { removeFiles } from '../storage/fileStorage';
@@ -13,6 +24,8 @@ import { toActivity } from './mappers';
 import { writeTicket } from './ticketWrites';
 
 type CommentValues = z.output<typeof createCommentInput>;
+type CommentEdit = z.output<typeof updateCommentRequest>;
+type Edit = Pick<ActivityRow, 'text' | 'editedAt'>;
 
 const DELETABLE: ReadonlySet<ActivityType> = new Set(['comment', 'report', 'review']);
 
@@ -53,16 +66,27 @@ export async function addComment(
   return finish(ctx, outcome);
 }
 
+const staleComment = () =>
+  staleEdit('The comment changed since this edit was typed. Read it again first.');
+
+// An edit that names the text it was typed over is refused once the comment has other text, also
+// when it would change nothing, so an older edit that lands late can't overwrite a newer one.
+async function writeEdit(db: Db, row: ActivityRow, edit: Edit, expected: string | undefined) {
+  if (expected === undefined) return updateActivityRow(db, row.id, edit);
+  if (row.text !== expected) throw staleComment();
+  if (!(await updateActivityMatching(db, row.id, expected, edit))) throw staleComment();
+}
+
 export async function updateComment(
   ctx: ServiceContext,
   id: string,
-  input: { text: string },
+  input: CommentEdit,
 ): Promise<Activity> {
   const outcome = await inTransaction(ctx, async (trx) => {
     const row = await requireActivity(trx, id);
     if (row.type !== 'comment') throw conflict('Only comments can be edited.');
     const edit = { text: input.text, editedAt: ctx.now() };
-    await updateActivityRow(trx, id, edit);
+    await writeEdit(trx, row, edit, input.expected?.text);
     await updateTicketRow(trx, row.ticketId, { updatedAt: edit.editedAt });
     const activity = toActivity({ ...row, ...edit }, await listActivityAttachments(trx, id));
     return { ref: await requireTicketById(trx, row.ticketId), activity };

@@ -135,7 +135,11 @@ describe('regression: comments on a ticket with an activity entry it cannot read
     await user.click(screen.getByRole('button', { name: 'Save' }));
 
     await waitFor(() => expect(screen.queryByLabelText('Edit comment')).toBeNull());
-    expect(updateComment).toHaveBeenCalledWith('c1', { text: 'First thought, mine' });
+    expect(updateComment).toHaveBeenCalledWith(
+      'c1',
+      { text: 'First thought, mine' },
+      { text: 'First thought' },
+    );
     const log = screen.getByRole('region', { name: 'Activity' });
     expect(within(log).getByText('First thought, mine')).toBeInTheDocument();
     expect(screen.queryByText(UNREACHABLE)).toBeNull();
@@ -171,7 +175,11 @@ describe('regression: comments on a ticket with an activity entry it cannot read
     await user.click(screen.getByRole('button', { name: 'Save' }));
 
     await waitFor(() => expect(screen.queryByLabelText('Edit comment')).toBeNull());
-    expect(updateComment).toHaveBeenCalledWith('c1', { text: 'First thought, mine' });
+    expect(updateComment).toHaveBeenCalledWith(
+      'c1',
+      { text: 'First thought, mine' },
+      { text: 'First thought' },
+    );
     expect(screen.queryByText(UNREACHABLE)).toBeNull();
     await waitFor(() => expect(hasDrafts()).toBe(false));
   });

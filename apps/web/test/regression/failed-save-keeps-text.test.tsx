@@ -105,9 +105,11 @@ it('keeps the comment editor open with the edit when saving fails', async () => 
   server.setReachable(true);
   reconnect();
   await waitFor(() => expect(screen.queryByLabelText('Edit comment')).not.toBeInTheDocument());
-  expect(client.updateComment).toHaveBeenLastCalledWith('c1', {
-    text: 'First thought and a second',
-  });
+  expect(client.updateComment).toHaveBeenLastCalledWith(
+    'c1',
+    { text: 'First thought and a second' },
+    { text: 'First thought' },
+  );
   const activity = screen.getByRole('region', { name: 'Activity' });
   expect(within(activity).getByText('First thought and a second')).toBeInTheDocument();
   expect(hasDrafts()).toBe(false);

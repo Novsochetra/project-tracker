@@ -1,7 +1,7 @@
 import type { Locator, Page } from '@playwright/test';
 import type { TrackerClient } from '@tracker/client';
 import { byRank } from '@tracker/shared';
-import { expect, isPhone, test } from './fixtures';
+import { expect, isPhone, isTablet, test } from './fixtures';
 import { group, seedProject, settled, ticketRow, toast } from './helpers';
 
 // Playwright can't drive a touch drag in WebKit, so the swipe is synthetic touch pointer events.
@@ -192,4 +192,77 @@ test.describe('a double tap on Undo runs it once and opens nothing behind the to
     );
     expect(hits).toEqual(['sidebar', 'band']);
   });
+});
+
+// Four groups of six fill a tablet's list past the toast. MOB-6 moves on the board, where the
+// keyboard moves cards, and back to the list, whose rows go behind the toast.
+const seedTablet = (api: TrackerClient) =>
+  seedProject(
+    api,
+    'Mobile app',
+    'MOB',
+    ['To do', 'In progress', 'Need review', 'Reviewed'].flatMap((status) =>
+      Array.from({ length: 6 }, (_, index) => ({ title: `${status} ${index + 1}`, status })),
+    ),
+  );
+
+async function undoOnList(page: Page): Promise<Box & { x: number; width: number }> {
+  const view = page.getByRole('group', { name: 'Show tickets as' });
+  await view.getByRole('button', { name: 'Board' }).click();
+  await page.getByRole('button', { name: 'Move MOB-6. Drag, or use the arrow keys.' }).focus();
+  await page.keyboard.press('ArrowRight');
+  await expect(toast(page, 'MOB-6 moved to In progress')).toBeVisible();
+  await view.getByRole('button', { name: 'List' }).click();
+  const undo = page.getByRole('button', { name: 'Undo' });
+  await settled(undo);
+  return (await undo.boundingBox())!;
+}
+
+// Scrolls the list until a row's middle is at `y`, so a tap there that isn't caught opens it.
+async function rowAt(page: Page, y: number): Promise<void> {
+  await page.evaluate((y) => {
+    const row = [...document.querySelectorAll('main button')].findLast((button) =>
+      /^MOB-\d+/.test(button.textContent ?? ''),
+    )!;
+    let scroller = row.parentElement;
+    const scrolls = (element: HTMLElement) =>
+      element.scrollHeight > element.clientHeight &&
+      /auto|scroll/.test(getComputedStyle(element).overflowY);
+    while (scroller && !scrolls(scroller)) scroller = scroller.parentElement;
+    const box = row.getBoundingClientRect();
+    (scroller ?? document.scrollingElement!).scrollTop += box.top + box.height / 2 - y;
+  }, y);
+  await page.waitForTimeout(150);
+}
+
+// A tablet has the desktop layout and touch taps: the band catches a double tap's second tap
+// in the content column, and the sidebar beside it takes taps as usual (PT-92, PT-106).
+test('a double tap on Undo on a tablet opens nothing behind the toast @tablet', async ({
+  page,
+  api,
+}, info) => {
+  test.skip(!isTablet(info.project.name), 'Touch taps on the desktop layout');
+  await seedTablet(api);
+  await page.goto('/p/MOB');
+  for (const second of SECOND_TAPS) {
+    const undo = await undoOnList(page);
+    const [x, y] = [undo.x + undo.width / 2, second.y(undo)];
+    await rowAt(page, y);
+
+    await page.touchscreen.tap(x, onTarget(undo, y));
+    const sidebar = await page.evaluate(
+      (y) => Boolean(document.elementFromPoint(40, y)?.closest('aside')),
+      y,
+    );
+    await page.waitForTimeout(150);
+    await page.touchscreen.tap(x, y);
+    await expect(toast(page, 'MOB-6 moved to To do')).toBeVisible();
+    await page.waitForTimeout(500);
+    await expect(page, `second tap ${second.name}`).toHaveURL(/\/p\/MOB$/);
+    expect(sidebar, 'the sidebar takes taps right after Undo').toBe(true);
+
+    await page.touchscreen.tap(x, y);
+    await expect(page, `a later tap ${second.name} opens the row`).toHaveURL(/\/p\/MOB\/\d+$/);
+    await page.goBack();
+  }
 });

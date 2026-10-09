@@ -1,6 +1,6 @@
 import type { KeyboardEvent } from 'react';
 import { describe, expect, it } from 'vitest';
-import { canSendComment, isSubmitShortcut } from './commentRules';
+import { canSendComment, isSubmitShortcut, tooLongMessage } from './commentRules';
 
 const key = (init: { key: string; metaKey?: boolean; ctrlKey?: boolean; isComposing?: boolean }) =>
   ({
@@ -33,5 +33,14 @@ describe('isSubmitShortcut', () => {
 
   it('leaves Enter to an input method that is composing', () => {
     expect(isSubmitShortcut(key({ key: 'Enter', metaKey: true, isComposing: true }))).toBe(false);
+  });
+});
+
+describe('tooLongMessage', () => {
+  it('is null up to the limit and names both lengths past it', () => {
+    expect(tooLongMessage('x'.repeat(20_000))).toBeNull();
+    expect(tooLongMessage('x'.repeat(20_001))).toBe(
+      'A comment can be up to 20,000 characters. This one has 20,001: shorten it to send it.',
+    );
   });
 });

@@ -24,6 +24,8 @@ export interface UpdateCommentVariables {
   ticketKey: string;
   activityId: string;
   text: string;
+  // The text the edit was typed over: the tracker refuses it once the comment has newer text.
+  expected?: string;
 }
 
 export interface DeleteActivityVariables {
@@ -67,8 +69,10 @@ export function useUpdateComment(): TrackerMutation<Activity, UpdateCommentVaria
   const client = useApi();
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ activityId, text }: UpdateCommentVariables) =>
-      client.updateComment(activityId, { text }),
+    mutationFn: ({ activityId, text, expected }: UpdateCommentVariables) =>
+      expected === undefined
+        ? client.updateComment(activityId, { text })
+        : client.updateComment(activityId, { text }, { text: expected }),
     onMutate: ({ ticketKey, activityId, text }) =>
       applyOptimistic(queryClient, [
         ticketChange(ticketKey, (detail) =>

@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useLocation, useNavigate, useNavigationType } from 'react-router';
+import { isPageReloading } from '../lib/pageReload';
 import {
   NavigationContext,
   OpeningContext,
@@ -59,7 +60,7 @@ export function NavigationProvider({ children, prepare = READY }: NavigationProv
       }
       const stillOpening = opening.open(path);
       const send = () => {
-        if (stillOpening()) void navigate(path, { replace });
+        if (stillOpening() && !isPageReloading()) void navigate(path, { replace });
       };
       const waiting = prepare(parseRoute(path));
       if (waiting) void waitAtMost(waiting, PUSH_WAIT_LIMIT_MS).then(send);

@@ -138,3 +138,63 @@ test.describe('a navigation while a screen’s code is on its way', () => {
     await expect(projectRow(page, 'Mobile app')).toBeVisible();
   });
 });
+
+// PT-108: on a phone the loading state of a screen whose code stalled was a spinner alone, with no
+// nav bar or Back; and the browser's Forward to such a screen put that spinner in place of the
+// whole stack until the code arrived.
+test.describe('a screen whose code stalls', () => {
+  test.beforeEach(async ({ api }) => {
+    await seedProject(api, 'Mobile app', 'MOB', [{ title: 'Login screen' }]);
+  });
+
+  const loadingLayer = (page: Page) => page.locator('[data-stack-path="/p/MOB"]');
+
+  test('a first load straight into it offers Back on a phone', async ({ page }, info) => {
+    const phone = isPhone(info.project.name);
+    const release = await holdScreen(page, PROJECT_SCREEN);
+    await page.goto('/p/MOB', { waitUntil: 'commit' });
+    const main = page.getByRole('main');
+    await expect(main.getByRole('status')).toBeVisible();
+    if (phone) {
+      await main.getByRole('button', { name: 'Back to Projects' }).tap();
+      await expect(page).toHaveURL(/\/$/);
+      await expect(projectRow(page, 'Mobile app')).toBeVisible();
+    } else {
+      const sidebar = page.getByRole('complementary', { name: 'Projects' });
+      await expect(sidebar.getByRole('button', { name: /^Mobile app/ })).toBeVisible();
+    }
+    release();
+  });
+
+  test('Forward to it slides in its loading state at once, with Back on a phone', async ({
+    page,
+  }, info) => {
+    test.setTimeout(PUSH_WAIT_LIMIT_MS + 30_000);
+    const phone = isPhone(info.project.name);
+    const release = await holdScreen(page, PROJECT_SCREEN);
+    await page.goto('/');
+    const row = projectRow(page, 'Mobile app');
+    await (phone ? row.tap() : row.click());
+    await expect(loadingLayer(page).getByRole('status')).toBeVisible({
+      timeout: PUSH_WAIT_LIMIT_MS + 5_000,
+    });
+    if (phone) await loadingLayer(page).getByRole('button', { name: 'Back to Projects' }).tap();
+    else await page.goBack();
+    await expect(page).toHaveURL(/\/$/);
+    await expect(loadingLayer(page)).toHaveCount(0);
+
+    await page.goForward();
+    await expect(page).toHaveURL(/\/p\/MOB$/);
+    await expect(loadingLayer(page).getByRole('status')).toBeVisible({ timeout: 1_000 });
+    if (phone) {
+      await expect(
+        loadingLayer(page).getByRole('button', { name: 'Back to Projects' }),
+      ).toBeVisible();
+    }
+
+    release();
+    await expect(page.getByText('Login screen')).toBeVisible();
+    await back(page, phone);
+    await expect(page).toHaveURL(/\/$/);
+  });
+});

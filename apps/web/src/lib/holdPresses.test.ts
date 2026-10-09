@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { CLICK_SHIELD_MS } from '../../lib/clickShield';
+import { CLICK_SHIELD_MS } from './clickShield';
 import { holdPresses } from './holdPresses';
 
 let screen: HTMLDivElement;

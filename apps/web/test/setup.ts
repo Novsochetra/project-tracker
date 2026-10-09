@@ -3,6 +3,7 @@ import { cleanup, configure } from '@testing-library/react';
 import { afterEach } from 'vitest';
 import { FRESH_READS_STORAGE_KEY } from '../src/api/freshReads';
 import { clearHandleFocus } from '../src/features/project/dnd/handleFocus';
+import { clearSends } from '../src/features/ticket/activity/sentComments';
 import { clearRefusedDrafts } from '../src/features/ticket/drafts/syncDrafts';
 import { clearSaves } from '../src/features/ticket/fields/fieldSaves';
 import { clearStoredDrafts } from '../src/lib/storedDrafts';
@@ -19,8 +20,10 @@ afterEach(() => {
   clearHandleFocus();
   // A field save that never answers would keep its draft 'saving' in the next test, its kept
   // text would open there as unsaved, a refusal would keep the next test's sync from sending the
-  // same text, and a write would have the next test's pages read that ticket fresh.
+  // same text, a comment on its way would come back in the next test's box when its page goes, and
+  // a write would have the next test's pages read that ticket fresh.
   clearSaves();
+  clearSends();
   clearRefusedDrafts();
   clearStoredDrafts();
   window.localStorage.removeItem(FRESH_READS_STORAGE_KEY);

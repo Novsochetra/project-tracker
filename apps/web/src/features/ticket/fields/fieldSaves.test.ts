@@ -235,6 +235,35 @@ describe('the saves of a field on their way in another tab', () => {
     expect(isSavingElsewhere(ID)).toBe(false);
   });
 
+  // Reviewer 77 (PT-90): nothing said when the mark of a tab that closed mid-save ran out, so a
+  // refused field waiting on it waited until something else happened.
+  it('tell subscribers when another tab’s mark runs out, though nothing else says so', async () => {
+    vi.useFakeTimers();
+    const tab = await otherTab();
+    tab.startSave(ID, 'Fix login now');
+    const listener = vi.fn();
+    const run = vi.fn();
+    const stop = subscribeSaves(listener);
+    whenSettled(ID, run);
+    vi.advanceTimersByTime(59_999);
+    expect(run).not.toHaveBeenCalled();
+    vi.advanceTimersByTime(1);
+    expect(listener).toHaveBeenCalled();
+    expect(run).toHaveBeenCalledTimes(1);
+    stop();
+  });
+
+  it('stop counting at once when the page that sent them goes for good', async () => {
+    const tab = await otherTab();
+    tab.startSave(ID, 'Fix login now');
+    const pageGoes = (persisted: boolean) =>
+      window.dispatchEvent(Object.assign(new Event('pagehide'), { persisted }));
+    pageGoes(true);
+    expect(isSavingElsewhere(ID)).toBe(true);
+    pageGoes(false);
+    expect(isSavingElsewhere(ID)).toBe(false);
+  });
+
   it('tell subscribers when another tab marks or unmarks a draft', () => {
     const listener = vi.fn();
     const stop = subscribeSaves(listener);

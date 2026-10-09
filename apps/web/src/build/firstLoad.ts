@@ -54,6 +54,16 @@ export interface FirstLoadLimits {
   maxFiles: number;
 }
 
+export const FIRST_LOAD_LIMITS: FirstLoadLimits = {
+  // Gzipped kB: 262.5 with every screen in one script, 206.5 after the split (PT-48). The room
+  // left is for small changes; one that needs more should load later, or raise this on purpose.
+  budgetKB: 215,
+  // The entry and the chunk it shares with the lazy parts. Each 3rd file so far was shared code that
+  // stopped folding into the entry: the people and statuses hooks (PT-98), the viewers without the
+  // text preview (PT-103, +0.6 kB); 7 files cost 3.3 kB (PT-93). A wanted 3rd file raises this.
+  maxFiles: 2,
+};
+
 const takenProblem = (file: string) =>
   `Loaded at start but meant to load when opened: a dynamic import of ${file}, which the ` +
   'first load holds. Something there imports the part statically; ' +

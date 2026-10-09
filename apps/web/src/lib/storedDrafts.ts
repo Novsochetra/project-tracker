@@ -1,17 +1,21 @@
 import { draftStorage } from './draftStorage';
 import { parseMap, type StoredMap } from './storedMap';
 
-export type DraftField = 'title' | 'description' | 'assignee' | 'comment' | 'comment-edit';
+// comment-send: a comment on its way, kept until it lands (activity/sentComments.ts).
+export type DraftField =
+  'title' | 'description' | 'assignee' | 'comment' | 'comment-edit' | 'comment-send';
 
 export interface DraftTarget {
   ticketKey: string;
   field: DraftField;
+  // The edited comment's id, or a comment send's own id.
   activityId?: string;
 }
 
 export interface StoredDraft extends DraftTarget {
   // The server value the text was typed over: a different one later means someone else
-  // changed it meanwhile.
+  // changed it meanwhile. For a comment on its way, how many of the ticket's comments had its
+  // text when it was sent.
   base: string;
   text: string;
   // Save was pressed for this text. A comment edit is only ever sent for the user after that.
@@ -31,10 +35,14 @@ const FIELDS: ReadonlySet<unknown> = new Set<DraftField>([
   'assignee',
   'comment',
   'comment-edit',
+  'comment-send',
 ]);
 
+const ofActivity = (field: DraftField): boolean =>
+  field === 'comment-edit' || field === 'comment-send';
+
 export const draftIdOf = ({ ticketKey, field, activityId }: DraftTarget): string =>
-  field === 'comment-edit' ? `comment-edit:${activityId ?? ''}` : `${field}:${ticketKey}`;
+  ofActivity(field) ? `${field}:${activityId ?? ''}` : `${field}:${ticketKey}`;
 
 const isText = (value: unknown): value is string => typeof value === 'string';
 

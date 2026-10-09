@@ -1,41 +1,7 @@
-import type { BrowserContext, Page } from '@playwright/test';
+import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
 import { seedProject } from './helpers';
-
-const titleOf = (page: Page) => page.getByLabel('Title', { exact: true });
-const note = (page: Page) => page.getByText(/isn't saved yet|changed elsewhere/);
-
-async function open(context: BrowserContext, existing?: Page): Promise<Page> {
-  const page = existing ?? (await context.newPage());
-  await page.goto('/p/MOB/1');
-  await expect(titleOf(page)).toHaveValue('Ticket 1');
-  return page;
-}
-
-async function typeAtEnd(page: Page, text: string): Promise<void> {
-  const title = titleOf(page);
-  // Not a click: on a loaded machine the layout can still shift under it, and the keys go nowhere.
-  await title.focus();
-  await title.evaluate((field: HTMLTextAreaElement) =>
-    field.setSelectionRange(field.value.length, field.value.length),
-  );
-  await page.keyboard.type(text, { delay: 20 });
-  await title.blur();
-}
-
-// Holds the page's saves of the ticket until released, as a connection that stalls would.
-async function holdSaves(page: Page): Promise<() => void> {
-  let release: () => void = () => undefined;
-  const held = new Promise<void>((resolve) => (release = resolve));
-  await page.route(
-    (url) => url.pathname === '/api/tickets/MOB-1',
-    async (route) => {
-      if (route.request().method() === 'PATCH') await held;
-      await route.continue().catch(() => undefined);
-    },
-  );
-  return release;
-}
+import { holdSaves, note, open, titleOf, typeAtEnd } from './twoTabs';
 
 // Reviewer 61 (PT-76): tab A's save hung, tab B typed on top of A's text and saved, and when A's
 // older save landed it overwrote B's text.

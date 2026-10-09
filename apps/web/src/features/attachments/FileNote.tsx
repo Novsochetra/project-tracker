@@ -1,10 +1,12 @@
 import clsx from 'clsx';
 import { CircleAlert, X } from 'lucide-react';
-import { useRef, type MouseEvent, type Ref } from 'react';
+import { useRef, type MouseEvent, type PointerEvent, type Ref } from 'react';
 import { flushSync } from 'react-dom';
 import { Icon, IconButton } from '../../components';
+import { holdPresses } from '../../lib/holdPresses';
+import { usePresses } from '../../lib/pressPointer';
 import styles from './FileNote.module.css';
-import { controlsAfter, focusFirst } from './focusAfter';
+import { controlsAfter, focusFirst } from './focusFirst';
 import {
   noticeDetail,
   noticeTitle,
@@ -12,7 +14,6 @@ import {
   type FileNotice,
   type Notices,
 } from './fileNotice';
-import { holdPresses } from './holdPresses';
 import { useToastIfUnseen } from './useToastIfUnseen';
 
 export interface FileNoteProps {
@@ -32,23 +33,19 @@ export interface FileNoteProps {
 // failed tiles go with it, and when they were the only ones the Add tile gives way to the Add files
 // button.
 function useDismissal(onDismiss: () => void, focusTo: FileNoteProps['focusTo']) {
-  const pointerDown = useRef(false);
+  const presses = usePresses();
   const dismissFromFocus = (button: HTMLButtonElement) => {
     const next = controlsAfter(button.closest('[role="alert"]') ?? button);
     flushSync(onDismiss);
     focusFirst([focusTo?.(), ...next]);
   };
   return {
-    onPointerDown: () => {
-      pointerDown.current = true;
-    },
-    onPointerCancel: () => {
-      pointerDown.current = false;
-    },
+    onPointerDown: (event: PointerEvent<HTMLButtonElement>) =>
+      presses.current?.press(event.pointerType, event.currentTarget),
     onClick: (event: MouseEvent<HTMLButtonElement>) => {
-      // A key's click (detail 0) after a press that ended off the button finds a pointer down.
-      const byPointer = pointerDown.current && event.detail !== 0;
-      pointerDown.current = false;
+      // A key's click (detail 0) while a pointer is pressed on the button finds that press.
+      const byPointer = (presses.current?.pointer() ?? null) !== null && event.detail !== 0;
+      presses.current?.forget();
       if (!byPointer) {
         dismissFromFocus(event.currentTarget);
         return;

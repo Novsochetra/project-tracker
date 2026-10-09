@@ -141,14 +141,18 @@ describe('comments', () => {
     );
   });
 
-  it('keeps app updates from reloading over an unsent comment', async () => {
-    const addComment = vi.fn().mockReturnValue(new Promise(() => undefined));
+  // Also while it is sent: a reload then would lose it (PT-105).
+  it('keeps app updates from reloading over an unsent comment until it lands', async () => {
+    const saved = deferred<Activity>();
+    const addComment = vi.fn().mockReturnValue(saved.promise);
     const user = userEvent.setup();
     setup([], { client: { addComment } });
     await user.type(screen.getByLabelText('Comment'), 'Half a thought');
     expect(hasDrafts()).toBe(true);
     await user.click(screen.getByRole('button', { name: 'Comment' }));
-    expect(hasDrafts()).toBe(false);
+    expect(hasDrafts()).toBe(true);
+    saved.resolve(comment('c1', 'Half a thought'));
+    await waitFor(() => expect(hasDrafts()).toBe(false));
   });
 
   it('submits with Cmd+Enter', async () => {
@@ -186,7 +190,11 @@ describe('comments', () => {
     expect(screen.getByRole('button', { name: 'Save' })).toBeDisabled();
     await user.type(editor, 'Second thought');
     await user.click(screen.getByRole('button', { name: 'Save' }));
-    expect(client.updateComment).toHaveBeenCalledWith('c1', { text: 'Second thought' });
+    expect(client.updateComment).toHaveBeenCalledWith(
+      'c1',
+      { text: 'Second thought' },
+      { text: 'First thought' },
+    );
     expect(editor).toBeInTheDocument();
     saved.resolve(comment('c1', 'Second thought', { editedAt: NOW }));
     await waitFor(() => expect(screen.queryByLabelText('Edit comment')).not.toBeInTheDocument());
@@ -256,7 +264,11 @@ describe('comments', () => {
     await user.click(within(sheet).getByRole('button', { name: 'Edit comment' }));
     await user.type(screen.getByLabelText('Edit comment'), '!');
     await user.click(screen.getByRole('button', { name: 'Save' }));
-    expect(client.updateComment).toHaveBeenCalledWith('c1', { text: 'First thought!' });
+    expect(client.updateComment).toHaveBeenCalledWith(
+      'c1',
+      { text: 'First thought!' },
+      { text: 'First thought' },
+    );
 
     await user.click(await screen.findByRole('button', { name: 'Comment options' }));
     const again = screen.getByRole('dialog', { name: 'Comment options' });

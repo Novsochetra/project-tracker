@@ -20,8 +20,15 @@ export const TextPreviewSheet = lazyWithPreload(() =>
   loadViewers().then((module) => module.TextPreviewSheet),
 );
 
+const PARTS = [ImageViewer, VideoViewer, TextPreviewSheet];
+
 // A part that fails to load fails again where it renders, which says so.
 export function preloadViewers(): void {
-  for (const part of [ImageViewer, VideoViewer, TextPreviewSheet])
-    void part.preload().catch(() => undefined);
+  for (const part of PARTS) void part.preload().catch(() => undefined);
 }
+
+// Once their code is in, or failed to load, rendering a viewer won't wait.
+export const settleViewers = (): Promise<unknown> =>
+  Promise.allSettled(PARTS.map((part) => part.preload()));
+
+export const viewersLoaded = (): boolean => PARTS.every((part) => part.isLoaded());
