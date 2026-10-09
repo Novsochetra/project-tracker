@@ -1,7 +1,8 @@
 import { MutationObserver, type QueryClient } from '@tanstack/react-query';
 import { ApiError } from '@tracker/client';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
 import { queryKeys } from '../api';
+import { deferred } from '../api/test/deferred';
 import { makeBoard } from '../api/test/fixtures';
 import { createTestQueryClient, isInvalidated } from '../api/test/render';
 import { noteAnswer, SAVED_ANSWER_HEADER } from '../pwa/savedAnswers';
@@ -9,6 +10,9 @@ import { signalOf } from './offline';
 import { createReachability, watchApiTraffic, type Reachability } from './reachability';
 
 const NETWORK_DOWN = new TypeError('Failed to fetch');
+const BARE_500 = new ApiError(500, 'http_error', 'Internal Server Error');
+const BARE_502 = new ApiError(502, 'http_error', 'Bad Gateway');
+const settled = () => new Promise((resolve) => setTimeout(resolve));
 const fromNetwork = () => new Response('[]');
 const fromCache = () => new Response('[]', { headers: { [SAVED_ANSWER_HEADER]: '1' } });
 
@@ -25,9 +29,11 @@ describe('signalOf', () => {
 
   it('counts requests that never reached the server as unreachable', () => {
     expect(signalOf({ type: 'error', error: NETWORK_DOWN })).toBe('unreachable');
-    expect(signalOf({ type: 'error', error: new ApiError(502, 'http_error', 'Bad Gateway') })).toBe(
-      'unreachable',
-    );
+  });
+
+  it("is unsure of a bare 5xx, a proxy's for a stopped API or one request's own", () => {
+    expect(signalOf({ type: 'error', error: BARE_502 })).toBe('unsure');
+    expect(signalOf({ type: 'error', error: BARE_500 })).toBe('unsure');
   });
 
   it('ignores cache writes, progress and errors that say nothing about the server', () => {
@@ -66,12 +72,14 @@ describe('createReachability', () => {
 describe('watchApiTraffic', () => {
   let queryClient: QueryClient;
   let reachability: Reachability;
+  let check: Mock<() => Promise<unknown>>;
   let stop: () => void;
 
   beforeEach(() => {
     queryClient = createTestQueryClient();
     reachability = createReachability();
-    stop = watchApiTraffic(queryClient, reachability);
+    check = vi.fn(() => Promise.resolve({ ok: true }));
+    stop = watchApiTraffic(queryClient, reachability, check);
   });
 
   afterEach(() => {
@@ -132,6 +140,67 @@ describe('watchApiTraffic', () => {
     stop();
     await load(queryKeys.board('MOB'), () => Promise.reject(NETWORK_DOWN));
     expect(reachability.isUnreachable()).toBe(false);
+  });
+
+  it('notices a request that never reached the server without a check', async () => {
+    await write(() => Promise.reject(NETWORK_DOWN));
+    expect(check).not.toHaveBeenCalled();
+  });
+
+  describe('with a bare 5xx', () => {
+    it('checks the tracker, and stays reachable while it answers', async () => {
+      await write(() => Promise.reject(BARE_500));
+      await vi.waitFor(() => expect(check).toHaveBeenCalledTimes(1));
+      expect(reachability.isUnreachable()).toBe(false);
+    });
+
+    it.each([
+      ['a bare 5xx: a proxy for a stopped API', BARE_502],
+      ['no answer', NETWORK_DOWN],
+    ])('counts as unreachable when the check gets %s too', async (_name, error) => {
+      check.mockRejectedValue(error);
+      await load(queryKeys.board('MOB'), () => Promise.reject(BARE_502));
+      await vi.waitFor(() => expect(reachability.isUnreachable()).toBe(true));
+    });
+
+    it('counts any other answer to the check as reachable', async () => {
+      check.mockRejectedValue(new ApiError(500, 'internal', 'Database is locked.'));
+      await write(() => Promise.reject(BARE_500));
+      await vi.waitFor(() => expect(check).toHaveBeenCalledTimes(1));
+      expect(reachability.isUnreachable()).toBe(false);
+    });
+
+    it('checks once at a time', async () => {
+      const answer = deferred<unknown>();
+      check.mockReturnValue(answer.promise);
+      await write(() => Promise.reject(BARE_500));
+      await write(() => Promise.reject(BARE_500));
+      expect(check).toHaveBeenCalledTimes(1);
+
+      answer.resolve({ ok: true });
+      await settled();
+      await write(() => Promise.reject(BARE_500));
+      expect(check).toHaveBeenCalledTimes(2);
+    });
+
+    it('checks nothing while the tracker is already unreachable', async () => {
+      reachability.setUnreachable(true);
+      await write(() => Promise.reject(BARE_500));
+      expect(check).not.toHaveBeenCalled();
+      expect(reachability.isUnreachable()).toBe(true);
+    });
+
+    it('ignores a check that ends after it stopped listening', async () => {
+      const answer = deferred<unknown>();
+      check.mockReturnValue(answer.promise);
+      await write(() => Promise.reject(BARE_500));
+      stop();
+
+      answer.reject(NETWORK_DOWN);
+      await settled();
+
+      expect(reachability.isUnreachable()).toBe(false);
+    });
   });
 
   describe('with reads answered from the service worker cache', () => {

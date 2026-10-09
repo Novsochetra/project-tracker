@@ -1,7 +1,7 @@
 import { useQueryClient, type QueryClient, type QueryKey } from '@tanstack/react-query';
 import { useCallback, useEffect } from 'react';
 import { projectOfQuery, useApi } from '../../../api';
-import { createReachability, watchApiTraffic } from '../../../app/reachability';
+import { createReachability, watchApiTraffic, type TrackerCheck } from '../../../app/reachability';
 import { useToast } from '../../../components';
 import { onDraftsNotKept } from '../../../lib/draftStorage';
 import { guardUnload } from '../../../lib/drafts';
@@ -110,7 +110,7 @@ function onReportedChange(queryClient: QueryClient, touch: (projectKey: string) 
 
 type Sync = (takeScope: () => SyncScope) => void;
 
-function syncOnReconnect(queryClient: QueryClient, sync: Sync): () => void {
+function syncOnReconnect(queryClient: QueryClient, sync: Sync, check: TrackerCheck): () => void {
   const scope = scopeOfNextRun();
   const runs = spacedRuns(() => sync(scope.take));
   const all = {
@@ -124,7 +124,7 @@ function syncOnReconnect(queryClient: QueryClient, sync: Sync): () => void {
     },
   };
   const reachability = createReachability();
-  const stopWatching = watchApiTraffic(queryClient, reachability);
+  const stopWatching = watchApiTraffic(queryClient, reachability, check);
   const stopListening = reachability.subscribe(() => {
     if (!reachability.isUnreachable()) all.soon();
   });
@@ -166,8 +166,9 @@ export function useTicketDrafts(enabled: boolean): void {
   useNotKeptNote();
   const sync = useDraftSync();
   const queryClient = useQueryClient();
+  const client = useApi();
   useEffect(() => {
     if (!enabled) return;
-    return syncOnReconnect(queryClient, sync);
-  }, [enabled, queryClient, sync]);
+    return syncOnReconnect(queryClient, sync, () => client.checkHealth());
+  }, [client, enabled, queryClient, sync]);
 }

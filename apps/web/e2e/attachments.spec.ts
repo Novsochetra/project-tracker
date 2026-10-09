@@ -88,6 +88,30 @@ const FILE_AREAS = [
 
 const SVG = { name: 'notes.svg', mimeType: 'image/svg+xml', buffer: Buffer.from('<svg/>') };
 
+interface BannerSaid {
+  bannerSaid: boolean;
+}
+
+// Whether the page ever said the tracker can't be reached: its banner announces that.
+const recordBanner = () => {
+  const said: BannerSaid = { bannerSaid: false };
+  Object.assign(window, said);
+  new MutationObserver(() => {
+    const regions = [...document.querySelectorAll('[aria-live]')];
+    if (regions.some((region) => region.textContent?.includes("Can't reach the tracker"))) {
+      Object.assign(window, { bannerSaid: true } satisfies BannerSaid);
+    }
+  }).observe(document, { subtree: true, childList: true, characterData: true });
+};
+
+// late.png's upload fails 2.5 s on, with a bare 500 like a proxy's; the others go through.
+const failLate = (page: Page) =>
+  page.route('**/api/attachments*', async (route) => {
+    if (route.request().headers()[FILE_NAME_HEADER] !== 'late.png') return route.continue();
+    await new Promise((resolve) => setTimeout(resolve, 2500));
+    return route.fulfill({ status: 500, contentType: 'application/json', body: '{}' });
+  });
+
 const spotOf = async (locator: Locator) => {
   const box = (await locator.boundingBox())!;
   return { x: box.x + box.width / 2, y: box.y + box.height / 2 };
@@ -501,6 +525,44 @@ test.describe('attachments', () => {
     });
   }
 
+  // The nav bar and the bottom bar stay where they are when a note goes, so a tap on them just
+  // after Dismiss is aimed and acts; before PT-101 the whole screen held it for 500 ms.
+  for (const [bar, done] of [
+    ['Back to Mobile app', (page: Page) => expect(page).toHaveURL(/\/p\/MOB$/)],
+    [
+      'Paste report',
+      (page: Page) => expect(page.getByRole('dialog', { name: /report/i })).toBeVisible(),
+    ],
+  ] as const) {
+    test(`phone: a tap on ${bar} just after Dismiss on the ticket screen acts`, async ({
+      page,
+      api,
+    }, info) => {
+      test.skip(!isPhone(info.project.name), 'A tap on a phone.');
+      await page.addInitScript(recordClicks);
+      await seedProject(api, 'Mobile app', 'MOB', [{ title: 'Existing ticket' }]);
+      await page.goto('/p/MOB/1');
+      await page.getByLabel('Add files to ticket').setInputFiles([...images(8), SVG]);
+      await expect(page.getByRole('progressbar')).toHaveCount(0);
+      const dismiss = page.getByRole('alert').getByRole('button', { name: 'Dismiss' });
+      await dismiss.evaluate((button) => button.scrollIntoView({ block: 'center' }));
+      await page.waitForTimeout(400);
+      const spot = await spotOf(dismiss);
+      const target = await spotOf(page.getByRole('button', { name: bar }));
+      await page.evaluate(() => {
+        (window as unknown as TapClicks).tapClicks.length = 0;
+      });
+
+      await page.touchscreen.tap(spot.x, spot.y);
+      await page.waitForTimeout(150);
+      await page.touchscreen.tap(target.x, target.y);
+
+      await done(page);
+      const [first, second] = await page.evaluate(() => (window as unknown as TapClicks).tapClicks);
+      expect(second! - first!, 'the tap came while the screen held others').toBeLessThan(HELD_MS);
+    });
+  }
+
   // Where a person may be when an upload fails: at the Add tile they picked from, at the bottom
   // of the screen, or back in the middle of the files.
   const LATE_SCROLLS = [
@@ -519,12 +581,9 @@ test.describe('attachments', () => {
     }, info) => {
       test.skip(!isPhone(info.project.name), 'The fold of a 320×568 phone.');
       await page.setViewportSize(SMALL_PHONE);
+      await page.addInitScript(recordBanner);
       await seedProject(api, 'Mobile app', 'MOB', [{ title: 'Existing ticket' }]);
-      await page.route('**/api/attachments*', async (route) => {
-        if (route.request().headers()[FILE_NAME_HEADER] !== 'late.png') return route.continue();
-        await new Promise((resolve) => setTimeout(resolve, 2500));
-        return route.fulfill({ status: 500, contentType: 'application/json', body: '{}' });
-      });
+      await failLate(page);
       await surface.open(page);
       const area = surface.area(page);
       await area
@@ -549,8 +608,40 @@ test.describe('attachments', () => {
       const noteSeen = await note.evaluate(isSeen);
       await expect(told).toHaveCount(noteSeen ? 0 : 1);
       if (!noteSeen) await expect(told).toBeInViewport();
+      // One file's 500 says nothing about the tracker, which answers its check: no banner says,
+      // even for a moment, that the whole tracker can't be reached (PT-101).
+      expect(await page.evaluate(() => (window as unknown as BannerSaid).bannerSaid)).toBe(false);
     });
   }
+
+  // The comment box keeps no failed tile, and its note is below the files by Attach files: from
+  // its first files at 320×568 that is out of sight, so a toast says it (PT-101).
+  test('small phone: an upload that fails late in the comment box, scrolled to its first files, is said in a toast', async ({
+    page,
+    api,
+  }, info) => {
+    test.skip(!isPhone(info.project.name), 'The fold of a 320×568 phone.');
+    await page.setViewportSize(SMALL_PHONE);
+    await seedProject(api, 'Mobile app', 'MOB', [{ title: 'Existing ticket' }]);
+    await failLate(page);
+    const commentBox = DRAFT_FILE_AREAS.find((area) => area.name === 'the comment box')!;
+    await commentBox.open(page);
+    const area = commentBox.area(page);
+    await area
+      .getByLabel(commentBox.input)
+      .setInputFiles([...images(15), { ...images(1)[0]!, name: 'late.png' }]);
+    await expect(area.getByRole('progressbar')).toHaveCount(1);
+    await area
+      .getByRole('button', { name: 'Remove image 1', exact: true })
+      .evaluate((element) => element.scrollIntoView({ block: 'center' }));
+
+    const note = area.getByRole('alert').filter({ hasText: "late.png didn't upload." });
+    await expect(note).toBeAttached({ timeout: 8000 });
+    await page.waitForTimeout(300);
+    expect(await note.evaluate(isSeen)).toBe(false);
+    const told = page.getByRole('status').getByText("late.png didn't upload.", { exact: true });
+    await expect(told).toBeInViewport();
+  });
 
   test('desktop: a file dropped on the New ticket sheet is attached', async ({
     page,

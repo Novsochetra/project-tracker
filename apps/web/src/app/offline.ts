@@ -1,7 +1,9 @@
 import { ApiError } from '@tracker/client';
 import { isNetworkError } from '../api';
 
-export type ApiSignal = 'reachable' | 'unreachable';
+// 'unsure': a bare 5xx. A proxy answers that way for a stopped API, but so can the API itself, or a
+// proxy whose connection to it broke during one request, so the tracker is checked first.
+export type ApiSignal = 'reachable' | 'unreachable' | 'unsure';
 
 export interface CacheAction {
   type: string;
@@ -10,8 +12,8 @@ export interface CacheAction {
 }
 
 // An error the server answered with still proves it can be reached.
-function signalOfError(error: unknown): ApiSignal | null {
-  if (isNetworkError(error)) return 'unreachable';
+export function signalOfError(error: unknown): ApiSignal | null {
+  if (isNetworkError(error)) return error instanceof ApiError ? 'unsure' : 'unreachable';
   return error instanceof ApiError ? 'reachable' : null;
 }
 

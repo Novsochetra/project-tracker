@@ -243,6 +243,7 @@ const routes: Route[] = [
       c.reviewTicket('MOB-3', { verdict: 'changes_requested', rating: 2, summary: 'Wrong field' }),
   },
   { name: 'listPeople', method: 'GET', path: '/api/people', call: (c) => c.listPeople() },
+  { name: 'checkHealth', method: 'GET', path: '/api/health', call: (c) => c.checkHealth() },
 ];
 
 afterEach(() => {
@@ -410,6 +411,7 @@ describe('fresh reads', () => {
 
     await client.getTicket('MOB-3', { fresh: true });
     await client.listTickets('MOB', { q: 'login' }, { fresh: true });
+    await client.checkHealth();
 
     for (const call of calls) {
       expect(headersOf(call).get(FRESH_READ_HEADER)).toBe('1');

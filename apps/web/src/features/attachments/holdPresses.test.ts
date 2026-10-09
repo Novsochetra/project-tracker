@@ -27,6 +27,7 @@ afterEach(() => {
   vi.runOnlyPendingTimers();
   vi.useRealTimers();
   document.body.replaceChildren();
+  Reflect.deleteProperty(document, 'elementFromPoint');
 });
 
 describe('holdPresses', () => {
@@ -72,5 +73,85 @@ describe('holdPresses', () => {
     holdPresses(note);
     expect(press('click', 1).defaultPrevented).toBe(false);
     expect(pressed).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("holdPresses on a screen's bars", () => {
+  let note: HTMLParagraphElement;
+
+  const bar = (position: 'fixed' | 'sticky', y: number) => {
+    const element = document.createElement('div');
+    element.style.position = position;
+    let box = new DOMRect(0, y, 375, 50);
+    element.getBoundingClientRect = () => box;
+    const control = document.createElement('button');
+    control.addEventListener('click', pressed);
+    element.append(control);
+    return { element, control, move: () => void (box = new DOMRect(0, y + 10, 375, 50)) };
+  };
+
+  const tapOn = (target: Element) => {
+    target.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, pointerType: 'touch' }));
+    const event = new MouseEvent('click', { bubbles: true, cancelable: true, detail: 1 });
+    target.dispatchEvent(event);
+    return event;
+  };
+
+  // What the browser finds along the top and the bottom of the screen.
+  const showing = (top: Element, bottom: Element) => {
+    document.elementFromPoint = (_x: number, y: number) => (y === 0 ? top : bottom);
+  };
+
+  beforeEach(() => {
+    note = document.createElement('p');
+  });
+
+  it('lets a tap on a nav bar or bottom bar through while they stay where they were', () => {
+    const navBar = bar('sticky', 0);
+    const bottomBar = bar('fixed', 760);
+    screen.append(navBar.element, note, bottomBar.element);
+    showing(navBar.control, bottomBar.control);
+
+    holdPresses(note);
+
+    expect(tapOn(navBar.control).defaultPrevented).toBe(false);
+    expect(tapOn(bottomBar.control).defaultPrevented).toBe(false);
+    expect(tapOn(button).defaultPrevented).toBe(true);
+    expect(pressed).toHaveBeenCalledTimes(2);
+  });
+
+  it('holds a bar that moved', () => {
+    const bottomBar = bar('fixed', 760);
+    screen.append(note, bottomBar.element);
+    showing(note, bottomBar.control);
+
+    holdPresses(note);
+    bottomBar.move();
+
+    expect(tapOn(bottomBar.control).defaultPrevented).toBe(true);
+  });
+
+  it('holds the bar the note is in', () => {
+    const bottomBar = bar('fixed', 760);
+    bottomBar.element.append(note);
+    screen.append(bottomBar.element);
+    showing(button, bottomBar.control);
+
+    holdPresses(note);
+
+    expect(tapOn(bottomBar.control).defaultPrevented).toBe(true);
+  });
+
+  it('holds all of a sheet: its header moves as it shrinks, and its scrim closes it', () => {
+    const scrim = bar('fixed', 0);
+    const sheet = document.createElement('div');
+    sheet.setAttribute('role', 'dialog');
+    sheet.append(note);
+    screen.append(scrim.element, sheet);
+    showing(scrim.control, scrim.control);
+
+    holdPresses(note);
+
+    expect(tapOn(scrim.control).defaultPrevented).toBe(true);
   });
 });
