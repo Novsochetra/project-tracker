@@ -1,5 +1,5 @@
 import type { Page, Request } from '@playwright/test';
-import { expect, isPhone, test } from './fixtures';
+import { expect, isPhone, test, usesPhoneLayout } from './fixtures';
 import { seedProject, toast } from './helpers';
 
 const SAVED_ON_PHONE = "Saved offline. It'll sync later.";
@@ -259,10 +259,10 @@ test.describe('quick capture', () => {
     expect((await api.listTickets('MOB')).map((ticket) => ticket.key)).toEqual(['MOB-1']);
   });
 
-  test('desktop: C leaves an open menu alone', async ({ page, api }, info) => {
-    test.skip(isPhone(info.project.name), 'Keyboard shortcut on desktop.');
+  test('desktop: C leaves an open menu alone', async ({ page, api }) => {
     await seedProject(api, 'Website', 'WEB');
     await page.goto('/p/WEB');
+    test.skip(await usesPhoneLayout(page), 'Keyboard shortcut on desktop.');
     await expect(page.getByText('No tickets yet')).toBeVisible();
 
     await page.getByRole('button', { name: 'Project options' }).click();

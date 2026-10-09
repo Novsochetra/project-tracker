@@ -5,7 +5,9 @@
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
-  padding: var(--space-2) calc(var(--space-2) + var(--safe-right))
+  /* A sheet taller than the screen (a phone turned sideways) keeps the same 8px margin and the
+     safe area at the top too, and its rows scroll (.card). */
+  padding: calc(var(--space-2) + var(--safe-top)) calc(var(--space-2) + var(--safe-right))
     calc(var(--space-2) + var(--safe-bottom)) calc(var(--space-2) + var(--safe-left));
 }
 
@@ -35,6 +37,7 @@
   gap: var(--space-2);
   width: 100%;
   max-width: 440px;
+  min-height: 0;
   margin: 0 auto;
   outline: none;
   touch-action: none;
@@ -42,12 +45,17 @@
   -webkit-user-select: none;
 }
 
+/* The rows give way when the sheet is taller than the screen: they scroll inside the card, and
+   Cancel keeps its size below them. */
 .card {
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
   border-radius: var(--radius-sheet);
   background: var(--surface);
+  touch-action: pan-y;
 }
 
 .caption {
@@ -91,5 +99,6 @@
 }
 
 .cancel {
+  flex: none;
   border-radius: var(--radius-sheet);
 }

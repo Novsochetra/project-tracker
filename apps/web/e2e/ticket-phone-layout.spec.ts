@@ -1,6 +1,6 @@
 import type { Locator, Page } from '@playwright/test';
 import { toYmd } from '@tracker/shared';
-import { expect, isPhone, test } from './fixtures';
+import { expect, isPhone, test, usesPhoneLayout } from './fixtures';
 import { activity, seedProject, settled, toast } from './helpers';
 
 // PT-73: on a phone the Details card sat in the middle of the ticket, under the description and
@@ -281,11 +281,11 @@ test.describe('ticket screen on a phone', () => {
     await expect(chips(page)).toHaveCount(0);
   });
 
-  test('desktop keeps the side panel and shows text whole', async ({ page, api, agent }, info) => {
-    test.skip(isPhone(info.project.name), 'Desktop is unchanged');
+  test('desktop keeps the side panel and shows text whole', async ({ page, api, agent }) => {
     await seedProject(api, 'Mobile app', 'MOB', [{ title: 'Date picker' }]);
     await agent.addComment('MOB-1', { text: LONG_COMMENT(1) });
     await page.goto('/p/MOB/1');
+    test.skip(await usesPhoneLayout(page), 'Desktop is unchanged');
     await expect(page.getByRole('complementary', { name: 'Ticket details' })).toBeVisible();
     await expect(chips(page)).toHaveCount(0);
     await expect(activity(page)).toContainText('Decisions (worker 1)');

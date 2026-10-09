@@ -1,5 +1,5 @@
 import type { Locator } from '@playwright/test';
-import { expect, isPhone, test } from './fixtures';
+import { expect, test, usesPhoneLayout } from './fixtures';
 import { openNewTicketIn, seedProject, toast } from './helpers';
 
 // 150 characters: five lines at 375px.
@@ -44,7 +44,8 @@ test.describe('new ticket sheet', () => {
   test('a paste turns its line breaks into spaces before the length limit, and undoes', async ({
     page,
     api,
-  }, info) => {
+    browserName,
+  }) => {
     await seedProject(api, 'Mobile app', 'MOB', [{ title: 'Existing ticket' }]);
     await page.goto('/p/MOB');
     await openNewTicketIn(page, 'To do');
@@ -64,7 +65,7 @@ test.describe('new ticket sheet', () => {
     await title.press('ControlOrMeta+v');
     await expect(title).toHaveValue('Fix the login crash');
     // WebKit's undo takes back the typing before a paste too, in any text area.
-    if (!isPhone(info.project.name)) {
+    if (browserName !== 'webkit') {
       await title.press('ControlOrMeta+z');
       await expect(title).toHaveValue('Fix crash');
     }
@@ -104,9 +105,9 @@ test.describe('new ticket sheet', () => {
     page,
     api,
   }, info) => {
-    test.skip(isPhone(info.project.name), 'A mouse on a desktop screen');
     await seedProject(api, 'Mobile app', 'MOB', [{ title: 'Existing ticket' }]);
     await page.goto('/p/MOB');
+    test.skip(await usesPhoneLayout(page), 'A mouse on a desktop screen');
     await openNewTicketIn(page, 'To do');
     const sheet = page.getByRole('dialog', { name: 'New ticket' });
     const title = sheet.getByLabel('Ticket title');

@@ -134,6 +134,14 @@ describe('decidePull', () => {
     expect(decidePull(8, 6, 0)).toBe('ignore');
     expect(decidePull(0, 6, 40)).toBe('ignore');
   });
+
+  it('takes an upward drag too when the content fits, as there is nothing to scroll', () => {
+    expect(decidePull(0, -6, 0, true)).toBe('engage');
+    expect(decidePull(2, 6, 0, true)).toBe('engage');
+    expect(decidePull(1, -2, 0, true)).toBe('wait');
+    expect(decidePull(8, -6, 0, true)).toBe('ignore');
+    expect(decidePull(0, -6, 0, false)).toBe('ignore');
+  });
 });
 
 describe('canScrollUpWithin', () => {

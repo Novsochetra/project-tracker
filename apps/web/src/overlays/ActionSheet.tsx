@@ -1,16 +1,13 @@
 import clsx from 'clsx';
 import { motion } from 'motion/react';
-import { useCallback, useRef, type ReactNode } from 'react';
+import { useRef, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
-import { useAxisDrag } from '../gestures/useAxisDrag';
 import { useTapShield } from '../lib/clickShield';
-import { usePrefersReducedMotion } from '../lib/media';
 import styles from './ActionSheet.module.css';
 import { actionSheetContent } from './actionSheetContent';
-import { useDismissDrag } from './useDismissDrag';
+import { useActionSheetMotion } from './useActionSheetMotion';
 import { useOverlayBehavior } from './useOverlayBehavior';
 import { usePresence } from './usePresence';
-import { useBottomPanelValues, useSlidePresence } from './useSlidePresence';
 
 export interface ActionSheetAction {
   label: string;
@@ -30,35 +27,9 @@ export interface ActionSheetProps {
 
 function ActionSheetPanel(props: ActionSheetProps & { onExited: () => void }) {
   const { open, onClose, label, caption, actions, cancelLabel = 'Cancel', onExited } = props;
-  const reducedMotion = usePrefersReducedMotion();
   const panelRef = useRef<HTMLDivElement>(null);
-  const releaseVelocityRef = useRef(0);
-  const values = useBottomPanelValues();
-  const { y } = values;
-  // Measured from the resting position, so an exit that starts mid-drag still leaves the screen.
-  const measureTravel = useCallback(() => {
-    const panel = panelRef.current;
-    return panel ? window.innerHeight - (panel.getBoundingClientRect().top - y.get()) : null;
-  }, [y]);
-  useSlidePresence({
-    enabled: true,
-    open,
-    reducedMotion,
-    values,
-    measureTravel,
-    releaseVelocityRef,
-    onExited,
-  });
-  const drag = useDismissDrag({
-    enabled: open,
-    open,
-    y,
-    travel: values.travel,
-    measureTravel,
-    releaseVelocityRef,
-    onClose,
-  });
-  useAxisDrag(panelRef, { ...drag, axis: 'y' });
+  const cardRef = useRef<HTMLDivElement>(null);
+  const values = useActionSheetMotion({ open, onClose, onExited, panelRef, cardRef });
   const trapKeys = useOverlayBehavior({ active: open, panelRef, onClose, focusInitial: false });
   // A tap opens the sheet, which slides up under the finger, or turns it into its next step, whose
   // row can take the tapped row's place (a delete confirm), so a double tap's second tap would
@@ -82,10 +53,10 @@ function ActionSheetPanel(props: ActionSheetProps & { onExited: () => void }) {
         aria-label={label}
         tabIndex={-1}
         className={styles.sheet}
-        style={{ y, opacity: values.opacity }}
+        style={{ y: values.y, opacity: values.opacity }}
         onKeyDown={trapKeys}
       >
-        <div role="presentation" className={styles.card} {...shield}>
+        <div ref={cardRef} role="presentation" className={styles.card} {...shield}>
           {caption !== undefined && (
             <div key={typeof caption === 'string' ? caption : undefined} className={styles.caption}>
               {caption}

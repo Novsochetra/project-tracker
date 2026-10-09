@@ -5,6 +5,9 @@ import { VelocityTracker } from './velocity';
 export interface TopPullOptions {
   enabled: boolean;
   scrollRef?: RefObject<HTMLElement | null>;
+  // Content that fits takes every vertical drag, so the panel stretches upward as it would
+  // anywhere else on it.
+  stretchWhenFits?: boolean;
   onStart: () => void;
   onMove: (dy: number) => void;
   onEnd: (velocityY: number) => void;
@@ -22,6 +25,11 @@ interface PullSession {
 function attachTopPull(target: HTMLElement, read: () => TopPullOptions): () => void {
   let session: PullSession | null = null;
   const scroller = () => read().scrollRef?.current ?? target;
+  // A pixel of rounding is not something to scroll.
+  const fits = () => {
+    const container = scroller();
+    return read().stretchWhenFits === true && container.scrollHeight - container.clientHeight <= 1;
+  };
 
   const onStart = (event: TouchEvent) => {
     session = null;
@@ -38,7 +46,8 @@ function attachTopPull(target: HTMLElement, read: () => TopPullOptions): () => v
     if (!session || !touch) return;
     const dy = touch.clientY - session.startY;
     if (!session.engaged) {
-      const decision = decidePull(touch.clientX - session.startX, dy, scroller().scrollTop);
+      const dx = touch.clientX - session.startX;
+      const decision = decidePull(dx, dy, scroller().scrollTop, fits());
       if (decision === 'wait') return;
       if (decision === 'ignore') {
         session = null;
