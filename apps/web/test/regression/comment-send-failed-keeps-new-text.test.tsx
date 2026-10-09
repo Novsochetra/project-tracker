@@ -3,7 +3,8 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { deferred } from '../../src/api/test/deferred';
 import { renderTicket } from '../../src/features/ticket/test/renderTicket';
-import { DRAFTS_STORAGE_KEY, storedDraft } from '../../src/lib/storedDrafts';
+import { keptComment } from '../../src/features/ticket/activity/sentComments';
+import { DRAFTS_STORAGE_KEY } from '../../src/lib/storedDrafts';
 import { skipAnimations } from '../../src/overlays/testing';
 
 const ID = 'comment:MOB-1';
@@ -45,7 +46,7 @@ it('brings a failed comment back before the text typed while it was sent', async
 
   await fail();
   await waitFor(() => expect(box).toHaveValue('Looks good\nAlso check the logout'));
-  expect(storedDraft(ID)?.text).toBe('Looks good\nAlso check the logout');
+  expect(keptComment('MOB-1')).toBe('Looks good\nAlso check the logout');
 });
 
 it('brings it back when the text meanwhile came from another tab', async () => {

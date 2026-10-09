@@ -1,6 +1,6 @@
 import { act, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { afterEach, beforeEach, expect, it } from 'vitest';
+import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { queryKeys } from '../../src/api';
 import { makeTicketDetail } from '../../src/api/test/fixtures';
 import {
@@ -36,13 +36,21 @@ function openTicket() {
 }
 
 // Another tab writes the drafts store; this tab hears of it the way browsers tell other tabs.
-function anotherTabKeeps(text: string | null) {
+function anotherTabKeeps(text: string) {
   act(() => {
-    if (text === null) localStorage.removeItem(DRAFTS_STORAGE_KEY);
-    else {
-      const draft = { ticketKey: 'MOB-1', field: 'title', base: 'Ticket 1', text };
-      localStorage.setItem(DRAFTS_STORAGE_KEY, JSON.stringify({ [ID]: draft }));
-    }
+    const draft = { ticketKey: 'MOB-1', field: 'title', base: 'Ticket 1', text };
+    localStorage.setItem(DRAFTS_STORAGE_KEY, JSON.stringify({ [ID]: draft }));
+    window.dispatchEvent(new StorageEvent('storage', { key: DRAFTS_STORAGE_KEY }));
+  });
+}
+
+// Another tab, with memory of its own, saved the text and let go of its kept copies, the ones this
+// tab kept too: a tab removes the records of a draft it has read once it is done.
+async function anotherTabSaved(text: string) {
+  vi.resetModules();
+  const tab = await import('../../src/lib/storedDrafts');
+  act(() => {
+    tab.draftSaved(ID, text);
     window.dispatchEvent(new StorageEvent('storage', { key: DRAFTS_STORAGE_KEY }));
   });
 }
@@ -84,7 +92,7 @@ it('lets go of its note once another tab saved the text', async () => {
 
   // The other tab showed the same text and saved it once it was back online.
   server.edit({ title: 'Ticket 1 now' });
-  anotherTabKeeps(null);
+  await anotherTabSaved('Ticket 1 now');
   await waitFor(() => expect(screen.queryByText(NOTE)).not.toBeInTheDocument(), {
     timeout: 1000,
   });

@@ -23,9 +23,10 @@ export const isOpen = (edit: EditState): boolean => OPEN_PHASES.has(edit.phase);
 export const STARTED: EditState = { phase: 'editing', checkFirst: false };
 
 // An edit whose Save failed opens failed and is retried. One nobody saved opens as it was left
-// and is only ever sent by Save.
+// and is only ever sent by Save; one the tracker refused says so again.
 export function restoredEdit(kept: StoredDraft | undefined): EditState {
   if (!kept) return { phase: 'idle', checkFirst: false };
+  if (kept.changed) return { phase: 'changed', checkFirst: true };
   return { phase: kept.submitted ? 'failed' : 'editing', checkFirst: true };
 }
 

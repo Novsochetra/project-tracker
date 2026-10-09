@@ -54,7 +54,7 @@ function useEditSend(input: SendingInput) {
   // editor keeps the sent text, as a comment needs text.
   const keepShown = (sent: string) => {
     const shown = latest.current.text;
-    keepDraft(id, { ...target, text: shown.trim() ? shown : sent }, base);
+    keepDraft(id, { ...target, text: shown.trim() ? shown : sent, changed: true }, base);
   };
   const send: Send = (text, by) => {
     submit(text);

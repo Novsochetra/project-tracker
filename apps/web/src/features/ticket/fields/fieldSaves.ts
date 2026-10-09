@@ -1,4 +1,4 @@
-import { draftSaved, rebaseDraft, storedDraft } from '../../../lib/storedDrafts';
+import { draftSaved, rebaseDraft } from '../../../lib/storedDrafts';
 import { isSentElsewhere, markSending, onOtherTabsMarks } from './saveMarks';
 
 // On a slow connection several saves of one field can be on their way, and the tracker ends with
@@ -114,28 +114,6 @@ export function finishSave(id: string, number: number, saved: boolean): void {
   update(id, saves);
 }
 
-// The text this tab typed last into each draft, and when it was kept (StoredDraft.at), until the
-// tracker has it (useKeptText).
-export interface OwnText {
-  text: string;
-  at: number;
-}
-
-const ownTexts = new Map<string, OwnText>();
-
-export const ownTextOf = (id: string): OwnText | undefined => ownTexts.get(id);
-
-export function typedHere(id: string, own: OwnText | null): void {
-  if (own) ownTexts.set(id, own);
-  else ownTexts.delete(id);
-}
-
-// A save sends text this tab may not have typed (kept from an earlier visit, or by another tab).
-// From then on it counts as this tab's, as if typed when it was kept.
-export function claimText(id: string, text: string): void {
-  if (!ownTexts.has(id)) typedHere(id, { text, at: storedDraft(id)?.at ?? Date.now() });
-}
-
 const waiting = new Map<string, () => void>();
 
 // Runs `run` once no save of the draft is on its way, in this tab or another (a closed tab's marks
@@ -171,5 +149,4 @@ export function clearSaves(): void {
   sent.clear();
   waiting.forEach((stop) => stop());
   waiting.clear();
-  ownTexts.clear();
 }

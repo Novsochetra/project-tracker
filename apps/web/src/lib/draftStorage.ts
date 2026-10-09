@@ -15,6 +15,8 @@ export function onDraftsNotKept(listener: () => void): () => void {
   return () => notKeptListeners.delete(listener);
 }
 
+export const draftsNotKept = (): void => notKeptListeners.forEach((listener) => listener());
+
 const sameDraft = (stored: unknown, draft: unknown): boolean =>
   stored !== undefined && JSON.stringify(stored) === JSON.stringify(draft);
 
@@ -48,7 +50,7 @@ export function draftStorage<T>(
     const allKept = !hasUnstored();
     const kept = writeWhatFits(stored, drafts);
     unstored = pick(drafts, (id) => !(id in kept));
-    if (allKept && hasUnstored()) notKeptListeners.forEach((listener) => listener());
+    if (allKept && hasUnstored()) draftsNotKept();
   };
   return { load, store, hasUnstored };
 }

@@ -8,6 +8,7 @@ import { useAttachmentList, type AttachmentList } from '../../attachments';
 import { useDraftMark } from '../../../lib/useDraftMark';
 import { canSendComment, tooLongMessage } from './commentRules';
 import {
+  backIdsOf,
   commentsWithText,
   endSend,
   keepComment,
@@ -27,17 +28,18 @@ export interface ComposerState {
 
 // Unsent text is kept in the drafts store until it is sent or emptied; it is never sent for
 // the user. The box shows what the store keeps, so a comment another tab types, sends or empties
-// shows here too, as in a field: neither tab types over a comment it hasn't shown.
+// shows here too, as in a field: neither tab types over a comment it hasn't shown. It also notes
+// which comments that came back it shows, which typing takes into its text.
 function useComposerText(ticketKey: string) {
   // Kept text of spaces only (the app never keeps one) counts as none.
   const kept = useSyncExternalStore(subscribeStoredDrafts, () => keptComment(ticketKey));
-  const [text, setText] = useState(kept ?? '');
-  if (keptForm(text) !== kept) setText(kept ?? '');
+  const [box, setBox] = useState(() => ({ text: kept ?? '', backs: backIdsOf(ticketKey) }));
+  if (keptForm(box.text) !== kept) setBox({ text: kept ?? '', backs: backIdsOf(ticketKey) });
   return {
-    text,
+    text: box.text,
     change: (next: string) => {
-      keepComment(ticketKey, next);
-      setText(next);
+      keepComment(ticketKey, next, box.backs);
+      setBox({ text: next, backs: [] });
     },
   };
 }

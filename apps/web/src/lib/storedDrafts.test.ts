@@ -18,6 +18,15 @@ import {
 const TITLE = { ticketKey: 'MOB-3', field: 'title' } as const;
 const TITLE_ID = 'title:MOB-3';
 
+// The same module with memory of its own, as in another tab (or the page after a reload).
+async function otherTab() {
+  vi.resetModules();
+  return import('./storedDrafts');
+}
+
+const draftKeys = () =>
+  Object.keys(localStorage).filter((key) => key.startsWith(DRAFTS_STORAGE_KEY));
+
 beforeEach(() => {
   localStorage.clear();
 });
@@ -37,15 +46,15 @@ describe('draft ids', () => {
 });
 
 describe('stored drafts', () => {
-  it('keep typed text with the server value it was first typed over', () => {
+  it('keep typed text with the server value it was first typed over', async () => {
     keepDraft(TITLE_ID, { ...TITLE, text: 'Fix the' }, 'Fix login');
     const first = storedDraft(TITLE_ID)?.at ?? 0;
     keepDraft(TITLE_ID, { ...TITLE, text: 'Fix the login' }, 'Fix the');
     const kept = { ...TITLE, base: 'Fix login', text: 'Fix the login', at: expect.any(Number) };
     expect(storedDraft(TITLE_ID)).toEqual(kept);
-    expect(JSON.parse(localStorage.getItem(DRAFTS_STORAGE_KEY) ?? '')).toEqual({
-      [TITLE_ID]: kept,
-    });
+    // In storage, one record for the draft, which another tab reads too.
+    expect(draftKeys()).toHaveLength(1);
+    expect((await otherTab()).storedDraft(TITLE_ID)).toEqual(kept);
     expect(hasStoredDrafts()).toBe(true);
     // Each new text is later than the one before, also within one millisecond; a new base keeps
     // the time the text was typed.
@@ -62,7 +71,7 @@ describe('stored drafts', () => {
     draftSaved(TITLE_ID, 'Fix the login');
     expect(storedDraft(TITLE_ID)).toBeUndefined();
     expect(hasStoredDrafts()).toBe(false);
-    expect(localStorage.getItem(DRAFTS_STORAGE_KEY)).toBeNull();
+    expect(draftKeys()).toEqual([]);
   });
 
   it('take a new base when the user keeps their text over a changed server value', () => {
@@ -149,6 +158,56 @@ describe('stored drafts without storage', () => {
     clearStoredDrafts();
     vi.restoreAllMocks();
     expect(hasStoredDrafts()).toBe(false);
+    expect(draftKeys()).toEqual([]);
+  });
+});
+
+describe('drafts kept in two tabs', () => {
+  it('show the text typed last, and the tab that outdates a record removes it', async () => {
+    keepDraft(TITLE_ID, { ...TITLE, text: 'Fix it' }, 'Fix login');
+    const tabB = await otherTab();
+    tabB.keepDraft(TITLE_ID, { ...TITLE, text: 'Fix it now' }, 'Fix it');
+    expect(storedDraft(TITLE_ID)).toMatchObject({ text: 'Fix it now', base: 'Fix login' });
+    expect(draftKeys()).toHaveLength(1);
+  });
+
+  it('never let a tab put older text over text another tab kept since', async () => {
+    keepDraft(TITLE_ID, { ...TITLE, text: 'Fix it' }, 'Fix login');
+    const older = storedDraft(TITLE_ID)?.at ?? 0;
+    const tabB = await otherTab();
+    keepDraft(TITLE_ID, { ...TITLE, text: 'Fix it now' }, 'Fix it');
+    // Tab B works from a copy that hadn't heard of 'Fix it now': its record is older.
+    const records = await import('./tabRecords');
+    records.putRecord({ ...TITLE, text: 'Fix it', base: 'Fix login', at: older });
+    expect(tabB.storedDraft(TITLE_ID)?.text).toBe('Fix it now');
+    expect(storedDraft(TITLE_ID)?.text).toBe('Fix it now');
+  });
+
+  it('take a base another tab learned for the text typed last', async () => {
+    keepDraft(TITLE_ID, { ...TITLE, text: 'Fix it now' }, 'Fix login');
+    const typedAt = storedDraft(TITLE_ID)?.at;
+    (await otherTab()).rebaseDraft(TITLE_ID, 'Fix it');
+    expect(storedDraft(TITLE_ID)).toMatchObject({
+      text: 'Fix it now',
+      base: 'Fix it',
+      at: typedAt,
+    });
+  });
+
+  it('let a tab end a draft whose text it has read, whichever tab kept it', async () => {
+    keepDraft(TITLE_ID, { ...TITLE, text: 'Fix it now' }, 'Fix login');
+    (await otherTab()).draftSaved(TITLE_ID, 'Fix it now');
+    expect(storedDraft(TITLE_ID)).toBeUndefined();
+    expect(draftKeys()).toEqual([]);
+  });
+
+  // Tabs of the versions before PT-111 kept every draft in one map, written whole.
+  it('read the map of earlier versions as one more tab, and drop an entry newer text outdates', () => {
+    const entry = { ...TITLE, base: 'Fix login', text: 'From an older tab' };
+    localStorage.setItem(DRAFTS_STORAGE_KEY, JSON.stringify({ [TITLE_ID]: entry }));
+    expect(storedDraft(TITLE_ID)).toMatchObject({ text: 'From an older tab', base: 'Fix login' });
+    keepDraft(TITLE_ID, { ...TITLE, text: 'From an older tab, and me' }, 'Fix login');
+    expect(storedDraft(TITLE_ID)?.text).toBe('From an older tab, and me');
     expect(localStorage.getItem(DRAFTS_STORAGE_KEY)).toBeNull();
   });
 });

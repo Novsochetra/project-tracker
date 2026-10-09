@@ -85,8 +85,10 @@ export function useCommentEdit(
     failed: edit.phase === 'failed',
     changed: edit.phase === 'changed',
     setText: (next) => {
-      // An emptied edit can't be saved (a comment needs text), so it isn't kept either.
-      if (next.trim()) keepDraft(id, { ...target, text: next }, startedFrom);
+      // An emptied edit can't be saved (a comment needs text), so it isn't kept either. A
+      // refused one still says so after a reload.
+      const changed = edit.phase === 'changed' || undefined;
+      if (next.trim()) keepDraft(id, { ...target, text: next, changed }, startedFrom);
       else forgetDraft(id);
       setText(next);
       setEdit(afterTyping);

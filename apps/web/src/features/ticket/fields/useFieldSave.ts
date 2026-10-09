@@ -1,21 +1,13 @@
 import type { Dispatch, SetStateAction } from 'react';
 import { errorMessage, isStaleEdit } from '../../../api';
 import { useToast, type ToastApi } from '../../../components';
-import {
-  draftIdOf,
-  draftSaved,
-  keepDraft,
-  storedDraft,
-  type StoredDraft,
-} from '../../../lib/storedDrafts';
+import { draftIdOf, draftSaved, keepDraft, storedDraft } from '../../../lib/storedDrafts';
 import { useLatest } from '../../../lib/useLatest';
 import { useDraftSave, type DraftSave } from '../drafts/useDraftSave';
 import { endSave, markSaved, refuseSave, type FieldDraft } from './fieldDraft';
 import {
-  claimText,
   finishSave,
   isSavingElsewhere,
-  ownTextOf,
   saveStep,
   savesOf,
   startSave,
@@ -45,8 +37,6 @@ interface SaveInput {
   setDraft: Dispatch<SetStateAction<FieldDraft>>;
   // The tracker refused a save because the field has newer text than it was typed over.
   onStale: () => void;
-  // The tracker has `value`, so the store letting it go is right.
-  onLanded: (value: string) => void;
 }
 
 type SaveResult = 'saved' | 'failed' | 'stale';
@@ -75,22 +65,14 @@ async function request(
 interface Answered {
   id: string;
   number: number;
-  draft: StoredDraft;
+  text: string;
   result: SaveResult;
 }
 
-function afterAnswer({ id, number, draft, result }: Answered, input: SaveInput): void {
-  const { text, ticketKey, field, base } = draft;
-  // Another tab can drop the kept text from a copy of the store that hadn't heard of it while
-  // the save was on its way, which reads as saved elsewhere. A failed save keeps it again,
-  // unless newer text was typed since, here or in another tab.
-  if (result === 'failed' && !storedDraft(id) && ownTextOf(id)?.text === text) {
-    keepDraft(id, { ticketKey, field, text }, base);
-  }
+function afterAnswer({ id, number, text, result }: Answered, input: SaveInput): void {
   input.setDraft((current) =>
     result === 'stale' ? refuseSave(current, text) : endSave(current, text, result === 'saved'),
   );
-  if (result === 'saved') input.onLanded(text);
   finishSave(id, number, result === 'saved');
   if (result === 'stale') input.onStale();
 }
@@ -109,7 +91,6 @@ export function useFieldSave(input: SaveInput): SaveField {
     const step = saveStep(savesOf(id), { value, shown, checked, sentElsewhere, base });
     if (step === 'skip') return;
     if (step === 'unchanged') {
-      latest.current.onLanded(value);
       draftSaved(id, value);
       setDraft((current) => markSaved(current, value));
       return;
@@ -122,9 +103,8 @@ export function useFieldSave(input: SaveInput): SaveField {
       checked ? (base ?? shown) : (typedOverLanded ?? base ?? shown),
     );
     const number = startSave(id, value);
-    claimText(id, value);
     const draft = { ticketKey, field, text: value, base: expected };
     const result = await request(latest.current, draft, quiet);
-    afterAnswer({ id, number, draft, result }, latest.current);
+    afterAnswer({ id, number, text: value, result }, latest.current);
   };
 }

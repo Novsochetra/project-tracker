@@ -32,6 +32,7 @@ export function useDraftSave(): DraftSave {
         });
       case 'comment':
       case 'comment-send':
+      case 'comment-back':
         return Promise.reject(new Error('The comment box is never sent for the user.'));
     }
   };

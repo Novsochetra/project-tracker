@@ -66,10 +66,13 @@ const refused = new Map<string, string>();
 
 export const clearRefusedDrafts = (): void => refused.clear();
 
-// The comment box is never sent for the user, nor an edit nobody pressed Save for. Their
-// tickets are still read, so their text goes once the ticket or comment is gone.
+// What the comment box keeps is never sent for the user, nor an edit nobody pressed Save for.
+// Their tickets are still read, so their text goes once the ticket or comment is gone.
+const isBox = (draft: StoredDraft): boolean =>
+  draft.field === 'comment' || draft.field === 'comment-back';
+
 const isSentForUser = (draft: StoredDraft): boolean =>
-  draft.field === 'comment-edit' ? draft.submitted === true : draft.field !== 'comment';
+  draft.field === 'comment-edit' ? draft.submitted === true : !isBox(draft);
 
 // Answers that say "not now" rather than "not this text": signed out, too slow, too many requests.
 const NOT_NOW_STATUSES = new Set([401, 408, 429]);
@@ -98,7 +101,7 @@ async function save([id, draft]: Entry, run: Run): Promise<boolean> {
 async function syncDraft(entry: Entry, detail: TicketDetail, run: Run): Promise<boolean> {
   const [id, draft] = entry;
   // A save may have started while the ticket was read.
-  if (draft.field === 'comment' || isSavingAnywhere(id)) return true;
+  if (isBox(draft) || isSavingAnywhere(id)) return true;
   if (draft.field === 'comment-send') {
     settleLeftSend(id, draft, detail);
     return true;

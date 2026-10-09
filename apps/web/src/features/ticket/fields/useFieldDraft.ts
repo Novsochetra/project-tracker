@@ -5,6 +5,7 @@ import {
   keepDraft,
   rebaseDraft,
   storedDraft,
+  subscribeStoredDrafts,
 } from '../../../lib/storedDrafts';
 import { useLiveDraft } from '../drafts/liveDrafts';
 import {
@@ -18,7 +19,6 @@ import {
 import { carries, isSavingElsewhere, savesOf, savingWhere, subscribeSaves } from './fieldSaves';
 import { retryOnceSettled, useFieldRetry } from './useFieldRetry';
 import { useFieldSave, type FieldTarget } from './useFieldSave';
-import { useKeptText } from './useKeptText';
 
 export interface FieldDraftState {
   value: string;
@@ -48,8 +48,7 @@ export function useFieldDraft(server: string, target: FieldTarget): FieldDraftSt
   const [draft, setDraft] = useState(() => openDraft(server, id));
   const [focused, setFocused] = useState(false);
   const where = useSyncExternalStore(subscribeSaves, () => savingWhere(id));
-  const own = useKeptText(id, target, draft, draft.landed?.text ?? server);
-  const { kept } = own;
+  const kept = useSyncExternalStore(subscribeStoredDrafts, () => storedDraft(id)?.text);
   const synced = syncDraft(draft, server, {
     focused,
     saving: where === 'here',
@@ -65,17 +64,8 @@ export function useFieldDraft(server: string, target: FieldTarget): FieldDraftSt
     // Checked like a retry: the check tells text typed over the newer one from text someone else
     // changed meanwhile.
     onStale: () => retryOnceSettled(id),
-    onLanded: own.settled,
   });
-  const retry = useFieldRetry({
-    id,
-    target,
-    server,
-    draft: synced,
-    setDraft,
-    save,
-    settled: own.settled,
-  });
+  const retry = useFieldRetry({ id, target, draft: synced, setDraft, save });
   useLiveDraft(id, () => retry('app'));
 
   return {
@@ -85,7 +75,6 @@ export function useFieldDraft(server: string, target: FieldTarget): FieldDraftSt
     conflict: synced.conflict,
     change: (value) => {
       keepDraft(id, { ...target, text: value }, synced.value);
-      own.typed(value);
       setDraft((current) => editDraft(current, value));
     },
     focus: () => setFocused(true),
@@ -98,7 +87,6 @@ export function useFieldDraft(server: string, target: FieldTarget): FieldDraftSt
       void save(synced.value, { checked: true });
     },
     discardMine: () => {
-      own.settled(synced.value);
       forgetDraft(id);
       setDraft(startDraft(server));
     },

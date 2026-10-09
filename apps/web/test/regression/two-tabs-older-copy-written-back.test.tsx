@@ -50,7 +50,8 @@ it('keeps text it typed when another tab writes an older copy back, and keeps it
   anotherTabWritesBack({ text: 'Ticket 1 from A an', at: typedAt - 50 });
   expect(title).toHaveValue('Ticket 1 from A and B');
   await waitFor(() => expect(storedDraft(ID)?.text).toBe('Ticket 1 from A and B'));
-  expect(storedDraft(ID)?.base).toBe('Ticket 1 from A');
+  // This tab's own record, which the older text didn't replace (PT-111).
+  expect(storedDraft(ID)?.base).toBe('Ticket 1');
 
   anotherTabWritesBack(null);
   expect(title).toHaveValue('Ticket 1 from A and B');

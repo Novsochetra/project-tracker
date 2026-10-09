@@ -4,7 +4,9 @@ import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { comment, makeTicketDetail } from '../../src/api/test/fixtures';
 import { renderTicket } from '../../src/features/ticket/test/renderTicket';
 import { hasDrafts } from '../../src/lib/drafts';
-import { keepDraft, storedDraft, storedDrafts } from '../../src/lib/storedDrafts';
+import { keptComment } from '../../src/features/ticket/activity/sentComments';
+import { isSavingAnywhere } from '../../src/features/ticket/fields/fieldSaves';
+import { keepDraft, storedDrafts } from '../../src/lib/storedDrafts';
 import { skipAnimations } from '../../src/overlays/testing';
 
 let cleanups: Array<() => void> = [];
@@ -51,16 +53,18 @@ it('keeps a comment on its way, so closing the page asks first', async () => {
   expect(hasDrafts()).toBe(true);
 });
 
-it('puts a comment still on its way back in the box when the page goes', async () => {
+// It may have reached the tracker as the page went (PT-111): it stays kept for the next check,
+// which reads the ticket first, instead of going back in the box at once.
+it('keeps a comment still on its way when the page goes, for a check of the ticket', async () => {
   sendHangs();
   const user = await send('Looks good');
   await user.type(screen.getByLabelText('Comment'), 'Also the logout');
 
   pageGoes(true);
-  expect(storedDraft('comment:MOB-1')?.text).toBe('Also the logout');
   pageGoes(false);
-  expect(storedDraft('comment:MOB-1')?.text).toBe('Looks good\nAlso the logout');
-  expect(sendsKept()).toEqual([]);
+  expect(keptComment('MOB-1')).toBe('Also the logout');
+  expect(sendsKept().map(([, draft]) => draft.text)).toEqual(['Looks good']);
+  expect(isSavingAnywhere(sendsKept()[0]?.[0] ?? '')).toBe(false);
 });
 
 // A tab that was killed (no pagehide) leaves the comment kept; the next start reads the ticket.

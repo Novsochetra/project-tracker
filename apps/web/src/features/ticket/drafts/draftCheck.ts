@@ -16,6 +16,7 @@ export function serverText(detail: TicketDetail, draft: StoredDraft): string | u
       return detail.activity.find((item) => matchesActivity(item, draft.activityId))?.text;
     case 'comment':
     case 'comment-send':
+    case 'comment-back':
       return undefined;
   }
 }

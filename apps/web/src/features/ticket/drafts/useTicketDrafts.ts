@@ -59,6 +59,24 @@ function useDraftSync(): (takeScope: () => SyncScope) => void {
 
 export const RETRY_GAP_MS = 10_000;
 
+// A page that went while it sent a comment leaves the comment kept for this sync, which reads the
+// ticket once that page's marks go (at once for a page that closed, a minute on for one that was
+// killed). A moment later, so a request that reached the tracker as the page went has landed.
+export const LEFT_SEND_WAIT_MS = 1_000;
+
+function runLater(run: () => void, ms: number) {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  return {
+    soon: () => {
+      timer ??= setTimeout(() => {
+        timer = undefined;
+        run();
+      }, ms);
+    },
+    stop: () => clearTimeout(timer),
+  };
+}
+
 // A retry that fails makes the tracker look unreachable, and the refetch after it reachable
 // again, or gets a bare 5xx that the check finds answered, which would start the next retry at
 // once. So retries on those signals wait until RETRY_GAP_MS after the last one.
@@ -152,10 +170,9 @@ function syncOnReconnect(queryClient: QueryClient, sync: Sync, check: TrackerChe
     scope.add(projectKey);
     runs.soon();
   });
-  // A page killed while it sent a comment leaves its mark until it runs out; the comment is then
-  // checked at once, not at the next start or reconnect.
+  const leftSends = runLater(all.now, LEFT_SEND_WAIT_MS);
   const stopMarks = onOtherTabsMarks(() => {
-    if (hasLeftSends()) all.soon();
+    if (hasLeftSends()) leftSends.soon();
   });
   window.addEventListener('online', all.now);
   all.now();
@@ -166,6 +183,7 @@ function syncOnReconnect(queryClient: QueryClient, sync: Sync, check: TrackerChe
     stopListening();
     stopChanges();
     stopMarks();
+    leftSends.stop();
     window.removeEventListener('online', all.now);
   };
 }

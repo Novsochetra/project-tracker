@@ -1,22 +1,19 @@
 import { useRef, type Dispatch, type SetStateAction } from 'react';
 import { NETWORK_ERROR_MESSAGE } from '../../../api';
 import { useToast } from '../../../components';
-import { draftSaved, forgetDraft, keepDraft, storedDraft } from '../../../lib/storedDrafts';
+import { draftSaved, forgetDraft, storedDraft } from '../../../lib/storedDrafts';
 import { retryLiveDraft } from '../drafts/liveDrafts';
 import { useDraftCheck, useFreshTicket, type CheckResult } from '../drafts/useDraftCheck';
 import { checkedDraft, supersededDraft, type FieldDraft } from './fieldDraft';
-import { isSavingAnywhere, ownTextOf, savingWhere, whenSettled } from './fieldSaves';
+import { isSavingAnywhere, savingWhere, whenSettled } from './fieldSaves';
 import type { FieldTarget, SaveField } from './useFieldSave';
 
 export interface RetryInput {
   id: string;
   target: FieldTarget;
-  server: string;
   draft: FieldDraft;
   setDraft: Dispatch<SetStateAction<FieldDraft>>;
   save: SaveField;
-  // The tracker has the text: its kept copy going is right.
-  settled: (value: string) => void;
 }
 
 // While the field is on screen. A task later, because the retry reads the field's state, which
@@ -30,15 +27,12 @@ export type RetryBy = 'user' | 'app';
 
 // Saves the newest typed text; none is kept when the user dropped it while the check ran.
 function settleCheck(input: RetryInput, shown: string, result: CheckResult, by: RetryBy) {
-  const { id, setDraft, save, settled } = input;
+  const { id, setDraft, save } = input;
   const kept = storedDraft(id);
   if (result === 'unchanged' && kept) {
     void save(kept.text, { checked: true, quiet: by === 'app' });
   } else if (result === 'gone') forgetDraft(id);
-  else if (result === 'saved') {
-    settled(shown);
-    draftSaved(id, shown);
-  }
+  else if (result === 'saved') draftSaved(id, shown);
   if (result === 'saved' || result === 'changed') {
     setDraft((current) => checkedDraft(current, shown, result));
   }
@@ -49,7 +43,7 @@ const waitMessage = (field: FieldTarget['field']) =>
   `Another tab is still saving the ${field}. Yours is tried again once that's done, within a minute.`;
 
 export function useFieldRetry(input: RetryInput) {
-  const { id, target, server, draft, setDraft } = input;
+  const { id, target, draft, setDraft } = input;
   const check = useDraftCheck(target.ticketKey);
   const read = useFreshTicket(target.ticketKey);
   const checkingRef = useRef(false);
@@ -70,10 +64,10 @@ export function useFieldRetry(input: RetryInput) {
     }
     checkingRef.current = true;
     const shown = draft.value;
-    if (!storedDraft(id) && ownTextOf(id)?.text !== shown) {
-      // Another tab typed over this text, and its newer text has gone from the store: saved
-      // there, or let go by its user. This text isn't kept again, which would put it back over
-      // the newer one: the field follows the tracker, read first so it shows what it has.
+    if (!storedDraft(id)) {
+      // Its kept text went: another tab saved it, or typed over it and saved or let go of the
+      // newer text. No tab removes text it hasn't read, so the field follows the tracker, read
+      // first so it shows what it has, rather than putting this text back over the newer one.
       void read()
         .catch(() => undefined)
         .then(() => {
@@ -82,9 +76,6 @@ export function useFieldRetry(input: RetryInput) {
         });
       return;
     }
-    // A failed or refused edit outlives its kept text, which another tab can drop from a copy of
-    // the store that hadn't heard of it yet: it is kept again for the check.
-    if (!storedDraft(id)) keepDraft(id, { ...target, text: shown }, draft.landed?.text ?? server);
     void check(id, draft.landed?.text).then((result) => {
       checkingRef.current = false;
       if (result === 'unreachable' && by === 'user') show(NETWORK_ERROR_MESSAGE, { kind: 'error' });
