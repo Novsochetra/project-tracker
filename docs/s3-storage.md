@@ -54,14 +54,15 @@ Create an IAM user for the tracker alone, with an access key and no console acce
 ```
 
 - `s3:PutObject` covers single uploads and every step of a multipart upload but its abort; `s3:GetObject` covers downloads, ranges and HEAD.
-- The second statement is optional. Without `s3:ListBucket`, S3 answers 403 instead of 404 for a file that isn't there, so the tracker answers 500 instead of 404 for it (a file is missing only when it was never copied there, see Existing files).
+- The second statement is optional. Without `s3:ListBucket`, S3 answers 403 instead of 404 for a file that isn't there, so the tracker answers 500 instead of 404 for it (a file is missing only when it was never copied there, see Existing files), and leftover objects aren't cleaned up at start (below; the log says so).
 
 ## How files are kept
 
 - Each file is the object `attachments/<id>.<extension>`, where `<id>` is the attachment's id. The database keeps `<id>.<extension>` (`storage_key`), the same as on disk; names people give their files never reach a key.
 - Uploads stream to S3 as they arrive (`@aws-sdk/lib-storage`): a file up to 5 MB in one PUT, a bigger one in 5 MB parts, two at a time, so an upload holds about 10 MB of server memory whatever its size. Images are the exception: they are read whole (at most 15 MB) and compressed before they are stored, and only the compressed file goes to S3 (`docs/architecture.md`, PT-127). The limits per kind stay (images 15 MB, videos 100 MB, text 5 MB, PDFs 25 MB). A file that passes its limit or stops arriving aborts its multipart upload, so S3 keeps no parts and no object, and the database no row.
 - A Range request reads just those bytes from S3 (a video seeking), and a dropped one closes its connection to S3. HEAD asks S3 for the size (`HeadObject`) without downloading.
-- Deleting an attachment, ticket, comment or project deletes its objects.
+- Deleting an attachment, ticket, comment or project deletes its rows, then its objects. When S3 refuses to delete an object, the delete has still happened (204), the log names the object, and at the next start the server removes every object under `attachments/` that no attachment names and is over an hour old, which also catches an upload cut off between its object and its row (`removeOrphanFiles`, PT-133). A refused clean-up at start is logged and the server starts anyway.
+- S3 errors are logged with their name, code, HTTP status and request id only (`s3Errors.ts`): S3's body for a wrong secret names the access key and the string it signed, and the SDK copies it onto its error (PT-133).
 
 ## S3-compatible stores
 
@@ -82,4 +83,4 @@ To run the whole server against the bucket locally: `npm run build`, then `node 
 
 ## Existing files
 
-Turning S3 on doesn't move files already on disk (PT-124). Their keys stay the same, so moving them is copying the uploads folder under `attachments/`, for example `aws s3 sync data/uploads s3://<bucket>/attachments/`. Until then those attachments answer 404 (500 without `s3:ListBucket`).
+Turning S3 on doesn't move files already on disk; until they are moved those attachments answer 404 (500 without `s3:ListBucket`). Moving a local tracker to Railway moves its files with its database in one command, which compresses images as new uploads are and stores only the compressed copy (`data-move.js`, `docs/deploy-railway.md` step 9, PT-124). For the same database with files still on disk, copying the folder under `attachments/` is enough, since the keys stay the same: `aws s3 sync data/uploads s3://<bucket>/attachments/`.

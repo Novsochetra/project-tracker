@@ -79,7 +79,8 @@ describe('compressImage', () => {
     const pixels = noisyPixels(64, 64);
     const photo = await jpegPhoto({ width: 64, height: 64, pixels, quality: 30 });
     const image = await compressImage(photo, 'image/jpeg');
-    expect(image).toEqual({ bytes: photo, mimeType: 'image/jpeg', width: 64, height: 64 });
+    expect(image).toMatchObject({ mimeType: 'image/jpeg', width: 64, height: 64 });
+    expect(Buffer.from(image.bytes).equals(Buffer.from(photo))).toBe(true);
   });
 
   it('keeps every pixel of a screenshot, at full size', async () => {
@@ -106,12 +107,9 @@ describe('compressImage', () => {
 
   it('keeps a small clean image as it came', async () => {
     const png = await pngImage(screenPixels(40, 30), 40, 30);
-    expect(await compressImage(png, 'image/png')).toEqual({
-      bytes: png,
-      mimeType: 'image/png',
-      width: 40,
-      height: 30,
-    });
+    const image = await compressImage(png, 'image/png');
+    expect(image).toMatchObject({ mimeType: 'image/png', width: 40, height: 30 });
+    expect(Buffer.from(image.bytes).equals(Buffer.from(png))).toBe(true);
   });
 
   it('leaves GIFs as they came, since they may move', async () => {

@@ -1,11 +1,16 @@
 import { sql } from 'kysely';
 import { NO_MIGRATIONS, type MigrationResultSet } from 'kysely/migration';
-import { describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vitest';
 import { MIGRATIONS } from '../../src/db/migrations';
 import { createMigrator, migrateToLatest } from '../../src/db/migrator';
 import type { Db } from '../../src/db/schema';
-import { exactSchema, portableSchema, type SchemaShape } from '../helpers/schemaShape';
-import { DIALECTS, openEmptyDatabase, type TestDialect } from '../helpers/server';
+import { exactSchema, portableSchema, readSchema, type SchemaShape } from '../helpers/schemaShape';
+import {
+  DIALECTS,
+  emptyPgliteDataDir,
+  openEmptyDatabase,
+  type TestDialect,
+} from '../helpers/server';
 
 const NAMES = Object.keys(MIGRATIONS).sort();
 
@@ -21,23 +26,33 @@ async function expectRan(run: Promise<MigrationResultSet>, names: string[]): Pro
 // must be what the first up made). Gives the portable schema after each.
 async function stepThrough(db: Db, dialect: TestDialect): Promise<SchemaShape[]> {
   const migrator = createMigrator(db);
-  let before = await exactSchema(db, dialect);
-  const steps = [await portableSchema(db, dialect)];
+  const start = await readSchema(db, dialect);
+  let before = start.exact;
+  const steps = [start.portable];
   for (const name of NAMES) {
     await expectRan(migrator.migrateUp(), [name]);
     const after = await exactSchema(db, dialect);
     await expectRan(migrator.migrateDown(), [name]);
     expect(await exactSchema(db, dialect), `${name} down() undoes its up()`).toEqual(before);
     await expectRan(migrator.migrateUp(), [name]);
-    expect(await exactSchema(db, dialect), `${name} up() after its down()`).toEqual(after);
+    const again = await readSchema(db, dialect);
+    expect(again.exact, `${name} up() after its down()`).toEqual(after);
     before = after;
-    steps.push(await portableSchema(db, dialect));
+    steps.push(again.portable);
   }
   return steps;
 }
 
+// Each test starts from a copy of one empty PGlite, made once: initdb per test took most of the
+// time, and under a loaded machine's verify run a test needed 64 s.
+let pgliteDataDir: Blob | undefined;
+
+beforeAll(async () => {
+  pgliteDataDir = await emptyPgliteDataDir();
+});
+
 async function withDatabase<T>(dialect: TestDialect, work: (db: Db) => Promise<T>): Promise<T> {
-  const db = openEmptyDatabase(dialect);
+  const db = openEmptyDatabase(dialect, pgliteDataDir);
   try {
     return await work(db);
   } finally {

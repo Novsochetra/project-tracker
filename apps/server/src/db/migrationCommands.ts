@@ -16,11 +16,17 @@ export interface CommandResult {
   lines: string[];
 }
 
-// Names the database without its password, so the output can be pasted anywhere.
+// Names the database without its password, so the output can be pasted anywhere: db.js prints it
+// first, in a deploy's log. A value with :// that isn't a readable postgres:// URL (a password with
+// an unencoded # or /, a port typo, quotes pasted around it) is never shown.
 export function describeDatabase(url: string): string {
-  if (!isPostgresUrl(url) || !URL.canParse(url)) return `SQLite ${url}`;
-  const { hostname, port, pathname } = new URL(url);
-  return `Postgres ${decodeURIComponent(pathname.slice(1))} on ${hostname}:${port || '5432'}`;
+  if (isPostgresUrl(url) && URL.canParse(url)) {
+    const { hostname, port, pathname } = new URL(url);
+    return `Postgres ${decodeURIComponent(pathname.slice(1))} on ${hostname}:${port || '5432'}`;
+  }
+  if (isPostgresUrl(url)) return 'Postgres (DATABASE_URL could not be read)';
+  if (url.includes('://')) return 'DATABASE_URL that is neither postgres:// nor a file path';
+  return `SQLite ${url}`;
 }
 
 export async function migrateCommand(

@@ -38,6 +38,8 @@ export const PENDING_TTL_MS = PENDING_ATTACHMENT_TTL_MS;
 
 const MAX_NAME_LENGTH = 200;
 
+const NAME_EXTENSION = /\.[^.\s]{1,10}$/u;
+
 const TABS_AND_LINE_BREAKS = /[\t\n\v\f\r]+/g;
 
 // Postgres refuses a NUL in text, and no control character (C0, DEL or C1) means anything in a
@@ -46,9 +48,13 @@ const CONTROL_CHARACTERS = /\p{Cc}/gu;
 
 // A tab or line break becomes a space so the words around it stay apart. Cut by code points: half
 // of a surrogate pair can't be encoded in a download header.
-function fileNameOf(name: string, extension: string): string {
+export function fileNameOf(name: string, extension: string): string {
   const plain = name.replace(TABS_AND_LINE_BREAKS, ' ').replace(CONTROL_CHARACTERS, '').trim();
-  return Array.from(plain).slice(0, MAX_NAME_LENGTH).join('') || `attachment.${extension}`;
+  const characters = Array.from(plain);
+  if (characters.length <= MAX_NAME_LENGTH) return plain || `attachment.${extension}`;
+  // The extension is what opens the file, so a long name loses the end of its stem instead.
+  const ending = Array.from(NAME_EXTENSION.exec(plain)?.[0] ?? '');
+  return characters.slice(0, MAX_NAME_LENGTH - ending.length).join('') + ending.join('');
 }
 
 export interface UploadInput {
@@ -155,7 +161,7 @@ export async function uploadAttachment(
   try {
     row = await insertUploaded(ctx, file, ref);
   } catch (error) {
-    await ctx.storage.remove(file.storageKey);
+    await removeFiles(ctx.storage, [file.storageKey]);
     throw error;
   }
   // Pending uploads belong to no ticket yet, so no open screen needs to refresh.
@@ -197,7 +203,7 @@ export async function deleteAttachment(ctx: ServiceContext, id: string): Promise
     if (owner) await updateTicketRow(trx, owner.id, { updatedAt: ctx.now() });
     return { storageKey: found.storageKey, owner };
   });
-  await ctx.storage.remove(removed.storageKey);
+  await removeFiles(ctx.storage, [removed.storageKey]);
   if (removed.owner) notify(ctx, removed.owner.projectId, removed.owner.id);
 }
 

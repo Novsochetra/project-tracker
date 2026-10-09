@@ -29,6 +29,7 @@
     "db:migrate": "tsx apps/server/src/db/cli.ts migrate",
     "db:rollback": "tsx apps/server/src/db/cli.ts rollback",
     "db:status": "tsx apps/server/src/db/cli.ts status",
+    "data:move": "tsx apps/server/src/cli/moveData.ts",
     "test:e2e:clean": "bash scripts/e2e-clean.sh"
   },
   "lint-staged": {

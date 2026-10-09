@@ -2,11 +2,19 @@ import {
   DeleteObjectCommand,
   GetObjectCommand,
   HeadObjectCommand,
+  ListObjectsV2Command,
   S3Client,
 } from '@aws-sdk/client-s3';
 import { Upload } from '@aws-sdk/lib-storage';
-import { checkedKey, type ByteRange, type FileStorage } from './fileStorage';
+import {
+  checkedKey,
+  isStorageKey,
+  type ByteRange,
+  type FileStorage,
+  type StoredEntry,
+} from './fileStorage';
 import type { S3Config } from './s3Config';
+import { s3Call, statusOf } from './s3Errors';
 
 // Objects sit under one prefix, so the bucket's lifecycle rules and a migration can name them.
 export const S3_KEY_PREFIX = 'attachments/';
@@ -28,9 +36,6 @@ export function createS3Client({ region, endpoint }: S3Config): S3Client {
   return new S3Client({ region, ...(endpoint && { endpoint, forcePathStyle: true }) });
 }
 
-const statusOf = (error: unknown): number | undefined =>
-  (error as { $metadata?: { httpStatusCode?: number } } | null)?.$metadata?.httpStatusCode;
-
 async function unlessMissing<T>(request: Promise<T>): Promise<T | null> {
   try {
     return await request;
@@ -42,6 +47,23 @@ async function unlessMissing<T>(request: Promise<T>): Promise<T | null> {
 
 const rangeHeader = (range: ByteRange | undefined) => range && `bytes=${range.start}-${range.end}`;
 
+async function* listed(client: S3Client, bucket: string): AsyncIterable<StoredEntry> {
+  let token: string | undefined;
+  do {
+    const command = new ListObjectsV2Command({
+      Bucket: bucket,
+      Prefix: S3_KEY_PREFIX,
+      ContinuationToken: token,
+    });
+    const page = await s3Call('ListObjectsV2', client.send(command));
+    for (const { Key = '', LastModified } of page.Contents ?? []) {
+      const key = Key.slice(S3_KEY_PREFIX.length);
+      if (isStorageKey(key)) yield { key, modifiedAt: LastModified?.getTime() ?? 0 };
+    }
+    token = page.IsTruncated ? page.NextContinuationToken : undefined;
+  } while (token);
+}
+
 export function createS3Storage({ client, bucket }: S3StorageOptions): FileStorage {
   const target = (key: string) => ({ Bucket: bucket, Key: S3_KEY_PREFIX + checkedKey(key) });
   return {
@@ -49,19 +71,22 @@ export function createS3Storage({ client, bucket }: S3StorageOptions): FileStora
       // A small file goes in one PUT, a bigger one in parts. When the body fails (too big, cut
       // off), lib-storage aborts the multipart upload, so S3 keeps no parts and no object.
       const params = { ...target(key), Body: body };
-      await new Upload({ client, params, partSize: PART_BYTES, queueSize: PARTS_AT_ONCE }).done();
+      const upload = new Upload({ client, params, partSize: PART_BYTES, queueSize: PARTS_AT_ONCE });
+      await s3Call('upload', upload.done());
     },
     async read(key, range) {
       const command = new GetObjectCommand({ ...target(key), Range: rangeHeader(range) });
-      const output = await unlessMissing(client.send(command));
+      const output = await s3Call('GetObject', unlessMissing(client.send(command)));
       return (output?.Body?.transformToWebStream() as ReadableStream<Uint8Array>) ?? null;
     },
     async stat(key) {
-      const output = await unlessMissing(client.send(new HeadObjectCommand(target(key))));
+      const request = unlessMissing(client.send(new HeadObjectCommand(target(key))));
+      const output = await s3Call('HeadObject', request);
       return output && { size: output.ContentLength ?? 0 };
     },
     async remove(key) {
-      await client.send(new DeleteObjectCommand(target(key)));
+      await s3Call('DeleteObject', client.send(new DeleteObjectCommand(target(key))));
     },
+    list: () => listed(client, bucket),
   };
 }

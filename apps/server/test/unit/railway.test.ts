@@ -6,6 +6,7 @@ const RAILWAY = {
   RAILWAY_ENVIRONMENT_ID: 'env-1',
   RAILWAY_PUBLIC_DOMAIN: 'tracker-production.up.railway.app',
   DATABASE_URL: 'postgres://tracker:secret@postgres.railway.internal:5432/railway',
+  RAILWAY_VOLUME_MOUNT_PATH: '/data',
   UPLOADS_DIR: '/data/uploads',
 };
 

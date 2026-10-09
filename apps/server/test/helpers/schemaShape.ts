@@ -107,53 +107,80 @@ function parseForeignKey(definition: string): ForeignKey[] {
   return [{ column, table, references, onDelete: onDelete.toLowerCase() }];
 }
 
-async function postgresColumns(db: Raw, table: string): Promise<Column[]> {
-  const primary = await rows<{ name: string }>(
-    db,
-    sql`select a.attname as name from pg_index i
-      join pg_attribute a on a.attrelid = i.indrelid and a.attnum = any(i.indkey)
-      where i.indrelid = ${table}::regclass and i.indisprimary`,
-  );
-  const columns = await rows<{ name: string; type: string; nullable: string; dflt: string | null }>(
-    db,
-    sql`select column_name as name, data_type as type, is_nullable as nullable, column_default as dflt
-      from information_schema.columns where table_schema = 'public' and table_name = ${table}
-      order by ordinal_position`,
-  );
-  const keys = new Set(primary.map((column) => column.name));
-  return columns.map((column) => ({
-    name: column.name,
-    type: column.type,
-    notNull: column.nullable === 'NO',
-    primaryKey: keys.has(column.name),
-    defaultValue: column.dflt?.replace(/::[\w ]+$/, '') ?? null,
-  }));
+interface PostgresRow {
+  table: string;
 }
 
-async function postgresTable(db: Raw, table: string): Promise<RawTable> {
-  const indexes = await rows<{
-    name: string;
-    unique: boolean;
-    primary: boolean;
-    columns: string[];
-  }>(
+// One catalog query per kind for every table, straight from pg_catalog: information_schema's views
+// and a query per table made each read take dozens of slow round trips through PGlite.
+const PUBLIC_TABLES = sql`select c.oid, c.relname from pg_class c
+  join pg_namespace n on n.oid = c.relnamespace
+  where n.nspname = 'public' and c.relkind = 'r'`;
+
+const postgresColumnRows = (db: Raw) =>
+  rows<
+    PostgresRow & {
+      name: string;
+      type: string;
+      notNull: boolean;
+      primary: boolean;
+      dflt: string | null;
+    }
+  >(
     db,
-    sql`select i.relname as name, ix.indisunique as unique, ix.indisprimary as primary,
+    sql`select t.relname as "table", a.attname as name, format_type(a.atttypid, a.atttypmod) as type,
+      a.attnotnull as "notNull", pg_get_expr(d.adbin, d.adrelid) as dflt,
+      exists (select 1 from pg_index i where i.indrelid = t.oid and i.indisprimary
+        and a.attnum = any(i.indkey)) as "primary"
+      from (${PUBLIC_TABLES}) t join pg_attribute a on a.attrelid = t.oid
+      left join pg_attrdef d on d.adrelid = a.attrelid and d.adnum = a.attnum
+      where a.attnum > 0 and not a.attisdropped order by t.relname, a.attnum`,
+  );
+
+const postgresIndexRows = (db: Raw) =>
+  rows<PostgresRow & { name: string; unique: boolean; primary: boolean; columns: string[] }>(
+    db,
+    sql`select t.relname as "table", i.relname as name, ix.indisunique as unique,
+      ix.indisprimary as primary,
       array(select a.attname::text from unnest(ix.indkey::int2[]) with ordinality as k(attnum, ord)
         join pg_attribute a on a.attrelid = ix.indrelid and a.attnum = k.attnum order by k.ord) as columns
-      from pg_index ix join pg_class i on i.oid = ix.indexrelid where ix.indrelid = ${table}::regclass`,
+      from (${PUBLIC_TABLES}) t join pg_index ix on ix.indrelid = t.oid
+      join pg_class i on i.oid = ix.indexrelid`,
   );
-  const constraints = await rows<{ name: string; definition: string }>(
+
+const postgresConstraintRows = (db: Raw) =>
+  rows<PostgresRow & { name: string; definition: string }>(
     db,
-    sql`select conname as name, pg_get_constraintdef(oid) as definition from pg_constraint
-      where conrelid = ${table}::regclass`,
+    sql`select t.relname as "table", c.conname as name, pg_get_constraintdef(c.oid) as definition
+      from (${PUBLIC_TABLES}) t join pg_constraint c on c.conrelid = t.oid`,
   );
-  return {
-    columns: await postgresColumns(db, table),
-    indexes: indexes.filter((index) => !index.primary),
-    foreignKeys: constraints.flatMap((constraint) => parseForeignKey(constraint.definition)),
-    constraints: constraints.map((constraint) => `${constraint.name}: ${constraint.definition}`),
-  };
+
+const ofTable = <T extends PostgresRow>(all: T[], table: string): T[] =>
+  all.filter((row) => row.table === table);
+
+async function postgresTables(db: Raw, names: string[]): Promise<Record<string, RawTable>> {
+  const [columns, indexes, constraints] = await Promise.all([
+    postgresColumnRows(db),
+    postgresIndexRows(db),
+    postgresConstraintRows(db),
+  ]);
+  const tables: Record<string, RawTable> = {};
+  for (const name of names) {
+    const own = ofTable(constraints, name);
+    tables[name] = {
+      columns: ofTable(columns, name).map((column) => ({
+        name: column.name,
+        type: column.type,
+        notNull: column.notNull,
+        primaryKey: column.primary,
+        defaultValue: column.dflt?.replace(/::[\w ]+$/, '') ?? null,
+      })),
+      indexes: ofTable(indexes, name).filter((index) => !index.primary),
+      foreignKeys: own.flatMap((constraint) => parseForeignKey(constraint.definition)),
+      constraints: own.map((constraint) => `${constraint.name}: ${constraint.definition}`),
+    };
+  }
+  return tables;
 }
 
 async function tableNames(db: Raw, dialect: TestDialect): Promise<string[]> {
@@ -163,11 +190,7 @@ async function tableNames(db: Raw, dialect: TestDialect): Promise<string[]> {
           db,
           sql`select name from sqlite_master where type = 'table' and name not like 'sqlite_%'`,
         )
-      : await rows<{ name: string }>(
-          db,
-          sql`select table_name as name from information_schema.tables
-            where table_schema = 'public' and table_type = 'BASE TABLE'`,
-        );
+      : await rows<{ name: string }>(db, sql`select relname as name from (${PUBLIC_TABLES}) t`);
   return names
     .map((row) => row.name)
     .filter((name) => !name.startsWith('kysely_'))
@@ -208,10 +231,10 @@ const exactTable = (table: RawTable): TableShape => ({
 
 async function readTables(db: Db, dialect: TestDialect): Promise<Record<string, RawTable>> {
   const raw = db.withoutPlugins() as unknown as Raw;
+  const names = await tableNames(raw, dialect);
+  if (dialect === 'pglite') return postgresTables(raw, names);
   const tables: Record<string, RawTable> = {};
-  for (const name of await tableNames(raw, dialect)) {
-    tables[name] = await (dialect === 'sqlite' ? sqliteTable(raw, name) : postgresTable(raw, name));
-  }
+  for (const name of names) tables[name] = await sqliteTable(raw, name);
   return tables;
 }
 
@@ -221,8 +244,19 @@ const mapTables = (
 ): SchemaShape =>
   Object.fromEntries(Object.entries(tables).map(([name, table]) => [name, shape(table)]));
 
+export interface SchemaShapes {
+  exact: SchemaShape;
+  portable: SchemaShape;
+}
+
+// Both shapes from one read, for a test that needs both of the same state.
+export async function readSchema(db: Db, dialect: TestDialect): Promise<SchemaShapes> {
+  const tables = await readTables(db, dialect);
+  return { exact: mapTables(tables, exactTable), portable: mapTables(tables, portableTable) };
+}
+
 export const exactSchema = async (db: Db, dialect: TestDialect): Promise<SchemaShape> =>
-  mapTables(await readTables(db, dialect), exactTable);
+  (await readSchema(db, dialect)).exact;
 
 export const portableSchema = async (db: Db, dialect: TestDialect): Promise<SchemaShape> =>
-  mapTables(await readTables(db, dialect), portableTable);
+  (await readSchema(db, dialect)).portable;

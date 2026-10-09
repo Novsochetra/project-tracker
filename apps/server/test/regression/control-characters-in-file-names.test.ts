@@ -31,8 +31,8 @@ describe.each(DIALECTS)('control characters in file names (%s)', (dialect) => {
     expect(await uploadNamed('\u0000\r\n\u007f')).toEqual(kept('attachment.txt'));
   });
 
-  it('cuts to 200 characters after dropping them', async () => {
-    const name = `${'\u0000'.repeat(5)}${'a'.repeat(199)}📄.txt`;
-    expect(await uploadNamed(name)).toEqual(kept(`${'a'.repeat(199)}📄`));
+  it('cuts to 200 characters after dropping them, keeping the extension', async () => {
+    const name = `${'\u0000'.repeat(5)}${'a'.repeat(195)}📄📄.txt`;
+    expect(await uploadNamed(name)).toEqual(kept(`${'a'.repeat(195)}📄.txt`));
   });
 });

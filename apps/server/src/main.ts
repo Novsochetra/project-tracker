@@ -3,11 +3,13 @@ import { serve } from '@hono/node-server';
 import { createApp } from './app';
 import { authNotice } from './auth/startupNotice';
 import { loadConfig } from './config';
-import { createDatabase, isPostgresUrl } from './db/createDatabase';
+import { createDatabase } from './db/createDatabase';
+import { describeDatabase } from './db/migrationCommands';
 import { prepareDatabase } from './db/startup';
 import { createBroadcaster } from './events/broadcaster';
 import { REQUEST_TIMEOUT_MS, endSlowRequests, isUploadRequest } from './http/slowRequests';
 import { removeStalePendingAttachments } from './services/attachments';
+import { removeOrphanFiles } from './services/orphanFiles';
 import { stopOnSignals } from './shutdown';
 import { describeStorage, openFileStorage } from './storage/openFileStorage';
 
@@ -19,6 +21,11 @@ const storage = await openFileStorage(config);
 console.log(`Files in ${describeStorage(config)}`);
 const removed = await removeStalePendingAttachments({ db, storage }, Date.now());
 if (removed > 0) console.log(`Removed ${removed} unused upload(s).`);
+// Not awaited: listing a big bucket takes a while, and a failure only leaves leftovers for later.
+void removeOrphanFiles({ db, storage }, Date.now()).then(
+  (count) => count > 0 && console.log(`Removed ${count} file(s) no attachment uses.`),
+  (error: unknown) => console.warn(`Leftover files not cleaned up: ${(error as Error).message}`),
+);
 
 for (const line of await authNotice(db, config.auth)) console.log(line);
 
@@ -48,7 +55,7 @@ const server = serve(
     serverOptions: { requestTimeout: UPLOAD_TIMEOUT_MS },
   },
   (info) => {
-    const database = isPostgresUrl(config.databaseUrl) ? 'Postgres' : config.databaseUrl;
+    const database = describeDatabase(config.databaseUrl);
     console.log(`Tracker API on http://${config.host}:${info.port} (database: ${database})`);
     if (config.publicUrl) console.log(`Agents connect at ${config.publicUrl}`);
     if (config.testReset) console.log('Test reset route enabled: POST /api/test/reset');

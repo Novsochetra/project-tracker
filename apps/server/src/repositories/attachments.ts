@@ -4,7 +4,7 @@ import type { AttachmentRow, Db } from '../db/schema';
 // 2^32 - 1 pixels (a 500 on Postgres only). No real image is that large, so it counts as unknown.
 const INTEGER_MAX = 2_147_483_647;
 
-const storableDimension = (value: number | null): number | null =>
+export const storableDimension = (value: number | null): number | null =>
   value !== null && value <= INTEGER_MAX ? value : null;
 
 export async function insertAttachment(db: Db, row: AttachmentRow): Promise<void> {

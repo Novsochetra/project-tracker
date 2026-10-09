@@ -4,9 +4,11 @@ import {
   MAX_INPUT_PIXELS,
   MAX_LOSSLESS_PIXELS,
   MAX_PHOTO_PIXELS,
+  MAX_WHOLE_DECODE_PIXELS,
   isWorthStoring,
   longSideWithin,
   planImage,
+  workBytes,
   type ImageFacts,
 } from '../../src/images/imagePlan';
 
@@ -15,6 +17,8 @@ const facts = (overrides: Partial<ImageFacts> = {}): ImageFacts => ({
   height: 800,
   pages: 1,
   orientation: 1,
+  channels: 3,
+  decodedWhole: false,
   hasMetadata: false,
   ...overrides,
 });
@@ -67,6 +71,41 @@ describe('planImage', () => {
     expect(planImage('image/webp', facts({ pages: 12 }))).toBeNull();
     expect(planImage('image/png', facts({ width: 20_000, height: 20_000 }))).toBeNull();
     expect(20_000 * 20_000).toBeGreaterThan(MAX_INPUT_PIXELS);
+  });
+
+  it('decodes a 48 MP iPhone photo, read a strip at a time', () => {
+    expect(planImage('image/jpeg', facts({ width: 8064, height: 6048 }))).not.toBeNull();
+  });
+
+  it('decodes an image read whole only up to its smaller limit', () => {
+    const whole = { decodedWhole: true };
+    expect(planImage('image/jpeg', facts({ ...whole, width: 5000, height: 4000 }))).not.toBeNull();
+    expect(planImage('image/jpeg', facts({ ...whole, width: 6000, height: 4500 }))).toBeNull();
+    expect(6000 * 4500).toBeGreaterThan(MAX_WHOLE_DECODE_PIXELS);
+  });
+});
+
+describe('workBytes', () => {
+  const MB = 1024 * 1024;
+  const estimate = (mimeType: 'image/jpeg' | 'image/png', overrides: Partial<ImageFacts>) => {
+    const image = facts(overrides);
+    return workBytes(image, planImage(mimeType, image)!) / MB;
+  };
+
+  // Measured peaks (one libvips thread, docs/architecture.md) stay under the estimates.
+  it('covers what measured images took', () => {
+    expect(estimate('image/jpeg', { width: 4032, height: 3024 })).toBeGreaterThan(58);
+    expect(estimate('image/jpeg', { width: 8064, height: 6048 })).toBeGreaterThan(58);
+    const progressive = { width: 5712, height: 4284, decodedWhole: true };
+    expect(estimate('image/jpeg', progressive)).toBeGreaterThan(117);
+    expect(estimate('image/png', { width: 3456, height: 2234 })).toBeGreaterThan(224);
+  });
+
+  it('counts a whole decode by its pixels and a lossless encode by what comes out', () => {
+    const plain = estimate('image/png', { width: 4000, height: 3000 });
+    const interlaced = estimate('image/png', { width: 4000, height: 3000, decodedWhole: true });
+    expect(interlaced - plain).toBeCloseTo((4000 * 3000 * 3 * 2) / MB, 0);
+    expect(estimate('image/png', { width: 8000, height: 6000 })).toBeCloseTo(plain, -1);
   });
 });
 

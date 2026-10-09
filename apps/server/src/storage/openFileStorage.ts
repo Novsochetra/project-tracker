@@ -1,4 +1,4 @@
-import { createDiskStorage } from './diskStorage';
+import { createDiskStorage, removePartialFiles } from './diskStorage';
 import type { FileStorage } from './fileStorage';
 import type { S3Config } from './s3Config';
 
@@ -8,7 +8,10 @@ export interface StorageSettings {
 }
 
 export async function openFileStorage(settings: StorageSettings): Promise<FileStorage> {
-  if (!settings.s3) return createDiskStorage(settings.uploadsDir);
+  if (!settings.s3) {
+    await removePartialFiles(settings.uploadsDir);
+    return createDiskStorage(settings.uploadsDir);
+  }
   // Loaded only when used: the AWS SDK is large, and local runs keep files on disk.
   const { createS3Client, createS3Storage } = await import('./s3Storage');
   return createS3Storage({ client: createS3Client(settings.s3), bucket: settings.s3.bucket });

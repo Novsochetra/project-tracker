@@ -1,4 +1,5 @@
 import { databaseUrlOf } from '../config';
+import { railwayDatabaseProblem } from '../railway';
 import { createDatabase } from './createDatabase';
 import {
   describeDatabase,
@@ -23,6 +24,12 @@ const COMMANDS: Record<string, (db: Db, args: string[]) => Promise<CommandResult
 };
 
 async function run(command: (db: Db, args: string[]) => Promise<CommandResult>, args: string[]) {
+  // On Railway a pre-deploy that migrated a throwaway SQLite file would pass the deploy.
+  const problem = railwayDatabaseProblem(process.env);
+  if (problem) {
+    console.error(problem);
+    return 1;
+  }
   const url = databaseUrlOf(process.env);
   process.stdout.write(`Database: ${describeDatabase(url)}\n`);
   // A migration may rewrite a whole table, which the server's statement timeout would cut short.

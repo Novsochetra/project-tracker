@@ -1,4 +1,5 @@
 import { readFileSync } from 'node:fs';
+import { crc32 } from 'node:zlib';
 import sharp from 'sharp';
 
 export const RED = [220, 30, 30] as const;
@@ -95,3 +96,63 @@ export async function rawPixelsOf(bytes: Uint8Array): Promise<Buffer> {
 
 export const containsText = (bytes: Uint8Array, text: string) =>
   Buffer.from(bytes).includes(Buffer.from(text, 'latin1'));
+
+// A JPEG segment (marker FF xx, then its length and data) put right after the start marker.
+export function withJpegSegment(jpeg: Uint8Array, marker: number, data: Buffer): Uint8Array {
+  const length = Buffer.alloc(2);
+  length.writeUInt16BE(data.length + 2);
+  const segment = Buffer.concat([Buffer.from([0xff, marker]), length, data]);
+  return Buffer.concat([jpeg.subarray(0, 2), segment, jpeg.subarray(2)]);
+}
+
+// Rewrites the size a JPEG's frame header claims, as a huge photo would, without its pixels.
+export function claimingJpegSize(jpeg: Uint8Array, width: number, height: number): Uint8Array {
+  const bytes = Buffer.from(jpeg);
+  const frame = [0xc0, 0xc2].map((marker) => bytes.indexOf(Buffer.from([0xff, marker])));
+  const start = Math.max(...frame);
+  bytes.writeUInt16BE(height, start + 5);
+  bytes.writeUInt16BE(width, start + 7);
+  return bytes;
+}
+
+export function pngChunk(type: string, data: Buffer): Buffer {
+  const length = Buffer.alloc(4);
+  length.writeUInt32BE(data.length);
+  const body = Buffer.concat([Buffer.from(type, 'latin1'), data]);
+  const checksum = Buffer.alloc(4);
+  checksum.writeUInt32BE(crc32(body));
+  return Buffer.concat([length, body, checksum]);
+}
+
+// A chunk put just before IEND, after the image data, where readers that stop early miss it.
+export function withPngChunkAtEnd(png: Uint8Array, chunk: Buffer): Uint8Array {
+  const end = png.byteLength - 12;
+  return Buffer.concat([png.subarray(0, end), chunk, png.subarray(end)]);
+}
+
+// Rewrites the size (and interlacing) a PNG's header claims, keeping its checksum right.
+export function claimingPngSize(
+  png: Uint8Array,
+  width: number,
+  height: number,
+  interlaced = false,
+): Uint8Array {
+  const bytes = Buffer.from(png);
+  bytes.writeUInt32BE(width, 16);
+  bytes.writeUInt32BE(height, 20);
+  bytes[28] = interlaced ? 1 : 0;
+  bytes.writeUInt32BE(crc32(bytes.subarray(12, 29)), 29);
+  return bytes;
+}
+
+export async function animatedWebp(camera: boolean): Promise<Uint8Array> {
+  const frame = (background: string) =>
+    sharp({ create: { width: 32, height: 24, channels: 3, background } })
+      .png()
+      .toBuffer();
+  let image = sharp([await frame('#d03020'), await frame('#2040d0')], {
+    join: { animated: true },
+  });
+  if (camera) image = image.withExif(CAMERA_EXIF);
+  return new Uint8Array(await image.webp({ loop: 0 }).toBuffer());
+}

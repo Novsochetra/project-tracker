@@ -14,7 +14,8 @@ export type S3Operation =
   | 'AbortMultipartUpload'
   | 'GetObject'
   | 'HeadObject'
-  | 'DeleteObject';
+  | 'DeleteObject'
+  | 'ListObjectsV2';
 
 export interface S3Call {
   operation: S3Operation;
@@ -31,14 +32,29 @@ export interface FakeS3 {
   bucket: string;
   endpoint: string;
   objects: Map<string, Buffer>;
+  // When each object was last written, as S3 lists it (ms).
+  modified: Map<string, number>;
   uploads: Map<string, MultipartUpload>;
   calls: S3Call[];
-  // Operations answered with 403 AccessDenied, which the SDK doesn't retry.
+  // Operations answered with `refusal` (403 AccessDenied unless changed), which the SDK doesn't
+  // retry.
   refused: Set<S3Operation>;
+  refusal: Refusal;
   client: () => S3Client;
   reset: () => void;
   close: () => Promise<void>;
 }
+
+export interface Refusal {
+  code: string;
+  // More of S3's error body, as it copies a wrong signature's details into it.
+  details: string;
+}
+
+const ACCESS_DENIED: Refusal = { code: 'AccessDenied', details: '' };
+
+// Small, so listing goes over several pages as a big bucket's does.
+const LIST_PAGE_SIZE = 2;
 
 interface Request {
   method: string;
@@ -52,7 +68,7 @@ function operationOf({ method, query }: Request): S3Operation | null {
   if (method === 'POST' && query.has('uploads')) return 'CreateMultipartUpload';
   if (method === 'POST' && multipart) return 'CompleteMultipartUpload';
   if (method === 'DELETE') return multipart ? 'AbortMultipartUpload' : 'DeleteObject';
-  if (method === 'GET') return 'GetObject';
+  if (method === 'GET') return query.has('list-type') ? 'ListObjectsV2' : 'GetObject';
   if (method === 'HEAD') return 'HeadObject';
   return null;
 }
@@ -68,8 +84,25 @@ const xml = (res: ServerResponse, status: number, body: string) => {
   res.end(`<?xml version="1.0" encoding="UTF-8"?>${body}`);
 };
 
-const error = (res: ServerResponse, status: number, code: string) =>
-  xml(res, status, `<Error><Code>${code}</Code><Message>${code}</Message></Error>`);
+const error = (res: ServerResponse, status: number, code: string, details = '') =>
+  xml(res, status, `<Error><Code>${code}</Code><Message>${code}</Message>${details}</Error>`);
+
+function listPage(bucket: string, keys: [string, number, number][], query: URLSearchParams) {
+  const prefix = query.get('prefix') ?? '';
+  const matching = keys.filter(([key]) => key.startsWith(prefix));
+  const start = Number(query.get('continuation-token') ?? 0);
+  const page = matching.slice(start, start + LIST_PAGE_SIZE);
+  const next = start + LIST_PAGE_SIZE;
+  const truncated = next < matching.length;
+  const contents = page
+    .map(
+      ([key, size, time]) =>
+        `<Contents><Key>${key}</Key><LastModified>${new Date(time).toISOString()}</LastModified><Size>${size}</Size></Contents>`,
+    )
+    .join('');
+  const token = truncated ? `<NextContinuationToken>${next}</NextContinuationToken>` : '';
+  return `<ListBucketResult><Name>${bucket}</Name><Prefix>${prefix}</Prefix><KeyCount>${page.length}</KeyCount><IsTruncated>${truncated}</IsTruncated>${token}${contents}</ListBucketResult>`;
+}
 
 const etag = (bytes: Buffer) => `"${bytes.byteLength}-${randomUUID()}"`;
 
@@ -91,9 +124,15 @@ function sendObject(res: ServerResponse, bytes: Buffer, rangeHeader: string | un
 
 export async function startFakeS3(bucket = 'tracker-test'): Promise<FakeS3> {
   const objects = new Map<string, Buffer>();
+  const modified = new Map<string, number>();
   const uploads = new Map<string, MultipartUpload>();
   const calls: S3Call[] = [];
   const refused = new Set<S3Operation>();
+  const refusal: Refusal = { ...ACCESS_DENIED };
+  const store = (key: string, bytes: Buffer) => {
+    objects.set(key, bytes);
+    modified.set(key, Date.now());
+  };
 
   const handlers: Record<
     S3Operation,
@@ -101,7 +140,7 @@ export async function startFakeS3(bucket = 'tracker-test'): Promise<FakeS3> {
   > = {
     async PutObject(req, res, { key }) {
       const bytes = await bodyOf(req);
-      objects.set(key, bytes);
+      store(key, bytes);
       res.writeHead(200, { etag: etag(bytes) }).end();
     },
     CreateMultipartUpload(_req, res, { key }) {
@@ -129,7 +168,7 @@ export async function startFakeS3(bucket = 'tracker-test'): Promise<FakeS3> {
       if (!upload) return error(res, 404, 'NoSuchUpload');
       const parts = listed.map(([, number]) => upload.parts.get(Number(number)));
       if (parts.some((part) => !part)) return error(res, 400, 'InvalidPart');
-      objects.set(key, Buffer.concat(parts as Buffer[]));
+      store(key, Buffer.concat(parts as Buffer[]));
       uploads.delete(uploadId);
       xml(
         res,
@@ -153,7 +192,16 @@ export async function startFakeS3(bucket = 'tracker-test'): Promise<FakeS3> {
     },
     DeleteObject(_req, res, { key }) {
       objects.delete(key);
+      modified.delete(key);
       res.writeHead(204).end();
+    },
+    ListObjectsV2(_req, res, { query }) {
+      const keys = [...objects].map(([key, bytes]): [string, number, number] => [
+        key,
+        bytes.byteLength,
+        modified.get(key) ?? 0,
+      ]);
+      xml(res, 200, listPage(bucket, keys, query));
     },
   };
 
@@ -174,7 +222,7 @@ export async function startFakeS3(bucket = 'tracker-test'): Promise<FakeS3> {
     });
     if (refused.has(operation)) {
       req.resume();
-      return error(res, 403, 'AccessDenied');
+      return error(res, 403, refusal.code, refusal.details);
     }
     void Promise.resolve(handlers[operation](req, res, request)).catch((failure: unknown) => {
       res.destroy(failure as Error);
@@ -188,9 +236,11 @@ export async function startFakeS3(bucket = 'tracker-test'): Promise<FakeS3> {
     bucket,
     endpoint,
     objects,
+    modified,
     uploads,
     calls,
     refused,
+    refusal,
     client: () =>
       new S3Client({
         region: 'us-east-1',
@@ -200,9 +250,11 @@ export async function startFakeS3(bucket = 'tracker-test'): Promise<FakeS3> {
       }),
     reset() {
       objects.clear();
+      modified.clear();
       uploads.clear();
       calls.length = 0;
       refused.clear();
+      Object.assign(refusal, ACCESS_DENIED);
     },
     async close() {
       server.closeAllConnections();

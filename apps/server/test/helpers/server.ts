@@ -20,12 +20,29 @@ export type TestDialect = (typeof DIALECTS)[number];
 
 export const BASE_URL = 'http://tracker.test';
 
-export const openEmptyDatabase = (dialect: TestDialect): Db =>
+// pgliteDataDir: a copy of an empty database from emptyPgliteDataDir().
+export const openEmptyDatabase = (dialect: TestDialect, pgliteDataDir?: Blob): Db =>
   dialect === 'sqlite'
     ? createDatabase(':memory:')
     : createKysely(
-        new PGliteDialect({ pglite: new PGlite({ parsers: { 20: (value) => Number(value) } }) }),
+        new PGliteDialect({
+          pglite: new PGlite({
+            loadDataDir: pgliteDataDir,
+            parsers: { 20: (value) => Number(value) },
+          }),
+        }),
       );
+
+// A new PGlite runs initdb, about a second and far longer on a loaded machine. Loading a copy of an
+// empty one takes a tenth of that, for a file that opens many databases.
+export async function emptyPgliteDataDir(): Promise<Blob> {
+  const pglite = await PGlite.create();
+  try {
+    return await pglite.dumpDataDir('none');
+  } finally {
+    await pglite.close();
+  }
+}
 
 export async function createTestDatabase(dialect: TestDialect): Promise<Db> {
   const db = openEmptyDatabase(dialect);

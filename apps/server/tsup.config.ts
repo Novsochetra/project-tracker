@@ -3,7 +3,13 @@ import { defineConfig } from 'tsup';
 export default defineConfig({
   // Each sits right in dist/, one level below the package root, as config.ts expects.
   // db.js runs migrations: node apps/server/dist/db.js migrate, a deploy's pre-deploy step.
-  entry: { main: 'src/main.ts', 'owner-set': 'src/cli/setOwner.ts', db: 'src/db/cli.ts' },
+  // data-move.js copies a local tracker into Postgres and S3 once (docs/deploy-railway.md).
+  entry: {
+    main: 'src/main.ts',
+    'owner-set': 'src/cli/setOwner.ts',
+    db: 'src/db/cli.ts',
+    'data-move': 'src/cli/moveData.ts',
+  },
   format: ['esm'],
   platform: 'node',
   target: 'node22',

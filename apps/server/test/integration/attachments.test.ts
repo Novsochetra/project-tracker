@@ -397,9 +397,9 @@ describe.each(DIALECTS)('attachments (%s)', (dialect) => {
     expect(res.body.fileName).toBe('100%.txt');
   });
 
-  it('cuts long names to 200 characters without splitting one', async () => {
-    const res = await upload(fileUpload({ name: `${'a'.repeat(199)}📄.txt` }));
-    expect(res.body.fileName).toBe(`${'a'.repeat(199)}📄`);
+  it('cuts long names to 200 characters before the extension, without splitting one', async () => {
+    const res = await upload(fileUpload({ name: `${'a'.repeat(195)}📄📄.txt` }));
+    expect(res.body.fileName).toBe(`${'a'.repeat(195)}📄.txt`);
     expect((await api.app.request(res.body.url)).status).toBe(200);
   });
 

@@ -26,6 +26,13 @@ function sqliteDialect(file: string): Dialect {
 // env carries the Postgres pool settings (DATABASE_POOL_MAX, DATABASE_STATEMENT_TIMEOUT_MS,
 // PGSSLMODE); SQLite needs none.
 export function createDatabase(url: string, env: NodeJS.ProcessEnv = process.env): Db {
+  // A postgres:// URL pasted with quotes or its name in front would open a SQLite file at a path
+  // holding the password.
+  if (!isPostgresUrl(url) && url.includes('://')) {
+    throw new Error(
+      'DATABASE_URL is neither a postgres:// URL nor a file path (its value is not shown): remove quotes or a name in front of it.',
+    );
+  }
   return createKysely(
     isPostgresUrl(url)
       ? new PostgresDialect({ pool: createPostgresPool(url, env) })
