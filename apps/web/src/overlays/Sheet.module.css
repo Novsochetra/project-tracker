@@ -119,6 +119,14 @@
   border-bottom: 1px solid var(--line);
 }
 
+/* A phone turned sideways has its camera at one side: the header, body and footer pad by the
+   side insets, and the lines between them still run to the screen's edges, as the bars' do.
+   Upright both insets are 0. */
+.phone .header {
+  padding-right: calc(10px + var(--safe-right));
+  padding-left: calc(10px + var(--safe-left));
+}
+
 .start,
 .end {
   display: flex;
@@ -169,6 +177,8 @@
 }
 
 .phone .body {
+  padding-right: var(--safe-right);
+  padding-left: var(--safe-left);
   overflow-y: auto;
   overscroll-behavior: contain;
 }
@@ -180,6 +190,11 @@
   gap: 10px;
   padding: 12px var(--space-4) var(--space-4);
   border-top: 1px solid var(--line);
+}
+
+.phone .footer {
+  padding-right: calc(var(--space-4) + var(--safe-right));
+  padding-left: calc(var(--space-4) + var(--safe-left));
 }
 
 .phone .footer > * {

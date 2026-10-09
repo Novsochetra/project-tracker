@@ -37,6 +37,26 @@ button {
   opacity: 1;
 }
 
+/* No suggestions arrow in a field with a list (the assignee chip and rows): the list opens as a
+   name is typed, and Chromium's arrow kept room that pushed the value off the field's right edge.
+   Its UA rule is !important, so these have to be too. Two rules: a browser that doesn't know one
+   of the pseudo-elements drops a list holding it whole. */
+input[list]::-webkit-calendar-picker-indicator {
+  display: none !important;
+}
+
+/* WebKit shows its button with `display: block !important` in the button's own style while the
+   field has a list, so `display: none` loses there, and iOS kept 40 to 46px for the button it
+   doesn't draw, cutting a long name early while it was typed. With no width, out of the flow, it
+   keeps no room. */
+input[list]::-webkit-list-button {
+  display: none !important;
+  position: absolute !important;
+  width: 0 !important;
+  height: 0 !important;
+  margin: 0 !important;
+}
+
 a {
   color: var(--link);
 }

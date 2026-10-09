@@ -74,12 +74,6 @@
   text-align: right;
 }
 
-/* Chromium reserves room for a datalist arrow that pushes the value off the right edge;
-   its UA rule is !important, so this one has to be too. */
-.input::-webkit-calendar-picker-indicator {
-  display: none !important;
-}
-
 .mono {
   font-family: var(--font-mono);
   font-size: var(--size-secondary);
