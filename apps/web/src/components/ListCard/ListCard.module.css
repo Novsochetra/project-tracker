@@ -44,7 +44,9 @@
   }
 }
 
-@media (max-width: 767px), (pointer: coarse) and (max-height: 500px) {
+@media (max-width: 767px),
+  (pointer: coarse) and (max-device-width: 500px),
+  (pointer: coarse) and (max-device-height: 500px) {
   .card {
     border-radius: var(--radius-group);
   }

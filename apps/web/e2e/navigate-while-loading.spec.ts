@@ -198,3 +198,50 @@ test.describe('a screen whose code stalls', () => {
     await expect(page).toHaveURL(/\/$/);
   });
 });
+
+// PT-108 review: after the page asked for a reload, every push and replace was dropped for the life
+// of the page. Chromium cancels a reload when a Back comes before the new page arrives, so on a
+// slow first visit, a Back on a stalled screen whose chunk then failed left an app whose rows
+// opened nothing.
+test.describe('a chunk reload the browser cancels', () => {
+  test.beforeEach(async ({ api }) => {
+    await seedProject(api, 'Mobile app', 'MOB', [{ title: 'Login screen' }]);
+    await seedProject(api, 'Website', 'WEB', [{ title: 'Home page' }]);
+  });
+
+  test('leaves the rows opening their screens', async ({ page, browserName }) => {
+    test.skip(browserName !== 'chromium', 'WebKit finishes the reload instead of cancelling it');
+    test.setTimeout(PUSH_WAIT_LIMIT_MS + 30_000);
+    let failChunk = () => undefined as void;
+    await page.route(`**/src/features/${PROJECT_SCREEN}*`, async (route) => {
+      await new Promise<void>((resolve) => (failChunk = resolve));
+      await route.abort('failed');
+    });
+    await page.goto('/');
+    await projectRow(page, 'Mobile app').click();
+    const layer = page.locator('[data-stack-path="/p/MOB"]');
+    await expect(layer.getByRole('status')).toBeVisible({ timeout: PUSH_WAIT_LIMIT_MS + 5_000 });
+
+    // A slow network: the reload's page takes 2 s, and Back comes 300 ms after the failure.
+    await page.route('**/*', async (route) => {
+      if (route.request().resourceType() !== 'document') return route.fallback();
+      await new Promise((resolve) => setTimeout(resolve, 2_000));
+      await route.continue().catch(() => undefined);
+    });
+    let loads = 0;
+    page.on('load', () => (loads += 1));
+    // The dev server sends no vite:preloadError, so the test sends the one a build's helper would.
+    await page.evaluate(() => {
+      window.dispatchEvent(new Event('vite:preloadError', { cancelable: true }));
+      setTimeout(() => window.history.back(), 300);
+    });
+    failChunk();
+    await page.waitForTimeout(3_000);
+    await expect(page).toHaveURL(/\/$/);
+    expect(loads).toBe(0);
+
+    await page.unroute('**/*');
+    await projectRow(page, 'Website').click();
+    await expect(page).toHaveURL(/\/p\/WEB$/);
+  });
+});

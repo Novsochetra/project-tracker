@@ -30,6 +30,19 @@
   margin-left: 1px;
 }
 
+/* The opening spinner's badge is see-through, so the triangle would show through it: the badge
+   fades out as the spinner fades in, after the same quiet wait (quiet-in), so a quick open changes
+   nothing on the tile. */
+.play.opening {
+  animation: play-out var(--duration-fade) var(--ease-out) var(--delay-quiet) forwards;
+}
+
+@keyframes play-out {
+  to {
+    opacity: 0;
+  }
+}
+
 .duration {
   position: absolute;
   right: var(--space-1);

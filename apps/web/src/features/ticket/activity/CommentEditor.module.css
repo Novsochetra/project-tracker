@@ -38,7 +38,9 @@
   margin-right: auto;
 }
 
-@media (max-width: 767px), (pointer: coarse) and (max-height: 500px) {
+@media (max-width: 767px),
+  (pointer: coarse) and (max-device-width: 500px),
+  (pointer: coarse) and (max-device-height: 500px) {
   .field .input {
     font-size: var(--size-input);
   }

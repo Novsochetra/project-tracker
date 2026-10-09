@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { isPageReloading } from '../lib/pageReload';
+import { reloadsAsked } from '../lib/pageReload';
 import { checkForUpdates } from './checkForUpdates';
 import { registerOptions } from './registerOptions';
 import { reloadWhenSafe } from './reloadWhenSafe';
@@ -17,12 +17,13 @@ afterEach(() => {
 describe('registerOptions', () => {
   it('waits for a safe moment instead of reloading straight away', () => {
     const reload = vi.fn();
+    const reloads = reloadsAsked();
     registerOptions(reload).onNeedReload?.();
     expect(reload).not.toHaveBeenCalled();
     vi.mocked(reloadWhenSafe).mock.calls[0]?.[0]();
     expect(reload).toHaveBeenCalledTimes(1);
-    // So a push meanwhile adds no history entry for the reload to fill (PT-108).
-    expect(isPageReloading()).toBe(true);
+    // So a push waiting meanwhile adds no history entry for the reload to fill (PT-108).
+    expect(reloadsAsked()).toBe(reloads + 1);
   });
 
   it('starts checking for updates once the service worker is registered', () => {

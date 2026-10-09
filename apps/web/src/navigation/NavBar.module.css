@@ -101,3 +101,14 @@
     display: none;
   }
 }
+
+/* Sideways a phone has about 300px of height under Safari's bars, so the bar is as tall as its
+   buttons, as iOS does for compact heights. */
+@media (pointer: coarse) and (max-device-width: 500px) and (min-width: 540px),
+  (pointer: coarse) and (max-device-height: 500px) and (min-width: 540px) {
+  .bar {
+    min-height: calc(var(--touch-target) + var(--safe-top));
+    padding-top: var(--safe-top);
+    padding-bottom: 0;
+  }
+}

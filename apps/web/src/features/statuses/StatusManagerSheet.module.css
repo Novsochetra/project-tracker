@@ -155,7 +155,9 @@ button.add {
   align-self: flex-start;
 }
 
-@media (max-width: 767px), (pointer: coarse) and (max-height: 500px) {
+@media (max-width: 767px),
+  (pointer: coarse) and (max-device-width: 500px),
+  (pointer: coarse) and (max-device-height: 500px) {
   .handle {
     margin: 4px 0 4px 2px;
   }

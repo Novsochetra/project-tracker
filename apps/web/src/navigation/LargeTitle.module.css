@@ -18,9 +18,21 @@
   font-variant-numeric: tabular-nums;
 }
 
-@media (max-width: 767px), (pointer: coarse) and (max-height: 500px) {
+@media (max-width: 767px),
+  (pointer: coarse) and (max-device-width: 500px),
+  (pointer: coarse) and (max-device-height: 500px) {
   .title {
     font: var(--text-large-title);
     letter-spacing: -0.02em;
+  }
+}
+
+/* Sideways the large title would take a fifth of the height left; it keeps the heading's size, as
+   iOS drops large titles for compact heights. */
+@media (pointer: coarse) and (max-device-width: 500px) and (min-width: 540px),
+  (pointer: coarse) and (max-device-height: 500px) and (min-width: 540px) {
+  .title {
+    font: var(--text-heading);
+    letter-spacing: -0.015em;
   }
 }

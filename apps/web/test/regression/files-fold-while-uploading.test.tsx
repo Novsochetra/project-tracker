@@ -54,3 +54,25 @@ it('folds the files again with Show less while an added file is still uploading'
   expect(showAll).toHaveAttribute('aria-expanded', 'false');
   expect(document.getElementById(showAll.getAttribute('aria-controls')!)).toHaveClass('folded');
 });
+
+// PT-84's review: after Show less, a second file added while the first was still uploading stayed
+// hidden under the fold, because it opened only when the first upload of a run began.
+it('opens again for each file added, even while another is still uploading', async () => {
+  const user = userEvent.setup();
+  const files = Array.from({ length: 12 }, (_, index) => attachment(`f${index + 1}`));
+  const detail = makeTicketDetail(undefined, { attachments: files });
+  const uploadAttachment = vi.fn().mockReturnValue(new Promise(() => undefined));
+  cleanups.push(renderTicket({ detail, phone: true, client: { uploadAttachment } }).restorePhone);
+  const input = screen.getByLabelText('Add files to ticket');
+
+  await user.upload(input, new File(['png'], 'first.png', { type: 'image/png' }));
+  await user.click(await screen.findByRole('button', { name: 'Show less' }));
+  expect(screen.getByRole('button', { name: 'Show all 12 files' })).toBeInTheDocument();
+
+  await user.upload(input, new File(['png'], 'second.png', { type: 'image/png' }));
+  await waitFor(() => expect(uploadAttachment).toHaveBeenCalledTimes(2));
+  expect(screen.getByRole('button', { name: 'Show less' })).toHaveAttribute(
+    'aria-expanded',
+    'true',
+  );
+});

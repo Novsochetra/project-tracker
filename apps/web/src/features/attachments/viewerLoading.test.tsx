@@ -235,6 +235,24 @@ describe('a viewer whose code is on its way', () => {
     expect(tile('Open image 2').parentElement).toContainElement(opening());
   });
 
+  // The spinner's badge is see-through, so the triangle showed through it (PT-114).
+  it("hides the video's play badge as its spinner shows, and only while it shows", async () => {
+    holdCode();
+    const user = await renderTicketFiles();
+    const video = tile('Play video 1');
+    fireEvent.loadedData(video.querySelector('video') as HTMLVideoElement);
+    const badge = () => video.querySelector('.play');
+    expect(badge()).not.toHaveClass('opening');
+    await user.click(video);
+    expect(video.parentElement).toContainElement(opening());
+    // It fades out after the spinner's quiet wait (thumbnailFaces.module.css), so a quick open
+    // changes nothing on the tile.
+    expect(badge()).toHaveClass('opening');
+    await user.keyboard('{Escape}');
+    expect(opening()).not.toBeInTheDocument();
+    expect(badge()).not.toHaveClass('opening');
+  });
+
   it.each(MOVING_ON)('is dropped when %s, and never opens or takes focus', async (_, moveOn) => {
     holdCode();
     const user = await renderTicketFiles();

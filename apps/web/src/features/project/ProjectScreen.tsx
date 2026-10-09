@@ -4,11 +4,12 @@ import { useEffect, useLayoutEffect } from 'react';
 import { errorMessage, isNotFound, useBoard } from '../../api';
 import { Button, EmptyState } from '../../components';
 import { PullToRefresh } from '../../gestures';
-import { NavBar, useNavigation, useScreen } from '../../navigation';
+import { useNavigation, useScreen } from '../../navigation';
 import { TicketBoard } from './board/TicketBoard';
 import { FilterRow } from './FilterRow';
 import { resetListView } from './listViewStore';
 import { ProjectBottomBar, ProjectNavBar, ProjectToolbar } from './ProjectBars';
+import { ProjectLoadingBar } from './ProjectLoadingBar';
 import styles from './ProjectScreen.module.css';
 import { TicketList } from './TicketList';
 import { useViewMode } from './viewModeStore';
@@ -69,7 +70,7 @@ export function ProjectScreen({ projectKey }: { projectKey: string }) {
   if (data) return <ProjectView board={data} onRefresh={() => refetch()} />;
   return (
     <>
-      <NavBar backLabel="Projects" />
+      <ProjectLoadingBar />
       {error && !isNotFound(error) && <LoadError error={error} onRetry={() => void refetch()} />}
     </>
   );

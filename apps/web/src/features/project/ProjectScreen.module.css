@@ -97,7 +97,9 @@
   display: none;
 }
 
-@media (max-width: 767px), (pointer: coarse) and (max-height: 500px) {
+@media (max-width: 767px),
+  (pointer: coarse) and (max-device-width: 500px),
+  (pointer: coarse) and (max-device-height: 500px) {
   /* A phone turned sideways has its camera on one side; the tickets keep clear of it, as the bars
      do. Upright, both insets are 0. */
   .page {
@@ -145,5 +147,20 @@
   to {
     opacity: 1;
     transform: none;
+  }
+}
+
+/* Sideways the status tabs and the search share a row, so tickets show without scrolling: the two
+   rows took the whole height under Safari's bars. The tabs scroll inside their track. */
+@media (pointer: coarse) and (max-device-width: 500px) and (min-width: 540px),
+  (pointer: coarse) and (max-device-height: 500px) and (min-width: 540px) {
+  .filters {
+    flex-wrap: nowrap;
+    padding-top: var(--space-2);
+    padding-bottom: var(--space-2);
+  }
+
+  .tools {
+    flex: 0 1 340px;
   }
 }

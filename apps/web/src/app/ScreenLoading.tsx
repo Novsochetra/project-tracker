@@ -1,7 +1,8 @@
 import clsx from 'clsx';
-import { useProject } from '../api';
 import { Spinner } from '../components';
-import { NavBar, NavBarSpacer, useNavigation, useOptionalScreen, type Route } from '../navigation';
+import { ProjectLoadingBar } from '../features/project/ProjectLoadingBar';
+import { TicketLoadingBar } from '../features/ticket/TicketLoadingBar';
+import { useNavigation, useOptionalScreen, type Route } from '../navigation';
 import styles from './ScreenLoading.module.css';
 
 export interface ScreenLoadingProps {
@@ -10,22 +11,15 @@ export interface ScreenLoadingProps {
   quiet?: boolean;
 }
 
-function TicketBar({ projectKey, num }: { projectKey: string; num: number }) {
-  const projectName = useProject(projectKey).data?.project.name ?? projectKey;
-  const ticketKey = `${projectKey}-${num}`.toUpperCase();
-  return <NavBar title={ticketKey} mono backLabel={projectName} right={<NavBarSpacer />} />;
-}
-
-// The bar of the screen's own placeholder (ProjectScreen, TicketScreen), so Back is there while
-// the code is on its way (PT-108) and the bar stays put when it arrives.
+// The bar of the screen's own placeholder, so Back is there while the code is on its way (PT-108).
 function LoadingBar({ route }: { route: Route }) {
   switch (route.name) {
     case 'projects':
       return null;
     case 'project':
-      return <NavBar backLabel="Projects" />;
+      return <ProjectLoadingBar />;
     case 'ticket':
-      return <TicketBar projectKey={route.key} num={route.num} />;
+      return <TicketLoadingBar projectKey={route.key} num={route.num} />;
   }
 }
 

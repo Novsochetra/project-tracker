@@ -73,7 +73,9 @@
 }
 
 /* The ticket's footer follows on phones and keeps the room the bar needs. */
-@media (max-width: 767px), (pointer: coarse) and (max-height: 500px) {
+@media (max-width: 767px),
+  (pointer: coarse) and (max-device-width: 500px),
+  (pointer: coarse) and (max-device-height: 500px) {
   .section {
     padding: var(--space-2) var(--space-4) var(--space-6);
   }

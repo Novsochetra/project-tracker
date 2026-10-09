@@ -1,13 +1,14 @@
 import type { Attachment } from '@tracker/shared';
 import clsx from 'clsx';
 import { Paperclip } from 'lucide-react';
-import { useEffect, useId, useLayoutEffect, useRef, type FocusEvent, type Ref } from 'react';
+import { useEffect, useId, useRef, type FocusEvent, type Ref } from 'react';
 import { Button, pastFold, ShowMoreButton, useFold } from '../../components';
 import styles from './AttachmentPicker.module.css';
 import { FileInput } from './FileInput';
 import { FileNote } from './FileNote';
 import { measureRows } from './foldRows';
 import { AddTile, ThumbnailGrid } from './ThumbnailGrid';
+import { useOpenForNewUploads } from './useOpenForNewUploads';
 import type { FileNotice } from './fileNotice';
 import type { AttachmentUploads } from './useAttachmentUploads';
 import { useToastIfUnseen } from './useToastIfUnseen';
@@ -112,13 +113,7 @@ export function AttachmentPicker({
   const pick = () => inputRef.current?.click();
   const empty = attachments.length === 0 && uploads.tiles.length === 0;
   const fold = useFold(filesRef, foldRows && !empty, attachments.length, measureRows);
-  const uploading = uploads.uploading.length > 0;
-  const { expand } = fold;
-  // Files added (a drop, a paste) land past the fold, so it opens when they start uploading, before
-  // paint. Only then: Show less still folds it while they upload.
-  useLayoutEffect(() => {
-    if (uploading) expand();
-  }, [uploading, expand]);
+  useOpenForNewUploads(uploads.uploading, fold.expand);
   const onFocus = (event: FocusEvent<HTMLDivElement>) => {
     if (fold.folded && pastFold(event.target, event.currentTarget)) fold.expand();
   };

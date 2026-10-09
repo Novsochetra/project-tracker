@@ -150,7 +150,9 @@ button.copy {
   align-self: flex-start;
 }
 
-@media (max-width: 767px), (pointer: coarse) and (max-height: 500px) {
+@media (max-width: 767px),
+  (pointer: coarse) and (max-device-width: 500px),
+  (pointer: coarse) and (max-device-height: 500px) {
   .step {
     font-size: var(--size-headline);
   }

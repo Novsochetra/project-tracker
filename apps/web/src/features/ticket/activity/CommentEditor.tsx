@@ -48,7 +48,9 @@ export function CommentEditor({ edit }: { edit: CommentEdit }) {
           value={edit.text}
           onChange={(event) => edit.setText(event.currentTarget.value)}
           onKeyDown={(event) => {
-            if (event.key === 'Escape') {
+            // An Escape something used first, like one that dropped a file's viewer still on its
+            // way (PT-114), leaves the edit open, as overlays leave it.
+            if (event.key === 'Escape' && !event.defaultPrevented) {
               event.preventDefault();
               edit.cancel();
             } else if (isSubmitShortcut(event)) {

@@ -21,6 +21,7 @@ interface FaceProps {
   kind: AttachmentKind | null;
   label: string;
   onOpen: (() => void) | undefined;
+  opening: boolean;
 }
 
 function OpenButton({
@@ -49,9 +50,13 @@ function OpenButton({
   );
 }
 
-function MediaFace({ attachment, kind, label, onOpen }: FaceProps) {
+function MediaFace({ attachment, kind, label, onOpen, opening }: FaceProps) {
   const isVideo = kind === 'video';
-  const face = isVideo ? <VideoFace src={attachment.url} /> : <ImageFace src={attachment.url} />;
+  const face = isVideo ? (
+    <VideoFace src={attachment.url} opening={opening} />
+  ) : (
+    <ImageFace src={attachment.url} />
+  );
   if (onOpen) {
     const name = `${isVideo ? 'Play' : 'Open'} ${label}`;
     const zoom = isVideo ? undefined : styles.zoom;
@@ -107,8 +112,8 @@ export function SavedThumbnail({
   onRemove,
 }: SavedThumbnailProps) {
   const kind = attachmentKind(attachment.mimeType);
-  const props: FaceProps = { attachment, kind, label, onOpen };
   const opening = use(ViewerOpeningContext) === attachment.id && onOpen !== undefined;
+  const props: FaceProps = { attachment, kind, label, onOpen, opening };
   return (
     <div className={clsx(styles.tile, isWide(kind) && styles.wide, marked && styles.marked)}>
       {isWide(kind) ? <DocumentFace {...props} /> : <MediaFace {...props} />}

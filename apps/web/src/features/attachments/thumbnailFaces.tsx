@@ -1,4 +1,5 @@
 import { formatBytes, type AttachmentKind } from '@tracker/shared';
+import clsx from 'clsx';
 import { File, FileImage, FileText, Film, Play } from 'lucide-react';
 import { useState, type ReactNode } from 'react';
 import { Icon } from '../../components';
@@ -26,11 +27,13 @@ export interface VideoFaceProps {
   src: string;
   // Off while the file uploads: the progress takes the middle then.
   playBadge?: boolean;
+  // While its viewer's code is on its way, when the opening spinner takes the middle (OpeningMark).
+  opening?: boolean;
 }
 
 // The first frame stands in for a poster: iOS draws it only for a time in the address (#t).
 // Until a frame is drawn, or when this browser can't play the video, a film icon shows.
-export function VideoFace({ src, playBadge = true }: VideoFaceProps) {
+export function VideoFace({ src, playBadge = true, opening = false }: VideoFaceProps) {
   const [duration, setDuration] = useState<string | null>(null);
   const [framed, setFramed] = useState(false);
   return (
@@ -50,7 +53,7 @@ export function VideoFace({ src, playBadge = true }: VideoFaceProps) {
         onLoadedData={() => setFramed(true)}
       />
       {framed && playBadge && (
-        <span className={styles.play} aria-hidden="true">
+        <span className={clsx(styles.play, opening && styles.opening)} aria-hidden="true">
           <Play size={10} fill="currentColor" strokeWidth={0} />
         </span>
       )}

@@ -1,12 +1,14 @@
 import { describe, expect, it, vi } from 'vitest';
-import { isPageReloading, reloadPage } from './pageReload';
+import { reloadPage, reloadsAsked } from './pageReload';
 
 describe('reloadPage', () => {
-  it('reloads, and says so from then on', () => {
+  it('reloads, and counts each reload asked for', () => {
     const reload = vi.fn();
-    expect(isPageReloading()).toBe(false);
+    const before = reloadsAsked();
     reloadPage(reload);
     expect(reload).toHaveBeenCalledTimes(1);
-    expect(isPageReloading()).toBe(true);
+    expect(reloadsAsked()).toBe(before + 1);
+    reloadPage(reload);
+    expect(reloadsAsked()).toBe(before + 2);
   });
 });

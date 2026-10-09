@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useLocation, useNavigate, useNavigationType } from 'react-router';
-import { isPageReloading } from '../lib/pageReload';
+import { reloadsAsked } from '../lib/pageReload';
 import {
   NavigationContext,
   OpeningContext,
@@ -59,8 +59,13 @@ export function NavigationProvider({ children, prepare = READY }: NavigationProv
         return;
       }
       const stillOpening = opening.open(path);
+      const reloads = reloadsAsked();
       const send = () => {
-        if (stillOpening() && !isPageReloading()) void navigate(path, { replace });
+        if (!stillOpening()) return;
+        // A reload asked for while it waited, as its screen's code failed, would fill its entry
+        // with the screen on show (PT-108). Only this push: the reload may never come.
+        if (reloadsAsked() === reloads) void navigate(path, { replace });
+        else opening.clear();
       };
       const waiting = prepare(parseRoute(path));
       if (waiting) void waitAtMost(waiting, PUSH_WAIT_LIMIT_MS).then(send);

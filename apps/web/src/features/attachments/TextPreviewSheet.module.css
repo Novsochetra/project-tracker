@@ -51,7 +51,7 @@
    header stays in view. */
 @media (min-width: 768px) and (pointer: fine),
   (min-width: 768px) and (pointer: none),
-  (min-width: 768px) and (min-height: 501px) {
+  (min-width: 768px) and (min-device-width: 501px) and (min-device-height: 501px) {
   .body {
     max-height: 70vh;
     overflow-y: auto;

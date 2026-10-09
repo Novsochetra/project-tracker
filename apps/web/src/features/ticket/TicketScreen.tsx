@@ -1,11 +1,12 @@
 import clsx from 'clsx';
 import { CircleAlert } from 'lucide-react';
 import { useEffect } from 'react';
-import { errorMessage, isNotFound, useProject, useTicket } from '../../api';
+import { errorMessage, isNotFound, useTicket } from '../../api';
 import { Button, EmptyState, Spinner } from '../../components';
 import { forgetTicketDrafts } from '../../lib/storedDrafts';
-import { NavBar, NavBarSpacer, useNavigation } from '../../navigation';
+import { useNavigation } from '../../navigation';
 import { useTicketOnScreen } from './drafts/liveDrafts';
+import { TicketLoadingBar } from './TicketLoadingBar';
 import styles from './TicketScreen.module.css';
 import { TicketView } from './TicketView';
 
@@ -24,6 +25,7 @@ export function TicketScreen({ projectKey, num }: TicketScreenProps) {
     <TicketPlaceholder
       ticketKey={ticketKey}
       projectKey={projectKey}
+      num={num}
       error={query.error}
       onRetry={() => void query.refetch()}
     />
@@ -45,16 +47,16 @@ function useLeaveWhenMissing(error: Error | null, ticketKey: string, projectKey:
 interface TicketPlaceholderProps {
   ticketKey: string;
   projectKey: string;
+  num: number;
   error: Error | null;
   onRetry: () => void;
 }
 
-function TicketPlaceholder({ ticketKey, projectKey, error, onRetry }: TicketPlaceholderProps) {
-  const projectName = useProject(projectKey).data?.project.name ?? projectKey;
+function TicketPlaceholder({ ticketKey, projectKey, num, error, onRetry }: TicketPlaceholderProps) {
   const failed = error !== null && !isNotFound(error);
   return (
     <>
-      <NavBar title={ticketKey} mono backLabel={projectName} right={<NavBarSpacer />} />
+      <TicketLoadingBar projectKey={projectKey} num={num} />
       {failed ? (
         <EmptyState
           icon={CircleAlert}
