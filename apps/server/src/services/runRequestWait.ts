@@ -1,5 +1,6 @@
 import { nextWaitMs, type RunRequest } from '@tracker/shared';
 import type { UserScope } from '../auth/scope';
+import { forbidden } from '../errors';
 import type { RunNotice } from '../events/runNotice';
 import type { ServiceContext } from './context';
 import { toRunRequest } from './runRequestMappers';
@@ -33,10 +34,13 @@ export async function waitForRunRequest(
   ctx: ServiceContext,
   scope: UserScope,
   id: string,
-  signal: AbortSignal,
+  { runnerId, signal }: { runnerId: string; signal: AbortSignal },
 ): Promise<RunRequest> {
   await settleRequests(ctx);
   const first = await requireRunRequest(ctx, scope, id);
+  if (first.run.runnerId !== runnerId) {
+    throw forbidden('Only the helper that took this run waits for its requests.');
+  }
   if (first.row.status !== 'open') return toRunRequest(first.row);
   const wait = untilRunNotice(
     ctx,

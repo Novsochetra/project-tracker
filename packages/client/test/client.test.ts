@@ -339,8 +339,8 @@ const routes: Route[] = [
   {
     name: 'waitForRunRequest',
     method: 'GET',
-    path: '/api/requests/q-1/wait',
-    call: (c) => c.waitForRunRequest('q-1'),
+    path: '/api/requests/q-1/wait?runnerId=r',
+    call: (c) => c.waitForRunRequest('q-1', { runnerId: 'r' }),
   },
   {
     name: 'cancelRunRequest',
@@ -556,7 +556,7 @@ describe('fresh reads', () => {
     const { client, last } = setup();
     const controller = new AbortController();
 
-    await client.waitForRunRequest('q-1', { signal: controller.signal });
+    await client.waitForRunRequest('q-1', { runnerId: 'r' }, { signal: controller.signal });
 
     expect(last().init.signal).toBe(controller.signal);
   });

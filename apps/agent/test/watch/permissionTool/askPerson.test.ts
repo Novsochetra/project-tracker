@@ -33,10 +33,12 @@ function setup(waits: Waited[], changes: Partial<AskPersonDeps> = {}) {
       asked.push(input);
       return Promise.resolve(permissionRequest());
     }),
-    waitForRunRequest: vi.fn((_id: string, { signal }: { signal?: AbortSignal } = {}) => {
-      const next = waits.shift();
-      return next ? next() : untilAborted(signal);
-    }),
+    waitForRunRequest: vi.fn(
+      (_id: string, _input: unknown, { signal }: { signal?: AbortSignal } = {}) => {
+        const next = waits.shift();
+        return next ? next() : untilAborted(signal);
+      },
+    ),
     cancelRunRequest: vi.fn(() => Promise.resolve(permissionRequest({ status: 'cancelled' }))),
   };
   const ask = createAskPerson({
@@ -150,7 +152,8 @@ describe('asking the person', () => {
     await vi.waitFor(() => expect(api.waitForRunRequest).toHaveBeenCalled());
     stop.abort(reason);
     expect(await asking).toEqual({ behavior: 'deny', message: RUN_ENDED });
-    const [, options] = vi.mocked(api.waitForRunRequest).mock.calls[0]!;
+    const [, input, options] = vi.mocked(api.waitForRunRequest).mock.calls[0]!;
+    expect(input).toEqual({ runnerId: RUNNER });
     expect(options?.signal?.aborted).toBe(true);
     expect(cancelled(api)).toEqual([['q-1', { runnerId: RUNNER }]]);
     expect(log.at(-1)).toBe(line);

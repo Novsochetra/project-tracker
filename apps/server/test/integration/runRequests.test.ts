@@ -46,7 +46,8 @@ describe.each(DIALECTS)('run requests (%s)', (dialect) => {
   const list = (as = person) => as<RunRequest[]>('GET', `/api/runs/${run.id}/requests`);
   const answer = (id: string, body: unknown, as = person) =>
     as<RunRequest>('POST', `/api/requests/${id}/answer`, body);
-  const wait = (id: string, as = helper) => as<RunRequest>('GET', `/api/requests/${id}/wait`);
+  const wait = (id: string, as = helper, runnerId = runner) =>
+    as<RunRequest>('GET', `/api/requests/${id}/wait?runnerId=${runnerId}`);
   const take = () => helper('POST', `/api/runners/${runner}/next`);
   const checkIn = () => helper('PUT', `/api/runners/${runner}`, helperName('A Mac'));
   const opened = async (input?: AddRunRequestInput) => (await ask(input)).body;
@@ -156,6 +157,20 @@ describe.each(DIALECTS)('run requests (%s)', (dialect) => {
     });
     expect((await wait(request.id, person)).status).toBe(403);
     expect((await list()).body[0]?.status).toBe('open');
+  });
+
+  it('lets only the helper that took the run wait for its requests', async () => {
+    await take();
+    const request = await opened();
+    const otherRunner = randomUUID();
+    await helper('PUT', `/api/runners/${otherRunner}`, helperName('A iMac'));
+    expect(await wait(request.id, helper, otherRunner)).toMatchObject({
+      status: 403,
+      body: { error: { message: 'Only the helper that took this run waits for its requests.' } },
+    });
+    expect((await helper('GET', `/api/requests/${request.id}/wait`)).status).toBe(400);
+    await answer(request.id, { decision: 'allow' });
+    expect((await wait(request.id)).body).toMatchObject({ status: 'answered' });
   });
 
   it("answers 404 for another user's run and requests, every way", async () => {

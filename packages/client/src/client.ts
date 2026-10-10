@@ -53,6 +53,7 @@ import type {
   UpdateProjectInput,
   UpdateStatusInput,
   UpdateTicketInput,
+  WaitRunRequestQuery,
 } from '@tracker/shared';
 import { Http, type HttpOptions, type ReadOptions } from './http';
 import type { UploadOptions } from './upload';
@@ -289,8 +290,15 @@ export class TrackerClient {
     });
 
   // A long poll: it may answer with the request still open, and is called again then.
-  waitForRunRequest = (requestId: string, { signal }: { signal?: AbortSignal } = {}) =>
-    this.http.request<RunRequest>('GET', `/api/requests/${segment(requestId)}/wait`, { signal });
+  waitForRunRequest = (
+    requestId: string,
+    { runnerId }: WaitRunRequestQuery,
+    { signal }: { signal?: AbortSignal } = {},
+  ) =>
+    this.http.request<RunRequest>('GET', `/api/requests/${segment(requestId)}/wait`, {
+      query: { runnerId },
+      signal,
+    });
 
   cancelRunRequest = (
     requestId: string,

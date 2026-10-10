@@ -62,3 +62,7 @@ export type AnswerRunRequestInput = z.input<typeof answerRunRequestInput>;
 // The helper ends a request Claude no longer waits for, so the phone never shows a dead card.
 export const cancelRunRequestInput = z.object({ runnerId });
 export type CancelRunRequestInput = z.input<typeof cancelRunRequestInput>;
+
+// Only the helper that took the run waits for its answers, as only it asks and sends steps.
+export const waitRunRequestQuery = z.object({ runnerId });
+export type WaitRunRequestQuery = z.input<typeof waitRunRequestQuery>;

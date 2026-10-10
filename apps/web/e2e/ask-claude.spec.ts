@@ -280,7 +280,7 @@ test('answers Claude from the phone: Allow, Deny and a choice, and Claude goes o
   // The helper's side (apps/agent/src/watch/permissionTool): ask, then wait for the person.
   const asks = async (input: Parameters<TrackerClient['addRunRequest']>[1]) => {
     const request = await api.addRunRequest(runId, input);
-    return api.waitForRunRequest(request.id);
+    return api.waitForRunRequest(request.id, { runnerId: helperId });
   };
   const permission = (label: string) =>
     asks({ runnerId: helperId, kind: 'permission', label, labelCut: false, questions: null });

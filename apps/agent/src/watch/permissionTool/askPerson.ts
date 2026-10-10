@@ -48,9 +48,11 @@ const gaveUp = (message: string): Ending => ({
 });
 
 const waitOnce = (deps: AskPersonDeps, id: string, signal: AbortSignal) =>
-  deps.api.waitForRunRequest(id, {
-    signal: AbortSignal.any([signal, AbortSignal.timeout(WAIT_TIMEOUT_MS)]),
-  });
+  deps.api.waitForRunRequest(
+    id,
+    { runnerId: deps.runnerId },
+    { signal: AbortSignal.any([signal, AbortSignal.timeout(WAIT_TIMEOUT_MS)]) },
+  );
 
 async function untilEnded(
   deps: AskPersonDeps,
