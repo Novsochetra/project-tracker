@@ -2,7 +2,7 @@ import { act, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { Run } from '@tracker/shared';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { refreshRunSteps } from '../../../api/live/refreshForRun';
+import { refreshRunSteps } from '../../../api/live/refreshRunSteps';
 import { listItem, makeTicketDetail, STATUS } from '../../../api/test/fixtures';
 import { DARA, makeRun } from '../../../api/test/runFixtures';
 import { skipAnimations } from '../../../overlays/testing';
@@ -109,7 +109,7 @@ describe('Claude Code run on the ticket screen', () => {
       const line = await latestLine();
 
       expect(line).toHaveAccessibleName('Latest step: Read apps/web/src/file12.ts, 12 steps');
-      act(() => refreshRunSteps(queryClient, running.id));
+      act(() => void refreshRunSteps(queryClient, running.id));
       await waitFor(() =>
         expect(line).toHaveAccessibleName('Latest step: Run npm run verify, 13 steps'),
       );

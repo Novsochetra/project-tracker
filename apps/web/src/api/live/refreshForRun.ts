@@ -3,6 +3,7 @@ import type { RunEvent } from '@tracker/shared';
 import { queryKeys } from '../queryKeys';
 import { changeScope } from './changeScope';
 import { cachedEntries } from './refreshForChange';
+import { refreshRunSteps } from './refreshRunSteps';
 
 const isTicketRuns = (queryKey: readonly unknown[]): boolean =>
   queryKey[0] === 'ticket' && queryKey[2] === 'runs';
@@ -20,11 +21,6 @@ function refreshTicketRuns(queryClient: QueryClient, ticketId: string, projectId
   }
 }
 
-// Each read asks only for the steps after the last one cached, so one per step event stays small.
-export const refreshRunSteps = (queryClient: QueryClient, runId: string): void =>
-  void queryClient.invalidateQueries({ queryKey: queryKeys.runSteps(runId), exact: true });
-
-// The helper sends a run's last steps before its end, so a missed step event is caught up here.
 // A helper that takes or ends a run has just been seen, so its online state may have changed too.
 export function refreshForRun(queryClient: QueryClient, event: RunEvent): void {
   if (event.ticketId) refreshTicketRuns(queryClient, event.ticketId, event.projectId);
@@ -33,6 +29,7 @@ export function refreshForRun(queryClient: QueryClient, event: RunEvent): void {
     // An answer moves its chat to the top of the list.
     void queryClient.invalidateQueries({ queryKey: queryKeys.allChats() });
   }
-  refreshRunSteps(queryClient, event.runId);
+  // The helper sends a run's last steps before its end, so a missed step event is caught up here.
+  void refreshRunSteps(queryClient, event.runId);
   void queryClient.invalidateQueries({ queryKey: queryKeys.runners(), exact: true });
 }

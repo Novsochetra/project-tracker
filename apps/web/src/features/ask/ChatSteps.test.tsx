@@ -2,7 +2,7 @@ import { act, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { ChatDetail, RunStep } from '@tracker/shared';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { refreshRunSteps } from '../../api/live/refreshForRun';
+import { refreshRunSteps } from '../../api/live/refreshRunSteps';
 import { makeAskRun, makeChatDetail, makeMessage } from '../../api/test/chatFixtures';
 import { makeRunner } from '../../api/test/runFixtures';
 import { makeStep, makeSteps } from '../steps/testSteps';
@@ -66,7 +66,7 @@ describe('Ask: what Claude is doing', () => {
     const message = await workingMessage();
     expect(stepsIn(message)).toHaveLength(2);
 
-    act(() => refreshRunSteps(queryClient, working.id));
+    act(() => void refreshRunSteps(queryClient, working.id));
     await waitFor(() => expect(stepsIn(message)).toHaveLength(3));
     expect(listRunSteps).toHaveBeenLastCalledWith(working.id, { after: 2 });
     expect(stepsIn(message).at(-1)).toBe('It is in runQueue.ts.');
