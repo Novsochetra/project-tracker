@@ -30,7 +30,8 @@ function guardedWriter(stream: SSEStreamingApi, allowed: () => Promise<boolean>,
   };
 }
 
-// Named after their type (`run`, `run-step`), so the web app's change handling never sees them.
+// Named after their type (`run`, `run-step`, `run-request`), so the web app's change handling
+// never sees them.
 function runListener(access: Access | null | undefined, send: (message: SSEMessage) => void) {
   const scope = scopeOf(access);
   return ({ userId, event }: RunNotice) => {

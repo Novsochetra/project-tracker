@@ -47,6 +47,45 @@ process.stdin.on('end', () => {
     say('It found the report: TICKET MOB-9.');
     process.exit(0);
   }
+  // Calls the permission prompt tool from --mcp-config the way Claude Code 2.1.296 does, then
+  // says what it got back.
+  if (prompt.includes('PROMPT TOOL ')) {
+    const argOf = (name) => process.argv[process.argv.indexOf(name) + 1];
+    const [name, server] = Object.entries(JSON.parse(argOf('--mcp-config')).mcpServers)[0];
+    const tool = argOf('--permission-prompt-tool').slice(('mcp__' + name + '__').length);
+    const call = JSON.parse(/PROMPT TOOL (.*)/.exec(prompt)[1]);
+    const child = require('node:child_process').spawn(server.command, server.args, {
+      stdio: ['pipe', 'pipe', 'inherit'],
+    });
+    const send = (message) => child.stdin.write(JSON.stringify({ jsonrpc: '2.0', ...message }) + '\\n');
+    let buffer = '';
+    child.stdout.on('data', (chunk) => {
+      buffer += chunk;
+      const lines = buffer.split('\\n');
+      buffer = lines.pop();
+      for (const message of lines.map((line) => JSON.parse(line))) {
+        if (message.id === 0) {
+          send({ method: 'notifications/initialized' });
+          const params = { name: tool, arguments: call, _meta: { progressToken: 1 } };
+          send({ id: 1, method: 'tools/call', params });
+          // Gives up on the call the way Claude Code cancels one, then waits for the test.
+          if (prompt.includes('GIVE UP')) {
+            setTimeout(() => send({ method: 'notifications/cancelled', params: { requestId: 1 } }), 300);
+            const go = join(dirname(process.argv[1]), 'gave-up');
+            setInterval(() => existsSync(go) && (say('GAVE UP'), process.exit(0)), 20);
+          }
+        }
+        if (message.id === 1) {
+          say('DECISION ' + message.result.content[0].text);
+          child.kill();
+          process.exit(0);
+        }
+      }
+    });
+    const clientInfo = { name: 'fake-claude', version: '9.9.9' };
+    send({ id: 0, method: 'initialize', params: { protocolVersion: '2025-06-18', capabilities: {}, clientInfo } });
+    return;
+  }
   if (prompt.includes('ASK FAIL')) { say('Credit balance is too low', true); process.exit(1); }
   // Waits for the test's go file, so a test can look at the steps while Claude still works.
   if (prompt.includes('SLOW STEPS')) {

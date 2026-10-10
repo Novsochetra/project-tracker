@@ -305,6 +305,23 @@ const DATA_MODEL: SchemaShape = {
     indexes: [],
     foreignKeys: ['run_id -> runs.id on delete cascade'],
   },
+  run_requests: {
+    columns: [
+      'id text primary key',
+      'run_id text not null',
+      'kind text not null',
+      'label text not null',
+      'questions text',
+      'status text not null',
+      'decision text',
+      'answers text',
+      'created_at bigint not null',
+      'expires_at bigint not null',
+      'ended_at bigint',
+    ],
+    indexes: ['index (run_id, created_at)', 'index (status, expires_at)'],
+    foreignKeys: ['run_id -> runs.id on delete cascade'],
+  },
   chats: {
     columns: [
       'id text primary key',

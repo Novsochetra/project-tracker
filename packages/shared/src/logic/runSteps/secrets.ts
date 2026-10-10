@@ -1,18 +1,10 @@
-const MASK = '***';
-// A quoted value whole, spaces and all, or a bare one up to the next space or quote.
-const VALUE = String.raw`(?:"[^"]*"|'[^']*'|[^\s"']+)`;
-const NAMED = String.raw`[\w-]*(?:token|key|secret|password|passwd)[\w-]*`;
+import { SECRET_RULES } from './secretRules';
 
-// Only the shapes a command line or an address usually carries a secret in, so the rest of a
-// label stays readable; a few harmless values get masked too (`--sort-key=name`).
-const PATTERNS: readonly RegExp[] = [
-  new RegExp(String.raw`(authorization:\s*(?:(?:bearer|basic|token)\s+)?)${VALUE}`, 'gi'),
-  new RegExp(String.raw`(\bbearer\s+)${VALUE}`, 'gi'),
-  new RegExp(String.raw`(\s--?${NAMED}(?:=|\s+))${VALUE}`, 'gi'),
-  new RegExp(String.raw`(\b${NAMED}=)${VALUE}`, 'gi'),
-  /(\/\/[^\s/:@]+:)[^\s/@]+(?=@)/g,
-];
-
+// Best effort, for the shapes a command line, a header or a link usually carries a secret in, so
+// the rest stays readable. A short `-p`/`-a` password is left: it can't be told from `mkdir -p`.
 export function maskSecrets(text: string): string {
-  return PATTERNS.reduce((masked, pattern) => masked.replace(pattern, `$1${MASK}`), text);
+  return SECRET_RULES.reduce(
+    (masked, { pattern, replace }) => masked.replace(pattern, replace),
+    text,
+  );
 }

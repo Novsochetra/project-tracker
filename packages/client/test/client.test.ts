@@ -303,6 +303,45 @@ const routes: Route[] = [
     path: '/api/runs/r-1/steps?after=12',
     call: (c) => c.listRunSteps('r-1', { after: 12 }),
   },
+  {
+    name: 'addRunRequest',
+    method: 'POST',
+    path: '/api/runs/r-1/requests',
+    body: { runnerId: 'r', kind: 'permission', label: 'Run npm test', questions: null },
+    call: (c) =>
+      c.addRunRequest('r-1', {
+        runnerId: 'r',
+        kind: 'permission',
+        label: 'Run npm test',
+        questions: null,
+      }),
+  },
+  {
+    name: 'listRunRequests',
+    method: 'GET',
+    path: '/api/runs/r-1/requests',
+    call: (c) => c.listRunRequests('r-1'),
+  },
+  {
+    name: 'answerRunRequest',
+    method: 'POST',
+    path: '/api/requests/q%201/answer',
+    body: { decision: 'allow', answers: ['Green'] },
+    call: (c) => c.answerRunRequest('q 1', { decision: 'allow', answers: ['Green'] }),
+  },
+  {
+    name: 'waitForRunRequest',
+    method: 'GET',
+    path: '/api/requests/q-1/wait',
+    call: (c) => c.waitForRunRequest('q-1'),
+  },
+  {
+    name: 'cancelRunRequest',
+    method: 'POST',
+    path: '/api/requests/q-1/cancel',
+    body: { runnerId: 'r' },
+    call: (c) => c.cancelRunRequest('q-1', { runnerId: 'r' }),
+  },
 ];
 
 afterEach(() => {
@@ -502,6 +541,15 @@ describe('fresh reads', () => {
     const controller = new AbortController();
 
     await client.addRunSteps('r-1', { runnerId: 'r', steps: [] }, { signal: controller.signal });
+
+    expect(last().init.signal).toBe(controller.signal);
+  });
+
+  it('can stop waiting for an answer when the run ends', async () => {
+    const { client, last } = setup();
+    const controller = new AbortController();
+
+    await client.waitForRunRequest('q-1', { signal: controller.signal });
 
     expect(last().init.signal).toBe(controller.signal);
   });

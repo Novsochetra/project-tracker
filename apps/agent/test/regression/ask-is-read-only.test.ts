@@ -1,22 +1,33 @@
 import { realpathSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import type { AskMode } from '@tracker/shared';
-import { afterAll, describe, expect, it } from 'vitest';
+import { afterAll, describe, expect, it, vi } from 'vitest';
 import { askOutcomeOf } from '../../src/watch/ask/askOutcome';
 import { claudeRunners } from '../../src/watch/claudeRunners';
-import { askJob } from '../watch/fakeTracker';
+import type { AskPerson } from '../../src/watch/prompts/askPerson';
+import { askJob, job } from '../watch/fakeTracker';
 import { installFakeClaude } from '../watch/fakeClaude';
 
 const fake = installFakeClaude();
 afterAll(() => fake.remove());
 
-// The runners tracker watch builds, for a helper started with --permission-mode bypassPermissions.
+// The runners tracker watch builds, for a helper started with --permission-mode bypassPermissions,
+// with the prompt tool that lets Claude ask the person.
+const askPerson = vi.fn<AskPerson>();
 const claude = claudeRunners({
   command: fake.command,
   cwd: realpathSync(tmpdir()),
   permissionMode: 'bypassPermissions',
   write: () => undefined,
+  prompts: { command: ['node', 'promptTool.js'], ask: askPerson },
 });
+
+const PROMPT_TOOL_ARGS = [
+  '--mcp-config',
+  expect.stringContaining('"tracker-watch"'),
+  '--permission-prompt-tool',
+  'mcp__tracker-watch__ask_person',
+];
 
 const noSteps = () => undefined;
 
@@ -25,11 +36,10 @@ const ask = async (prompt: string, resume: string | null = null, mode: AskMode =
   return askOutcomeOf(await claude.runAsk(job, new AbortController().signal, noSteps), false);
 };
 
+const STREAM = ['-p', '--output-format', 'stream-json', '--verbose'];
+
 const READ_ONLY_ARGS = [
-  '-p',
-  '--output-format',
-  'stream-json',
-  '--verbose',
+  ...STREAM,
   '--permission-mode',
   'plan',
   '--strict-mcp-config',
@@ -68,7 +78,16 @@ describe('regression: an ask runs Claude read-only', () => {
     expect(argsOf(outcome.answer)).toEqual(READ_ONLY_ARGS);
   });
 
-  it("gives an Edit question the helper's mode, the tracker MCP and the edit tools", async () => {
+  it('gives an Ask or Plan question no way to ask the person, so no answer can widen it', async () => {
+    for (const mode of ['ask', 'plan'] as const) {
+      const args = argsOf((await ask('Delete X', null, mode)).answer);
+      expect(args).not.toContain('--permission-prompt-tool');
+      expect(args).not.toContain('--mcp-config');
+    }
+    expect(askPerson).not.toHaveBeenCalled();
+  });
+
+  it("gives an Edit question the helper's mode, the tracker MCP, the edit tools and the prompt tool", async () => {
     const args = argsOf((await ask('Rename X', null, 'edit')).answer);
     expect(args).toEqual([
       '-p',
@@ -77,13 +96,14 @@ describe('regression: an ask runs Claude read-only', () => {
       '--verbose',
       '--permission-mode',
       'bypassPermissions',
+      ...PROMPT_TOOL_ARGS,
     ]);
     expect(args).not.toContain('--strict-mcp-config');
     expect(args).not.toContain('--disallowedTools');
   });
 
   it('still gives ticket runs the mode the person chose', async () => {
-    const exit = await claude.runClaude('Fix MOB-1', new AbortController().signal, noSteps);
+    const exit = await claude.runClaude(job('r-1', 'MOB-1'), new AbortController().signal, noSteps);
     expect(argsOf(exit.results[0]?.text)).toEqual([
       '-p',
       '--output-format',
@@ -91,7 +111,45 @@ describe('regression: an ask runs Claude read-only', () => {
       '--verbose',
       '--permission-mode',
       'bypassPermissions',
+      ...PROMPT_TOOL_ARGS,
     ]);
+  });
+
+  it('asks the person in an Edit question, not a ticket run, when the helper got no mode', async () => {
+    const noMode = claudeRunners({
+      command: fake.command,
+      cwd: realpathSync(tmpdir()),
+      write: () => undefined,
+      prompts: { command: ['node', 'promptTool.js'], ask: askPerson },
+    });
+    const editJob = {
+      ...askJob('r-1', 'c-1', null, { model: 'default', mode: 'edit' }),
+      prompt: 'X',
+    };
+    const edit = askOutcomeOf(
+      await noMode.runAsk(editJob, new AbortController().signal, noSteps),
+      false,
+    );
+    expect(argsOf(edit.answer)).toEqual([
+      ...STREAM,
+      '--permission-mode',
+      'default',
+      ...PROMPT_TOOL_ARGS,
+    ]);
+    for (const mode of ['ask', 'plan'] as const) {
+      const readOnly = { ...askJob('r-1', 'c-1', null, { model: 'default', mode }), prompt: 'X' };
+      const outcome = askOutcomeOf(
+        await noMode.runAsk(readOnly, new AbortController().signal, noSteps),
+        false,
+      );
+      expect(argsOf(outcome.answer)).toEqual(READ_ONLY_ARGS);
+    }
+    const ticket = await noMode.runClaude(
+      job('r-2', 'MOB-1'),
+      new AbortController().signal,
+      noSteps,
+    );
+    expect(argsOf(ticket.results[0]?.text)).toEqual([...STREAM, ...PROMPT_TOOL_ARGS]);
   });
 
   it("resumes the chat's session and hands back the new one", async () => {
