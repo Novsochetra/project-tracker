@@ -12,8 +12,7 @@ import { jsonBody, rejectInvalid } from '../validation';
 
 const scope = (c: Context<AppEnv>) => requireScope(c.get('access'));
 
-// Only a person starts Claude Code: an agent's token can't start more agents. Checked before the
-// body, like the other refusals.
+// So agents can't start more agents. Checked before the body, like the other refusals.
 const personOnly = createMiddleware<AppEnv>(async (c, next) => {
   if (c.get('actor').kind !== 'human') {
     throw forbidden("Only a person can start Claude Code. Agents can't start more agents.");
@@ -21,8 +20,6 @@ const personOnly = createMiddleware<AppEnv>(async (c, next) => {
   await next();
 });
 
-// The helper on the person's computer signs in with an API token (or needs none on a tracker
-// without an owner); a browser session isn't one.
 const helperOnly = createMiddleware<AppEnv>(async (c, next) => {
   const kind = c.get('access')?.kind;
   if (kind !== 'token' && kind !== 'open') {

@@ -1,12 +1,11 @@
 import type { RunStatus } from '@tracker/shared';
 
-// userId is null on a tracker running locally without an owner, where anyone on this computer is
-// the one person. Once an owner exists, rows without one belong to nobody who can sign in.
+// userId is null on a tracker without an owner; once an owner exists, nobody signed in reaches them.
 export interface RunnerRow {
   id: string;
   userId: string | null;
   name: string;
-  // A JSON array of project ids, so renaming a project's key doesn't cut the helper off.
+  // Ids, not keys, so renaming a project keeps its helpers.
   projectIds: string;
   createdAt: number;
   lastSeenAt: number;
@@ -18,7 +17,7 @@ export interface RunRow {
   projectId: string;
   ticketId: string;
   runnerId: string | null;
-  // Kept with the run, so its history still names the computer after it is removed.
+  // Copied, so the run still names its computer after the computer is removed.
   runnerName: string;
   prompt: string;
   status: RunStatus;

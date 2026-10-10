@@ -223,7 +223,6 @@ export class TrackerClient {
 
   revokeApiToken = (id: string) => this.http.request<void>('DELETE', `/api/tokens/${segment(id)}`);
 
-  // A person starts Claude Code on one of their own helpers; the helper's side follows.
   startRun = (ticketKey: string, input: StartRunInput) =>
     this.http.request<Run>('POST', `/api/tickets/${segment(ticketKey)}/runs`, { body: input });
 

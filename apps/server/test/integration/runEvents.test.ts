@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
-import type { Run, RunEvent } from '@tracker/shared';
+import { RUN_PICKUP_MS, type Run, type RunEvent } from '@tracker/shared';
 import { afterEach, describe, expect, it } from 'vitest';
+import { testClock } from '../helpers/auth';
 import { addUser, caller, helperName, type Auth } from '../helpers/runs';
 import { DIALECTS, useTestServer } from '../helpers/server';
 
@@ -23,7 +24,8 @@ const runEvents = (text: string): RunEvent[] =>
   );
 
 describe.each(DIALECTS)('run events (%s)', (dialect) => {
-  const api = useTestServer(dialect);
+  const clock = testClock();
+  const api = useTestServer(dialect, { now: clock.now });
   const readers: Reader[] = [];
 
   afterEach(async () => {
@@ -41,47 +43,60 @@ describe.each(DIALECTS)('run events (%s)', (dialect) => {
     return reader;
   }
 
-  async function startOn(auth: Auth, helper: Auth, ticket: string): Promise<Run> {
-    const runner = randomUUID();
-    await caller(() => api.app, helper)('PUT', `/api/runners/${runner}`, helperName('Mac'));
-    const started = await caller(() => api.app, auth)<Run>('POST', `/api/tickets/${ticket}/runs`, {
-      runnerId: runner,
-      prompt: `Work on ${ticket}`,
-    });
-    expect(started.status).toBe(201);
-    return started.body;
-  }
-
-  it("reach only the run's own user, and only as named run events", async () => {
-    const a = await addUser(api.db, 'a@example.com', Date.now());
-    const b = await addUser(api.db, 'b@example.com', Date.now() + 1);
-    const person = caller(() => api.app, a.person);
-    await person('POST', '/api/projects', { name: 'Mobile', key: 'MOB' });
-    await person('POST', '/api/projects/MOB/tickets', { title: 'Crash' });
-    await person('POST', '/api/projects/MOB/tickets', { title: 'Login' });
+  it("reach only the run's own user, for every change a run goes through", async () => {
+    clock.set(Date.now());
+    const a = await addUser(api.db, 'a@example.com', clock.now());
+    const b = await addUser(api.db, 'b@example.com', clock.now() + 1);
+    const [aPerson, aHelper] = [caller(() => api.app, a.person), caller(() => api.app, a.helper)];
+    const [bPerson, bHelper] = [caller(() => api.app, b.person), caller(() => api.app, b.helper)];
+    await aPerson('POST', '/api/projects', { name: 'Mobile', key: 'MOB' });
+    await aPerson('POST', '/api/projects/MOB/tickets', { title: 'Crash' });
+    await aPerson('POST', '/api/projects/MOB/tickets', { title: 'Login' });
     const aStream = await stream(a.helper);
     const bStream = await stream(b.person);
+    const [aRunner, bRunner] = [randomUUID(), randomUUID()];
+    const checkIn = () => aHelper('PUT', `/api/runners/${aRunner}`, helperName('A Mac'));
+    const start = async () =>
+      (await aPerson<Run>('POST', '/api/tickets/MOB-1/runs', { runnerId: aRunner, prompt: 'Go' }))
+        .body;
 
-    const aRun = await startOn(a.person, a.helper, 'MOB-1');
-    const bRun = await startOn(b.person, b.helper, 'MOB-2');
+    await checkIn();
+    const done = await start();
+    await aHelper('POST', `/api/runners/${aRunner}/next`);
+    await aHelper('POST', `/api/runs/${done.id}/finish`, { status: 'done' });
+    const cancelled = await start();
+    await aPerson('POST', `/api/runs/${cancelled.id}/cancel`);
+    const expired = await start();
+    clock.advance(RUN_PICKUP_MS);
+    await aPerson('GET', `/api/runs/${expired.id}`);
+    await checkIn();
+    const removed = await start();
+    await aPerson('DELETE', `/api/runners/${aRunner}`);
 
-    // Writes keep their order, so B's own event arriving first means A's was never sent to B.
+    await bHelper('PUT', `/api/runners/${bRunner}`, helperName('B Mac'));
+    const bRun = (
+      await bPerson<Run>('POST', '/api/tickets/MOB-2/runs', { runnerId: bRunner, prompt: 'Go' })
+    ).body;
+
+    // Writes keep their order, so B's own event arriving first means none of A's were sent to B.
     const bText = await readUntil(bStream, /^event: run\ndata: .+\n\n/m);
     expect(runEvents(bText)).toEqual([
-      expect.objectContaining({ type: 'run', runId: bRun.id, status: 'queued' }),
+      expect.objectContaining({ runId: bRun.id, runnerId: bRunner, status: 'queued' }),
     ]);
-    expect(bText).not.toContain(aRun.id);
-    const aText = await readUntil(aStream, /^event: run\ndata: .+\n\n/m);
-    expect(runEvents(aText)).toEqual([
-      {
-        type: 'run',
-        runId: aRun.id,
-        runnerId: aRun.runnerId,
-        projectId: expect.any(String),
-        ticketId: expect.any(String),
-        status: 'queued',
-      },
+    const aText = await readUntil(aStream, new RegExp(`"runId":"${removed.id}","[^}]+"failed"`));
+    const seen = runEvents(aText).map(({ runId, status }) => [runId, status]);
+    expect(seen).toEqual([
+      [done.id, 'queued'],
+      [done.id, 'running'],
+      [done.id, 'done'],
+      [cancelled.id, 'queued'],
+      [cancelled.id, 'cancelled'],
+      [expired.id, 'queued'],
+      [expired.id, 'failed'],
+      [removed.id, 'queued'],
+      [removed.id, 'failed'],
     ]);
+    expect(aText).not.toContain(bRun.id);
     expect(aText).not.toContain('userId');
   });
 });

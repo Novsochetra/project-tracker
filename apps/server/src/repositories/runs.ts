@@ -1,7 +1,8 @@
-import { ACTIVE_RUN_STATUSES, type EndedRunStatus } from '@tracker/shared';
+import { ACTIVE_RUN_STATUSES, type EndedRunStatus, type RunStatus } from '@tracker/shared';
+import type { ExpressionBuilder } from 'kysely';
 import type { UserScope } from '../auth/scope';
 import type { RunRow } from '../db/runTables';
-import type { Db } from '../db/schema';
+import type { Database, Db } from '../db/schema';
 
 export interface RunWithKey extends RunRow {
   projectKey: string;
@@ -9,17 +10,17 @@ export interface RunWithKey extends RunRow {
 }
 
 // '=' never matches a null user, so the open tracker's rows need 'is'.
-const runsOf = (db: Db, userId: UserScope) => {
-  const query = db
+const ownedBy = (userId: UserScope) => (eb: ExpressionBuilder<Database, 'runs'>) =>
+  userId === null ? eb('runs.userId', 'is', null) : eb('runs.userId', '=', userId);
+
+const runsOf = (db: Db, userId: UserScope) =>
+  db
     .selectFrom('runs')
     .innerJoin('tickets', 'tickets.id', 'runs.ticketId')
     .innerJoin('projects', 'projects.id', 'runs.projectId')
     .selectAll('runs')
-    .select(['projects.key as projectKey', 'tickets.num as ticketNum']);
-  return userId === null
-    ? query.where('runs.userId', 'is', null)
-    : query.where('runs.userId', '=', userId);
-};
+    .select(['projects.key as projectKey', 'tickets.num as ticketNum'])
+    .where(ownedBy(userId));
 
 export const findRunInScope = (db: Db, userId: UserScope, id: string) =>
   runsOf(db, userId).where('runs.id', '=', id).executeTakeFirst();
@@ -53,10 +54,16 @@ export async function insertRun(db: Db, row: RunRow): Promise<void> {
 }
 
 // Only a queued run starts, so two takes that race can't both get it.
-export async function markRunStarted(db: Db, id: string, startedAt: number): Promise<boolean> {
+export async function markRunStarted(
+  db: Db,
+  userId: UserScope,
+  id: string,
+  startedAt: number,
+): Promise<boolean> {
   const result = await db
     .updateTable('runs')
     .set({ status: 'running', startedAt })
+    .where(ownedBy(userId))
     .where('id', '=', id)
     .where('status', '=', 'queued')
     .executeTakeFirst();
@@ -65,32 +72,63 @@ export async function markRunStarted(db: Db, id: string, startedAt: number): Pro
 
 export async function markRunEnded(
   db: Db,
+  userId: UserScope,
   id: string,
   changes: { status: EndedRunStatus; error: string | null; endedAt: number },
 ): Promise<boolean> {
   const result = await db
     .updateTable('runs')
     .set(changes)
+    .where(ownedBy(userId))
     .where('id', '=', id)
     .where('status', 'in', ACTIVE_RUN_STATUSES)
     .executeTakeFirst();
   return Number(result.numUpdatedRows) > 0;
 }
 
-export const failQueuedRunsBefore = (db: Db, createdBefore: number, error: string, now: number) =>
+// Silence counts from the later of the run's start and its helper's last check-in, so a run
+// waits while its helper is busy with another.
+export const failRunsOfSilentHelpers = (
+  db: Db,
+  status: RunStatus,
+  silentSince: number,
+  ended: { error: string; endedAt: number },
+) =>
   db
     .updateTable('runs')
-    .set({ status: 'failed', error, endedAt: now })
-    .where('status', '=', 'queued')
-    .where('createdAt', '<=', createdBefore)
+    .set({ status: 'failed', ...ended })
+    .where('status', '=', status)
+    .where('createdAt', '<=', silentSince)
+    .where((eb) =>
+      eb.or([
+        eb('runnerId', 'is', null),
+        eb(
+          'runnerId',
+          'in',
+          eb
+            .selectFrom('runners')
+            .select('runners.id')
+            .where('runners.lastSeenAt', '<=', silentSince),
+        ),
+      ]),
+    )
     .returningAll()
     .execute();
 
-export const failActiveRunsOf = (db: Db, runnerId: string, error: string, now: number) =>
+export const failActiveRunsOf = (
+  db: Db,
+  userId: UserScope,
+  runnerId: string,
+  ended: { error: string; endedAt: number },
+) =>
   db
     .updateTable('runs')
-    .set({ status: 'failed', error, endedAt: now })
+    .set({ status: 'failed', ...ended })
+    .where(ownedBy(userId))
     .where('runnerId', '=', runnerId)
     .where('status', 'in', ACTIVE_RUN_STATUSES)
     .returningAll()
     .execute();
+
+export const assignOwnerlessRuns = (db: Db, userId: string) =>
+  db.updateTable('runs').set({ userId }).where('userId', 'is', null).execute();

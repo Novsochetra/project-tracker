@@ -17,7 +17,7 @@ import { notifyRun, toRunner } from './runMappers';
 
 const RUNNER_NOT_FOUND = 'That computer was not found. Start tracker watch on it again.';
 
-// Another user's helper answers like one that doesn't exist, so nobody learns its id is taken.
+// 404 rather than 403, so nobody learns another user's helper exists.
 export async function requireRunner(
   ctx: ServiceContext,
   scope: UserScope,
@@ -43,7 +43,8 @@ async function saveRunner(ctx: ServiceContext, row: RunnerRow, retried = false):
   const existing = await findRunnerRow(ctx.db, row.id);
   if (existing && !inScope(existing.userId, row.userId)) throw notFound(RUNNER_NOT_FOUND);
   const { name, projectIds, lastSeenAt } = row;
-  if (existing) return updateRunnerRow(ctx.db, row.id, { name, projectIds, lastSeenAt });
+  if (existing)
+    return updateRunnerRow(ctx.db, row.userId, row.id, { name, projectIds, lastSeenAt });
   try {
     await insertRunner(ctx.db, row);
   } catch (error) {
@@ -53,7 +54,6 @@ async function saveRunner(ctx: ServiceContext, row: RunnerRow, retried = false):
   }
 }
 
-// A helper checks in with this when it starts and about every 20 s after, which keeps it online.
 export async function registerRunner(
   ctx: ServiceContext,
   scope: UserScope,
@@ -81,19 +81,25 @@ export async function listRunners(ctx: ServiceContext, scope: UserScope): Promis
   return rows.map((row) => toRunner(row, keys, now));
 }
 
-export async function touchRunner(ctx: ServiceContext, row: RunnerRow): Promise<void> {
-  await updateRunnerRow(ctx.db, row.id, { lastSeenAt: ctx.now() });
+export async function touchRunner(
+  ctx: ServiceContext,
+  scope: UserScope,
+  row: RunnerRow,
+): Promise<void> {
+  await updateRunnerRow(ctx.db, scope, row.id, { lastSeenAt: ctx.now() });
 }
 
-// For a computer the person no longer uses. Its waiting and running runs end, so no phone waits
-// on them; a helper stopping on its own is only offline and keeps its runs.
+// Its runs end so no phone waits on them; a helper that only stops keeps its runs.
 export async function removeRunner(
   ctx: ServiceContext,
   scope: UserScope,
   id: string,
 ): Promise<void> {
   const row = await requireRunner(ctx, scope, id);
-  const ended = await failActiveRunsOf(ctx.db, row.id, RUNNER_REMOVED, ctx.now());
-  await deleteRunnerRow(ctx.db, row.id);
+  const ended = await failActiveRunsOf(ctx.db, scope, row.id, {
+    error: RUNNER_REMOVED,
+    endedAt: ctx.now(),
+  });
+  await deleteRunnerRow(ctx.db, scope, row.id);
   for (const run of ended) notifyRun(ctx, scope, run);
 }

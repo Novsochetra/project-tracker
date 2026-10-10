@@ -1,8 +1,7 @@
 import { AppError } from '../errors';
 import type { Access } from './access';
 
-// Whose runs and helpers a request reaches: the user behind its session or token, or null on a
-// tracker without an owner, where everyone on this computer is the one person.
+// Null on a tracker without an owner, where everyone on this computer is the one person.
 export type UserScope = string | null;
 
 export function scopeOf(access: Access | null | undefined): UserScope | undefined {

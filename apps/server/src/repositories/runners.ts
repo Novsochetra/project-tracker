@@ -1,17 +1,22 @@
+import type { ExpressionBuilder } from 'kysely';
 import type { UserScope } from '../auth/scope';
 import type { RunnerRow } from '../db/runTables';
-import type { Db } from '../db/schema';
+import type { Database, Db } from '../db/schema';
 
-// Any user's: the caller decides what a runner of another user means.
+const ownedBy = (userId: UserScope) => (eb: ExpressionBuilder<Database, 'runners'>) =>
+  userId === null ? eb('userId', 'is', null) : eb('userId', '=', userId);
+
 export const findRunnerRow = (db: Db, id: string) =>
   db.selectFrom('runners').selectAll().where('id', '=', id).executeTakeFirst();
 
-export const listRunnerRows = (db: Db, userId: UserScope) => {
-  const query = db.selectFrom('runners').selectAll().orderBy('createdAt').orderBy('id');
-  return (
-    userId === null ? query.where('userId', 'is', null) : query.where('userId', '=', userId)
-  ).execute();
-};
+export const listRunnerRows = (db: Db, userId: UserScope) =>
+  db
+    .selectFrom('runners')
+    .selectAll()
+    .where(ownedBy(userId))
+    .orderBy('createdAt')
+    .orderBy('id')
+    .execute();
 
 export async function insertRunner(db: Db, row: RunnerRow): Promise<void> {
   await db.insertInto('runners').values(row).execute();
@@ -19,12 +24,21 @@ export async function insertRunner(db: Db, row: RunnerRow): Promise<void> {
 
 export async function updateRunnerRow(
   db: Db,
+  userId: UserScope,
   id: string,
   changes: Partial<Pick<RunnerRow, 'name' | 'projectIds' | 'lastSeenAt'>>,
 ): Promise<void> {
-  await db.updateTable('runners').set(changes).where('id', '=', id).execute();
+  await db
+    .updateTable('runners')
+    .set(changes)
+    .where(ownedBy(userId))
+    .where('id', '=', id)
+    .execute();
 }
 
-export async function deleteRunnerRow(db: Db, id: string): Promise<void> {
-  await db.deleteFrom('runners').where('id', '=', id).execute();
+export async function deleteRunnerRow(db: Db, userId: UserScope, id: string): Promise<void> {
+  await db.deleteFrom('runners').where(ownedBy(userId)).where('id', '=', id).execute();
 }
+
+export const assignOwnerlessRunners = (db: Db, userId: string) =>
+  db.updateTable('runners').set({ userId }).where('userId', 'is', null).execute();

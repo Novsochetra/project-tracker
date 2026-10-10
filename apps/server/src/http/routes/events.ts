@@ -30,8 +30,7 @@ function guardedWriter(stream: SSEStreamingApi, allowed: () => Promise<boolean>,
   };
 }
 
-// A run event reaches only the streams of the run's own user, as a named `run` event the web app's
-// change handling never sees.
+// Named, so the web app's change handling never sees run events.
 function runListener(access: Access | null | undefined, send: (message: SSEMessage) => void) {
   const scope = scopeOf(access);
   return ({ userId, event }: RunNotice) => {

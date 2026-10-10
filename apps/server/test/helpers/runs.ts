@@ -7,8 +7,6 @@ import type { AppEnv } from '../../src/http/env';
 import { SESSION_COOKIE } from '../../src/http/sessionCookie';
 import { insertUser } from '../../src/repositories/users';
 
-// How a request signs in: a person's session cookie, an agent's or helper's token, or nothing on a
-// tracker without an owner.
 export interface Auth {
   cookie?: string;
   token?: string;
@@ -25,8 +23,7 @@ export interface Answer<T = unknown> {
   body: T;
 }
 
-// Only one account can sign in with a password today, so the second user's session is made
-// straight in the database; the server treats both the same once they are in.
+// Only one account can sign in with a password today, so sessions are made in the database.
 export async function addUser(db: Db, email: string, now: number): Promise<UserAuth> {
   const id = randomUUID();
   await insertUser(db, { id, email, passwordHash: 'unused', createdAt: now, updatedAt: now });

@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import {
+  RUN_LOST,
   RUN_NOT_TAKEN,
   RUN_PICKUP_MS,
   type EndedRunStatus,
@@ -12,7 +13,7 @@ import { isUniqueViolation } from '../db/errors';
 import type { RunRow } from '../db/runTables';
 import { conflict, notFound } from '../errors';
 import {
-  failQueuedRunsBefore,
+  failRunsOfSilentHelpers,
   findRunInScope,
   insertRun,
   listTicketRunRows,
@@ -26,14 +27,23 @@ import { requireRunner } from './runners';
 
 const TICKET_RUNS_SHOWN = 20;
 
-// Rows of every user: each event goes to its own user's streams.
 export async function expireUntakenRuns(ctx: ServiceContext): Promise<void> {
-  const now = ctx.now();
-  const expired = await failQueuedRunsBefore(ctx.db, now - RUN_PICKUP_MS, RUN_NOT_TAKEN, now);
+  const endedAt = ctx.now();
+  const silentSince = endedAt - RUN_PICKUP_MS;
+  const expired = [
+    ...(await failRunsOfSilentHelpers(ctx.db, 'queued', silentSince, {
+      error: RUN_NOT_TAKEN,
+      endedAt,
+    })),
+    ...(await failRunsOfSilentHelpers(ctx.db, 'running', silentSince, {
+      error: RUN_LOST,
+      endedAt,
+    })),
+  ];
   for (const row of expired) notifyRun(ctx, row.userId, row);
 }
 
-// Another user's run answers like one that doesn't exist, so nobody learns it does.
+// 404 rather than 403, so nobody learns another user's run exists.
 export async function requireRun(
   ctx: ServiceContext,
   scope: UserScope,
@@ -96,8 +106,7 @@ export async function getRun(ctx: ServiceContext, scope: UserScope, id: string):
   return toRun(await requireRun(ctx, scope, id));
 }
 
-// Saying the same end twice is fine: a helper retries a report the server may already have, and a
-// helper reports "cancelled" after the person cancelled.
+// The same end twice is fine: a helper retries reports, and says "cancelled" after the person did.
 export async function endRun(
   ctx: ServiceContext,
   scope: UserScope,
@@ -108,7 +117,7 @@ export async function endRun(
   const status: EndedRunStatus = input.status;
   const error = status === 'done' ? null : input.error?.trim() || null;
   const before = await requireRun(ctx, scope, id);
-  const ended = await markRunEnded(ctx.db, before.id, { status, error, endedAt: ctx.now() });
+  const ended = await markRunEnded(ctx.db, scope, before.id, { status, error, endedAt: ctx.now() });
   const after = await requireRun(ctx, scope, id);
   if (!ended && after.status !== status) {
     throw conflict(`This run already ended (${after.status}).`);

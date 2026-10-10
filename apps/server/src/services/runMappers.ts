@@ -25,7 +25,6 @@ export function parseProjectIds(row: RunnerRow): string[] {
   }
 }
 
-// Projects deleted since the helper checked in drop out of its list.
 export function toRunner(
   row: RunnerRow,
   keysById: ReadonlyMap<string, string>,

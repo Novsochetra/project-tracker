@@ -78,6 +78,17 @@ describe.each(DIALECTS)("one user's runs stay theirs (%s)", (dialect) => {
     ]);
   });
 
+  it('runs one Claude per ticket, whoever started it, and tells B nothing more', async () => {
+    const blocked = await b.person('POST', '/api/tickets/MOB-1/runs', {
+      runnerId: b.runner,
+      prompt: 'Work on MOB-1',
+    });
+    expect(blocked).toEqual({
+      status: 409,
+      body: { error: { code: 'conflict', message: 'Claude is already working on MOB-1.' } },
+    });
+  });
+
   it("won't let A start a run on B's computer", async () => {
     const started = await a.person('POST', '/api/tickets/MOB-2/runs', {
       runnerId: b.runner,

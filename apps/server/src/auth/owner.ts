@@ -3,6 +3,8 @@ import { EMAIL_MAX, PASSWORD_MAX, normalizeEmail } from '@tracker/shared';
 import { z } from 'zod';
 import type { Db } from '../db/schema';
 import { invalidInput } from '../errors';
+import { assignOwnerlessRunners } from '../repositories/runners';
+import { assignOwnerlessRuns } from '../repositories/runs';
 import { deleteUserSessions } from '../repositories/sessions';
 import { findOwner, insertUser, updateUserRow } from '../repositories/users';
 import { hashPassword, verifyPassword, type ScryptParams } from './passwords';
@@ -68,13 +70,11 @@ export async function setOwner(
   return db.transaction().execute(async (trx) => {
     const owner = await findOwner(trx);
     if (!owner) {
-      await insertUser(trx, {
-        id: randomUUID(),
-        email,
-        passwordHash,
-        createdAt: now,
-        updatedAt: now,
-      });
+      const id = randomUUID();
+      await insertUser(trx, { id, email, passwordHash, createdAt: now, updatedAt: now });
+      // Until now everyone on this computer was the one person, and that person is the owner.
+      await assignOwnerlessRuns(trx, id);
+      await assignOwnerlessRunners(trx, id);
       return { email, created: true, signedOut: 0 };
     }
     await updateUserRow(trx, owner.id, { email, passwordHash, updatedAt: now });
