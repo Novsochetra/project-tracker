@@ -186,4 +186,14 @@ describe('createStepReader', () => {
     const words = { type: 'assistant', message: { content: [{ type: 'text', text: said }] } };
     expect(read(words)[0]?.label).toBe('I ran `export GITHUB_TOKEN=***` first.');
   });
+
+  it('masks a long secret whole, past where a step is cut', () => {
+    const read = createStepReader(STREAM_FOLDER);
+    const token = 'eyJhbGciOiJIUzI1NiJ9'.repeat(45);
+    const [step] = read(toolUse('Bash', { command: `export TOKEN="${token.slice(0, 700)}"` }));
+    expect(step?.label).toBe('Run export TOKEN=***');
+    const said = `I sent Authorization: Bearer ${token} and it worked.`;
+    const words = { type: 'assistant', message: { content: [{ type: 'text', text: said }] } };
+    expect(read(words)[0]?.label).toBe('I sent Authorization: Bearer *** and it worked.');
+  });
 });
