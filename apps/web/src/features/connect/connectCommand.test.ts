@@ -9,6 +9,7 @@ import {
   shellQuote,
   slashCommand,
   trackerAddress,
+  watchCommand,
 } from './connectCommand';
 
 const MCP = '/Users/dara/code/project-tracker/apps/agent/dist/mcp.js';
@@ -47,6 +48,25 @@ describe('cliHelpCommand', () => {
   it('runs the CLI’s help', () => {
     expect(cliHelpCommand(local)).toBe(`node ${CLI} help`);
     expect(cliHelpCommand(online)).toBe('node apps/agent/dist/cli.js help');
+  });
+});
+
+describe('watchCommand', () => {
+  it('starts the helper for the project behind the sheet with the CLI on this computer', () => {
+    expect(watchCommand(local, 'MOB')).toBe(`node ${CLI} watch MOB`);
+    expect(watchCommand({ ...local, cliEntry: '/Users/dara/My Code/cli.js' }, 'MOB')).toBe(
+      "node '/Users/dara/My Code/cli.js' watch MOB",
+    );
+  });
+
+  it('leaves the key out without a project, so the helper finds it by its folder', () => {
+    expect(watchCommand(local, null)).toBe(`node ${CLI} watch`);
+  });
+
+  it('asks for the person’s own checkout for a tracker elsewhere, since it runs in another folder', () => {
+    expect(watchCommand(online, 'MOB')).toBe(
+      'node /absolute/path/to/project-tracker/apps/agent/dist/cli.js watch MOB',
+    );
   });
 });
 

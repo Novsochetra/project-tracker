@@ -12,12 +12,14 @@ export const queryKeys = {
   projectPrompt: (projectKey: string) => ['project', canonical(projectKey), 'prompt'] as const,
   ticket: (ticketKey: string) => ['ticket', canonical(ticketKey)] as const,
   ticketPrompt: (ticketKey: string) => ['ticket', canonical(ticketKey), 'prompt'] as const,
+  ticketRuns: (ticketKey: string) => ['ticket', canonical(ticketKey), 'runs'] as const,
   people: () => ['people'] as const,
   reportPreview: (text: string, ticketKey?: string) =>
     ['reportPreview', ticketKey ? canonical(ticketKey) : '', text] as const,
   session: () => ['session'] as const,
   meta: () => ['meta'] as const,
   apiTokens: () => ['apiTokens'] as const,
+  runners: () => ['runners'] as const,
   attachmentText: (attachmentId: string) => ['attachmentText', attachmentId] as const,
 };
 

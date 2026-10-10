@@ -70,6 +70,65 @@
   align-self: flex-start;
 }
 
+.setUp {
+  position: relative;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--link);
+  font: inherit;
+  cursor: pointer;
+}
+
+/* The line is about 20px tall, too short to hit with a finger. */
+.setUp::before {
+  content: '';
+  position: absolute;
+  inset: -12px -4px;
+}
+
+@media (hover: hover) {
+  .setUp:hover {
+    color: var(--link-hover);
+  }
+}
+
+.actions {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+
+.buttons {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.runOnIcon {
+  color: var(--muted);
+}
+
+.working {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+  min-height: 36px;
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--size-secondary);
+  text-wrap: balance;
+}
+
+.workingSpinner {
+  flex: none;
+  display: inline-flex;
+}
+
 /* The design's share button is 40×40 with a 20px icon; phones keep the 44px IconButton. */
 @media (width >= 768px) and (pointer: fine),
   (width >= 768px) and (pointer: none),
@@ -84,7 +143,7 @@
     height: var(--icon-lg);
   }
 
-  button.copy {
+  button.footerButton {
     font-size: var(--size-body);
     font-weight: var(--weight-semibold);
   }
@@ -100,5 +159,16 @@
   .switchRow {
     min-height: 50px;
     font-size: var(--size-input);
+  }
+
+  .buttons {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .working {
+    justify-content: center;
+    min-height: var(--bar-button);
+    font-size: var(--size-body);
   }
 }

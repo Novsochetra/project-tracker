@@ -2,7 +2,8 @@
   padding: var(--space-2) 0;
 }
 
-.latest .done {
+.latest .done,
+.latest .action {
   align-self: flex-start;
   margin-top: 6px;
 }

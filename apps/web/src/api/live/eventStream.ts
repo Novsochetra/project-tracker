@@ -1,10 +1,11 @@
 import { LIVE_STALE_MS, type ChangeEvent } from '@tracker/shared';
 import { retryDelay } from './backoff';
-import { parseChangeEvent } from './changeEvent';
+import { parseChangeEvent, parseRunChange } from './changeEvent';
 import { pauseWhileHidden } from './pauseWhileHidden';
 
 export interface LiveHandlers {
   onChange: (event: ChangeEvent) => void;
+  onRun: (event: ChangeEvent) => void;
   onReconnect: () => void;
   // While true, reads can wait for onReconnect: it runs once the stream reports every later change.
   onRefreshPending: (pending: boolean) => void;
@@ -19,6 +20,18 @@ export interface TrackerReachability {
 }
 
 type Timer = ReturnType<typeof setTimeout> | undefined;
+
+const relay =
+  (
+    alive: () => void,
+    parse: (data: unknown) => ChangeEvent | null,
+    deliver: LiveHandlers['onChange'],
+  ) =>
+  (message: MessageEvent) => {
+    alive();
+    const event = parse(message.data);
+    if (event) deliver(event);
+  };
 
 // Reads wait for a reopening stream only while it is likely to open soon: behind a proxy that
 // refuses the stream while the API answers, it never does, and focus would never read again.
@@ -79,11 +92,8 @@ export function connectLiveUpdates(
     setReconnecting(false);
     if (missed) handlers.onReconnect();
   };
-  const onMessage = (message: MessageEvent) => {
-    alive();
-    const event = parseChangeEvent(message.data);
-    if (event) handlers.onChange(event);
-  };
+  const onMessage = relay(alive, parseChangeEvent, handlers.onChange);
+  const onRun = relay(alive, parseRunChange, handlers.onRun);
   const onError = () => {
     if (source?.readyState === EventSource.CLOSED) {
       reopenLater();
@@ -100,6 +110,7 @@ export function connectLiveUpdates(
     source.addEventListener('open', onOpen);
     source.addEventListener('message', onMessage);
     source.addEventListener('changed', onMessage);
+    source.addEventListener('run', onRun);
     source.addEventListener('ping', alive);
     source.addEventListener('error', onError);
     alive();

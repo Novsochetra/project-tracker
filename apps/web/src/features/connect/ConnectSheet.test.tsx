@@ -2,6 +2,7 @@ import { screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { ServerMeta } from '@tracker/shared';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { DARA, makeRunner } from '../../api/test/runFixtures';
 import { renderWithApp } from '../../app/test/harness';
 import { renderWithApi, setClipboard, sheetTestSetup } from '../claude/test/renderWithApi';
 import { ConnectSheet } from './ConnectSheet';
@@ -134,5 +135,53 @@ describe('ConnectSheet', () => {
     );
     await user.click(within(sheet()).getByRole('button', { name: 'Try again' }));
     expect(await within(sheet()).findByText(COMMAND)).toBeInTheDocument();
+  });
+});
+
+describe('ConnectSheet: Run Claude Code from your phone', () => {
+  const step = () =>
+    within(sheet()).findByRole('region', { name: 'Run Claude Code from your phone' });
+
+  it('shows the watch command for the project behind the sheet and this user’s computers', async () => {
+    const studio = makeRunner({
+      id: 'h-studio',
+      name: 'Studio',
+      online: false,
+      lastSeenAt: Date.now() - 2 * 60 * 60 * 1000,
+    });
+    renderWithApp(<ConnectSheet open onClose={() => undefined} />, {
+      path: '/p/mob/2',
+      client: {
+        getMeta: vi.fn().mockResolvedValue(meta),
+        listRunners: vi
+          .fn()
+          .mockResolvedValue([makeRunner({ projectKeys: ['MOB', 'WEB'] }), studio]),
+      },
+    });
+    const section = await step();
+    const command = `node ${meta.cliEntry} watch MOB`;
+    expect(within(section).getByText(command)).toBeInTheDocument();
+    const computers = await within(section).findByRole('list', { name: 'Your computers' });
+    expect(
+      within(computers)
+        .getAllByRole('listitem')
+        .map((row) => row.textContent),
+    ).toEqual([`${DARA}MOB, WEB · Online`, 'StudioMOB · Last seen 2h ago']);
+
+    const user = userEvent.setup();
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    setClipboard({ writeText });
+    await user.click(within(section).getByRole('button', { name: 'Copy watch command' }));
+    expect(writeText).toHaveBeenCalledWith(command);
+  });
+
+  it('says when no computer runs it yet', async () => {
+    renderWithApi(<ConnectSheet open onClose={() => undefined} />, {
+      getMeta: vi.fn().mockResolvedValue(meta),
+      listRunners: vi.fn().mockResolvedValue([]),
+    });
+    const section = await step();
+    expect(await within(section).findByText('No computers yet.')).toBeInTheDocument();
+    expect(within(section).getByText(`node ${meta.cliEntry} watch`)).toBeInTheDocument();
   });
 });

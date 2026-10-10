@@ -22,6 +22,7 @@ import { SetupCommands } from './SetupCommands';
 import { ADDRESS_COPY } from './tokenText';
 import { OpenTrackerNote, TokensSection } from './TokensSection';
 import { useCopyCommand, type CopyHandler } from './useCopyCommand';
+import { WatchSection } from './WatchSection';
 
 export function ConnectSheet({ open, onClose }: SheetProps) {
   const meta = useMeta();
@@ -83,6 +84,7 @@ function Setup({ meta, projectKey }: { meta: ServerMeta; projectKey: string | nu
         onCopy={copy}
       />
       <SlashCommands projectKey={projectKey} onCopy={copy} />
+      <WatchSection info={info} projectKey={projectKey} onCopy={copy} />
       <Section title="Without MCP">
         <GroupedCard>
           <ul className={styles.rows}>

@@ -13,6 +13,7 @@ let connections: Array<() => void> = [];
 function connect(tracker?: TrackerReachability) {
   const handlers = {
     onChange: vi.fn(),
+    onRun: vi.fn(),
     onReconnect: vi.fn(),
     onRefreshPending: vi.fn(),
     onRefused: vi.fn(),
@@ -80,6 +81,17 @@ describe('connectLiveUpdates', () => {
     source.emit('', 'ping');
     expect(onChange).toHaveBeenCalledTimes(2);
     expect(onChange).toHaveBeenCalledWith(event);
+  });
+
+  it('passes named run events as a change of their ticket, apart from other changes', () => {
+    const { source, onChange, onRun } = connect();
+    const run = { type: 'run', runId: 'r1', runnerId: 'h1', projectId: 'p-mob', ticketId: 't-1' };
+    source.emit({ ...run, status: 'running' }, 'run');
+    source.emit(run);
+    source.emit(event, 'run');
+    expect(onRun).toHaveBeenCalledTimes(1);
+    expect(onRun).toHaveBeenCalledWith({ type: 'changed', projectId: 'p-mob', ticketId: 't-1' });
+    expect(onChange).not.toHaveBeenCalled();
   });
 
   it('reports reconnects but not the first connection', () => {
@@ -449,6 +461,7 @@ describe('connectLiveUpdates', () => {
     vi.stubGlobal('EventSource', undefined);
     const stop = connectLiveUpdates('/api/events', {
       onChange: vi.fn(),
+      onRun: vi.fn(),
       onReconnect: vi.fn(),
       onRefreshPending: vi.fn(),
       onRefused: vi.fn(),

@@ -62,6 +62,16 @@ export const loginCommand = (info: ConnectInfo): string =>
 
 export const cliHelpCommand = (info: ConnectInfo): string => `node ${cliEntry(info)} help`;
 
+export const CHECKOUT_PLACEHOLDER = '/absolute/path/to/project-tracker';
+
+// The helper runs in the project's own folder, not in the tracker's checkout, so the CLI needs a
+// path that works from there, which for a tracker elsewhere only the person knows.
+const watchEntry = ({ serverUrl, cliEntry: path }: ConnectInfo): string =>
+  isLocalTracker(serverUrl) ? shellQuote(path) : `${CHECKOUT_PLACEHOLDER}/apps/agent/dist/cli.js`;
+
+export const watchCommand = (info: ConnectInfo, projectKey: string | null): string =>
+  `node ${watchEntry(info)} watch${projectKey ? ` ${projectKey}` : ''}`;
+
 export const slashCommand = (name: SlashCommand, projectKey: string | null): string =>
   `/mcp__tracker__${name} ${projectKey ?? KEY_PLACEHOLDER}`;
 

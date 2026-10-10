@@ -46,6 +46,25 @@ describe('useLiveUpdates', () => {
     expect(isInvalidated(queryClient, queryKeys.session())).toBe(false);
   });
 
+  it('refreshes the runs of the ticket a run event names and the helpers, nothing else', () => {
+    const { queryClient, wrapper } = setupApi();
+    seed(queryClient);
+    queryClient.setQueryData(queryKeys.ticketRuns('MOB-1'), []);
+    queryClient.setQueryData(queryKeys.ticketRuns('MOB-3'), []);
+    queryClient.setQueryData(queryKeys.runners(), []);
+    renderHook(() => useLiveUpdates(), { wrapper });
+
+    const run = { type: 'run', runId: 'r-1', runnerId: 'h-1', projectId: 'p-mob', ticketId: 't-1' };
+    act(() => MockEventSource.latest().emit({ ...run, status: 'running' }, 'run'));
+
+    expect(isInvalidated(queryClient, queryKeys.ticketRuns('MOB-1'))).toBe(true);
+    expect(isInvalidated(queryClient, queryKeys.runners())).toBe(true);
+    expect(isInvalidated(queryClient, queryKeys.ticketRuns('MOB-3'))).toBe(false);
+    expect(isInvalidated(queryClient, queryKeys.ticket('MOB-1'))).toBe(false);
+    expect(isInvalidated(queryClient, queryKeys.board('MOB'))).toBe(false);
+    expect(isInvalidated(queryClient, queryKeys.projects())).toBe(false);
+  });
+
   it('leaves a ticket alone while one of its edits is still saving', async () => {
     const request = deferred<Ticket>();
     const { queryClient, wrapper } = setupApi({ updateTicket: vi.fn(() => request.promise) });

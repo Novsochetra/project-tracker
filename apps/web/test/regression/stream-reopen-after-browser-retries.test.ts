@@ -18,6 +18,7 @@ let stop: (() => void) | undefined;
 function connect() {
   const handlers = {
     onChange: vi.fn(),
+    onRun: vi.fn(),
     onReconnect: vi.fn(),
     onRefreshPending: vi.fn(),
     onRefused: vi.fn(),

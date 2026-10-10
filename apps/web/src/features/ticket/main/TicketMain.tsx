@@ -10,6 +10,7 @@ import { TITLE_MAX_LENGTH } from '../fields/limits';
 import type { MoveToDone } from '../useMoveToDone';
 import { DescriptionField } from './DescriptionField';
 import { LatestReview } from './LatestReview';
+import { LatestRun } from './LatestRun';
 import { TicketAttachments } from './TicketAttachments';
 import styles from './TicketMain.module.css';
 
@@ -46,7 +47,8 @@ export function TicketMain({ detail, done, className }: TicketMainProps) {
           onKeyDown={keepOneLine}
         />
         {isPhone && <DetailChips detail={detail} />}
-        {/* Above the description, which often runs long enough to push it below a phone's fold. */}
+        {/* Above the description, which often runs long enough to push them below a phone's fold. */}
+        <LatestRun ticketKey={ticket.key} />
         <LatestReview detail={detail} done={done} />
         <DescriptionField
           ticketKey={ticket.key}

@@ -9,7 +9,7 @@ import {
   STATUS,
   summaryOf,
 } from '../test/fixtures';
-import { parseChangeEvent } from './changeEvent';
+import { parseChangeEvent, parseRunChange } from './changeEvent';
 import { changeScope, EVERYTHING, isAffected, type CachedEntry } from './changeScope';
 
 const entries: CachedEntry[] = [
@@ -97,5 +97,22 @@ describe('parseChangeEvent', () => {
     expect(parseChangeEvent('not json')).toBeNull();
     expect(parseChangeEvent('{"type":"heartbeat"}')).toBeNull();
     expect(parseChangeEvent(42)).toBeNull();
+  });
+});
+
+describe('parseRunChange', () => {
+  it('reads a run event as a change of its ticket', () => {
+    const run = { type: 'run', runId: 'r1', runnerId: null, projectId: 'p', ticketId: 't' };
+    expect(parseRunChange(JSON.stringify({ ...run, status: 'failed' }))).toEqual({
+      type: 'changed',
+      projectId: 'p',
+      ticketId: 't',
+    });
+  });
+
+  it('ignores anything else', () => {
+    expect(parseRunChange('{"type":"changed","projectId":"p","ticketId":"t"}')).toBeNull();
+    expect(parseRunChange('{"type":"run","projectId":"p"}')).toBeNull();
+    expect(parseRunChange('not json')).toBeNull();
   });
 });

@@ -1,13 +1,13 @@
 import type { PromptResult } from '@tracker/shared';
 import clsx from 'clsx';
-import { Check, Copy, Share } from 'lucide-react';
+import { Share } from 'lucide-react';
 import { useRef, type ReactNode, type RefObject } from 'react';
 import { errorMessage, type TrackerQuery } from '../../api';
-import { Button, Icon, IconButton, Spinner, useToast } from '../../components';
+import { Button, IconButton, Spinner, useToast } from '../../components';
 import { copyText } from '../../lib/clipboard';
-import { useIsPhone } from '../../lib/media';
 import { canShare, sharePrompt } from '../../lib/share';
 import { Sheet, SheetTextButton } from '../../overlays';
+import { PromptFooter } from './PromptFooter';
 import styles from './PromptSheet.module.css';
 import {
   COPY_BLOCKED,
@@ -18,6 +18,7 @@ import {
 } from './sendPrompt';
 import { useCopyState } from './useCopyState';
 import type { PromptDraft } from './usePromptDraft';
+import type { RunOffer } from './useRunOffer';
 
 export interface PromptViewProps {
   open: boolean;
@@ -26,6 +27,8 @@ export interface PromptViewProps {
   query: TrackerQuery<PromptResult>;
   draft: PromptDraft;
   onSent: () => void;
+  run?: RunOffer;
+  boxNote?: ReactNode;
   sendSwitch?: ReactNode;
   sendError?: Error | null;
 }
@@ -37,6 +40,7 @@ export function PromptView({
   query,
   draft,
   onSent,
+  run,
   ...rest
 }: PromptViewProps) {
   const toast = useToast();
@@ -75,10 +79,12 @@ export function PromptView({
       }
       footer={
         hasPrompt ? (
-          <CopyButton
+          <PromptFooter
             copied={copyOutcome === 'copied'}
             disabled={!draft.text.trim()}
-            onClick={() => void copy()}
+            onCopy={() => void copy()}
+            run={run}
+            onRun={() => run?.start(draft.text)}
           />
         ) : undefined
       }
@@ -101,6 +107,7 @@ interface PromptBodyProps {
   draft: PromptDraft;
   fieldRef: RefObject<HTMLTextAreaElement | null>;
   copyFailed: boolean;
+  boxNote?: ReactNode;
   sendSwitch?: ReactNode;
   sendError?: Error | null;
 }
@@ -110,6 +117,7 @@ function PromptBody({
   draft,
   fieldRef,
   copyFailed,
+  boxNote,
   sendSwitch,
   sendError,
 }: PromptBodyProps) {
@@ -137,6 +145,7 @@ function PromptBody({
           onChange={(event) => draft.setText(event.target.value)}
         />
       )}
+      {hasPrompt && boxNote}
       {sendSwitch}
       {copyFailed && <Alert>{COPY_BLOCKED}</Alert>}
       {sendError && <Alert>{errorMessage(sendError)}</Alert>}
@@ -160,28 +169,5 @@ function LoadError({ error, onRetry }: { error: Error; onRetry: () => void }) {
         Try again
       </Button>
     </>
-  );
-}
-
-interface CopyButtonProps {
-  copied: boolean;
-  disabled: boolean;
-  onClick: () => void;
-}
-
-function CopyButton({ copied, disabled, onClick }: CopyButtonProps) {
-  const isPhone = useIsPhone();
-  return (
-    <Button
-      variant="primary"
-      size={isPhone ? 'bar' : 'lg'}
-      fullWidth={isPhone}
-      className={styles.copy}
-      disabled={disabled}
-      onClick={onClick}
-    >
-      {copied ? <Icon icon={Check} className="fade-in" /> : <Icon icon={Copy} />}
-      {copied ? 'Copied' : 'Copy prompt'}
-    </Button>
   );
 }
