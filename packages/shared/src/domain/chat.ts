@@ -16,6 +16,8 @@ export interface Chat {
   title: string;
   // The last question's choice, so the next one starts with it.
   options: AskOptions;
+  // So the chat list can say Claude waits for the person there (PT-165).
+  waiting: boolean;
   createdAt: number;
   updatedAt: number;
 }

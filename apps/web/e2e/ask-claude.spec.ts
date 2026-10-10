@@ -236,3 +236,79 @@ test('shows what Claude does while it answers, then folds the steps above the an
   await expect(folded.nth(2)).toContainText('Run echo hello > out.txt');
   await page.screenshot({ path: info.outputPath(`ask-steps-${info.project.name}.png`) });
 });
+
+test('answers Claude from the phone: Allow, Deny and a choice, and Claude goes on', async ({
+  page,
+  api,
+}, info) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await seedProject(api, 'Mobile app', 'MOB');
+  const helperId = randomUUID();
+  await api.registerRunner(helperId, { name: HELPER, projectKeys: ['MOB'] });
+  await page.goto('/p/MOB/ask/new');
+  await page.getByRole('group', { name: 'Mode' }).getByRole('button', { name: 'Edit' }).click();
+  await ask(page, 'Rename the sync queue and run the tests');
+  const job = await api.takeNextRun(helperId, 'ticket');
+  const runId = job!.run.id;
+  const send = (...steps: RunStepInput[]) => api.addRunSteps(runId, { runnerId: helperId, steps });
+  // The helper's side (apps/agent/src/watch/prompts): ask, then wait for the person.
+  const asks = async (input: Parameters<TrackerClient['addRunRequest']>[1]) => {
+    const request = await api.addRunRequest(runId, input);
+    return api.waitForRunRequest(request.id);
+  };
+  const permission = (label: string) =>
+    asks({ runnerId: helperId, kind: 'permission', label, questions: null });
+
+  await send(step('Read apps/web/src/features/capture/syncQueue.ts', { toolId: 'toolu_1' }));
+  const working = page.getByRole('article', { name: 'Claude, working' });
+  const allowed = permission('Run npm test -- --run src/features/capture');
+  const testCard = working.getByRole('region', {
+    name: 'Claude asks: Run npm test -- --run src/features/capture',
+  });
+  await expect(testCard.getByRole('button', { name: 'Allow' })).toBeVisible();
+  await expect(page.getByText('Claude is waiting for your answer.')).toBeVisible();
+  await page.screenshot({ path: info.outputPath(`ask-permission-${info.project.name}.png`) });
+  await testCard.getByRole('button', { name: 'Allow' }).click();
+  expect(await allowed).toMatchObject({ status: 'answered', decision: 'allow' });
+  await expect(testCard).toContainText('Allowed');
+  await expect(page.getByText(`Claude is thinking on ${HELPER}…`)).toBeVisible();
+
+  await send(step('Run npm test -- --run src/features/capture', { toolId: 'toolu_2' }));
+  const denied = permission('Run rm -rf node_modules');
+  const rmCard = working.getByRole('region', { name: 'Claude asks: Run rm -rf node_modules' });
+  await rmCard.getByRole('button', { name: 'Deny' }).click();
+  expect(await denied).toMatchObject({ status: 'answered', decision: 'deny' });
+  await expect(rmCard).toContainText('Denied');
+  await expect(testCard).toBeHidden();
+
+  const name = 'Which name should the queue get?';
+  const answered = asks({
+    runnerId: helperId,
+    kind: 'question',
+    label: `Ask: ${name}`,
+    questions: [
+      {
+        question: name,
+        header: 'Name',
+        options: [
+          { label: 'uploadQueue', description: 'Says what it holds.' },
+          { label: 'captureQueue', description: 'Matches the feature folder.' },
+        ],
+        multiSelect: false,
+      },
+    ],
+  });
+  const nameCard = working.getByRole('region', { name: `Claude asks: ${name}` });
+  await expect(nameCard.getByRole('button', { name: 'uploadQueue' })).toBeVisible();
+  await page.screenshot({ path: info.outputPath(`ask-question-${info.project.name}.png`) });
+  await nameCard.getByRole('button', { name: 'uploadQueue' }).click();
+  expect(await answered).toMatchObject({ decision: 'allow', answers: ['uploadQueue'] });
+  await expect(nameCard).toContainText('uploadQueue');
+  await page.screenshot({ path: info.outputPath(`ask-answered-${info.project.name}.png`) });
+
+  await send(step('Edit apps/web/src/features/capture/uploadQueue.ts', { toolId: 'toolu_3' }));
+  const text = 'Renamed it to uploadQueue; the tests pass.';
+  await api.finishRun(runId, { status: 'done', answer: text, sessionId: randomUUID() });
+  await expect(working).toBeHidden();
+  await expect(page.getByRole('article', { name: 'Claude', exact: true })).toContainText(text);
+});

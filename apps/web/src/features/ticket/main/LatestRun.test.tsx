@@ -4,6 +4,7 @@ import type { Run } from '@tracker/shared';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { refreshRunSteps } from '../../../api/live/refreshForRun';
 import { listItem, makeTicketDetail, STATUS } from '../../../api/test/fixtures';
+import { makeRequest } from '../../../api/test/requestFixtures';
 import { DARA, makeRun } from '../../../api/test/runFixtures';
 import { skipAnimations } from '../../../overlays/testing';
 import { STOPPED_SHOWN_MS } from '../../claude/runs';
@@ -55,6 +56,33 @@ describe('Claude Code run on the ticket screen', () => {
       expect(screen.queryByRole('region', { name: 'Claude Code run' })).not.toBeInTheDocument(),
     );
     expect(screen.getByRole('button', { name: /^Status/ })).toHaveFocus();
+  });
+
+  it('shows what Claude asks under its latest step, and says it waits for an answer', async () => {
+    const running = makeRun({ status: 'running', startedAt: Date.now() });
+    const request = makeRequest({ runId: running.id, label: 'Edit src/rotate.ts' });
+    const answerRunRequest = vi
+      .fn()
+      .mockResolvedValue({ ...request, status: 'answered', decision: 'deny', endedAt: Date.now() });
+    setup([running], {
+      client: {
+        listRunSteps: vi.fn().mockResolvedValue(makeSteps(1)),
+        listRunRequests: vi.fn().mockResolvedValue([request]),
+        answerRunRequest,
+      },
+    });
+    const user = userEvent.setup();
+    const card = await runCard();
+    const asked = await within(card).findByRole('region', {
+      name: 'Claude asks: Edit src/rotate.ts',
+    });
+
+    expect(card).toHaveTextContent('Claude is waiting for your answer.');
+    const latest = within(card).getByRole('button', { name: /^Latest step:/ });
+    expect(follows(latest, asked)).toBe(true);
+    await user.click(within(asked).getByRole('button', { name: 'Deny' }));
+    expect(await within(asked).findByText('Denied')).toBeInTheDocument();
+    expect(card).toHaveTextContent(`Claude is working on ${DARA}…`);
   });
 
   it('keeps the run and says why when the cancel fails', async () => {

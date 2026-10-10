@@ -112,6 +112,11 @@
   display: inline-flex;
 }
 
+.waitingIcon {
+  flex: none;
+  color: var(--accent);
+}
+
 .failed,
 .error {
   margin: 0;

@@ -20,6 +20,7 @@ function connect() {
     onChange: vi.fn(),
     onRun: vi.fn(),
     onRunStep: vi.fn(),
+    onRunRequest: vi.fn(),
     onReconnect: vi.fn(),
     onRefreshPending: vi.fn(),
     onRefused: vi.fn(),

@@ -1,4 +1,11 @@
-import { RUN_STATUSES, type ChangeEvent, type RunEvent, type RunStepEvent } from '@tracker/shared';
+import {
+  RUN_REQUEST_STATUSES,
+  RUN_STATUSES,
+  type ChangeEvent,
+  type RunEvent,
+  type RunRequestEvent,
+  type RunStepEvent,
+} from '@tracker/shared';
 import { isRecord } from '../../lib/isRecord';
 
 const idOrNull = (value: unknown): string | null =>
@@ -48,4 +55,16 @@ export function parseRunStepEvent(data: unknown): RunStepEvent | null {
   const ticketId = idOrNull(value.ticketId);
   const chatId = idOrNull(value.chatId);
   return { type: 'run-step', runId, projectId, ticketId, chatId, count };
+}
+
+export function parseRunRequestEvent(data: unknown): RunRequestEvent | null {
+  const value = readJson(data);
+  const status = RUN_REQUEST_STATUSES.find((known) => known === value?.status);
+  const runId = idOrNull(value?.runId);
+  const requestId = idOrNull(value?.requestId);
+  const projectId = idOrNull(value?.projectId);
+  if (value?.type !== 'run-request' || !status || !runId || !requestId || !projectId) return null;
+  const ticketId = idOrNull(value.ticketId);
+  const chatId = idOrNull(value.chatId);
+  return { type: 'run-request', runId, requestId, projectId, ticketId, chatId, status };
 }

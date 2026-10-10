@@ -6,6 +6,8 @@ export const toChat = (row: ChatWithKey): Chat => ({
   projectKey: row.projectKey,
   title: row.title,
   options: { model: row.askModel, mode: row.askMode },
+  // SQLite answers exists() with 0 or 1, Postgres with a boolean.
+  waiting: Boolean(row.waiting),
   createdAt: row.createdAt,
   updatedAt: row.updatedAt,
 });

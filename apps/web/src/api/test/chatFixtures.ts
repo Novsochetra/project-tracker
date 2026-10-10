@@ -6,6 +6,7 @@ export const makeChat = (overrides: Partial<Chat> = {}): Chat => ({
   projectKey: 'MOB',
   title: 'How does sync work?',
   options: DEFAULT_ASK_OPTIONS,
+  waiting: false,
   createdAt: Date.now() - 60_000,
   updatedAt: Date.now() - 60_000,
   ...overrides,

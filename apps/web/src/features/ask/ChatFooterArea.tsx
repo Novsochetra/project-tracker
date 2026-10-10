@@ -1,11 +1,12 @@
 import type { AskOptions, Run } from '@tracker/shared';
 import clsx from 'clsx';
-import { Laptop } from 'lucide-react';
+import { Laptop, MessageCircleQuestion } from 'lucide-react';
 import { GroupedCard, Icon, SelectRow, Spinner } from '../../components';
 import { useIsPhone } from '../../lib/media';
 import { useOptionalScreen } from '../../navigation';
 import { useRegisterBottomBar } from '../../navigation/bottomBarStore';
 import { SetupLine } from '../claude/SetupLine';
+import { WAITING_TEXT } from '../requests/copy';
 import { AskComposer } from './AskComposer';
 import { helperOf, stoppableRunOf, thinkingText } from './chatFooter';
 import styles from './ChatScreen.module.css';
@@ -15,10 +16,19 @@ export interface ChatFooterAreaProps {
   projectKey: string;
   chatId: string | null;
   helper: AskHelper;
+  waiting: boolean;
   savedOptions: AskOptions;
 }
 
-function Thinking({ run }: { run: Run }) {
+function Thinking({ run, waiting }: { run: Run; waiting: boolean }) {
+  if (waiting) {
+    return (
+      <p className={clsx(styles.statusLine, 'fade-in')}>
+        <Icon icon={MessageCircleQuestion} size={16} className={styles.waitingIcon} />
+        {WAITING_TEXT}
+      </p>
+    );
+  }
   return (
     <p className={styles.statusLine}>
       <span aria-hidden="true" className={styles.spinner}>
@@ -45,7 +55,8 @@ function RunOn({ helper }: { helper: AskHelper }) {
   );
 }
 
-export function ChatFooterArea({ projectKey, chatId, helper, savedOptions }: ChatFooterAreaProps) {
+export function ChatFooterArea(props: ChatFooterAreaProps) {
+  const { projectKey, chatId, helper, waiting, savedOptions } = props;
   const { footer } = helper;
   const isPhone = useIsPhone();
   const isTop = useOptionalScreen()?.isTop ?? true;
@@ -55,7 +66,7 @@ export function ChatFooterArea({ projectKey, chatId, helper, savedOptions }: Cha
   return (
     <div className={styles.footer}>
       <div className={styles.footerInner}>
-        {footer.kind === 'thinking' && <Thinking run={footer.run} />}
+        {footer.kind === 'thinking' && <Thinking run={footer.run} waiting={waiting} />}
         {stopped && <p className={clsx(styles[stopped.kind], 'fade-in')}>{stopped.text}</p>}
         {footer.kind === 'setup' && <SetupLine />}
         <RunOn helper={helper} />

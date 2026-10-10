@@ -5,6 +5,7 @@ import type { Database, Db } from '../db/schema';
 
 export interface ChatWithKey extends ChatRow {
   projectKey: string;
+  waiting: number | boolean;
 }
 
 export interface MessageWithKey extends ChatMessageRow {
@@ -17,19 +18,41 @@ export interface MessageWithKey extends ChatMessageRow {
 const ownedBy = (userId: UserScope) => (eb: ExpressionBuilder<Database, 'chats'>) =>
   userId === null ? eb('chats.userId', 'is', null) : eb('chats.userId', '=', userId);
 
-const chatsOf = (db: Db, userId: UserScope) =>
+// Requests are ended lazily (settleRequests), so one past its deadline or of an ended run may
+// still say open: only a live one counts.
+const waitingAt = (now: number) => (eb: ExpressionBuilder<Database, 'chats'>) =>
+  eb
+    .exists(
+      eb
+        .selectFrom('runRequests')
+        .innerJoin('runs', 'runs.id', 'runRequests.runId')
+        .select('runRequests.id')
+        .whereRef('runs.chatId', '=', 'chats.id')
+        .where('runs.status', '=', 'running')
+        .where('runRequests.status', '=', 'open')
+        .where('runRequests.expiresAt', '>', now),
+    )
+    .as('waiting');
+
+const chatsOf = (db: Db, userId: UserScope, now: number) =>
   db
     .selectFrom('chats')
     .innerJoin('projects', 'projects.id', 'chats.projectId')
     .selectAll('chats')
     .select('projects.key as projectKey')
+    .select(waitingAt(now))
     .where(ownedBy(userId));
 
-export const findChatInScope = (db: Db, userId: UserScope, id: string) =>
-  chatsOf(db, userId).where('chats.id', '=', id).executeTakeFirst();
+export const findChatInScope = (db: Db, userId: UserScope, id: string, now: number) =>
+  chatsOf(db, userId, now).where('chats.id', '=', id).executeTakeFirst();
 
-export const listProjectChatRows = (db: Db, userId: UserScope, projectId: string, limit: number) =>
-  chatsOf(db, userId)
+export const listProjectChatRows = (
+  db: Db,
+  userId: UserScope,
+  projectId: string,
+  { limit, now }: { limit: number; now: number },
+) =>
+  chatsOf(db, userId, now)
     .where('chats.projectId', '=', projectId)
     .orderBy('chats.updatedAt', 'desc')
     .orderBy('chats.id', 'desc')

@@ -80,9 +80,11 @@ describe('isAffected', () => {
     expect(isAffected(queryKeys.runners(), EVERYTHING)).toBe(true);
   });
 
-  it("reads a run's steps again only for a full refresh, as after a reconnect", () => {
+  it("reads a run's steps and requests again only for a full refresh, as after a reconnect", () => {
     expect(isAffected(queryKeys.runSteps('r-1'), scope)).toBe(false);
     expect(isAffected(queryKeys.runSteps('r-1'), EVERYTHING)).toBe(true);
+    expect(isAffected(queryKeys.runRequests('r-1'), scope)).toBe(false);
+    expect(isAffected(queryKeys.runRequests('r-1'), EVERYTHING)).toBe(true);
   });
 });
 

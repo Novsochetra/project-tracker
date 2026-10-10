@@ -37,6 +37,19 @@ describe('Ask: the chat list', () => {
     await waitFor(() => expect(currentPath()).toBe('/p/MOB/ask/c-2'));
   });
 
+  it('says which chat waits for an answer in place of its time', async () => {
+    setup([
+      makeChat({ id: 'c-2', title: 'Rename the queue', waiting: true }),
+      makeChat({ id: 'c-1', title: 'How does sync work?' }),
+    ]);
+    const list = await screen.findByRole('region', { name: 'Chats' });
+    const rows = within(list).getAllByRole('button');
+    expect(rows.map((row) => row.textContent)).toEqual([
+      'Rename the queue Waiting for you',
+      expect.stringMatching(/^How does sync work\? 1m ago/),
+    ]);
+  });
+
   it('starts a new chat from the empty list', async () => {
     setup([]);
     const user = userEvent.setup();

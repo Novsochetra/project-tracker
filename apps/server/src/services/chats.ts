@@ -31,7 +31,7 @@ export async function requireChat(
   scope: UserScope,
   id: string,
 ): Promise<ChatWithKey> {
-  const row = await findChatInScope(ctx.db, scope, id);
+  const row = await findChatInScope(ctx.db, scope, id, ctx.now());
   if (!row) throw notFound('That chat was not found.');
   return row;
 }
@@ -42,7 +42,10 @@ export async function listChats(
   projectKey: string,
 ): Promise<Chat[]> {
   const project = await requireProject(ctx.db, projectKey);
-  const rows = await listProjectChatRows(ctx.db, scope, project.id, CHATS_SHOWN);
+  const rows = await listProjectChatRows(ctx.db, scope, project.id, {
+    limit: CHATS_SHOWN,
+    now: ctx.now(),
+  });
   return rows.map(toChat);
 }
 

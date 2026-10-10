@@ -7,6 +7,9 @@ import { AgentAvatar, Button, useToast } from '../../../components';
 import { holdPresses } from '../../../lib/holdPresses';
 import { useNow } from '../../../lib/useNow';
 import { runTime, shownRun } from '../../claude/runs';
+import { WAITING_TEXT } from '../../requests/copy';
+import { RequestCards } from '../../requests/RequestCards';
+import { useRequests } from '../../requests/useRequests';
 import { ActivityCard } from '../activity/ActivityCard';
 import cardStyles from '../activity/ActivityCard.module.css';
 import { PhoneFold } from '../activity/PhoneFold';
@@ -24,6 +27,7 @@ export function LatestRun({ ticketKey, onCancelled }: LatestRunProps) {
   const runs = useTicketRuns(ticketKey);
   const now = useNow();
   const shown = shownRun(runs.data, now);
+  const requests = useRequests(shown?.run.id ?? null);
   if (!shown) return null;
   return (
     <section aria-label="Claude Code run" className={styles.latest}>
@@ -33,9 +37,10 @@ export function LatestRun({ ticketKey, onCancelled }: LatestRunProps) {
         meta={<TimeAgo at={runTime(shown.run)} now={now} />}
       >
         <PhoneFold>
-          <p className={cardStyles.body}>{shown.text}</p>
+          <p className={cardStyles.body}>{requests.waiting ? WAITING_TEXT : shown.text}</p>
         </PhoneFold>
         <RunStepsLine run={shown.run} ticketKey={ticketKey} />
+        <RequestCards requests={requests.shown} now={requests.now} />
         {shown.state === 'working' ? (
           <CancelButton run={shown.run} onCancelled={onCancelled} />
         ) : (

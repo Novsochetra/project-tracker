@@ -8,7 +8,7 @@ import { ASK_INTRO } from './copy';
 import { MessageList } from './MessageList';
 import { useAskHelper } from './useAskHelper';
 import { useScrollToEnd } from './useScrollToEnd';
-import { useWorkingSteps } from './useWorkingSteps';
+import { useWorkingMessage } from './useWorkingMessage';
 import { WorkingMessage } from './WorkingMessage';
 
 export interface ChatViewProps {
@@ -21,7 +21,8 @@ export function ChatView({ projectKey, chatId, detail }: ChatViewProps) {
   const helper = useAskHelper(projectKey, detail?.run);
   const messages = detail?.messages ?? [];
   useScrollToEnd(`${messages.length}:${helper.footer.kind}`);
-  const { threadRef, rows: workingSteps } = useWorkingSteps(detail?.run);
+  const { threadRef, rows, requests } = useWorkingMessage(detail?.run);
+  const working = rows.length > 0 || requests.shown.length > 0;
   return (
     <div className={styles.screen}>
       <NavBar
@@ -37,7 +38,7 @@ export function ChatView({ projectKey, chatId, detail }: ChatViewProps) {
             chatId={chatId ?? ''}
             messages={messages}
             helper={helper.cardHelper}
-            working={workingSteps.length > 0 && <WorkingMessage rows={workingSteps} />}
+            working={working && <WorkingMessage rows={rows} requests={requests} />}
           />
         )}
       </div>
@@ -45,6 +46,7 @@ export function ChatView({ projectKey, chatId, detail }: ChatViewProps) {
         projectKey={projectKey}
         chatId={chatId}
         helper={helper}
+        waiting={requests.waiting}
         savedOptions={savedAskOptions(detail?.chat)}
       />
     </div>

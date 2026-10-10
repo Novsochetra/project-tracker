@@ -15,6 +15,7 @@ function connect(tracker?: TrackerReachability) {
     onChange: vi.fn(),
     onRun: vi.fn(),
     onRunStep: vi.fn(),
+    onRunRequest: vi.fn(),
     onReconnect: vi.fn(),
     onRefreshPending: vi.fn(),
     onRefused: vi.fn(),
@@ -118,6 +119,28 @@ describe('connectLiveUpdates', () => {
     source.emit(step, 'run');
     expect(onRunStep).toHaveBeenCalledTimes(1);
     expect(onRunStep).toHaveBeenCalledWith(step);
+    expect(onRun).not.toHaveBeenCalled();
+    expect(onChange).not.toHaveBeenCalled();
+  });
+
+  it('passes named request events apart from steps, runs and changes', () => {
+    const { source, onChange, onRun, onRunStep, onRunRequest } = connect();
+    const request = {
+      type: 'run-request',
+      runId: 'r1',
+      requestId: 'q1',
+      projectId: 'p-mob',
+      ticketId: null,
+      chatId: 'c-1',
+      status: 'open',
+    };
+    source.emit(request, 'run-request');
+    source.emit(request);
+    source.emit(request, 'run-step');
+    source.emit({ ...request, status: 'pending' }, 'run-request');
+    expect(onRunRequest).toHaveBeenCalledTimes(1);
+    expect(onRunRequest).toHaveBeenCalledWith(request);
+    expect(onRunStep).not.toHaveBeenCalled();
     expect(onRun).not.toHaveBeenCalled();
     expect(onChange).not.toHaveBeenCalled();
   });
@@ -491,6 +514,7 @@ describe('connectLiveUpdates', () => {
       onChange: vi.fn(),
       onRun: vi.fn(),
       onRunStep: vi.fn(),
+      onRunRequest: vi.fn(),
       onReconnect: vi.fn(),
       onRefreshPending: vi.fn(),
       onRefused: vi.fn(),

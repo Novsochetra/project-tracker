@@ -117,16 +117,39 @@ describe('useLiveUpdates', () => {
     expect(isInvalidated(queryClient, queryKeys.projects())).toBe(false);
   });
 
-  it("reads a run's last steps when it ends, in case a step event was missed", () => {
+  it('reads the requests of the run a request event names, and its chat list', () => {
+    const { queryClient, wrapper } = setupApi();
+    seed(queryClient);
+    queryClient.setQueryData(queryKeys.runRequests('r-1'), []);
+    queryClient.setQueryData(queryKeys.runRequests('r-2'), []);
+    queryClient.setQueryData(queryKeys.runSteps('r-1'), []);
+    queryClient.setQueryData(queryKeys.chats('MOB'), []);
+    queryClient.setQueryData(queryKeys.ticket('MOB-1'), null);
+    renderHook(() => useLiveUpdates(), { wrapper });
+
+    const request = { type: 'run-request', runId: 'r-1', requestId: 'q-1', projectId: 'p-mob' };
+    const event = { ...request, ticketId: null, chatId: 'c-1', status: 'open' };
+    act(() => MockEventSource.latest().emit(event, 'run-request'));
+
+    expect(isInvalidated(queryClient, queryKeys.runRequests('r-1'))).toBe(true);
+    expect(isInvalidated(queryClient, queryKeys.chats('MOB'))).toBe(true);
+    expect(isInvalidated(queryClient, queryKeys.runRequests('r-2'))).toBe(false);
+    expect(isInvalidated(queryClient, queryKeys.runSteps('r-1'))).toBe(false);
+    expect(isInvalidated(queryClient, queryKeys.ticket('MOB-1'))).toBe(false);
+  });
+
+  it("reads a run's last steps and its ended requests when it ends", () => {
     const { queryClient, wrapper } = setupApi();
     seed(queryClient);
     queryClient.setQueryData(queryKeys.runSteps('r-1'), []);
+    queryClient.setQueryData(queryKeys.runRequests('r-1'), []);
     renderHook(() => useLiveUpdates(), { wrapper });
 
     const run = { type: 'run', runId: 'r-1', runnerId: 'h-1', projectId: 'p-mob', ticketId: 't-1' };
     act(() => MockEventSource.latest().emit({ ...run, status: 'done' }, 'run'));
 
     expect(isInvalidated(queryClient, queryKeys.runSteps('r-1'))).toBe(true);
+    expect(isInvalidated(queryClient, queryKeys.runRequests('r-1'))).toBe(true);
   });
 
   it('refreshes chats and steps after a reconnect, which may have missed an answer or steps', () => {

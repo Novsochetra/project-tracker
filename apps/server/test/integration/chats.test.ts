@@ -66,6 +66,7 @@ describe.each(DIALECTS)('chats with Claude Code (%s)', (dialect) => {
       projectKey: 'MOB',
       title: 'Where are runs queued?',
       options: { model: 'default', mode: 'ask' },
+      waiting: false,
       createdAt: 1_000_000,
       updatedAt: 1_000_000,
     });
