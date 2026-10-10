@@ -1,6 +1,7 @@
 import { laneOf } from '@tracker/shared';
 import type {
   Activity,
+  AddRunStepsInput,
   AskOptions,
   FinishRunInput,
   ReportInput,
@@ -17,6 +18,13 @@ export const RUNNER = 'runner-1';
 
 export const noAsks = (): Promise<ClaudeExit> => Promise.reject(new Error('No asks in this test.'));
 
+export const answered = (text: string, sessionId?: string): ClaudeExit => ({
+  code: 0,
+  signal: null,
+  output: `${text}\n`,
+  results: [{ text, sessionId, isError: false }],
+});
+
 export const runOf = (id: string, ticketKey: string): Run => ({
   id,
   kind: 'ticket',
@@ -31,6 +39,7 @@ export const runOf = (id: string, ticketKey: string): Run => ({
   createdAt: 1,
   startedAt: 2,
   endedAt: null,
+  stepCount: 0,
 });
 
 export const job = (id: string, ticketKey: string, prompt = `Work on ${ticketKey}`): RunJob => ({
@@ -58,6 +67,7 @@ export function fakeTracker(jobs: RunJob[]) {
   const statuses = new Map<string, Run['status']>();
   const reports: ReportInput[] = [];
   const activity: Activity[] = [];
+  const steps: (AddRunStepsInput & { id: string })[] = [];
   const api: WatchApi = {
     listProjects: vi.fn(),
     eventsUrl: () => 'http://tracker.test/api/events',
@@ -70,6 +80,10 @@ export function fakeTracker(jobs: RunJob[]) {
       ended.push({ id, ...input });
       return Promise.resolve({} as Run);
     }),
+    addRunSteps: vi.fn((id: string, input: AddRunStepsInput) => {
+      steps.push({ id, ...input });
+      return Promise.resolve();
+    }),
     getRun: vi.fn((id: string) =>
       Promise.resolve({ ...runOf(id, 'MOB-1'), status: statuses.get(id) ?? 'running' }),
     ),
@@ -79,5 +93,5 @@ export function fakeTracker(jobs: RunJob[]) {
       return Promise.resolve({ updatedTicketKeys: [input.ticketKey ?? ''] });
     }),
   };
-  return { api, ended, statuses, reports, activity };
+  return { api, ended, statuses, reports, activity, steps };
 }

@@ -30,12 +30,12 @@ function guardedWriter(stream: SSEStreamingApi, allowed: () => Promise<boolean>,
   };
 }
 
-// Named, so the web app's change handling never sees run events.
+// Named after their type (`run`, `run-step`), so the web app's change handling never sees them.
 function runListener(access: Access | null | undefined, send: (message: SSEMessage) => void) {
   const scope = scopeOf(access);
   return ({ userId, event }: RunNotice) => {
     if (scope !== undefined && userId === scope)
-      send({ event: 'run', data: JSON.stringify(event) });
+      send({ event: event.type, data: JSON.stringify(event) });
   };
 }
 

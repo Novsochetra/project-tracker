@@ -47,6 +47,8 @@ const PROTECTED: readonly (readonly [string, string])[] = [
   ['POST', '/api/tokens'],
   ['DELETE', '/api/tokens/t1'],
   ['DELETE', '/api/sessions'],
+  ['POST', '/api/runs/r1/steps'],
+  ['GET', '/api/runs/r1/steps'],
   ['POST', '/api/test/reset'],
   ['GET', '/api/nope'],
 ];

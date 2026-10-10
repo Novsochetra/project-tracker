@@ -29,6 +29,7 @@ export const queuedRunRow = (run: QueuedRun, target: RunTarget): RunRow => ({
   createdAt: run.now,
   startedAt: null,
   endedAt: null,
+  stepCount: 0,
   ...target,
   prompt: target.prompt.trim(),
 });

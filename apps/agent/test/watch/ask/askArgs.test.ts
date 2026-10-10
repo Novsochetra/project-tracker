@@ -13,13 +13,13 @@ const READ_ONLY = [
   'Write',
   'NotebookEdit',
 ];
-const JSON_OUT = ['-p', '--output-format', 'json'];
+const JSON_OUT = ['-p', '--output-format', 'stream-json', '--verbose'];
 
 const argsFor = (options: unknown, resume: string | null = null, permissionMode?: string) =>
   askArgs(askJob('r-1', 'c-1', resume, options as AskOptions | null), permissionMode);
 
 describe('askArgs', () => {
-  it('asks for JSON in plan mode with no MCP servers and no edit tools', () => {
+  it('asks for stream-json in plan mode with no MCP servers and no edit tools', () => {
     expect(argsFor({ model: 'default', mode: 'ask' })).toEqual([...JSON_OUT, ...READ_ONLY]);
   });
 

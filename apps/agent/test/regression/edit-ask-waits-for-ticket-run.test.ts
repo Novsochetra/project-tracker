@@ -1,11 +1,9 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { ClaudeExit } from '../../src/watch/outcome';
 import { createWatcher } from '../../src/watch/watcher';
-import { askJob, fakeTracker, job, RUNNER } from '../watch/fakeTracker';
+import { answered, askJob, fakeTracker, job, RUNNER } from '../watch/fakeTracker';
 
 const SESSION = '11111111-2222-4333-8444-555555555555';
-const answer = JSON.stringify({ result: 'Renamed it.', session_id: SESSION });
-const answered: ClaudeExit = { code: 0, signal: null, output: answer, stdout: answer };
 
 // An Edit question changes the folder, so two Claudes would edit one tree at once if it ran beside
 // a ticket run (PT-160).
@@ -15,9 +13,9 @@ describe('regression: an Edit question while a ticket run works', () => {
     const tracker = fakeTracker([job('r-1', 'MOB-1'), editAsk]);
     let finishTicket = () => undefined as void;
     const ticketRun = new Promise<ClaudeExit>((resolve) => {
-      finishTicket = () => resolve({ code: 0, signal: null, output: '', stdout: '' });
+      finishTicket = () => resolve({ code: 0, signal: null, output: '', results: [] });
     });
-    const runAsk = vi.fn(() => Promise.resolve(answered));
+    const runAsk = vi.fn(() => Promise.resolve(answered('Renamed it.', SESSION)));
     const log: string[] = [];
     const watcher = createWatcher(
       { api: tracker.api, runClaude: () => ticketRun, runAsk, log: (text) => log.push(text) },

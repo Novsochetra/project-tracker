@@ -1,21 +1,24 @@
 import type { FinishRunInput, RunJob, RunKind } from '@tracker/shared';
 import { askOutcomeOf } from './ask/askOutcome';
+import type { OnSteps } from './claudeRunners';
 import type { ClaudeExit } from './outcome';
 import { outcomeOf } from './outcome';
 import { refusalOf } from './refusal';
 import { labelOf } from './runLabel';
 import { retryUntilAnswered } from './retry';
+import type { StepBatcher } from './steps/stepBatcher';
 import type { WatchApi } from './watchApi';
 
 export interface RunLoopDeps {
   api: WatchApi;
-  runClaude: (prompt: string, signal: AbortSignal) => Promise<ClaudeExit>;
-  runAsk: (job: RunJob, signal: AbortSignal) => Promise<ClaudeExit>;
+  runClaude: (prompt: string, signal: AbortSignal, onSteps: OnSteps) => Promise<ClaudeExit>;
+  runAsk: (job: RunJob, signal: AbortSignal, onSteps: OnSteps) => Promise<ClaudeExit>;
   log: (text: string) => void;
   describe: (error: unknown) => string;
   onProblem: (error: unknown) => void;
-  handBack: (job: RunJob, output: string) => Promise<void>;
+  handBack: (job: RunJob, texts: readonly string[]) => Promise<void>;
   signOfLife: (ticketKey: string) => () => void;
+  stepsFor: (runId: string) => StepBatcher;
   retryDelay?: ((attempt: number) => number) | undefined;
 }
 
@@ -30,6 +33,28 @@ const ENDINGS: Record<FinishRunInput['status'], string> = {
   failed: 'Claude Code stopped with an error',
   cancelled: 'Cancelled',
 };
+
+// Every turn's result: the report can be in an earlier one than the last (background work).
+const reportTexts = ({ results, output }: ClaudeExit): string[] =>
+  results.length > 0 ? results.map(({ text }) => text) : [output];
+
+type Runner = (
+  deps: RunLoopDeps,
+  job: RunJob,
+  stop: AbortSignal,
+  onSteps: OnSteps,
+) => Promise<FinishRunInput>;
+
+const runTicket: Runner = async (deps, job, stop, onSteps) => {
+  const exit = await deps.runClaude(job.prompt, stop, onSteps);
+  const outcome = outcomeOf(exit, stop.aborted);
+  // A cancelled run was stopped part way, so whatever it printed is not a report of the work.
+  if (outcome.status !== 'cancelled') await deps.handBack(job, reportTexts(exit));
+  return outcome;
+};
+
+const runAsk: Runner = async (deps, job, stop, onSteps) =>
+  askOutcomeOf(await deps.runAsk(job, stop, onSteps), stop.aborted);
 
 export function createRunLoop(deps: RunLoopDeps, settings: RunLoopSettings) {
   const { api, log } = deps;
@@ -65,18 +90,6 @@ export function createRunLoop(deps: RunLoopDeps, settings: RunLoopSettings) {
     await report(job, outcome);
   }
 
-  async function runTicket(job: RunJob, stop: AbortSignal): Promise<FinishRunInput> {
-    const exit = await deps.runClaude(job.prompt, stop);
-    const outcome = outcomeOf(exit, stop.aborted);
-    // A cancelled run was stopped part way, so whatever it printed is not a report of the work.
-    if (outcome.status !== 'cancelled') await deps.handBack(job, exit.output);
-    return outcome;
-  }
-
-  async function runAsk(job: RunJob, stop: AbortSignal): Promise<FinishRunInput> {
-    return askOutcomeOf(await deps.runAsk(job, stop), stop.aborted);
-  }
-
   async function work(job: RunJob) {
     const label = labelOf(job.run);
     const refusal = refusalOf(job, settings);
@@ -95,8 +108,10 @@ export function createRunLoop(deps: RunLoopDeps, settings: RunLoopSettings) {
     const stop = new AbortController();
     current = { runId: job.run.id, stop };
     const quiet = deps.signOfLife(label);
-    const outcome = await (asking ? runAsk : runTicket)(job, stop.signal);
+    const steps = deps.stepsFor(job.run.id);
+    const outcome = await (asking ? runAsk : runTicket)(deps, job, stop.signal, steps.add);
     quiet();
+    await steps.end();
     current = undefined;
     await end(job, outcome);
   }

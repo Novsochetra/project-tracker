@@ -4,6 +4,7 @@ import { createProblemLog } from './problems';
 import { handBackReport } from './report/handBack';
 import { createLanes } from './lanes';
 import type { RunLoopDeps } from './runLoop';
+import { createStepBatcher } from './steps/stepBatcher';
 import { showStillWorking } from './stillWorking';
 
 export interface WatcherSettings {
@@ -13,11 +14,15 @@ export interface WatcherSettings {
   trackerUrl: string;
 }
 
+// A tracker that hangs mustn't hold up the run's end, which waits for the last steps.
+const STEP_SEND_TIMEOUT_MS = 10_000;
+
 export type WatcherDeps = Omit<
   RunLoopDeps,
-  'describe' | 'onProblem' | 'handBack' | 'signOfLife'
+  'describe' | 'onProblem' | 'handBack' | 'signOfLife' | 'stepsFor'
 > & {
   aliveEvery?: number | undefined;
+  stepEvery?: number | undefined;
 };
 
 export function createWatcher(deps: WatcherDeps, settings: WatcherSettings) {
@@ -30,10 +35,22 @@ export function createWatcher(deps: WatcherDeps, settings: WatcherSettings) {
       ...deps,
       describe,
       onProblem,
-      handBack: (job, output) =>
-        handBackReport({ api: deps.api, log: deps.log, describe }, job, output),
+      handBack: (job, texts) =>
+        handBackReport({ api: deps.api, log: deps.log, describe }, job, texts),
       signOfLife: (ticketKey) =>
         showStillWorking(ticketKey, { log: deps.log, every: deps.aliveEvery }),
+      stepsFor: (runId) =>
+        createStepBatcher({
+          send: (steps) =>
+            deps.api.addRunSteps(
+              runId,
+              { runnerId: settings.runnerId, steps },
+              { signal: AbortSignal.timeout(STEP_SEND_TIMEOUT_MS) },
+            ),
+          log: deps.log,
+          describe,
+          every: deps.stepEvery,
+        }),
     },
     settings,
   );

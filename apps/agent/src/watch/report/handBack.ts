@@ -21,15 +21,20 @@ async function alreadyOnTheTicket(
   return activity.some((entry) => entry.type === 'report' && entry.createdAt >= since);
 }
 
+// Each turn's words on their own: a block runs to the end of its text, so later turns' words
+// would end up in the report. The last turn that has one wins.
+const lastBlock = (texts: readonly string[], ticketKey: string): string | null =>
+  texts.reduce<string | null>((found, text) => reportBlockFor(text, ticketKey) ?? found, null);
+
 // claude -p can only reach the tracker through its MCP tools. When those are missing or Claude
 // just prints the report, the helper puts it on the ticket the way "Paste report" does (PT-155).
 export async function handBackReport(
   { api, log, describe }: HandBackDeps,
   job: RunJob,
-  output: string,
+  texts: readonly string[],
 ): Promise<void> {
   const { ticketKey } = job.run;
-  const text = ticketKey ? reportBlockFor(output, ticketKey) : null;
+  const text = ticketKey ? lastBlock(texts, ticketKey) : null;
   if (!ticketKey || !text) return;
   try {
     if (await alreadyOnTheTicket(api, job, ticketKey)) return;

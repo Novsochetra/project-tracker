@@ -27,6 +27,8 @@ export interface ChatMessage {
   text: string;
   // The ticket made from this message's ticket card, once the person taps Create.
   ticketKey: string | null;
+  // The run that gave Claude's answer, so its steps can fold under it; null on the person's.
+  runId: string | null;
   createdAt: number;
 }
 

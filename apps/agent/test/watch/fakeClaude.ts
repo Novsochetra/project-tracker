@@ -12,23 +12,54 @@ if (process.argv[2] === 'mcp') {
   else { console.log('tracker: node /gone/apps/agent/dist/mcp.js - ' + state); }
   process.exit(0);
 }
+const { existsSync } = require('node:fs');
+const { dirname, join } = require('node:path');
+const stream = process.argv.includes('stream-json');
+const session_id = '11111111-2222-4333-8444-555555555555';
+const emit = (event) => console.log(JSON.stringify({ ...event, session_id }));
+const toolUse = (name, input) => emit({
+  type: 'assistant',
+  message: { role: 'assistant', content: [{ type: 'tool_use', id: 'toolu_' + name, name, input }] },
+  parent_tool_use_id: null,
+});
+const say = (text, is_error = false) => {
+  if (!stream) return console.log(text);
+  const content = [{ type: 'text', text }];
+  emit({ type: 'assistant', message: { role: 'assistant', content }, parent_tool_use_id: null });
+  emit({ type: 'result', subtype: 'success', is_error, result: text });
+};
 let prompt = '';
 process.stdin.on('data', (chunk) => { prompt += chunk; });
 process.stdin.on('end', () => {
-  if (process.argv.includes('--output-format')) {
-    const session_id = '11111111-2222-4333-8444-555555555555';
-    const result = 'ARGS ' + JSON.stringify(process.argv.slice(2)) + '\\nPROMPT ' + prompt;
-    if (prompt.includes('ASK FAIL')) {
-      console.log(JSON.stringify({ is_error: true, result: 'Credit balance is too low', session_id }));
-      process.exit(1);
-    }
-    if (prompt.includes('WAIT')) { setTimeout(() => process.exit(0), 60000); return; }
-    console.log(JSON.stringify({ type: 'result', is_error: false, result, session_id }));
+  if (stream) {
+    emit({ type: 'system', subtype: 'init', cwd: process.cwd(), tools: ['Read', 'Bash'] });
+    toolUse('Read', { file_path: join(process.cwd(), 'src', 'app.ts') });
+    emit({
+      type: 'user',
+      message: { role: 'user', content: [{ type: 'tool_result', tool_use_id: 'toolu_Read', content: 'SECRET_FILE_CONTENTS' }] },
+      parent_tool_use_id: null,
+      tool_use_result: { type: 'text', file: { filePath: 'src/app.ts', content: 'SECRET_FILE_CONTENTS' } },
+    });
+  }
+  // Background work makes a second turn, so the run prints a result for each.
+  if (prompt.includes('TWO RESULTS')) {
+    say('I started the sub agent.');
+    say('It found the report: TICKET MOB-9.');
     process.exit(0);
   }
-  console.log('ARGS ' + JSON.stringify(process.argv.slice(2)));
-  console.log('CWD ' + process.cwd());
-  console.log('PROMPT ' + prompt);
+  if (prompt.includes('ASK FAIL')) { say('Credit balance is too low', true); process.exit(1); }
+  // Waits for the test's go file, so a test can look at the steps while Claude still works.
+  if (prompt.includes('SLOW STEPS')) {
+    const go = join(dirname(process.argv[1]), 'go');
+    const timer = setInterval(() => {
+      if (!existsSync(go)) return;
+      clearInterval(timer);
+      toolUse('Bash', { command: 'npm test' });
+      say('Done slowly.');
+      process.exit(0);
+    }, 20);
+    return;
+  }
   if (prompt.includes('SPLIT')) {
     const bytes = Buffer.from('café ✓');
     process.stderr.write(bytes.subarray(0, 4));
@@ -41,12 +72,14 @@ process.stdin.on('end', () => {
     return;
   }
   if (prompt.includes('REPORT')) {
-    console.log('Did the work.\\n\\n\u0060\u0060\u0060\\nTICKET: ' + /\\b[A-Z]+-\\d+/.exec(prompt)[0]
+    say('Did the work.\\n\\n\u0060\u0060\u0060\\nTICKET: ' + /\\b[A-Z]+-\\d+/.exec(prompt)[0]
       + '\\nSTATUS: done\\nSUMMARY: Fixed it.\\nFILES: a.ts\\nNEXT: none\\n\u0060\u0060\u0060');
     process.exit(0);
   }
   if (prompt.includes('FAIL')) { console.error('boom'); process.exit(3); }
-  if (prompt.includes('WAIT')) setTimeout(() => process.exit(0), 60000);
+  if (prompt.includes('WAIT')) { setTimeout(() => process.exit(0), 60000); return; }
+  say('ARGS ' + JSON.stringify(process.argv.slice(2)) + '\\nCWD ' + process.cwd() + '\\nPROMPT ' + prompt);
+  process.exit(0);
 });
 `;
 

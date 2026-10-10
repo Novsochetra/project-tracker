@@ -16,7 +16,7 @@ describe('regression: Claude output keeps its line breaks', () => {
       { command: fake.command, args: ['-p'], cwd: realpathSync(tmpdir()) },
       'TWO LINES',
       new AbortController().signal,
-      () => undefined,
+      { onOutput: () => undefined, onEvent: () => undefined },
     );
     expect(outcomeOf(exit, false)).toMatchObject({
       status: 'failed',

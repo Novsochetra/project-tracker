@@ -20,6 +20,8 @@ export interface ChatMessageRow {
   role: ChatRole;
   text: string;
   ticketId: string | null;
+  // The ask run that answered, on Claude's messages; null on the person's and older ones.
+  runId: string | null;
   createdAt: number;
 }
 

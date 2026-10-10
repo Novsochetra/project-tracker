@@ -1,4 +1,4 @@
-import type { AskMode, AskModel, RunKind, RunStatus } from '@tracker/shared';
+import type { AskMode, AskModel, RunKind, RunStatus, RunStepKind } from '@tracker/shared';
 
 export interface RunnerRow {
   id: string;
@@ -31,9 +31,22 @@ export interface RunRow {
   // The question's choice; null on ticket runs and on asks queued before options.
   askModel: AskModel | null;
   askMode: AskMode | null;
+  stepCount: number;
+}
+
+export interface RunStepRow {
+  runId: string;
+  seq: number;
+  kind: RunStepKind;
+  label: string;
+  // 0 or 1: neither database's boolean is portable.
+  subAgent: number;
+  toolId: string | null;
+  createdAt: number;
 }
 
 export interface RunTables {
   runners: RunnerRow;
   runs: RunRow;
+  runSteps: RunStepRow;
 }
