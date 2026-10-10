@@ -16,6 +16,7 @@ import { renamedFor } from '../images/imageFileName';
 import {
   deleteAttachmentRows,
   findAttachmentById,
+  finishAttachmentRow,
   insertAttachment,
   listPendingBefore,
   nextTicketPosition,
@@ -70,10 +71,14 @@ interface CheckedUpload {
   kind: AttachmentKind;
 }
 
-type StoredFile = Omit<AttachmentRow, 'ticketId' | 'activityId' | 'position' | 'createdAt'>;
-
-interface StoredContent extends Omit<StoredFile, 'id' | 'fileName' | 'mimeType'> {
+// What is stored: the upload as it streams in, or, for an image, what compressImage made of it.
+interface UploadContent {
+  storageKey: string;
   mimeType: AttachmentMimeType;
+  width: number | null;
+  height: number | null;
+  body: ReadableStream<Uint8Array>;
+  size: () => number;
 }
 
 function checkUpload(input: UploadInput): CheckedUpload {
@@ -83,69 +88,90 @@ function checkUpload(input: UploadInput): CheckedUpload {
   return check;
 }
 
-async function storeStreamed(
-  ctx: ServiceContext,
-  id: string,
-  upload: MeasuredUpload,
-  mimeType: AttachmentMimeType,
-): Promise<StoredContent> {
-  const storageKey = `${id}.${storedExtension(mimeType)}`;
-  await ctx.storage.write(storageKey, upload.body);
-  return { storageKey, mimeType, size: upload.size(), width: null, height: null };
-}
-
 // Images are read whole (up to their 15 MB) to be turned upright, stripped of their metadata and
 // made smaller, and only what comes out is stored (images/compressImage).
-async function storeImage(
-  ctx: ServiceContext,
+async function contentOf(
   id: string,
   upload: MeasuredUpload,
-  mimeType: AttachmentMimeType,
-): Promise<StoredContent> {
-  const image = await compressImage(await readWhole(upload.body), mimeType);
-  const storageKey = `${id}.${storedExtension(image.mimeType)}`;
-  await ctx.storage.write(storageKey, new Blob([image.bytes]).stream());
-  const { width, height } = image;
-  return { storageKey, mimeType: image.mimeType, size: image.bytes.byteLength, width, height };
-}
-
-async function storeFile(
-  ctx: ServiceContext,
-  input: UploadInput,
   { mimeType, kind }: CheckedUpload,
-): Promise<StoredFile> {
-  const id = randomUUID();
-  const upload = measureUpload(input.body ?? new Blob([]).stream(), {
-    maxBytes: ATTACHMENT_KINDS[kind].maxBytes,
-    expectedBytes: input.size,
-    tooLarge: () => invalidInput(tooLargeMessage(kind)),
-    incomplete: () => invalidInput(INCOMPLETE_MESSAGE),
-  });
-  const stored =
-    kind === 'image'
-      ? await storeImage(ctx, id, upload, mimeType)
-      : await storeStreamed(ctx, id, upload, mimeType);
-  const name = renamedFor(input.name, mimeType, stored.mimeType);
-  return { id, fileName: fileNameOf(name, storedExtension(stored.mimeType)), ...stored };
+): Promise<UploadContent> {
+  if (kind !== 'image') {
+    const storageKey = `${id}.${storedExtension(mimeType)}`;
+    return {
+      storageKey,
+      mimeType,
+      width: null,
+      height: null,
+      body: upload.body,
+      size: upload.size,
+    };
+  }
+  const image = await compressImage(await readWhole(upload.body), mimeType);
+  if (image.refusal) throw invalidInput(image.refusal);
+  return {
+    storageKey: `${id}.${storedExtension(image.mimeType)}`,
+    mimeType: image.mimeType,
+    width: image.width,
+    height: image.height,
+    body: new Blob([image.bytes]).stream(),
+    size: () => image.bytes.byteLength,
+  };
 }
 
-async function insertUploaded(
+function pendingRow(ctx: ServiceContext, id: string, fileName: string, content: UploadContent) {
+  const { storageKey, mimeType, width, height } = content;
+  return {
+    id,
+    fileName,
+    mimeType,
+    size: 0,
+    width,
+    height,
+    storageKey,
+    ticketId: null,
+    activityId: null,
+    position: 0,
+    createdAt: ctx.now(),
+  } satisfies AttachmentRow;
+}
+
+async function finishUpload(
   ctx: ServiceContext,
-  file: StoredFile,
+  row: AttachmentRow,
+  size: number,
   ref: TicketRef | null,
 ): Promise<AttachmentRow> {
   return inTransaction(ctx, async (trx) => {
-    const row: AttachmentRow = {
-      ...file,
+    const done = {
+      size,
       ticketId: ref?.ticket.id ?? null,
-      activityId: null,
       position: ref ? await nextTicketPosition(trx, ref.ticket.id) : 0,
-      createdAt: ctx.now(),
     };
-    await insertAttachment(trx, row);
-    if (ref) await updateTicketRow(trx, ref.ticket.id, { updatedAt: row.createdAt });
-    return row;
+    await finishAttachmentRow(trx, row.id, done);
+    if (ref) await updateTicketRow(trx, ref.ticket.id, { updatedAt: ctx.now() });
+    return { ...row, ...done };
   });
+}
+
+// The row goes in before the file, as a pending upload: if the file is cut off or the server
+// stops half way, the pending clean-up (removeStalePendingAttachments) finds the key in this
+// database and removes both. No file is ever stored without a row naming it, so nothing has to
+// guess from a listing which files are whose (PT-133).
+async function storeUpload(
+  ctx: ServiceContext,
+  row: AttachmentRow,
+  content: UploadContent,
+  ref: TicketRef | null,
+): Promise<AttachmentRow> {
+  await insertAttachment(ctx.db, row);
+  try {
+    await ctx.storage.write(row.storageKey, content.body);
+    return await finishUpload(ctx, row, content.size(), ref);
+  } catch (error) {
+    await deleteAttachmentRows(ctx.db, [row.id]).catch(() => undefined);
+    await removeFiles(ctx.storage, [row.storageKey]);
+    throw error;
+  }
 }
 
 // Streamed rather than read whole first: reading a 95 MB video whole took the server from 76 MB
@@ -156,14 +182,17 @@ export async function uploadAttachment(
 ): Promise<Attachment> {
   const check = checkUpload(input);
   const ref = input.ticketKey ? await requireTicket(ctx.db, input.ticketKey) : null;
-  const file = await storeFile(ctx, input, check);
-  let row: AttachmentRow;
-  try {
-    row = await insertUploaded(ctx, file, ref);
-  } catch (error) {
-    await removeFiles(ctx.storage, [file.storageKey]);
-    throw error;
-  }
+  const id = randomUUID();
+  const upload = measureUpload(input.body ?? new Blob([]).stream(), {
+    maxBytes: ATTACHMENT_KINDS[check.kind].maxBytes,
+    expectedBytes: input.size,
+    tooLarge: () => invalidInput(tooLargeMessage(check.kind)),
+    incomplete: () => invalidInput(INCOMPLETE_MESSAGE),
+  });
+  const content = await contentOf(id, upload, check);
+  const name = renamedFor(input.name, check.mimeType, content.mimeType);
+  const fileName = fileNameOf(name, storedExtension(content.mimeType));
+  const row = await storeUpload(ctx, pendingRow(ctx, id, fileName, content), content, ref);
   // Pending uploads belong to no ticket yet, so no open screen needs to refresh.
   if (ref) notify(ctx, ref.project.id, ref.ticket.id);
   return toAttachment(row);

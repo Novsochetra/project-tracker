@@ -1,49 +1,36 @@
-import { resolve } from 'node:path';
 import { isPostgresUrl } from '../db/createDatabase';
-import type { StorageSettings } from '../storage/openFileStorage';
-import { loadS3Config } from '../storage/s3Config';
-import type { MoveArgs } from './moveArgs';
+import { loadS3Config, type S3Config } from '../storage/s3Config';
 
 export interface MoveTargetSettings {
   databaseUrl: string;
-  storage: StorageSettings;
+  s3: S3Config;
 }
 
-const samePath = (a: string, b: string): boolean => resolve(a) === resolve(b);
-
-// No defaults: the server's own (data/tracker.db, data/uploads) are where the data comes from.
-export function moveTargetSettings(
-  env: NodeJS.ProcessEnv,
-  args: Pick<MoveArgs, 'from' | 'uploads'>,
-): MoveTargetSettings {
+// The move goes from this computer into what the online tracker reads: Railway's Postgres and the
+// S3 bucket. A SQLite file or a local folder as the target could only be a slip, and each was one:
+// an empty $DB made "?sslmode=require" a SQLite file that took every row while the run said
+// "Done.", and a file path naming the source another way migrated the user's own tracker. Values
+// are never shown, since a pasted one may hold the password.
+export function moveTargetSettings(env: NodeJS.ProcessEnv): MoveTargetSettings {
   const databaseUrl = env.DATABASE_URL?.trim() ?? '';
   if (!databaseUrl) {
     throw new Error(
-      "Set DATABASE_URL to the database to move into (Railway: the Postgres service's " +
-        'DATABASE_PUBLIC_URL with ?sslmode=require).',
+      "Set DATABASE_URL to the Postgres service's DATABASE_PUBLIC_URL (with PGSSLMODE=require).",
     );
   }
-  // Pasted with quotes or its name in front, a postgres:// URL reads as a SQLite path that isn't
-  // there: a dry run then reported on an empty database in memory, a real run would make a file
-  // named after the password. The value is never shown.
-  if (!isPostgresUrl(databaseUrl) && databaseUrl.includes('://')) {
+  if (!isPostgresUrl(databaseUrl)) {
     throw new Error(
-      'DATABASE_URL is neither a postgres:// URL nor a file path (its value is not shown): ' +
-        'remove quotes or a name in front of it.',
+      'DATABASE_URL is not a postgres:// URL (its value is not shown). The move goes only into ' +
+        "Railway's Postgres: set it to the Postgres service's DATABASE_PUBLIC_URL, without quotes " +
+        'or a name in front.',
     );
-  }
-  if (!isPostgresUrl(databaseUrl) && samePath(databaseUrl, args.from)) {
-    throw new Error('DATABASE_URL is the file being moved. Point it at the target database.');
   }
   const s3 = loadS3Config(env);
-  const uploadsDir = env.UPLOADS_DIR?.trim() ?? '';
-  if (!s3 && !uploadsDir) {
+  if (!s3) {
     throw new Error(
-      'Set S3_BUCKET with AWS_REGION and the AWS keys (or UPLOADS_DIR) for where the files go.',
+      'Set S3_BUCKET, AWS_REGION and the AWS keys (they are in .env): files go only to the S3 ' +
+        'bucket the online tracker reads, never to a folder on this computer.',
     );
   }
-  if (!s3 && samePath(uploadsDir, args.uploads)) {
-    throw new Error('UPLOADS_DIR is the folder being moved. Point it at the target folder.');
-  }
-  return { databaseUrl, storage: { s3, uploadsDir } };
+  return { databaseUrl, s3 };
 }

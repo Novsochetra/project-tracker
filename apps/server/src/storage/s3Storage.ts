@@ -2,17 +2,10 @@ import {
   DeleteObjectCommand,
   GetObjectCommand,
   HeadObjectCommand,
-  ListObjectsV2Command,
   S3Client,
 } from '@aws-sdk/client-s3';
 import { Upload } from '@aws-sdk/lib-storage';
-import {
-  checkedKey,
-  isStorageKey,
-  type ByteRange,
-  type FileStorage,
-  type StoredEntry,
-} from './fileStorage';
+import { checkedKey, type ByteRange, type FileStorage } from './fileStorage';
 import type { S3Config } from './s3Config';
 import { s3Call, statusOf } from './s3Errors';
 
@@ -47,23 +40,6 @@ async function unlessMissing<T>(request: Promise<T>): Promise<T | null> {
 
 const rangeHeader = (range: ByteRange | undefined) => range && `bytes=${range.start}-${range.end}`;
 
-async function* listed(client: S3Client, bucket: string): AsyncIterable<StoredEntry> {
-  let token: string | undefined;
-  do {
-    const command = new ListObjectsV2Command({
-      Bucket: bucket,
-      Prefix: S3_KEY_PREFIX,
-      ContinuationToken: token,
-    });
-    const page = await s3Call('ListObjectsV2', client.send(command));
-    for (const { Key = '', LastModified } of page.Contents ?? []) {
-      const key = Key.slice(S3_KEY_PREFIX.length);
-      if (isStorageKey(key)) yield { key, modifiedAt: LastModified?.getTime() ?? 0 };
-    }
-    token = page.IsTruncated ? page.NextContinuationToken : undefined;
-  } while (token);
-}
-
 export function createS3Storage({ client, bucket }: S3StorageOptions): FileStorage {
   const target = (key: string) => ({ Bucket: bucket, Key: S3_KEY_PREFIX + checkedKey(key) });
   return {
@@ -87,6 +63,5 @@ export function createS3Storage({ client, bucket }: S3StorageOptions): FileStora
     async remove(key) {
       await s3Call('DeleteObject', client.send(new DeleteObjectCommand(target(key))));
     },
-    list: () => listed(client, bucket),
   };
 }

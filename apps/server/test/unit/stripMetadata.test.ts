@@ -56,11 +56,10 @@ describe('stripJpeg', () => {
     expect(Buffer.from(stripJpeg(trailer, 1)!).equals(Buffer.from(photo))).toBe(true);
   });
 
-  it('keeps nothing past a header cut off before the image data', async () => {
+  it('gives nothing for a JPEG cut off before its image data', async () => {
     const photo = await jpegPhoto({ width: 16, height: 16, camera: true });
     const exifAt = Buffer.from(photo).indexOf(Buffer.from([0xff, 0xe1]));
-    const cut = photo.subarray(0, exifAt + 40);
-    expect(containsText(stripJpeg(cut, 1)!, 'Apple')).toBe(false);
+    expect(stripJpeg(photo.subarray(0, exifAt + 40), 1)).toBeNull();
   });
 
   it('leaves bytes that are not a JPEG to the caller', () => {
@@ -75,7 +74,7 @@ describe('stripPng', () => {
       withPngChunkAtEnd(png, pngChunk('tEXt', Buffer.from('Author\0Sok', 'latin1'))),
       pngChunk('tIME', Buffer.from([7, 234, 10, 9, 12, 0, 0])),
     );
-    const stripped = stripPng(tagged)!;
+    const stripped = stripPng(tagged, 1)!;
     expect(containsText(stripped, 'Sok')).toBe(false);
     expect(Buffer.from(stripped).equals(Buffer.from(png))).toBe(true);
   });
@@ -83,11 +82,11 @@ describe('stripPng', () => {
   it('drops anything after the end chunk', async () => {
     const png = await pngImage(screenPixels(8, 8), 8, 8);
     const trailer = Buffer.concat([Buffer.from(png), Buffer.from('GPS 11.55N')]);
-    expect(Buffer.from(stripPng(trailer)!).equals(Buffer.from(png))).toBe(true);
+    expect(Buffer.from(stripPng(trailer, 1)!).equals(Buffer.from(png))).toBe(true);
   });
 
   it('leaves bytes that are not a PNG to the caller', () => {
-    expect(stripPng(new TextEncoder().encode('not a png'))).toBeNull();
+    expect(stripPng(new TextEncoder().encode('not a png'), 1)).toBeNull();
   });
 });
 
@@ -107,7 +106,7 @@ describe('stripWebp', () => {
 });
 
 describe('stripMetadata', () => {
-  it('leaves other images and bytes it cannot read as they are', async () => {
+  it('leaves other images as they are, and gives nothing for a PNG that isn’t one', async () => {
     const gif = new Uint8Array(
       await sharp({ create: { width: 4, height: 4, channels: 3, background: '#fff' } })
         .gif()
@@ -115,6 +114,6 @@ describe('stripMetadata', () => {
     );
     expect(stripMetadata(gif, 'image/gif', 1)).toBe(gif);
     const broken = new TextEncoder().encode('not really a png');
-    expect(stripMetadata(broken, 'image/png', 1)).toBe(broken);
+    expect(stripMetadata(broken, 'image/png', 1)).toBeNull();
   });
 });

@@ -60,7 +60,7 @@ export function compressionTotals(moved: readonly MovedAttachment[]): Compressio
 }
 
 export function compressionLine(totals: CompressionTotals, dryRun: boolean): string {
-  const verb = dryRun ? 'Would compress' : 'Compressed';
+  const verb = dryRun ? 'Would compress or strip' : 'Compressed or stripped';
   const saving =
     totals.compressed > 0
       ? ` (${formatBytes(totals.bytesBefore)} → ${formatBytes(totals.bytesAfter)})`

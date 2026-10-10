@@ -1,6 +1,11 @@
-import type { AttachmentMimeType } from '@tracker/shared';
+import {
+  UNSUPPORTED_ATTACHMENT_MESSAGE,
+  attachmentKind,
+  type AttachmentMimeType,
+} from '@tracker/shared';
 import sharp from 'sharp';
 import {
+  MAX_WORK_BYTES,
   MIN_SAVING_BYTES,
   PHOTO_QUALITY,
   isWorthStoring,
@@ -11,6 +16,7 @@ import {
 } from './imagePlan';
 import { keptAsItCame, type StoredImage } from './keptAsItCame';
 import { createWorkLimiter } from './limiter';
+import { sniffImageType } from './sniffImage';
 
 export type { StoredImage } from './keptAsItCame';
 
@@ -35,7 +41,7 @@ sharp.unblock({
 // when built against one. Without it, HEIC photos are kept as they came.
 export const DECODES_HEIC = sharp.format.heif.input.fileSuffix?.includes('.heic') ?? false;
 
-const FORMAT_OF_TYPE: Partial<Record<AttachmentMimeType, string>> = {
+const FORMAT_OF_TYPE: Partial<Record<AttachmentMimeType, ImageFacts['format']>> = {
   'image/jpeg': 'jpeg',
   'image/png': 'png',
   'image/webp': 'webp',
@@ -49,8 +55,8 @@ const MB = 1024 * 1024;
 // upload, have a lane of their own, so one never waits behind big scans or screenshots. This also
 // leaves Node's thread pool, which file and DNS work share, to other requests.
 const PHOTO_WORK_BYTES = 100 * MB;
-const photoLane = createWorkLimiter(200 * MB);
-const bigLane = createWorkLimiter(350 * MB);
+const photoLane = createWorkLimiter(2 * PHOTO_WORK_BYTES);
+const bigLane = createWorkLimiter(MAX_WORK_BYTES);
 const laneFor = (cost: number) => (cost <= PHOTO_WORK_BYTES ? photoLane : bigLane);
 
 // A slow or stuck encode gives up and the image is kept, stripped, rather than holding its place.
@@ -60,7 +66,10 @@ const ENCODE_TIMEOUT_SECONDS = 30;
 // off end); refusing those kept their GPS (PT-127 review). Reads only as far as each step needs.
 const OPEN = { failOn: 'none', sequentialRead: true, autoOrient: true } as const;
 
-async function factsOf(original: Uint8Array, mimeType: AttachmentMimeType) {
+async function factsOf(
+  original: Uint8Array,
+  mimeType: AttachmentMimeType,
+): Promise<ImageFacts | null> {
   const format = FORMAT_OF_TYPE[mimeType];
   if (!format) return null;
   const meta = await sharp(original, OPEN)
@@ -73,9 +82,10 @@ async function factsOf(original: Uint8Array, mimeType: AttachmentMimeType) {
     pages: meta.pages ?? 1,
     orientation: meta.orientation ?? 1,
     channels: meta.channels ?? 4,
-    decodedWhole: meta.isProgressive || format === 'webp' || format === 'heif',
+    format,
+    progressive: meta.isProgressive,
     hasMetadata: Boolean(meta.exif ?? meta.xmp ?? meta.iptc ?? meta.comments?.length),
-  } satisfies ImageFacts;
+  };
 }
 
 // sharp writes no metadata unless asked, and converts colors to sRGB.
@@ -102,12 +112,22 @@ async function compressed(
   return { bytes: data, mimeType: 'image/webp', width: info.width, height: info.height };
 }
 
-// An upload never fails for compression's sake: an image that isn't compressed is kept as it came,
-// without its metadata (keptAsItCame).
+// An image that isn't compressed is kept as it came, without its metadata (keptAsItCame). The
+// upload is refused only for an image whose metadata can't be removed: a TIFF, or one cut off
+// before its picture. Compression failing never refuses one.
 export async function compressImage(
   original: Uint8Array,
-  mimeType: AttachmentMimeType,
+  declared: AttachmentMimeType,
 ): Promise<StoredImage> {
+  // The bytes decide what an image is, and so how it is read, stripped, stored and named; the
+  // declared type only stands for bytes that are no image we know.
+  const sniffed = sniffImageType(original);
+  if (sniffed === 'image/tiff') {
+    const refusal = UNSUPPORTED_ATTACHMENT_MESSAGE;
+    return { bytes: original, mimeType: declared, width: null, height: null, refusal };
+  }
+  const recognized = sniffed !== null && attachmentKind(sniffed) === 'image';
+  const mimeType = recognized ? sniffed : declared;
   const facts = await factsOf(original, mimeType);
   try {
     const image = facts && (await compressed(original, mimeType, facts));
@@ -115,5 +135,5 @@ export async function compressImage(
   } catch (error) {
     console.warn(`Image kept as uploaded: ${(error as Error).message}`);
   }
-  return keptAsItCame(original, mimeType, facts);
+  return keptAsItCame(original, mimeType, facts, recognized);
 }

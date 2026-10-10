@@ -1,29 +1,46 @@
-import { existsSync } from 'node:fs';
 import { MOVE_USAGE, parseMoveArgs, type MoveArgs } from '../dataMove/moveArgs';
 import { moveTargetSettings } from '../dataMove/moveTarget';
 import { runMove } from '../dataMove/runMove';
-import { createDatabase, isPostgresUrl } from '../db/createDatabase';
+import { removeSourceCopies } from '../dataMove/sourceCopy';
+import { stoppedLine, type MovePhase } from '../dataMove/stopped';
+import { createDatabase } from '../db/createDatabase';
 import { describeDatabase } from '../db/migrationCommands';
 import { describeStorage, openFileStorage } from '../storage/openFileStorage';
 
 const say = (line: string) => process.stdout.write(`${line}\n`);
 
-// A dry run only reads the target. Opening a SQLite file creates it, so one that isn't there yet
-// is read as the empty database it would be.
-const readableTarget = (url: string, dryRun: boolean): string =>
-  dryRun && !isPostgresUrl(url) && !existsSync(url) ? ':memory:' : url;
+let phase: MovePhase = 'no-rows';
+
+// Ctrl-C would end the process without the move's cleanup, leaving the copy of the whole
+// database in the temp folder. An open transaction ends with the connection, uncommitted.
+for (const [signal, code] of [
+  ['SIGINT', 130],
+  ['SIGTERM', 143],
+] as const) {
+  process.once(signal, () => {
+    removeSourceCopies();
+    console.error(`Stopped (${signal}). ${stoppedLine(phase)}`);
+    process.exit(code);
+  });
+}
+process.once('exit', removeSourceCopies);
 
 // Says where things go without DATABASE_URL's password or any AWS key.
 async function move(args: MoveArgs): Promise<number> {
-  const target = moveTargetSettings(process.env, args);
+  const { databaseUrl, s3 } = moveTargetSettings(process.env);
+  const storage = { s3, uploadsDir: '' };
   say(`From: ${args.from} and ${args.uploads} (only read)`);
-  say(`To: ${describeDatabase(target.databaseUrl)}; files in ${describeStorage(target.storage)}`);
+  say(`To: ${describeDatabase(databaseUrl)}; files in ${describeStorage(storage)}`);
   // Migrations and large inserts run without the server's statement timeout.
-  const env = { ...process.env, DATABASE_STATEMENT_TIMEOUT_MS: '0' };
-  const db = createDatabase(readableTarget(target.databaseUrl, args.dryRun), env);
+  const db = createDatabase(databaseUrl, { ...process.env, DATABASE_STATEMENT_TIMEOUT_MS: '0' });
   try {
-    const storage = await openFileStorage(target.storage);
-    return (await runMove(args, { db, storage, say })) ? 0 : 1;
+    const target = {
+      db,
+      openStorage: () => openFileStorage(storage),
+      say,
+      onPhase: (next: MovePhase) => (phase = next),
+    };
+    return (await runMove(args, target)) ? 0 : 1;
   } finally {
     await db.destroy();
   }

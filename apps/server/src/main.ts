@@ -9,7 +9,6 @@ import { prepareDatabase } from './db/startup';
 import { createBroadcaster } from './events/broadcaster';
 import { REQUEST_TIMEOUT_MS, endSlowRequests, isUploadRequest } from './http/slowRequests';
 import { removeStalePendingAttachments } from './services/attachments';
-import { removeOrphanFiles } from './services/orphanFiles';
 import { stopOnSignals } from './shutdown';
 import { describeStorage, openFileStorage } from './storage/openFileStorage';
 
@@ -21,11 +20,6 @@ const storage = await openFileStorage(config);
 console.log(`Files in ${describeStorage(config)}`);
 const removed = await removeStalePendingAttachments({ db, storage }, Date.now());
 if (removed > 0) console.log(`Removed ${removed} unused upload(s).`);
-// Not awaited: listing a big bucket takes a while, and a failure only leaves leftovers for later.
-void removeOrphanFiles({ db, storage }, Date.now()).then(
-  (count) => count > 0 && console.log(`Removed ${count} file(s) no attachment uses.`),
-  (error: unknown) => console.warn(`Leftover files not cleaned up: ${(error as Error).message}`),
-);
 
 for (const line of await authNotice(db, config.auth)) console.log(line);
 

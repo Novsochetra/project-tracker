@@ -13,7 +13,10 @@ function pngClaiming(width: number, height: number): Uint8Array {
   header.writeUInt32BE(height, 20);
   header[24] = 8;
   header[25] = 2;
-  return new Uint8Array(header);
+  // Image data and an end, empty: a PNG without them is refused as cut off (PT-127 review).
+  const empty = (type: string) =>
+    Buffer.concat([Buffer.alloc(4), Buffer.from(type), Buffer.alloc(4)]);
+  return new Uint8Array(Buffer.concat([header, empty('IDAT'), empty('IEND')]));
 }
 
 // Postgres refused the claimed width (22003, out of range for integer) and the upload answered 500,

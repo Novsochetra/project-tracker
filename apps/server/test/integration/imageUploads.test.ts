@@ -1,7 +1,7 @@
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import type { Attachment } from '@tracker/shared';
+import { MAX_PHOTO_PIXELS, type Attachment } from '@tracker/shared';
 import type { Hono } from 'hono';
 import sharp from 'sharp';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
@@ -9,7 +9,6 @@ import { createApp } from '../../src/app';
 import type { Db } from '../../src/db/schema';
 import { createBroadcaster } from '../../src/events/broadcaster';
 import type { AppEnv } from '../../src/http/env';
-import { MAX_PHOTO_PIXELS } from '../../src/images/imagePlan';
 import { createDiskStorage } from '../../src/storage/diskStorage';
 import type { FileStorage } from '../../src/storage/fileStorage';
 import { createS3Storage } from '../../src/storage/s3Storage';

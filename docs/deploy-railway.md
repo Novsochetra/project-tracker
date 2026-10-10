@@ -85,42 +85,92 @@ Tracker service → **Settings** → **Networking** → **Generate Domain**. If 
 
 ## 6. Set the owner password
 
-Until then every request is refused (the log says so). With the [Railway CLI](https://docs.railway.com/cli) on your Mac (`brew install railway`):
+Until then every request is refused (the log says so). With the [Railway CLI](https://docs.railway.com/cli) on your Mac (`brew install railway`), in the repo folder: `railway link` asks for the project and the tracker service, `railway ssh` opens a shell inside the running tracker, and `/app` is where Railpack puts the app. `db.js status` must say `Database: Postgres railway on postgres.railway.internal:5432`.
 
 ```bash
 railway login
-railway link          # in the repo folder: pick the project and the tracker service
-railway ssh           # a shell inside the running tracker
-cd /app               # where Railpack puts the app
-node apps/server/dist/db.js status      # must say "Database: Postgres railway on postgres.railway.internal:5432"
+railway link
+railway ssh
+cd /app
+node apps/server/dist/db.js status
 node apps/server/dist/owner-set.js --email you@example.com
 exit
 ```
 
 `db.js status` shows the shell has the service's variables: if it names SQLite instead, stop, since the owner would go into a throwaway file. `owner-set.js` asks for the password twice, hidden (at least 12 characters). Run it again later to change the email or password; that signs out every device. The log's hint `npm run owner:set` is the same command for a local checkout.
 
-Without `railway ssh`, the same works from your Mac on the exact commit that is deployed: copy `DATABASE_PUBLIC_URL` from the Postgres service's **Variables**, then
+Without `railway ssh`, the same works from your Mac on the exact commit that is deployed: copy `DATABASE_PUBLIC_URL` from the Postgres service's **Variables**, then run these. `read -rs DB` waits for you to paste the URL and press Enter, without showing it. `PGSSLMODE=require` encrypts the connection without checking the certificate (Railway's public address has a self-signed one), whether or not the URL already has a `?…` part. If `DB` is empty (a new terminal tab, or Enter before the paste), the shell stops with `DB: is empty, run read -rs DB again` and runs nothing: with an empty `DATABASE_URL` the command would set the owner in your local `data/tracker.db` instead.
 
 ```bash
-read -rs DB    # paste the URL, it isn't shown
-DATABASE_URL="$DB?sslmode=require" npm run owner:set -- --email you@example.com
+read -rs DB
+DATABASE_URL="${DB:?is empty, run read -rs DB again}" PGSSLMODE=require npm run owner:set -- --email you@example.com
+unset DB
 ```
 
-## 7. Open it on your phone
+## 7. Move your current data
+
+A one-time command copies your local tracker (`data/tracker.db` and `data/uploads`) into Railway's Postgres and your S3 bucket: every project, status, ticket, comment, report, review and file, with the same ids, so ticket keys (PT-1…), ranks, counters and links stay as they are. Run it right after setting the owner (step 6), before you open the online tracker or add anything to it (steps 8 and 9): it refuses a database that already holds projects or tickets.
+
+- **It only reads your local data.** It backs `data/tracker.db` up to a temporary copy and migrates the copy (your local tracker may be on an older schema); the file and the folder are never changed. The copy is deleted at the end, also when you stop it with Ctrl-C.
+- **Only into Railway.** `DATABASE_URL` must be a `postgres://` URL and the files go only to the S3 bucket, never to a SQLite file or a folder on your Mac, which the online tracker could not read.
+- **Images are compressed** as new uploads are (`docs/architecture.md` §3), and only the compressed copy, or one stripped of its metadata, goes to S3: a screenshot `….png` becomes `….webp`, with the same id, so its tile, its place and links to it stay. The bytes decide the type, so a JPEG once saved as `….png` goes online as what it is. Text that names a file by its old name still reads the same; the command says how many texts do. Other files are copied as they are.
+- **Images that can't go online as they are** (a TIFF, or one cut off before its picture), whose metadata such as a photo's location can't be removed, stop the move before any file or row is written. The dry run lists them by attachment id, ticket key, file name, size and reason; delete them in the local tracker (or attach a copy saved again), then run it again.
+- **Not copied:** sign-in (`users`, `sessions`, `api_tokens`). The online owner is the one you set in step 6; make new API tokens online for your agents (step 9).
+- **Files first, rows after.** The rows go in one transaction, so a run that stops halfway (network, a refused upload, Ctrl-C) leaves no row pointing at a missing file. Its last line says whether rows were written; when none were, run the same command again: it starts over, writing the files again under the same keys.
+- **It refuses** a database that already holds projects or tickets, and says what is there (`--allow-existing` adds your data next to them); one where your data is already there; and one an older build migrated (deploy this commit first, so the online tracker and the move agree on the schema).
+
+It runs on your Mac and reaches Railway's Postgres through its public address: the service's own `DATABASE_URL` (`postgres.railway.internal`) works only inside Railway. Your Mac needs the exact commit Railway deployed, and a `.env` with the S3 settings (`S3_BUCKET`, `AWS_REGION` and the two keys; made from `.env.example`, `docs/s3-storage.md`). Without a `.env`, node stops at once with `.env: not found`.
+
+1. Stop your local Claude Code agents and the local tracker (Ctrl-C where `npm run dev` or `node apps/server/dist/main.js` runs), so nothing changes after the copy.
+2. Take a final backup and build. `git status` should show nothing to commit, and `git log` the commit the Railway deployment shows:
+
+   ```bash
+   git status && git log -1 --oneline
+   mkdir -p data/backups
+   sqlite3 data/tracker.db ".backup data/backups/tracker-$(date +%Y%m%d-%H%M)-before-move.db"
+   cp -R data/uploads "data/backups/uploads-$(date +%Y%m%d-%H%M)"
+   npm run build -w @tracker/server
+   ```
+
+3. Copy `DATABASE_PUBLIC_URL` from the Postgres service's **Variables** (if it is not there: Postgres → **Settings** → **Networking** → **TCP Proxy**), then look first with a dry run, which changes nothing. `read -rs DB` waits for you to paste the URL and press Enter, without showing it:
+
+   ```bash
+   read -rs DB
+   DATABASE_URL="${DB:?is empty, run read -rs DB again}" PGSSLMODE=require node --env-file=.env apps/server/dist/data-move.js \
+     --from data/tracker.db --uploads data/uploads --dry-run
+   ```
+
+   It prints where it goes (`Postgres railway on <host>:<port>; files in S3 bucket <name>`, never the password or a key), the rows per table, the files and their size, how many images it would compress or strip, and any image that would stop the move. `PGSSLMODE=require` encrypts the connection (Railway's public address has a self-signed certificate) and works whether or not the URL already has a `?…` part. `DATABASE_URL` on the command line wins over one in `.env`. If `DB` is empty (a new terminal tab, or Enter before the paste), the shell stops with `DB: is empty, run read -rs DB again` and runs nothing (the move would refuse an empty `DATABASE_URL` too). The dry run does not contact S3: wrong keys show at the first file of the real run, before any row is written.
+
+4. Move, in the same terminal, with the same command without `--dry-run`:
+
+   ```bash
+   DATABASE_URL="${DB:?is empty, run read -rs DB again}" PGSSLMODE=require node --env-file=.env apps/server/dist/data-move.js \
+     --from data/tracker.db --uploads data/uploads
+   unset DB
+   ```
+
+   It ends with `Checked: the target has every row moved (…) and every attachment's file, at its size. Done.`: it counted every table's rows in Postgres by id and asked S3 for every file's size. Anything else says what is wrong and whether rows were written.
+
+5. Check it yourself: on the phone the project shows its tickets with the same keys, a ticket with a screenshot shows it, and a new ticket gets the next number (if the app was already open, reload it: the moved rows send no live update). The S3 console lists the files under `attachments/` as `<id>.webp` (and other files as they were). From now on use only the online tracker; keep `data/` as your backup.
+
+With exported variables, `npm run data:move -- --from data/tracker.db --uploads data/uploads` runs the same from the source.
+
+## 8. Open it on your phone
 
 1. Safari → `https://<name>.up.railway.app` → sign in.
 2. **Share** → **Add to Home Screen**. It opens full screen like an app. HTTPS also turns on offline support and the clipboard.
 
-## 8. Connect Claude Code agents
+## 9. Connect Claude Code agents
 
 Agents on your Mac reach the online tracker with its address and an API token you create in the app. Follow README → **Connect Claude Code**, "To an online tracker", with `https://<name>.up.railway.app`:
 
 1. In the app on the phone or the Mac: project menu (•••) → **Connect Claude Code** → **API tokens** → name it ("Claude laptop") → **Create token** → **Copy token** (shown once).
-2. On the Mac, in the repo folder:
+2. On the Mac, in the repo folder (`login` asks for the token: paste it):
 
    ```bash
    npm run build -w @tracker/agent
-   node apps/agent/dist/cli.js login --url https://<name>.up.railway.app   # paste the token when asked
+   node apps/agent/dist/cli.js login --url https://<name>.up.railway.app
    claude mcp add tracker -s user --env TRACKER_URL=https://<name>.up.railway.app --env TRACKER_AGENT_NAME=Claude -- node "$(pwd)/apps/agent/dist/mcp.js"
    ```
 
@@ -128,64 +178,18 @@ Agents on your Mac reach the online tracker with its address and an API token yo
 
 3. Restart Claude Code and check with `node apps/agent/dist/cli.js projects`.
 
-## 9. Your current data
-
-A one-time command copies your local tracker (`data/tracker.db` and `data/uploads`) into Railway's Postgres and your S3 bucket: every project, status, ticket, comment, report, review and file, with the same ids, so ticket keys (PT-1…), ranks, counters and links stay as they are. Run it once, after the first deploy and setting the owner (step 6), before you use the online tracker.
-
-- **It only reads your local data.** It backs `data/tracker.db` up to a temporary copy and migrates the copy (your local tracker may be on an older schema); the file and the folder are never changed.
-- **Images are compressed** as new uploads are (`docs/architecture.md` §3), and only the compressed copy goes to S3: a screenshot `….png` becomes `….webp`, with the same id, so its tile, its place and links to it stay. Text that names a file by its old name still reads the same; the command says how many texts do. Other files are copied as they are.
-- **Not copied:** sign-in (`users`, `sessions`, `api_tokens`). The online owner is the one you set in step 6; make new API tokens online for your agents (step 8).
-- **Files first, rows after.** The rows go in one transaction, so a run that stops halfway (network, a refused upload) leaves no row pointing at a missing file. Run the same command again: it starts over, writing the files again under the same keys.
-- **It refuses** a database that already holds projects or tickets, and says what is there (`--allow-existing` adds your data next to them), and refuses outright when your data is already there.
-
-It runs on your Mac and reaches Railway's Postgres through its public address: the service's own `DATABASE_URL` (`postgres.railway.internal`) works only inside Railway. Your Mac needs the exact commit Railway deployed and the S3 settings in `.env`.
-
-1. Stop your local Claude Code agents and the local tracker (Ctrl-C where `npm run dev` or `node apps/server/dist/main.js` runs), so nothing changes after the copy.
-2. Take a final backup and build:
-
-   ```bash
-   git status && git log -1 --oneline      # clean, and the commit Railway's deployment shows
-   mkdir -p data/backups
-   sqlite3 data/tracker.db ".backup data/backups/tracker-$(date +%Y%m%d-%H%M)-before-move.db"
-   cp -R data/uploads "data/backups/uploads-$(date +%Y%m%d-%H%M)"
-   npm run build -w @tracker/server
-   ```
-
-3. Copy `DATABASE_PUBLIC_URL` from the Postgres service's **Variables** (if it isn't there: Postgres → **Settings** → **Networking** → **TCP Proxy**), then look first with a dry run, which changes nothing:
-
-   ```bash
-   read -rs DB    # paste the URL, it isn't shown
-   DATABASE_URL="$DB?sslmode=require" node --env-file=.env apps/server/dist/data-move.js \
-     --from data/tracker.db --uploads data/uploads --dry-run
-   ```
-
-   It prints where it goes (`Postgres railway on <host>:<port>; files in S3 bucket <name>`, never the password or a key), the rows per table, the files and their size, and how many images it would compress. `DATABASE_URL` on the command line wins over the one in `.env`; `.env` gives the S3 bucket, region and keys.
-
-4. Move, with the same command without `--dry-run`:
-
-   ```bash
-   DATABASE_URL="$DB?sslmode=require" node --env-file=.env apps/server/dist/data-move.js \
-     --from data/tracker.db --uploads data/uploads
-   unset DB
-   ```
-
-   It ends with `Checked: the target has every row moved (…) and every attachment's file, at its size. Done.`: it counted every table's rows in Postgres by id and asked S3 for every file's size. Anything else says what is wrong and that nothing was moved, or which rows or files the check found missing.
-
-5. Check it yourself: on the phone the project shows its tickets with the same keys, a ticket with a screenshot shows it, and a new ticket gets the next number. The S3 console lists the files under `attachments/` as `<id>.webp` (and other files as they were). From now on use only the online tracker; keep `data/` as your backup.
-
-With exported variables, `npm run data:move -- --from data/tracker.db --uploads data/uploads` runs the same from the source.
-
 ## Backups
 
 - **Railway:** Postgres service → **Backups** → **Create backup** before any risky change, and add a **Daily** schedule (kept 6 days). Restore from the same tab (it mounts the backup as a new volume; click **Deploy**).
-- **Your own copy** (needs `brew install libpq`, whose `pg_dump` must be at least the server's version):
+- **Your own copy** (needs `brew install libpq`, whose `pg_dump` must be at least the server's version). Paste `DATABASE_PUBLIC_URL` from the Postgres service at `read -rs DB`; libpq reads `PGSSLMODE` as it reads `sslmode` in a URL, and with `DB` empty it would reach a Postgres on your Mac instead, so the shell stops as in step 6:
 
   ```bash
-  read -rs DB    # DATABASE_PUBLIC_URL from the Postgres service
-  "$(brew --prefix libpq)/bin/pg_dump" "$DB?sslmode=require" -Fc -f tracker-$(date +%F).dump
+  read -rs DB
+  PGSSLMODE=require "$(brew --prefix libpq)/bin/pg_dump" "${DB:?is empty, run read -rs DB again}" -Fc -f tracker-$(date +%F).dump
+  unset DB
   ```
 
-  Restore into an empty database with `"$(brew --prefix libpq)/bin/pg_restore" --no-owner -d "$DB?sslmode=require" tracker-<date>.dump` (Homebrew's libpq isn't on your `PATH`).
+  Restore into an empty database with `PGSSLMODE=require "$(brew --prefix libpq)/bin/pg_restore" --no-owner -d "${DB:?is empty, run read -rs DB again}" tracker-<date>.dump` after `read -rs DB` (Homebrew's libpq isn't on your `PATH`).
 
 - **Files:** S3 keeps them; turn on bucket versioning if you want deleted files to be recoverable.
 
@@ -201,14 +205,14 @@ With exported variables, `npm run data:move -- --from data/tracker.db --uploads 
 
 - **A release that migrated but never went Active** (pre-deploy said `Applied …`, then the new server failed its health check or crashed): Railway keeps the old server serving, but the database now has a migration the old build doesn't know. The old server refuses to start again if it restarts, its `db.js rollback` refuses too, and so does the pre-deploy of a revert you push. Either:
   - **Fix forward (simplest):** push a commit that fixes the new release. Its build has the migration, so its pre-deploy has nothing to do and its server starts.
-  - **Or undo the migration from your Mac**, with the failed release's own code, then go back:
+  - **Or undo the migration from your Mac**, with the failed release's own code, then go back. Take a Railway backup first. `<commit>` is the commit the failed deployment shows; paste `DATABASE_PUBLIC_URL` at `read -rs DB` (with `DB` empty the shell stops, as in step 6, where an empty `DATABASE_URL` would roll back your local `data/tracker.db`); `db:status` should list the release's new migration as applied; run `db:rollback` once per migration it added:
 
     ```bash
-    git worktree add /tmp/tracker-undo <the failed release's commit>   # the commit its deployment shows
+    git worktree add /tmp/tracker-undo <commit>
     cd /tmp/tracker-undo && npm ci
-    read -rs DB    # DATABASE_PUBLIC_URL from the Postgres service; take a Railway backup first
-    DATABASE_URL="$DB?sslmode=require" npm run db:status             # its new migration: applied
-    DATABASE_URL="$DB?sslmode=require" npm run db:rollback -- --yes  # once per migration it added
+    read -rs DB
+    DATABASE_URL="${DB:?is empty, run read -rs DB again}" PGSSLMODE=require npm run db:status
+    DATABASE_URL="${DB:?is empty, run read -rs DB again}" PGSSLMODE=require npm run db:rollback -- --yes
     unset DB
     cd - && git worktree remove --force /tmp/tracker-undo
     ```
@@ -228,6 +232,6 @@ What could only be proved on Railway itself:
 - Build logs show Node 22 and `npm ci` installing `@img/sharp-linux-x64`; the start log has no `sharp` load error.
 - Pre-deploy migrated, the deploy went Active, `/api/health` answers on the public address.
 - Sign in on the phone; the cookie works (it is `Secure`).
-- Upload a photo to a ticket: it is stored as WebP in the bucket under `attachments/`.
+- After step 7, upload a photo to a ticket: it is stored as WebP in the bucket under `attachments/`. (Before the move, a ticket made online would make the move refuse.)
 - Keep a ticket open on the phone and change it from the Mac: the change shows up right away (live updates through Railway's proxy).
 - Push a small commit: the old deployment's logs end without errors, and the phone reconnects to the new one.

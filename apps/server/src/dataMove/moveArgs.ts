@@ -1,11 +1,13 @@
 import { ALLOW_EXISTING_FLAG } from './plan';
 
-export const MOVE_USAGE = `Usage: npm run data:move -- --from data/tracker.db --uploads data/uploads [--dry-run]
+export const MOVE_USAGE = `Usage: node --env-file=.env apps/server/dist/data-move.js \\
+         --from data/tracker.db --uploads data/uploads [--dry-run]
 
-Copies a local tracker (its SQLite file and uploads folder) into the database in DATABASE_URL and
-the files storage the server would use: S3_BUCKET with AWS_REGION and the AWS keys, or UPLOADS_DIR.
-Neither falls back to data/, which is the source. The local file and folder are only read: the
-command backs the file up to a temporary copy and migrates the copy.
+Copies a local tracker (its SQLite file and uploads folder) into the online tracker: rows into the
+Postgres database in DATABASE_URL (postgres:// only, such as Railway's DATABASE_PUBLIC_URL, with
+PGSSLMODE=require), files into the S3 bucket in S3_BUCKET with AWS_REGION and the AWS keys. The
+local file and folder are only read: the command backs the file up to a temporary copy and
+migrates the copy. A target an older build migrated is refused: deploy this commit first.
 
   --from <file>       The local SQLite file.
   --uploads <dir>     Its uploads folder.
@@ -14,8 +16,10 @@ command backs the file up to a temporary copy and migrates the copy.
   ${ALLOW_EXISTING_FLAG}    Copy even though the target already holds projects or tickets,
                       next to them.
 
-Images are compressed as new uploads are, and only the compressed copy is stored. Rows are
-written in one transaction after the files, then counted and every file is checked.
+Images are compressed or stripped of their metadata as new uploads are, and only that copy is
+stored; an image that can't be (a TIFF, or one cut off before its picture) stops the move before
+anything is written. Rows are written in one transaction after the files, then counted and every
+file is checked.
 `;
 
 export interface MoveArgs {

@@ -196,6 +196,12 @@ describe('attachments stored in S3', () => {
 
     await waitFor(() => operations().includes('AbortMultipartUpload'), 'the upload to abort');
     expect(leftInS3()).toBe(0);
-    expect(await rowCount()).toBe(0);
+    // The pending row goes in before the file (PT-133) and out once the file has failed.
+    let rows = await rowCount();
+    for (let tries = 0; rows > 0 && tries < 100; tries += 1) {
+      await new Promise((resolve) => setTimeout(resolve, 20));
+      rows = await rowCount();
+    }
+    expect(rows).toBe(0);
   });
 });

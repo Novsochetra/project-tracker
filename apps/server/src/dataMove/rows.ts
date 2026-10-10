@@ -31,8 +31,10 @@ export async function readRows(db: Db): Promise<TableRows> {
 export const rowCounts = (rows: TableRows): TableCounts =>
   Object.fromEntries(COPIED_TABLE_NAMES.map((name) => [name, rows[name].length])) as TableCounts;
 
-// One transaction: a run that fails anywhere keeps none of the rows.
-export async function insertRows(db: Db, rows: TableRows): Promise<void> {
+// One transaction: a run that fails anywhere keeps none of the rows. onInserted runs once every
+// insert has gone through, just before the commit, which is the one step whose failure leaves it
+// unknown whether the rows are there.
+export async function insertRows(db: Db, rows: TableRows, onInserted = () => {}): Promise<void> {
   await db.transaction().execute(async (trx) => {
     for (const name of COPIED_TABLE_NAMES) {
       for (const chunk of inChunks<object>(rows[name])) {
@@ -42,5 +44,6 @@ export async function insertRows(db: Db, rows: TableRows): Promise<void> {
           .execute();
       }
     }
+    onInserted();
   });
 }

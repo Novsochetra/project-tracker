@@ -38,10 +38,8 @@ const errorOf = (run: () => unknown): string => {
 // all. Any value with :// that isn't postgres:// is refused before anything runs, without showing it.
 describe('a move target that is not a postgres:// URL', () => {
   it.each(NOT_POSTGRES)('is refused without its value: %s', (value) => {
-    const message = errorOf(() =>
-      moveTargetSettings({ DATABASE_URL: value, ...S3_ENV }, { from: 'a.db', uploads: 'up' }),
-    );
-    expect(message).toMatch(/^DATABASE_URL is neither a postgres:\/\/ URL nor a file path/);
+    const message = errorOf(() => moveTargetSettings({ DATABASE_URL: value, ...S3_ENV }));
+    expect(message).toMatch(/^DATABASE_URL is not a postgres:\/\/ URL \(its value is not shown\)/);
     expect(message).not.toContain(PASSWORD);
     expect(message).not.toContain('rlwy');
   });
@@ -64,7 +62,7 @@ describe('a move target that is not a postgres:// URL', () => {
     );
 
     expect(failure).toMatchObject({ code: 1, stdout: '' });
-    expect(failure?.stderr).toContain('DATABASE_URL is neither a postgres:// URL nor a file path');
+    expect(failure?.stderr).toContain('DATABASE_URL is not a postgres:// URL');
     expect(failure?.stderr).not.toContain(PASSWORD);
   });
 });

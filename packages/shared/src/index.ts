@@ -3,6 +3,7 @@ export * from './domain/actor';
 export * from './domain/apiToken';
 export * from './domain/attachment';
 export * from './domain/events';
+export * from './domain/imageBudget';
 export * from './domain/liveUpdates';
 export * from './domain/priority';
 export * from './domain/project';

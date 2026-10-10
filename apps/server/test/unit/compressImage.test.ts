@@ -1,10 +1,11 @@
 import { crc32 } from 'node:zlib';
+import { MAX_LOSSLESS_PIXELS, MAX_PHOTO_PIXELS } from '@tracker/shared';
 import sharp from 'sharp';
 import { describe, expect, it } from 'vitest';
 import { DECODES_HEIC, compressImage } from '../../src/images/compressImage';
-import { MAX_LOSSLESS_PIXELS, MAX_PHOTO_PIXELS } from '../../src/images/imagePlan';
 import {
   BLUE,
+  CAMERA_EXIF,
   RED,
   TINY_HEIC,
   containsText,
@@ -16,6 +17,7 @@ import {
   rawImage,
   rawPixelsOf,
   screenPixels,
+  withPngChunkAtEnd,
 } from '../helpers/images';
 
 const metadataOf = (bytes: Uint8Array) => sharp(bytes).metadata();
@@ -154,5 +156,54 @@ describe('compressImage', () => {
     const image = await compressImage(new Uint8Array(header), 'image/png');
     expect(image.mimeType).toBe('image/png');
     expect(Buffer.from(image.bytes).equals(header)).toBe(true);
+  });
+});
+
+// PT-134: the web app sends these as they are, trusting the server to drop their GPS location.
+describe('what the web app sends as it is', () => {
+  const GPS_ONLY = { IFD3: CAMERA_EXIF.IFD3 };
+
+  // The camera's eXIf chunk as sharp writes it, to be put where readers that stop early miss it.
+  async function cameraExifChunk(): Promise<Buffer> {
+    const png = await sharp({ create: { width: 2, height: 2, channels: 3, background: '#fff' } })
+      .png()
+      .withExif(CAMERA_EXIF)
+      .toBuffer();
+    const at = png.indexOf('eXIf') - 4;
+    return png.subarray(at, at + 12 + png.readUInt32BE(at));
+  }
+
+  it('stores a light photo within the budget as WebP at its size, without its GPS', async () => {
+    const pixels = noisyPixels(2560, 1920);
+    const photo = new Uint8Array(
+      await rawImage(pixels, 2560, 1920).withExif(GPS_ONLY).jpeg({ quality: 80 }).toBuffer(),
+    );
+    expect(photo.byteLength).toBeLessThan(2 * 1024 * 1024);
+    expect((await metadataOf(photo)).exif).toBeDefined();
+    const image = await compressImage(photo, 'image/jpeg');
+    expect(image).toMatchObject({ mimeType: 'image/webp', width: 2560, height: 1920 });
+    expect((await metadataOf(image.bytes)).exif).toBeUndefined();
+  });
+
+  it('stores a screenshot with an eXIf chunk lossless, every pixel kept, without it', async () => {
+    const pixels = screenPixels(1170, 2532);
+    const shot = new Uint8Array(
+      await rawImage(pixels, 1170, 2532).png().withExif(CAMERA_EXIF).toBuffer(),
+    );
+    expect(containsText(shot, 'eXIf')).toBe(true);
+    const image = await compressImage(shot, 'image/png');
+    expect(image).toMatchObject({ mimeType: 'image/webp', width: 1170, height: 2532 });
+    expect((await metadataOf(image.bytes)).exif).toBeUndefined();
+    expect(containsText(image.bytes, 'iPhone 15 Pro')).toBe(false);
+    expect((await rawPixelsOf(image.bytes)).equals(pixels)).toBe(true);
+  });
+
+  it('drops an eXIf chunk after the pixels of a PNG too small to be worth a WebP', async () => {
+    const tiny = await pngImage(screenPixels(40, 30), 40, 30);
+    const tagged = withPngChunkAtEnd(tiny, await cameraExifChunk());
+    expect(containsText(tagged, 'iPhone 15 Pro')).toBe(true);
+    const image = await compressImage(tagged, 'image/png');
+    expect(containsText(image.bytes, 'eXIf')).toBe(false);
+    expect(containsText(image.bytes, 'iPhone 15 Pro')).toBe(false);
   });
 });

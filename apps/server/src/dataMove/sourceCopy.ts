@@ -1,4 +1,4 @@
-import { existsSync } from 'node:fs';
+import { existsSync, rmSync } from 'node:fs';
 import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -25,10 +25,23 @@ async function backUp(file: string, copy: string): Promise<void> {
   }
 }
 
+// The copies still open: a stop by a signal can't wait for close(), and each holds the whole
+// database.
+const openCopies = new Set<string>();
+
+export function removeSourceCopies(): void {
+  for (const dir of openCopies) rmSync(dir, { recursive: true, force: true });
+  openCopies.clear();
+}
+
 export async function openSourceCopy(file: string): Promise<SourceCopy> {
   if (!existsSync(file)) throw new Error(`There is no SQLite file at ${file}.`);
   const dir = await mkdtemp(join(tmpdir(), 'tracker-move-'));
-  const remove = () => rm(dir, { recursive: true, force: true });
+  openCopies.add(dir);
+  const remove = async () => {
+    await rm(dir, { recursive: true, force: true });
+    openCopies.delete(dir);
+  };
   let db: Db | null = null;
   try {
     const copy = join(dir, 'source.db');

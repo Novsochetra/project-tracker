@@ -6,7 +6,8 @@ import {
   type MovedAttachment,
 } from '../../src/dataMove/movedAttachment';
 import { targetProblems } from '../../src/dataMove/plan';
-import { inChunks } from '../../src/dataMove/rows';
+import { placeOf, refusedImageProblems } from '../../src/dataMove/refusedImages';
+import { inChunks, type TableRows } from '../../src/dataMove/rows';
 import { sourceFileProblems, totalBytes } from '../../src/dataMove/sourceFiles';
 import {
   checkedLine,
@@ -19,7 +20,10 @@ import {
 import { COPIED_TABLES } from '../../src/dataMove/tables';
 import type { TableCounts } from '../../src/dataMove/rows';
 import type { TargetState } from '../../src/dataMove/targetState';
+import { stoppedError, stoppedLine } from '../../src/dataMove/stopped';
+import { schemaVerdict } from '../../src/dataMove/targetSchema';
 import { verificationProblems } from '../../src/dataMove/verify';
+import type { MigrationState } from '../../src/db/migrator';
 import { fileNameOf } from '../../src/services/attachments';
 
 const NONE: TableCounts = { projects: 0, statuses: 0, tickets: 0, activities: 0, attachments: 0 };
@@ -63,6 +67,7 @@ const moved = (before: AttachmentRow, compressed: boolean): MovedAttachment => (
   before,
   after: movedAttachmentRow(before, compressed ? WEBP : null),
   compressed,
+  refusal: null,
 });
 
 const state = (patch: Partial<TargetState>): TargetState => ({
@@ -222,10 +227,10 @@ describe('summary', () => {
       bytesAfter: 838_000,
     });
     expect(compressionLine(totals, true)).toBe(
-      'Would compress 1 of 1 images, as new uploads are (4.6 MB → 818 KB).',
+      'Would compress or strip 1 of 1 images, as new uploads are (4.6 MB → 818 KB).',
     );
     expect(compressionLine({ ...totals, compressed: 0 }, false)).toBe(
-      'Compressed 0 of 1 images, as new uploads are.',
+      'Compressed or stripped 0 of 1 images, as new uploads are.',
     );
   });
 
@@ -258,5 +263,103 @@ describe('verificationProblems', () => {
       'f2.txt: no file in the target storage.',
       'f3.txt: 11 bytes stored, the row says 12.',
     ]);
+  });
+});
+
+const migration = (name: string, status: MigrationState['status']): MigrationState => ({
+  name,
+  status,
+  appliedAt: status === 'pending' ? null : '2026-10-09T20:00:00.000Z',
+});
+
+describe('schemaVerdict', () => {
+  const ALL = ['0001_initial', '0002_ticket_client_id'];
+
+  it('migrates only a database with no tables at all', () => {
+    const fresh = ALL.map((name) => migration(name, 'pending'));
+    expect(schemaVerdict(fresh, 0)).toEqual({ migrate: ALL });
+    expect(schemaVerdict(fresh, 2)).toEqual({
+      problem:
+        'The target has tables but none of the tracker’s migrations, so it is not a tracker ' +
+        'database. Check DATABASE_URL.',
+    });
+  });
+
+  it('takes a database at exactly this build', () => {
+    const current = ALL.map((name) => migration(name, 'applied'));
+    expect(schemaVerdict(current, 7)).toEqual({ migrate: [] });
+  });
+
+  it('leaves a database an older build serves to this commit’s deploy', () => {
+    const behind = [
+      migration('0001_initial', 'applied'),
+      migration('0002_ticket_client_id', 'pending'),
+    ];
+    expect(schemaVerdict(behind, 5)).toEqual({
+      problem:
+        'The target is behind this build: it lacks 0002_ticket_client_id. Deploy this same ' +
+        'commit first (its pre-deploy step migrates the database), then run the move again.',
+    });
+  });
+
+  it('refuses a database a newer build migrated', () => {
+    const ahead = [
+      ...ALL.map((name) => migration(name, 'applied')),
+      migration('0099_x', 'unknown'),
+    ];
+    expect(schemaVerdict(ahead, 7)).toEqual({ problem: expect.stringContaining('0099_x') });
+  });
+});
+
+describe('stoppedLine', () => {
+  it('says whether rows were written and whether running again is safe', () => {
+    expect(stoppedLine('no-rows')).toBe(
+      'No rows were written to the target, so running the same command again is safe.',
+    );
+    expect(stoppedLine('committing')).toMatch(/may or may not be in the target\. Running the same/);
+    expect(stoppedLine('rows-written')).toMatch(/^The rows were written before it stopped/);
+  });
+
+  it('keeps the error’s own message first', () => {
+    const error = stoppedError(new Error('connect ECONNREFUSED'), 'no-rows');
+    expect(error.message).toBe(`connect ECONNREFUSED\n${stoppedLine('no-rows')}`);
+    expect(stoppedError('a string', 'committing').message).toMatch(/^a string\nIt stopped while/);
+  });
+});
+
+describe('refusedImageProblems', () => {
+  const rows = {
+    projects: [{ id: 'p1', key: 'PT' }],
+    tickets: [{ id: 't1', projectId: 'p1', num: 12, title: 'Secret title' }],
+    activities: [],
+  } as unknown as TableRows;
+  const place = placeOf(rows);
+  const refused = (before: AttachmentRow, refusal: string): MovedAttachment => ({
+    before,
+    after: before,
+    compressed: false,
+    refusal,
+  });
+
+  it('says where each file is by its ticket key, never its text', () => {
+    expect(place(PHOTO)).toBe('a comment on PT-12');
+    expect(place({ ...PHOTO, activityId: null })).toBe('PT-12');
+    expect(place({ ...PHOTO, ticketId: null, activityId: null })).toBe('not on a ticket yet');
+  });
+
+  it('names every image that can’t be stored, and nothing when none is', () => {
+    const scan = { ...PHOTO, id: 'f-scan', fileName: 'scan.jpg', size: 3_900, activityId: null };
+    const problems = refusedImageProblems(
+      [moved(NOTES, false), refused(scan, 'Only images can be attached.')],
+      place,
+    );
+    expect(problems).toEqual([
+      "1 image(s) can't go online as they are: their metadata (such as where a photo was " +
+        'taken) can’t be removed. Delete them in the local tracker, or attach a copy saved ' +
+        'again, then run the move again:',
+      '  - f-scan (PT-12, scan.jpg, 4 KB): Only images can be attached.',
+    ]);
+    expect(problems.join('\n')).not.toContain('Secret title');
+    expect(refusedImageProblems([moved(PHOTO, true), moved(NOTES, false)], place)).toEqual([]);
   });
 });

@@ -3,7 +3,7 @@ import { createReadStream } from 'node:fs';
 import { mkdir, readdir, rename, rm, stat, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { Readable } from 'node:stream';
-import { checkedKey, isStorageKey, type FileStorage } from './fileStorage';
+import { checkedKey, type FileStorage } from './fileStorage';
 
 // A file arrives under a partial name and takes its key only once whole. A stop can cut an upload
 // and exit before its handler removes what came, so partial files go when storage opens. No key
@@ -47,13 +47,6 @@ export function createDiskStorage(dir: string): FileStorage {
     },
     async remove(key) {
       await rm(pathOf(key), { force: true });
-    },
-    async *list() {
-      const names = await readdir(dir).catch(() => []);
-      for (const key of names.filter(isStorageKey)) {
-        const info = await fileAt(join(dir, key));
-        if (info) yield { key, modifiedAt: info.mtimeMs };
-      }
     },
   };
 }

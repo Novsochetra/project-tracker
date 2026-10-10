@@ -158,16 +158,6 @@ describe.each(KINDS)('%s file storage', (kind, open) => {
     expect(stored(), kind).toEqual([]);
   });
 
-  it('lists the files it keeps, with when each was written', async () => {
-    const before = Date.now() - 2000;
-    await storage().write('a.png', new Blob(['a']).stream());
-    await storage().write('b.txt', new Blob(['bb']).stream());
-    const listed: { key: string; modifiedAt: number }[] = [];
-    for await (const entry of storage().list()) listed.push(entry);
-    expect(listed.map((entry) => entry.key).sort()).toEqual(['a.png', 'b.txt']);
-    for (const entry of listed) expect(entry.modifiedAt, entry.key).toBeGreaterThan(before);
-  });
-
   it('refuses keys it did not make, which could reach outside its folder or prefix', async () => {
     for (const key of ['../evil', '.hidden', 'a/b.png', '']) {
       await expect(storage().write(key, new Blob([]).stream()), key).rejects.toThrow(

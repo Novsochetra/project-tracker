@@ -46,7 +46,7 @@ describe.each(DIALECTS.flatMap((dialect) => STORAGES.map((kind) => [dialect, kin
       expect(lines.at(-1)).toMatch(/^Checked: the target has every row moved/);
       expect(lines).toContainEqual(
         expect.stringMatching(
-          /^Compressed 1 of 2 images, as new uploads are \(\d+ K?B → \d+ K?B\)\.$/,
+          /^Compressed or stripped 1 of 2 images, as new uploads are \(\d+ K?B → \d+ K?B\)\.$/,
         ),
       );
       expect(await tableCounts(target.db)).toEqual(SOURCE_COUNTS);
@@ -159,10 +159,10 @@ describe.each(DIALECTS)('a dry run into %s', (dialect) => {
         '  attachments  3',
         expect.stringMatching(/^ {2}files {8}3 \(\d+ KB\)$/),
         expect.stringMatching(
-          /^Would migrate the target first: 0001_initial, .*0004_owner_auth\.$/,
+          /^Would migrate the empty target first: 0001_initial, .*0004_owner_auth\.$/,
         ),
         expect.stringMatching(
-          /^Would compress 1 of 2 images, as new uploads are \(\d+ K?B → \d+ K?B\)\.$/,
+          /^Would compress or strip 1 of 2 images, as new uploads are \(\d+ K?B → \d+ K?B\)\.$/,
         ),
         'Dry run: nothing was written.',
       ]),

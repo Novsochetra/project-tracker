@@ -1,13 +1,13 @@
+import { MAX_LOSSLESS_PIXELS, MAX_PHOTO_PIXELS, longSideWithin } from '@tracker/shared';
 import { describe, expect, it } from 'vitest';
 import { renamedFor } from '../../src/images/imageFileName';
 import {
   MAX_INPUT_PIXELS,
-  MAX_LOSSLESS_PIXELS,
-  MAX_PHOTO_PIXELS,
   MAX_WHOLE_DECODE_PIXELS,
+  MAX_WORK_BYTES,
   isWorthStoring,
-  longSideWithin,
   planImage,
+  wholePixels,
   workBytes,
   type ImageFacts,
 } from '../../src/images/imagePlan';
@@ -18,28 +18,10 @@ const facts = (overrides: Partial<ImageFacts> = {}): ImageFacts => ({
   pages: 1,
   orientation: 1,
   channels: 3,
-  decodedWhole: false,
+  format: 'jpeg',
+  progressive: false,
   hasMetadata: false,
   ...overrides,
-});
-
-describe('longSideWithin', () => {
-  it('leaves an image within the pixel budget alone, so nothing is ever enlarged', () => {
-    expect(longSideWithin(2560, 1920, MAX_PHOTO_PIXELS)).toBeNull();
-    expect(longSideWithin(300, 200, MAX_PHOTO_PIXELS)).toBeNull();
-  });
-
-  it('brings a 12 MP phone photo to 2560×1920', () => {
-    expect(longSideWithin(4032, 3024, MAX_PHOTO_PIXELS)).toBe(2560);
-    expect(longSideWithin(3024, 4032, MAX_PHOTO_PIXELS)).toBe(2560);
-  });
-
-  it('gives every shape the same budget, so a panorama stays tall enough to see', () => {
-    const longSide = longSideWithin(16000, 3000, MAX_PHOTO_PIXELS)!;
-    const shortSide = Math.round((3000 * longSide) / 16000);
-    expect(longSide * shortSide).toBeLessThanOrEqual(MAX_PHOTO_PIXELS);
-    expect(shortSide).toBeGreaterThan(900);
-  });
 });
 
 describe('planImage', () => {
@@ -78,10 +60,20 @@ describe('planImage', () => {
   });
 
   it('decodes an image read whole only up to its smaller limit', () => {
-    const whole = { decodedWhole: true };
+    const whole = { progressive: true };
     expect(planImage('image/jpeg', facts({ ...whole, width: 5000, height: 4000 }))).not.toBeNull();
     expect(planImage('image/jpeg', facts({ ...whole, width: 6000, height: 4500 }))).toBeNull();
     expect(6000 * 4500).toBeGreaterThan(MAX_WHOLE_DECODE_PIXELS);
+  });
+
+  // Turning a quarter needs the whole picture; a JPEG holds only what is left after shrinking it.
+  it('counts a turned picture as read whole, a JPEG after shrinking', () => {
+    const turned = { orientation: 6, width: 8160, height: 6120 };
+    expect(planImage('image/png', facts({ ...turned, format: 'png' }))).toBeNull();
+    const photo = facts({ ...turned, format: 'jpeg' });
+    const plan = planImage('image/jpeg', photo)!;
+    expect(wholePixels(photo, plan)).toBeLessThanOrEqual(4 * MAX_PHOTO_PIXELS);
+    expect(wholePixels(facts({ orientation: 3, format: 'png' }), plan)).toBe(0);
   });
 });
 
@@ -96,16 +88,26 @@ describe('workBytes', () => {
   it('covers what measured images took', () => {
     expect(estimate('image/jpeg', { width: 4032, height: 3024 })).toBeGreaterThan(58);
     expect(estimate('image/jpeg', { width: 8064, height: 6048 })).toBeGreaterThan(58);
-    const progressive = { width: 5712, height: 4284, decodedWhole: true };
+    const progressive = { width: 5712, height: 4284, progressive: true };
     expect(estimate('image/jpeg', progressive)).toBeGreaterThan(117);
     expect(estimate('image/png', { width: 3456, height: 2234 })).toBeGreaterThan(224);
   });
 
   it('counts a whole decode by its pixels and a lossless encode by what comes out', () => {
-    const plain = estimate('image/png', { width: 4000, height: 3000 });
-    const interlaced = estimate('image/png', { width: 4000, height: 3000, decodedWhole: true });
-    expect(interlaced - plain).toBeCloseTo((4000 * 3000 * 3 * 2) / MB, 0);
-    expect(estimate('image/png', { width: 8000, height: 6000 })).toBeCloseTo(plain, -1);
+    const plain = estimate('image/png', { width: 3000, height: 2000 });
+    const interlaced = estimate('image/png', { width: 3000, height: 2000, progressive: true });
+    expect(interlaced - plain).toBeCloseTo((3000 * 2000 * 3 * 2) / MB, 0);
+    const capped = estimate('image/png', { width: 4000, height: 3000 });
+    expect(estimate('image/png', { width: 8000, height: 6000 })).toBeCloseTo(capped, -1);
+  });
+
+  it('leaves an image estimated past the most one may take undecoded', () => {
+    const big = facts({ width: 5770, height: 4315, channels: 4, progressive: true, format: 'png' });
+    expect(planImage('image/png', big)).toBeNull();
+    const screenshot = facts({ width: 3840, height: 2160, format: 'png' });
+    expect(workBytes(screenshot, planImage('image/png', screenshot)!)).toBeLessThanOrEqual(
+      MAX_WORK_BYTES,
+    );
   });
 });
 

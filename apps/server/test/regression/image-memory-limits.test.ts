@@ -1,7 +1,7 @@
+import { MAX_PHOTO_PIXELS } from '@tracker/shared';
 import sharp, { type Sharp } from 'sharp';
 import { describe, expect, it } from 'vitest';
 import { compressImage } from '../../src/images/compressImage';
-import { MAX_PHOTO_PIXELS } from '../../src/images/imagePlan';
 
 const solid = (width: number, height: number) =>
   sharp({ create: { width, height, channels: 3, background: '#7090b0' } });

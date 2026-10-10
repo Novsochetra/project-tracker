@@ -149,7 +149,11 @@ export async function moveData(
   const lines: string[] = [];
   const ok = await runMove(
     { from: source.file, uploads: source.uploads, dryRun: false, allowExisting: false, ...options },
-    { db: target.db, storage: target.storage, say: (line) => lines.push(line) },
+    {
+      db: target.db,
+      openStorage: () => Promise.resolve(target.storage),
+      say: (line) => lines.push(line),
+    },
   );
   return { ok, lines };
 }

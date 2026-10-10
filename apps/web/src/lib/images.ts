@@ -1,49 +1,18 @@
-export const MAX_IMAGE_EDGE = 2048;
-export const MAX_UNTOUCHED_BYTES = 2 * 1024 * 1024;
-export const JPEG_QUALITY = 0.85;
-
-export interface Size {
-  width: number;
-  height: number;
-}
+import { ATTACHMENT_KINDS, storedExtension, type AttachmentMimeType } from '@tracker/shared';
+import { JPEG_QUALITY, planImage, type EncodedType, type Encoding } from './imagePlan';
 
 export interface PreparedImage {
   blob: Blob;
   fileName: string;
 }
 
-const EXTENSIONS: Record<string, string> = {
-  'image/png': 'png',
-  'image/jpeg': 'jpg',
-  'image/gif': 'gif',
-  'image/webp': 'webp',
-  'image/heic': 'heic',
-  'image/heif': 'heif',
-};
+export const uploadName = (file: File, type: AttachmentMimeType): string =>
+  file.name || `image.${storedExtension(type)}`;
 
-export function fitWithin(width: number, height: number, max: number): Size {
-  const longest = Math.max(width, height);
-  if (longest <= max) return { width, height };
-  const scale = max / longest;
-  return {
-    width: Math.max(1, Math.round(width * scale)),
-    height: Math.max(1, Math.round(height * scale)),
-  };
-}
-
-export const uploadName = (file: File): string =>
-  file.name || `image.${EXTENSIONS[file.type] ?? 'png'}`;
-
-export function jpegName(fileName: string): string {
+export function renamedAs(fileName: string, type: EncodedType): string {
   const base = fileName.replace(/\.[^./\\]*$/, '');
-  return `${base || 'image'}.jpg`;
+  return `${base || 'image'}.${storedExtension(type)}`;
 }
-
-const isGif = (file: File): boolean => file.type === 'image/gif' || /\.gif$/i.test(file.name);
-
-// Only Safari shows HEIC, so a decodable one is converted for everyone else.
-const isHeic = (file: File): boolean =>
-  /^image\/hei[cf]$/.test(file.type) || /\.hei[cf]$/i.test(file.name);
 
 async function decode(file: File): Promise<ImageBitmap | null> {
   if (typeof createImageBitmap !== 'function') return null;
@@ -54,37 +23,65 @@ async function decode(file: File): Promise<ImageBitmap | null> {
   }
 }
 
-function encodeJpeg(bitmap: ImageBitmap, size: Size): Promise<Blob | null> {
+// The canvas holds only pixels, so what it encodes carries no EXIF, GPS or other metadata.
+function encode(bitmap: ImageBitmap, { type, width, height }: Encoding): Promise<Blob | null> {
   const canvas = document.createElement('canvas');
-  canvas.width = size.width;
-  canvas.height = size.height;
+  canvas.width = width;
+  canvas.height = height;
   const context = canvas.getContext('2d');
   if (!context) return Promise.resolve(null);
-  // JPEG has no alpha; paint white first so transparent screenshots don't turn black.
-  context.fillStyle = 'white';
-  context.fillRect(0, 0, size.width, size.height);
+  if (type === 'image/jpeg') {
+    // JPEG has no alpha; paint white first so transparent images don't turn black.
+    context.fillStyle = 'white';
+    context.fillRect(0, 0, width, height);
+  }
   context.imageSmoothingQuality = 'high';
-  context.drawImage(bitmap, 0, 0, size.width, size.height);
-  return new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', JPEG_QUALITY));
+  context.drawImage(bitmap, 0, 0, width, height);
+  return new Promise((resolve) => canvas.toBlob(resolve, type, JPEG_QUALITY));
 }
 
-async function reencode(file: File, bitmap: ImageBitmap): Promise<Blob | null> {
-  const oversized = Math.max(bitmap.width, bitmap.height) > MAX_IMAGE_EDGE;
-  const mustConvert = oversized || isHeic(file);
-  if (!mustConvert && file.size <= MAX_UNTOUCHED_BYTES) return null;
-  const blob = await encodeJpeg(bitmap, fitWithin(bitmap.width, bitmap.height, MAX_IMAGE_EDGE));
-  if (!blob || (!mustConvert && blob.size >= file.size)) return null;
-  return blob;
+interface Encoded {
+  blob: Blob;
+  type: EncodedType;
 }
 
-export async function prepareImageForUpload(file: File): Promise<PreparedImage> {
-  const original: PreparedImage = { blob: file, fileName: uploadName(file) };
-  if (isGif(file)) return original;
+async function encodeToFit(bitmap: ImageBitmap, encodings: Encoding[]): Promise<Encoded | null> {
+  let encoded: Encoded | null = null;
+  for (const encoding of encodings) {
+    const blob = await encode(bitmap, encoding);
+    if (!blob) return null;
+    encoded = { blob, type: encoding.type };
+    if (blob.size <= ATTACHMENT_KINDS.image.maxBytes) return encoded;
+  }
+  return encoded;
+}
+
+async function reencode(
+  file: File,
+  type: AttachmentMimeType,
+  bitmap: ImageBitmap,
+): Promise<Encoded | null> {
+  const { width, height } = bitmap;
+  const plan = planImage({ type, bytes: file.size, width, height });
+  if (!plan) return null;
+  const encoded = await encodeToFit(bitmap, plan.encodings);
+  if (!encoded || (!plan.mustConvert && encoded.blob.size >= file.size)) return null;
+  return encoded;
+}
+
+export async function prepareImageForUpload(
+  file: File,
+  type: AttachmentMimeType,
+): Promise<PreparedImage> {
+  const original: PreparedImage = { blob: file, fileName: uploadName(file, type) };
+  // A GIF may move, and a canvas keeps only its first frame.
+  if (type === 'image/gif') return original;
   const bitmap = await decode(file);
   if (!bitmap) return original;
   try {
-    const blob = await reencode(file, bitmap);
-    return blob ? { blob, fileName: jpegName(original.fileName) } : original;
+    const encoded = await reencode(file, type, bitmap);
+    if (!encoded) return original;
+    return { blob: encoded.blob, fileName: renamedAs(original.fileName, encoded.type) };
   } catch {
     return original;
   } finally {

@@ -1,9 +1,6 @@
-import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { parseMoveArgs } from '../../src/dataMove/moveArgs';
 import { moveTargetSettings } from '../../src/dataMove/moveTarget';
-
-const PATHS = { from: 'data/tracker.db', uploads: 'data/uploads' };
 
 const S3_ENV = {
   S3_BUCKET: 'tracker-files',
@@ -52,41 +49,34 @@ describe('parseMoveArgs', () => {
 });
 
 describe('moveTargetSettings', () => {
-  it('moves into DATABASE_URL and the S3 bucket', () => {
-    const url = 'postgresql://postgres:pw@db.proxy.rlwy.net:41234/railway?sslmode=require';
-    expect(moveTargetSettings({ DATABASE_URL: url, ...S3_ENV }, PATHS)).toEqual({
-      databaseUrl: url,
-      storage: {
-        s3: { bucket: 'tracker-files', region: 'eu-west-1', endpoint: null },
-        uploadsDir: '',
-      },
-    });
-  });
+  const URL_TEXT = 'postgresql://postgres:pw@db.proxy.rlwy.net:41234/railway';
 
-  it('moves files into UPLOADS_DIR without a bucket', () => {
-    const env = { DATABASE_URL: '/tmp/online.db', UPLOADS_DIR: '/tmp/online-files' };
-    expect(moveTargetSettings(env, PATHS).storage).toEqual({
-      s3: null,
-      uploadsDir: '/tmp/online-files',
+  it('moves into a postgres:// DATABASE_URL and the S3 bucket', () => {
+    expect(moveTargetSettings({ DATABASE_URL: ` ${URL_TEXT} `, ...S3_ENV })).toEqual({
+      databaseUrl: URL_TEXT,
+      s3: { bucket: 'tracker-files', region: 'eu-west-1', endpoint: null },
     });
   });
 
   it('never falls back to the data folder, which is the source', () => {
-    expect(() => moveTargetSettings({ ...S3_ENV }, PATHS)).toThrow(/^Set DATABASE_URL/);
-    expect(() => moveTargetSettings({ DATABASE_URL: '/tmp/online.db' }, PATHS)).toThrow(
-      'Set S3_BUCKET with AWS_REGION and the AWS keys (or UPLOADS_DIR) for where the files go.',
+    expect(() => moveTargetSettings({ ...S3_ENV })).toThrow(/^Set DATABASE_URL/);
+    expect(() => moveTargetSettings({ DATABASE_URL: '', ...S3_ENV })).toThrow(/^Set DATABASE_URL/);
+  });
+
+  it('takes no SQLite file and no folder: neither is what the online tracker reads', () => {
+    expect(() => moveTargetSettings({ DATABASE_URL: '/tmp/online.db', ...S3_ENV })).toThrow(
+      /^DATABASE_URL is not a postgres:\/\/ URL \(its value is not shown\)/,
+    );
+    expect(() =>
+      moveTargetSettings({ DATABASE_URL: URL_TEXT, UPLOADS_DIR: '/tmp/online-files' }),
+    ).toThrow(
+      'Set S3_BUCKET, AWS_REGION and the AWS keys (they are in .env): files go only to the S3 ' +
+        'bucket the online tracker reads, never to a folder on this computer.',
     );
   });
 
-  it('refuses to move a tracker into itself', () => {
-    const sameFile = { DATABASE_URL: join(process.cwd(), PATHS.from), ...S3_ENV };
-    expect(() => moveTargetSettings(sameFile, PATHS)).toThrow('DATABASE_URL is the file');
-    const sameFolder = { DATABASE_URL: '/tmp/online.db', UPLOADS_DIR: './data/uploads/' };
-    expect(() => moveTargetSettings(sameFolder, PATHS)).toThrow('UPLOADS_DIR is the folder');
-  });
-
   it('refuses half an S3 setting, as the server does', () => {
-    const env = { DATABASE_URL: '/tmp/online.db', S3_BUCKET: 'tracker-files' };
-    expect(() => moveTargetSettings(env, PATHS)).toThrow(/AWS_REGION/);
+    const env = { DATABASE_URL: URL_TEXT, S3_BUCKET: 'tracker-files' };
+    expect(() => moveTargetSettings(env)).toThrow(/AWS_REGION/);
   });
 });

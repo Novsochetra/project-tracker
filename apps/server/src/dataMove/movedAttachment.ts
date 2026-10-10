@@ -14,7 +14,11 @@ export interface CompressedFile {
 export interface MovedAttachment {
   before: AttachmentRow;
   after: AttachmentRow;
+  // Stored as other bytes than the source's: compressed, or kept without its metadata.
   compressed: boolean;
+  // Why the image can't be stored at all (compressImage's refusal: a TIFF, or one cut off before
+  // its picture, whose metadata can't be removed); null for every other file.
+  refusal: string | null;
 }
 
 // The id stays, so links to the file (/api/attachments/<id>/file) and its place among its ticket's
