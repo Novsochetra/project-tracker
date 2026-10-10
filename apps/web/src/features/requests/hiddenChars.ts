@@ -1,36 +1,27 @@
 export type ShownPart = { kind: 'text'; text: string } | { kind: 'hidden'; text: string };
 
-// Characters that change the order text reads in (bidi controls), take no room (zero width) or act
-// as controls, so a command could show one way and run another. Tabs and newlines stay layout.
-const HIDDEN_RANGES: ReadonlyArray<readonly [number, number]> = [
-  [0x00, 0x08],
-  [0x0b, 0x1f],
-  [0x7f, 0x9f],
-  [0xad, 0xad],
-  [0x61c, 0x61c],
-  [0x180e, 0x180e],
-  [0x200b, 0x200f],
-  [0x2028, 0x202e],
-  [0x2060, 0x2069],
-  [0xfeff, 0xfeff],
-];
+// Characters that draw nothing or act on the text around them: controls (Cc), format characters
+// such as bidi overrides and zero-width joiners (Cf), line and paragraph separators, and every
+// default ignorable (variation selectors, tags, hangul fillers), so a command could show one way
+// and run another. Tabs and newlines stay layout. An emoji's variation selector shows marked too.
+const HIDDEN = /[\p{Cc}\p{Cf}\p{Zl}\p{Zp}\p{Default_Ignorable_Code_Point}]/u;
+const LAYOUT = new Set(['\t', '\n']);
 
-const isHidden = (code: number): boolean =>
-  HIDDEN_RANGES.some(([from, to]) => code >= from && code <= to);
+const isHidden = (char: string): boolean => !LAYOUT.has(char) && HIDDEN.test(char);
 
 const marked = (code: number): string => `\\u{${code.toString(16).toUpperCase()}}`;
 
 export function markHidden(text: string): ShownPart[] {
   const parts: ShownPart[] = [];
   let plain = '';
+  // By code point, so an astral tag or selector is one token.
   for (const char of text) {
-    const code = char.codePointAt(0) ?? 0;
-    if (!isHidden(code)) {
+    if (!isHidden(char)) {
       plain += char;
       continue;
     }
     if (plain) parts.push({ kind: 'text', text: plain });
-    parts.push({ kind: 'hidden', text: marked(code) });
+    parts.push({ kind: 'hidden', text: marked(char.codePointAt(0) ?? 0) });
     plain = '';
   }
   if (plain) parts.push({ kind: 'text', text: plain });

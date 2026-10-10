@@ -1,8 +1,9 @@
 import { MASK, SECRET_RULES } from '../runSteps/secretRules';
 
-// One word the shell takes as it is: no space, quote, backtick, expansion, escape or operator,
-// and no `#`, which starts a comment at a word's start.
-const LITERAL = /^[^\s"'`$\\;&|<>(){},#]+$/;
+// One word the shell takes as it is: no space, quote, backtick, expansion, escape or operator; no
+// `#`, which starts a comment at a word's start; and no glob, which becomes one argument per
+// matching file, files Claude can make.
+const LITERAL = /^[^\s"'`$\\;&|<>(){},#*?[]+$/;
 
 const quoteOf = (text: string): string => (/^(["']).+\1$/s.test(text) ? (text[0] ?? '') : '');
 

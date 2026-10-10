@@ -27,4 +27,37 @@ describe('markHidden', () => {
   it('marks each of several in a row', () => {
     expect(showHidden('‮‮')).toBe('\\u{202E}\\u{202E}');
   });
+
+  it('marks every character that draws nothing, one token per code point', () => {
+    const zeroWidth = {
+      'combining grapheme joiner': '͏',
+      'hangul fillers': 'ᅟᅠㅤﾠ',
+      'deprecated format characters': '⁪⁯',
+      'variation selectors': '︀️',
+      'interlinear annotation': '￹￻',
+      'musical format characters': '\u{1D173}\u{1D17A}',
+    };
+    for (const [name, chars] of Object.entries(zeroWidth)) {
+      const marks = markHidden(`a${chars}b`).filter((part) => part.kind === 'hidden');
+      expect(marks, name).toHaveLength([...chars].length);
+    }
+    expect(showHidden('a\u{E0001}\u{E0041}\u{E007F}b')).toBe('a\\u{E0001}\\u{E0041}\\u{E007F}b');
+    expect(showHidden('x\u{E0100}\u{E01EF}')).toBe('x\\u{E0100}\\u{E01EF}');
+  });
+
+  it('marks nothing in plain text, accents, CJK, Cyrillic or emoji without a selector', () => {
+    for (const text of [
+      'npm run test',
+      'café naïve',
+      '日本語のファイル',
+      'привет мир',
+      '😀 🚀 👍🏽',
+    ]) {
+      expect(hasHidden(text), text).toBe(false);
+    }
+  });
+
+  it('marks the variation selector of an emoji that has one, as it does a joiner', () => {
+    expect(showHidden('❤️')).toBe('❤\\u{FE0F}');
+  });
 });
