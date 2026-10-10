@@ -85,7 +85,7 @@ async function factsOf(
     channels: meta.channels ?? 4,
     format,
     progressive: meta.isProgressive,
-    scans: format === 'jpeg' ? countJpegScans(original) : 1,
+    scans: format === 'jpeg' ? countJpegScans(original) : null,
     hasMetadata: Boolean(meta.exif ?? meta.xmp ?? meta.iptc ?? meta.comments?.length),
   };
 }

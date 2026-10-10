@@ -46,6 +46,20 @@ describe('jpegSegments', () => {
     segments.slice(1).forEach((segment, index) => expect(segment.start).toBe(segments[index]!.end));
   });
 
+  it('reads a length field below 2 as an empty segment, as libjpeg does', async () => {
+    const photo = await jpegPhoto({ width: 16, height: 16 });
+    for (const length of [0, 1]) {
+      const empty = Buffer.concat([
+        photo.subarray(0, 2),
+        Buffer.from([0xff, 0xe0, 0, length]),
+        photo.subarray(2),
+      ]);
+      const [first, second] = jpegSegments(empty);
+      expect(first).toEqual({ marker: 0xe0, start: 2, end: 6 });
+      expect(second?.start).toBe(6);
+    }
+  });
+
   it('stops at a segment cut off', async () => {
     const photo = Buffer.from(await jpegPhoto({ width: 16, height: 16 }));
     const cut = photo.subarray(0, photo.indexOf(Buffer.from([0xff, 0xda])) + 3);

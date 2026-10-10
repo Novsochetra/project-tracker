@@ -1,22 +1,27 @@
 import { hasOrientation, orientationExif } from './exifOrientation';
-import { jpegSegments, type JpegSegment } from './jpegSegments';
+import { EOI, SOS, headerEnd, jpegSegments, type JpegSegment } from './jpegSegments';
 
 const SOI = 0xd8;
-const SOS = 0xda;
+const SOF = [0xc0, 0xc1, 0xc2, 0xc3, 0xc5, 0xc6, 0xc7, 0xc9, 0xca, 0xcb, 0xcd, 0xce, 0xcf];
+const DHT = 0xc4;
+const DAC = 0xcc;
+const DQT = 0xdb;
+const DNL = 0xdc;
+const DRI = 0xdd;
 const APP0 = 0xe0;
 const APP2 = 0xe2;
 const APP14 = 0xee;
-const COM = 0xfe;
 const ICC_PROFILE = Buffer.from('ICC_PROFILE\0', 'latin1');
 
-// Kept: JFIF (APP0), the color profile (APP2 ICC_PROFILE) and Adobe's color transform (APP14),
-// which the pixels need. Dropped, wherever they are, between scans too: every other APPn (EXIF with
-// GPS and camera, XMP, IPTC, MPF) and comments.
+// Only what the pixels need: the frame, its tables and scans, JFIF (APP0), the color profile (APP2
+// ICC_PROFILE) and Adobe's color transform (APP14). Everything else can carry any bytes and goes,
+// wherever it is, between scans too: every other APPn (EXIF with GPS and camera, XMP, IPTC, MPF),
+// comments, and markers libjpeg doesn't know (PT-146).
+const KEPT = new Set([...SOF, DHT, DAC, DQT, DNL, DRI, SOS, EOI, APP0, APP14]);
+
 function isNeeded(bytes: Buffer, { marker, start }: JpegSegment): boolean {
-  if (marker === COM) return false;
-  if (marker < APP0 || marker > APP14 + 1) return true;
   if (marker === APP2) return bytes.subarray(start + 4, start + 16).equals(ICC_PROFILE);
-  return marker === APP0 || marker === APP14;
+  return KEPT.has(marker);
 }
 
 function orientationSegment(orientation: number): Buffer {
@@ -53,14 +58,13 @@ function walk(bytes: Buffer): Walk {
 
 // JFIF wants to come first; the EXIF that says which way is up goes right after it.
 function uprightAt(bytes: Buffer, first: Piece): number {
-  if (bytes[first.start + 1] !== APP0) return first.start;
-  return first.start + 2 + bytes.readUInt16BE(first.start + 2);
+  return bytes[first.start + 1] === APP0 ? headerEnd(bytes, first.start) : first.start;
 }
 
 // Removes metadata without decoding, so not a pixel changes. Null when the bytes aren't a JPEG, or
 // are cut off or broken before any image data: there is nothing whole to keep.
 export function stripJpeg(bytes: Uint8Array, orientation: number): Uint8Array | null {
-  const buffer = Buffer.from(bytes);
+  const buffer = Buffer.from(bytes.buffer, bytes.byteOffset, bytes.byteLength);
   if (buffer[0] !== 0xff || buffer[1] !== SOI) return null;
   const { pieces, scanned } = walk(buffer);
   const [first, ...rest] = pieces;

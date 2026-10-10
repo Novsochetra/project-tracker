@@ -67,6 +67,10 @@ describe('planImage', () => {
     ).toBeNull();
   });
 
+  it('plans a format that has no scans to count', () => {
+    expect(planImage('image/png', facts({ format: 'png', scans: null }))).not.toBeNull();
+  });
+
   it('decodes a 48 MP iPhone photo, read a strip at a time', () => {
     expect(planImage('image/jpeg', facts({ width: 8064, height: 6048 }))).not.toBeNull();
   });

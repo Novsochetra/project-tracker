@@ -49,7 +49,7 @@ export interface ImageFacts {
   format: 'jpeg' | 'png' | 'webp' | 'heif';
   // A progressive JPEG or an interlaced PNG.
   progressive: boolean;
-  scans: number;
+  scans: number | null;
   // EXIF, XMP, IPTC or text chunks: where a phone puts the place and the camera.
   hasMetadata: boolean;
 }
@@ -80,9 +80,10 @@ export function wholePixels(facts: ImageFacts, plan: ImagePlan): number {
   return Math.min(pixels, Math.max(4 * outputPixels(facts, plan), pixels / 64));
 }
 
-// Null keeps the image as it came: an animation would lose its frames.
+// Null leaves the image undecoded, kept as it came: an animation would lose its frames, and past
+// the limits above a decode takes too long or too much memory.
 export function planImage(mimeType: AttachmentMimeType, facts: ImageFacts): ImagePlan | null {
-  if (facts.pages > 1 || facts.scans > MAX_JPEG_SCANS) return null;
+  if (facts.pages > 1 || (facts.scans ?? 0) > MAX_JPEG_SCANS) return null;
   if (facts.width * facts.height > MAX_INPUT_PIXELS) return null;
   const lossless = LOSSLESS_SOURCES.has(mimeType);
   const budget = lossless ? MAX_LOSSLESS_PIXELS : MAX_PHOTO_PIXELS;

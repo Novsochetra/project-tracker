@@ -8,8 +8,10 @@ import {
   animatedWebp,
   containsText,
   jpegPhoto,
+  noisyPixels,
   pngChunk,
   pngImage,
+  rawImage,
   rawPixelsOf,
   screenPixels,
   withJpegSegment,
@@ -54,6 +56,32 @@ describe('stripJpeg', () => {
     const photo = await jpegPhoto({ width: 16, height: 16 });
     const trailer = Buffer.concat([Buffer.from(photo), Buffer.from('GPS 11.55N 104.92E')]);
     expect(Buffer.from(stripJpeg(trailer, 1)!).equals(Buffer.from(photo))).toBe(true);
+  });
+
+  it('keeps every byte of a JPEG without metadata, whatever its kind', async () => {
+    const noise = () => rawImage(noisyPixels(48, 32), 48, 32);
+    const kinds = [
+      noise().jpeg(),
+      noise().jpeg({ progressive: true }),
+      noise().jpeg({ mozjpeg: true }),
+      noise().jpeg({ chromaSubsampling: '4:4:4' }),
+      noise().greyscale().jpeg({ progressive: true }),
+      noise().toColourspace('cmyk').jpeg({ progressive: true }),
+      noise().withIccProfile('p3').jpeg(),
+    ];
+    for (const kind of kinds) {
+      const jpeg = await kind.toBuffer();
+      expect(Buffer.from(stripJpeg(jpeg, 1)!).equals(jpeg)).toBe(true);
+    }
+  });
+
+  it('drops segments of markers libjpeg doesn’t know, which can carry anything', async () => {
+    const photo = await jpegPhoto({ width: 32, height: 24 });
+    const marked = [0x02, 0xbf, 0xc8, 0xde, 0xf0, 0xfd].reduce(
+      (jpeg, marker) => withJpegSegment(jpeg, marker, Buffer.from('GPS 11.55N 104.92E')),
+      photo,
+    );
+    expect(Buffer.from(stripJpeg(marked, 1)!).equals(Buffer.from(photo))).toBe(true);
   });
 
   it('gives nothing for a JPEG cut off before its image data', async () => {
