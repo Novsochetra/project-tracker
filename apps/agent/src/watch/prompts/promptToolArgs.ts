@@ -1,6 +1,4 @@
 import { dirname, extname, join } from 'node:path';
-import { RUN_REQUEST_DEADLINE_MS } from '@tracker/shared';
-import type { Env } from '../../config';
 import { PROMPT_SERVER, PROMPT_TOOL } from './promptToolServer';
 
 // Built beside the CLI (dist/promptTool.js), or its source under tsx, whose loader is in execArgv.
@@ -21,14 +19,4 @@ export function promptToolArgs(command: readonly string[], socketPath: string): 
     '--permission-prompt-tool',
     `mcp__${PROMPT_SERVER}__${PROMPT_TOOL}`,
   ];
-}
-
-const TOOL_TIMEOUT_MS = RUN_REQUEST_DEADLINE_MS + 5 * 60_000;
-
-// Claude Code must not give up on the tool before the tracker's deadline ends the request; a
-// longer timeout the person set stays.
-export function promptToolEnv(env: Env): Env {
-  const theirs = Number(env.MCP_TOOL_TIMEOUT);
-  const timeout = Number.isFinite(theirs) && theirs > TOOL_TIMEOUT_MS ? theirs : TOOL_TIMEOUT_MS;
-  return { ...env, MCP_TOOL_TIMEOUT: String(timeout) };
 }

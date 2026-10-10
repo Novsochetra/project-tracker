@@ -1,11 +1,11 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { askHelper } from './askHelper';
+import { keepCallAlive } from './keepCallAlive';
 
 export const PROMPT_SERVER = 'tracker-watch';
 export const PROMPT_TOOL = 'ask_person';
 
-// Claude Code calls this tool itself and never shows it to the model.
 export function createPromptToolServer(socketPath: string): McpServer {
   const server = new McpServer({ name: PROMPT_SERVER, version: '0.0.0' });
   server.registerTool(
@@ -19,8 +19,13 @@ export function createPromptToolServer(socketPath: string): McpServer {
       },
     },
     async (args, extra) => {
-      const decision = await askHelper(socketPath, args, extra.signal);
-      return { content: [{ type: 'text', text: JSON.stringify(decision) }] };
+      const stop = keepCallAlive(extra._meta?.progressToken, extra.sendNotification);
+      try {
+        const decision = await askHelper(socketPath, args, extra.signal);
+        return { content: [{ type: 'text', text: JSON.stringify(decision) }] };
+      } finally {
+        stop();
+      }
     },
   );
   return server;

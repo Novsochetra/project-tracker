@@ -49,3 +49,7 @@ export const answerRunRequestInput = z.object({
   answers: z.array(text(RUN_REQUEST_ANSWER_MAX, 1)).min(1).max(RUN_QUESTIONS_MAX).optional(),
 });
 export type AnswerRunRequestInput = z.input<typeof answerRunRequestInput>;
+
+// The helper ends a request Claude no longer waits for, so the phone never shows a dead card.
+export const cancelRunRequestInput = z.object({ runnerId });
+export type CancelRunRequestInput = z.input<typeof cancelRunRequestInput>;

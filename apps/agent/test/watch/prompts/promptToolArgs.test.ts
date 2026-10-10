@@ -1,11 +1,6 @@
-import { RUN_REQUEST_DEADLINE_MS } from '@tracker/shared';
 import { describe, expect, it } from 'vitest';
 import { promptCallOf } from '../../../src/watch/prompts/promptCall';
-import {
-  promptToolArgs,
-  promptToolCommand,
-  promptToolEnv,
-} from '../../../src/watch/prompts/promptToolArgs';
+import { promptToolArgs, promptToolCommand } from '../../../src/watch/prompts/promptToolArgs';
 
 describe('promptToolArgs', () => {
   it('adds one stdio server holding only the socket, and names its tool as the prompt tool', () => {
@@ -47,20 +42,6 @@ describe('promptToolCommand', () => {
       ...loader,
       '/app/src/promptTool.ts',
     ]);
-  });
-});
-
-describe('promptToolEnv', () => {
-  const ours = String(RUN_REQUEST_DEADLINE_MS + 5 * 60_000);
-
-  it("lets Claude Code wait on the tool past the tracker's deadline", () => {
-    expect(promptToolEnv({ PATH: '/bin' })).toEqual({ PATH: '/bin', MCP_TOOL_TIMEOUT: ours });
-    expect(promptToolEnv({ MCP_TOOL_TIMEOUT: '60000' }).MCP_TOOL_TIMEOUT).toBe(ours);
-    expect(promptToolEnv({ MCP_TOOL_TIMEOUT: 'soon' }).MCP_TOOL_TIMEOUT).toBe(ours);
-  });
-
-  it('keeps a longer timeout the person set', () => {
-    expect(promptToolEnv({ MCP_TOOL_TIMEOUT: '100000000' }).MCP_TOOL_TIMEOUT).toBe('100000000');
   });
 });
 

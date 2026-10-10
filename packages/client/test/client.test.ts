@@ -335,6 +335,13 @@ const routes: Route[] = [
     path: '/api/requests/q-1/wait',
     call: (c) => c.waitForRunRequest('q-1'),
   },
+  {
+    name: 'cancelRunRequest',
+    method: 'POST',
+    path: '/api/requests/q-1/cancel',
+    body: { runnerId: 'r' },
+    call: (c) => c.cancelRunRequest('q-1', { runnerId: 'r' }),
+  },
 ];
 
 afterEach(() => {

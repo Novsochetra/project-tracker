@@ -1,8 +1,9 @@
-import { addRunRequestInput, answerRunRequestInput } from '@tracker/shared';
+import { addRunRequestInput, answerRunRequestInput, cancelRunRequestInput } from '@tracker/shared';
 import { Hono, type Context } from 'hono';
 import { requireScope } from '../../auth/scope';
 import type { ServiceContext } from '../../services/context';
 import { addRunRequest, answerRunRequest, listRunRequests } from '../../services/runRequests';
+import { cancelRunRequest } from '../../services/runRequestCancel';
 import { waitForRunRequest } from '../../services/runRequestWait';
 import type { AppEnv } from '../env';
 import { helperOnly } from '../helperOnly';
@@ -24,4 +25,7 @@ export const runRequestRoutes = (ctx: ServiceContext) =>
     )
     .get('/requests/:id/wait', helperOnly, async (c) =>
       c.json(await waitForRunRequest(ctx, scope(c), c.req.param('id'), c.req.raw.signal)),
+    )
+    .post('/requests/:id/cancel', helperOnly, jsonBody(cancelRunRequestInput), async (c) =>
+      c.json(await cancelRunRequest(ctx, scope(c), c.req.param('id'), c.req.valid('json'))),
     );

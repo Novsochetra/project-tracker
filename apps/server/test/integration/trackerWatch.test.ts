@@ -96,7 +96,17 @@ describe('tracker watch against a real tracker', () => {
     person = tracker.person;
     link = await cuttableLink(tracker.port);
     await person.createProject({ name: 'Mobile', key: 'MOB' });
-    for (const title of ['Crash', 'Login', 'Offline', 'Slow', 'Report', 'Steps', 'Ask', 'Stop']) {
+    for (const title of [
+      'Crash',
+      'Login',
+      'Offline',
+      'Slow',
+      'Report',
+      'Steps',
+      'Ask',
+      'Stop',
+      'Give up',
+    ]) {
       await person.createTicket('MOB', { title });
     }
     const helper = new TrackerClient({
@@ -266,6 +276,17 @@ describe('tracker watch against a real tracker', () => {
     await person.answerRunRequest(request.id, { decision: 'deny' });
     await vi.waitFor(async () => expect(await statusOf(runId)).toBe('done'), settle);
     expect(written.join('')).toContain(`DECISION {"behavior":"deny","message":"${DENIED}"}`);
+  });
+
+  it('ends the request on the tracker when Claude gives up on the call', async () => {
+    const runId = await start('MOB-9', `GIVE UP ${promptCall('Bash', { command: 'npm test' })}`);
+    await vi.waitFor(async () => {
+      const requests = await person.listRunRequests(runId);
+      expect(requests).toMatchObject([{ label: 'Run npm test', status: 'cancelled' }]);
+    }, settle);
+    expect(await statusOf(runId)).toBe('running');
+    writeFileSync(join(fake.dir, 'gave-up'), '');
+    await vi.waitFor(async () => expect(await statusOf(runId)).toBe('done'), settle);
   });
 
   it('ends the open request of a run the person stops', async () => {

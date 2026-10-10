@@ -47,8 +47,8 @@ process.stdin.on('end', () => {
     say('It found the report: TICKET MOB-9.');
     process.exit(0);
   }
-  // Calls the permission prompt tool from --mcp-config the way Claude Code does, then says what
-  // it got back.
+  // Calls the permission prompt tool from --mcp-config the way Claude Code 2.1.296 does, then
+  // says what it got back.
   if (prompt.includes('PROMPT TOOL ')) {
     const argOf = (name) => process.argv[process.argv.indexOf(name) + 1];
     const [name, server] = Object.entries(JSON.parse(argOf('--mcp-config')).mcpServers)[0];
@@ -66,7 +66,14 @@ process.stdin.on('end', () => {
       for (const message of lines.map((line) => JSON.parse(line))) {
         if (message.id === 0) {
           send({ method: 'notifications/initialized' });
-          send({ id: 1, method: 'tools/call', params: { name: tool, arguments: call } });
+          const params = { name: tool, arguments: call, _meta: { progressToken: 1 } };
+          send({ id: 1, method: 'tools/call', params });
+          // Gives up on the call the way Claude Code cancels one, then waits for the test.
+          if (prompt.includes('GIVE UP')) {
+            setTimeout(() => send({ method: 'notifications/cancelled', params: { requestId: 1 } }), 300);
+            const go = join(dirname(process.argv[1]), 'gave-up');
+            setInterval(() => existsSync(go) && (say('GAVE UP'), process.exit(0)), 20);
+          }
         }
         if (message.id === 1) {
           say('DECISION ' + message.result.content[0].text);

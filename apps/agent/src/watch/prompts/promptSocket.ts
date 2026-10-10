@@ -53,10 +53,11 @@ async function serve(socket: Socket, answer: Answer, stopped: AbortSignal): Prom
   if (!socket.destroyed) socket.end(`${JSON.stringify(decision)}\n`);
 }
 
-// The prompt tool talks to the helper through a socket in a folder only this user can open
-// (mkdtemp makes it 0700), so no token or secret has to reach Claude or its tools.
+// The prompt tool asks the helper rather than the tracker: it needs no token, nothing secret
+// goes into Claude's argv, and the helper keeps the run's lifecycle and its own --url and
+// --token. mkdtemp makes the folder 0700, so only this user can reach the socket.
 export async function openPromptSocket(answer: Answer): Promise<PromptSocket> {
-  const dir = mkdtempSync(join(tmpdir(), 'tracker-'));
+  const dir = mkdtempSync(join(tmpdir(), 'tracker-prompt-'));
   const path = join(dir, 'prompt.sock');
   const stopped = new AbortController();
   const sockets = new Set<Socket>();

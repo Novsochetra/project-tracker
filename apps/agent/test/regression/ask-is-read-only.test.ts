@@ -36,11 +36,10 @@ const ask = async (prompt: string, resume: string | null = null, mode: AskMode =
   return askOutcomeOf(await claude.runAsk(job, new AbortController().signal, noSteps), false);
 };
 
+const STREAM = ['-p', '--output-format', 'stream-json', '--verbose'];
+
 const READ_ONLY_ARGS = [
-  '-p',
-  '--output-format',
-  'stream-json',
-  '--verbose',
+  ...STREAM,
   '--permission-mode',
   'plan',
   '--strict-mcp-config',
@@ -114,6 +113,43 @@ describe('regression: an ask runs Claude read-only', () => {
       'bypassPermissions',
       ...PROMPT_TOOL_ARGS,
     ]);
+  });
+
+  it('asks the person in an Edit question, not a ticket run, when the helper got no mode', async () => {
+    const noMode = claudeRunners({
+      command: fake.command,
+      cwd: realpathSync(tmpdir()),
+      write: () => undefined,
+      prompts: { command: ['node', 'promptTool.js'], ask: askPerson },
+    });
+    const editJob = {
+      ...askJob('r-1', 'c-1', null, { model: 'default', mode: 'edit' }),
+      prompt: 'X',
+    };
+    const edit = askOutcomeOf(
+      await noMode.runAsk(editJob, new AbortController().signal, noSteps),
+      false,
+    );
+    expect(argsOf(edit.answer)).toEqual([
+      ...STREAM,
+      '--permission-mode',
+      'default',
+      ...PROMPT_TOOL_ARGS,
+    ]);
+    for (const mode of ['ask', 'plan'] as const) {
+      const readOnly = { ...askJob('r-1', 'c-1', null, { model: 'default', mode }), prompt: 'X' };
+      const outcome = askOutcomeOf(
+        await noMode.runAsk(readOnly, new AbortController().signal, noSteps),
+        false,
+      );
+      expect(argsOf(outcome.answer)).toEqual(READ_ONLY_ARGS);
+    }
+    const ticket = await noMode.runClaude(
+      job('r-2', 'MOB-1'),
+      new AbortController().signal,
+      noSteps,
+    );
+    expect(argsOf(ticket.results[0]?.text)).toEqual([...STREAM, ...PROMPT_TOOL_ARGS]);
   });
 
   it("resumes the chat's session and hands back the new one", async () => {

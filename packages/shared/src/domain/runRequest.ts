@@ -35,7 +35,6 @@ export interface RunQuestion {
   multiSelect: boolean;
 }
 
-// The label is the tool and a cut command or path, or the first question.
 export type RunRequestInput =
   | { kind: 'permission'; label: string; questions: null }
   | { kind: 'question'; label: string; questions: RunQuestion[] };
