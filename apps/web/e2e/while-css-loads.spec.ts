@@ -47,6 +47,26 @@ const drawnInNextFrame = (page: Page, statusText: string) =>
     statusText,
   );
 
+const BANNER_TEXT = "Can't reach the tracker. Check your connection.";
+
+// The banner's text is in a span, the live region's that says the same in a div.
+const bannerDrawnInNextFrame = (page: Page) =>
+  page.evaluate(
+    (text) =>
+      new Promise<string>((resolve) => {
+        const banner = [...document.querySelectorAll('span')].find(
+          (span) => span.textContent === text,
+        )?.parentElement;
+        if (!banner) return resolve('missing');
+        const watch = new IntersectionObserver(([entry]) => {
+          watch.disconnect();
+          resolve(entry?.isIntersecting ? 'drawn' : 'not drawn');
+        });
+        watch.observe(banner);
+      }),
+    BANNER_TEXT,
+  );
+
 const statusShown = (page: Page, text: string) =>
   page.waitForFunction(
     (wanted) =>
@@ -85,6 +105,23 @@ test('a toast shows while a stylesheet loads', async ({ page, context, api }) =>
   sendCapture();
   await statusShown(page, '1 ticket added');
   expect(await drawnInNextFrame(page, '1 ticket added')).toBe('drawn');
+  release();
+});
+
+// PT-129: the banner comes on its own when the connection drops, maybe while a part's CSS loads.
+test('the offline banner shows while a stylesheet loads', async ({ page, context, api }) => {
+  await seedProject(api, 'Mobile app', 'MOB');
+  await page.goto('/');
+  await expect(page.getByRole('button', { name: /^Mobile app/ }).last()).toBeVisible();
+  const release = await holdSheet(page);
+  await addHeldSheet(page);
+  await context.setOffline(true);
+  await page.waitForFunction(
+    (text) => [...document.querySelectorAll('span')].some((span) => span.textContent === text),
+    BANNER_TEXT,
+  );
+  expect(await bannerDrawnInNextFrame(page)).toBe('drawn');
+  await context.setOffline(false);
   release();
 });
 
