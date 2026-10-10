@@ -23,7 +23,10 @@ describe('regression: the options row and the chat’s saved choice', () => {
   function setup() {
     const rendered = renderAsk({
       client: {
-        getChat: vi.fn().mockResolvedValue(savedAs({ model: 'default', mode: 'ask' })),
+        getChat: vi
+          .fn()
+          .mockResolvedValueOnce(savedAs({ model: 'default', mode: 'ask' }))
+          .mockResolvedValue(savedAs({ model: 'haiku', mode: 'ask' })),
         listRunners: vi.fn().mockResolvedValue([makeRunner()]),
         ask: vi.fn().mockResolvedValue(savedAs({ model: 'haiku', mode: 'ask' })),
       },
@@ -60,6 +63,8 @@ describe('regression: the options row and the chat’s saved choice', () => {
     await user.type(screen.getByRole('textbox', { name: 'Question for Claude' }), 'Why?');
     await user.click(screen.getByRole('button', { name: 'Send' }));
     await waitFor(() => expect(screen.getByRole('textbox', { name: /Question/ })).toHaveValue(''));
+    expect(await modelChip()).toHaveTextContent('Haiku');
+    expect(mode('Ask')).toHaveAttribute('aria-pressed', 'true');
     await save({ model: 'sonnet', mode: 'ask' });
     expect(await modelChip()).toHaveTextContent('Sonnet');
   });

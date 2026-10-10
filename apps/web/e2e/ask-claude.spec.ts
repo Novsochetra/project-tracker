@@ -167,6 +167,9 @@ test('picks the model and mode on one row above the box, and sends them', async 
   await page.screenshot({ path: info.outputPath(`ask-options-${info.project.name}.png`) });
 
   await ask(page, 'Rename the sync queue');
+  await expect(page).toHaveURL(/\/p\/MOB\/ask\/[\w-]+$/);
+  await expect(model).toHaveText(/Sonnet/);
+  await expect(modes.getByRole('button', { name: 'Edit' })).toHaveAttribute('aria-pressed', 'true');
   const job = await api.takeNextRun(helperId, 'ticket');
   expect(job?.run.askOptions).toEqual({ model: 'sonnet', mode: 'edit' });
 });

@@ -21,7 +21,6 @@ export interface AskComposerProps {
   // The chat's queued or running question, which Stop takes Send's place for.
   working: Run | null;
   offersSend: boolean;
-  // The chat's saved choice, or the defaults for a new chat.
   savedOptions: AskOptions;
 }
 
