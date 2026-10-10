@@ -54,6 +54,10 @@ describe('maskSecrets', () => {
         "json={'username': 'bob', 'password': '***'}",
       ],
       ["{'api_key': 'abc123def'}", "{'api_key': '***'}"],
+      ['json={"password": "it\'s"}', 'json={"password": "***"}'],
+      ["{'password': 'say \"hi\"'}", "{'password': '***'}"],
+      ['curl -d \'{"password":"a\'XYZ"}\' x', 'curl -d \'{"password":"***"}\' x'],
+      ['{"api_key": "x\'y\'z"}', '{"api_key": "***"}'],
     ]);
     keeps(['{"name": "x", "keyboard": "us"}', '{"msg": "it\'s fine"}', "{'max_tokens': 100}"]);
   });

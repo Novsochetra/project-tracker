@@ -65,7 +65,8 @@ export const SECRET_RULES: readonly SecretRule[] = [
   ),
   rule(
     'json key',
-    String.raw`(\\?["'](${NAME})\\?["']\s{0,4}:\s{0,4}\\?["'])(?:[^"'\\\n]|\\(?!["']))+`,
+    // The value ends only at its own quote, so `"it's"` or `'say "hi"'` is masked whole.
+    String.raw`(\\?["'](${NAME})\\?["']\s{0,4}:\s{0,4}\\?(["']))(?:(?!\3)[^\\\n]|\\(?!\3))+`,
     'g',
     (m, head = '', name = '') => (secretName(name) ? masked(head) : m),
   ),
