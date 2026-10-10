@@ -49,8 +49,23 @@ describe('maskSecrets', () => {
       ['curl -d \'{"password":"hunter2"}\' x', 'curl -d \'{"password":"***"}\' x'],
       ['curl -d \'{"api_key": "abc"}\' x', 'curl -d \'{"api_key": "***"}\' x'],
       ['curl -d "{\\"password\\":\\"hunter2\\"}" x', 'curl -d "{\\"password\\":\\"***\\"}" x'],
+      [
+        "json={'username': 'bob', 'password': 'hunter2'}",
+        "json={'username': 'bob', 'password': '***'}",
+      ],
+      ["{'api_key': 'abc123def'}", "{'api_key': '***'}"],
+      ['json={"password": "it\'s"}', 'json={"password": "***"}'],
+      ["{'password': 'say \"hi\"'}", "{'password': '***'}"],
+      ['curl -d \'{"password":"a\'XYZ"}\' x', 'curl -d \'{"password":"***"}\' x'],
+      ['{"api_key": "x\'y\'z"}', '{"api_key": "***"}'],
     ]);
-    keeps(['{"name": "x", "keyboard": "us"}']);
+    keeps(['{"name": "x", "keyboard": "us"}', '{"msg": "it\'s fine"}', "{'max_tokens': 100}"]);
+    keeps([
+      'Search for \'"token":\' in src',
+      'Search for \'"password":"\' in src',
+      "rg '\"api_key\":' src -g '*.json'",
+      'grep -rn \'"token":\' test/',
+    ]);
   });
 
   describe('user password', () => {
@@ -104,6 +119,10 @@ describe('maskSecrets', () => {
       'GITHUB_TOKEN=`gh auth token` ./x',
       'Add `key={item.id}` to each <li>.',
       'KEYBOARD_LAYOUT=us MONKEY=1 BYPASS_CACHE=1 ./x',
+      "Search for 'token=' in src",
+      'grep -rn "API_KEY=" apps | head -5',
+      "rg 'password=' -n src",
+      'echo "token=" >> .env.example',
     ]);
   });
 

@@ -5,8 +5,9 @@ import { secretName } from './secretNames';
 // helper's stdout listener waited. A value runs to its end, since it ends each pattern and can't
 // backtrack, and a cut value would show the rest of a long token. A bare value never starts with
 // `-` and stops at a quote, a backtick or a shell symbol, so it never takes the next flag or shell
-// word (`--with-token < token.txt`); a quote left open masks to the line's end.
-const VALUE = String.raw`(?:"[^"\n]*"?|'[^'\n]*'?|[^\s"'\x60<>|;&)-][^\s"'\x60<>|;&)]*)`;
+// word (`--with-token < token.txt`). A quote left open masks to the line's end, unless a space
+// follows it: then it closes a string (`grep "API_KEY=" src`) and the rest is no value.
+const VALUE = String.raw`(?:"[^"\n]*"|'[^'\n]*'|"[^"\s][^"\n]*|'[^'\s][^'\n]*|[^\s"'\x60<>|;&)-][^\s"'\x60<>|;&)]*)`;
 const NAME = String.raw`[\w-]{1,60}`;
 // trk_ is this tracker's own API token (API_TOKEN_PREFIX in the server).
 const PREFIXED = String.raw`trk_[\w-]{20,}|gh[pousr]_\w+|github_pat_\w+|sk-ant-[\w-]+|sk-[\w-]{20,}|sk_(?:live|test)_\w+|xox[abprs]-[\w-]+|glpat-[\w-]+|AKIA[0-9A-Z]{16}`;
@@ -64,7 +65,9 @@ export const SECRET_RULES: readonly SecretRule[] = [
   ),
   rule(
     'json key',
-    String.raw`(\\?"(${NAME})\\?"\s{0,4}:\s{0,4}\\?")(?:[^"\\\n]|\\(?!"))+`,
+    // The value ends only at its own quote, so `"it's"` or `'say "hi"'` is masked whole. A value
+    // can't start with a space or a quote: that quote closes a search (`rg '"token":' src`).
+    String.raw`(\\?["'](${NAME})\\?["']\s{0,4}:\s{0,4}\\?(["']))(?![\s"'])(?:(?!\3)[^\\\n]|\\(?!\3))+`,
     'g',
     (m, head = '', name = '') => (secretName(name) ? masked(head) : m),
   ),
