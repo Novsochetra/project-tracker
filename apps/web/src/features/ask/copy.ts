@@ -8,5 +8,6 @@ export const EDIT_HINT =
 export const SEND_LABEL = 'Send';
 export const STOP_LABEL = 'Stop';
 export const WORKING_LABEL = 'Claude, working';
+export const STOPPED_STEPS_LABEL = 'Claude, stopped';
 export const STOPPED_TEXT = 'Stopped.';
 export const STOPPED_PART_WAY_TEXT = 'Stopped part way. Some files or tickets may have changed.';

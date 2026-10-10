@@ -7,6 +7,7 @@ import {
   runHelper,
   thinkingText,
   stoppableRunOf,
+  stoppedWithSteps,
 } from './chatFooter';
 import { STOPPED_PART_WAY_TEXT, STOPPED_TEXT } from './copy';
 
@@ -94,5 +95,23 @@ describe('cancelledText', () => {
     }
     expect(cancelledText({ askOptions: edit, startedAt: null })).toBe(STOPPED_TEXT);
     expect(cancelledText({ askOptions: null, startedAt: 2 })).toBe(STOPPED_TEXT);
+  });
+});
+
+describe('stoppedWithSteps', () => {
+  it('is a question that failed or was stopped after Claude took steps', () => {
+    for (const status of ['failed', 'cancelled'] as const) {
+      const run = ask({ status, stepCount: 3 });
+      expect(stoppedWithSteps(run)).toBe(run);
+      expect(stoppedWithSteps({ ...run, stepCount: 0 })).toBeNull();
+    }
+  });
+
+  it('is none while Claude works, once it answered, or with no question', () => {
+    for (const status of ['queued', 'running', 'done'] as const) {
+      expect(stoppedWithSteps(ask({ status, stepCount: 3 }))).toBeNull();
+    }
+    expect(stoppedWithSteps(null)).toBeNull();
+    expect(stoppedWithSteps(undefined)).toBeNull();
   });
 });

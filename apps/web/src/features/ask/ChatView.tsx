@@ -5,11 +5,11 @@ import { savedAskOptions } from './askOptions';
 import { ChatFooterArea } from './ChatFooterArea';
 import styles from './ChatScreen.module.css';
 import { ASK_INTRO } from './copy';
+import { LatestRunSteps } from './LatestRunSteps';
 import { MessageList } from './MessageList';
 import { useAskHelper } from './useAskHelper';
 import { useScrollToEnd } from './useScrollToEnd';
 import { useWorkingMessage } from './useWorkingMessage';
-import { WorkingMessage } from './WorkingMessage';
 
 export interface ChatViewProps {
   projectKey: string;
@@ -22,7 +22,6 @@ export function ChatView({ projectKey, chatId, detail }: ChatViewProps) {
   const messages = detail?.messages ?? [];
   useScrollToEnd(`${messages.length}:${helper.footer.kind}`);
   const { threadRef, rows, requests } = useWorkingMessage(detail?.run);
-  const working = rows.length > 0 || requests.shown.length > 0;
   return (
     <div className={styles.screen}>
       <NavBar
@@ -38,7 +37,7 @@ export function ChatView({ projectKey, chatId, detail }: ChatViewProps) {
             chatId={chatId ?? ''}
             messages={messages}
             helper={helper.cardHelper}
-            working={working && <WorkingMessage rows={rows} requests={requests} />}
+            latestRun={<LatestRunSteps run={detail?.run} working={rows} requests={requests} />}
           />
         )}
       </div>

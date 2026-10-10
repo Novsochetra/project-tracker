@@ -3,6 +3,7 @@ import type { RunEvent, RunRequestEvent } from '@tracker/shared';
 import { queryKeys } from '../queryKeys';
 import { changeScope } from './changeScope';
 import { cachedEntries } from './refreshForChange';
+import { refreshRunSteps } from './refreshRunSteps';
 
 const isTicketRuns = (queryKey: readonly unknown[]): boolean =>
   queryKey[0] === 'ticket' && queryKey[2] === 'runs';
@@ -20,10 +21,6 @@ function refreshTicketRuns(queryClient: QueryClient, ticketId: string, projectId
   }
 }
 
-// Each read asks only for the steps after the last one cached, so one per step event stays small.
-export const refreshRunSteps = (queryClient: QueryClient, runId: string): void =>
-  void queryClient.invalidateQueries({ queryKey: queryKeys.runSteps(runId), exact: true });
-
 export const refreshRunRequests = (queryClient: QueryClient, runId: string): void =>
   void queryClient.invalidateQueries({ queryKey: queryKeys.runRequests(runId), exact: true });
 
@@ -33,8 +30,6 @@ export function refreshForRunRequest(queryClient: QueryClient, event: RunRequest
   if (event.chatId) void queryClient.invalidateQueries({ queryKey: queryKeys.allChats() });
 }
 
-// The helper sends a run's last steps before its end, so a missed step event is caught up here.
-// A run's end also ends its open requests, which the tracker settles when they are next read.
 // A helper that takes or ends a run has just been seen, so its online state may have changed too.
 export function refreshForRun(queryClient: QueryClient, event: RunEvent): void {
   if (event.ticketId) refreshTicketRuns(queryClient, event.ticketId, event.projectId);
@@ -43,7 +38,9 @@ export function refreshForRun(queryClient: QueryClient, event: RunEvent): void {
     // An answer moves its chat to the top of the list.
     void queryClient.invalidateQueries({ queryKey: queryKeys.allChats() });
   }
-  refreshRunSteps(queryClient, event.runId);
+  // The helper sends a run's last steps before its end, so a missed step event is caught up here.
+  void refreshRunSteps(queryClient, event.runId);
+  // A run's end also ends its open requests, which the tracker settles when they are next read.
   refreshRunRequests(queryClient, event.runId);
   void queryClient.invalidateQueries({ queryKey: queryKeys.runners(), exact: true });
 }

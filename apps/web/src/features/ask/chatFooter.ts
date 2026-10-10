@@ -58,3 +58,6 @@ export const helperOf = (footer: ChatFooter): Runner | null =>
 
 export const stoppableRunOf = (footer: ChatFooter): Run | null =>
   footer.kind === 'thinking' ? footer.run : null;
+
+export const stoppedWithSteps = (run: Run | null | undefined): Run | null =>
+  run && (run.status === 'failed' || run.status === 'cancelled') && run.stepCount > 0 ? run : null;
