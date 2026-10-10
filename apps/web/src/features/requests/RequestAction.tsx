@@ -1,6 +1,8 @@
 import { Icon } from '../../components';
 import { stepIcon } from '../steps/stepIcon';
-import { LABEL_CUT_TEXT } from './copy';
+import { HIDDEN_CHARS_TEXT, LABEL_CUT_TEXT } from './copy';
+import { hasHidden } from './hiddenChars';
+import { MarkedText } from './MarkedText';
 import styles from './Requests.module.css';
 import { labelParts } from './requestText';
 
@@ -11,9 +13,16 @@ export function RequestAction({ label, cut }: { label: string; cut: boolean }) {
     <div className={styles.action}>
       <p className={styles.verb}>
         <Icon icon={stepIcon({ kind: 'tool', label })} size={16} className={styles.verbIcon} />
-        {verb}
+        <span className={styles.verbText}>
+          <MarkedText text={verb} />
+        </span>
       </p>
-      {detail && <code className={styles.code}>{detail}</code>}
+      {detail && (
+        <code className={styles.code}>
+          <MarkedText text={detail} />
+        </code>
+      )}
+      {hasHidden(label) && <p className={styles.cut}>{HIDDEN_CHARS_TEXT}</p>}
       {cut && <p className={styles.cut}>{LABEL_CUT_TEXT}</p>}
     </div>
   );

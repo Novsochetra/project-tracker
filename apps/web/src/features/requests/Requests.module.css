@@ -63,8 +63,24 @@
   font-size: var(--size-secondary);
 }
 
+.verbText {
+  min-width: 0;
+  unicode-bidi: isolate;
+  direction: ltr;
+}
+
+.hiddenChar {
+  padding: 0 2px;
+  border-radius: var(--radius-square);
+  background: var(--danger-line);
+  color: var(--danger);
+  font: var(--text-mono);
+}
+
 .code {
   display: block;
+  unicode-bidi: isolate;
+  direction: ltr;
   max-height: 30vh;
   padding: var(--space-2) 10px;
   overflow-y: auto;

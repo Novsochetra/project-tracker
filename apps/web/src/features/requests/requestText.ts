@@ -1,5 +1,6 @@
 import { labelHead, type RunQuestion, type RunRequest } from '@tracker/shared';
 import { OUTCOME_TEXT, PERMISSION_HEAD, QUESTION_HEAD } from './copy';
+import { showHidden } from './hiddenChars';
 import { requestState } from './requestState';
 
 export type Outcome = keyof typeof OUTCOME_TEXT | 'answered';
@@ -20,9 +21,11 @@ export function labelParts(label: string): LabelParts {
 
 // One line: a permission's command may run over many.
 export const subjectOf = (request: RunRequest): string =>
-  request.kind === 'question'
-    ? (request.questions[0]?.question ?? request.label)
-    : labelHead(request.label);
+  showHidden(
+    request.kind === 'question'
+      ? (request.questions[0]?.question ?? request.label)
+      : labelHead(request.label),
+  );
 
 export function outcomeOf(request: RunRequest, now: number): Outcome {
   const state = requestState(request, now);
