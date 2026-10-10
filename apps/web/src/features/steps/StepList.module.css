@@ -56,12 +56,32 @@
   line-height: 1.45;
 }
 
-.clamped .label {
+/* Words cut while Claude works open with a tap, so they read as text that can be pressed. */
+.open {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  cursor: pointer;
+}
+
+.clamped .words {
   display: -webkit-box;
   overflow: hidden;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: var(--step-lines);
   line-clamp: var(--step-lines);
+}
+
+.leaving {
+  overflow: hidden;
+  pointer-events: none;
 }
 
 .sub {

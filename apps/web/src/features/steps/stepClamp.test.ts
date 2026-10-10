@@ -1,21 +1,23 @@
 import { describe, expect, it } from 'vitest';
-import { textLines } from './stepClamp';
+import { isCut } from './stepClamp';
 
 const text = { kind: 'text' } as const;
+const older = { newest: false, whole: false };
 
-describe('textLines', () => {
-  it("shows Claude's newest words whole while it works, and earlier ones cut to 3 lines", () => {
-    expect(textLines('live', text, true)).toBeNull();
-    expect(textLines('live', text, false)).toBe(3);
+describe('isCut', () => {
+  it("cuts Claude's earlier words while it works, never its newest", () => {
+    expect(isCut('live', text, older)).toBe(true);
+    expect(isCut('live', text, { ...older, newest: true })).toBe(false);
   });
 
-  it("keeps a folded answer's words to 2 lines and a sheet's whole", () => {
-    expect(textLines('history', text, true)).toBe(2);
-    expect(textLines('full', text, false)).toBeNull();
+  it('cuts nothing once the person opened every earlier step', () => {
+    expect(isCut('live', text, { ...older, whole: true })).toBe(false);
   });
 
-  it('never cuts a call, which is one line already', () => {
-    expect(textLines('live', { kind: 'tool' }, false)).toBeNull();
-    expect(textLines('history', { kind: 'denied' }, false)).toBeNull();
+  it("cuts nothing in a folded answer's list or a sheet, and never a call", () => {
+    expect(isCut('history', text, older)).toBe(false);
+    expect(isCut('full', text, older)).toBe(false);
+    expect(isCut('live', { kind: 'tool' }, older)).toBe(false);
+    expect(isCut('live', { kind: 'denied' }, older)).toBe(false);
   });
 });

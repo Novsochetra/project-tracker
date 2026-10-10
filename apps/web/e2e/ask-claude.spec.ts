@@ -160,6 +160,14 @@ test('says an Edit question Claude had started stopped part way, and keeps its s
   // The open list fades in; a screenshot taken before its first frame showed it folded.
   await page.evaluate(() => Promise.all(document.getAnimations().map(({ finished }) => finished)));
   await page.screenshot({ path: info.outputPath(`ask-stopped-edit-${info.project.name}.png`) });
+
+  await ask(page, 'Rename it to captureQueue');
+  await expect(page.getByText(/Stopped part way/)).toBeHidden();
+  const thread = page.getByRole('list', { name: 'Messages' }).getByRole('article');
+  await expect
+    .poll(() => thread.evaluateAll((items) => items.map((item) => item.getAttribute('aria-label'))))
+    .toEqual(['You', 'Claude, stopped', 'You']);
+  await expect(stopped.getByRole('button', { name: '2 steps' })).toBeVisible();
 });
 
 test('picks the model and mode on one row above the box, and sends them', async ({
@@ -253,4 +261,53 @@ test('shows what Claude does while it answers, then folds the steps above the an
   await expect(folded).toHaveCount(7);
   await expect(folded.nth(2)).toContainText('Run echo hello > out.txt');
   await page.screenshot({ path: info.outputPath(`ask-steps-${info.project.name}.png`) });
+});
+
+// Claude's words are cut once a newer step comes; the row eases to its new height rather than the
+// list dropping by the lines it lost in one frame.
+test('eases a long step down when a newer one comes, frame by frame', async ({
+  page,
+  api,
+}, info) => {
+  await seedProject(api, 'Mobile app', 'MOB');
+  const helperId = randomUUID();
+  await api.registerRunner(helperId, { name: HELPER, projectKeys: ['MOB'] });
+  await page.goto('/p/MOB/ask/new');
+  await ask(page, 'Why is sync slow?');
+  const job = await api.takeNextRun(helperId, 'ask');
+  const send = (steps: RunStepInput[]) =>
+    api.addRunSteps(job!.run.id, { runnerId: helperId, steps });
+  const long = Array.from({ length: 9 }, (_, line) => `Line ${line + 1}: one capture at a time.`);
+  await send([
+    ...['a', 'b', 'c', 'd'].map((name) => step(`Read apps/web/src/${name}.ts`)),
+    step(long.join('\n'), { kind: 'text' }),
+  ]);
+  const working = page.getByRole('article', { name: 'Claude, working' });
+  await expect(working.getByText('Line 9: one capture at a time.')).toBeVisible();
+
+  // Each frame until 40 after the new step shows: where the long step's bottom is and its height.
+  const frames = page.evaluate(
+    () =>
+      new Promise<Array<{ bottom: number; height: number }>>((resolve) => {
+        const seen: Array<{ bottom: number; height: number }> = [];
+        let after = 0;
+        const tick = () => {
+          const rows = [...document.querySelectorAll('[aria-label="Claude, working"] li')];
+          const row = rows.find((item) => item.textContent?.includes('Line 9'));
+          const box = row?.getBoundingClientRect();
+          if (box) seen.push({ bottom: box.bottom, height: box.height });
+          if (rows.at(-1)?.textContent === 'Run npm test') after += 1;
+          if (after < 40 && seen.length < 1_000) requestAnimationFrame(tick);
+          else resolve(seen);
+        };
+        requestAnimationFrame(tick);
+      }),
+  );
+  await send([step('Run npm test')]);
+  const seen = await frames;
+  await expect(working.getByRole('listitem').last()).toHaveText('Run npm test');
+  const moves = seen.slice(1).map(({ bottom }, index) => Math.abs(bottom - seen[index]!.bottom));
+  expect(seen[0]!.height - seen.at(-1)!.height).toBeGreaterThan(80);
+  expect(Math.max(...moves)).toBeLessThan(40);
+  await page.screenshot({ path: info.outputPath(`ask-cut-step-${info.project.name}.png`) });
 });
