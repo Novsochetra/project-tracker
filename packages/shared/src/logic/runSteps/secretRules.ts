@@ -65,8 +65,9 @@ export const SECRET_RULES: readonly SecretRule[] = [
   ),
   rule(
     'json key',
-    // The value ends only at its own quote, so `"it's"` or `'say "hi"'` is masked whole.
-    String.raw`(\\?["'](${NAME})\\?["']\s{0,4}:\s{0,4}\\?(["']))(?:(?!\3)[^\\\n]|\\(?!\3))+`,
+    // The value ends only at its own quote, so `"it's"` or `'say "hi"'` is masked whole. A value
+    // can't start with a space or a quote: that quote closes a search (`rg '"token":' src`).
+    String.raw`(\\?["'](${NAME})\\?["']\s{0,4}:\s{0,4}\\?(["']))(?![\s"'])(?:(?!\3)[^\\\n]|\\(?!\3))+`,
     'g',
     (m, head = '', name = '') => (secretName(name) ? masked(head) : m),
   ),

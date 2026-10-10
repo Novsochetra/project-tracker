@@ -60,6 +60,12 @@ describe('maskSecrets', () => {
       ['{"api_key": "x\'y\'z"}', '{"api_key": "***"}'],
     ]);
     keeps(['{"name": "x", "keyboard": "us"}', '{"msg": "it\'s fine"}', "{'max_tokens': 100}"]);
+    keeps([
+      'Search for \'"token":\' in src',
+      'Search for \'"password":"\' in src',
+      "rg '\"api_key\":' src -g '*.json'",
+      'grep -rn \'"token":\' test/',
+    ]);
   });
 
   describe('user password', () => {
