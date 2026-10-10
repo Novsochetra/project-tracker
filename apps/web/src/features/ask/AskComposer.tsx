@@ -18,8 +18,7 @@ export interface AskComposerProps {
   chatId: string | null;
   // The helper that answers; null while none can (thinking, unknown or none online).
   helper: Runner | null;
-  // The chat's queued or running question, which Stop takes Send's place for.
-  working: Run | null;
+  stoppableRun: Run | null;
   offersSend: boolean;
   savedOptions: AskOptions;
 }
@@ -28,7 +27,7 @@ export function AskComposer({
   projectKey,
   chatId,
   helper,
-  working,
+  stoppableRun,
   offersSend,
   savedOptions,
 }: AskComposerProps) {
@@ -78,7 +77,7 @@ export function AskComposer({
             send();
           }}
         />
-        {offersSend && <SendButton working={working} canSend={canSend} onSend={onSend} />}
+        {offersSend && <SendButton stoppableRun={stoppableRun} canSend={canSend} onSend={onSend} />}
       </div>
     </form>
   );

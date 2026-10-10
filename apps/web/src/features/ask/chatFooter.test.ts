@@ -6,7 +6,7 @@ import {
   helperOf,
   runHelper,
   thinkingText,
-  workingOf,
+  stoppableRunOf,
 } from './chatFooter';
 import { STOPPED_PART_WAY_TEXT, STOPPED_TEXT } from './copy';
 
@@ -22,7 +22,7 @@ describe('chatFooter', () => {
       const run = ask({ status });
       const footer = chatFooter({ ...input, runners: undefined, run });
       expect(footer).toEqual({ kind: 'thinking', run });
-      expect(workingOf(footer)).toBe(run);
+      expect(stoppableRunOf(footer)).toBe(run);
     }
     expect(thinkingText(ask())).toBe(`Claude is thinking on ${DARA}…`);
   });
@@ -41,7 +41,7 @@ describe('chatFooter', () => {
     });
     expect(footer).toEqual({ kind: 'ask', helpers: [dara, studio], helper: studio, stopped: null });
     expect(helperOf(footer)).toBe(studio);
-    expect(workingOf(footer)).toBeNull();
+    expect(stoppableRunOf(footer)).toBeNull();
   });
 
   it('offers setup when no helper serving the project is online', () => {

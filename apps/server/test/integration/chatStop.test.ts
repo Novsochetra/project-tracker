@@ -83,4 +83,16 @@ describe.each(DIALECTS)('stopping Claude from the chat (%s)', (dialect) => {
     });
     expect((await ask(chatId)).status).toBe(200);
   });
+
+  it("answers another user's Stop with 404 and leaves the question running", async () => {
+    const chatId = await answeredChat();
+    const asked = await ask(chatId);
+    await next();
+    const other = await addUser(api.db, 'other@example.com', clock.now());
+    const stranger = caller(() => api.app, other.person);
+
+    const refused = await stranger('POST', `/api/runs/${asked.body.run?.id ?? ''}/cancel`);
+    expect(refused.status).toBe(404);
+    expect((await chat(chatId)).run).toMatchObject({ id: asked.body.run?.id, status: 'running' });
+  });
 });

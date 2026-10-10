@@ -1,5 +1,6 @@
 import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { ApiError } from '@tracker/client';
 import type { AskMode, ChatDetail, Run } from '@tracker/shared';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { makeAskRun, makeChatDetail } from '../../api/test/chatFixtures';
@@ -95,5 +96,21 @@ describe('Ask: Stop', () => {
     await tap(user, await button('Send'));
     await tap(user, await button('Stop'));
     expect(cancelRun).not.toHaveBeenCalled();
+  });
+
+  it('shows why a Stop failed and turns back into Send once Claude has finished', async () => {
+    const run = running();
+    const done = { ...run, status: 'done' as const, endedAt: Date.now() };
+    const conflict = new ApiError(409, 'conflict', 'This run already ended (done).');
+    const { client } = setup([makeChatDetail({ run }), makeChatDetail({ run: done })], {
+      cancelRun: vi.fn().mockRejectedValue(conflict),
+    });
+    const stop = await button('Stop');
+    await userEvent.setup().click(stop);
+
+    expect(await screen.findByText('This run already ended (done).')).toBeVisible();
+    expect(await button('Send')).toBe(stop);
+    expect(client.getChat).toHaveBeenCalledTimes(2);
+    expect(screen.queryByText(STOPPED_TEXT)).not.toBeInTheDocument();
   });
 });

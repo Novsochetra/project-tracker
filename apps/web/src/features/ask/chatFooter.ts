@@ -56,5 +56,5 @@ export function chatFooter({ runners, run, projectKey, lastUsedId }: ChatFooterI
 export const helperOf = (footer: ChatFooter): Runner | null =>
   footer.kind === 'ask' ? footer.helper : null;
 
-export const workingOf = (footer: ChatFooter): Run | null =>
+export const stoppableRunOf = (footer: ChatFooter): Run | null =>
   footer.kind === 'thinking' ? footer.run : null;

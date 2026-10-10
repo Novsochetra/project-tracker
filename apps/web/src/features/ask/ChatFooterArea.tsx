@@ -7,7 +7,7 @@ import { useOptionalScreen } from '../../navigation';
 import { useRegisterBottomBar } from '../../navigation/bottomBarStore';
 import { SetupLine } from '../claude/SetupLine';
 import { AskComposer } from './AskComposer';
-import { helperOf, thinkingText, workingOf } from './chatFooter';
+import { helperOf, stoppableRunOf, thinkingText } from './chatFooter';
 import styles from './ChatScreen.module.css';
 import type { AskHelper } from './useAskHelper';
 
@@ -63,7 +63,7 @@ export function ChatFooterArea({ projectKey, chatId, helper, savedOptions }: Cha
           projectKey={projectKey}
           chatId={chatId}
           helper={helperOf(footer)}
-          working={workingOf(footer)}
+          stoppableRun={stoppableRunOf(footer)}
           offersSend={footer.kind !== 'setup'}
           savedOptions={savedOptions}
         />

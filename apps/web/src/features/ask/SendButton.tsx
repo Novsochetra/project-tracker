@@ -8,8 +8,7 @@ import { SEND_LABEL, STOP_LABEL } from './copy';
 import { useStopAsk } from './useStopAsk';
 
 export interface SendButtonProps {
-  // The chat's queued or running question, which this button then stops.
-  working: Run | null;
+  stoppableRun: Run | null;
   canSend: boolean;
   onSend: (event: MouseEvent<HTMLButtonElement>) => void;
 }
@@ -28,21 +27,21 @@ function Labels({ shown }: { shown: string }) {
 }
 
 // One button that turns between Send and Stop, so it stays the same element and keeps focus.
-export function SendButton({ working, canSend, onSend }: SendButtonProps) {
+export function SendButton({ stoppableRun, canSend, onSend }: SendButtonProps) {
   const { stop, stopping } = useStopAsk();
-  const action = working
+  const action = stoppableRun
     ? {
         icon: Square,
         label: STOP_LABEL,
         disabled: stopping,
-        onClick: (event: MouseEvent<HTMLButtonElement>) => stop(event, working),
+        onClick: (event: MouseEvent<HTMLButtonElement>) => stop(event, stoppableRun),
       }
     : { icon: ArrowUp, label: SEND_LABEL, disabled: !canSend, onClick: onSend };
   return (
     <Button
       variant="primary"
       icon={action.icon}
-      className={clsx(styles.send, working && styles.stop)}
+      className={clsx(styles.send, stoppableRun && styles.stop)}
       disabled={action.disabled}
       onClick={action.onClick}
     >
