@@ -77,19 +77,6 @@ describe('Ask: what Claude is doing', () => {
     expect(stepsIn(message).at(-1)).toBe('It is in runQueue.ts.');
   });
 
-  it("cuts Claude's earlier words to a few lines and shows its newest whole", async () => {
-    const long = Array.from({ length: 9 }, (_, line) => `Line ${line + 1}.`).join('\n');
-    const steps = [
-      makeStep(1, { kind: 'text', label: long, toolId: null }),
-      makeStep(2),
-      makeStep(3, { kind: 'text', label: long, toolId: null }),
-    ];
-    setup(makeChatDetail({ messages: [question], run: working }), vi.fn().mockResolvedValue(steps));
-    const items = within(await workingMessage()).getAllByRole('listitem');
-    expect(items[0]).toHaveStyle({ '--step-lines': '3' });
-    expect(items[2]?.style.getPropertyValue('--step-lines')).toBe('');
-  });
-
   it('marks a call that was not allowed and shows why under it', async () => {
     const steps: RunStep[] = [
       makeStep(1, { label: 'Run echo hello > out.txt', toolId: 'toolu_a' }),

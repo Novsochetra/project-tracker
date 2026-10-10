@@ -263,12 +263,66 @@ test('shows what Claude does while it answers, then folds the steps above the an
   await page.screenshot({ path: info.outputPath(`ask-steps-${info.project.name}.png`) });
 });
 
-// Claude's words are cut once a newer step comes; the row eases to its new height rather than the
-// list dropping by the lines it lost in one frame.
-test('eases a long step down when a newer one comes, frame by frame', async ({
-  page,
-  api,
-}, info) => {
+// The most a row of the working message grew, shrank or slid, or its end rose, in a 60th of a
+// second, from the next step until every row that left has folded away; a slow frame (WebKit under
+// load draws some at 30 fps) counts for its length. Places are taken in the scroller's content, so
+// following new rows down, as any chat does, doesn't count, and neither does the end going down as
+// rows come in.
+function watchFolds(page: Page, lastLabel: string): Promise<number> {
+  return page.evaluate(
+    (last) =>
+      new Promise<number>((resolve) => {
+        type Place = { top: number; height: number };
+        let was = new Map<string, Place>();
+        let end: number | null = null;
+        let most = 0;
+        let settled = 0;
+        let frames = 0;
+        let then = performance.now();
+        const scrollerOf = (element: Element | null) => {
+          let node = element?.parentElement ?? null;
+          while (node && !/auto|scroll/.test(getComputedStyle(node).overflowY)) {
+            node = node.parentElement;
+          }
+          return node;
+        };
+        const placeOf = (row: Element, scrolled: number): Place => {
+          const box = row.getBoundingClientRect();
+          return { top: box.top + scrolled, height: box.height };
+        };
+        const changed = (place: Place, key: string) => {
+          const before = was.get(key);
+          if (!before) return 0;
+          return Math.max(Math.abs(place.height - before.height), Math.abs(place.top - before.top));
+        };
+        const tick = (now: number) => {
+          const frame = Math.max(now - then, 1000 / 60) / (1000 / 60);
+          then = now;
+          const message = document.querySelector('[aria-label="Claude, working"]');
+          const scrolled = scrollerOf(message)?.scrollTop ?? 0;
+          const rows = [...(message?.querySelectorAll<HTMLElement>('li') ?? [])];
+          const places = new Map(
+            rows.map((row) => [row.dataset.seq ?? '', placeOf(row, scrolled)]),
+          );
+          for (const [key, place] of places) most = Math.max(most, changed(place, key) / frame);
+          was = places;
+          const bottom = (message?.getBoundingClientRect().bottom ?? 0) + scrolled;
+          if (end !== null) most = Math.max(most, (end - bottom) / frame);
+          end = bottom;
+          const done =
+            rows.at(-1)?.textContent === last && !message?.querySelector('[data-leaving]');
+          settled = done ? settled + 1 : 0;
+          frames += 1;
+          if (settled < 10 && frames < 1_200) requestAnimationFrame(tick);
+          else resolve(most);
+        };
+        requestAnimationFrame(tick);
+      }),
+    lastLabel,
+  );
+}
+
+async function startWorking(page: Page, api: TrackerClient, words: string) {
   await seedProject(api, 'Mobile app', 'MOB');
   const helperId = randomUUID();
   await api.registerRunner(helperId, { name: HELPER, projectKeys: ['MOB'] });
@@ -277,37 +331,40 @@ test('eases a long step down when a newer one comes, frame by frame', async ({
   const job = await api.takeNextRun(helperId, 'ask');
   const send = (steps: RunStepInput[]) =>
     api.addRunSteps(job!.run.id, { runnerId: helperId, steps });
-  const long = Array.from({ length: 9 }, (_, line) => `Line ${line + 1}: one capture at a time.`);
   await send([
     ...['a', 'b', 'c', 'd'].map((name) => step(`Read apps/web/src/${name}.ts`)),
-    step(long.join('\n'), { kind: 'text' }),
+    step(words, { kind: 'text' }),
   ]);
-  const working = page.getByRole('article', { name: 'Claude, working' });
-  await expect(working.getByText('Line 9: one capture at a time.')).toBeVisible();
+  await expect(page.getByText(words.split('\n').at(-1)!.slice(-30))).toBeVisible();
+  return send;
+}
 
-  // Each frame until 40 after the new step shows: where the long step's bottom is and its height.
-  const frames = page.evaluate(
-    () =>
-      new Promise<Array<{ bottom: number; height: number }>>((resolve) => {
-        const seen: Array<{ bottom: number; height: number }> = [];
-        let after = 0;
-        const tick = () => {
-          const rows = [...document.querySelectorAll('[aria-label="Claude, working"] li')];
-          const row = rows.find((item) => item.textContent?.includes('Line 9'));
-          const box = row?.getBoundingClientRect();
-          if (box) seen.push({ bottom: box.bottom, height: box.height });
-          if (rows.at(-1)?.textContent === 'Run npm test') after += 1;
-          if (after < 40 && seen.length < 1_000) requestAnimationFrame(tick);
-          else resolve(seen);
-        };
-        requestAnimationFrame(tick);
-      }),
-  );
-  await send([step('Run npm test')]);
-  const seen = await frames;
-  await expect(working.getByRole('listitem').last()).toHaveText('Run npm test');
-  const moves = seen.slice(1).map(({ bottom }, index) => Math.abs(bottom - seen[index]!.bottom));
-  expect(seen[0]!.height - seen.at(-1)!.height).toBeGreaterThan(80);
-  expect(Math.max(...moves)).toBeLessThan(40);
-  await page.screenshot({ path: info.outputPath(`ask-cut-step-${info.project.name}.png`) });
+const reads = (count: number) =>
+  Array.from({ length: count }, (_, index) => step(`Read apps/web/src/sync${index + 1}.ts`));
+
+// Claude often says what it will do, then reads several files at once: its words and the rows
+// before them leave together.
+test('folds a long step and the rows before it away calmly when a batch comes', async ({
+  page,
+  api,
+}, info) => {
+  const words = Array.from({ length: 9 }, (_, line) => `Line ${line + 1}: one capture at a time.`);
+  const send = await startWorking(page, api, words.join('\n'));
+  const folds = watchFolds(page, 'Read apps/web/src/sync5.ts');
+  await send(reads(5));
+  expect(await folds).toBeLessThan(40);
+  await expect(page.getByText('Line 9: one capture at a time.')).toHaveCount(0);
+  await page.screenshot({ path: info.outputPath(`ask-folded-batch-${info.project.name}.png`) });
+});
+
+test('folds the longest text step the helper sends as calmly, step by step', async ({
+  page,
+  api,
+}) => {
+  const words = `${'One capture at a time holds every capture behind it. '.repeat(37)}End.`;
+  expect(words.length).toBeLessThanOrEqual(2_000);
+  const send = await startWorking(page, api, words);
+  const folds = watchFolds(page, 'Read apps/web/src/sync5.ts');
+  for (const each of reads(5)) await send([each]);
+  expect(await folds).toBeLessThan(40);
 });

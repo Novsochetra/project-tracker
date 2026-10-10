@@ -18,7 +18,9 @@ export function useLeavingRows(shown: StepRow[]) {
   const key = keyOf(shown);
   if (state.key !== key) {
     const left = prefersReducedMotionNow() ? [] : leavingRows(state.rows, shown);
-    setState({ key, rows: shown, leaving: [...state.leaving, ...left] });
+    // Opening the earlier steps shows a row that was folding away again, so it stops leaving.
+    const kept = state.leaving.filter(({ seq }) => !shown.some((row) => row.seq === seq));
+    setState({ key, rows: shown, leaving: [...kept, ...left] });
   }
   const onLeft = useCallback(
     (seq: number) =>

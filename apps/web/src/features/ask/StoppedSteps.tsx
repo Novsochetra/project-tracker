@@ -4,8 +4,8 @@ import { ClaudeFrom } from './ClaudeFrom';
 import styles from './ChatScreen.module.css';
 import { STOPPED_STEPS_LABEL } from './copy';
 
-// A question that stopped adds no answer, so what Claude did before it stopped folds here, where
-// the working message was, and the footer says why it stopped.
+// A question that stopped adds no answer, so what Claude did before it stopped folds here, right
+// after the question, for good.
 export function StoppedSteps({ run }: { run: Run }) {
   return (
     <li className={`${styles.item} rise`}>
