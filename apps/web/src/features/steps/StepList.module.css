@@ -1,0 +1,90 @@
+/* Rows sit flush, so the line beside a sub agent's steps runs unbroken from one to the next. */
+.list {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.step {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  min-width: 0;
+  padding: 3px 0;
+  color: var(--muted);
+  font-size: var(--size-secondary);
+  line-height: 1.45;
+}
+
+/* Centred on the first line: 13px at 1.45 is 19px high. */
+.icon {
+  flex: none;
+  margin-top: 2.5px;
+  color: var(--subtle);
+}
+
+.label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.full .label,
+.text .label {
+  overflow: visible;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.text {
+  padding: var(--space-1) 0;
+  color: var(--ink-2);
+  font-size: var(--size-body);
+  line-height: 1.55;
+}
+
+/* A sub agent's words are its own notes, not Claude's answer, so they stay as quiet as its calls. */
+.text.sub,
+.history .text {
+  padding: 3px 0;
+  color: var(--muted);
+  font-size: var(--size-secondary);
+  line-height: 1.45;
+}
+
+.history .text .label {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+.sub {
+  margin-left: 6px;
+  padding-left: 14px;
+  border-left: 1px solid var(--line);
+}
+
+.refused .label {
+  text-decoration: line-through;
+  text-decoration-color: var(--faint);
+}
+
+.denied,
+.denied .icon {
+  color: var(--danger);
+}
+
+@media (width < 768px),
+  (pointer: coarse) and (device-width < 600px),
+  (pointer: coarse) and (device-height < 600px) {
+  .live .text:not(.sub),
+  .full .text:not(.sub) {
+    font-size: var(--size-headline);
+  }
+}

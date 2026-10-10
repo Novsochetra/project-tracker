@@ -8,6 +8,7 @@ import {
   NewTicketSheet,
   PromptSheet,
   ReportSheet,
+  RunStepsSheet,
   StatusManagerSheet,
 } from '../lazyParts';
 import { SheetError } from './SheetError';
@@ -52,6 +53,8 @@ function RequestedSheet({ request, open, onClose }: SheetProps & { request: Shee
       return <ReportSheet {...sheet} scope={request.scope} />;
     case 'statuses':
       return <StatusManagerSheet {...sheet} projectKey={request.projectKey} />;
+    case 'runSteps':
+      return <RunStepsSheet {...sheet} runId={request.runId} ticketKey={request.ticketKey} />;
     case 'connect':
       return <ConnectSheet {...sheet} />;
     case 'account':

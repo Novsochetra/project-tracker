@@ -59,6 +59,16 @@
   font-weight: var(--weight-medium);
 }
 
+.answerSteps {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.stepsToggle {
+  align-self: flex-start;
+}
+
 .text {
   margin: 0;
   color: var(--ink-2);

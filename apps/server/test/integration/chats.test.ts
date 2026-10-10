@@ -116,6 +116,33 @@ describe.each(DIALECTS)('chats with Claude Code (%s)', (dialect) => {
     expect(job?.prompt).toContain('Person:\nWhere are runs queued?\n\nYou:\nIn runQueue.ts.');
   });
 
+  it('counts the steps of the run that gave each answer, so older answers can fold theirs', async () => {
+    const started = await startChat('Where are runs queued?');
+    const job = (await next()).body;
+    const step = { kind: 'tool', label: 'Read runQueue.ts', subAgent: false, toolId: null };
+    const steps = { runnerId: runner, steps: [step, { ...step, label: 'Read runs.ts' }] };
+    expect((await helper('POST', `/api/runs/${job?.run.id}/steps`, steps)).status).toBe(204);
+    clock.advance(1_000);
+    await finish(job?.run.id ?? '', {
+      status: 'done',
+      answer: 'In runQueue.ts.',
+      sessionId: SESSION,
+    });
+    const chatId = started.body.chat.id;
+    clock.advance(1_000);
+    await ask(chatId, 'And who takes them?');
+    clock.advance(1_000);
+    await finish((await next()).body?.run.id ?? '', { status: 'done', answer: 'The helper.' });
+
+    const { messages } = (await chat(chatId)).body;
+    expect(messages.map(({ role, stepCount }) => [role, stepCount])).toEqual([
+      ['person', 0],
+      ['claude', 2],
+      ['person', 0],
+      ['claude', 0],
+    ]);
+  });
+
   it('allows one question at a time in a chat, without blocking a ticket run', async () => {
     const chatId = (await startChat('First?')).body.chat.id;
     const busy = await ask(chatId, 'Second?');

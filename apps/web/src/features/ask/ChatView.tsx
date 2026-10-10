@@ -8,6 +8,8 @@ import { ASK_INTRO } from './copy';
 import { MessageList } from './MessageList';
 import { useAskHelper } from './useAskHelper';
 import { useScrollToEnd } from './useScrollToEnd';
+import { useWorkingSteps } from './useWorkingSteps';
+import { WorkingMessage } from './WorkingMessage';
 
 export interface ChatViewProps {
   projectKey: string;
@@ -19,6 +21,7 @@ export function ChatView({ projectKey, chatId, detail }: ChatViewProps) {
   const helper = useAskHelper(projectKey, detail?.run);
   const messages = detail?.messages ?? [];
   useScrollToEnd(`${messages.length}:${helper.footer.kind}`);
+  const { threadRef, rows: workingSteps } = useWorkingSteps(detail?.run);
   return (
     <div className={styles.screen}>
       <NavBar
@@ -26,11 +29,16 @@ export function ChatView({ projectKey, chatId, detail }: ChatViewProps) {
         backLabel={ASK_LABEL}
         right={<NavBarSpacer />}
       />
-      <div className={styles.thread}>
+      <div ref={threadRef} className={styles.thread}>
         {messages.length === 0 ? (
           <p className={styles.intro}>{ASK_INTRO}</p>
         ) : (
-          <MessageList chatId={chatId ?? ''} messages={messages} helper={helper.cardHelper} />
+          <MessageList
+            chatId={chatId ?? ''}
+            messages={messages}
+            helper={helper.cardHelper}
+            working={workingSteps.length > 0 && <WorkingMessage rows={workingSteps} />}
+          />
         )}
       </div>
       <ChatFooterArea

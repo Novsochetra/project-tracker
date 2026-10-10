@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import type { TrackerClient } from '@tracker/client';
+import type { RunStepInput } from '@tracker/shared';
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
 import { seedProject, toast } from './helpers';
@@ -28,6 +29,15 @@ async function answer(api: TrackerClient, helperId: string, text: string): Promi
   expect(job?.run.kind).toBe('ask');
   await api.finishRun(job!.run.id, { status: 'done', answer: text, sessionId: randomUUID() });
 }
+
+// The helper's side of live steps, as `tracker watch` sends them (apps/agent/src/watch/steps).
+const step = (label: string, more: Partial<RunStepInput> = {}): RunStepInput => ({
+  kind: 'tool',
+  label,
+  subAgent: false,
+  toolId: null,
+  ...more,
+});
 
 async function ask(page: Page, question: string): Promise<void> {
   await page.getByRole('textbox', { name: 'Question for Claude' }).fill(question);
@@ -173,4 +183,56 @@ test('picks the model and mode on one row above the box, and sends them', async 
   await expect(modes.getByRole('button', { name: 'Edit' })).toHaveAttribute('aria-pressed', 'true');
   const job = await api.takeNextRun(helperId, 'ticket');
   expect(job?.run.askOptions).toEqual({ model: 'sonnet', mode: 'edit' });
+});
+
+test('shows what Claude does while it answers, then folds the steps above the answer', async ({
+  page,
+  api,
+}, info) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await seedProject(api, 'Mobile app', 'MOB');
+  const helperId = randomUUID();
+  await api.registerRunner(helperId, { name: HELPER, projectKeys: ['MOB'] });
+  await page.goto('/p/MOB/ask/new');
+  await page.getByRole('group', { name: 'Mode' }).getByRole('button', { name: 'Edit' }).click();
+  await ask(page, 'Make capture sync faster');
+  const job = await api.takeNextRun(helperId, 'ticket');
+  const send = (steps: RunStepInput[]) =>
+    api.addRunSteps(job!.run.id, { runnerId: helperId, steps });
+
+  await send([
+    step('Read apps/web/src/features/capture/useCaptureSync.ts', { toolId: 'toolu_1' }),
+    step('The queue sends one capture at a time. I will batch them.', { kind: 'text' }),
+    step('Run echo hello > out.txt', { toolId: 'toolu_2' }),
+    step('Not allowed: Run echo hello > out.txt', { kind: 'denied', toolId: 'toolu_2' }),
+    step('Start sub agent: Find the sync tests', { kind: 'agent', toolId: 'toolu_3' }),
+    step("Search for 'syncQueue' in apps/web", { subAgent: true, toolId: 'toolu_4' }),
+  ]);
+  const working = page.getByRole('article', { name: 'Claude, working' });
+  const workingSteps = working.getByRole('list', { name: "Claude's steps" }).getByRole('listitem');
+  await expect(workingSteps).toHaveCount(5);
+  await expect(working.getByRole('button', { name: '1 earlier step' })).toBeVisible();
+  await expect(workingSteps.first()).toContainText('The queue sends one capture at a time.');
+
+  await send([
+    step('Edit apps/web/src/features/capture/useCaptureSync.ts', { toolId: 'toolu_5' }),
+    step('Captures now go in batches of ten.', { kind: 'text' }),
+  ]);
+  await expect(workingSteps.last()).toHaveText('Captures now go in batches of ten.');
+  await expect(working.getByRole('button', { name: '3 earlier steps' })).toBeVisible();
+  await expect(page.getByText(`Claude is thinking on ${HELPER}…`)).toBeVisible();
+  await page.screenshot({ path: info.outputPath(`ask-working-${info.project.name}.png`) });
+
+  const text = 'Captures now go in batches of ten.';
+  await api.finishRun(job!.run.id, { status: 'done', answer: text, sessionId: randomUUID() });
+  await expect(working).toBeHidden();
+  const answer = page.getByRole('article', { name: 'Claude', exact: true });
+  const toggle = answer.getByRole('button', { name: '8 steps' });
+  await expect(toggle).toHaveAttribute('aria-expanded', 'false');
+  await page.reload();
+  await toggle.click();
+  const folded = answer.getByRole('list', { name: "Claude's steps" }).getByRole('listitem');
+  await expect(folded).toHaveCount(8);
+  await expect(folded.nth(2)).toContainText('Run echo hello > out.txt');
+  await page.screenshot({ path: info.outputPath(`ask-steps-${info.project.name}.png`) });
 });

@@ -1,11 +1,13 @@
-import { screen, waitFor, within } from '@testing-library/react';
+import { act, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { Run } from '@tracker/shared';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { refreshRunSteps } from '../../../api/live/refreshForRun';
 import { listItem, makeTicketDetail, STATUS } from '../../../api/test/fixtures';
 import { DARA, makeRun } from '../../../api/test/runFixtures';
 import { skipAnimations } from '../../../overlays/testing';
 import { STOPPED_SHOWN_MS } from '../../claude/runs';
+import { makeStep, makeSteps } from '../../steps/testSteps';
 import { renderTicket } from '../test/renderTicket';
 
 const LOST = 'Your computer stopped answering.';
@@ -91,5 +93,65 @@ describe('Claude Code run on the ticket screen', () => {
       expect(screen.queryByRole('region', { name: 'Claude Code run' })).not.toBeInTheDocument();
       unmount();
     }
+  });
+
+  describe('its steps', () => {
+    const running = makeRun({ status: 'running', startedAt: Date.now(), stepCount: 12 });
+    const latestLine = async () =>
+      within(await runCard()).findByRole('button', { name: /^Latest step:/ });
+
+    it('shows the latest step under who is working, and follows new ones', async () => {
+      const listRunSteps = vi
+        .fn()
+        .mockResolvedValueOnce(makeSteps(12))
+        .mockResolvedValue([makeStep(13, { label: 'Run npm run verify' })]);
+      const { queryClient } = setup([running], { client: { listRunSteps } });
+      const line = await latestLine();
+
+      expect(line).toHaveAccessibleName('Latest step: Read apps/web/src/file12.ts, 12 steps');
+      act(() => refreshRunSteps(queryClient, running.id));
+      await waitFor(() =>
+        expect(line).toHaveAccessibleName('Latest step: Run npm run verify, 13 steps'),
+      );
+      expect(listRunSteps).toHaveBeenLastCalledWith(running.id, { after: 12 });
+    });
+
+    it('opens every step in a sheet, with who is still working', async () => {
+      const listRunSteps = vi.fn().mockResolvedValue(makeSteps(12));
+      setup([running], { phone: true, client: { listRunSteps } });
+      const user = userEvent.setup();
+      await user.click(await latestLine());
+
+      const sheet = await screen.findByRole('dialog', { name: "Claude's steps" });
+      const list = await within(sheet).findByRole('list', { name: "Claude's steps" });
+      expect(within(list).getAllByRole('listitem')).toHaveLength(12);
+      expect(sheet).toHaveTextContent('MOB-1 · 12 steps');
+      expect(sheet).toHaveTextContent(`Claude is working on ${DARA}…`);
+    });
+
+    it('shows the last step of a run that stopped, to see where it stopped', async () => {
+      const failed = makeRun({ status: 'failed', error: LOST, endedAt: Date.now(), stepCount: 3 });
+      const listRunSteps = vi.fn().mockResolvedValue([
+        makeStep(1),
+        makeStep(2, { label: 'Run rm -rf build', toolId: 'toolu_x' }),
+        makeStep(3, {
+          kind: 'denied',
+          label: 'Not allowed: Run rm -rf build',
+          toolId: 'toolu_x',
+        }),
+      ]);
+      setup([failed], { client: { listRunSteps } });
+      expect(await latestLine()).toHaveAccessibleName(
+        'Latest step: Not allowed: Run rm -rf build, 3 steps',
+      );
+    });
+
+    it('shows no step line before the first step', async () => {
+      const listRunSteps = vi.fn().mockResolvedValue([]);
+      setup([makeRun({ status: 'queued' })], { client: { listRunSteps } });
+      await runCard();
+      await waitFor(() => expect(listRunSteps).toHaveBeenCalled());
+      expect(screen.queryByRole('button', { name: /^Latest step:/ })).not.toBeInTheDocument();
+    });
   });
 });

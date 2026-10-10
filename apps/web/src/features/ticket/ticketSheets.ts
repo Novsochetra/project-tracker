@@ -9,3 +9,9 @@ export const reportSheet = (ticketKey: string, projectKey: string): SheetRequest
   type: 'report',
   scope: { kind: 'ticket', ticketKey, projectKey },
 });
+
+export const stepsSheet = (runId: string, ticketKey: string): SheetRequest => ({
+  type: 'runSteps',
+  runId,
+  ticketKey,
+});

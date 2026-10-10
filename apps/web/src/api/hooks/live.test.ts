@@ -97,18 +97,54 @@ describe('useLiveUpdates', () => {
     expect(isInvalidated(queryClient, queryKeys.ticket('MOB-1'))).toBe(false);
   });
 
-  it('refreshes chats after a reconnect, which may have missed an answer', () => {
+  it('reads the new steps of the run a step event names, and nothing else', () => {
+    const { queryClient, wrapper } = setupApi();
+    seed(queryClient);
+    queryClient.setQueryData(queryKeys.runSteps('r-1'), []);
+    queryClient.setQueryData(queryKeys.runSteps('r-2'), []);
+    queryClient.setQueryData(queryKeys.ticketRuns('MOB-1'), []);
+    queryClient.setQueryData(queryKeys.chat('c-1'), null);
+    renderHook(() => useLiveUpdates(), { wrapper });
+
+    const step = { type: 'run-step', runId: 'r-1', projectId: 'p-mob', ticketId: 't-1', count: 3 };
+    act(() => MockEventSource.latest().emit({ ...step, chatId: null }, 'run-step'));
+
+    expect(isInvalidated(queryClient, queryKeys.runSteps('r-1'))).toBe(true);
+    expect(isInvalidated(queryClient, queryKeys.runSteps('r-2'))).toBe(false);
+    expect(isInvalidated(queryClient, queryKeys.ticketRuns('MOB-1'))).toBe(false);
+    expect(isInvalidated(queryClient, queryKeys.ticket('MOB-1'))).toBe(false);
+    expect(isInvalidated(queryClient, queryKeys.chat('c-1'))).toBe(false);
+    expect(isInvalidated(queryClient, queryKeys.projects())).toBe(false);
+  });
+
+  it("reads a run's last steps when it ends, in case a step event was missed", () => {
+    const { queryClient, wrapper } = setupApi();
+    seed(queryClient);
+    queryClient.setQueryData(queryKeys.runSteps('r-1'), []);
+    renderHook(() => useLiveUpdates(), { wrapper });
+
+    const run = { type: 'run', runId: 'r-1', runnerId: 'h-1', projectId: 'p-mob', ticketId: 't-1' };
+    act(() => MockEventSource.latest().emit({ ...run, status: 'done' }, 'run'));
+
+    expect(isInvalidated(queryClient, queryKeys.runSteps('r-1'))).toBe(true);
+  });
+
+  it('refreshes chats and steps after a reconnect, which may have missed an answer or steps', () => {
     const { queryClient, wrapper } = setupApi();
     queryClient.setQueryData(queryKeys.chat('c-1'), null);
     queryClient.setQueryData(queryKeys.chats('MOB'), []);
+    queryClient.setQueryData(queryKeys.runSteps('r-1'), []);
     renderHook(() => useLiveUpdates(), { wrapper });
     const source = MockEventSource.latest();
+    act(() => source.emit(mobTicketChanged));
+    expect(isInvalidated(queryClient, queryKeys.runSteps('r-1'))).toBe(false);
     act(() => {
       source.fail(false);
       source.open();
     });
     expect(isInvalidated(queryClient, queryKeys.chat('c-1'))).toBe(true);
     expect(isInvalidated(queryClient, queryKeys.chats('MOB'))).toBe(true);
+    expect(isInvalidated(queryClient, queryKeys.runSteps('r-1'))).toBe(true);
   });
 
   it('leaves a ticket alone while one of its edits is still saving', async () => {

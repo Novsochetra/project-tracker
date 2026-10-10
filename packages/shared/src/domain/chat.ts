@@ -29,6 +29,8 @@ export interface ChatMessage {
   ticketKey: string | null;
   // The run that gave Claude's answer, so its steps can fold under it; null on the person's.
   runId: string | null;
+  // That run's steps, so an older answer can say "23 steps" before they are read; 0 on the person's.
+  stepCount: number;
   createdAt: number;
 }
 

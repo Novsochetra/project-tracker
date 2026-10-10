@@ -1,9 +1,10 @@
 import type { ChatMessage, Runner } from '@tracker/shared';
-import { useMemo } from 'react';
-import { AgentAvatar } from '../../components';
+import { useMemo, type ReactNode } from 'react';
 import { LinkedText } from '../ticket/activity/LinkedText';
+import { AnswerSteps } from './AnswerSteps';
 import { messageCards, type MessageCard } from './cards';
 import styles from './ChatScreen.module.css';
+import { ClaudeFrom } from './ClaudeFrom';
 import { TicketCardView } from './TicketCardView';
 
 export interface MessageListProps {
@@ -11,6 +12,7 @@ export interface MessageListProps {
   messages: ChatMessage[];
   // The helper a created card's Run starts on.
   helper: Runner | null;
+  working?: ReactNode;
 }
 
 // Rendered as text and links only, as comments are, so nothing Claude writes becomes markup.
@@ -33,10 +35,10 @@ interface ClaudeMessageProps {
 function ClaudeMessage({ chatId, message, card, helper }: ClaudeMessageProps) {
   return (
     <article className={styles.claude} aria-label="Claude">
-      <div className={styles.from}>
-        <AgentAvatar />
-        <span>Claude</span>
-      </div>
+      <ClaudeFrom />
+      {message.runId && message.stepCount > 0 && (
+        <AnswerSteps runId={message.runId} count={message.stepCount} />
+      )}
       {card ? (
         <>
           <Text text={card.split.before} />
@@ -56,7 +58,7 @@ function ClaudeMessage({ chatId, message, card, helper }: ClaudeMessageProps) {
   );
 }
 
-export function MessageList({ chatId, messages, helper }: MessageListProps) {
+export function MessageList({ chatId, messages, helper, working }: MessageListProps) {
   const cards = useMemo(() => messageCards(messages), [messages]);
   return (
     <ol className={styles.messages} aria-label="Messages">
@@ -76,6 +78,7 @@ export function MessageList({ chatId, messages, helper }: MessageListProps) {
           )}
         </li>
       ))}
+      {working}
     </ol>
   );
 }

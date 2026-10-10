@@ -1,0 +1,37 @@
+.steps {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.toggle {
+  align-self: flex-start;
+}
+
+.note {
+  margin: 0;
+  padding: 3px 0;
+  color: var(--placeholder);
+  font-size: var(--size-caption);
+}
+
+.loading {
+  display: flex;
+  padding: var(--space-1) 0;
+  color: var(--muted);
+}
+
+.failed {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  margin: 0;
+  color: var(--danger);
+  font-size: var(--size-secondary);
+}
+
+/* Part of the sentence, so it keeps the line's size; its touch target stays. */
+button.retry {
+  padding-inline: var(--space-1);
+  font-size: inherit;
+}

@@ -9,7 +9,7 @@ import {
   STATUS,
   summaryOf,
 } from '../test/fixtures';
-import { parseChangeEvent, parseRunEvent } from './changeEvent';
+import { parseChangeEvent, parseRunEvent, parseRunStepEvent } from './changeEvent';
 import { changeScope, EVERYTHING, isAffected, type CachedEntry } from './changeScope';
 
 const entries: CachedEntry[] = [
@@ -79,6 +79,11 @@ describe('isAffected', () => {
     expect(isAffected(queryKeys.runners(), scope)).toBe(false);
     expect(isAffected(queryKeys.runners(), EVERYTHING)).toBe(true);
   });
+
+  it("reads a run's steps again only for a full refresh, as after a reconnect", () => {
+    expect(isAffected(queryKeys.runSteps('r-1'), scope)).toBe(false);
+    expect(isAffected(queryKeys.runSteps('r-1'), EVERYTHING)).toBe(true);
+  });
 });
 
 describe('parseChangeEvent', () => {
@@ -142,5 +147,30 @@ describe('parseRunEvent', () => {
     expect(parseRunEvent(JSON.stringify({ ...run, ticketId: null, status: 'done' }))).toBeNull();
     expect(parseRunEvent('{"type":"changed","projectId":"p","ticketId":"t"}')).toBeNull();
     expect(parseRunEvent('not json')).toBeNull();
+  });
+});
+
+describe('parseRunStepEvent', () => {
+  const step = {
+    type: 'run-step',
+    runId: 'r1',
+    projectId: 'p',
+    ticketId: 't',
+    chatId: null,
+    count: 12,
+  };
+
+  it("reads step events of a ticket's run and of a chat's", () => {
+    expect(parseRunStepEvent(JSON.stringify(step))).toEqual(step);
+    const ask = { ...step, ticketId: null, chatId: 'c1' };
+    expect(parseRunStepEvent(JSON.stringify(ask))).toEqual(ask);
+  });
+
+  it('ignores anything else', () => {
+    expect(parseRunStepEvent(JSON.stringify({ ...step, type: 'run' }))).toBeNull();
+    expect(parseRunStepEvent(JSON.stringify({ ...step, runId: '' }))).toBeNull();
+    expect(parseRunStepEvent(JSON.stringify({ ...step, count: '12' }))).toBeNull();
+    expect(parseRunStepEvent(JSON.stringify({ ...step, count: -1 }))).toBeNull();
+    expect(parseRunStepEvent('not json')).toBeNull();
   });
 });

@@ -1,11 +1,12 @@
-import { LIVE_STALE_MS, type ChangeEvent, type RunEvent } from '@tracker/shared';
+import { LIVE_STALE_MS, type ChangeEvent, type RunEvent, type RunStepEvent } from '@tracker/shared';
 import { retryDelay } from './backoff';
-import { parseChangeEvent, parseRunEvent } from './changeEvent';
+import { parseChangeEvent, parseRunEvent, parseRunStepEvent } from './changeEvent';
 import { pauseWhileHidden } from './pauseWhileHidden';
 
 export interface LiveHandlers {
   onChange: (event: ChangeEvent) => void;
   onRun: (event: RunEvent) => void;
+  onRunStep: (event: RunStepEvent) => void;
   onReconnect: () => void;
   // While true, reads can wait for onReconnect: it runs once the stream reports every later change.
   onRefreshPending: (pending: boolean) => void;
@@ -90,6 +91,7 @@ export function connectLiveUpdates(
   };
   const onMessage = relay(alive, parseChangeEvent, handlers.onChange);
   const onRun = relay(alive, parseRunEvent, handlers.onRun);
+  const onRunStep = relay(alive, parseRunStepEvent, handlers.onRunStep);
   const onError = () => {
     if (source?.readyState === EventSource.CLOSED) {
       reopenLater();
@@ -107,6 +109,7 @@ export function connectLiveUpdates(
     source.addEventListener('message', onMessage);
     source.addEventListener('changed', onMessage);
     source.addEventListener('run', onRun);
+    source.addEventListener('run-step', onRunStep);
     source.addEventListener('ping', alive);
     source.addEventListener('error', onError);
     alive();

@@ -10,6 +10,7 @@ export interface ChatWithKey extends ChatRow {
 export interface MessageWithKey extends ChatMessageRow {
   projectKey: string | null;
   ticketNum: number | null;
+  stepCount: number | null;
 }
 
 // '=' never matches a null user, so the open tracker's rows need 'is'.
@@ -40,8 +41,9 @@ export const listMessageRows = (db: Db, chatId: string) =>
     .selectFrom('chatMessages')
     .leftJoin('tickets', 'tickets.id', 'chatMessages.ticketId')
     .leftJoin('projects', 'projects.id', 'tickets.projectId')
+    .leftJoin('runs', 'runs.id', 'chatMessages.runId')
     .selectAll('chatMessages')
-    .select(['projects.key as projectKey', 'tickets.num as ticketNum'])
+    .select(['projects.key as projectKey', 'tickets.num as ticketNum', 'runs.stepCount'])
     .where('chatMessages.chatId', '=', chatId)
     .orderBy('chatMessages.createdAt')
     .orderBy('chatMessages.id')

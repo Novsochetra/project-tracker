@@ -28,6 +28,7 @@ interface CacheIndex {
 export const EVERYTHING: ChangeScope = { all: true, projectKeys: new Set(), ticketKeys: new Set() };
 
 const INDEXED_ROOTS = new Set<unknown>(['projects', 'project', 'ticket']);
+const FULL_REFRESH_ONLY = new Set<unknown>(['people', 'runners', 'chats', 'chat', 'runSteps']);
 
 function refOf(value: unknown): Ref[] {
   if (!isRecord(value) || typeof value.id !== 'string' || typeof value.key !== 'string') return [];
@@ -83,10 +84,8 @@ export function changeScope(
 export function isAffected(queryKey: QueryKey, scope: ChangeScope): boolean {
   const root = rootOf(queryKey);
   if (root === 'projects' || root === 'ready' || root === 'reportPreview') return true;
-  // Chats change only through runs, which have their own event.
-  if (root === 'people' || root === 'runners' || root === 'chats' || root === 'chat') {
-    return scope.all;
-  }
+  // Chats and steps change only through runs, which have their own events.
+  if (FULL_REFRESH_ONLY.has(root)) return scope.all;
   const key = scopeOf(queryKey) ?? '';
   if (root === 'project') return scope.all || scope.projectKeys.has(key);
   if (root === 'ticket') return scope.all || scope.ticketKeys.has(key);

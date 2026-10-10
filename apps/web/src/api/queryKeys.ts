@@ -23,6 +23,7 @@ export const queryKeys = {
   chats: (projectKey: string) => ['chats', canonical(projectKey)] as const,
   allChats: () => ['chats'] as const,
   chat: (chatId: string) => ['chat', chatId] as const,
+  runSteps: (runId: string) => ['runSteps', runId] as const,
   attachmentText: (attachmentId: string) => ['attachmentText', attachmentId] as const,
 };
 

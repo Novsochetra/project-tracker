@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import type { Locator, Page } from '@playwright/test';
+import type { RunStepInput } from '@tracker/shared';
 import { expect, isPhone, test } from './fixtures';
 import { seedProject, toast } from './helpers';
 
@@ -100,4 +101,47 @@ test('a double tap on Run starts one run and leaves the screen alone', async ({
     );
     expect(await api.listTicketRuns(`MOB-${index + 1}`)).toHaveLength(1);
   }
+});
+
+test('shows the latest step of a ticket run and opens all of them', async ({ page, api }, info) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await seedProject(api, 'Mobile app', 'MOB', [{ title: 'Crash when rotating' }]);
+  const helperId = randomUUID();
+  await api.registerRunner(helperId, { name: HELPER, projectKeys: ['MOB'] });
+  await api.startRun('MOB-1', { runnerId: helperId, prompt: 'Fix MOB-1, please.' });
+  const job = await api.takeNextRun(helperId, 'ticket');
+  const send = (...labels: string[]) =>
+    api.addRunSteps(job!.run.id, {
+      runnerId: helperId,
+      steps: labels.map((label): RunStepInput => ({
+        kind: 'tool',
+        label,
+        subAgent: false,
+        toolId: null,
+      })),
+    });
+  await send('Use tracker: claim_ticket MOB-1', 'Read apps/web/src/rotate.ts');
+  await page.goto('/p/MOB/1');
+
+  const card = page.getByRole('region', { name: 'Claude Code run' });
+  const latest = card.getByRole('button', { name: /^Latest step:/ });
+  await expect(latest).toHaveAccessibleName('Latest step: Read apps/web/src/rotate.ts, 2 steps');
+  await send('Run npm run verify');
+  await expect(latest).toHaveAccessibleName('Latest step: Run npm run verify, 3 steps');
+  await page.screenshot({ path: info.outputPath(`run-latest-step-${info.project.name}.png`) });
+
+  await latest.click();
+  const sheet = page.getByRole('dialog', { name: "Claude's steps" });
+  const steps = sheet.getByRole('list', { name: "Claude's steps" }).getByRole('listitem');
+  await expect(steps).toHaveCount(3);
+  await expect(sheet).toContainText(`Claude is working on ${HELPER}…`);
+  await send('Edit apps/web/src/rotate.ts');
+  await expect(steps).toHaveCount(4);
+  await expect(steps.last()).toHaveText('Edit apps/web/src/rotate.ts');
+  await page.screenshot({ path: info.outputPath(`run-steps-sheet-${info.project.name}.png`) });
+
+  await api.finishRun(job!.run.id, { status: 'done' });
+  await expect(sheet).not.toContainText('Claude is working');
+  await expect(steps).toHaveCount(4);
+  await expect(card).toHaveCount(0);
 });

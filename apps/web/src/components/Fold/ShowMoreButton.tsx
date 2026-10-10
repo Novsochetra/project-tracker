@@ -8,6 +8,7 @@ export interface ShowMoreButtonProps {
   expanded: boolean;
   onClick: (event: MouseEvent<HTMLButtonElement>) => void;
   moreLabel?: string;
+  lessLabel?: string;
   controls?: string | undefined;
   className?: string | undefined;
 }
@@ -16,6 +17,7 @@ export function ShowMoreButton({
   expanded,
   onClick,
   moreLabel = 'Show more',
+  lessLabel = 'Show less',
   controls,
   className,
 }: ShowMoreButtonProps) {
@@ -27,7 +29,7 @@ export function ShowMoreButton({
       aria-controls={controls}
       onClick={onClick}
     >
-      {expanded ? 'Show less' : moreLabel}
+      {expanded ? lessLabel : moreLabel}
       <Icon icon={ChevronDown} className={styles.chevron} />
     </button>
   );

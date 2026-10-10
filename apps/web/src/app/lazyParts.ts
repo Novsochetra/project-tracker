@@ -5,7 +5,7 @@ export const ProjectScreen = lazyWithPreload(() =>
   import('../features/project/projectScreens').then((module) => module.ProjectScreen),
 );
 export const TicketScreen = lazyWithPreload(() =>
-  import('../features/ticket/TicketScreen').then((module) => module.TicketScreen),
+  import('../features/ticket/ticketParts').then((module) => module.TicketScreen),
 );
 export const ChatsScreen = lazyWithPreload(() =>
   import('../features/project/projectScreens').then((module) => module.ChatsScreen),
@@ -25,6 +25,9 @@ export const ReportSheet = lazyWithPreload(() =>
 );
 export const StatusManagerSheet = lazyWithPreload(() =>
   import('../features/statuses/StatusManagerSheet').then((module) => module.StatusManagerSheet),
+);
+export const RunStepsSheet = lazyWithPreload(() =>
+  import('../features/ticket/ticketParts').then((module) => module.RunStepsSheet),
 );
 export const ConnectSheet = lazyWithPreload(() =>
   import('../features/connect/ConnectSheet').then((module) => module.ConnectSheet),
@@ -50,6 +53,7 @@ const SHEETS: Part[] = [
   PromptSheet,
   ReportSheet,
   StatusManagerSheet,
+  RunStepsSheet,
   ConnectSheet,
   AccountSheet,
 ];

@@ -13,6 +13,7 @@ import { PhoneFold } from '../activity/PhoneFold';
 import { TimeAgo } from '../activity/TimeAgo';
 import { promptSheet } from '../ticketSheets';
 import styles from './LatestReview.module.css';
+import { RunStepsLine } from './RunStepsLine';
 
 export interface LatestRunProps {
   ticketKey: string;
@@ -34,6 +35,7 @@ export function LatestRun({ ticketKey, onCancelled }: LatestRunProps) {
         <PhoneFold>
           <p className={cardStyles.body}>{shown.text}</p>
         </PhoneFold>
+        <RunStepsLine run={shown.run} ticketKey={ticketKey} />
         {shown.state === 'working' ? (
           <CancelButton run={shown.run} onCancelled={onCancelled} />
         ) : (

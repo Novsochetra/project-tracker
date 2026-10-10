@@ -14,6 +14,7 @@ function connect(tracker?: TrackerReachability) {
   const handlers = {
     onChange: vi.fn(),
     onRun: vi.fn(),
+    onRunStep: vi.fn(),
     onReconnect: vi.fn(),
     onRefreshPending: vi.fn(),
     onRefused: vi.fn(),
@@ -99,6 +100,25 @@ describe('connectLiveUpdates', () => {
     source.emit(event, 'run');
     expect(onRun).toHaveBeenCalledTimes(1);
     expect(onRun).toHaveBeenCalledWith(run);
+    expect(onChange).not.toHaveBeenCalled();
+  });
+
+  it('passes named step events apart from runs and changes', () => {
+    const { source, onChange, onRun, onRunStep } = connect();
+    const step = {
+      type: 'run-step',
+      runId: 'r1',
+      projectId: 'p-mob',
+      ticketId: null,
+      chatId: 'c-1',
+      count: 4,
+    };
+    source.emit(step, 'run-step');
+    source.emit(step);
+    source.emit(step, 'run');
+    expect(onRunStep).toHaveBeenCalledTimes(1);
+    expect(onRunStep).toHaveBeenCalledWith(step);
+    expect(onRun).not.toHaveBeenCalled();
     expect(onChange).not.toHaveBeenCalled();
   });
 
@@ -470,6 +490,7 @@ describe('connectLiveUpdates', () => {
     const stop = connectLiveUpdates('/api/events', {
       onChange: vi.fn(),
       onRun: vi.fn(),
+      onRunStep: vi.fn(),
       onReconnect: vi.fn(),
       onRefreshPending: vi.fn(),
       onRefused: vi.fn(),

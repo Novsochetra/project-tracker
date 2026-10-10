@@ -19,6 +19,7 @@ function connect() {
   const handlers = {
     onChange: vi.fn(),
     onRun: vi.fn(),
+    onRunStep: vi.fn(),
     onReconnect: vi.fn(),
     onRefreshPending: vi.fn(),
     onRefused: vi.fn(),
