@@ -1,4 +1,4 @@
-import type { Run, RunJob } from '@tracker/shared';
+import type { AskMode, Run, RunJob } from '@tracker/shared';
 import { describe, expect, it } from 'vitest';
 import { refusalOf } from '../../src/watch/refusal';
 
@@ -11,6 +11,7 @@ const job = (run: Partial<Run>): RunJob => ({
     projectKey: 'MOB',
     ticketKey: 'MOB-3',
     chatId: null,
+    askOptions: null,
     runnerId: 'x',
     runnerName: 'Mac',
     status: 'running',
@@ -25,6 +26,7 @@ const job = (run: Partial<Run>): RunJob => ({
 const ticketLane = { projectKey: 'MOB', kind: 'ticket' as const };
 const askLane = { projectKey: 'MOB', kind: 'ask' as const };
 const question = { kind: 'ask' as const, ticketKey: null, chatId: 'c-1' };
+const asked = (mode: AskMode) => ({ ...question, askOptions: { model: 'default' as const, mode } });
 
 describe('refusalOf', () => {
   it("refuses a ticket outside this helper's project, even one whose key starts the same", () => {
@@ -43,17 +45,47 @@ describe('refusalOf', () => {
 
   it("never lets a question or an unknown kind take the ticket lane's permission mode", () => {
     expect(refusalOf(job(question), ticketLane)).toBe(
-      'This helper expected a run of kind "ticket", not "ask".',
+      'This helper\'s ticket lane does not take runs of the "ask" lane.',
     );
     expect(refusalOf(job({ kind: 'later' as Run['kind'] }), ticketLane)).toBe(
-      'This helper expected a run of kind "ticket", not "later".',
+      'This helper\'s ticket lane does not take runs of the "later" lane.',
     );
     expect(refusalOf(job({ ticketKey: null }), ticketLane)).toBe('This ticket run has no ticket.');
   });
 
   it('keeps ticket runs out of the read-only lane', () => {
     expect(refusalOf(job({}), askLane)).toBe(
-      'This helper expected a run of kind "ask", not "ticket".',
+      'This helper\'s ask lane does not take runs of the "ticket" lane.',
+    );
+  });
+
+  it('takes Ask and Plan questions in the read-only lane only', () => {
+    for (const mode of ['ask', 'plan'] as const) {
+      expect(refusalOf(job(asked(mode)), askLane)).toBeUndefined();
+      expect(refusalOf(job(asked(mode)), ticketLane)).toBe(
+        'This helper\'s ticket lane does not take runs of the "ask" lane.',
+      );
+    }
+  });
+
+  it('takes an Edit question in the ticket lane only, so it never edits beside a ticket run', () => {
+    expect(refusalOf(job(asked('edit')), ticketLane)).toBeUndefined();
+    expect(refusalOf(job(asked('edit')), askLane)).toBe(
+      'This helper\'s ask lane does not take runs of the "ticket" lane.',
+    );
+  });
+
+  it('refuses an Edit question about another project', () => {
+    expect(refusalOf(job({ ...asked('edit'), projectKey: 'WEB' }), ticketLane)).toBe(
+      'This helper only answers about MOB, not WEB.',
+    );
+  });
+
+  it('keeps a question with options the helper does not know in the read-only lane', () => {
+    const odd = { ...question, askOptions: { model: 'default', mode: 'yolo' } as never };
+    expect(refusalOf(job(odd), askLane)).toBeUndefined();
+    expect(refusalOf(job(odd), ticketLane)).toBe(
+      'This helper\'s ticket lane does not take runs of the "ask" lane.',
     );
   });
 });

@@ -1,10 +1,11 @@
-import type { ChatDetail, Runner } from '@tracker/shared';
+import type { AskOptions, ChatDetail, Runner } from '@tracker/shared';
 import { useAsk, useStartChat } from '../../api/hooks/chats';
 import { useNavigation } from '../../navigation';
 import { rememberHelper } from '../claude/lastHelper';
+import { askInputOf } from './askOptions';
 
 export interface ChatSend {
-  send: (text: string, onSent: () => void) => void;
+  send: (text: string, options: AskOptions, onSent: () => void) => void;
   sending: boolean;
   error: Error | null;
 }
@@ -15,9 +16,9 @@ export function useChatSend(projectKey: string, chatId: string | null, helper: R
   const ask = useAsk();
   const { replace } = useNavigation();
   const sending = start.isPending || ask.isPending;
-  const send = (text: string, onSent: () => void) => {
+  const send = (text: string, options: AskOptions, onSent: () => void) => {
     if (!helper || sending) return;
-    const input = { runnerId: helper.id, text };
+    const input = askInputOf(helper.id, text, options);
     const onSuccess = (detail: ChatDetail) => {
       rememberHelper(helper.id);
       onSent();

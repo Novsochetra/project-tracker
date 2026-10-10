@@ -1,4 +1,4 @@
-import { CHAT_QUESTION_MAX, type Runner } from '@tracker/shared';
+import { CHAT_QUESTION_MAX, type AskOptions, type Runner } from '@tracker/shared';
 import clsx from 'clsx';
 import { ArrowUp } from 'lucide-react';
 import { useState, type MouseEvent } from 'react';
@@ -7,6 +7,7 @@ import { AutoTextarea, Button } from '../../components';
 import { holdPresses } from '../../lib/holdPresses';
 import { useDraftMark } from '../../lib/useDraftMark';
 import { isSubmitShortcut } from '../ticket/activity/commentRules';
+import { AskOptionsRow } from './AskOptionsRow';
 import styles from './ChatScreen.module.css';
 import { ASK_PLACEHOLDER } from './copy';
 import { useChatSend } from './useChatSend';
@@ -17,15 +18,24 @@ export interface AskComposerProps {
   // The helper that answers; null while none can (thinking, unknown or none online).
   helper: Runner | null;
   offersSend: boolean;
+  // The chat's last choice, or the defaults for a new chat.
+  initialOptions: AskOptions;
 }
 
-export function AskComposer({ projectKey, chatId, helper, offersSend }: AskComposerProps) {
+export function AskComposer({
+  projectKey,
+  chatId,
+  helper,
+  offersSend,
+  initialOptions,
+}: AskComposerProps) {
   const [text, setText] = useState('');
+  const [options, setOptions] = useState(initialOptions);
   const chat = useChatSend(projectKey, chatId, helper);
   useDraftMark(`ask:${chatId ?? `new:${projectKey}`}`, text.trim() !== '');
   const canSend = helper !== null && text.trim() !== '' && !chat.sending;
   const send = () => {
-    if (canSend) chat.send(text.trim(), () => setText(''));
+    if (canSend) chat.send(text.trim(), options, () => setText(''));
   };
   // What is pressed next may be the line that takes the thinking state's place.
   const onSend = (event: MouseEvent<HTMLButtonElement>) => {
@@ -45,6 +55,7 @@ export function AskComposer({ projectKey, chatId, helper, offersSend }: AskCompo
           {errorMessage(chat.error)}
         </p>
       )}
+      {offersSend && <AskOptionsRow options={options} onChange={setOptions} />}
       <div className={styles.box}>
         <AutoTextarea
           aria-label="Question for Claude"

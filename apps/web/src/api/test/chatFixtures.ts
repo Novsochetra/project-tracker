@@ -1,10 +1,11 @@
-import type { Chat, ChatDetail, ChatMessage } from '@tracker/shared';
+import { DEFAULT_ASK_OPTIONS, type Chat, type ChatDetail, type ChatMessage } from '@tracker/shared';
 import { makeRun } from './runFixtures';
 
 export const makeChat = (overrides: Partial<Chat> = {}): Chat => ({
   id: 'c-1',
   projectKey: 'MOB',
   title: 'How does sync work?',
+  options: DEFAULT_ASK_OPTIONS,
   createdAt: Date.now() - 60_000,
   updatedAt: Date.now() - 60_000,
   ...overrides,
@@ -21,7 +22,14 @@ export const makeMessage = (overrides: Partial<ChatMessage> = {}): ChatMessage =
 });
 
 export const makeAskRun = (overrides: Parameters<typeof makeRun>[0] = {}) =>
-  makeRun({ id: 'r-ask', kind: 'ask', ticketKey: null, chatId: 'c-1', ...overrides });
+  makeRun({
+    id: 'r-ask',
+    kind: 'ask',
+    ticketKey: null,
+    chatId: 'c-1',
+    askOptions: DEFAULT_ASK_OPTIONS,
+    ...overrides,
+  });
 
 export const makeChatDetail = (overrides: Partial<ChatDetail> = {}): ChatDetail => ({
   chat: makeChat(),

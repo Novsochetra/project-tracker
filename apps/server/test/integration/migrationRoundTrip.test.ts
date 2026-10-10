@@ -274,6 +274,8 @@ const DATA_MODEL: SchemaShape = {
       "kind text not null default 'ticket'",
       'chat_id text',
       'resume_session_id text',
+      'ask_model text',
+      'ask_mode text',
     ],
     indexes: [
       'index (runner_id, status)',
@@ -299,6 +301,8 @@ const DATA_MODEL: SchemaShape = {
       'session_runner_id text',
       'created_at bigint not null',
       'updated_at bigint not null',
+      "ask_model text not null default 'default'",
+      "ask_mode text not null default 'ask'",
     ],
     indexes: ['index (project_id, updated_at)'],
     foreignKeys: [

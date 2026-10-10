@@ -66,7 +66,9 @@ export async function insertMessage(db: Db, row: ChatMessageRow): Promise<void> 
 export async function updateChatRow(
   db: Db,
   id: string,
-  changes: Partial<Pick<ChatRow, 'sessionId' | 'sessionRunnerId' | 'updatedAt'>>,
+  changes: Partial<
+    Pick<ChatRow, 'sessionId' | 'sessionRunnerId' | 'updatedAt' | 'askModel' | 'askMode'>
+  >,
 ): Promise<void> {
   await db.updateTable('chats').set(changes).where('id', '=', id).execute();
 }

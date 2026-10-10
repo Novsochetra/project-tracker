@@ -45,22 +45,32 @@ export const latestChatRunRow = (db: Db, userId: UserScope, chatId: string) =>
     .orderBy('runs.id', 'desc')
     .executeTakeFirst();
 
+// The helper's lane, not the run's kind: an Edit question changes the folder, so it waits in the
+// ticket lane, as laneOf in shared says. Older asks have no mode and stay in the ask lane.
+const inLane = (lane: RunKind) => (eb: ExpressionBuilder<Database, 'runs'>) =>
+  lane === 'ticket'
+    ? eb.or([eb('runs.kind', '=', 'ticket'), eb('runs.askMode', '=', 'edit')])
+    : eb.and([
+        eb('runs.kind', '=', 'ask'),
+        eb.or([eb('runs.askMode', 'is', null), eb('runs.askMode', '!=', 'edit')]),
+      ]);
+
 export interface QueueSlot {
   runnerId: string;
-  kind: RunKind;
+  lane: RunKind;
   projectIds: readonly string[];
 }
 
 export const nextQueuedRun = (
   db: Db,
   userId: UserScope,
-  { runnerId, kind, projectIds }: QueueSlot,
+  { runnerId, lane, projectIds }: QueueSlot,
 ) =>
   projectIds.length === 0
     ? Promise.resolve(undefined)
     : runsOf(db, userId)
         .where('runs.runnerId', '=', runnerId)
-        .where('runs.kind', '=', kind)
+        .where(inLane(lane))
         .where('runs.status', '=', 'queued')
         .where('runs.projectId', 'in', projectIds)
         .orderBy('runs.createdAt')
@@ -136,7 +146,7 @@ export const failRunsOfSilentHelpers = (
 export const failRunsOf = (
   db: Db,
   userId: UserScope,
-  of: { runnerId: string; statuses: readonly RunStatus[]; kind?: RunKind },
+  of: { runnerId: string; statuses: readonly RunStatus[]; lane?: RunKind },
   ended: { error: string; endedAt: number },
 ) =>
   db
@@ -145,7 +155,7 @@ export const failRunsOf = (
     .where(ownedBy(userId))
     .where('runnerId', '=', of.runnerId)
     .where('status', 'in', of.statuses)
-    .$if(of.kind !== undefined, (query) => query.where('kind', '=', of.kind as RunKind))
+    .$if(of.lane !== undefined, (query) => query.where(inLane(of.lane as RunKind)))
     .returningAll()
     .execute();
 

@@ -76,7 +76,8 @@ async function askIn(
   const queued = { scope, runner, projectId: project.id, now: ctx.now() };
   const run = await inTransaction(ctx, async (trx) => {
     if (isNew) await insertChat(trx, chat);
-    return queueAsk(trx, { queued, project, chat, history, question: input.text });
+    const options = { model: input.model, mode: input.mode };
+    return queueAsk(trx, { queued, project, chat, history, question: input.text, options });
   });
   notifyRun(ctx, scope, run);
   return getChat(ctx, scope, chat.id);
@@ -97,6 +98,8 @@ export async function startChat(
     title: chatTitle(input.text),
     sessionId: null,
     sessionRunnerId: null,
+    askModel: input.model,
+    askMode: input.mode,
     createdAt: at,
     updatedAt: at,
   };

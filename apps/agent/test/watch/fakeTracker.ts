@@ -1,5 +1,7 @@
+import { laneOf } from '@tracker/shared';
 import type {
   Activity,
+  AskOptions,
   FinishRunInput,
   ReportInput,
   Run,
@@ -21,6 +23,7 @@ export const runOf = (id: string, ticketKey: string): Run => ({
   projectKey: ticketKey.split('-')[0] ?? '',
   ticketKey,
   chatId: null,
+  askOptions: null,
   runnerId: RUNNER,
   runnerName: 'Mac',
   status: 'running',
@@ -40,8 +43,9 @@ export const askJob = (
   id: string,
   chatId: string,
   resumeSessionId: string | null = null,
+  askOptions: AskOptions | null = null,
 ): RunJob => ({
-  run: { ...runOf(id, 'MOB-0'), kind: 'ask', ticketKey: null, chatId },
+  run: { ...runOf(id, 'MOB-0'), kind: 'ask', ticketKey: null, chatId, askOptions },
   prompt: `Question in ${chatId}`,
   resumeSessionId,
 });
@@ -59,7 +63,7 @@ export function fakeTracker(jobs: RunJob[]) {
     eventsUrl: () => 'http://tracker.test/api/events',
     registerRunner: vi.fn(() => Promise.resolve({} as never)),
     takeNextRun: vi.fn((_runnerId: string, kind: RunKind) => {
-      const index = jobs.findIndex((queued) => queued.run.kind === kind);
+      const index = jobs.findIndex(({ run }) => laneOf(run.kind, run.askOptions) === kind);
       return Promise.resolve(index === -1 ? null : (jobs.splice(index, 1)[0] ?? null));
     }),
     finishRun: vi.fn((id: string, input: FinishRunInput) => {

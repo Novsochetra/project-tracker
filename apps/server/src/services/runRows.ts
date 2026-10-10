@@ -13,7 +13,10 @@ export interface QueuedRun {
   now: number;
 }
 
-type RunTarget = Pick<RunRow, 'kind' | 'ticketId' | 'chatId' | 'resumeSessionId' | 'prompt'>;
+type RunTarget = Pick<
+  RunRow,
+  'kind' | 'ticketId' | 'chatId' | 'resumeSessionId' | 'prompt' | 'askModel' | 'askMode'
+>;
 
 export const queuedRunRow = (run: QueuedRun, target: RunTarget): RunRow => ({
   id: randomUUID(),

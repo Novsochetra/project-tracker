@@ -50,6 +50,7 @@ describe.each(DIALECTS)('Claude Code runs (%s)', (dialect) => {
       projectKey: 'MOB',
       ticketKey: 'MOB-1',
       chatId: null,
+      askOptions: null,
       runnerId: runner,
       runnerName: 'Dara’s MacBook',
       status: 'queued',

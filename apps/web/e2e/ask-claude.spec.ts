@@ -102,3 +102,40 @@ test('offers no Send without a helper online, and cancels a question', async ({ 
     'Where is the login screen?',
   );
 });
+
+test('picks the model and mode on one row above the box, and sends them', async ({
+  page,
+  api,
+}, info) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await seedProject(api, 'Mobile app', 'MOB');
+  const helperId = randomUUID();
+  await api.registerRunner(helperId, { name: HELPER, projectKeys: ['MOB'] });
+  await page.goto('/p/MOB/ask/new');
+
+  const model = page.getByRole('button', { name: /^Model/ });
+  const modes = page.getByRole('group', { name: 'Mode' });
+  const box = page.getByRole('textbox', { name: 'Question for Claude' });
+  await expect(model).toHaveText(/Default/);
+  const [chip, group, field] = await Promise.all([
+    model.boundingBox(),
+    modes.boundingBox(),
+    box.boundingBox(),
+  ]);
+  const width = page.viewportSize()!.width;
+  expect(Math.abs(chip!.y + chip!.height / 2 - (group!.y + group!.height / 2))).toBeLessThan(1);
+  expect(group!.x + group!.width).toBeLessThanOrEqual(width);
+  expect(group!.y + group!.height).toBeLessThanOrEqual(field!.y);
+
+  await model.click();
+  await page.getByRole('option', { name: 'Sonnet' }).click();
+  await modes.getByRole('button', { name: 'Edit' }).click();
+  await expect(page.getByText(/Claude can change files and tickets/)).toBeVisible();
+  await expect(page.getByRole('listbox')).toBeHidden();
+  await expect(modes.getByRole('button', { name: 'Edit' })).toHaveAttribute('aria-pressed', 'true');
+  await page.screenshot({ path: info.outputPath(`ask-options-${info.project.name}.png`) });
+
+  await ask(page, 'Rename the sync queue');
+  const job = await api.takeNextRun(helperId, 'ticket');
+  expect(job?.run.askOptions).toEqual({ model: 'sonnet', mode: 'edit' });
+});

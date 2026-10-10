@@ -68,6 +68,8 @@ export async function startRun(
     ticketId: ref.ticket.id,
     chatId: null,
     resumeSessionId: null,
+    askModel: null,
+    askMode: null,
   });
   await insertQueuedRun(ctx.db, row, `Claude is already working on ${ticketKeyOf(ref)}.`);
   notifyRun(ctx, scope, row);

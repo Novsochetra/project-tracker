@@ -1,3 +1,4 @@
+import type { AskOptions } from './askOptions';
 import type { Run } from './run';
 
 export const CHAT_ROLES = ['person', 'claude'] as const;
@@ -13,6 +14,8 @@ export interface Chat {
   id: string;
   projectKey: string;
   title: string;
+  // The last question's choice, so the next one starts with it.
+  options: AskOptions;
   createdAt: number;
   updatedAt: number;
 }

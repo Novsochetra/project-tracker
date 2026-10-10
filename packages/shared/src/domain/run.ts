@@ -1,7 +1,9 @@
+import type { AskOptions } from './askOptions';
+
 export const RUN_STATUSES = ['queued', 'running', 'done', 'failed', 'cancelled'] as const;
 export type RunStatus = (typeof RUN_STATUSES)[number];
 
-// A ticket run works on a ticket; an ask run answers a chat question and changes nothing.
+// A ticket run works on a ticket; an ask run answers a chat question.
 export const RUN_KINDS = ['ticket', 'ask'] as const;
 export type RunKind = (typeof RUN_KINDS)[number];
 
@@ -45,6 +47,8 @@ export interface Run {
   projectKey: string;
   ticketKey: string | null;
   chatId: string | null;
+  // The person's choice for a question; null for a ticket run.
+  askOptions: AskOptions | null;
   runnerId: string | null;
   runnerName: string;
   status: RunStatus;

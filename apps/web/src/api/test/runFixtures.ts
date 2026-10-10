@@ -18,6 +18,7 @@ export const makeRun = (overrides: Partial<Run> = {}): Run => ({
   projectKey: 'MOB',
   ticketKey: 'MOB-1',
   chatId: null,
+  askOptions: null,
   runnerId: 'h-dara',
   runnerName: DARA,
   status: 'queued',

@@ -1,4 +1,4 @@
-import type { Run } from '@tracker/shared';
+import type { AskOptions, Run } from '@tracker/shared';
 import clsx from 'clsx';
 import { Laptop } from 'lucide-react';
 import type { MouseEvent } from 'react';
@@ -19,6 +19,7 @@ export interface ChatFooterAreaProps {
   projectKey: string;
   chatId: string | null;
   helper: AskHelper;
+  initialOptions: AskOptions;
 }
 
 function Thinking({ run }: { run: Run }) {
@@ -61,7 +62,12 @@ function RunOn({ helper }: { helper: AskHelper }) {
   );
 }
 
-export function ChatFooterArea({ projectKey, chatId, helper }: ChatFooterAreaProps) {
+export function ChatFooterArea({
+  projectKey,
+  chatId,
+  helper,
+  initialOptions,
+}: ChatFooterAreaProps) {
   const { footer } = helper;
   const isPhone = useIsPhone();
   const isTop = useOptionalScreen()?.isTop ?? true;
@@ -80,6 +86,7 @@ export function ChatFooterArea({ projectKey, chatId, helper }: ChatFooterAreaPro
           chatId={chatId}
           helper={helperOf(footer)}
           offersSend={footer.kind !== 'setup'}
+          initialOptions={initialOptions}
         />
       </div>
     </div>

@@ -5,6 +5,7 @@ export const toChat = (row: ChatWithKey): Chat => ({
   id: row.id,
   projectKey: row.projectKey,
   title: row.title,
+  options: { model: row.askModel, mode: row.askMode },
   createdAt: row.createdAt,
   updatedAt: row.updatedAt,
 });

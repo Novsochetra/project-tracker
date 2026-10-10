@@ -85,7 +85,8 @@ export function createRunLoop(deps: RunLoopDeps, settings: RunLoopSettings) {
       return report(job, { status: 'failed', error: refusal });
     }
     if (stopped) return end(job, { status: 'cancelled' });
-    const asking = settings.kind === 'ask';
+    // An Edit question runs in the ticket lane but is still a question: its answer goes to the chat.
+    const asking = job.run.kind === 'ask';
     log(
       asking
         ? `Claude Code is answering a question in ${label}…`

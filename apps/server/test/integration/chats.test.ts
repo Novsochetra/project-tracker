@@ -65,16 +65,24 @@ describe.each(DIALECTS)('chats with Claude Code (%s)', (dialect) => {
       id: expect.any(String),
       projectKey: 'MOB',
       title: 'Where are runs queued?',
+      options: { model: 'default', mode: 'ask' },
       createdAt: 1_000_000,
       updatedAt: 1_000_000,
     });
     expect(messages).toEqual([
       expect.objectContaining({ role: 'person', text: 'Where are runs queued?', ticketKey: null }),
     ]);
-    expect(run).toMatchObject({ kind: 'ask', ticketKey: null, chatId: made.id, status: 'queued' });
+    expect(run).toMatchObject({
+      kind: 'ask',
+      ticketKey: null,
+      chatId: made.id,
+      askOptions: { model: 'default', mode: 'ask' },
+      status: 'queued',
+    });
 
     const job = (await next()).body;
     expect(job?.run).toMatchObject({ id: run?.id, kind: 'ask', projectKey: 'MOB' });
+    expect(job?.prompt).toContain('read-only');
     expect(job?.resumeSessionId).toBeNull();
     expect(job?.prompt).toContain('"Mobile" (MOB)');
     expect(job?.prompt.endsWith('Question:\nWhere are runs queued?')).toBe(true);

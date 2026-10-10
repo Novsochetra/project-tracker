@@ -18,6 +18,7 @@ describe('regression: stopping while a run is being taken', () => {
         projectKey: 'MOB',
         ticketKey: 'MOB-1',
         chatId: null,
+        askOptions: null,
         runnerId: 'x',
         runnerName: 'Mac',
         status: 'running',

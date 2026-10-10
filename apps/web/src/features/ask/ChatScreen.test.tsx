@@ -1,7 +1,7 @@
 import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ApiError } from '@tracker/client';
-import type { ChatDetail, Runner } from '@tracker/shared';
+import { DEFAULT_ASK_OPTIONS, type ChatDetail, type Runner } from '@tracker/shared';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { makeAskRun, makeChatDetail, makeMessage } from '../../api/test/chatFixtures';
 import { DARA, makeRunner } from '../../api/test/runFixtures';
@@ -63,7 +63,11 @@ describe('Ask: the chat screen', () => {
     await user.type(await question(), '  And offline?  ');
     await user.click(sendButton()!);
 
-    expect(client.ask).toHaveBeenCalledWith('c-1', { runnerId: dara.id, text: 'And offline?' });
+    expect(client.ask).toHaveBeenCalledWith('c-1', {
+      runnerId: dara.id,
+      text: 'And offline?',
+      ...DEFAULT_ASK_OPTIONS,
+    });
     expect(await question()).toHaveValue('');
     expect(await screen.findByText(`Claude is thinking on ${DARA}…`)).toBeInTheDocument();
     expect(localStorage.getItem(LAST_HELPER_STORAGE_KEY)).toBe(dara.id);
@@ -129,7 +133,11 @@ describe('Ask: the chat screen', () => {
     expect(await screen.findByRole('button', { name: /^Run on/ })).toHaveTextContent('Studio');
     await user.type(await question(), 'Hi');
     await user.click(sendButton()!);
-    expect(client.ask).toHaveBeenCalledWith('c-1', { runnerId: studio.id, text: 'Hi' });
+    expect(client.ask).toHaveBeenCalledWith('c-1', {
+      runnerId: studio.id,
+      text: 'Hi',
+      ...DEFAULT_ASK_OPTIONS,
+    });
   });
 
   it('makes the chat with the first question and moves to its address', async () => {
@@ -144,6 +152,7 @@ describe('Ask: the chat screen', () => {
     expect(client.startChat).toHaveBeenCalledWith('MOB', {
       runnerId: dara.id,
       text: 'How does sync work?',
+      ...DEFAULT_ASK_OPTIONS,
     });
     await waitFor(() => expect(currentPath()).toBe('/p/MOB/ask/c-1'));
     expect(await screen.findByText(`Claude is thinking on ${DARA}…`)).toBeInTheDocument();

@@ -1,8 +1,17 @@
-import { formatTicketKey, RUNNER_ONLINE_MS, type Run, type Runner } from '@tracker/shared';
+import {
+  formatTicketKey,
+  RUNNER_ONLINE_MS,
+  type AskOptions,
+  type Run,
+  type Runner,
+} from '@tracker/shared';
 import type { UserScope } from '../auth/scope';
 import type { RunnerRow, RunRow } from '../db/runTables';
 import type { RunWithKey } from '../repositories/runs';
 import type { ServiceContext } from './context';
+
+const askOptionsOf = ({ askModel, askMode }: RunRow): AskOptions | null =>
+  askModel && askMode ? { model: askModel, mode: askMode } : null;
 
 export const toRun = (row: RunWithKey): Run => ({
   id: row.id,
@@ -10,6 +19,7 @@ export const toRun = (row: RunWithKey): Run => ({
   projectKey: row.projectKey,
   ticketKey: row.ticketNum === null ? null : formatTicketKey(row.projectKey, row.ticketNum),
   chatId: row.chatId,
+  askOptions: askOptionsOf(row),
   runnerId: row.runnerId,
   runnerName: row.runnerName,
   status: row.status,

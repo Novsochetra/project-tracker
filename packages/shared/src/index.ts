@@ -1,6 +1,7 @@
 export * from './domain/activity';
 export * from './domain/actor';
 export * from './domain/apiToken';
+export * from './domain/askOptions';
 export * from './domain/attachment';
 export * from './domain/chat';
 export * from './domain/events';

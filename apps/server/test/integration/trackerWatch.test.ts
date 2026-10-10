@@ -100,7 +100,7 @@ describe('tracker watch against a real tracker', () => {
           runClaude({ command: fake.command, args: ['-p'], cwd }, prompt, signal, () => undefined),
         runAsk: (job, signal) =>
           runClaude(
-            { command: fake.command, args: askArgs(job.resumeSessionId), cwd },
+            { command: fake.command, args: askArgs(job), cwd },
             job.prompt,
             signal,
             () => undefined,

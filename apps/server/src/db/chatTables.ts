@@ -1,4 +1,4 @@
-import type { ChatRole } from '@tracker/shared';
+import type { AskMode, AskModel, ChatRole } from '@tracker/shared';
 
 export interface ChatRow {
   id: string;
@@ -8,6 +8,8 @@ export interface ChatRow {
   // Claude Code's session lives on one computer, so it is kept with the helper that made it.
   sessionId: string | null;
   sessionRunnerId: string | null;
+  askModel: AskModel;
+  askMode: AskMode;
   createdAt: number;
   updatedAt: number;
 }

@@ -1,4 +1,4 @@
-import type { RunKind, RunStatus } from '@tracker/shared';
+import type { AskMode, AskModel, RunKind, RunStatus } from '@tracker/shared';
 
 export interface RunnerRow {
   id: string;
@@ -28,6 +28,9 @@ export interface RunRow {
   chatId: string | null;
   // Copied from the chat when the run is queued on the helper that holds that session.
   resumeSessionId: string | null;
+  // The question's choice; null on ticket runs and on asks queued before options.
+  askModel: AskModel | null;
+  askMode: AskMode | null;
 }
 
 export interface RunTables {
