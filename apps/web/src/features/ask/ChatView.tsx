@@ -5,11 +5,11 @@ import { savedAskOptions } from './askOptions';
 import { ChatFooterArea } from './ChatFooterArea';
 import styles from './ChatScreen.module.css';
 import { ASK_INTRO } from './copy';
+import { LatestRunSteps } from './LatestRunSteps';
 import { MessageList } from './MessageList';
 import { useAskHelper } from './useAskHelper';
 import { useScrollToEnd } from './useScrollToEnd';
 import { useWorkingSteps } from './useWorkingSteps';
-import { WorkingMessage } from './WorkingMessage';
 
 export interface ChatViewProps {
   projectKey: string;
@@ -37,7 +37,7 @@ export function ChatView({ projectKey, chatId, detail }: ChatViewProps) {
             chatId={chatId ?? ''}
             messages={messages}
             helper={helper.cardHelper}
-            working={workingSteps.length > 0 && <WorkingMessage rows={workingSteps} />}
+            latestRun={<LatestRunSteps run={detail?.run} working={workingSteps} />}
           />
         )}
       </div>

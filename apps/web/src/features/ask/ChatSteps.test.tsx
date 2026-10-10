@@ -6,7 +6,8 @@ import { refreshRunSteps } from '../../api/live/refreshRunSteps';
 import { makeAskRun, makeChatDetail, makeMessage } from '../../api/test/chatFixtures';
 import { makeRunner } from '../../api/test/runFixtures';
 import { makeStep, makeSteps } from '../steps/testSteps';
-import { WORKING_LABEL } from './copy';
+import { queryKeys } from '../../api/queryKeys';
+import { STOPPED_STEPS_LABEL, STOPPED_PART_WAY_TEXT, WORKING_LABEL } from './copy';
 import { renderAsk } from './test/renderAsk';
 
 const working = makeAskRun({ status: 'running', startedAt: Date.now() });
@@ -17,10 +18,14 @@ let restore: () => void;
 beforeEach(() => localStorage.clear());
 afterEach(() => restore());
 
-function setup(detail: ChatDetail, listRunSteps: ReturnType<typeof vi.fn>) {
+function setup(detail: ChatDetail | ChatDetail[], listRunSteps: ReturnType<typeof vi.fn>) {
+  const details = [detail].flat();
+  const getChat = vi.fn();
+  details.forEach((each) => getChat.mockResolvedValueOnce(each));
+  getChat.mockResolvedValue(details.at(-1));
   const rendered = renderAsk({
     client: {
-      getChat: vi.fn().mockResolvedValue(detail),
+      getChat,
       listRunners: vi.fn().mockResolvedValue([makeRunner()]),
       listRunSteps,
     },
@@ -118,7 +123,7 @@ describe('Ask: what Claude is doing', () => {
     expect(screen.queryByRole('article', { name: WORKING_LABEL })).not.toBeInTheDocument();
   });
 
-  it('folds the steps of an answer, and reads them when opened', async () => {
+  it('folds the steps of an answer, and opens them without its own words', async () => {
     const answer = makeMessage({
       id: 'm-2',
       role: 'claude',
@@ -142,7 +147,7 @@ describe('Ask: what Claude is doing', () => {
     expect(toggle).toHaveAttribute('aria-expanded', 'true');
     expect(listRunSteps).toHaveBeenCalledWith('r-old', { after: 0 });
     expect(await within(claude).findByText('21 earlier steps were not kept.')).toBeVisible();
-    expect(stepsIn(claude)).toEqual(['Read apps/web/src/file22.ts', 'In runQueue.ts.']);
+    expect(stepsIn(claude)).toEqual(['Read apps/web/src/file22.ts']);
     await user.click(toggle);
     expect(within(claude).queryByRole('list')).not.toBeInTheDocument();
   });
@@ -176,5 +181,66 @@ describe('Ask: what Claude is doing', () => {
     setup(makeChatDetail({ messages: [question, ...answers] }), vi.fn());
     await screen.findByText('No steps.');
     expect(screen.queryByRole('button', { name: /step/ })).not.toBeInTheDocument();
+  });
+
+  it('folds what Claude did before a question stopped, where the working message was', async () => {
+    const stopped = makeAskRun({
+      status: 'cancelled',
+      startedAt: Date.now(),
+      endedAt: Date.now(),
+      askOptions: { model: 'default', mode: 'edit' },
+      stepCount: 4,
+    });
+    const listRunSteps = vi.fn().mockResolvedValue(makeSteps(4));
+    setup(makeChatDetail({ messages: [question], run: stopped }), listRunSteps);
+    const user = userEvent.setup();
+    expect(await screen.findByText(STOPPED_PART_WAY_TEXT)).toBeVisible();
+    const claude = screen.getByRole('article', { name: STOPPED_STEPS_LABEL });
+    await user.click(within(claude).getByRole('button', { name: '4 steps' }));
+    await waitFor(() => expect(stepsIn(claude)).toHaveLength(4));
+    expect(listRunSteps).toHaveBeenCalledWith(stopped.id, { after: 0 });
+  });
+
+  it('shows nothing for a question that stopped before any step', async () => {
+    const stopped = makeAskRun({ status: 'failed', error: 'Lost.', endedAt: Date.now() });
+    setup(makeChatDetail({ messages: [question], run: stopped }), vi.fn());
+    await screen.findByText('Claude stopped: Lost.');
+    expect(screen.queryByRole('article', { name: STOPPED_STEPS_LABEL })).not.toBeInTheDocument();
+  });
+
+  it.each([
+    ['the answer lands', 'Claude'],
+    ['the question stops', STOPPED_STEPS_LABEL],
+  ])('hands focus on its steps to the folded toggle when %s', async (_when, name) => {
+    const answer = makeMessage({
+      id: 'm-2',
+      role: 'claude',
+      text: 'In runQueue.ts.',
+      runId: working.id,
+      stepCount: 8,
+    });
+    const ended =
+      name === 'Claude'
+        ? makeChatDetail({
+            messages: [question, answer],
+            run: { ...working, status: 'done', stepCount: 8 },
+          })
+        : makeChatDetail({
+            messages: [question],
+            run: { ...working, status: 'cancelled', stepCount: 8 },
+          });
+    const listRunSteps = vi.fn().mockResolvedValue(makeSteps(8));
+    const { queryClient } = setup(
+      [makeChatDetail({ messages: [question], run: working }), ended],
+      listRunSteps,
+    );
+    const earlier = within(await workingMessage()).getByRole('button', { name: '3 earlier steps' });
+    earlier.focus();
+
+    await act(() => queryClient.invalidateQueries({ queryKey: queryKeys.chat('c-1') }));
+    const toggle = await within(await screen.findByRole('article', { name })).findByRole('button', {
+      name: '8 steps',
+    });
+    expect(toggle).toHaveFocus();
   });
 });

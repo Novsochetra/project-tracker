@@ -128,7 +128,10 @@ test('offers no Send without a helper online, and stops a question with Stop in 
   await expect(page.getByText('Stopped.', { exact: true })).toBeHidden();
 });
 
-test('says an Edit question Claude had started stopped part way', async ({ page, api }, info) => {
+test('says an Edit question Claude had started stopped part way, and keeps its steps', async ({
+  page,
+  api,
+}, info) => {
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await seedProject(api, 'Mobile app', 'MOB');
   const helperId = randomUUID();
@@ -136,12 +139,26 @@ test('says an Edit question Claude had started stopped part way', async ({ page,
   await page.goto('/p/MOB/ask/new');
   await page.getByRole('group', { name: 'Mode' }).getByRole('button', { name: 'Edit' }).click();
   await ask(page, 'Rename the sync queue');
-  await api.takeNextRun(helperId, 'ticket');
+  const job = await api.takeNextRun(helperId, 'ticket');
+  await api.addRunSteps(job!.run.id, {
+    runnerId: helperId,
+    steps: [step('Read apps/web/src/sync/queue.ts'), step('Edit apps/web/src/sync/queue.ts')],
+  });
+  const working = page.getByRole('article', { name: 'Claude, working' });
+  await expect(working.getByRole('listitem')).toHaveCount(2);
 
   await page.getByRole('button', { name: 'Stop', exact: true }).click();
   await expect(
     page.getByText('Stopped part way. Some files or tickets may have changed.'),
   ).toBeVisible();
+  const stopped = page.getByRole('article', { name: 'Claude, stopped' });
+  await stopped.getByRole('button', { name: '2 steps' }).click();
+  await expect(stopped.getByRole('listitem')).toHaveText([
+    'Read apps/web/src/sync/queue.ts',
+    'Edit apps/web/src/sync/queue.ts',
+  ]);
+  // The open list fades in; a screenshot taken before its first frame showed it folded.
+  await page.evaluate(() => Promise.all(document.getAnimations().map(({ finished }) => finished)));
   await page.screenshot({ path: info.outputPath(`ask-stopped-edit-${info.project.name}.png`) });
 });
 
@@ -232,7 +249,8 @@ test('shows what Claude does while it answers, then folds the steps above the an
   await page.reload();
   await toggle.click();
   const folded = answer.getByRole('list', { name: "Claude's steps" }).getByRole('listitem');
-  await expect(folded).toHaveCount(8);
+  // Every step but the last, Claude's words that are the answer right under the list.
+  await expect(folded).toHaveCount(7);
   await expect(folded.nth(2)).toContainText('Run echo hello > out.txt');
   await page.screenshot({ path: info.outputPath(`ask-steps-${info.project.name}.png`) });
 });

@@ -12,7 +12,7 @@ export interface MessageListProps {
   messages: ChatMessage[];
   // The helper a created card's Run starts on.
   helper: Runner | null;
-  working?: ReactNode;
+  latestRun?: ReactNode;
 }
 
 // Rendered as text and links only, as comments are, so nothing Claude writes becomes markup.
@@ -37,7 +37,7 @@ function ClaudeMessage({ chatId, message, card, helper }: ClaudeMessageProps) {
     <article className={styles.claude} aria-label="Claude">
       <ClaudeFrom />
       {message.runId && message.stepCount > 0 && (
-        <AnswerSteps runId={message.runId} count={message.stepCount} />
+        <AnswerSteps runId={message.runId} count={message.stepCount} answer={message.text} />
       )}
       {card ? (
         <>
@@ -58,7 +58,7 @@ function ClaudeMessage({ chatId, message, card, helper }: ClaudeMessageProps) {
   );
 }
 
-export function MessageList({ chatId, messages, helper, working }: MessageListProps) {
+export function MessageList({ chatId, messages, helper, latestRun }: MessageListProps) {
   const cards = useMemo(() => messageCards(messages), [messages]);
   return (
     <ol className={styles.messages} aria-label="Messages">
@@ -78,7 +78,7 @@ export function MessageList({ chatId, messages, helper, working }: MessageListPr
           )}
         </li>
       ))}
-      {working}
+      {latestRun}
     </ol>
   );
 }

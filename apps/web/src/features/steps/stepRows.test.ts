@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { stepRows } from './stepRows';
+import { stepRows, withoutAnswer } from './stepRows';
 import { makeStep } from './testSteps';
 
 describe('stepRows', () => {
@@ -39,5 +39,30 @@ describe('stepRows', () => {
       makeStep(502, { kind: 'denied', label: 'Not allowed: Run rm -rf build', toolId: 'toolu_x' }),
     ]);
     expect(rows.map(({ refused }) => refused)).toEqual([false, false]);
+  });
+});
+
+describe('withoutAnswer', () => {
+  const answer = 'Captures now go in batches of ten.\n\nThe tests pass.';
+  const before = [makeStep(1), makeStep(2, { kind: 'text', label: 'Let me look.', toolId: null })];
+  const words = (label: string, more = {}) =>
+    makeStep(3, { kind: 'text', label, toolId: null, ...more });
+
+  it("leaves out the answer's own words at the end of its steps", () => {
+    expect(withoutAnswer(stepRows([...before, words(answer)]), answer)).toHaveLength(2);
+  });
+
+  it('knows the answer from words the helper cut short', () => {
+    expect(
+      withoutAnswer(stepRows([...before, words('Captures now go in batc…')]), answer),
+    ).toHaveLength(2);
+  });
+
+  it('keeps last words that are not the answer, a sub agent’s, a call, and no steps', () => {
+    expect(withoutAnswer(stepRows([...before, words('Something else.')]), answer)).toHaveLength(3);
+    const sub = words(answer, { subAgent: true });
+    expect(withoutAnswer(stepRows([...before, sub]), answer)).toHaveLength(3);
+    expect(withoutAnswer(stepRows([makeStep(1)]), answer)).toHaveLength(1);
+    expect(withoutAnswer([], answer)).toEqual([]);
   });
 });
