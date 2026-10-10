@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { useLocation, useNavigate, useNavigationType } from 'react-router';
-import { reloadsAsked } from '../lib/pageReload';
+import { NavigationType, useLocation, useNavigate, useNavigationType } from 'react-router';
+import { forgetReload, reloadTimeLeft } from '../lib/pageReload';
 import {
   NavigationContext,
   OpeningContext,
@@ -37,6 +37,10 @@ export function NavigationProvider({ children, prepare = READY }: NavigationProv
     historyRef.current.record(key, pathname, toNavigationKind(navigationType));
   }, [key, pathname, navigationType]);
 
+  useLayoutEffect(() => {
+    if (navigationType === NavigationType.Pop) forgetReload();
+  }, [key, navigationType]);
+
   // Before any screen's code, so a cold deep link to /p/MOB/ or /p/MOB/01 shows the right URL at
   // once (PT-104); the screen on show is the same either way. Not a layout effect: the router
   // starts listening to the history in its own, which runs after this one on the first render.
@@ -59,13 +63,17 @@ export function NavigationProvider({ children, prepare = READY }: NavigationProv
         return;
       }
       const stillOpening = opening.open(path);
-      const reloads = reloadsAsked();
+      const letGo = () => {
+        if (stillOpening()) opening.clear();
+      };
       const send = () => {
         if (!stillOpening()) return;
-        // A reload asked for while it waited, as its screen's code failed, would fill its entry
-        // with the screen on show (PT-108). Only this push: the reload may never come.
-        if (reloadsAsked() === reloads) void navigate(path, { replace });
-        else opening.clear();
+        // A reload on its way, as when its screen's code failed, would fill the new entry with the
+        // screen on show (PT-108, PT-119). The row stays pressed until the new page replaces it,
+        // rather than letting go and inviting a second tap, and lets go if that page never comes.
+        const reloading = reloadTimeLeft();
+        if (reloading > 0) window.setTimeout(letGo, reloading);
+        else void navigate(path, { replace });
       };
       const waiting = prepare(parseRoute(path));
       if (waiting) void waitAtMost(waiting, PUSH_WAIT_LIMIT_MS).then(send);

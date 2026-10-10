@@ -245,3 +245,47 @@ test.describe('a chunk reload the browser cancels', () => {
     await expect(page).toHaveURL(/\/p\/WEB$/);
   });
 });
+
+// PT-119: once a screen's chunk failed and the page asked for a reload, the push that waited for
+// it was dropped and its row let go. On a slow network a tap on a row while the new page was still
+// coming pushed, and the reload then loaded Projects into that entry, so Back stayed on Projects.
+test.describe('a tap while the page reloads', () => {
+  test.beforeEach(async ({ api }) => {
+    await seedProject(api, 'Mobile app', 'MOB', [{ title: 'Login screen' }]);
+    await seedProject(api, 'Website', 'WEB', [{ title: 'Home page' }]);
+  });
+
+  test('adds no history entry', async ({ page }) => {
+    let failChunk = () => undefined as void;
+    await page.route(`**/src/features/${PROJECT_SCREEN}*`, async (route) => {
+      await new Promise<void>((resolve) => (failChunk = resolve));
+      await route.abort('failed');
+    });
+    await page.goto('/');
+    const entries = await historyLength(page);
+    await projectRow(page, 'Mobile app').click();
+
+    // A slow network: the reload's page takes 2 s, and the tap comes 500 ms after it is asked for.
+    await page.route('**/*', async (route) => {
+      if (route.request().resourceType() !== 'document') return route.fallback();
+      await new Promise((resolve) => setTimeout(resolve, 2_000));
+      await route.continue().catch(() => undefined);
+    });
+    let loads = 0;
+    page.on('load', () => (loads += 1));
+    // The dev server sends no vite:preloadError, so the test sends the one a build's helper would.
+    // The page taps the row itself: Playwright's clicks wait while a navigation is on its way.
+    await page.evaluate(() => {
+      window.dispatchEvent(new Event('vite:preloadError', { cancelable: true }));
+      const website = [...document.querySelectorAll<HTMLElement>('main button')].find((row) =>
+        row.textContent?.startsWith('Website'),
+      );
+      setTimeout(() => website?.click(), 500);
+    });
+    failChunk();
+
+    await expect.poll(() => loads, { timeout: 10_000 }).toBe(1);
+    await expect(page).toHaveURL(/\/$/);
+    expect(await historyLength(page)).toBe(entries);
+  });
+});

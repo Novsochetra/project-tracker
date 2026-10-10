@@ -22,13 +22,14 @@ export function TicketScreen({ projectKey, num }: TicketScreenProps) {
   useLeaveWhenMissing(query.error, ticketKey, projectKey);
   if (query.data) return <TicketView detail={query.data} />;
   return (
-    <TicketPlaceholder
-      ticketKey={ticketKey}
-      projectKey={projectKey}
-      num={num}
-      error={query.error}
-      onRetry={() => void query.refetch()}
-    />
+    <>
+      <TicketLoadingBar projectKey={projectKey} num={num} />
+      <TicketPlaceholder
+        ticketKey={ticketKey}
+        error={query.error}
+        onRetry={() => void query.refetch()}
+      />
+    </>
   );
 }
 
@@ -46,29 +47,22 @@ function useLeaveWhenMissing(error: Error | null, ticketKey: string, projectKey:
 
 interface TicketPlaceholderProps {
   ticketKey: string;
-  projectKey: string;
-  num: number;
   error: Error | null;
   onRetry: () => void;
 }
 
-function TicketPlaceholder({ ticketKey, projectKey, num, error, onRetry }: TicketPlaceholderProps) {
+function TicketPlaceholder({ ticketKey, error, onRetry }: TicketPlaceholderProps) {
   const failed = error !== null && !isNotFound(error);
-  return (
-    <>
-      <TicketLoadingBar projectKey={projectKey} num={num} />
-      {failed ? (
-        <EmptyState
-          icon={CircleAlert}
-          title={`Couldn't load ${ticketKey}`}
-          text={errorMessage(error)}
-          action={<Button onClick={onRetry}>Try again</Button>}
-        />
-      ) : (
-        <div className={clsx(styles.loading, 'quiet-in')}>
-          <Spinner label={`Loading ${ticketKey}`} />
-        </div>
-      )}
-    </>
+  return failed ? (
+    <EmptyState
+      icon={CircleAlert}
+      title={`Couldn't load ${ticketKey}`}
+      text={errorMessage(error)}
+      action={<Button onClick={onRetry}>Try again</Button>}
+    />
+  ) : (
+    <div className={clsx(styles.loading, 'quiet-in')}>
+      <Spinner label={`Loading ${ticketKey}`} />
+    </div>
   );
 }

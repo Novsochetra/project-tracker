@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { lazy, Suspense, use, type ComponentType } from 'react';
 import { MemoryRouter, useLocation, useNavigate } from 'react-router';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { reloadPage } from '../lib/pageReload';
+import { forgetReload, RELOAD_ON_ITS_WAY_MS, reloadPage } from '../lib/pageReload';
 import { skipAnimations } from '../overlays/testing';
 import { NavigationContext } from './NavigationContext';
 import { NavigationProvider } from './NavigationProvider';
@@ -448,6 +448,7 @@ describe('the browser’s Back or Forward to a screen whose code is on its way',
 // was dropped, as the reload would fill its entry with the screen on show; but the mark that a
 // reload was asked for stayed, so when the reload didn't happen (Chromium cancels it for a Back
 // that comes first), every push after it was dropped too and nothing opened any more.
+// PT-119: its row let go at once, and a tap while the new page was still on its way pushed.
 describe('a reload asked for while a push waits', () => {
   const advance = (ms: number) => act(() => vi.advanceTimersByTimeAsync(ms));
   const setup = () => userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
@@ -460,10 +461,11 @@ describe('a reload asked for while a push waits', () => {
   });
 
   afterEach(() => {
+    forgetReload();
     vi.useRealTimers();
   });
 
-  it('drops that push and lets its row go, and the next tap opens the screen', async () => {
+  it('drops that push and keeps its row pressed until the reload’s time is up', async () => {
     const user = setup();
     const stack = renderStack();
     stack.show();
@@ -471,14 +473,33 @@ describe('a reload asked for while a push waits', () => {
     reloadThatNeverHappens();
     await stack.project.arrive();
     expect(location()).toBe('/');
-    expect(button('Open MOB')).not.toHaveAttribute('data-opening');
+    expect(button('Open MOB')).toHaveAttribute('data-opening');
 
+    await advance(RELOAD_ON_ITS_WAY_MS);
+    expect(button('Open MOB')).not.toHaveAttribute('data-opening');
     await user.click(button('Open MOB'));
     expect(await screen.findByText('Project MOB')).toBeInTheDocument();
     expect(location()).toBe('/p/MOB');
   });
 
-  it('leaves later pushes alone when the reload doesn’t happen', async () => {
+  it('holds a push made meanwhile the same way, with no history entry', async () => {
+    const user = setup();
+    const stack = renderStack();
+    await stack.project.arrive();
+    stack.show();
+    reloadThatNeverHappens();
+    await advance(300);
+    await user.click(button('Open WEB'));
+    await advance(100);
+    expect(location()).toBe('/');
+    expect(button('Open WEB')).toHaveAttribute('data-opening');
+
+    await advance(RELOAD_ON_ITS_WAY_MS);
+    expect(button('Open WEB')).not.toHaveAttribute('data-opening');
+    expect(location()).toBe('/');
+  });
+
+  it('leaves later pushes alone once a Back cancels the reload', async () => {
     const user = setup();
     const stack = renderStack();
     stack.show();
