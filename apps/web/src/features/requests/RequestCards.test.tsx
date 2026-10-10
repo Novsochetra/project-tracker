@@ -1,7 +1,7 @@
 import { act, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ApiError } from '@tracker/client';
-import { labelHead, RUN_PERMISSION_LABEL_MAX, type RunRequest } from '@tracker/shared';
+import type { RunRequest } from '@tracker/shared';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { announce } from '../../app/announce';
 import { LiveRegion } from '../../app/LiveRegion';
@@ -68,11 +68,17 @@ describe('a permission request', () => {
     expect(within(shown).queryByText(/goes on past what is shown/)).toBeNull();
   });
 
-  it('says a command goes on past what is shown when it was cut', async () => {
-    const label = `Run echo ${'a'.repeat(RUN_PERMISSION_LABEL_MAX - 10)}…`;
-    setup([makeRequest({ label })]);
-    const shown = await card(labelHead(label));
-    expect(within(shown).getByText(/goes on past what is shown/)).toBeVisible();
+  it('says a command goes on past what is shown only when the helper cut it', async () => {
+    const label = `Run echo ${'a'.repeat(40)}…`;
+    setup([
+      makeRequest({ id: 'q-1', label, labelCut: true }),
+      makeRequest({ id: 'q-2', label: 'Run echo wait…' }),
+    ]);
+    const cut = await card(label);
+    expect(within(cut).getByText(/goes on past what is shown/)).toBeVisible();
+    expect(
+      within(await card('Run echo wait…')).queryByText(/goes on past what is shown/),
+    ).toBeNull();
   });
 
   it('takes the cards away and says why when the run is gone', async () => {

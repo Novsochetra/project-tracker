@@ -59,6 +59,8 @@ export interface RunRequestRow {
   runId: string;
   kind: RunRequestKind;
   label: string;
+  // 0 or 1: no booleans (§2).
+  labelCut: number;
   // JSON as text, like runners.project_ids: no JSON columns (§2). Null for a permission.
   questions: string | null;
   status: RunRequestStatus;

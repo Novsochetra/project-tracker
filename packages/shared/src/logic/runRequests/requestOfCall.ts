@@ -15,11 +15,12 @@ export function requestOfCall(
   folder: string,
 ): RunRequestInput | null {
   if (toolName !== QUESTION_TOOL) {
-    const label = permissionLabel(toolName, isJson(input) ? input : {}, folder);
-    return { kind: 'permission', label, questions: null };
+    const { label, cut } = permissionLabel(toolName, isJson(input) ? input : {}, folder);
+    return { kind: 'permission', label, labelCut: cut, questions: null };
   }
   const questions = questionsOf(input);
   const [first] = questions;
   if (!first) return null;
-  return { kind: 'question', label: cutTo(first.question, RUN_REQUEST_LABEL_MAX), questions };
+  const label = cutTo(first.question, RUN_REQUEST_LABEL_MAX);
+  return { kind: 'question', label, labelCut: label !== first.question, questions };
 }

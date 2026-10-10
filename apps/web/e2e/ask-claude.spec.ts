@@ -275,7 +275,7 @@ test('answers Claude from the phone: Allow, Deny and a choice, and Claude goes o
     return api.waitForRunRequest(request.id);
   };
   const permission = (label: string) =>
-    asks({ runnerId: helperId, kind: 'permission', label, questions: null });
+    asks({ runnerId: helperId, kind: 'permission', label, labelCut: false, questions: null });
 
   await send(step('Read apps/web/src/features/capture/syncQueue.ts', { toolId: 'toolu_1' }));
   const working = page.getByRole('article', { name: 'Claude, working' });
@@ -307,6 +307,7 @@ test('answers Claude from the phone: Allow, Deny and a choice, and Claude goes o
     runnerId: helperId,
     kind: 'question',
     label: `Ask: ${name}`,
+    labelCut: false,
     questions: [
       {
         question: name,
@@ -331,6 +332,7 @@ test('answers Claude from the phone: Allow, Deny and a choice, and Claude goes o
     runnerId: helperId,
     kind: 'question',
     label: 'Ask: Which test runner?',
+    labelCut: false,
     questions: [
       {
         question: 'Which test runner?',

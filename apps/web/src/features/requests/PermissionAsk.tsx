@@ -12,7 +12,7 @@ export function PermissionAsk({ request, answer }: { request: RunRequest; answer
   return (
     <>
       <RequestHead icon={ShieldQuestion} text={PERMISSION_HEAD} />
-      <RequestAction label={request.label} />
+      <RequestAction label={request.label} cut={request.labelCut} />
       <div className={styles.buttons}>
         <Button
           variant="primary"

@@ -14,10 +14,12 @@ function parsed<T>(text: string | null): T | null {
   }
 }
 
-const inputOf = ({ kind, label, questions }: RunRequestRow): RunRequestInput =>
-  kind === 'question'
-    ? { kind, label, questions: parsed<RunQuestion[]>(questions) ?? [] }
-    : { kind, label, questions: null };
+function inputOf({ kind, label, labelCut, questions }: RunRequestRow): RunRequestInput {
+  const cut = labelCut === 1;
+  return kind === 'question'
+    ? { kind, label, labelCut: cut, questions: parsed<RunQuestion[]>(questions) ?? [] }
+    : { kind, label, labelCut: cut, questions: null };
+}
 
 export const toRunRequest = (row: RunRequestRow): RunRequest => ({
   ...inputOf(row),

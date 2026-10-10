@@ -9,13 +9,13 @@ import {
 } from '../src/domain/runRequest';
 import { answerProblem } from '../src/logic/runRequests/answerProblem';
 import { nextWaitMs, requestExpiresAt, requestIsOverdue } from '../src/logic/runRequests/deadline';
-import { labelHead, labelIsCut, permissionLabel } from '../src/logic/runRequests/permissionLabel';
+import { labelHead, permissionLabel } from '../src/logic/runRequests/permissionLabel';
 import { requestOfCall } from '../src/logic/runRequests/requestOfCall';
 
 const FOLDER = '/Users/dara/code/app';
 
 const labelOf = (name: string, input: Record<string, unknown>) =>
-  permissionLabel(name, input, FOLDER);
+  permissionLabel(name, input, FOLDER).label;
 
 // The shape Claude Code 2.1.296 sends to the permission prompt tool for a question.
 const colorQuestion = {
@@ -91,13 +91,23 @@ describe('permissionLabel', () => {
     );
   });
 
-  it('is cut at its own limit, and the cut can be told', () => {
-    const label = labelOf('Bash', { command: `echo ${'a '.repeat(RUN_PERMISSION_LABEL_MAX)}` });
-    expect(label.length).toBeGreaterThanOrEqual(RUN_PERMISSION_LABEL_MAX - 1);
-    expect(label.length).toBeLessThanOrEqual(RUN_PERMISSION_LABEL_MAX);
-    expect(labelIsCut(label)).toBe(true);
-    expect(labelIsCut('Run echo wait…')).toBe(false);
-    expect(labelIsCut(labelOf('Bash', { command: 'npm test' }))).toBe(false);
+  it('is cut at its own limit, and says when it was', () => {
+    const long = permissionLabel(
+      'Bash',
+      { command: `echo ${'a'.repeat(RUN_PERMISSION_LABEL_MAX)}` },
+      FOLDER,
+    );
+    expect(long.label).toHaveLength(RUN_PERMISSION_LABEL_MAX);
+    expect(long.cut).toBe(true);
+    const fits = `echo ${'a'.repeat(RUN_PERMISSION_LABEL_MAX - 'Run echo '.length)}`;
+    expect(permissionLabel('Bash', { command: fits }, FOLDER)).toEqual({
+      label: `Run ${fits}`,
+      cut: false,
+    });
+    expect(permissionLabel('Bash', { command: 'echo wait…' }, FOLDER)).toEqual({
+      label: 'Run echo wait…',
+      cut: false,
+    });
     expect(labelOf('Bash', {})).toBe('Run');
   });
 
@@ -115,18 +125,30 @@ describe('permissionLabel', () => {
 describe('requestOfCall', () => {
   it('keeps a permission as its label alone, never the tool input', () => {
     const request = requestOfCall('Bash', { command: 'rm -rf build' }, FOLDER);
-    expect(request).toEqual({ kind: 'permission', label: 'Run rm -rf build', questions: null });
+    expect(request).toEqual({
+      kind: 'permission',
+      label: 'Run rm -rf build',
+      labelCut: false,
+      questions: null,
+    });
     expect(requestOfCall('Bash', 'not an object', FOLDER)).toEqual({
       kind: 'permission',
       label: 'Run',
+      labelCut: false,
       questions: null,
     });
+  });
+
+  it('says a long command was cut, so the phone can say so', () => {
+    const command = `echo ${'a'.repeat(RUN_PERMISSION_LABEL_MAX)}`;
+    expect(requestOfCall('Bash', { command }, FOLDER)).toMatchObject({ labelCut: true });
   });
 
   it('turns AskUserQuestion into a question with its choices, labelled with the first', () => {
     expect(requestOfCall('AskUserQuestion', colorQuestion, FOLDER)).toEqual({
       kind: 'question',
       label: 'Which color should the button be?',
+      labelCut: false,
       questions: [
         {
           question: 'Which color should the button be?',

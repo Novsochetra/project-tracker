@@ -38,12 +38,14 @@ export const addRunRequestInput = z.discriminatedUnion('kind', [
     runnerId,
     kind: z.literal('permission'),
     label: permissionLabel,
+    labelCut: z.boolean(),
     questions: z.null(),
   }),
   z.object({
     runnerId,
     kind: z.literal('question'),
     label: questionLabel,
+    labelCut: z.boolean(),
     questions: z.array(runQuestion).min(1).max(RUN_QUESTIONS_MAX),
   }),
 ]);

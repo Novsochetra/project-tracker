@@ -9,6 +9,7 @@ export async function up(db: SchemaDb): Promise<void> {
     .addColumn('run_id', 'text', (col) => col.notNull().references('runs.id').onDelete('cascade'))
     .addColumn('kind', 'text', (col) => col.notNull())
     .addColumn('label', 'text', (col) => col.notNull())
+    .addColumn('label_cut', 'integer', (col) => col.notNull())
     .addColumn('questions', 'text')
     .addColumn('status', 'text', (col) => col.notNull())
     .addColumn('decision', 'text')

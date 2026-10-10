@@ -307,12 +307,19 @@ const routes: Route[] = [
     name: 'addRunRequest',
     method: 'POST',
     path: '/api/runs/r-1/requests',
-    body: { runnerId: 'r', kind: 'permission', label: 'Run npm test', questions: null },
+    body: {
+      runnerId: 'r',
+      kind: 'permission',
+      label: 'Run npm test',
+      labelCut: false,
+      questions: null,
+    },
     call: (c) =>
       c.addRunRequest('r-1', {
         runnerId: 'r',
         kind: 'permission',
         label: 'Run npm test',
+        labelCut: false,
         questions: null,
       }),
   },

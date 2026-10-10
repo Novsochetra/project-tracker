@@ -165,6 +165,7 @@ describe.each(DIALECTS)('run events (%s)', (dialect) => {
         runnerId: runner,
         kind: 'permission',
         label,
+        labelCut: false,
         questions: null,
       })
     ).body;

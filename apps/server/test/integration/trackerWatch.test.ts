@@ -244,7 +244,7 @@ describe('tracker watch against a real tracker', () => {
   it('lets an Edit question ask for permission, wait, and go on once the person allows', async () => {
     const chat = await editChat(promptCall('Bash', { command: 'npm test', description: 'Test' }));
     const request = await openRequest(chat.runId);
-    expect(request).toMatchObject({ kind: 'permission', label: 'Run npm test' });
+    expect(request).toMatchObject({ kind: 'permission', label: 'Run npm test', labelCut: false });
     expect(await statusOf(chat.runId)).toBe('running');
     await person.answerRunRequest(request.id, { decision: 'allow' });
     await vi.waitFor(async () => expect(await chat.answer()).toBeDefined(), settle);

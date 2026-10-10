@@ -173,6 +173,7 @@ test('answers what Claude asks during a ticket run, and the run goes on', async 
     runnerId: helperId,
     kind: 'permission',
     label: 'Edit src/rotate.ts',
+    labelCut: false,
     questions: null,
   });
   const allowed = api.waitForRunRequest(asked.id);
@@ -190,6 +191,7 @@ test('answers what Claude asks during a ticket run, and the run goes on', async 
     runnerId: helperId,
     kind: 'question',
     label: `Ask: ${files}`,
+    labelCut: false,
     questions: [
       {
         question: files,
@@ -220,6 +222,7 @@ test('answers what Claude asks during a ticket run, and the run goes on', async 
     runnerId: helperId,
     kind: 'permission',
     label: 'Run npm test',
+    labelCut: false,
     questions: null,
   });
   await api.cancelRunRequest(late.id, { runnerId: helperId });

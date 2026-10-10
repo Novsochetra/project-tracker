@@ -53,6 +53,7 @@ export async function addRunRequest(
     runId: run.id,
     kind: input.kind,
     label: input.label,
+    labelCut: input.labelCut ? 1 : 0,
     questions: input.questions === null ? null : JSON.stringify(input.questions),
     status: 'open',
     decision: null,

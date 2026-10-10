@@ -311,6 +311,7 @@ const DATA_MODEL: SchemaShape = {
       'run_id text not null',
       'kind text not null',
       'label text not null',
+      'label_cut integer not null',
       'questions text',
       'status text not null',
       'decision text',

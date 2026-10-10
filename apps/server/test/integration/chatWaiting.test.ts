@@ -32,6 +32,7 @@ describe.each(DIALECTS)('a chat waiting for the person (%s)', (dialect) => {
         runnerId: runner,
         kind: 'permission',
         label: 'Run npm test',
+        labelCut: false,
         questions: null,
       })
     ).body;

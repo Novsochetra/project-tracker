@@ -14,7 +14,7 @@ export const RUN_REQUEST_WAIT_MS = 25_000;
 
 export const RUN_REQUEST_LABEL_MAX = 300;
 // A permission shows what will run, every line of a command and an address with its query, since
-// the person decides on it; generous, so a cut is rare and then said (labelIsCut).
+// the person decides on it; generous, so a cut is rare, and then said (labelCut).
 export const RUN_PERMISSION_LABEL_MAX = 4000;
 export const RUN_QUESTION_MAX = 500;
 export const RUN_QUESTION_HEADER_MAX = 60;
@@ -37,9 +37,10 @@ export interface RunQuestion {
   multiSelect: boolean;
 }
 
+// labelCut: the label was cut at its limit, so the phone says there is more than it shows.
 export type RunRequestInput =
-  | { kind: 'permission'; label: string; questions: null }
-  | { kind: 'question'; label: string; questions: RunQuestion[] };
+  | { kind: 'permission'; label: string; labelCut: boolean; questions: null }
+  | { kind: 'question'; label: string; labelCut: boolean; questions: RunQuestion[] };
 
 export type RunRequest = RunRequestInput & {
   id: string;

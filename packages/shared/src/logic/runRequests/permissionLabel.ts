@@ -1,5 +1,5 @@
 import { RUN_PERMISSION_LABEL_MAX, RUN_REQUEST_LABEL_MAX } from '../../domain/runRequest';
-import { cutTo, isCutAt, oneLine } from '../runSteps/cut';
+import { cutTo, oneLine } from '../runSteps/cut';
 import { maskSecrets } from '../runSteps/secrets';
 import { toolLabel, type ToolInput } from '../runSteps/toolLabel';
 
@@ -21,16 +21,23 @@ const WHOLE: Readonly<Record<string, (input: ToolInput) => string>> = {
 // past the limit keeps a secret that crosses it whole for its rule.
 const MASK_ROOM = 1000;
 
+export interface PermissionLabel {
+  label: string;
+  // Kept with the request, so the phone can say the command goes on past what it shows and the
+  // person never allows what they could not see.
+  cut: boolean;
+}
+
 // Never a file's contents: a Write or Edit shows only its path, as its step does.
-export function permissionLabel(name: string, input: ToolInput, folder: string): string {
+export function permissionLabel(name: string, input: ToolInput, folder: string): PermissionLabel {
   const whole = Object.hasOwn(WHOLE, name) ? WHOLE[name]?.(input) : undefined;
   const label = whole ?? oneLine(toolLabel(name, input, folder));
   const masked = maskSecrets(label.slice(0, RUN_PERMISSION_LABEL_MAX + MASK_ROOM)).trim();
-  return cutTo(masked, RUN_PERMISSION_LABEL_MAX, { trim: false });
+  return {
+    label: cutTo(masked, RUN_PERMISSION_LABEL_MAX),
+    cut: masked.length > RUN_PERMISSION_LABEL_MAX,
+  };
 }
-
-// The phone says so under the command, so the person never allows what they could not see.
-export const labelIsCut = (label: string): boolean => isCutAt(label, RUN_PERMISSION_LABEL_MAX);
 
 export function labelHead(label: string): string {
   const [first = '', ...rest] = label.split('\n');

@@ -6,6 +6,7 @@ export const makeRequest = (overrides: Partial<RunRequest> = {}): RunRequest =>
     runId: 'r-1',
     kind: 'permission',
     label: 'Run npm test',
+    labelCut: false,
     questions: null,
     status: 'open',
     decision: null,

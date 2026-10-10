@@ -65,7 +65,13 @@ describe('asking the person', () => {
     const { ask, api, asked, log } = setup([stillOpen, stillOpen, answered('allow')]);
     expect(await ask(run, bash, signal())).toEqual({ behavior: 'allow', updatedInput: bash.input });
     expect(asked).toEqual([
-      { runnerId: RUNNER, kind: 'permission', label: 'Run npm test', questions: null },
+      {
+        runnerId: RUNNER,
+        kind: 'permission',
+        label: 'Run npm test',
+        labelCut: false,
+        questions: null,
+      },
     ]);
     expect(log).toEqual([
       'MOB-1: Claude asks on the phone: Run npm test',
