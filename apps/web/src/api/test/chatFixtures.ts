@@ -40,6 +40,7 @@ export const makeChatDetail = (overrides: Partial<ChatDetail> = {}): ChatDetail 
     makeMessage({ id: 'm-2', role: 'claude', text: 'It reads the queue every minute.' }),
   ],
   run: makeAskRun({ status: 'done', endedAt: Date.now() }),
+  stoppedRuns: [],
   ...overrides,
 });
 

@@ -143,6 +143,43 @@ describe.each(DIALECTS)('chats with Claude Code (%s)', (dialect) => {
     ]);
   });
 
+  it('keeps the questions that stopped after Claude took steps, oldest first', async () => {
+    const step = { kind: 'tool', label: 'Read runQueue.ts', subAgent: false, toolId: null };
+    const chatId = (await startChat('First?')).body.chat.id;
+    const first = (await next()).body?.run.id ?? '';
+    await helper('POST', `/api/runs/${first}/steps`, { runnerId: runner, steps: [step, step] });
+    await person('POST', `/api/runs/${first}/cancel`);
+    await finish(first, { status: 'cancelled' });
+    clock.advance(1_000);
+    await ask(chatId, 'Second?');
+    await finish((await next()).body?.run.id ?? '', { status: 'failed', error: 'Lost.' });
+    clock.advance(1_000);
+    await ask(chatId, 'Third?');
+    const third = (await next()).body?.run.id ?? '';
+    await helper('POST', `/api/runs/${third}/steps`, { runnerId: runner, steps: [step] });
+    await finish(third, { status: 'failed', error: 'Claude Code exited with 1.' });
+    clock.advance(1_000);
+    await ask(chatId, 'Fourth?');
+    const fourth = (await next()).body?.run.id ?? '';
+    await helper('POST', `/api/runs/${fourth}/steps`, { runnerId: runner, steps: [step] });
+    clock.advance(1_000);
+    await finish(fourth, { status: 'done', answer: 'Yes.', sessionId: SESSION });
+
+    const detail = (await chat(chatId)).body;
+    expect(detail.stoppedRuns.map(({ id, status, stepCount }) => [id, status, stepCount])).toEqual([
+      [first, 'cancelled', 2],
+      [third, 'failed', 1],
+    ]);
+    expect(detail.messages.map(({ role }) => role)).toEqual([
+      'person',
+      'person',
+      'person',
+      'person',
+      'claude',
+    ]);
+    expect(detail.run?.id).toBe(fourth);
+  });
+
   it('allows one question at a time in a chat, without blocking a ticket run', async () => {
     const chatId = (await startChat('First?')).body.chat.id;
     const busy = await ask(chatId, 'Second?');
