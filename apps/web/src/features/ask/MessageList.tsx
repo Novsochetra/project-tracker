@@ -1,10 +1,12 @@
-import type { ChatMessage, Runner } from '@tracker/shared';
+import type { ChatMessage, Run, Runner } from '@tracker/shared';
 import { useMemo, type ReactNode } from 'react';
 import { LinkedText } from '../ticket/activity/LinkedText';
 import { AnswerSteps } from './AnswerSteps';
 import { messageCards, type MessageCard } from './cards';
 import styles from './ChatScreen.module.css';
 import { ClaudeFrom } from './ClaudeFrom';
+import { StoppedSteps } from './StoppedSteps';
+import { threadItems } from './thread';
 import { TicketCardView } from './TicketCardView';
 
 export interface MessageListProps {
@@ -12,6 +14,7 @@ export interface MessageListProps {
   messages: ChatMessage[];
   // The helper a created card's Run starts on.
   helper: Runner | null;
+  stoppedRuns?: Run[];
   latestRun?: ReactNode;
 }
 
@@ -58,26 +61,37 @@ function ClaudeMessage({ chatId, message, card, helper }: ClaudeMessageProps) {
   );
 }
 
-export function MessageList({ chatId, messages, helper, latestRun }: MessageListProps) {
+export function MessageList({
+  chatId,
+  messages,
+  helper,
+  stoppedRuns = [],
+  latestRun,
+}: MessageListProps) {
   const cards = useMemo(() => messageCards(messages), [messages]);
+  const items = useMemo(() => threadItems(messages, stoppedRuns), [messages, stoppedRuns]);
   return (
     <ol className={styles.messages} aria-label="Messages">
-      {messages.map((message) => (
-        <li key={message.id} className={`${styles.item} rise`}>
-          {message.role === 'person' ? (
-            <article className={styles.person} aria-label="You">
-              <Text text={message.text} />
-            </article>
-          ) : (
-            <ClaudeMessage
-              chatId={chatId}
-              message={message}
-              card={cards.get(message.id)}
-              helper={helper}
-            />
-          )}
-        </li>
-      ))}
+      {items.map((item) => {
+        if (item.kind === 'stopped') return <StoppedSteps key={item.run.id} run={item.run} />;
+        const { message } = item;
+        return (
+          <li key={message.id} className={`${styles.item} rise`}>
+            {message.role === 'person' ? (
+              <article className={styles.person} aria-label="You">
+                <Text text={message.text} />
+              </article>
+            ) : (
+              <ClaudeMessage
+                chatId={chatId}
+                message={message}
+                card={cards.get(message.id)}
+                helper={helper}
+              />
+            )}
+          </li>
+        );
+      })}
       {latestRun}
     </ol>
   );

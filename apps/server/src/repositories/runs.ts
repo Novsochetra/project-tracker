@@ -45,6 +45,15 @@ export const latestChatRunRow = (db: Db, userId: UserScope, chatId: string) =>
     .orderBy('runs.id', 'desc')
     .executeTakeFirst();
 
+export const listStoppedChatRunRows = (db: Db, userId: UserScope, chatId: string) =>
+  runsOf(db, userId)
+    .where('runs.chatId', '=', chatId)
+    .where('runs.status', 'in', ['failed', 'cancelled'])
+    .where('runs.stepCount', '>', 0)
+    .orderBy('runs.createdAt')
+    .orderBy('runs.id')
+    .execute();
+
 // The helper's lane, not the run's kind: an Edit question changes the folder, so it waits in the
 // ticket lane, as laneOf in shared says. Older asks have no mode and stay in the ask lane.
 const inLane = (lane: RunKind) => (eb: ExpressionBuilder<Database, 'runs'>) =>

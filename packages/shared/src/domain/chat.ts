@@ -41,4 +41,7 @@ export interface ChatDetail {
   messages: ChatMessage[];
   // The latest ask in this chat, so the screen can show Claude thinking or why it stopped.
   run: Run | null;
+  // The questions that failed or were stopped after Claude took steps, oldest first. They add no
+  // message, so this is how what Claude did keeps its place in the thread.
+  stoppedRuns: Run[];
 }

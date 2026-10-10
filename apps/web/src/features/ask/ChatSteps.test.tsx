@@ -243,4 +243,29 @@ describe('Ask: what Claude is doing', () => {
     });
     expect(toggle).toHaveFocus();
   });
+
+  it('keeps a stopped question’s steps in its place once the person asks again', async () => {
+    const first = makeMessage({ id: 'm-1', text: 'Rename the queue', createdAt: 1_000 });
+    const again = makeMessage({ id: 'm-3', text: 'Try again', createdAt: 5_000 });
+    const stopped = makeAskRun({
+      id: 'r-stopped',
+      status: 'cancelled',
+      createdAt: 1_000,
+      endedAt: 2_000,
+      stepCount: 3,
+    });
+    const asking = makeAskRun({ id: 'r-again', status: 'queued', createdAt: 5_000 });
+    const detail = makeChatDetail({
+      messages: [first, again],
+      run: asking,
+      stoppedRuns: [stopped],
+    });
+    setup(detail, vi.fn().mockResolvedValue([]));
+    const tile = await screen.findByRole('article', { name: STOPPED_STEPS_LABEL });
+    expect(within(tile).getByRole('button', { name: '3 steps' })).toBeVisible();
+    const order = screen
+      .getAllByRole('article')
+      .map((article) => article.getAttribute('aria-label'));
+    expect(order).toEqual(['You', STOPPED_STEPS_LABEL, 'You']);
+  });
 });

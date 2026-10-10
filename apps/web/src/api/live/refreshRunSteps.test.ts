@@ -3,6 +3,7 @@ import type { RunStep } from '@tracker/shared';
 import { describe, expect, it, vi } from 'vitest';
 import { makeStep } from '../../features/steps/testSteps';
 import { useRunSteps } from '../hooks/runSteps';
+import { queryKeys } from '../queryKeys';
 import { deferred, type Deferred } from '../test/deferred';
 import { setupApi } from '../test/render';
 import { refreshRunSteps } from './refreshRunSteps';
@@ -38,7 +39,11 @@ describe('refreshRunSteps', () => {
     expect(listRunSteps).toHaveBeenLastCalledWith('r-1', { after: 1 });
     await land(reads[1], [makeStep(2)]);
     await act(() => done);
-    expect(result.current.data?.map(({ seq }) => seq)).toEqual([1, 2]);
+    // The cache holds the read once `done` settles; the hook hears of it in TanStack's next batch
+    // (notifyManager), which can come after act returns.
+    const cached = queryClient.getQueryData<RunStep[]>(queryKeys.runSteps('r-1'));
+    expect(cached?.map(({ seq }) => seq)).toEqual([1, 2]);
+    await waitFor(() => expect(result.current.data?.map(({ seq }) => seq)).toEqual([1, 2]));
     expect(listRunSteps).toHaveBeenCalledTimes(2);
   });
 

@@ -12,7 +12,7 @@ import {
   listProjectChatRows,
   type ChatWithKey,
 } from '../repositories/chats';
-import { latestChatRunRow } from '../repositories/runs';
+import { latestChatRunRow, listStoppedChatRunRows } from '../repositories/runs';
 import { queueAsk } from './askRuns';
 import { chatTitle, toChat, toMessage } from './chatMappers';
 import { inTransaction, type ServiceContext } from './context';
@@ -58,7 +58,13 @@ export async function getChat(
   const chat = await requireChat(ctx, scope, id);
   const messages = await listMessageRows(ctx.db, chat.id);
   const run = await latestChatRunRow(ctx.db, scope, chat.id);
-  return { chat: toChat(chat), messages: messages.map(toMessage), run: run ? toRun(run) : null };
+  const stopped = await listStoppedChatRunRows(ctx.db, scope, chat.id);
+  return {
+    chat: toChat(chat),
+    messages: messages.map(toMessage),
+    run: run ? toRun(run) : null,
+    stoppedRuns: stopped.map(toRun),
+  };
 }
 
 interface AskIn {

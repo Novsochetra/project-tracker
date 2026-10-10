@@ -1,15 +1,19 @@
-import type { StepVariant } from './stepVariant';
 import type { StepRow } from './stepRows';
+import type { StepVariant } from './stepVariant';
 
-// Lines a text step shows, or null for all. While Claude works only its newest words show whole:
-// a long text step that stayed whole dropped the working message by hundreds of pixels at once
-// when it left the newest few. A folded answer's words are quiet rows, since the answer is below.
-export function textLines(
+export const LIVE_TEXT_LINES = 3;
+
+export interface CutInput {
+  newest: boolean;
+  // The person opened every earlier step, so they are reading, not watching.
+  whole: boolean;
+}
+
+// While Claude works only its newest words show whole and earlier ones are cut, since a long text
+// step that stayed whole dropped the working message by hundreds of pixels when it left the newest
+// few. A cut one opens with a tap, and a folded answer's list and a sheet cut nothing.
+export const isCut = (
   variant: StepVariant,
   row: Pick<StepRow, 'kind'>,
-  newest: boolean,
-): number | null {
-  if (row.kind !== 'text') return null;
-  if (variant === 'history') return 2;
-  return variant === 'live' && !newest ? 3 : null;
-}
+  { newest, whole }: CutInput,
+): boolean => variant === 'live' && row.kind === 'text' && !newest && !whole;
