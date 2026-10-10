@@ -5,6 +5,12 @@ const KB = 1024;
 
 const bytesOf = (size: number) => new Uint8Array(size);
 
+function jpegOf(size: number) {
+  const bytes = bytesOf(size);
+  bytes.set([0xff, 0xd8, 0xff]);
+  return bytes;
+}
+
 function decodesAs(width: number, height: number) {
   vi.stubGlobal('createImageBitmap', vi.fn().mockResolvedValue({ width, height, close: vi.fn() }));
 }
@@ -30,6 +36,6 @@ afterEach(() => {
 it('sends a light photo just past the budget as it is when its JPEG would be bigger', async () => {
   decodesAs(2592, 1944);
   canvasGives(498 * KB);
-  const photo = new File([bytesOf(239 * KB)], 'DSC_0007.JPG', { type: 'image/jpeg' });
+  const photo = new File([jpegOf(239 * KB)], 'DSC_0007.JPG', { type: 'image/jpeg' });
   await expect(prepareUpload(photo)).resolves.toEqual({ blob: photo, fileName: 'DSC_0007.JPG' });
 });

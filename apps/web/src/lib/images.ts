@@ -1,4 +1,5 @@
 import { ATTACHMENT_KINDS, storedExtension, type AttachmentMimeType } from '@tracker/shared';
+import { HEAD_BYTES, isJpegOrWebp } from './imageBytes';
 import { JPEG_QUALITY, planImage, type EncodedType, type Encoding } from './imagePlan';
 
 export interface PreparedImage {
@@ -13,6 +14,8 @@ export function renamedAs(fileName: string, type: EncodedType): string {
   const base = fileName.replace(/\.[^./\\]*$/, '');
   return `${base || 'image'}.${storedExtension(type)}`;
 }
+
+const headOf = async (file: File) => new Uint8Array(await file.slice(0, HEAD_BYTES).arrayBuffer());
 
 async function decode(file: File): Promise<ImageBitmap | null> {
   if (typeof createImageBitmap !== 'function') return null;
@@ -62,7 +65,8 @@ async function reencode(
   bitmap: ImageBitmap,
 ): Promise<Encoded | null> {
   const { width, height } = bitmap;
-  const plan = planImage({ type, bytes: file.size, width, height });
+  const contentIsJpegOrWebp = isJpegOrWebp(await headOf(file));
+  const plan = planImage({ type, bytes: file.size, width, height, contentIsJpegOrWebp });
   if (!plan) return null;
   const encoded = await encodeToFit(bitmap, plan.encodings);
   if (!encoded || (!plan.mustConvert && encoded.blob.size >= file.size)) return null;

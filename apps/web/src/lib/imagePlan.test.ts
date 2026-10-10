@@ -9,6 +9,12 @@ const source = (type: AttachmentMimeType, width: number, height: number, bytes: 
   width,
   height,
   bytes,
+  contentIsJpegOrWebp: type === 'image/jpeg' || type === 'image/webp',
+});
+
+const namedJpeg = (width: number, height: number, bytes: number) => ({
+  ...source('image/jpeg', width, height, bytes),
+  contentIsJpegOrWebp: false,
 });
 
 const photoOf = (width: number, height: number) => ({ type: 'image/jpeg', width, height });
@@ -83,6 +89,17 @@ describe('planImage: screenshots', () => {
 });
 
 describe('planImage: other types', () => {
+  it('converts a photo whose bytes are no JPEG or WebP, as a HEIC or an AVIF named .jpg', () => {
+    expect(planImage(namedJpeg(3840, 2160, 741_000))).toEqual({
+      encodings: [photoOf(2956, 1662)],
+      mustConvert: true,
+    });
+    expect(planImage(namedJpeg(1000, 750, 400_000))).toEqual({
+      encodings: [photoOf(1000, 750)],
+      mustConvert: true,
+    });
+  });
+
   it('converts a HEIC the browser decodes to a JPEG within the budget, even a small one', () => {
     expect(planImage(source('image/heic', 1000, 750, 400_000))).toEqual({
       encodings: [photoOf(1000, 750)],

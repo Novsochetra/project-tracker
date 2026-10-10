@@ -4,8 +4,16 @@ import { prepareImageForUpload, renamedAs, uploadName } from './images';
 
 const MB = 1024 * 1024;
 
-const fileOf = (name: string, type: string, size = 1000) =>
-  new File([new Uint8Array(size)], name, { type });
+const ascii = (text: string) => [...text].map((char) => char.charCodeAt(0));
+const JPEG = [0xff, 0xd8, 0xff];
+const WEBP = [...ascii('RIFF'), 0, 0, 0, 0, ...ascii('WEBP')];
+const AVIF = [0, 0, 0, 0x1c, ...ascii('ftypavif')];
+
+function fileOf(name: string, type: string, size = 1000, head: number[] = []) {
+  const bytes = new Uint8Array(size);
+  bytes.set(head);
+  return new File([bytes], name, { type });
+}
 
 const blobOf = (type: string, size = 10) => new Blob([new Uint8Array(size)], { type });
 
@@ -73,7 +81,7 @@ describe('prepareImageForUpload', () => {
   it('sends a light photo within the budget as it is', async () => {
     const { close } = mockDecode(2560, 1920);
     const { toBlob } = mockCanvas(blobOf('image/jpeg'));
-    const photo = fileOf('IMG_5.JPG', 'image/jpeg', MAX_UNTOUCHED_PHOTO_BYTES);
+    const photo = fileOf('IMG_5.JPG', 'image/jpeg', MAX_UNTOUCHED_PHOTO_BYTES, JPEG);
     await expect(prepareImageForUpload(photo, 'image/jpeg')).resolves.toEqual({
       blob: photo,
       fileName: 'IMG_5.JPG',
@@ -86,7 +94,7 @@ describe('prepareImageForUpload', () => {
     const { close } = mockDecode(4032, 3024);
     const jpeg = blobOf('image/jpeg');
     const { context, toBlob } = mockCanvas(jpeg);
-    const photo = fileOf('IMG_2001.jpeg', 'image/jpeg', 3_000_000);
+    const photo = fileOf('IMG_2001.jpeg', 'image/jpeg', 3_000_000, JPEG);
 
     await expect(prepareImageForUpload(photo, 'image/jpeg')).resolves.toEqual({
       blob: jpeg,
@@ -102,7 +110,7 @@ describe('prepareImageForUpload', () => {
     mockDecode(2400, 1600);
     const smaller = blobOf('image/jpeg', 10);
     mockCanvas(smaller);
-    const heavy = fileOf('scan.webp', 'image/webp', MAX_UNTOUCHED_PHOTO_BYTES + 1);
+    const heavy = fileOf('scan.webp', 'image/webp', MAX_UNTOUCHED_PHOTO_BYTES + 1, WEBP);
     await expect(prepareImageForUpload(heavy, 'image/webp')).resolves.toEqual({
       blob: smaller,
       fileName: 'scan.jpg',
@@ -162,6 +170,17 @@ describe('prepareImageForUpload', () => {
     await expect(prepareImageForUpload(heic, 'image/heic')).resolves.toEqual({
       blob: heic,
       fileName: 'IMG_3.HEIC',
+    });
+  });
+
+  it('converts a light photo named .jpg whose bytes are no JPEG or WebP', async () => {
+    mockDecode(1000, 750);
+    const jpeg = blobOf('image/jpeg', 300_000);
+    mockCanvas(jpeg);
+    const avif = fileOf('IMG_6.jpg', 'image/jpeg', 100_000, AVIF);
+    await expect(prepareImageForUpload(avif, 'image/jpeg')).resolves.toEqual({
+      blob: jpeg,
+      fileName: 'IMG_6.jpg',
     });
   });
 

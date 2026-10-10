@@ -33,6 +33,7 @@ export interface ImagePlan {
 export interface SourceImage extends PixelSize {
   type: AttachmentMimeType;
   bytes: number;
+  contentIsJpegOrWebp: boolean;
 }
 
 const pixelsOf = ({ width, height }: PixelSize): number => width * height;
@@ -56,20 +57,21 @@ function planPng(source: SourceImage): ImagePlan | null {
   return { encodings, mustConvert: true };
 }
 
-// The original goes when it is the smaller, even past the budget: the server drops its GPS and,
-// up to what it decodes, shrinks it to the budget in its one lossy pass (PT-145).
+// The server strips a JPEG or WebP of its GPS and, up to MAX_WHOLE_DECODE_PIXELS, shrinks it to the
+// budget in its one lossy pass, so such an original goes when it is the smaller, even past the
+// budget (PT-145).
 function planPhoto(source: SourceImage): ImagePlan | null {
   const pixels = pixelsOf(source);
   if (pixels <= MAX_PHOTO_PIXELS && source.bytes <= MAX_UNTOUCHED_PHOTO_BYTES) return null;
   return { encodings: [asPhoto(source)], mustConvert: pixels > MAX_WHOLE_DECODE_PIXELS };
 }
 
-// Null sends the image as it is. Only Safari shows HEIC and the server can neither read one nor
-// strip its GPS, so a HEIC the browser can decode is always converted.
+// Null sends the image as it is. The server can neither read a HEIC or an AVIF nor strip its GPS,
+// and a browser decodes one by its bytes while its type comes from its name, so one named .jpg comes
+// as image/jpeg. A photo whose bytes aren't JPEG or WebP is therefore always converted.
 export function planImage(source: SourceImage): ImagePlan | null {
   if (source.type === 'image/gif') return null;
-  if (source.type === 'image/heic' || source.type === 'image/heif') {
-    return { encodings: [asPhoto(source)], mustConvert: true };
-  }
-  return source.type === 'image/png' ? planPng(source) : planPhoto(source);
+  if (source.type === 'image/png') return planPng(source);
+  if (!source.contentIsJpegOrWebp) return { encodings: [asPhoto(source)], mustConvert: true };
+  return planPhoto(source);
 }
