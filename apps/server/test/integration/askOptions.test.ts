@@ -44,9 +44,9 @@ describe.each(DIALECTS)('question options and lanes (%s)', (dialect) => {
     await helper('POST', `/api/runs/${job?.run.id ?? ''}/finish`, { status: 'done', answer: 'A' });
 
     clock.advance(1_000);
-    const again = await ask(started.body.chat.id, {});
-    expect(again.body.chat.options).toEqual({ model: 'default', mode: 'ask' });
-    expect(again.body.run?.askOptions).toEqual({ model: 'default', mode: 'ask' });
+    const again = await ask(started.body.chat.id, { model: 'sonnet', mode: 'ask' });
+    expect(again.body.chat.options).toEqual({ model: 'sonnet', mode: 'ask' });
+    expect(again.body.run?.askOptions).toEqual({ model: 'sonnet', mode: 'ask' });
     expect((await run(started.body.run?.id)).askOptions).toEqual({ model: 'opus', mode: 'plan' });
   });
 

@@ -36,7 +36,7 @@ export const registerRunnerInput = z.object({
 export type RegisterRunnerInput = z.input<typeof registerRunnerInput>;
 
 // A helper runs one run of each kind at a time. One that names no kind predates asks.
-export const takeRunQuery = z.object({ kind: z.enum(RUN_KINDS).default('ticket') });
+export const takeRunQuery = z.object({ kind: z.enum(RUN_KINDS).optional() });
 export type TakeRunQuery = z.input<typeof takeRunQuery>;
 
 export const finishRunInput = z.object({

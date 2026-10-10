@@ -1,7 +1,7 @@
 import type { ChatDetail } from '@tracker/shared';
 import { ASK_LABEL, NEW_CHAT_LABEL } from '../../app/crumbs';
 import { NavBar, NavBarSpacer } from '../../navigation';
-import { initialAskOptions } from './askOptions';
+import { savedAskOptions } from './askOptions';
 import { ChatFooterArea } from './ChatFooterArea';
 import styles from './ChatScreen.module.css';
 import { ASK_INTRO } from './copy';
@@ -37,7 +37,7 @@ export function ChatView({ projectKey, chatId, detail }: ChatViewProps) {
         projectKey={projectKey}
         chatId={chatId}
         helper={helper}
-        initialOptions={initialAskOptions(detail?.chat)}
+        savedOptions={savedAskOptions(detail?.chat)}
       />
     </div>
   );

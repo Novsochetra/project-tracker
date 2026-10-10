@@ -13,6 +13,11 @@ export interface AskOptions {
 
 export const DEFAULT_ASK_OPTIONS: AskOptions = { model: 'default', mode: 'ask' };
 
+export const chosenAskOptions = (
+  chosen: Partial<AskOptions>,
+  saved: AskOptions = DEFAULT_ASK_OPTIONS,
+): AskOptions => ({ model: chosen.model ?? saved.model, mode: chosen.mode ?? saved.mode });
+
 // An Edit question changes the folder, so it waits in the ticket lane: two Claudes must never
 // change one folder at once.
 export const laneOf = (kind: RunKind, askOptions: AskOptions | null): RunKind =>

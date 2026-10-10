@@ -55,9 +55,16 @@ const inLane = (lane: RunKind) => (eb: ExpressionBuilder<Database, 'runs'>) =>
         eb.or([eb('runs.askMode', 'is', null), eb('runs.askMode', '!=', 'edit')]),
       ]);
 
+// A take that names no lane comes from a helper built before asks. It throws on a question, which
+// has no ticket, so it gets ticket runs only and a question waits for a helper that names its lane.
+const takenBy = (lane: RunKind | undefined) =>
+  lane === undefined
+    ? (eb: ExpressionBuilder<Database, 'runs'>) => eb('runs.kind', '=', 'ticket')
+    : inLane(lane);
+
 export interface QueueSlot {
   runnerId: string;
-  lane: RunKind;
+  lane: RunKind | undefined;
   projectIds: readonly string[];
 }
 
@@ -70,7 +77,7 @@ export const nextQueuedRun = (
     ? Promise.resolve(undefined)
     : runsOf(db, userId)
         .where('runs.runnerId', '=', runnerId)
-        .where(inLane(lane))
+        .where(takenBy(lane))
         .where('runs.status', '=', 'queued')
         .where('runs.projectId', 'in', projectIds)
         .orderBy('runs.createdAt')

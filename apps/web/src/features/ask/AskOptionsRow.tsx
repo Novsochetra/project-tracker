@@ -8,7 +8,7 @@ import { ModelChip } from './ModelChip';
 
 export interface AskOptionsRowProps {
   options: AskOptions;
-  onChange: (options: AskOptions) => void;
+  onChange: (change: Partial<AskOptions>) => void;
 }
 
 export function AskOptionsRow({ options, onChange }: AskOptionsRowProps) {
@@ -16,13 +16,13 @@ export function AskOptionsRow({ options, onChange }: AskOptionsRowProps) {
   return (
     <>
       <div className={styles.row}>
-        <ModelChip value={options.model} onChange={(model) => onChange({ ...options, model })} />
+        <ModelChip value={options.model} onChange={(model) => onChange({ model })} />
         <div className={styles.mode}>
           <Segmented
             aria-label={MODE_LABEL}
             options={MODE_OPTIONS}
             value={options.mode}
-            onChange={(mode) => onChange({ ...options, mode })}
+            onChange={(mode) => onChange({ mode })}
           />
         </div>
       </div>

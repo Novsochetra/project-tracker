@@ -12,9 +12,10 @@ export const askInput = z.object({
     .trim()
     .min(1, 'Write a question for Claude.')
     .max(CHAT_QUESTION_MAX, `Use at most ${CHAT_QUESTION_MAX} characters for the question.`),
-  // Names only: the helper turns each into its own fixed flags.
-  model: z.enum(ASK_MODELS).default('default'),
-  mode: z.enum(ASK_MODES).default('ask'),
+  // Names only: the helper turns each into its own fixed flags. No default, since a missing one
+  // keeps the chat's saved choice (chosenAskOptions).
+  model: z.enum(ASK_MODELS).optional(),
+  mode: z.enum(ASK_MODES).optional(),
 });
 export type AskInput = z.input<typeof askInput>;
 

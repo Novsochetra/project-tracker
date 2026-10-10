@@ -22,7 +22,7 @@ export const MODE_OPTIONS: readonly { value: AskMode; label: string }[] = [
 ];
 
 // A chat from a server without options starts like a new one.
-export const initialAskOptions = (chat: Pick<Chat, 'options'> | null | undefined): AskOptions =>
+export const savedAskOptions = (chat: Pick<Chat, 'options'> | null | undefined): AskOptions =>
   chat?.options ?? DEFAULT_ASK_OPTIONS;
 
 export const askInputOf = (runnerId: string, text: string, options: AskOptions): AskInput => ({

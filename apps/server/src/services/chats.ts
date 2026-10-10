@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import type { askInput, Chat, ChatDetail } from '@tracker/shared';
+import { chosenAskOptions, type askInput, type Chat, type ChatDetail } from '@tracker/shared';
 import type { z } from 'zod';
 import type { UserScope } from '../auth/scope';
 import type { ChatRow } from '../db/chatTables';
@@ -76,7 +76,7 @@ async function askIn(
   const queued = { scope, runner, projectId: project.id, now: ctx.now() };
   const run = await inTransaction(ctx, async (trx) => {
     if (isNew) await insertChat(trx, chat);
-    const options = { model: input.model, mode: input.mode };
+    const options = chosenAskOptions(input, { model: chat.askModel, mode: chat.askMode });
     return queueAsk(trx, { queued, project, chat, history, question: input.text, options });
   });
   notifyRun(ctx, scope, run);
@@ -91,6 +91,7 @@ export async function startChat(
 ): Promise<ChatDetail> {
   const project = await requireProject(ctx.db, projectKey);
   const at = ctx.now();
+  const options = chosenAskOptions(input);
   const chat: ChatRow = {
     id: randomUUID(),
     userId: scope,
@@ -98,8 +99,8 @@ export async function startChat(
     title: chatTitle(input.text),
     sessionId: null,
     sessionRunnerId: null,
-    askModel: input.model,
-    askMode: input.mode,
+    askModel: options.model,
+    askMode: options.mode,
     createdAt: at,
     updatedAt: at,
   };

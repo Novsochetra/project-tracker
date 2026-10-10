@@ -31,12 +31,12 @@ export async function takeNextRun(
   ctx: ServiceContext,
   scope: UserScope,
   runnerId: string,
-  lane: RunKind,
+  lane: RunKind | undefined,
 ): Promise<RunJob | null> {
   const runner = await requireRunner(ctx, scope, runnerId);
   await touchRunner(ctx, scope, runner);
   await expireSilentRuns(ctx);
-  await endLostRuns(ctx, scope, runner, lane);
+  await endLostRuns(ctx, scope, runner, lane ?? 'ticket');
   const slot = { runnerId: runner.id, lane, projectIds: parseProjectIds(runner) };
   const next = await nextQueuedRun(ctx.db, scope, slot);
   if (!next || !(await markRunStarted(ctx.db, scope, next.id, ctx.now()))) return null;

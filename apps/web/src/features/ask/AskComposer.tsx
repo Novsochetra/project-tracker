@@ -10,6 +10,7 @@ import { isSubmitShortcut } from '../ticket/activity/commentRules';
 import { AskOptionsRow } from './AskOptionsRow';
 import styles from './ChatScreen.module.css';
 import { ASK_PLACEHOLDER } from './copy';
+import { useAskOptions } from './useAskOptions';
 import { useChatSend } from './useChatSend';
 
 export interface AskComposerProps {
@@ -18,8 +19,8 @@ export interface AskComposerProps {
   // The helper that answers; null while none can (thinking, unknown or none online).
   helper: Runner | null;
   offersSend: boolean;
-  // The chat's last choice, or the defaults for a new chat.
-  initialOptions: AskOptions;
+  // The chat's saved choice, or the defaults for a new chat.
+  savedOptions: AskOptions;
 }
 
 export function AskComposer({
@@ -27,15 +28,19 @@ export function AskComposer({
   chatId,
   helper,
   offersSend,
-  initialOptions,
+  savedOptions,
 }: AskComposerProps) {
   const [text, setText] = useState('');
-  const [options, setOptions] = useState(initialOptions);
+  const { options, pick, forget } = useAskOptions(savedOptions);
   const chat = useChatSend(projectKey, chatId, helper);
   useDraftMark(`ask:${chatId ?? `new:${projectKey}`}`, text.trim() !== '');
   const canSend = helper !== null && text.trim() !== '' && !chat.sending;
   const send = () => {
-    if (canSend) chat.send(text.trim(), options, () => setText(''));
+    if (!canSend) return;
+    chat.send(text.trim(), options, () => {
+      setText('');
+      forget();
+    });
   };
   // What is pressed next may be the line that takes the thinking state's place.
   const onSend = (event: MouseEvent<HTMLButtonElement>) => {
@@ -55,7 +60,7 @@ export function AskComposer({
           {errorMessage(chat.error)}
         </p>
       )}
-      {offersSend && <AskOptionsRow options={options} onChange={setOptions} />}
+      {offersSend && <AskOptionsRow options={options} onChange={pick} />}
       <div className={styles.box}>
         <AutoTextarea
           aria-label="Question for Claude"

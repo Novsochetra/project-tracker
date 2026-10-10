@@ -1,20 +1,20 @@
 import { DEFAULT_ASK_OPTIONS } from '@tracker/shared';
 import { describe, expect, it } from 'vitest';
-import { askInputOf, askOptionsHint, initialAskOptions } from './askOptions';
+import { askInputOf, askOptionsHint, savedAskOptions } from './askOptions';
 import { EDIT_HINT } from './copy';
 
-describe('initialAskOptions', () => {
+describe('savedAskOptions', () => {
   it('starts a new chat from the defaults', () => {
-    expect(initialAskOptions(null)).toEqual(DEFAULT_ASK_OPTIONS);
+    expect(savedAskOptions(null)).toEqual(DEFAULT_ASK_OPTIONS);
   });
 
   it('starts an existing chat from its last choice', () => {
     const options = { model: 'opus', mode: 'plan' } as const;
-    expect(initialAskOptions({ options })).toEqual(options);
+    expect(savedAskOptions({ options })).toEqual(options);
   });
 
   it('starts a chat whose server sent no options from the defaults', () => {
-    expect(initialAskOptions({} as never)).toEqual(DEFAULT_ASK_OPTIONS);
+    expect(savedAskOptions({} as never)).toEqual(DEFAULT_ASK_OPTIONS);
   });
 });
 

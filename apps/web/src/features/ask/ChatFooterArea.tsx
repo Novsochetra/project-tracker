@@ -19,7 +19,7 @@ export interface ChatFooterAreaProps {
   projectKey: string;
   chatId: string | null;
   helper: AskHelper;
-  initialOptions: AskOptions;
+  savedOptions: AskOptions;
 }
 
 function Thinking({ run }: { run: Run }) {
@@ -62,12 +62,7 @@ function RunOn({ helper }: { helper: AskHelper }) {
   );
 }
 
-export function ChatFooterArea({
-  projectKey,
-  chatId,
-  helper,
-  initialOptions,
-}: ChatFooterAreaProps) {
+export function ChatFooterArea({ projectKey, chatId, helper, savedOptions }: ChatFooterAreaProps) {
   const { footer } = helper;
   const isPhone = useIsPhone();
   const isTop = useOptionalScreen()?.isTop ?? true;
@@ -86,7 +81,7 @@ export function ChatFooterArea({
           chatId={chatId}
           helper={helperOf(footer)}
           offersSend={footer.kind !== 'setup'}
-          initialOptions={initialOptions}
+          savedOptions={savedOptions}
         />
       </div>
     </div>
