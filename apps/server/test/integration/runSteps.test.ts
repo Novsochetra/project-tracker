@@ -16,6 +16,7 @@ const step = (label: string, kind: RunStepInput['kind'] = 'tool'): RunStepInput 
   kind,
   label,
   subAgent: false,
+  toolId: kind === 'text' ? null : `toolu_${label.length}`,
 });
 
 const batch = (from: number, size: number) =>
@@ -52,18 +53,21 @@ describe.each(DIALECTS)('run steps (%s)', (dialect) => {
 
   it('keeps the steps the helper sends, in order, for the person to read', async () => {
     await take();
-    expect((await send([step('Read a.ts'), { ...step('Used Grep'), subAgent: true }])).status).toBe(
-      204,
-    );
-    expect((await send([step('Done.', 'text')])).status).toBe(204);
+    const grep = { ...step('Use Grep'), subAgent: true, toolId: 'toolu_g' };
+    expect((await send([step('Read a.ts'), grep])).status).toBe(204);
+    const denied = { kind: 'denied' as const, label: 'Not allowed: Use Grep', toolId: 'toolu_g' };
+    expect((await send([step('Done.', 'text'), { ...denied, subAgent: true }])).status).toBe(204);
     const { status, body } = await read();
     expect(status).toBe(200);
+    const at = expect.any(Number) as number;
     expect(body).toEqual([
-      { seq: 1, kind: 'tool', label: 'Read a.ts', subAgent: false, at: expect.any(Number) },
-      { seq: 2, kind: 'tool', label: 'Used Grep', subAgent: true, at: expect.any(Number) },
-      { seq: 3, kind: 'text', label: 'Done.', subAgent: false, at: expect.any(Number) },
+      { seq: 1, kind: 'tool', label: 'Read a.ts', subAgent: false, toolId: 'toolu_9', at },
+      { seq: 2, kind: 'tool', label: 'Use Grep', subAgent: true, toolId: 'toolu_g', at },
+      { seq: 3, kind: 'text', label: 'Done.', subAgent: false, toolId: null, at },
+      { seq: 4, ...denied, subAgent: true, at },
     ]);
-    expect((await read('?after=2')).body.map(({ seq }) => seq)).toEqual([3]);
+    expect((await read('?after=2')).body.map(({ seq }) => seq)).toEqual([3, 4]);
+    expect((await person<Run>('GET', `/api/runs/${run.id}`)).body.stepCount).toBe(4);
   });
 
   it('takes steps only from the helper that took the run', async () => {

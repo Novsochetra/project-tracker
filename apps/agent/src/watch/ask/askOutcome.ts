@@ -11,7 +11,9 @@ const fitted = (answer: string) =>
 
 export function askOutcomeOf(exit: ClaudeExit, cancelled: boolean): FinishRunInput {
   if (cancelled) return { status: 'cancelled' };
-  const { result } = exit;
+  // The last turn's result is how the run ended, as `--output-format json` prints only it: an
+  // earlier one is Claude saying it started background work, or a failure it went on from.
+  const result = exit.results.at(-1);
   const answer = result?.text ?? '';
   if (exit.code === 0 && result && !result.isError && answer) {
     const sessionId = isSessionId(result.sessionId) ? result.sessionId : undefined;

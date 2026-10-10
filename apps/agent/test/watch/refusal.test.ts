@@ -19,6 +19,7 @@ const job = (run: Partial<Run>): RunJob => ({
     createdAt: 1,
     startedAt: 2,
     endedAt: null,
+    stepCount: 0,
     ...run,
   },
 });

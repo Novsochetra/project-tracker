@@ -5,7 +5,7 @@ import { canCreate, cardInput, messageCards } from './cards';
 let next = 0;
 const message = (role: ChatMessage['role'], text: string, ticketKey: string | null = null) => {
   next += 1;
-  return { id: `m-${next}`, chatId: 'c-1', role, text, ticketKey, createdAt: next };
+  return { id: `m-${next}`, chatId: 'c-1', role, text, ticketKey, runId: null, createdAt: next };
 };
 const card = (title: string) =>
   ['Here it is:', '```ticket', `Title: ${title}`, 'Priority: high', '---', 'Why.', '```'].join(

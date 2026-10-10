@@ -10,6 +10,7 @@ const steps = (count: number, from = 1): RunStepInput[] =>
     kind: 'tool',
     label: `Read ${from + index}.ts`,
     subAgent: false,
+    toolId: null,
   }));
 
 function batcher(send: (batch: RunStepInput[]) => Promise<void>, every = NEVER) {

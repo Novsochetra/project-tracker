@@ -26,5 +26,6 @@ export const makeRun = (overrides: Partial<Run> = {}): Run => ({
   createdAt: Date.now(),
   startedAt: null,
   endedAt: null,
+  stepCount: 0,
   ...overrides,
 });

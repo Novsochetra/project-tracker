@@ -16,12 +16,17 @@ export async function up(db: SchemaDb): Promise<void> {
     .addColumn('kind', 'text', (col) => col.notNull())
     .addColumn('label', 'text', (col) => col.notNull())
     .addColumn('sub_agent', 'integer', (col) => col.notNull())
+    .addColumn('tool_id', 'text')
     .addColumn('created_at', 'bigint', (col) => col.notNull())
     .addPrimaryKeyConstraint('run_steps_pk', ['run_id', 'seq'])
     .execute();
+  // Claude's answer keeps the run that gave it, so its steps can fold under it. No foreign key:
+  // SQLite can't drop a column that has one, and an ask run goes only with its chat.
+  await db.schema.alterTable('chat_messages').addColumn('run_id', 'text').execute();
 }
 
 export async function down(db: SchemaDb): Promise<void> {
+  await db.schema.alterTable('chat_messages').dropColumn('run_id').execute();
   await db.schema.dropTable('run_steps').execute();
   await db.schema.alterTable('runs').dropColumn('step_count').execute();
 }

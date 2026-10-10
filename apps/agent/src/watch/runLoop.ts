@@ -16,7 +16,7 @@ export interface RunLoopDeps {
   log: (text: string) => void;
   describe: (error: unknown) => string;
   onProblem: (error: unknown) => void;
-  handBack: (job: RunJob, output: string) => Promise<void>;
+  handBack: (job: RunJob, texts: readonly string[]) => Promise<void>;
   signOfLife: (ticketKey: string) => () => void;
   stepsFor: (runId: string) => StepBatcher;
   retryDelay?: ((attempt: number) => number) | undefined;
@@ -34,6 +34,10 @@ const ENDINGS: Record<FinishRunInput['status'], string> = {
   cancelled: 'Cancelled',
 };
 
+// Every turn's result: the report can be in an earlier one than the last (background work).
+const reportTexts = ({ results, output }: ClaudeExit): string[] =>
+  results.length > 0 ? results.map(({ text }) => text) : [output];
+
 type Runner = (
   deps: RunLoopDeps,
   job: RunJob,
@@ -45,7 +49,7 @@ const runTicket: Runner = async (deps, job, stop, onSteps) => {
   const exit = await deps.runClaude(job.prompt, stop, onSteps);
   const outcome = outcomeOf(exit, stop.aborted);
   // A cancelled run was stopped part way, so whatever it printed is not a report of the work.
-  if (outcome.status !== 'cancelled') await deps.handBack(job, exit.result?.text ?? exit.output);
+  if (outcome.status !== 'cancelled') await deps.handBack(job, reportTexts(exit));
   return outcome;
 };
 

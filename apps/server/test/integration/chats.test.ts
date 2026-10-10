@@ -93,9 +93,9 @@ describe.each(DIALECTS)('chats with Claude Code (%s)', (dialect) => {
   it("adds Claude's answer and resumes its session for the next question on that helper", async () => {
     const chatId = await answered('Where are runs queued?', 'In runQueue.ts.');
     const detail = (await chat(chatId)).body;
-    expect(detail.messages.map(({ role, text }) => [role, text])).toEqual([
-      ['person', 'Where are runs queued?'],
-      ['claude', 'In runQueue.ts.'],
+    expect(detail.messages.map(({ role, text, runId }) => [role, text, runId])).toEqual([
+      ['person', 'Where are runs queued?', null],
+      ['claude', 'In runQueue.ts.', detail.run?.id],
     ]);
     expect(detail.run).toMatchObject({ status: 'done' });
 

@@ -41,6 +41,7 @@ export interface RunStepRow {
   label: string;
   // 0 or 1: neither database's boolean is portable.
   subAgent: number;
+  toolId: string | null;
   createdAt: number;
 }
 

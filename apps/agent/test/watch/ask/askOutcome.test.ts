@@ -12,11 +12,11 @@ const said = (text: string, more: Partial<ClaudeResult> = {}): ClaudeResult => (
   ...more,
 });
 
-const exit = (code: number | null, result: ClaudeResult | null, output = '') => ({
+const exit = (code: number | null, result: ClaudeResult | ClaudeResult[] | null, output = '') => ({
   code,
   signal: null,
   output,
-  result,
+  results: result === null ? [] : [result].flat(),
 });
 
 describe('askOutcomeOf', () => {
@@ -25,6 +25,25 @@ describe('askOutcomeOf', () => {
       status: 'done',
       answer: 'It is in runQueue.ts.',
       sessionId: SESSION,
+    });
+  });
+
+  it("answers with the last turn's result, after background work Claude started", () => {
+    const started = said('I started the sub agent. I will tell you what it found.');
+    const found = said('The sub agent found two files.');
+    expect(askOutcomeOf(exit(0, [started, found]), false)).toMatchObject({
+      status: 'done',
+      answer: 'The sub agent found two files.',
+    });
+  });
+
+  it('ends as the last turn ended, whichever turn failed', () => {
+    const failed = said('API Error: overloaded', { isError: true });
+    const answer = said('Here it is.');
+    expect(askOutcomeOf(exit(0, [failed, answer]), false)).toMatchObject({ status: 'done' });
+    expect(askOutcomeOf(exit(0, [answer, failed]), false)).toEqual({
+      status: 'failed',
+      error: 'Claude Code exited with 0.\nAPI Error: overloaded',
     });
   });
 

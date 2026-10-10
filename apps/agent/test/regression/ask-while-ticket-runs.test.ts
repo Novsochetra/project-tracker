@@ -9,7 +9,7 @@ describe('regression: a question while a ticket run works', () => {
     const tracker = fakeTracker([job('r-1', 'MOB-1'), askJob('r-2', 'c0ffee00-chat')]);
     let finishTicket = () => undefined as void;
     const ticketRun = new Promise<ClaudeExit>((resolve) => {
-      finishTicket = () => resolve({ code: 0, signal: null, output: '', result: null });
+      finishTicket = () => resolve({ code: 0, signal: null, output: '', results: [] });
     });
     const watcher = createWatcher(
       {

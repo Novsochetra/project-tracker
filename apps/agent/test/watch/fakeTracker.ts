@@ -22,7 +22,7 @@ export const answered = (text: string, sessionId?: string): ClaudeExit => ({
   code: 0,
   signal: null,
   output: `${text}\n`,
-  result: { text, sessionId, isError: false },
+  results: [{ text, sessionId, isError: false }],
 });
 
 export const runOf = (id: string, ticketKey: string): Run => ({
@@ -39,6 +39,7 @@ export const runOf = (id: string, ticketKey: string): Run => ({
   createdAt: 1,
   startedAt: 2,
   endedAt: null,
+  stepCount: 0,
 });
 
 export const job = (id: string, ticketKey: string, prompt = `Work on ${ticketKey}`): RunJob => ({

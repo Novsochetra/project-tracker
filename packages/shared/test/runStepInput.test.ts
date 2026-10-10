@@ -8,8 +8,14 @@ const parse = (steps: unknown) => addRunStepsInput.safeParse({ runnerId: RUNNER,
 describe('addRunStepsInput', () => {
   it('trims labels and takes a step as from the main conversation unless it says otherwise', () => {
     expect(parse([{ kind: 'tool', label: ' Read a.ts ' }]).data?.steps).toEqual([
-      { kind: 'tool', label: 'Read a.ts', subAgent: false },
+      { kind: 'tool', label: 'Read a.ts', subAgent: false, toolId: null },
     ]);
+  });
+
+  it('takes a refused call with the id of the call it refuses', () => {
+    const denied = { kind: 'denied', label: 'Not allowed: Run ls', toolId: 'toolu_01' };
+    expect(parse([denied]).data?.steps).toEqual([{ ...denied, subAgent: false }]);
+    expect(parse([{ ...denied, toolId: 'x'.repeat(101) }]).success).toBe(false);
   });
 
   it('gives Claude’s words more room than a tool’s one line', () => {

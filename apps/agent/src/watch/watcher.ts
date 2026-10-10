@@ -35,8 +35,8 @@ export function createWatcher(deps: WatcherDeps, settings: WatcherSettings) {
       ...deps,
       describe,
       onProblem,
-      handBack: (job, output) =>
-        handBackReport({ api: deps.api, log: deps.log, describe }, job, output),
+      handBack: (job, texts) =>
+        handBackReport({ api: deps.api, log: deps.log, describe }, job, texts),
       signOfLife: (ticketKey) =>
         showStillWorking(ticketKey, { log: deps.log, every: deps.aliveEvery }),
       stepsFor: (runId) =>

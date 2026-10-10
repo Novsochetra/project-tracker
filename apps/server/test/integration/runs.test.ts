@@ -58,6 +58,7 @@ describe.each(DIALECTS)('Claude Code runs (%s)', (dialect) => {
       createdAt: 1_000_000,
       startedAt: null,
       endedAt: null,
+      stepCount: 0,
     });
 
     clock.advance(5_000);

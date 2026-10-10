@@ -6,7 +6,8 @@ export interface ClaudeExit {
   signal: NodeJS.Signals | null;
   // The last of what the helper's window showed: stderr, stray lines and the result's text.
   output: string;
-  result: ClaudeResult | null;
+  // One a turn: background work Claude started (a sub agent) gets a turn of its own when it ends.
+  results: ClaudeResult[];
 }
 
 export function lastLines(text: string, max = RUN_ERROR_MAX): string {
@@ -22,7 +23,7 @@ export function reasonOf({ code, signal }: Pick<ClaudeExit, 'code' | 'signal'>):
   return signal ? `Claude Code was stopped (${signal}).` : 'Claude Code did not start.';
 }
 
-export function outcomeOf(exit: Omit<ClaudeExit, 'result'>, cancelled: boolean): FinishRunInput {
+export function outcomeOf(exit: Omit<ClaudeExit, 'results'>, cancelled: boolean): FinishRunInput {
   if (cancelled) return { status: 'cancelled' };
   if (exit.code === 0) return { status: 'done' };
   return { status: 'failed', error: lastLines(`${reasonOf(exit)}\n${exit.output}`) };

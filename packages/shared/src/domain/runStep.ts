@@ -1,4 +1,6 @@
-export const RUN_STEP_KINDS = ['tool', 'text', 'agent'] as const;
+// A tool or sub agent Claude asks for is shown as asked, since it may never run; a `denied` step
+// follows, with the same toolId, when it was not allowed.
+export const RUN_STEP_KINDS = ['tool', 'text', 'agent', 'denied'] as const;
 export type RunStepKind = (typeof RUN_STEP_KINDS)[number];
 
 // One line on a phone: a tool's name and a cut path or command, never its output.
@@ -14,6 +16,8 @@ export interface RunStepInput {
   label: string;
   // Sent by a sub agent rather than the main conversation, so the phone can indent it.
   subAgent: boolean;
+  // Claude Code's id for the tool call, which ties a call to what became of it; null for text.
+  toolId: string | null;
 }
 
 export interface RunStep extends RunStepInput {

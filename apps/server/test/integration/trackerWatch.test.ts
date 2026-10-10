@@ -154,12 +154,15 @@ describe('tracker watch against a real tracker', () => {
 
   it('shows the steps while Claude works, never what a tool gave back', async () => {
     const runId = await start('MOB-6', 'SLOW STEPS on MOB-6');
-    const labels = async () => (await person.listRunSteps(runId)).map(({ label }) => label);
+    const steps = () => person.listRunSteps(runId);
+    const labels = async () => (await steps()).map(({ label }) => label);
     await vi.waitFor(async () => expect(await labels()).toEqual(['Read src/app.ts']), settle);
     expect(await statusOf(runId)).toBe('running');
     writeFileSync(join(fake.dir, 'go'), '');
     await vi.waitFor(async () => expect(await statusOf(runId)).toBe('done'), settle);
-    expect(await labels()).toEqual(['Read src/app.ts', 'Ran npm test', 'Done slowly.']);
+    expect(await labels()).toEqual(['Read src/app.ts', 'Run npm test', 'Done slowly.']);
+    expect(JSON.stringify(await steps())).not.toContain('SECRET');
+    expect((await person.getRun(runId)).stepCount).toBe(3);
   });
 
   it('answers a chat question read-only and continues the session on the next one', async () => {
@@ -171,6 +174,7 @@ describe('tracker watch against a real tracker', () => {
     const [first] = await answers();
     expect(first?.text).toContain('"--permission-mode","plan","--strict-mcp-config"');
     const run = (await person.getChat(chatId)).run;
+    expect(first?.runId).toBe(run?.id);
     expect((await person.listRunSteps(run!.id)).map(({ label }) => label)).toEqual([
       'Read src/app.ts',
       expect.stringContaining('ARGS'),

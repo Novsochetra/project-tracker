@@ -13,7 +13,7 @@ describe('regression: an Edit question while a ticket run works', () => {
     const tracker = fakeTracker([job('r-1', 'MOB-1'), editAsk]);
     let finishTicket = () => undefined as void;
     const ticketRun = new Promise<ClaudeExit>((resolve) => {
-      finishTicket = () => resolve({ code: 0, signal: null, output: '', result: null });
+      finishTicket = () => resolve({ code: 0, signal: null, output: '', results: [] });
     });
     const runAsk = vi.fn(() => Promise.resolve(answered('Renamed it.', SESSION)));
     const log: string[] = [];

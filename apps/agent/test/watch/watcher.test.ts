@@ -22,7 +22,7 @@ function watcherWith(
 const exits =
   (code: number, output = '') =>
   () =>
-    Promise.resolve({ code, signal: null, output, result: null });
+    Promise.resolve({ code, signal: null, output, results: [] });
 
 describe('the watcher', () => {
   it('runs each waiting run in turn and reports how it ended', async () => {
@@ -32,8 +32,8 @@ describe('the watcher', () => {
       prompts.push(prompt);
       return Promise.resolve(
         prompt === 'FAIL'
-          ? { code: 1, signal: null, output: 'boom', result: null }
-          : { code: 0, signal: null, output: '', result: null },
+          ? { code: 1, signal: null, output: 'boom', results: [] }
+          : { code: 0, signal: null, output: '', results: [] },
       );
     });
     await watcher.lookForWork();
@@ -47,7 +47,7 @@ describe('the watcher', () => {
 
   it("sends what Claude did as the run's steps, all before the run's end", async () => {
     const tracker = fakeTracker([job('r-1', 'MOB-1')]);
-    const step = { kind: 'tool', label: 'Read a.ts', subAgent: false } as const;
+    const step = { kind: 'tool', label: 'Read a.ts', subAgent: false, toolId: 't-1' } as const;
     const { watcher } = watcherWith(tracker.api, (_prompt, _signal, onSteps) => {
       onSteps([step]);
       return exits(0)();
@@ -63,12 +63,29 @@ describe('the watcher', () => {
     const tracker = fakeTracker([job('r-1', 'MOB-1')]);
     vi.mocked(tracker.api.addRunSteps).mockRejectedValue(new Error('fetch failed'));
     const { watcher, log } = watcherWith(tracker.api, (_prompt, _signal, onSteps) => {
-      onSteps([{ kind: 'text', label: 'Looking.', subAgent: false }]);
+      onSteps([{ kind: 'text', label: 'Looking.', subAgent: false, toolId: null }]);
       return exits(0)();
     });
     await watcher.lookForWork();
     expect(tracker.ended).toEqual([{ id: 'r-1', status: 'done' }]);
     expect(log).toContain("Couldn't show the tracker what Claude is doing: fetch failed");
+  });
+
+  it('hands back a report from any turn, not only the last', async () => {
+    const tracker = fakeTracker([job('r-1', 'MOB-1')]);
+    const block = 'TICKET: MOB-1\nSTATUS: done\nSUMMARY: Fixed it.\nFILES: a.ts\nNEXT: none';
+    const report = `\`\`\`\n${block}\n\`\`\``;
+    const turn = (text: string) => ({ text, sessionId: undefined, isError: false });
+    const { watcher } = watcherWith(tracker.api, () =>
+      Promise.resolve({
+        code: 0,
+        signal: null,
+        output: '',
+        results: [turn(`Did the work.\n\n${report}`), turn('The sub agent agreed.')],
+      }),
+    );
+    await watcher.lookForWork();
+    expect(tracker.reports).toEqual([{ text: block, ticketKey: 'MOB-1' }]);
   });
 
   it('refuses a run for another project without starting Claude', async () => {
@@ -87,8 +104,7 @@ describe('the watcher', () => {
     const runClaude = vi.fn(
       () =>
         new Promise<ClaudeExit>(
-          (resolve) =>
-            (finish = () => resolve({ code: 0, signal: null, output: '', result: null })),
+          (resolve) => (finish = () => resolve({ code: 0, signal: null, output: '', results: [] })),
         ),
     );
     const { watcher } = watcherWith(tracker.api, runClaude);
@@ -117,7 +133,7 @@ describe('the watcher', () => {
         (_prompt, signal) =>
           new Promise((resolve) =>
             signal.addEventListener('abort', () =>
-              resolve({ code: null, signal: 'SIGTERM', output: '', result: null }),
+              resolve({ code: null, signal: 'SIGTERM', output: '', results: [] }),
             ),
           ),
       );

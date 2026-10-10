@@ -56,6 +56,8 @@ export interface Run {
   createdAt: number;
   startedAt: number | null;
   endedAt: number | null;
+  // How many steps the helper has sent, the oldest dropped included (the latest step's seq).
+  stepCount: number;
 }
 
 export interface RunJob {

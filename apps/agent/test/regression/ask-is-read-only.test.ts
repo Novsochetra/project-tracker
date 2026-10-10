@@ -84,7 +84,7 @@ describe('regression: an ask runs Claude read-only', () => {
 
   it('still gives ticket runs the mode the person chose', async () => {
     const exit = await claude.runClaude('Fix MOB-1', new AbortController().signal, noSteps);
-    expect(argsOf(exit.result?.text)).toEqual([
+    expect(argsOf(exit.results[0]?.text)).toEqual([
       '-p',
       '--output-format',
       'stream-json',

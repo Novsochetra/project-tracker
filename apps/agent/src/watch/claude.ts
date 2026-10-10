@@ -30,7 +30,7 @@ export const claudeArgs = (permissionMode?: string): string[] => [
 
 function collect({ onOutput, onEvent }: ClaudeListeners) {
   let output = '';
-  let result: ClaudeResult | null = null;
+  const results: ClaudeResult[] = [];
   const say = (text: string) => {
     output = (output + text).slice(-KEPT_OUTPUT);
     onOutput(text);
@@ -41,7 +41,7 @@ function collect({ onOutput, onEvent }: ClaudeListeners) {
       onEvent(event);
       const found = resultOf(event);
       if (!found) return;
-      result = found;
+      results.push(found);
       if (found.text) say(`${found.text}\n`);
     },
   });
@@ -53,7 +53,7 @@ function collect({ onOutput, onEvent }: ClaudeListeners) {
     },
     exit: (code: number | null, signal: NodeJS.Signals | null): ClaudeExit => {
       lines.end();
-      return { code, signal, output, result };
+      return { code, signal, output, results };
     },
   };
 }

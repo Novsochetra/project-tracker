@@ -34,6 +34,18 @@ process.stdin.on('end', () => {
   if (stream) {
     emit({ type: 'system', subtype: 'init', cwd: process.cwd(), tools: ['Read', 'Bash'] });
     toolUse('Read', { file_path: join(process.cwd(), 'src', 'app.ts') });
+    emit({
+      type: 'user',
+      message: { role: 'user', content: [{ type: 'tool_result', tool_use_id: 'toolu_Read', content: 'SECRET_FILE_CONTENTS' }] },
+      parent_tool_use_id: null,
+      tool_use_result: { type: 'text', file: { filePath: 'src/app.ts', content: 'SECRET_FILE_CONTENTS' } },
+    });
+  }
+  // Background work makes a second turn, so the run prints a result for each.
+  if (prompt.includes('TWO RESULTS')) {
+    say('I started the sub agent.');
+    say('It found the report: TICKET MOB-9.');
+    process.exit(0);
   }
   if (prompt.includes('ASK FAIL')) { say('Credit balance is too low', true); process.exit(1); }
   // Waits for the test's go file, so a test can look at the steps while Claude still works.

@@ -16,6 +16,7 @@ const toStep = (row: RunStepRow): RunStep => ({
   kind: row.kind,
   label: row.label,
   subAgent: row.subAgent === 1,
+  toolId: row.toolId,
   at: row.createdAt,
 });
 
@@ -28,6 +29,7 @@ const rowsOf = (runId: string, steps: Steps, count: number, at: number) =>
     kind: step.kind,
     label: step.label,
     subAgent: step.subAgent ? 1 : 0,
+    toolId: step.toolId ?? null,
     createdAt: at,
   }));
 

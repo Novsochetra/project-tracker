@@ -19,6 +19,7 @@ export const toMessage = (row: MessageWithKey): ChatMessage => ({
     row.projectKey === null || row.ticketNum === null
       ? null
       : formatTicketKey(row.projectKey, row.ticketNum),
+  runId: row.runId,
   createdAt: row.createdAt,
 });
 

@@ -7,7 +7,7 @@ import type { Answer } from './runEnding';
 // The session belongs to the helper that answered, since Claude Code keeps it on that computer.
 export async function saveAnswer(
   trx: Db,
-  run: Pick<RunRow, 'chatId' | 'runnerId'>,
+  run: Pick<RunRow, 'id' | 'chatId' | 'runnerId'>,
   answer: Answer & { at: number },
 ): Promise<void> {
   if (!run.chatId) return;
@@ -17,6 +17,7 @@ export async function saveAnswer(
     role: 'claude',
     text: answer.text,
     ticketId: null,
+    runId: run.id,
     createdAt: answer.at,
   });
   const session = answer.sessionId

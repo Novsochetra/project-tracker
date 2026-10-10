@@ -299,6 +299,7 @@ const DATA_MODEL: SchemaShape = {
       'kind text not null',
       'label text not null',
       'sub_agent integer not null',
+      'tool_id text',
       'created_at bigint not null',
     ],
     indexes: [],
@@ -331,6 +332,7 @@ const DATA_MODEL: SchemaShape = {
       'text text not null',
       'ticket_id text',
       'created_at bigint not null',
+      'run_id text',
     ],
     indexes: ['index (chat_id, created_at)'],
     foreignKeys: [

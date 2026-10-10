@@ -9,7 +9,7 @@ const OUTPUT = `Read the ticket and fixed it.\n\n\`\`\`\n${REPORT}\n\`\`\`\n`;
 function handBack(tracker: ReturnType<typeof fakeTracker>, output: string) {
   const log: string[] = [];
   const deps = { api: tracker.api, log: (text: string) => log.push(text), describe: String };
-  return { log, done: handBackReport(deps, job('r-1', 'MOB-1'), output) };
+  return { log, done: handBackReport(deps, job('r-1', 'MOB-1'), [output]) };
 }
 
 describe('putting Claude’s report on the ticket', () => {
@@ -19,6 +19,14 @@ describe('putting Claude’s report on the ticket', () => {
     await done;
     expect(tracker.reports).toEqual([{ text: REPORT, ticketKey: 'MOB-1' }]);
     expect(log).toEqual(["Put Claude's report on MOB-1."]);
+  });
+
+  it("takes the last turn's report, without the words of the turns after it", async () => {
+    const tracker = fakeTracker([]);
+    const log: string[] = [];
+    const deps = { api: tracker.api, log: (text: string) => log.push(text), describe: String };
+    await handBackReport(deps, job('r-1', 'MOB-1'), [OUTPUT, 'The sub agent agreed.']);
+    expect(tracker.reports).toEqual([{ text: REPORT, ticketKey: 'MOB-1' }]);
   });
 
   it('sends nothing when the output has no report block', async () => {
