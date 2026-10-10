@@ -117,7 +117,8 @@ describe.each(DIALECTS)('every migration up and down (%s)', (dialect) => {
   });
 });
 
-// The data model of docs/architecture.md §2, as both databases report it.
+// The data model of docs/architecture.md §2, as both databases report it. Every table: matching
+// only the ones listed let the sign-in tables go unchecked.
 const DATA_MODEL: SchemaShape = {
   projects: {
     columns: [
@@ -209,6 +210,41 @@ const DATA_MODEL: SchemaShape = {
       'ticket_id -> tickets.id on delete cascade',
     ],
   },
+  users: {
+    columns: [
+      'id text primary key',
+      'email text not null',
+      'password_hash text not null',
+      'created_at bigint not null',
+      'updated_at bigint not null',
+    ],
+    indexes: ['unique (email)'],
+    foreignKeys: [],
+  },
+  sessions: {
+    columns: [
+      'id text primary key',
+      'user_id text not null',
+      'created_at bigint not null',
+      'last_seen_at bigint not null',
+      'expires_at bigint not null',
+    ],
+    indexes: ['index (user_id)'],
+    foreignKeys: ['user_id -> users.id on delete cascade'],
+  },
+  api_tokens: {
+    columns: [
+      'id text primary key',
+      'user_id text not null',
+      'name text not null',
+      'hint text not null',
+      'token_hash text not null',
+      'created_at bigint not null',
+      'last_used_at bigint',
+    ],
+    indexes: ['index (user_id)', 'unique (token_hash)'],
+    foreignKeys: ['user_id -> users.id on delete cascade'],
+  },
   runners: {
     columns: [
       'id text primary key',
@@ -256,7 +292,7 @@ describe('migrations on SQLite and on Postgres', () => {
   it.each(DIALECTS)('build the data model the architecture describes (%s)', async (dialect) => {
     await withDatabase(dialect, async (db) => {
       await migrateToLatest(db);
-      expect(await portableSchema(db, dialect)).toMatchObject(DATA_MODEL);
+      expect(await portableSchema(db, dialect)).toEqual(DATA_MODEL);
     });
   });
 });

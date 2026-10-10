@@ -9,9 +9,7 @@ import {
   type UnknownRow,
   type ValueNode,
 } from 'kysely';
-
-const withoutNul = (value: unknown): unknown =>
-  typeof value === 'string' && value.includes('\0') ? value.replaceAll('\0', '') : value;
+import { withoutNul } from '../withoutNul';
 
 class NulTransformer extends OperationNodeTransformer {
   protected override transformValue(node: ValueNode): ValueNode {

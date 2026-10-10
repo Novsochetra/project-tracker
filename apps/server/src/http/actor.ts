@@ -1,5 +1,6 @@
 import type { Actor } from '@tracker/shared';
 import { createMiddleware } from 'hono/factory';
+import { withoutNul } from '../withoutNul';
 import type { AppEnv } from './env';
 
 export const MAX_ACTOR_NAME = 60;
@@ -13,7 +14,7 @@ function decodeName(raw: string): string {
 }
 
 export function parseActor(kind: string | undefined, rawName: string | undefined): Actor {
-  const name = decodeName(rawName ?? '')
+  const name = withoutNul(decodeName(rawName ?? ''))
     .trim()
     .slice(0, MAX_ACTOR_NAME);
   if (kind?.trim().toLowerCase() === 'agent') return { kind: 'agent', name: name || 'Agent' };

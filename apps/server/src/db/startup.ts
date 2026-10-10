@@ -1,3 +1,4 @@
+import { sql } from 'kysely';
 import { isPostgresUrl } from './createDatabase';
 import { MIGRATIONS } from './migrations';
 import {
@@ -19,6 +20,24 @@ export function migratesOnStart(url: string, env: NodeJS.ProcessEnv): boolean {
   return !isPostgresUrl(url);
 }
 
+// The pool cuts a statement at DATABASE_STATEMENT_TIMEOUT_MS. A migration may rewrite a whole table
+// and a second server waits for the first's migration lock, so, as db.js does, they run on one
+// connection with the timeout off, and the connection gets its own timeout back after.
+async function migrateWithoutTimeout(db: Db, migrations: Migrations): Promise<string[]> {
+  return db.connection().execute(async (connection) => {
+    const { rows } = await sql<{ timeout: string }>`
+      select current_setting('statement_timeout') as timeout`.execute(connection);
+    await sql`set statement_timeout = 0`.execute(connection);
+    try {
+      return await migrateToLatest(connection, migrations);
+    } finally {
+      await sql`select set_config('statement_timeout', ${rows[0]?.timeout ?? '0'}, false)`.execute(
+        connection,
+      );
+    }
+  });
+}
+
 // Migrates, or checks the database is at exactly this build's migrations: a server never runs on a
 // schema it wasn't built for. Says which migrations ran.
 export async function prepareDatabase(
@@ -27,7 +46,11 @@ export async function prepareDatabase(
   env: NodeJS.ProcessEnv = process.env,
   migrations: Migrations = MIGRATIONS,
 ): Promise<string[]> {
-  if (migratesOnStart(url, env)) return migrateToLatest(db, migrations);
+  if (migratesOnStart(url, env)) {
+    return isPostgresUrl(url)
+      ? migrateWithoutTimeout(db, migrations)
+      : migrateToLatest(db, migrations);
+  }
   const states = await readMigrationState(db, migrations);
   const unknown = namesWith(states, 'unknown');
   if (unknown.length > 0) throw new Error(unknownMigrationsMessage(unknown));

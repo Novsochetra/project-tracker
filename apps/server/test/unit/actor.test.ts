@@ -17,4 +17,11 @@ describe('parseActor', () => {
     expect(parseActor('agent', `  ${'a'.repeat(70)}  `).name).toHaveLength(60);
     expect(parseActor('human', '%E0%A4%A')).toEqual({ kind: 'human', name: '%E0%A4%A' });
   });
+
+  it('drops a NUL, as stored text does', () => {
+    expect(parseActor('agent', 'Claude%00%20Worker')).toEqual({
+      kind: 'agent',
+      name: 'Claude Worker',
+    });
+  });
 });

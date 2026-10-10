@@ -9,6 +9,11 @@ import { StripNulPlugin } from './stripNul';
 
 export const isPostgresUrl = (url: string): boolean => /^postgres(ql)?:\/\//i.test(url);
 
+// Anything that starts with a scheme is a URL, typo or not: as a SQLite path, postgresql:/user:pw@…
+// (one slash) made folders named after the password. One letter is a Windows drive, not a scheme.
+export const looksLikeUrl = (url: string): boolean =>
+  url.includes('://') || /^[a-z][a-z\d+.-]+:/i.test(url);
+
 export function createKysely(dialect: Dialect): Db {
   return new Kysely<Database>({ dialect, plugins: [new CamelCasePlugin(), new StripNulPlugin()] });
 }
@@ -26,11 +31,11 @@ function sqliteDialect(file: string): Dialect {
 // env carries the Postgres pool settings (DATABASE_POOL_MAX, DATABASE_STATEMENT_TIMEOUT_MS,
 // PGSSLMODE); SQLite needs none.
 export function createDatabase(url: string, env: NodeJS.ProcessEnv = process.env): Db {
-  // A postgres:// URL pasted with quotes or its name in front would open a SQLite file at a path
-  // holding the password.
-  if (!isPostgresUrl(url) && url.includes('://')) {
+  // A postgres:// URL pasted with quotes or its name in front, or mistyped, would open a SQLite file
+  // at a path holding the password.
+  if (!isPostgresUrl(url) && looksLikeUrl(url)) {
     throw new Error(
-      'DATABASE_URL is neither a postgres:// URL nor a file path (its value is not shown): remove quotes or a name in front of it.',
+      'DATABASE_URL is neither a postgres:// URL nor a file path (its value is not shown): it should start with postgres:// or postgresql://, without quotes or a name in front.',
     );
   }
   return createKysely(

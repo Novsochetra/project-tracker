@@ -9,7 +9,7 @@ import { AppError, forbidden } from '../../errors';
 import type { AuthDeps } from '../auth';
 import type { AppEnv } from '../env';
 import { clearSessionCookie, readSessionCookie, setSessionCookie } from '../sessionCookie';
-import { jsonBody } from '../validation';
+import { jsonBodyAsSent } from '../validation';
 
 // The browser also drops its HTTP cache for the tracker, where attachment files are kept for a
 // year. The service worker's caches are the page's to clear (api/hooks/session.ts).
@@ -76,7 +76,7 @@ export function sessionRoutes(deps: AuthDeps) {
   const limits = createLoginLimits(deps.options.loginLimits);
   return new Hono<AppEnv>()
     .get('/session', async (c) => c.json(await stateFor(deps, c.get('access'))))
-    .post('/session', jsonBody(loginInput), async (c) => {
+    .post('/session', jsonBodyAsSent(loginInput), async (c) => {
       const { email, password } = c.req.valid('json');
       const address = clientAddress(c, deps.options.trustedProxies);
       return signIn(c, deps, limits, { address, email, password });
