@@ -1,17 +1,13 @@
 import type { AskOptions, Run } from '@tracker/shared';
 import clsx from 'clsx';
 import { Laptop } from 'lucide-react';
-import type { MouseEvent } from 'react';
-import { errorMessage } from '../../api';
-import { useCancelAsk } from '../../api/hooks/chats';
-import { Button, GroupedCard, Icon, SelectRow, Spinner, useToast } from '../../components';
-import { holdPresses } from '../../lib/holdPresses';
+import { GroupedCard, Icon, SelectRow, Spinner } from '../../components';
 import { useIsPhone } from '../../lib/media';
 import { useOptionalScreen } from '../../navigation';
 import { useRegisterBottomBar } from '../../navigation/bottomBarStore';
 import { SetupLine } from '../claude/SetupLine';
 import { AskComposer } from './AskComposer';
-import { helperOf, thinkingText } from './chatFooter';
+import { helperOf, thinkingText, workingOf } from './chatFooter';
 import styles from './ChatScreen.module.css';
 import type { AskHelper } from './useAskHelper';
 
@@ -23,26 +19,13 @@ export interface ChatFooterAreaProps {
 }
 
 function Thinking({ run }: { run: Run }) {
-  const cancel = useCancelAsk();
-  const toast = useToast();
-  const onClick = (event: MouseEvent<HTMLButtonElement>) => {
-    if (event.detail !== 0) holdPresses(event.currentTarget);
-    cancel.mutate(run, {
-      onError: (error) => toast.show(errorMessage(error), { kind: 'error' }),
-    });
-  };
   return (
-    <div className={styles.status}>
-      <p className={styles.statusLine}>
-        <span aria-hidden="true" className={styles.spinner}>
-          <Spinner />
-        </span>
-        {thinkingText(run)}
-      </p>
-      <Button size="sm" disabled={cancel.isPending} onClick={onClick}>
-        Cancel
-      </Button>
-    </div>
+    <p className={styles.statusLine}>
+      <span aria-hidden="true" className={styles.spinner}>
+        <Spinner />
+      </span>
+      {thinkingText(run)}
+    </p>
   );
 }
 
@@ -73,13 +56,14 @@ export function ChatFooterArea({ projectKey, chatId, helper, savedOptions }: Cha
     <div className={styles.footer}>
       <div className={styles.footerInner}>
         {footer.kind === 'thinking' && <Thinking run={footer.run} />}
-        {stopped && <p className={clsx(styles.stopped, 'fade-in')}>{stopped}</p>}
+        {stopped && <p className={clsx(styles[stopped.kind], 'fade-in')}>{stopped.text}</p>}
         {footer.kind === 'setup' && <SetupLine />}
         <RunOn helper={helper} />
         <AskComposer
           projectKey={projectKey}
           chatId={chatId}
           helper={helperOf(footer)}
+          working={workingOf(footer)}
           offersSend={footer.kind !== 'setup'}
           savedOptions={savedOptions}
         />

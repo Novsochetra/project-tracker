@@ -73,28 +73,6 @@ describe('Ask: the chat screen', () => {
     expect(localStorage.getItem(LAST_HELPER_STORAGE_KEY)).toBe(dara.id);
   });
 
-  it('shows Claude thinking with Cancel, which cancels the ask', async () => {
-    const running = makeAskRun({ status: 'running', startedAt: Date.now() });
-    const cancelled = { ...running, status: 'cancelled' as const, endedAt: Date.now() };
-    const cancelRun = vi.fn().mockResolvedValue(cancelled);
-    const getChat = vi
-      .fn()
-      .mockResolvedValueOnce(makeChatDetail({ run: running }))
-      .mockResolvedValue(makeChatDetail({ run: cancelled }));
-    const { client } = setup(null, [dara], {
-      client: { cancelRun, getChat },
-      path: '/p/MOB/ask/c-1',
-    });
-    const user = userEvent.setup();
-
-    expect(await screen.findByText(`Claude is thinking on ${DARA}…`)).toBeInTheDocument();
-    expect(sendButton()).toBeDisabled();
-    await user.click(screen.getByRole('button', { name: 'Cancel' }));
-
-    expect(client.cancelRun).toHaveBeenCalledWith(running.id);
-    await waitFor(() => expect(screen.queryByText(/Claude is thinking/)).not.toBeInTheDocument());
-  });
-
   it('says why Claude stopped and lets the person ask again', async () => {
     const failed = makeAskRun({ status: 'failed', error: 'Claude exited with code 1.' });
     setup(makeChatDetail({ run: failed }));

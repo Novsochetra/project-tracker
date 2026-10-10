@@ -1,6 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import { DARA, makeRun, makeRunner } from '../../api/test/runFixtures';
-import { chatFooter, helperOf, runHelper, thinkingText } from './chatFooter';
+import {
+  cancelledText,
+  chatFooter,
+  helperOf,
+  runHelper,
+  thinkingText,
+  workingOf,
+} from './chatFooter';
+import { STOPPED_PART_WAY_TEXT, STOPPED_TEXT } from './copy';
 
 const dara = makeRunner();
 const studio = makeRunner({ id: 'h-studio', name: 'Studio' });
@@ -12,7 +20,9 @@ describe('chatFooter', () => {
   it('shows Claude thinking while the latest ask waits or works, helpers known or not', () => {
     for (const status of ['queued', 'running'] as const) {
       const run = ask({ status });
-      expect(chatFooter({ ...input, runners: undefined, run })).toEqual({ kind: 'thinking', run });
+      const footer = chatFooter({ ...input, runners: undefined, run });
+      expect(footer).toEqual({ kind: 'thinking', run });
+      expect(workingOf(footer)).toBe(run);
     }
     expect(thinkingText(ask())).toBe(`Claude is thinking on ${DARA}…`);
   });
@@ -31,6 +41,7 @@ describe('chatFooter', () => {
     });
     expect(footer).toEqual({ kind: 'ask', helpers: [dara, studio], helper: studio, stopped: null });
     expect(helperOf(footer)).toBe(studio);
+    expect(workingOf(footer)).toBeNull();
   });
 
   it('offers setup when no helper serving the project is online', () => {
@@ -43,15 +54,21 @@ describe('chatFooter', () => {
     const run = ask({ status: 'failed', error: 'Your computer stopped answering.' });
     expect(chatFooter({ ...input, run })).toMatchObject({
       kind: 'ask',
-      stopped: 'Claude stopped: Your computer stopped answering.',
+      stopped: { kind: 'failed', text: 'Claude stopped: Your computer stopped answering.' },
     });
     expect(chatFooter({ ...input, runners: [], run })).toMatchObject({ kind: 'setup' });
   });
 
-  it('says nothing about an ask that ended well or was cancelled', () => {
-    for (const status of ['done', 'cancelled'] as const) {
-      expect(chatFooter({ ...input, run: ask({ status }) })).toMatchObject({ stopped: null });
-    }
+  it('says nothing about an ask that ended well', () => {
+    expect(chatFooter({ ...input, run: ask({ status: 'done' }) })).toMatchObject({ stopped: null });
+  });
+
+  it('says the person stopped the latest ask, and lets them ask again', () => {
+    const run = ask({ status: 'cancelled' });
+    expect(chatFooter({ ...input, run })).toMatchObject({
+      kind: 'ask',
+      stopped: { kind: 'cancelled', text: STOPPED_TEXT },
+    });
   });
 
   it("picks the card's Run helper whether or not Claude is thinking", () => {
@@ -59,5 +76,23 @@ describe('chatFooter', () => {
     expect(runHelper({ ...input, runners, lastUsedId: studio.id })).toBe(studio);
     expect(runHelper({ ...input, runners: undefined })).toBeNull();
     expect(runHelper({ ...input, runners: [makeRunner({ online: false })] })).toBeNull();
+  });
+});
+
+describe('cancelledText', () => {
+  const edit = { model: 'default', mode: 'edit' } as const;
+
+  it('warns that an Edit question Claude had started may have changed files or tickets', () => {
+    expect(cancelledText({ askOptions: edit, startedAt: 2 })).toBe(STOPPED_PART_WAY_TEXT);
+  });
+
+  it('says only that it stopped for Ask, Plan, or an Edit question still waiting', () => {
+    for (const mode of ['ask', 'plan'] as const) {
+      expect(cancelledText({ askOptions: { model: 'opus', mode }, startedAt: 2 })).toBe(
+        STOPPED_TEXT,
+      );
+    }
+    expect(cancelledText({ askOptions: edit, startedAt: null })).toBe(STOPPED_TEXT);
+    expect(cancelledText({ askOptions: null, startedAt: 2 })).toBe(STOPPED_TEXT);
   });
 });

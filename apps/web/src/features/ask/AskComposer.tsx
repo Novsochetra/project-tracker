@@ -1,15 +1,15 @@
-import { CHAT_QUESTION_MAX, type AskOptions, type Runner } from '@tracker/shared';
+import { CHAT_QUESTION_MAX, type AskOptions, type Run, type Runner } from '@tracker/shared';
 import clsx from 'clsx';
-import { ArrowUp } from 'lucide-react';
 import { useState, type MouseEvent } from 'react';
 import { errorMessage } from '../../api';
-import { AutoTextarea, Button } from '../../components';
+import { AutoTextarea } from '../../components';
 import { holdPresses } from '../../lib/holdPresses';
 import { useDraftMark } from '../../lib/useDraftMark';
 import { isSubmitShortcut } from '../ticket/activity/commentRules';
 import { AskOptionsRow } from './AskOptionsRow';
 import styles from './ChatScreen.module.css';
 import { ASK_PLACEHOLDER } from './copy';
+import { SendButton } from './SendButton';
 import { useAskOptions } from './useAskOptions';
 import { useChatSend } from './useChatSend';
 
@@ -18,6 +18,8 @@ export interface AskComposerProps {
   chatId: string | null;
   // The helper that answers; null while none can (thinking, unknown or none online).
   helper: Runner | null;
+  // The chat's queued or running question, which Stop takes Send's place for.
+  working: Run | null;
   offersSend: boolean;
   // The chat's saved choice, or the defaults for a new chat.
   savedOptions: AskOptions;
@@ -27,6 +29,7 @@ export function AskComposer({
   projectKey,
   chatId,
   helper,
+  working,
   offersSend,
   savedOptions,
 }: AskComposerProps) {
@@ -42,7 +45,7 @@ export function AskComposer({
       forget();
     });
   };
-  // What is pressed next may be the line that takes the thinking state's place.
+  // Stop takes Send's place, and the second tap of a double tap must not stop the question.
   const onSend = (event: MouseEvent<HTMLButtonElement>) => {
     if (event.detail !== 0) holdPresses(event.currentTarget);
     send();
@@ -76,17 +79,7 @@ export function AskComposer({
             send();
           }}
         />
-        {offersSend && (
-          <Button
-            variant="primary"
-            icon={ArrowUp}
-            className={styles.send}
-            disabled={!canSend}
-            onClick={onSend}
-          >
-            Send
-          </Button>
-        )}
+        {offersSend && <SendButton working={working} canSend={canSend} onSend={onSend} />}
       </div>
     </form>
   );

@@ -32,4 +32,34 @@ describe('the watcher with a chat question', () => {
     expect(log).toContain('Claude Code is answering a question in chat c0ffee00…');
     expect(log).toContain('chat c0ffee00: Claude Code finished.');
   });
+
+  // PT-162: the chat's Stop cancels the run, and the helper must end Claude in either lane.
+  it.each(['ask', 'edit'] as const)('stops Claude answering a %s question', async (mode) => {
+    const tracker = fakeTracker([askJob('r-1', 'c0ffee00-chat', null, { model: 'default', mode })]);
+    const runAsk = vi.fn(
+      (_job: unknown, signal: AbortSignal) =>
+        new Promise<ClaudeExit>((resolve) =>
+          signal.addEventListener('abort', () =>
+            resolve({ code: null, signal: 'SIGTERM', output: '', stdout: '' }),
+          ),
+        ),
+    );
+    const watcher = createWatcher(
+      { api: tracker.api, runClaude: vi.fn(), runAsk, log: () => undefined },
+      { runnerId: RUNNER, name: 'Mac', projectKey: 'MOB', trackerUrl: 'http://tracker.test' },
+    );
+    const working = watcher.lookForWork();
+    await vi.waitFor(() => expect(runAsk).toHaveBeenCalled());
+    watcher.onRunEvent({
+      type: 'run',
+      runId: 'r-1',
+      runnerId: RUNNER,
+      projectId: 'p',
+      ticketId: null,
+      chatId: 'c0ffee00-chat',
+      status: 'cancelled',
+    });
+    await working;
+    expect(tracker.ended).toEqual([{ id: 'r-1', status: 'cancelled' }]);
+  });
 });

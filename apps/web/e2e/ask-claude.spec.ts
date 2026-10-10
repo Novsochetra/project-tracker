@@ -49,7 +49,7 @@ test('asks Claude about a project, shapes a ticket card, creates it and runs it'
   await page.getByRole('button', { name: 'New chat' }).first().click();
   await ask(page, 'How does capture sync work?');
   await expect(page).toHaveURL(/\/p\/MOB\/ask\/[\w-]+$/);
-  await expect(page.getByRole('button', { name: 'Send', exact: true })).toBeDisabled();
+  await expect(page.getByRole('button', { name: 'Stop', exact: true })).toBeEnabled();
 
   await answer(api, helperId, 'Captures wait in a queue and go when the tracker answers.');
   const messages = page.getByRole('list', { name: 'Messages' });
@@ -87,7 +87,11 @@ test('asks Claude about a project, shapes a ticket card, creates it and runs it'
   await expect(page).toHaveURL(/\/p\/MOB\/2$/);
 });
 
-test('offers no Send without a helper online, and cancels a question', async ({ page, api }) => {
+test('offers no Send without a helper online, and stops a question with Stop in Send’s place', async ({
+  page,
+  api,
+}, info) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
   await seedProject(api, 'Mobile app', 'MOB');
   await page.goto('/p/MOB/ask/new');
   await expect(page.getByRole('button', { name: 'set up your computer' })).toBeVisible();
@@ -95,12 +99,39 @@ test('offers no Send without a helper online, and cancels a question', async ({ 
 
   await api.registerRunner(randomUUID(), { name: HELPER, projectKeys: ['MOB'] });
   await page.reload();
+  const send = page.getByRole('button', { name: 'Send', exact: true });
+  const sendBox = await send.boundingBox();
   await ask(page, 'Where is the login screen?');
-  await page.getByRole('button', { name: 'Cancel' }).click();
+  const stop = page.getByRole('button', { name: 'Stop', exact: true });
+  await expect(send).toHaveCount(0);
+  expect(await stop.boundingBox()).toEqual(sendBox);
+  await page.screenshot({ path: info.outputPath(`ask-stop-${info.project.name}.png`) });
+
+  await stop.click();
+  await expect(page.getByText('Stopped.', { exact: true })).toBeVisible();
   await expect(page.getByText(/Claude is thinking/)).toBeHidden();
+  expect(await send.boundingBox()).toEqual(sendBox);
   await expect(page.getByRole('list', { name: 'Messages' })).toContainText(
     'Where is the login screen?',
   );
+  await ask(page, 'And the sign-up screen?');
+  await expect(page.getByText('Stopped.', { exact: true })).toBeHidden();
+});
+
+test('says an Edit question Claude had started stopped part way', async ({ page, api }, info) => {
+  await seedProject(api, 'Mobile app', 'MOB');
+  const helperId = randomUUID();
+  await api.registerRunner(helperId, { name: HELPER, projectKeys: ['MOB'] });
+  await page.goto('/p/MOB/ask/new');
+  await page.getByRole('group', { name: 'Mode' }).getByRole('button', { name: 'Edit' }).click();
+  await ask(page, 'Rename the sync queue');
+  await api.takeNextRun(helperId, 'ticket');
+
+  await page.getByRole('button', { name: 'Stop', exact: true }).click();
+  await expect(
+    page.getByText('Stopped part way. Some files or tickets may have changed.'),
+  ).toBeVisible();
+  await page.screenshot({ path: info.outputPath(`ask-stopped-edit-${info.project.name}.png`) });
 });
 
 test('picks the model and mode on one row above the box, and sends them', async ({
