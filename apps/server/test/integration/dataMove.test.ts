@@ -96,7 +96,7 @@ describe.each(DIALECTS.flatMap((dialect) => STORAGES.map((kind) => [dialect, kin
           createdAt: 1150,
         },
         expect.objectContaining({ id: 'f-notes', storageKey: 'f-notes.txt', activityId: 'a2' }),
-        expect.objectContaining({ id: 'f-tiny', storageKey: 'f-tiny.png', ticketId: null }),
+        expect.objectContaining({ id: 'f-tiny', storageKey: 'f-tiny.png', ticketId: 't3' }),
       ]);
       expect(lines.some((line) => line.startsWith('1 ticket or comment text(s) name'))).toBe(true);
 

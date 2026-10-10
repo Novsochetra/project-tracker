@@ -33,7 +33,7 @@ export async function removeFiles(storage: FileStorage, keys: readonly string[])
   results.forEach((result, index) => {
     if (result.status === 'fulfilled') return;
     const reason = result.reason instanceof Error ? result.reason.message : String(result.reason);
-    console.warn(`File ${keys[index]} stays until the next clean-up: ${reason}`);
+    console.warn(`File ${keys[index]} stays in storage and must be removed by hand: ${reason}`);
   });
   return results.filter((result) => result.status === 'fulfilled').length;
 }

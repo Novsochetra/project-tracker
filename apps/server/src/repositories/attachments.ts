@@ -18,8 +18,17 @@ export async function insertAttachment(db: Db, row: AttachmentRow): Promise<void
 
 export type FinishedUpload = Pick<AttachmentRow, 'size' | 'ticketId' | 'position'>;
 
-export async function finishAttachmentRow(db: Db, id: string, done: FinishedUpload): Promise<void> {
-  await db.updateTable('attachments').set(done).where('id', '=', id).execute();
+export async function finishAttachmentRow(
+  db: Db,
+  id: string,
+  done: FinishedUpload,
+): Promise<boolean> {
+  const result = await db
+    .updateTable('attachments')
+    .set(done)
+    .where('id', '=', id)
+    .executeTakeFirst();
+  return Number(result.numUpdatedRows) > 0;
 }
 
 export const findAttachmentById = (db: Db, id: string) =>

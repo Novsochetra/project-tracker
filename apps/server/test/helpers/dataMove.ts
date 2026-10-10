@@ -61,7 +61,7 @@ async function insertRows(db: Db, files: Pick<MoveSource, 'photo' | 'notes' | 't
         'f-photo.jpg', 1150),
       ('f-notes', 't1', 'a2', 'notes.txt', 'text/plain', ${files.notes.byteLength}, null, null,
         'f-notes.txt', 1200),
-      ('f-tiny', null, null, 'tiny.png', 'image/png', ${files.tiny.byteLength}, 3, 2,
+      ('f-tiny', 't3', null, 'tiny.png', 'image/png', ${files.tiny.byteLength}, 3, 2,
         'f-tiny.png', 1300)`.execute(raw);
 }
 

@@ -147,7 +147,11 @@ async function finishUpload(
       ticketId: ref?.ticket.id ?? null,
       position: ref ? await nextTicketPosition(trx, ref.ticket.id) : 0,
     };
-    await finishAttachmentRow(trx, row.id, done);
+    // A 201 would name an attachment that isn't there; failing lets storeUpload remove the file,
+    // which no row names any more.
+    if (!(await finishAttachmentRow(trx, row.id, done))) {
+      throw new Error(`The pending row of upload ${row.id} was removed while its file was stored.`);
+    }
     if (ref) await updateTicketRow(trx, ref.ticket.id, { updatedAt: ctx.now() });
     return { ...row, ...done };
   });
