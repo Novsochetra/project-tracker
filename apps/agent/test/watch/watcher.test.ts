@@ -174,6 +174,28 @@ describe('the watcher', () => {
     );
   });
 
+  it('says why stopping waits only while a run end is still unreported', async () => {
+    let up = false;
+    const tracker = fakeTracker([job('r-1', 'MOB-1')]);
+    const finishRun = vi.fn(() =>
+      up ? Promise.resolve({} as Run) : Promise.reject(new TypeError('fetch failed')),
+    );
+    const { watcher, log } = watcherWith({ ...tracker.api, finishRun }, exits(0));
+    void watcher.lookForWork();
+    await vi.waitFor(() =>
+      expect(log).toContain("Couldn't tell the tracker how MOB-1 ended yet. Trying again."),
+    );
+    const stopping = watcher.stop();
+    expect(log).toContain(
+      'Still telling the tracker how MOB-1 ended. Press Ctrl-C again to quit now.',
+    );
+    up = true;
+    await stopping;
+    const idle = watcherWith(fakeTracker([]).api, exits(0));
+    await idle.watcher.stop();
+    expect(idle.log).toEqual([]);
+  });
+
   it('says once that the tracker is out of reach, and when it is back', async () => {
     let down = true;
     const tracker = fakeTracker([]);

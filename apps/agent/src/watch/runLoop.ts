@@ -30,16 +30,26 @@ export function createRunLoop(deps: RunLoopDeps, settings: RunLoopSettings) {
   let current: { runId: string; stop: AbortController } | undefined;
   let looking: Promise<void> | undefined;
   let stopped = false;
+  let unreported: string | undefined;
+
+  const stillReporting = () =>
+    log(`Still telling the tracker how ${unreported} ended. Press Ctrl-C again to quit now.`);
 
   async function report({ run }: RunJob, outcome: FinishRunInput) {
+    const onWait = () => {
+      unreported = run.ticketKey;
+      if (stopped) stillReporting();
+      else log(`Couldn't tell the tracker how ${run.ticketKey} ended yet. Trying again.`);
+    };
     try {
       await retryUntilAnswered(() => api.finishRun(run.id, outcome), {
         delay: deps.retryDelay,
-        onWait: () =>
-          log(`Couldn't tell the tracker how ${run.ticketKey} ended yet. Trying again.`),
+        onWait,
       });
     } catch (error) {
       log(`The tracker didn't take how ${run.ticketKey} ended: ${deps.describe(error)}`);
+    } finally {
+      unreported = undefined;
     }
   }
 
@@ -90,6 +100,7 @@ export function createRunLoop(deps: RunLoopDeps, settings: RunLoopSettings) {
   async function stop() {
     stopped = true;
     current?.stop.abort();
+    if (unreported) stillReporting();
     await looking;
   }
 

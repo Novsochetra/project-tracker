@@ -1,14 +1,14 @@
 import { dirname } from 'node:path';
 import type { GlobalValues } from '../cli/options';
-import { runClaude } from './claude';
+import { CLAUDE, runClaude } from './claude';
 import { lockFolder } from './folderLock';
 import { followRunEvents } from './liveStream';
-import { canonicalPath, CLAUDE, setUp, type Setup } from './setup';
+import { canonicalPath } from './paths';
+import { setUp, type Setup } from './setup';
 import { createWatcher } from './watcher';
 import type { WatchArgs, WatchIo } from './watchIo';
 
 const CHECK_IN_MS = 20_000;
-const SLOW_STOP_MS = 2_000;
 
 const aborted = (signal: AbortSignal): Promise<void> =>
   new Promise((resolve) => {
@@ -38,12 +38,7 @@ async function keepWatching(setup: Setup, args: WatchArgs, io: WatchIo, signal: 
   await aborted(signal);
   clearInterval(timer);
   io.stdout('Stopping…');
-  const slow = setTimeout(
-    () => io.stdout('Still telling the tracker how a run ended. Press Ctrl-C again to quit now.'),
-    SLOW_STOP_MS,
-  );
   await Promise.all([watcher.stop(), stream]);
-  clearTimeout(slow);
 }
 
 export async function watch(global: GlobalValues, args: WatchArgs, io: WatchIo): Promise<void> {

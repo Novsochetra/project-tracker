@@ -47,7 +47,9 @@ export function lockFolder(lockFolderPath: string, folder: string): () => void {
   if (!tryCreate(path)) {
     const holder = holderOf(path);
     if (holder !== undefined) {
-      throw new FolderBusyError(`tracker watch already runs in this folder (process ${holder}).`);
+      throw new FolderBusyError(
+        `tracker watch already runs in this folder (process ${holder}). If it doesn't, delete ${path}.`,
+      );
     }
     rmSync(path, { force: true });
     if (!tryCreate(path)) throw new FolderBusyError('tracker watch just started in this folder.');

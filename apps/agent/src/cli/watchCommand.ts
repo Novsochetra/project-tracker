@@ -3,19 +3,13 @@ import { describeError } from '../errors';
 import { watch } from '../watch/watch';
 import type { WatchIo } from '../watch/watchIo';
 import { UsageError, type ParsedArgs } from './args';
+import { ignoreClosedTerminal, untilSignal } from './terminal';
 import { EXIT_ERROR, EXIT_OK } from './exitCodes';
 import type { CliIo } from './run';
 
 export const WATCH_USAGE = 'watch [PROJECT] [--name NAME] [--permission-mode MODE]';
 
 const WATCH_OPTIONS = new Set(['name', 'permission-mode']);
-
-// Once per signal, so a second Ctrl-C quits at once.
-const untilSignal = (): Promise<void> =>
-  new Promise((resolve) => {
-    for (const signal of ['SIGINT', 'SIGTERM', 'SIGHUP'] as const)
-      process.once(signal, () => resolve());
-  });
 
 function connectionOf(parsed: ParsedArgs, io: CliIo) {
   try {
@@ -34,6 +28,8 @@ export function checkWatchArgs(parsed: ParsedArgs): void {
 }
 
 export async function watchCommand(parsed: ParsedArgs, io: CliIo): Promise<number> {
+  ignoreClosedTerminal(process.stdout);
+  ignoreClosedTerminal(process.stderr);
   const watchIo: WatchIo = {
     env: io.env,
     store: io.store,

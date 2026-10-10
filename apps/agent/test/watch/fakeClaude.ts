@@ -10,6 +10,12 @@ process.stdin.on('end', () => {
   console.log('ARGS ' + JSON.stringify(process.argv.slice(2)));
   console.log('CWD ' + process.cwd());
   console.log('PROMPT ' + prompt);
+  if (prompt.includes('SPLIT')) {
+    const bytes = Buffer.from('café ✓');
+    process.stderr.write(bytes.subarray(0, 4));
+    setTimeout(() => { process.stderr.write(bytes.subarray(4)); process.exit(5); }, 100);
+    return;
+  }
   if (prompt.includes('TWO LINES')) {
     process.stderr.write('first line\\n');
     setTimeout(() => { process.stderr.write('second line\\n'); process.exit(4); }, 100);

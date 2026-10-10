@@ -3,6 +3,8 @@ import type { ClaudeExit } from './outcome';
 
 const KEPT_OUTPUT = 20_000;
 
+export const CLAUDE = 'claude';
+
 export interface ClaudeCommand {
   command: string;
   permissionMode?: string | undefined;
@@ -27,12 +29,14 @@ export function runClaude(
       ended = true;
     };
     const child = spawn(command, claudeArgs(permissionMode), { cwd, signal, stdio: 'pipe' });
-    const keep = (chunk: Buffer) => {
-      output = (output + chunk.toString()).slice(-KEPT_OUTPUT);
-      onOutput(chunk.toString());
+    const keep = (text: string) => {
+      output = (output + text).slice(-KEPT_OUTPUT);
+      onOutput(text);
     };
-    child.stdout.on('data', keep);
-    child.stderr.on('data', keep);
+    for (const stream of [child.stdout, child.stderr]) {
+      stream.setEncoding('utf8');
+      stream.on('data', keep);
+    }
     child.stdin.on('error', () => undefined);
     child.on('error', (error) => {
       if (error.name === 'AbortError') return;

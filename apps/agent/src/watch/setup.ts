@@ -1,19 +1,16 @@
-import { realpathSync } from 'node:fs';
 import { homedir } from 'node:os';
-import { resolve } from 'node:path';
 import { TrackerClient } from '@tracker/client';
 import type { GlobalValues } from '../cli/options';
 import { loadConfig, type Config } from '../config';
 import { describeError } from '../errors';
-import { claudeIsInstalled } from './claude';
+import { CLAUDE, claudeIsInstalled } from './claude';
+import { canonicalPath } from './paths';
 import { computerName, runnerIdFor } from './identity';
 import { pickProject } from './project';
 import { retryUntilAnswered } from './retry';
 import type { WatchArgs, WatchIo } from './watchIo';
 import type { WatcherSettings } from './watcher';
 import type { WatchApi } from './watchApi';
-
-export const CLAUDE = 'claude';
 
 export class ClaudeMissingError extends Error {
   override name = 'ClaudeMissingError';
@@ -24,14 +21,6 @@ export interface Setup {
   api: WatchApi;
   folder: string;
   settings: WatcherSettings;
-}
-
-export function canonicalPath(path: string): string {
-  try {
-    return realpathSync.native(path);
-  } catch {
-    return resolve(path);
-  }
 }
 
 const clientFor = (config: Config): WatchApi =>
