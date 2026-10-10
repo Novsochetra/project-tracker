@@ -2,7 +2,9 @@ import { HEARTBEAT_MS } from '@tracker/shared';
 import { Hono } from 'hono';
 import { streamSSE, type SSEMessage, type SSEStreamingApi } from 'hono/streaming';
 import type { Access } from '../../auth/access';
+import { scopeOf } from '../../auth/scope';
 import type { Broadcaster } from '../../events/broadcaster';
+import type { RunBroadcaster, RunNotice } from '../../events/runNotice';
 import type { AppEnv } from '../env';
 
 // Browsers never hand SSE comments to the page, so the heartbeat is a named event: the web app
@@ -28,10 +30,21 @@ function guardedWriter(stream: SSEStreamingApi, allowed: () => Promise<boolean>,
   };
 }
 
+// A run event reaches only the streams of the run's own user, as a named `run` event the web app's
+// change handling never sees.
+function runListener(access: Access | null | undefined, send: (message: SSEMessage) => void) {
+  const scope = scopeOf(access);
+  return ({ userId, event }: RunNotice) => {
+    if (scope !== undefined && userId === scope)
+      send({ event: 'run', data: JSON.stringify(event) });
+  };
+}
+
 export const eventRoutes = (
   events: Broadcaster,
   heartbeatMs = HEARTBEAT_MS,
   stillAllowed: AccessCheck = alwaysAllowed,
+  runs?: RunBroadcaster,
 ) =>
   new Hono<AppEnv>().get('/events', (c) => {
     const access = c.get('access');
@@ -43,6 +56,7 @@ export const eventRoutes = (
       });
       const send = guardedWriter(stream, () => stillAllowed(access), end);
       const unsubscribe = events.subscribe((event) => send({ data: JSON.stringify(event) }));
+      const unsubscribeRuns = runs?.subscribe(runListener(access, send));
       const heartbeat = setInterval(() => send(PING), heartbeatMs);
       try {
         // A comment line flushes the headers so proxies and clients see the stream open.
@@ -51,6 +65,7 @@ export const eventRoutes = (
       } finally {
         clearInterval(heartbeat);
         unsubscribe();
+        unsubscribeRuns?.();
       }
     });
   });

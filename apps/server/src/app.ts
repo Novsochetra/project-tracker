@@ -3,7 +3,8 @@ import { Hono } from 'hono';
 import { createClock, type Clock } from './clock';
 import { REPO_ROOT } from './config';
 import type { Db } from './db/schema';
-import type { Broadcaster } from './events/broadcaster';
+import { createBroadcaster, type Broadcaster } from './events/broadcaster';
+import type { RunBroadcaster } from './events/runNotice';
 import { actorMiddleware } from './http/actor';
 import { authMiddleware, stillHasAccess, type AuthDeps } from './http/auth';
 import { DEFAULT_AUTH_OPTIONS, type AuthOptions } from './http/authOptions';
@@ -17,6 +18,7 @@ import { eventRoutes } from './http/routes/events';
 import { miscRoutes, testResetRoutes } from './http/routes/misc';
 import { projectRoutes } from './http/routes/projects';
 import { reportRoutes } from './http/routes/reports';
+import { runRoutes } from './http/routes/runs';
 import { sessionRoutes } from './http/routes/session';
 import { statusRoutes } from './http/routes/statuses';
 import { ticketRoutes } from './http/routes/tickets';
@@ -30,6 +32,7 @@ export interface AppDeps {
   db: Db;
   storage: FileStorage;
   events: Broadcaster;
+  runEvents?: RunBroadcaster;
   now?: Clock;
   auth?: Partial<AuthOptions>;
   webDist?: string | null;
@@ -67,9 +70,15 @@ function createApi(ctx: ServiceContext, deps: AppDeps): Hono<AppEnv> {
     .route('/', activityRoutes(ctx))
     .route('/', attachmentRoutes(ctx))
     .route('/', reportRoutes(ctx))
+    .route('/', runRoutes(ctx))
     .route(
       '/',
-      eventRoutes(deps.events, deps.heartbeatMs, (access) => stillHasAccess(auth, access)),
+      eventRoutes(
+        deps.events,
+        deps.heartbeatMs,
+        (access) => stillHasAccess(auth, access),
+        ctx.runEvents,
+      ),
     );
   if (deps.testReset) api.route('/', testResetRoutes(ctx));
   return api;
@@ -80,6 +89,7 @@ export function createApp(deps: AppDeps): Hono<AppEnv> {
     db: deps.db,
     storage: deps.storage,
     events: deps.events,
+    runEvents: deps.runEvents ?? createBroadcaster(),
     now: deps.now ?? createClock(),
   };
   const app = new Hono<AppEnv>();

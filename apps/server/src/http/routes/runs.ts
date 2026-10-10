@@ -1,0 +1,71 @@
+import { finishRunInput, registerRunnerInput, runnerId, startRunInput } from '@tracker/shared';
+import { Hono, type Context } from 'hono';
+import { createMiddleware } from 'hono/factory';
+import { requireScope } from '../../auth/scope';
+import { forbidden } from '../../errors';
+import type { ServiceContext } from '../../services/context';
+import { takeNextRun } from '../../services/runQueue';
+import { listRunners, registerRunner, removeRunner } from '../../services/runners';
+import { cancelRun, endRun, getRun, listTicketRuns, startRun } from '../../services/runs';
+import type { AppEnv } from '../env';
+import { jsonBody, rejectInvalid } from '../validation';
+
+const scope = (c: Context<AppEnv>) => requireScope(c.get('access'));
+
+// Only a person starts Claude Code: an agent's token can't start more agents. Checked before the
+// body, like the other refusals.
+const personOnly = createMiddleware<AppEnv>(async (c, next) => {
+  if (c.get('actor').kind !== 'human') {
+    throw forbidden("Only a person can start Claude Code. Agents can't start more agents.");
+  }
+  await next();
+});
+
+// The helper on the person's computer signs in with an API token (or needs none on a tracker
+// without an owner); a browser session isn't one.
+const helperOnly = createMiddleware<AppEnv>(async (c, next) => {
+  const kind = c.get('access')?.kind;
+  if (kind !== 'token' && kind !== 'open') {
+    throw forbidden('Only tracker watch does this, with an API token from Connect Claude Code.');
+  }
+  await next();
+});
+
+const validRunnerId = createMiddleware<AppEnv>(async (c, next) => {
+  rejectInvalid(runnerId.safeParse(c.req.param('id')));
+  await next();
+});
+
+const ticketRunRoutes = (ctx: ServiceContext) =>
+  new Hono<AppEnv>()
+    .post('/tickets/:key/runs', personOnly, jsonBody(startRunInput), async (c) =>
+      c.json(await startRun(ctx, scope(c), c.req.param('key'), c.req.valid('json')), 201),
+    )
+    .get('/tickets/:key/runs', async (c) =>
+      c.json(await listTicketRuns(ctx, scope(c), c.req.param('key'))),
+    )
+    .get('/runs/:id', async (c) => c.json(await getRun(ctx, scope(c), c.req.param('id'))))
+    .post('/runs/:id/cancel', async (c) =>
+      c.json(await cancelRun(ctx, scope(c), c.req.param('id'))),
+    )
+    .post('/runs/:id/finish', helperOnly, jsonBody(finishRunInput), async (c) =>
+      c.json(await endRun(ctx, scope(c), c.req.param('id'), c.req.valid('json'))),
+    );
+
+const runnerRoutes = (ctx: ServiceContext) =>
+  new Hono<AppEnv>()
+    .get('/runners', async (c) => c.json(await listRunners(ctx, scope(c))))
+    .put('/runners/:id', helperOnly, validRunnerId, jsonBody(registerRunnerInput), async (c) =>
+      c.json(await registerRunner(ctx, scope(c), c.req.param('id'), c.req.valid('json'))),
+    )
+    .delete('/runners/:id', async (c) => {
+      await removeRunner(ctx, scope(c), c.req.param('id'));
+      return c.body(null, 204);
+    })
+    .post('/runners/:id/next', helperOnly, async (c) => {
+      const job = await takeNextRun(ctx, scope(c), c.req.param('id'));
+      return job ? c.json(job) : c.body(null, 204);
+    });
+
+export const runRoutes = (ctx: ServiceContext) =>
+  new Hono<AppEnv>().route('/', ticketRunRoutes(ctx)).route('/', runnerRoutes(ctx));

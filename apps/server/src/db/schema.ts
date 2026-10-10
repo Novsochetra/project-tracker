@@ -7,6 +7,7 @@ import type {
 } from '@tracker/shared';
 import type { Kysely } from 'kysely';
 import type { AuthTables } from './authTables';
+import type { RunTables } from './runTables';
 
 export interface ProjectRow {
   id: string;
@@ -74,7 +75,7 @@ export interface AttachmentRow {
   createdAt: number;
 }
 
-export interface Database extends AuthTables {
+export interface Database extends AuthTables, RunTables {
   projects: ProjectRow;
   statuses: StatusRow;
   tickets: TicketRow;

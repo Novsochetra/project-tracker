@@ -1,5 +1,6 @@
 import { sql } from 'kysely';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { MIGRATIONS } from '../../src/db/migrations';
 import { createMigrator, namesWith, readMigrationState } from '../../src/db/migrator';
 import type { Db } from '../../src/db/schema';
 import { moveData, openMoveTarget, writeMoveSource } from '../helpers/dataMove';
@@ -18,6 +19,8 @@ afterAll(async () => {
 
 const applied = async (db: Db) => namesWith(await readMigrationState(db), 'applied');
 
+const LATER = Object.keys(MIGRATIONS).filter((name) => name > '0003_attachment_position');
+
 // The move migrated whatever it was pointed at. A database an older build serves (0003) became
 // 0004 under it, and that build refuses to start on a database with migrations it lacks: the
 // next restart of the online tracker would fail. Only a database with no tables at all is
@@ -32,7 +35,7 @@ describe.each(DIALECTS)('a move target behind this build (%s)', (dialect) => {
 
     expect(result.ok).toBe(false);
     expect(result.lines).toContain(
-      '  The target is behind this build: it lacks 0004_owner_auth. Deploy this same commit ' +
+      `  The target is behind this build: it lacks ${LATER.join(', ')}. Deploy this same commit ` +
         'first (its pre-deploy step migrates the database), then run the move again.',
     );
     expect(await applied(target.db)).toEqual([

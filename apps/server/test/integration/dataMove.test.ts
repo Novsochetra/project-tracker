@@ -1,5 +1,6 @@
 import { describe, expect, it, beforeAll, afterAll } from 'vitest';
 import { createApp } from '../../src/app';
+import { MIGRATIONS } from '../../src/db/migrations';
 import { createBroadcaster } from '../../src/events/broadcaster';
 import {
   moveData,
@@ -158,9 +159,7 @@ describe.each(DIALECTS)('a dry run into %s', (dialect) => {
         '  activities   3',
         '  attachments  3',
         expect.stringMatching(/^ {2}files {8}3 \(\d+ KB\)$/),
-        expect.stringMatching(
-          /^Would migrate the empty target first: 0001_initial, .*0004_owner_auth\.$/,
-        ),
+        `Would migrate the empty target first: ${Object.keys(MIGRATIONS).join(', ')}.`,
         expect.stringMatching(
           /^Would compress or strip 1 of 2 images, as new uploads are \(\d+ K?B → \d+ K?B\)\.$/,
         ),
@@ -182,8 +181,8 @@ describe.each(DIALECTS)('a source on the first schema into %s', (dialect) => {
 
     expect(ok).toBe(true);
     expect(lines).toContain(
-      `Migrated a copy of ${source.file} (not the file): 0002_ticket_client_id, ` +
-        '0003_attachment_position, 0004_owner_auth.',
+      `Migrated a copy of ${source.file} (not the file): ` +
+        `${Object.keys(MIGRATIONS).slice(1).join(', ')}.`,
     );
     expect(await tableCounts(target.db)).toEqual(SOURCE_COUNTS);
     const rows = await target.db.selectFrom('attachments').select(['id', 'position']).execute();

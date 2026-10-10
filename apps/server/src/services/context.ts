@@ -1,12 +1,14 @@
 import type { Clock } from '../clock';
 import type { Db } from '../db/schema';
 import type { Broadcaster } from '../events/broadcaster';
+import type { RunBroadcaster } from '../events/runNotice';
 import type { FileStorage } from '../storage/fileStorage';
 
 export interface ServiceContext {
   db: Db;
   storage: FileStorage;
   events: Broadcaster;
+  runEvents: RunBroadcaster;
   now: Clock;
 }
 

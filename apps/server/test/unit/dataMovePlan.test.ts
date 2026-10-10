@@ -213,8 +213,9 @@ describe('summary', () => {
       '  activities   1283',
       '  attachments     3',
       '  files           3 (266 KB)',
-      'Not copied: users, sessions, api_tokens (sign-in stays with each tracker: set the online ' +
-        'owner with owner-set and make new API tokens online).',
+      'Not copied: users, sessions, api_tokens, runners, runs (sign-in and helpers stay with ' +
+        'each tracker: set the online owner with owner-set, make new API tokens online and ' +
+        'start tracker watch against it).',
     ]);
   });
 

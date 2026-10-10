@@ -11,6 +11,7 @@ import type {
   CreateTicketInput,
   ExpectedComment,
   ExpectedFields,
+  FinishRunInput,
   ListTicketsQuery,
   LoginInput,
   MarkSentInput,
@@ -20,12 +21,17 @@ import type {
   ProjectDetail,
   ProjectSummary,
   PromptResult,
+  RegisterRunnerInput,
   ReportInput,
   ReportPreview,
   ReportResult,
   ReviewInput,
+  Run,
+  RunJob,
+  Runner,
   ServerMeta,
   SessionState,
+  StartRunInput,
   Status,
   SubmitWorkInput,
   Ticket,
@@ -216,6 +222,34 @@ export class TrackerClient {
     this.http.request<CreatedApiToken>('POST', '/api/tokens', { body: input });
 
   revokeApiToken = (id: string) => this.http.request<void>('DELETE', `/api/tokens/${segment(id)}`);
+
+  // A person starts Claude Code on one of their own helpers; the helper's side follows.
+  startRun = (ticketKey: string, input: StartRunInput) =>
+    this.http.request<Run>('POST', `/api/tickets/${segment(ticketKey)}/runs`, { body: input });
+
+  listTicketRuns = (ticketKey: string) =>
+    this.http.request<Run[]>('GET', `/api/tickets/${segment(ticketKey)}/runs`);
+
+  getRun = (runId: string) => this.http.request<Run>('GET', `/api/runs/${segment(runId)}`);
+
+  cancelRun = (runId: string) =>
+    this.http.request<Run>('POST', `/api/runs/${segment(runId)}/cancel`);
+
+  listRunners = () => this.http.request<Runner[]>('GET', '/api/runners');
+
+  removeRunner = (runnerId: string) =>
+    this.http.request<void>('DELETE', `/api/runners/${segment(runnerId)}`);
+
+  registerRunner = (runnerId: string, input: RegisterRunnerInput) =>
+    this.http.request<Runner>('PUT', `/api/runners/${segment(runnerId)}`, { body: input });
+
+  takeNextRun = (runnerId: string) =>
+    this.http.request<RunJob | null>('POST', `/api/runners/${segment(runnerId)}/next`, {
+      allowEmpty: true,
+    });
+
+  finishRun = (runId: string, input: FinishRunInput) =>
+    this.http.request<Run>('POST', `/api/runs/${segment(runId)}/finish`, { body: input });
 
   eventsUrl = () => this.http.url('/api/events');
 }

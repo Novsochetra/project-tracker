@@ -209,6 +209,41 @@ const DATA_MODEL: SchemaShape = {
       'ticket_id -> tickets.id on delete cascade',
     ],
   },
+  runners: {
+    columns: [
+      'id text primary key',
+      'user_id text',
+      'name text not null',
+      'project_ids text not null',
+      'created_at bigint not null',
+      'last_seen_at bigint not null',
+    ],
+    indexes: ['index (user_id)'],
+    foreignKeys: ['user_id -> users.id on delete cascade'],
+  },
+  runs: {
+    columns: [
+      'id text primary key',
+      'user_id text',
+      'project_id text not null',
+      'ticket_id text not null',
+      'runner_id text',
+      'runner_name text not null',
+      'prompt text not null',
+      'status text not null',
+      'error text',
+      'created_at bigint not null',
+      'started_at bigint',
+      'ended_at bigint',
+    ],
+    indexes: ['index (runner_id, status)', 'index (status, created_at)', 'unique (ticket_id)'],
+    foreignKeys: [
+      'project_id -> projects.id on delete cascade',
+      'runner_id -> runners.id on delete set null',
+      'ticket_id -> tickets.id on delete cascade',
+      'user_id -> users.id on delete cascade',
+    ],
+  },
 };
 
 describe('migrations on SQLite and on Postgres', () => {
