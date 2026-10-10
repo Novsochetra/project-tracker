@@ -29,4 +29,6 @@ export const SKIPPED_TABLES: Readonly<Record<string, string>> = {
   api_tokens: "this computer's agent tokens; make new ones online",
   runners: "this computer's helpers; start them again against the online tracker",
   runs: 'Claude Code runs started from this tracker',
+  chats: "chats with Claude Code on this tracker's helpers",
+  chat_messages: "chats with Claude Code on this tracker's helpers",
 };

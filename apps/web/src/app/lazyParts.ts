@@ -2,10 +2,16 @@ import { lazyWithPreload } from '../lib/lazyWithPreload';
 import { routeStack, type Route } from '../navigation';
 
 export const ProjectScreen = lazyWithPreload(() =>
-  import('../features/project/ProjectScreen').then((module) => module.ProjectScreen),
+  import('../features/project/projectScreens').then((module) => module.ProjectScreen),
 );
 export const TicketScreen = lazyWithPreload(() =>
   import('../features/ticket/TicketScreen').then((module) => module.TicketScreen),
+);
+export const ChatsScreen = lazyWithPreload(() =>
+  import('../features/project/projectScreens').then((module) => module.ChatsScreen),
+);
+export const ChatScreen = lazyWithPreload(() =>
+  import('../features/project/projectScreens').then((module) => module.ChatScreen),
 );
 
 export const NewTicketSheet = lazyWithPreload(() =>
@@ -36,6 +42,8 @@ const SCREENS: Record<Route['name'], Part | null> = {
   projects: null,
   project: ProjectScreen,
   ticket: TicketScreen,
+  chats: ChatsScreen,
+  chat: ChatScreen,
 };
 const SHEETS: Part[] = [
   NewTicketSheet,
@@ -68,6 +76,6 @@ export function screensOnTheirWay(route: Route): Promise<unknown> | null {
 
 // Screens first: on a slow network the screen a tap opens shouldn't share it with sheets.
 export async function preloadParts(): Promise<void> {
-  await Promise.all([ProjectScreen, TicketScreen].map(preloadQuietly));
+  await Promise.all([ProjectScreen, TicketScreen, ChatsScreen, ChatScreen].map(preloadQuietly));
   await Promise.all(SHEETS.map(preloadQuietly));
 }

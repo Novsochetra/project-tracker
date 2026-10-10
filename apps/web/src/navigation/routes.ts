@@ -1,7 +1,10 @@
 export type Route =
   | { name: 'projects' }
   | { name: 'project'; key: string }
-  | { name: 'ticket'; key: string; num: number };
+  | { name: 'ticket'; key: string; num: number }
+  | { name: 'chats'; key: string }
+  // A new chat has no id until its first question is sent.
+  | { name: 'chat'; key: string; chatId: string | null };
 
 export type NavigationKind = 'POP' | 'PUSH' | 'REPLACE';
 
@@ -24,12 +27,24 @@ function parseTicketNumber(segment: string): number | null {
   return Number.isSafeInteger(num) && num > 0 ? num : null;
 }
 
+const ASK = 'ask';
+const NEW_CHAT = 'new';
+
+function parseAskRoute(key: string, chatSegment: string | undefined): Route {
+  if (chatSegment === undefined) return { name: 'chats', key };
+  const chatId = decodeSegment(chatSegment);
+  if (chatId === null) return { name: 'chats', key };
+  return { name: 'chat', key, chatId: chatId === NEW_CHAT ? null : chatId };
+}
+
 export function parseRoute(pathname: string): Route {
   const segments = pathname.split('/').filter((segment) => segment !== '');
-  if (segments[0] !== 'p' || segments.length < 2 || segments.length > 3) return PROJECTS;
+  if (segments[0] !== 'p' || segments.length < 2 || segments.length > 4) return PROJECTS;
   const key = decodeSegment(segments[1] ?? '');
   if (key === null) return PROJECTS;
   if (segments.length === 2) return { name: 'project', key };
+  if (segments[2] === ASK) return parseAskRoute(key, segments[3]);
+  if (segments.length > 3) return PROJECTS;
   const num = parseTicketNumber(segments[2] ?? '');
   return num === null ? { name: 'project', key } : { name: 'ticket', key, num };
 }
@@ -42,6 +57,10 @@ export function routePath(route: Route): string {
       return `/p/${encodeURIComponent(route.key)}`;
     case 'ticket':
       return `/p/${encodeURIComponent(route.key)}/${route.num}`;
+    case 'chats':
+      return `/p/${encodeURIComponent(route.key)}/${ASK}`;
+    case 'chat':
+      return `/p/${encodeURIComponent(route.key)}/${ASK}/${encodeURIComponent(route.chatId ?? NEW_CHAT)}`;
   }
 }
 
@@ -58,7 +77,10 @@ export function parentRoute(route: Route): Route | null {
     case 'project':
       return PROJECTS;
     case 'ticket':
+    case 'chats':
       return { name: 'project', key: route.key };
+    case 'chat':
+      return { name: 'chats', key: route.key };
   }
 }
 

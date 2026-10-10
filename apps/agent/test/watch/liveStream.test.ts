@@ -11,6 +11,7 @@ const RUN: RunEvent = {
   runnerId: 'x',
   projectId: 'p',
   ticketId: 't',
+  chatId: null,
   status: 'queued',
 };
 

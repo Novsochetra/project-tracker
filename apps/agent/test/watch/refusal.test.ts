@@ -4,9 +4,13 @@ import { refusalOf } from '../../src/watch/refusal';
 
 const job = (ticketKey: string): RunJob => ({
   prompt: 'Go',
+  resumeSessionId: null,
   run: {
     id: 'r-1',
+    kind: 'ticket',
+    projectKey: ticketKey.split('-')[0] ?? '',
     ticketKey,
+    chatId: null,
     runnerId: 'x',
     runnerName: 'Mac',
     status: 'running',
@@ -23,5 +27,14 @@ describe('refusalOf', () => {
     expect(refusalOf(job('MOBILE-3'), 'MOB')).toBe(
       'This helper only runs MOB tickets, not MOBILE-3.',
     );
+  });
+
+  it('refuses a question about another project', () => {
+    const ask: RunJob = {
+      ...job('MOB-3'),
+      run: { ...job('MOB-3').run, kind: 'ask', ticketKey: null, chatId: 'c-1', projectKey: 'WEB' },
+    };
+    expect(refusalOf(ask, 'MOB')).toBe('This helper only answers about MOB, not WEB.');
+    expect(refusalOf({ ...ask, run: { ...ask.run, projectKey: 'MOB' } }, 'MOB')).toBeUndefined();
   });
 });

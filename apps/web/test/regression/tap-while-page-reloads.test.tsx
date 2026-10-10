@@ -38,6 +38,10 @@ vi.mock('../../src/features/project/ProjectScreen', async (importOriginal) => {
   return importOriginal();
 });
 
+vi.mock('../../src/features/project/projectScreens', async () =>
+  (await import('../../src/app/test/projectScreensMock')).projectScreensWithoutAsk(),
+);
+
 const OPEN_SESSION: SessionState = { authRequired: false, authenticated: true };
 const WEBSITE = projectSummary({ id: otherProject.id, key: 'WEB', name: 'Website' });
 

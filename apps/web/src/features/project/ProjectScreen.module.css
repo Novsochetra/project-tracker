@@ -83,14 +83,17 @@
   padding: 0 14px;
 }
 
-.barReport,
 .barSend {
   flex: 1 1 0;
   padding: 0 12px;
 }
 
-.barSend {
-  flex-grow: 1.35;
+/* Ask Claude and Paste report are squares, so "Send open tickets" keeps its whole label from
+   375px up beside them (PT-156). */
+.barSquare {
+  flex: none;
+  width: var(--bar-button);
+  padding: 0;
 }
 
 .sendShortLabel {
@@ -123,8 +126,8 @@
   }
 }
 
-/* Narrow phones such as 320 and 360: "Send open tickets" needs about 367px beside "Paste
-   report", and at 320 the search field's 160px minimum leaves the switch 120px. */
+/* Narrow phones such as 320 and 360: "Send open tickets" needs about 332px beside the two
+   squares and their gaps, and at 320 the search field's 160px minimum leaves the switch 120px. */
 @media (max-width: 374px) {
   .tools .viewSwitch {
     width: 120px;

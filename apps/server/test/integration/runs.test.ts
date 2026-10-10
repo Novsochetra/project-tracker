@@ -46,7 +46,10 @@ describe.each(DIALECTS)('Claude Code runs (%s)', (dialect) => {
     expect(started.status).toBe(201);
     expect(started.body).toEqual({
       id: expect.any(String),
+      kind: 'ticket',
+      projectKey: 'MOB',
       ticketKey: 'MOB-1',
+      chatId: null,
       runnerId: runner,
       runnerName: 'Dara’s MacBook',
       status: 'queued',
@@ -62,6 +65,7 @@ describe.each(DIALECTS)('Claude Code runs (%s)', (dialect) => {
     expect(taken.body).toEqual({
       run: { ...started.body, status: 'running', startedAt: 1_005_000 },
       prompt: 'Fix the crash on MOB-1',
+      resumeSessionId: null,
     });
     clock.advance(60_000);
     const done = await finish(started.body.id, { status: 'done', error: 'ignored' });

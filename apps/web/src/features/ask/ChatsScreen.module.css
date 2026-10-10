@@ -1,0 +1,56 @@
+.page {
+  padding: 24px var(--space-8) 48px;
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  max-width: 720px;
+}
+
+.row {
+  gap: var(--space-3);
+  min-height: 56px;
+}
+
+.chatTitle {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  font-weight: var(--weight-medium);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.time {
+  flex: none;
+  color: var(--muted);
+  font-size: var(--size-secondary);
+}
+
+.chevron {
+  flex: none;
+  display: none;
+  color: var(--faint);
+}
+
+.loading {
+  display: flex;
+  justify-content: center;
+  padding: 48px 0;
+}
+
+@media (width < 768px),
+  (pointer: coarse) and (device-width < 600px),
+  (pointer: coarse) and (device-height < 600px) {
+  /* The bottom padding clears the New chat bar. */
+  .page {
+    padding: var(--space-4) calc(var(--space-4) + var(--safe-right)) calc(96px + var(--safe-bottom))
+      calc(var(--space-4) + var(--safe-left));
+  }
+
+  .chevron {
+    display: inline-flex;
+  }
+}

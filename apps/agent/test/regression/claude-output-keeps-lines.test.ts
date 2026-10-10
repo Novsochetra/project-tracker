@@ -13,7 +13,7 @@ describe('regression: Claude output keeps its line breaks', () => {
 
   it('reports lines that arrived apart on lines of their own', async () => {
     const exit = await runClaude(
-      { command: fake.command, cwd: realpathSync(tmpdir()) },
+      { command: fake.command, args: ['-p'], cwd: realpathSync(tmpdir()) },
       'TWO LINES',
       new AbortController().signal,
       () => undefined,

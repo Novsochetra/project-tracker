@@ -21,6 +21,10 @@ vi.mock('../features/project/ProjectScreen', async (importOriginal) => {
   return importOriginal();
 });
 
+vi.mock('../features/project/projectScreens', async () =>
+  (await import('./test/projectScreensMock')).projectScreensWithoutAsk(),
+);
+
 const OPEN_SESSION: SessionState = { authRequired: false, authenticated: true };
 
 let restore: Array<() => void> = [];

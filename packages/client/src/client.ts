@@ -1,7 +1,11 @@
 import type {
   Activity,
   ApiToken,
+  AskInput,
   Attachment,
+  CardTicketInput,
+  Chat,
+  ChatDetail,
   CreateApiTokenInput,
   CreatedApiToken,
   CreateCommentInput,
@@ -249,6 +253,29 @@ export class TrackerClient {
 
   finishRun = (runId: string, input: FinishRunInput) =>
     this.http.request<Run>('POST', `/api/runs/${segment(runId)}/finish`, { body: input });
+
+  listChats = (projectKey: string) =>
+    this.http.request<Chat[]>('GET', `/api/projects/${segment(projectKey)}/chats`);
+
+  startChat = (projectKey: string, input: AskInput) =>
+    this.http.request<ChatDetail>('POST', `/api/projects/${segment(projectKey)}/chats`, {
+      body: input,
+    });
+
+  getChat = (chatId: string) =>
+    this.http.request<ChatDetail>('GET', `/api/chats/${segment(chatId)}`);
+
+  ask = (chatId: string, input: AskInput) =>
+    this.http.request<ChatDetail>('POST', `/api/chats/${segment(chatId)}/messages`, {
+      body: input,
+    });
+
+  createCardTicket = (chatId: string, messageId: string, input: CardTicketInput) =>
+    this.http.request<ChatDetail>(
+      'POST',
+      `/api/chats/${segment(chatId)}/messages/${segment(messageId)}/ticket`,
+      { body: input },
+    );
 
   eventsUrl = () => this.http.url('/api/events');
 }

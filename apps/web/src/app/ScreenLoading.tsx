@@ -1,5 +1,6 @@
 import clsx from 'clsx';
 import { Spinner } from '../components';
+import { ChatLoadingBar, ChatsLoadingBar } from '../features/ask/AskLoadingBars';
 import { ProjectLoadingBar } from '../features/project/ProjectLoadingBar';
 import { TicketLoadingBar } from '../features/ticket/TicketLoadingBar';
 import { styleNow } from '../lib/styleNow';
@@ -21,6 +22,10 @@ function LoadingBar({ route }: { route: Route }) {
       return <ProjectLoadingBar />;
     case 'ticket':
       return <TicketLoadingBar projectKey={route.key} num={route.num} />;
+    case 'chats':
+      return <ChatsLoadingBar projectKey={route.key} />;
+    case 'chat':
+      return <ChatLoadingBar chatId={route.chatId} />;
   }
 }
 

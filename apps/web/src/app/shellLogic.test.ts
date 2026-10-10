@@ -51,6 +51,25 @@ describe('breadcrumbFor', () => {
     ]);
   });
 
+  it('goes through Ask Claude to a chat, named by its title once loaded', () => {
+    const chat = { name: 'chat', key: 'mob', chatId: 'c-1' } as const;
+    expect(breadcrumbFor(chat, project, 'How does sync work?').slice(2)).toEqual([
+      { level: 'chats', label: 'Ask Claude', target: { name: 'chats', key: 'MOB' } },
+      { level: 'chat', label: 'How does sync work?', target: null },
+    ]);
+    expect(breadcrumbFor({ name: 'chats', key: 'MOB' }, project).slice(1)).toEqual([
+      {
+        level: 'project',
+        label: 'Mobile app',
+        color: '#5B5BD6',
+        target: { name: 'project', key: 'MOB' },
+      },
+      { level: 'chats', label: 'Ask Claude', target: null },
+    ]);
+    const fresh = breadcrumbFor({ name: 'chat', key: 'MOB', chatId: null }, project);
+    expect(fresh.at(-1)?.label).toBe('New chat');
+  });
+
   it('shows the key while the project is still loading', () => {
     const crumbs = breadcrumbFor({ name: 'ticket', key: 'web', num: 1 }, undefined);
     expect(crumbs.map((crumb) => crumb.label)).toEqual(['Projects', 'WEB', 'WEB-1']);

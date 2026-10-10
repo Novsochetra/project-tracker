@@ -6,7 +6,10 @@ import type { ServiceContext } from './context';
 
 export const toRun = (row: RunWithKey): Run => ({
   id: row.id,
-  ticketKey: formatTicketKey(row.projectKey, row.ticketNum),
+  kind: row.kind,
+  projectKey: row.projectKey,
+  ticketKey: row.ticketNum === null ? null : formatTicketKey(row.projectKey, row.ticketNum),
+  chatId: row.chatId,
   runnerId: row.runnerId,
   runnerName: row.runnerName,
   status: row.status,
@@ -53,6 +56,7 @@ export function notifyRun(ctx: ServiceContext, userId: UserScope, row: RunRow): 
       runnerId: row.runnerId,
       projectId: row.projectId,
       ticketId: row.ticketId,
+      chatId: row.chatId,
       status: row.status,
     },
   });

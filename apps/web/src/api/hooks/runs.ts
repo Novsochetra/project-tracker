@@ -34,7 +34,9 @@ export function useTicketRuns(ticketKey: string): TrackerQuery<Run[]> {
   });
 }
 
-function showRun(queryClient: QueryClient, run: Run): void {
+// Only a ticket's runs are listed by ticket; an ask shows in its chat.
+export function showRun(queryClient: QueryClient, run: Run): void {
+  if (!run.ticketKey) return;
   queryClient.setQueryData<Run[]>(queryKeys.ticketRuns(run.ticketKey), (runs = []) =>
     runs.some(({ id }) => id === run.id)
       ? runs.map((shown) => (shown.id === run.id ? run : shown))
@@ -42,8 +44,11 @@ function showRun(queryClient: QueryClient, run: Run): void {
   );
 }
 
-const invalidateRuns = (queryClient: QueryClient, ticketKey: string) =>
-  void queryClient.invalidateQueries({ queryKey: queryKeys.ticketRuns(ticketKey), exact: true });
+export const invalidateRuns = (queryClient: QueryClient, ticketKey: string | null) => {
+  if (ticketKey) {
+    void queryClient.invalidateQueries({ queryKey: queryKeys.ticketRuns(ticketKey), exact: true });
+  }
+};
 
 export function useStartRun(): TrackerMutation<Run, StartRunVariables> {
   const client = useApi();

@@ -17,7 +17,7 @@ async function createRunners(db: SchemaDb): Promise<void> {
   await db.schema.createIndex('runners_user_idx').on('runners').column('user_id').execute();
 }
 
-async function createRuns(db: SchemaDb): Promise<void> {
+export async function createRuns(db: SchemaDb): Promise<void> {
   await db.schema
     .createTable('runs')
     .addColumn('id', 'text', (col) => col.primaryKey())

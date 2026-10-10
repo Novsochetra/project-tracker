@@ -7,7 +7,12 @@ import { installFakeClaude } from './fakeClaude';
 const fake = installFakeClaude();
 const cwd = realpathSync(tmpdir());
 const run = (prompt: string, signal = new AbortController().signal, permissionMode?: string) =>
-  runClaude({ command: fake.command, cwd, permissionMode }, prompt, signal, () => undefined);
+  runClaude(
+    { command: fake.command, cwd, args: claudeArgs(permissionMode) },
+    prompt,
+    signal,
+    () => undefined,
+  );
 
 afterAll(() => fake.remove());
 

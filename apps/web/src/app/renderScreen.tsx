@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import { ProjectsScreen } from '../features/projects/ProjectsScreen';
 import { ErrorBoundary } from '../lib/ErrorBoundary';
 import { routePath, type Route } from '../navigation';
-import { ProjectScreen, TicketScreen } from './lazyParts';
+import { ChatScreen, ChatsScreen, ProjectScreen, TicketScreen } from './lazyParts';
 import { ScreenError } from './ScreenError';
 
 function screenFor(route: Route): ReactNode {
@@ -13,6 +13,10 @@ function screenFor(route: Route): ReactNode {
       return <ProjectScreen projectKey={route.key} />;
     case 'ticket':
       return <TicketScreen projectKey={route.key} num={route.num} />;
+    case 'chats':
+      return <ChatsScreen projectKey={route.key} />;
+    case 'chat':
+      return <ChatScreen projectKey={route.key} chatId={route.chatId} />;
   }
 }
 

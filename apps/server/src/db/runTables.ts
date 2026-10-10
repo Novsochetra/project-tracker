@@ -1,4 +1,4 @@
-import type { RunStatus } from '@tracker/shared';
+import type { RunKind, RunStatus } from '@tracker/shared';
 
 export interface RunnerRow {
   id: string;
@@ -14,7 +14,7 @@ export interface RunRow {
   id: string;
   userId: string | null;
   projectId: string;
-  ticketId: string;
+  ticketId: string | null;
   runnerId: string | null;
   // Copied, so the run still names its computer after the computer is removed.
   runnerName: string;
@@ -24,6 +24,10 @@ export interface RunRow {
   createdAt: number;
   startedAt: number | null;
   endedAt: number | null;
+  kind: RunKind;
+  chatId: string | null;
+  // Copied from the chat when the run is queued on the helper that holds that session.
+  resumeSessionId: string | null;
 }
 
 export interface RunTables {

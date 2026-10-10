@@ -299,6 +299,13 @@ describe('ProjectScreen', () => {
     });
   });
 
+  it('opens Ask Claude from the toolbar on desktop', async () => {
+    const user = userEvent.setup();
+    renderProject();
+    await user.click(await screen.findByRole('button', { name: 'Ask Claude' }));
+    await waitFor(() => expect(location()).toBe('/p/MOB/ask'));
+  });
+
   it('shows an error with a retry when the board fails to load', async () => {
     const user = userEvent.setup();
     const getBoard = vi

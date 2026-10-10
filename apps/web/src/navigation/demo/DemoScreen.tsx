@@ -11,5 +11,8 @@ export function DemoScreen({ route }: { route: Route }) {
       return <DemoProjectScreen projectKey={route.key} />;
     case 'ticket':
       return <DemoTicketScreen projectKey={route.key} num={route.num} />;
+    case 'chats':
+    case 'chat':
+      return <DemoProjectScreen projectKey={route.key} />;
   }
 }

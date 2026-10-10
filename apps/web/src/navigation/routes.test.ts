@@ -15,6 +15,9 @@ const mob: Route = { name: 'project', key: 'MOB' };
 const mob3: Route = { name: 'ticket', key: 'MOB', num: 3 };
 const mob4: Route = { name: 'ticket', key: 'MOB', num: 4 };
 const web: Route = { name: 'project', key: 'WEB' };
+const ask: Route = { name: 'chats', key: 'MOB' };
+const chat: Route = { name: 'chat', key: 'MOB', chatId: 'c-1' };
+const newChat: Route = { name: 'chat', key: 'MOB', chatId: null };
 
 describe('parseRoute', () => {
   it.each([
@@ -25,6 +28,10 @@ describe('parseRoute', () => {
     ['/p/MOB/3', mob3],
     ['/p/MOB/3/', mob3],
     ['/p/MOB2/12', { name: 'ticket', key: 'MOB2', num: 12 }],
+    ['/p/MOB/ask', ask],
+    ['/p/MOB/ask/', ask],
+    ['/p/MOB/ask/c-1', chat],
+    ['/p/MOB/ask/new', newChat],
   ])('parses %s', (path, route) => {
     expect(parseRoute(path)).toEqual(route);
   });
@@ -40,7 +47,7 @@ describe('parseRoute', () => {
     },
   );
 
-  it.each(['/x', '/p', '/p/MOB/3/extra', '/p/%E0%A4%A', '/projects/MOB'])(
+  it.each(['/x', '/p', '/p/MOB/3/extra', '/p/%E0%A4%A', '/projects/MOB', '/p/MOB/ask/c-1/x'])(
     'falls back to Projects for %s',
     (path) => {
       expect(parseRoute(path)).toEqual(projects);
@@ -50,7 +57,10 @@ describe('parseRoute', () => {
 
 describe('routePath', () => {
   it('builds paths that parse back to the same route', () => {
-    for (const route of [projects, mob, mob3, { name: 'project', key: 'A B' } as Route]) {
+    for (const route of [projects, mob, mob3, ask, chat, newChat]) {
+      expect(parseRoute(routePath(route))).toEqual(route);
+    }
+    for (const route of [{ name: 'project', key: 'A B' } as Route]) {
       expect(parseRoute(routePath(route))).toEqual(route);
     }
   });
@@ -59,6 +69,9 @@ describe('routePath', () => {
     expect(routePath(projects)).toBe('/');
     expect(routePath(mob)).toBe('/p/MOB');
     expect(routePath(mob3)).toBe('/p/MOB/3');
+    expect(routePath(ask)).toBe('/p/MOB/ask');
+    expect(routePath(chat)).toBe('/p/MOB/ask/c-1');
+    expect(routePath(newChat)).toBe('/p/MOB/ask/new');
   });
 });
 
@@ -72,6 +85,7 @@ describe('stack helpers', () => {
   it('builds the stack from Projects down', () => {
     expect(routeStack(projects)).toEqual([projects]);
     expect(routeStack(mob3)).toEqual([projects, mob, mob3]);
+    expect(routeStack(chat)).toEqual([projects, mob, ask, chat]);
   });
 
   it('measures depth', () => {

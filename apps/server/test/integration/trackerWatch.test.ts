@@ -8,6 +8,7 @@ import { serve } from '@hono/node-server';
 import { TrackerClient } from '@tracker/client';
 import type { RunStatus } from '@tracker/shared';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
+import { askArgs } from '../../../agent/src/watch/ask/askArgs';
 import { runClaude } from '../../../agent/src/watch/claude';
 import { followRunEvents } from '../../../agent/src/watch/liveStream';
 import { watch } from '../../../agent/src/watch/watch';
@@ -96,7 +97,14 @@ describe('tracker watch against a real tracker', () => {
         api: helper,
         log: (text) => logs.push(text),
         runClaude: (prompt, signal) =>
-          runClaude({ command: fake.command, cwd }, prompt, signal, () => undefined),
+          runClaude({ command: fake.command, args: ['-p'], cwd }, prompt, signal, () => undefined),
+        runAsk: (job, signal) =>
+          runClaude(
+            { command: fake.command, args: askArgs(job.resumeSessionId), cwd },
+            job.prompt,
+            signal,
+            () => undefined,
+          ),
       },
       settings,
     );
@@ -154,6 +162,22 @@ describe('tracker watch against a real tracker', () => {
     expect(reports).toHaveLength(1);
     expect(reports[0]!.text).toContain('SUMMARY: Fixed it.');
     expect(reports[0]!.text).not.toContain('Did the work.');
+  });
+
+  it('answers a chat question read-only and continues the session on the next one', async () => {
+    const started = await person.startChat('MOB', { runnerId, text: 'Where are runs queued?' });
+    const chatId = started.chat.id;
+    const answers = async () =>
+      (await person.getChat(chatId)).messages.filter((message) => message.role === 'claude');
+    await vi.waitFor(async () => expect(await answers()).toHaveLength(1), settle);
+    const [first] = await answers();
+    expect(first?.text).toContain('"--permission-mode","plan","--strict-mcp-config"');
+    expect(first?.text).toContain('Question:\nWhere are runs queued?');
+
+    await person.ask(chatId, { runnerId, text: 'And who takes them?' });
+    await vi.waitFor(async () => expect(await answers()).toHaveLength(2), settle);
+    const second = (await answers())[1];
+    expect(second?.text).toContain('"--resume","11111111-2222-4333-8444-555555555555"');
   });
 });
 

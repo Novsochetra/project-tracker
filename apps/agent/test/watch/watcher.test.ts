@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from 'vitest';
 import type { ClaudeExit } from '../../src/watch/outcome';
 import { createWatcher } from '../../src/watch/watcher';
 import type { WatchApi } from '../../src/watch/watchApi';
-import { fakeTracker, job, RUNNER } from './fakeTracker';
+import { fakeTracker, job, noAsks, RUNNER } from './fakeTracker';
 
 function watcherWith(
   api: WatchApi,
@@ -12,7 +12,7 @@ function watcherWith(
 ) {
   const log: string[] = [];
   const watcher = createWatcher(
-    { api, runClaude, log: (text) => log.push(text), retryDelay: () => 1 },
+    { api, runClaude, runAsk: noAsks, log: (text) => log.push(text), retryDelay: () => 1 },
     { runnerId: RUNNER, name: 'Mac', projectKey: 'MOB', trackerUrl: 'http://tracker.test' },
   );
   return { watcher, log };
@@ -21,7 +21,7 @@ function watcherWith(
 const exits =
   (code: number, output = '') =>
   () =>
-    Promise.resolve({ code, signal: null, output });
+    Promise.resolve({ code, signal: null, output, stdout: '' });
 
 describe('the watcher', () => {
   it('runs each waiting run in turn and reports how it ended', async () => {
@@ -31,8 +31,8 @@ describe('the watcher', () => {
       prompts.push(prompt);
       return Promise.resolve(
         prompt === 'FAIL'
-          ? { code: 1, signal: null, output: 'boom' }
-          : { code: 0, signal: null, output: '' },
+          ? { code: 1, signal: null, output: 'boom', stdout: '' }
+          : { code: 0, signal: null, output: '', stdout: '' },
       );
     });
     await watcher.lookForWork();
@@ -60,7 +60,7 @@ describe('the watcher', () => {
     const runClaude = vi.fn(
       () =>
         new Promise<ClaudeExit>(
-          (resolve) => (finish = () => resolve({ code: 0, signal: null, output: '' })),
+          (resolve) => (finish = () => resolve({ code: 0, signal: null, output: '', stdout: '' })),
         ),
     );
     const { watcher } = watcherWith(tracker.api, runClaude);
@@ -73,6 +73,7 @@ describe('the watcher', () => {
       runnerId: RUNNER,
       projectId: 'p',
       ticketId: 't',
+      chatId: null,
       status: 'queued',
     });
     finish();
@@ -88,7 +89,7 @@ describe('the watcher', () => {
         (_prompt, signal) =>
           new Promise((resolve) =>
             signal.addEventListener('abort', () =>
-              resolve({ code: null, signal: 'SIGTERM', output: '' }),
+              resolve({ code: null, signal: 'SIGTERM', output: '', stdout: '' }),
             ),
           ),
       );
@@ -102,6 +103,7 @@ describe('the watcher', () => {
           runnerId: 'other',
           projectId: 'p',
           ticketId: 't',
+          chatId: null,
           status: 'cancelled',
         });
         watcher.onRunEvent({
@@ -110,6 +112,7 @@ describe('the watcher', () => {
           runnerId: RUNNER,
           projectId: 'p',
           ticketId: 't',
+          chatId: null,
           status: 'cancelled',
         });
       } else {

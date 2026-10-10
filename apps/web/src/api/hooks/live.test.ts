@@ -65,6 +65,52 @@ describe('useLiveUpdates', () => {
     expect(isInvalidated(queryClient, queryKeys.projects())).toBe(false);
   });
 
+  it('refreshes the chat a run event names and the chat lists, but no ticket', () => {
+    const { queryClient, wrapper } = setupApi();
+    seed(queryClient);
+    queryClient.setQueryData(queryKeys.ticketRuns('MOB-1'), []);
+    queryClient.setQueryData(queryKeys.chats('MOB'), []);
+    queryClient.setQueryData(queryKeys.chat('c-1'), null);
+    queryClient.setQueryData(queryKeys.chat('c-2'), null);
+    renderHook(() => useLiveUpdates(), { wrapper });
+
+    const ask = { type: 'run', runId: 'r-2', runnerId: 'h-1', projectId: 'p-mob', ticketId: null };
+    act(() => MockEventSource.latest().emit({ ...ask, chatId: 'c-1', status: 'done' }, 'run'));
+
+    expect(isInvalidated(queryClient, queryKeys.chat('c-1'))).toBe(true);
+    expect(isInvalidated(queryClient, queryKeys.chats('MOB'))).toBe(true);
+    expect(isInvalidated(queryClient, queryKeys.chat('c-2'))).toBe(false);
+    expect(isInvalidated(queryClient, queryKeys.ticketRuns('MOB-1'))).toBe(false);
+    expect(isInvalidated(queryClient, queryKeys.board('MOB'))).toBe(false);
+  });
+
+  it('refreshes every shown ticket run for a ticket it has not cached, as one made from a chat', () => {
+    const { queryClient, wrapper } = setupApi();
+    seed(queryClient);
+    queryClient.setQueryData(queryKeys.ticketRuns('MOB-9'), []);
+    renderHook(() => useLiveUpdates(), { wrapper });
+
+    const run = { type: 'run', runId: 'r-3', runnerId: 'h-1', projectId: 'p-mob', chatId: null };
+    act(() => MockEventSource.latest().emit({ ...run, ticketId: 't-9', status: 'queued' }, 'run'));
+
+    expect(isInvalidated(queryClient, queryKeys.ticketRuns('MOB-9'))).toBe(true);
+    expect(isInvalidated(queryClient, queryKeys.ticket('MOB-1'))).toBe(false);
+  });
+
+  it('refreshes chats after a reconnect, which may have missed an answer', () => {
+    const { queryClient, wrapper } = setupApi();
+    queryClient.setQueryData(queryKeys.chat('c-1'), null);
+    queryClient.setQueryData(queryKeys.chats('MOB'), []);
+    renderHook(() => useLiveUpdates(), { wrapper });
+    const source = MockEventSource.latest();
+    act(() => {
+      source.fail(false);
+      source.open();
+    });
+    expect(isInvalidated(queryClient, queryKeys.chat('c-1'))).toBe(true);
+    expect(isInvalidated(queryClient, queryKeys.chats('MOB'))).toBe(true);
+  });
+
   it('leaves a ticket alone while one of its edits is still saving', async () => {
     const request = deferred<Ticket>();
     const { queryClient, wrapper } = setupApi({ updateTicket: vi.fn(() => request.promise) });

@@ -8,17 +8,10 @@ import { takeNextRun } from '../../services/runQueue';
 import { listRunners, registerRunner, removeRunner } from '../../services/runners';
 import { cancelRun, endRun, getRun, listTicketRuns, startRun } from '../../services/runs';
 import type { AppEnv } from '../env';
+import { personOnly } from '../personOnly';
 import { jsonBody, rejectInvalid } from '../validation';
 
 const scope = (c: Context<AppEnv>) => requireScope(c.get('access'));
-
-// So agents can't start more agents. Checked before the body, like the other refusals.
-const personOnly = createMiddleware<AppEnv>(async (c, next) => {
-  if (c.get('actor').kind !== 'human') {
-    throw forbidden("Only a person can start Claude Code. Agents can't start more agents.");
-  }
-  await next();
-});
 
 const helperOnly = createMiddleware<AppEnv>(async (c, next) => {
   const kind = c.get('access')?.kind;

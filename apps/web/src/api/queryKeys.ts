@@ -20,6 +20,9 @@ export const queryKeys = {
   meta: () => ['meta'] as const,
   apiTokens: () => ['apiTokens'] as const,
   runners: () => ['runners'] as const,
+  chats: (projectKey: string) => ['chats', canonical(projectKey)] as const,
+  allChats: () => ['chats'] as const,
+  chat: (chatId: string) => ['chat', chatId] as const,
   attachmentText: (attachmentId: string) => ['attachmentText', attachmentId] as const,
 };
 

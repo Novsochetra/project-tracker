@@ -20,6 +20,10 @@ vi.mock('../../src/features/project/ProjectScreen', async () => {
   return { ProjectScreen: () => createElement('p', null, 'Project screen') };
 });
 
+vi.mock('../../src/features/project/projectScreens', async () =>
+  (await import('../../src/app/test/projectScreensMock')).projectScreensWithoutAsk(),
+);
+
 vi.mock('../../src/features/projects/ProjectSheet', () => ({
   ProjectSheet: () => {
     throw new Error('Project sheet crashed');
@@ -66,7 +70,7 @@ describe('regression: the desktop sidebar with a projects answer it cannot read'
     );
     expect(await screen.findByText("Couldn't show the projects")).toBeInTheDocument();
     expect(within(sidebar()).getByRole('button', { name: 'All projects' })).toBeInTheDocument();
-    expect(screen.getByText('Project screen')).toBeInTheDocument();
+    expect(await screen.findByText('Project screen')).toBeInTheDocument();
     expect(consoleError).toHaveBeenCalledWith(
       "Sidebar couldn't be shown.",
       expect.any(TypeError),

@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { CHAT_ANSWER_MAX } from '../domain/chat';
 import {
   ENDED_RUN_STATUSES,
   RUN_ERROR_MAX,
@@ -36,5 +37,8 @@ export type RegisterRunnerInput = z.input<typeof registerRunnerInput>;
 export const finishRunInput = z.object({
   status: z.enum(ENDED_RUN_STATUSES),
   error: z.string().trim().max(RUN_ERROR_MAX).optional(),
+  // An ask run's answer and the Claude Code session that gave it.
+  answer: z.string().trim().max(CHAT_ANSWER_MAX).optional(),
+  sessionId: z.uuid().optional(),
 });
 export type FinishRunInput = z.input<typeof finishRunInput>;

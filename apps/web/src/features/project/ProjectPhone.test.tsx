@@ -53,6 +53,16 @@ describe('ProjectScreen on phones', () => {
     });
   });
 
+  it('opens Ask Claude from the bottom bar, within reach of a thumb', async () => {
+    const user = userEvent.setup();
+    renderProject();
+    await screen.findByRole('region', { name: 'To do' });
+    await user.click(screen.getByRole('button', { name: 'Ask Claude' }));
+    await waitFor(() =>
+      expect(screen.getByRole('status', { name: 'Location' })).toHaveTextContent('/p/MOB/ask'),
+    );
+  });
+
   it('swipes right to move a ticket to the next status', async () => {
     const updateTicket = vi.fn(pending);
     renderProject({ client: { updateTicket } });

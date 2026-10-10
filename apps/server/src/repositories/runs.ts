@@ -6,7 +6,7 @@ import type { Database, Db } from '../db/schema';
 
 export interface RunWithKey extends RunRow {
   projectKey: string;
-  ticketNum: number;
+  ticketNum: number | null;
 }
 
 // '=' never matches a null user, so the open tracker's rows need 'is'.
@@ -16,7 +16,7 @@ const ownedBy = (userId: UserScope) => (eb: ExpressionBuilder<Database, 'runs'>)
 const runsOf = (db: Db, userId: UserScope) =>
   db
     .selectFrom('runs')
-    .innerJoin('tickets', 'tickets.id', 'runs.ticketId')
+    .leftJoin('tickets', 'tickets.id', 'runs.ticketId')
     .innerJoin('projects', 'projects.id', 'runs.projectId')
     .selectAll('runs')
     .select(['projects.key as projectKey', 'tickets.num as ticketNum'])
@@ -32,6 +32,13 @@ export const listTicketRunRows = (db: Db, userId: UserScope, ticketId: string, l
     .orderBy('runs.id', 'desc')
     .limit(limit)
     .execute();
+
+export const latestChatRunRow = (db: Db, userId: UserScope, chatId: string) =>
+  runsOf(db, userId)
+    .where('runs.chatId', '=', chatId)
+    .orderBy('runs.createdAt', 'desc')
+    .orderBy('runs.id', 'desc')
+    .executeTakeFirst();
 
 export const nextQueuedRun = (
   db: Db,

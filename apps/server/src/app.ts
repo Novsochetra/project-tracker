@@ -19,6 +19,7 @@ import { miscRoutes, testResetRoutes } from './http/routes/misc';
 import { projectRoutes } from './http/routes/projects';
 import { reportRoutes } from './http/routes/reports';
 import { runRoutes } from './http/routes/runs';
+import { chatRoutes } from './http/routes/chats';
 import { sessionRoutes } from './http/routes/session';
 import { statusRoutes } from './http/routes/statuses';
 import { ticketRoutes } from './http/routes/tickets';
@@ -71,6 +72,7 @@ function createApi(ctx: ServiceContext, deps: AppDeps): Hono<AppEnv> {
     .route('/', attachmentRoutes(ctx))
     .route('/', reportRoutes(ctx))
     .route('/', runRoutes(ctx))
+    .route('/', chatRoutes(ctx))
     .route(
       '/',
       eventRoutes(

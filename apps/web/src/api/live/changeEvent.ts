@@ -24,12 +24,16 @@ export function parseChangeEvent(data: unknown): ChangeEvent | null {
   };
 }
 
+// A run works on a ticket or answers in a chat, so it names one of them.
 export function parseRunEvent(data: unknown): RunEvent | null {
   const value = readJson(data);
   const status = RUN_STATUSES.find((known) => known === value?.status);
   const runId = idOrNull(value?.runId);
   const projectId = idOrNull(value?.projectId);
   const ticketId = idOrNull(value?.ticketId);
-  if (value?.type !== 'run' || !status || !runId || !projectId || !ticketId) return null;
-  return { type: 'run', runId, runnerId: idOrNull(value.runnerId), projectId, ticketId, status };
+  const chatId = idOrNull(value?.chatId);
+  if (value?.type !== 'run' || !status || !runId || !projectId) return null;
+  if (!ticketId && !chatId) return null;
+  const runnerId = idOrNull(value.runnerId);
+  return { type: 'run', runId, runnerId, projectId, ticketId, chatId, status };
 }

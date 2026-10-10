@@ -11,9 +11,13 @@ export interface HandBackDeps {
 
 // submit_for_review and "Paste report" both leave a report entry, so one made since the run was
 // taken means Claude used the tracker tools itself and the ticket must not get the report twice.
-async function alreadyOnTheTicket(api: HandBackApi, { run }: RunJob): Promise<boolean> {
+async function alreadyOnTheTicket(
+  api: HandBackApi,
+  { run }: RunJob,
+  ticketKey: string,
+): Promise<boolean> {
   const since = run.startedAt ?? run.createdAt;
-  const { activity } = await api.getTicket(run.ticketKey, { fresh: true });
+  const { activity } = await api.getTicket(ticketKey, { fresh: true });
   return activity.some((entry) => entry.type === 'report' && entry.createdAt >= since);
 }
 
@@ -25,10 +29,10 @@ export async function handBackReport(
   output: string,
 ): Promise<void> {
   const { ticketKey } = job.run;
-  const text = reportBlockFor(output, ticketKey);
-  if (!text) return;
+  const text = ticketKey ? reportBlockFor(output, ticketKey) : null;
+  if (!ticketKey || !text) return;
   try {
-    if (await alreadyOnTheTicket(api, job)) return;
+    if (await alreadyOnTheTicket(api, job, ticketKey)) return;
     const { updatedTicketKeys } = await api.applyReport({ text, ticketKey });
     log(`Put Claude's report on ${updatedTicketKeys.join(', ') || ticketKey}.`);
   } catch (error) {

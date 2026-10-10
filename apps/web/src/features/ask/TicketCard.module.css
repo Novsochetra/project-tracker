@@ -1,0 +1,122 @@
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3) 14px 14px;
+  border: 1px solid var(--report-line);
+  border-radius: var(--radius-group);
+  background: var(--report-bg);
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+  font: var(--text-caption);
+}
+
+.title {
+  color: var(--ink);
+}
+
+.details {
+  background: var(--surface);
+}
+
+.description {
+  min-height: 72px;
+  max-height: 40vh;
+  padding: var(--space-2) var(--space-3);
+  overflow-y: auto;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-control);
+  background: var(--surface);
+  color: var(--ink-2);
+  font-size: var(--size-body);
+  line-height: 1.55;
+}
+
+.action {
+  align-self: flex-start;
+  margin-top: var(--space-1);
+}
+
+.error {
+  margin: 0;
+  color: var(--danger);
+  font-size: var(--size-secondary);
+}
+
+.key {
+  color: var(--link);
+  font: var(--text-mono);
+  font-weight: var(--weight-medium);
+}
+
+@media (hover: hover) {
+  .key:hover {
+    color: var(--link-hover);
+  }
+}
+
+.createdTitle {
+  margin: 0;
+  color: var(--ink);
+  font: var(--text-headline);
+  overflow-wrap: anywhere;
+}
+
+.run {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.runLine {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--size-secondary);
+}
+
+.spinner {
+  flex: none;
+  display: inline-flex;
+}
+
+.replaced {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+  padding: var(--space-2) var(--space-3);
+  border: 1px dashed var(--dashed);
+  border-radius: var(--radius-group);
+  color: var(--muted);
+  font-size: var(--size-secondary);
+}
+
+.replacedTitle {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-decoration: line-through;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.replacedNote {
+  flex: none;
+  font: var(--text-caption);
+}
+
+@media (width < 768px),
+  (pointer: coarse) and (device-width < 600px),
+  (pointer: coarse) and (device-height < 600px) {
+  .description {
+    font-size: var(--size-input);
+  }
+}

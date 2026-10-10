@@ -1,13 +1,16 @@
 import type { FinishRunInput, RunJob } from '@tracker/shared';
+import { askOutcomeOf } from './ask/askOutcome';
 import type { ClaudeExit } from './outcome';
 import { outcomeOf } from './outcome';
 import { refusalOf } from './refusal';
+import { labelOf } from './runLabel';
 import { retryUntilAnswered } from './retry';
 import type { WatchApi } from './watchApi';
 
 export interface RunLoopDeps {
   api: WatchApi;
   runClaude: (prompt: string, signal: AbortSignal) => Promise<ClaudeExit>;
+  runAsk: (job: RunJob, signal: AbortSignal) => Promise<ClaudeExit>;
   log: (text: string) => void;
   describe: (error: unknown) => string;
   onProblem: (error: unknown) => void;
@@ -38,10 +41,11 @@ export function createRunLoop(deps: RunLoopDeps, settings: RunLoopSettings) {
     log(`Still telling the tracker how ${unreported} ended. Press Ctrl-C again to quit now.`);
 
   async function report({ run }: RunJob, outcome: FinishRunInput) {
+    const label = labelOf(run);
     const onWait = () => {
-      unreported = run.ticketKey;
+      unreported = label;
       if (stopped) stillReporting();
-      else log(`Couldn't tell the tracker how ${run.ticketKey} ended yet. Trying again.`);
+      else log(`Couldn't tell the tracker how ${label} ended yet. Trying again.`);
     };
     try {
       await retryUntilAnswered(() => api.finishRun(run.id, outcome), {
@@ -49,34 +53,49 @@ export function createRunLoop(deps: RunLoopDeps, settings: RunLoopSettings) {
         onWait,
       });
     } catch (error) {
-      log(`The tracker didn't take how ${run.ticketKey} ended: ${deps.describe(error)}`);
+      log(`The tracker didn't take how ${label} ended: ${deps.describe(error)}`);
     } finally {
       unreported = undefined;
     }
   }
 
   async function end(job: RunJob, outcome: FinishRunInput) {
-    log(`${job.run.ticketKey}: ${ENDINGS[outcome.status]}.`);
+    log(`${labelOf(job.run)}: ${ENDINGS[outcome.status]}.`);
     await report(job, outcome);
   }
 
+  async function runTicket(job: RunJob, stop: AbortSignal): Promise<FinishRunInput> {
+    const exit = await deps.runClaude(job.prompt, stop);
+    const outcome = outcomeOf(exit, stop.aborted);
+    // A cancelled run was stopped part way, so whatever it printed is not a report of the work.
+    if (outcome.status !== 'cancelled') await deps.handBack(job, exit.output);
+    return outcome;
+  }
+
+  async function runAsk(job: RunJob, stop: AbortSignal): Promise<FinishRunInput> {
+    return askOutcomeOf(await deps.runAsk(job, stop), stop.aborted);
+  }
+
   async function work(job: RunJob) {
+    const label = labelOf(job.run);
     const refusal = refusalOf(job, settings.projectKey);
     if (refusal) {
-      log(`Refused ${job.run.ticketKey}: ${refusal}`);
+      log(`Refused ${label}: ${refusal}`);
       return report(job, { status: 'failed', error: refusal });
     }
     if (stopped) return end(job, { status: 'cancelled' });
-    log(`Claude Code is working on ${job.run.ticketKey}…`);
+    const asking = job.run.kind === 'ask';
+    log(
+      asking
+        ? `Claude Code is answering a question in ${label}…`
+        : `Claude Code is working on ${label}…`,
+    );
     const stop = new AbortController();
     current = { runId: job.run.id, stop };
-    const quiet = deps.signOfLife(job.run.ticketKey);
-    const exit = await deps.runClaude(job.prompt, stop.signal);
+    const quiet = deps.signOfLife(label);
+    const outcome = await (asking ? runAsk : runTicket)(job, stop.signal);
     quiet();
     current = undefined;
-    const outcome = outcomeOf(exit, stop.signal.aborted);
-    // A cancelled run was stopped part way, so whatever it printed is not a report of the work.
-    if (outcome.status !== 'cancelled') await deps.handBack(job, exit.output);
     await end(job, outcome);
   }
 

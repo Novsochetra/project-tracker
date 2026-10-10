@@ -1,9 +1,11 @@
 import { render, screen, within } from '@testing-library/react';
+import { MemoryRouter } from 'react-router';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { makeBoard } from '../../src/api/test/fixtures';
 import { SheetsContext, type SheetsApi } from '../../src/app/sheets/context';
 import { FilterRow } from '../../src/features/project/FilterRow';
 import { ProjectBottomBar } from '../../src/features/project/ProjectBars';
+import { NavigationProvider } from '../../src/navigation';
 import { mockPhone } from '../../src/overlays/testing';
 import { edges, phoneRule, phoneStyle, pixels } from './phoneCss';
 
@@ -12,6 +14,10 @@ const SEARCH = 'components/SearchField/SearchField.module.css';
 const SEGMENTED = 'components/Segmented/Segmented.module.css';
 // "Board" in the phone's 14px medium Geist, measured in WebKit.
 const BOARD_LABEL = 39.2;
+// "Send open tickets" with its icon and padding, and the bar's 48px squares and 10px gaps.
+const SEND_LABEL = 184;
+const BAR_SQUARE = 48;
+const BAR_GAP = 10;
 
 function renderFilters() {
   render(<FilterRow board={makeBoard()} />);
@@ -23,9 +29,13 @@ function renderFilters() {
 function renderSendButton() {
   const sheets: SheetsApi = { open: vi.fn(), close: vi.fn(), current: null };
   render(
-    <SheetsContext.Provider value={sheets}>
-      <ProjectBottomBar projectKey="MOB" />
-    </SheetsContext.Provider>,
+    <MemoryRouter initialEntries={['/p/MOB']}>
+      <NavigationProvider>
+        <SheetsContext.Provider value={sheets}>
+          <ProjectBottomBar projectKey="MOB" />
+        </SheetsContext.Provider>
+      </NavigationProvider>
+    </MemoryRouter>,
   );
   const send = screen.getByRole('button', { name: 'Send open tickets' });
   return {
@@ -99,5 +109,15 @@ describe('regression: 320px phones keep the filter row and bottom bar inside the
   it('keeps "Send open tickets" from 375px up', () => {
     const { full, short } = renderSendButton();
     expect([shows(full, 375), shows(short, 375)]).toEqual([true, false]);
+  });
+
+  // PT-156 put Ask Claude in the bar: it and Paste report are squares so the label still fits.
+  it('fits "Send open tickets" beside Ask Claude and Paste report at 375px', () => {
+    renderSendButton();
+    for (const name of ['Ask Claude', 'Paste report']) {
+      const square = phoneStyle(screen.getByRole('button', { name }), MODULE, 375);
+      expect([square.get('flex'), pixels(square.get('width'))]).toEqual(['none', BAR_SQUARE]);
+    }
+    expect(32 + 2 * BAR_SQUARE + 2 * BAR_GAP + SEND_LABEL).toBeLessThanOrEqual(375);
   });
 });

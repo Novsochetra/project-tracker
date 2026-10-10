@@ -30,6 +30,10 @@ vi.mock('../../src/features/project/ProjectScreen', async (importOriginal) => {
   return importOriginal();
 });
 
+vi.mock('../../src/features/project/projectScreens', async () =>
+  (await import('../../src/app/test/projectScreensMock')).projectScreensWithoutAsk(),
+);
+
 vi.mock('../../src/features/ticket/TicketScreen', async (importOriginal) => {
   await gates.ticket.arrived;
   return importOriginal();

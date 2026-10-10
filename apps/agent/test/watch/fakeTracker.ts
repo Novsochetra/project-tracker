@@ -7,13 +7,19 @@ import type {
   TicketDetail,
 } from '@tracker/shared';
 import { vi } from 'vitest';
+import type { ClaudeExit } from '../../src/watch/outcome';
 import type { WatchApi } from '../../src/watch/watchApi';
 
 export const RUNNER = 'runner-1';
 
+export const noAsks = (): Promise<ClaudeExit> => Promise.reject(new Error('No asks in this test.'));
+
 export const runOf = (id: string, ticketKey: string): Run => ({
   id,
+  kind: 'ticket',
+  projectKey: ticketKey.split('-')[0] ?? '',
   ticketKey,
+  chatId: null,
   runnerId: RUNNER,
   runnerName: 'Mac',
   status: 'running',
@@ -26,6 +32,17 @@ export const runOf = (id: string, ticketKey: string): Run => ({
 export const job = (id: string, ticketKey: string, prompt = `Work on ${ticketKey}`): RunJob => ({
   run: runOf(id, ticketKey),
   prompt,
+  resumeSessionId: null,
+});
+
+export const askJob = (
+  id: string,
+  chatId: string,
+  resumeSessionId: string | null = null,
+): RunJob => ({
+  run: { ...runOf(id, 'MOB-0'), kind: 'ask', ticketKey: null, chatId },
+  prompt: `Question in ${chatId}`,
+  resumeSessionId,
 });
 
 export const reportEntry = (createdAt: number): Activity =>

@@ -1,9 +1,10 @@
 import type { Project } from '@tracker/shared';
-import { ClipboardCheck, Folder, Plus, Terminal } from 'lucide-react';
+import { ClipboardCheck, Folder, MessageCircle, Plus, Terminal } from 'lucide-react';
+import { ASK_LABEL } from '../../app/crumbs';
 import { useSheets } from '../../app/sheets/context';
 import { Button, Icon } from '../../components';
 import { useIsPhone } from '../../lib/media';
-import { BottomBar, NavBar, NavBarButton } from '../../navigation';
+import { BottomBar, NavBar, NavBarButton, useNavigation } from '../../navigation';
 import { ProjectOptionsButton } from '../projects/ProjectOptionsButton';
 import styles from './ProjectScreen.module.css';
 
@@ -30,20 +31,34 @@ export function ProjectNavBar({ project }: { project: Project }) {
   );
 }
 
+// Its own screen, so a chat survives the sheets and the back gesture like a ticket does.
+function useOpenAsk(projectKey: string): () => void {
+  const { push } = useNavigation();
+  return () => push({ name: 'chats', key: projectKey });
+}
+
 export function ProjectBottomBar({ projectKey }: { projectKey: string }) {
   const sheets = useSheets();
+  const openAsk = useOpenAsk(projectKey);
   const scope = projectScope(projectKey);
   return (
     <BottomBar>
       <Button
         variant="secondary"
         size="bar"
+        icon={MessageCircle}
+        aria-label={ASK_LABEL}
+        className={styles.barSquare}
+        onClick={openAsk}
+      />
+      <Button
+        variant="secondary"
+        size="bar"
         icon={ClipboardCheck}
-        className={styles.barReport}
+        aria-label="Paste report"
+        className={styles.barSquare}
         onClick={() => sheets.open({ type: 'report', scope })}
-      >
-        Paste report
-      </Button>
+      />
       <Button
         variant="primary"
         size="bar"
@@ -61,6 +76,7 @@ export function ProjectBottomBar({ projectKey }: { projectKey: string }) {
 
 export function ProjectToolbar({ project }: { project: Project }) {
   const sheets = useSheets();
+  const openAsk = useOpenAsk(project.key);
   const isPhone = useIsPhone();
   const scope = projectScope(project.key);
   if (isPhone) return null;
@@ -72,6 +88,9 @@ export function ProjectToolbar({ project }: { project: Project }) {
           <span className={styles.repoPath}>{project.repo}</span>
         </span>
       )}
+      <Button size="sm" icon={MessageCircle} onClick={openAsk}>
+        {ASK_LABEL}
+      </Button>
       <Button size="sm" icon={Terminal} onClick={() => sheets.open({ type: 'prompt', scope })}>
         Send open tickets to Claude Code
       </Button>

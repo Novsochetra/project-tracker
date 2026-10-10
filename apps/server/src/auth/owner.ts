@@ -3,6 +3,7 @@ import { EMAIL_MAX, PASSWORD_MAX, normalizeEmail } from '@tracker/shared';
 import { z } from 'zod';
 import type { Db } from '../db/schema';
 import { invalidInput } from '../errors';
+import { assignOwnerlessChats } from '../repositories/chats';
 import { assignOwnerlessRunners } from '../repositories/runners';
 import { assignOwnerlessRuns } from '../repositories/runs';
 import { deleteUserSessions } from '../repositories/sessions';
@@ -75,6 +76,7 @@ export async function setOwner(
       // Until now everyone on this computer was the one person, and that person is the owner.
       await assignOwnerlessRuns(trx, id);
       await assignOwnerlessRunners(trx, id);
+      await assignOwnerlessChats(trx, id);
       return { email, created: true, signedOut: 0 };
     }
     await updateUserRow(trx, owner.id, { email, passwordHash, updatedAt: now });

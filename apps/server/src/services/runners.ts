@@ -7,7 +7,8 @@ import {
 import { inScope, type UserScope } from '../auth/scope';
 import { isUniqueViolation } from '../db/errors';
 import type { RunnerRow } from '../db/runTables';
-import { notFound } from '../errors';
+import type { ProjectRow } from '../db/schema';
+import { conflict, notFound } from '../errors';
 import {
   deleteRunnerRow,
   findRunnerRow,
@@ -18,7 +19,7 @@ import {
 import { failRunsOf } from '../repositories/runs';
 import type { ServiceContext } from './context';
 import { requireProject } from './lookups';
-import { notifyRun, toRunner } from './runMappers';
+import { notifyRun, parseProjectIds, toRunner } from './runMappers';
 
 const RUNNER_NOT_FOUND = 'That computer was not found. Start tracker watch on it again.';
 
@@ -31,6 +32,19 @@ export async function requireRunner(
   const row = await findRunnerRow(ctx.db, id);
   if (!row || !inScope(row.userId, scope)) throw notFound(RUNNER_NOT_FOUND);
   return row;
+}
+
+export async function requireRunnerFor(
+  ctx: ServiceContext,
+  scope: UserScope,
+  id: string,
+  project: Pick<ProjectRow, 'id' | 'key'>,
+): Promise<RunnerRow> {
+  const runner = await requireRunner(ctx, scope, id);
+  if (!parseProjectIds(runner).includes(project.id)) {
+    throw conflict(`${runner.name} doesn't run ${project.key}. Start tracker watch there.`);
+  }
+  return runner;
 }
 
 async function projectKeysById(ctx: ServiceContext): Promise<Map<string, string>> {

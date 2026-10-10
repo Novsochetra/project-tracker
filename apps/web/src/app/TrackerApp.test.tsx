@@ -19,6 +19,10 @@ vi.mock('../features/project/ProjectScreen', async () => {
   };
 });
 
+vi.mock('../features/project/projectScreens', async () =>
+  (await import('./test/projectScreensMock')).projectScreensWithoutAsk(),
+);
+
 vi.mock('../features/ticket/TicketScreen', async () => {
   const { createElement } = await import('react');
   return {
@@ -81,7 +85,8 @@ describe('desktop shell', () => {
     renderApp('/');
     await screen.findByRole('complementary', { name: 'Projects' });
     await user.click(await within(sidebar()).findByRole('button', { name: 'Mobile app 3 open' }));
-    expect(path()).toBe('/p/MOB');
+    // Opening waits for the project screen's code, which a loaded machine takes a moment over.
+    await waitFor(() => expect(path()).toBe('/p/MOB'));
     expect(await screen.findByText('Project screen MOB')).toBeInTheDocument();
     expect(within(sidebar()).getByRole('button', { name: 'Mobile app 3 open' })).toHaveAttribute(
       'aria-current',

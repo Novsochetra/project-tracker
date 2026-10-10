@@ -14,7 +14,10 @@ export const makeRunner = (overrides: Partial<Runner> = {}): Runner => ({
 
 export const makeRun = (overrides: Partial<Run> = {}): Run => ({
   id: 'r-1',
+  kind: 'ticket',
+  projectKey: 'MOB',
   ticketKey: 'MOB-1',
+  chatId: null,
   runnerId: 'h-dara',
   runnerName: DARA,
   status: 'queued',

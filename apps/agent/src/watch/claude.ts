@@ -2,12 +2,14 @@ import { spawn } from 'node:child_process';
 import type { ClaudeExit } from './outcome';
 
 const KEPT_OUTPUT = 20_000;
+// An ask's whole answer comes on stdout as one JSON object, so stdout is kept apart and in full.
+const KEPT_STDOUT = 2_000_000;
 
 export const CLAUDE = 'claude';
 
 export interface ClaudeCommand {
   command: string;
-  permissionMode?: string | undefined;
+  args: readonly string[];
   cwd: string;
 }
 
@@ -16,19 +18,20 @@ export const claudeArgs = (permissionMode?: string): string[] =>
 
 // The prompt goes in on stdin, never as an argument, so text from the tracker can't become a flag.
 export function runClaude(
-  { command, permissionMode, cwd }: ClaudeCommand,
+  { command, args, cwd }: ClaudeCommand,
   prompt: string,
   signal: AbortSignal,
   onOutput: (text: string) => void,
 ): Promise<ClaudeExit> {
   return new Promise((resolve) => {
     let output = '';
+    let stdout = '';
     let ended = false;
     const end = (code: number | null, exitSignal: NodeJS.Signals | null) => {
-      if (!ended) resolve({ code, signal: exitSignal, output });
+      if (!ended) resolve({ code, signal: exitSignal, output, stdout });
       ended = true;
     };
-    const child = spawn(command, claudeArgs(permissionMode), { cwd, signal, stdio: 'pipe' });
+    const child = spawn(command, [...args], { cwd, signal, stdio: 'pipe' });
     const keep = (text: string) => {
       output = (output + text).slice(-KEPT_OUTPUT);
       onOutput(text);
@@ -37,6 +40,9 @@ export function runClaude(
       stream.setEncoding('utf8');
       stream.on('data', keep);
     }
+    child.stdout.on('data', (text: string) => {
+      if (stdout.length < KEPT_STDOUT) stdout += text;
+    });
     child.stdin.on('error', () => undefined);
     child.on('error', (error) => {
       if (error.name === 'AbortError') return;

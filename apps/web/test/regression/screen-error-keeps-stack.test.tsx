@@ -42,6 +42,10 @@ vi.mock('../../src/features/project/ProjectScreen', async () => {
   return { ProjectScreen: () => createElement('p', null, 'Project screen') };
 });
 
+vi.mock('../../src/features/project/projectScreens', async () =>
+  (await import('../../src/app/test/projectScreensMock')).projectScreensWithoutAsk(),
+);
+
 vi.mock('../../src/features/ticket/TicketScreen', () => ({
   TicketScreen: () => {
     throw new Error('Ticket screen crashed');

@@ -83,7 +83,10 @@ export function changeScope(
 export function isAffected(queryKey: QueryKey, scope: ChangeScope): boolean {
   const root = rootOf(queryKey);
   if (root === 'projects' || root === 'ready' || root === 'reportPreview') return true;
-  if (root === 'people' || root === 'runners') return scope.all;
+  // Chats change only through runs, which have their own event.
+  if (root === 'people' || root === 'runners' || root === 'chats' || root === 'chat') {
+    return scope.all;
+  }
   const key = scopeOf(queryKey) ?? '';
   if (root === 'project') return scope.all || scope.projectKeys.has(key);
   if (root === 'ticket') return scope.all || scope.ticketKeys.has(key);

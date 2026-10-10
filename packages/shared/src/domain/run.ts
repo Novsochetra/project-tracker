@@ -1,6 +1,10 @@
 export const RUN_STATUSES = ['queued', 'running', 'done', 'failed', 'cancelled'] as const;
 export type RunStatus = (typeof RUN_STATUSES)[number];
 
+// A ticket run works on a ticket; an ask run answers a chat question and changes nothing.
+export const RUN_KINDS = ['ticket', 'ask'] as const;
+export type RunKind = (typeof RUN_KINDS)[number];
+
 export const ACTIVE_RUN_STATUSES = ['queued', 'running'] as const satisfies readonly RunStatus[];
 export const ENDED_RUN_STATUSES = [
   'done',
@@ -37,7 +41,10 @@ export interface Runner {
 
 export interface Run {
   id: string;
-  ticketKey: string;
+  kind: RunKind;
+  projectKey: string;
+  ticketKey: string | null;
+  chatId: string | null;
   runnerId: string | null;
   runnerName: string;
   status: RunStatus;
@@ -50,6 +57,8 @@ export interface Run {
 export interface RunJob {
   run: Run;
   prompt: string;
+  // Claude Code's session from the chat's last answer on this helper, for an ask to continue it.
+  resumeSessionId: string | null;
 }
 
 export interface RunEvent {
@@ -57,6 +66,7 @@ export interface RunEvent {
   runId: string;
   runnerId: string | null;
   projectId: string;
-  ticketId: string;
+  ticketId: string | null;
+  chatId: string | null;
   status: RunStatus;
 }

@@ -103,7 +103,14 @@ describe('parseChangeEvent', () => {
 });
 
 describe('parseRunEvent', () => {
-  const run = { type: 'run', runId: 'r1', runnerId: null, projectId: 'p', ticketId: 't' };
+  const run = {
+    type: 'run',
+    runId: 'r1',
+    runnerId: null,
+    projectId: 'p',
+    ticketId: 't',
+    chatId: null,
+  };
 
   it('reads run events', () => {
     expect(parseRunEvent(JSON.stringify({ ...run, status: 'failed' }))).toEqual({
@@ -114,6 +121,19 @@ describe('parseRunEvent', () => {
       ...run,
       runnerId: 'h1',
       status: 'queued',
+    });
+  });
+
+  it('reads an ask run, which names its chat instead of a ticket', () => {
+    const ask = { ...run, ticketId: null, chatId: 'c1', status: 'done' };
+    expect(parseRunEvent(JSON.stringify(ask))).toEqual(ask);
+  });
+
+  it('reads a run event from before chats as a ticket run', () => {
+    const { chatId: _chatId, ...older } = run;
+    expect(parseRunEvent(JSON.stringify({ ...older, status: 'done' }))).toEqual({
+      ...run,
+      status: 'done',
     });
   });
 

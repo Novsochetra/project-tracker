@@ -12,7 +12,7 @@ describe('regression: characters split across chunks', () => {
   it('stay whole in what is shown and reported', async () => {
     const shown: string[] = [];
     const exit = await runClaude(
-      { command: fake.command, cwd: realpathSync(tmpdir()) },
+      { command: fake.command, args: ['-p'], cwd: realpathSync(tmpdir()) },
       'SPLIT',
       new AbortController().signal,
       (text) => shown.push(text),

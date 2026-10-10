@@ -91,6 +91,7 @@ describe('connectLiveUpdates', () => {
       runnerId: 'h1',
       projectId: 'p-mob',
       ticketId: 't-1',
+      chatId: null,
       status: 'running',
     };
     source.emit(run, 'run');

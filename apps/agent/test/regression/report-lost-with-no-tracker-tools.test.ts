@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { createWatcher } from '../../src/watch/watcher';
-import { fakeTracker, job, RUNNER } from '../watch/fakeTracker';
+import { fakeTracker, job, noAsks, RUNNER } from '../watch/fakeTracker';
 
 const REPORT = [
   'TICKET: MOB-1',
@@ -21,7 +21,13 @@ describe('a run whose Claude had no tracker tools', () => {
         api: tracker.api,
         log: (text) => log.push(text),
         runClaude: () =>
-          Promise.resolve({ code: 0, signal: null, output: `Working…\n\n${REPORT}\n` }),
+          Promise.resolve({
+            code: 0,
+            signal: null,
+            output: `Working…\n\n${REPORT}\n`,
+            stdout: '',
+          }),
+        runAsk: noAsks,
       },
       { runnerId: RUNNER, name: 'Mac', projectKey: 'MOB', trackerUrl: 'http://tracker.test' },
     );

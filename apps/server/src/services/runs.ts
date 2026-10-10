@@ -1,29 +1,27 @@
-import { randomUUID } from 'node:crypto';
 import {
   RUN_LOST,
   RUN_NOT_TAKEN,
   HELPER_SILENCE_MS,
-  type EndedRunStatus,
   type FinishRunInput,
   type Run,
   type StartRunInput,
 } from '@tracker/shared';
 import type { UserScope } from '../auth/scope';
-import { isUniqueViolation } from '../db/errors';
-import type { RunRow } from '../db/runTables';
 import { conflict, notFound } from '../errors';
 import {
   failRunsOfSilentHelpers,
   findRunInScope,
-  insertRun,
   listTicketRunRows,
   markRunEnded,
   type RunWithKey,
 } from '../repositories/runs';
-import type { ServiceContext } from './context';
+import { saveAnswer } from './chatAnswers';
+import { inTransaction, type ServiceContext } from './context';
 import { requireTicket, ticketKeyOf } from './lookups';
-import { notifyRun, parseProjectIds, toRun } from './runMappers';
-import { requireRunner } from './runners';
+import { endingOf } from './runEnding';
+import { notifyRun, toRun } from './runMappers';
+import { requireRunnerFor } from './runners';
+import { insertQueuedRun, queuedRunRow } from './runRows';
 
 const TICKET_RUNS_SHOWN = 20;
 
@@ -61,31 +59,17 @@ export async function startRun(
   input: StartRunInput,
 ): Promise<Run> {
   const ref = await requireTicket(ctx.db, ticketKey);
-  const runner = await requireRunner(ctx, scope, input.runnerId);
-  if (!parseProjectIds(runner).includes(ref.project.id)) {
-    throw conflict(`${runner.name} doesn't run ${ref.project.key}. Start tracker watch there.`);
-  }
+  const runner = await requireRunnerFor(ctx, scope, input.runnerId, ref.project);
   await expireSilentRuns(ctx);
-  const row: RunRow = {
-    id: randomUUID(),
-    userId: scope,
-    projectId: ref.project.id,
+  const queued = { scope, runner, projectId: ref.project.id, now: ctx.now() };
+  const row = queuedRunRow(queued, {
+    prompt: input.prompt,
+    kind: 'ticket',
     ticketId: ref.ticket.id,
-    runnerId: runner.id,
-    runnerName: runner.name,
-    prompt: input.prompt.trim(),
-    status: 'queued',
-    error: null,
-    createdAt: ctx.now(),
-    startedAt: null,
-    endedAt: null,
-  };
-  try {
-    await insertRun(ctx.db, row);
-  } catch (error) {
-    if (!isUniqueViolation(error)) throw error;
-    throw conflict(`Claude is already working on ${ticketKeyOf(ref)}.`);
-  }
+    chatId: null,
+    resumeSessionId: null,
+  });
+  await insertQueuedRun(ctx.db, row, `Claude is already working on ${ticketKeyOf(ref)}.`);
   notifyRun(ctx, scope, row);
   return toRun(await requireRun(ctx, scope, row.id));
 }
@@ -114,10 +98,14 @@ export async function endRun(
   input: FinishRunInput,
 ): Promise<Run> {
   await expireSilentRuns(ctx);
-  const status: EndedRunStatus = input.status;
-  const error = status === 'done' ? null : input.error?.trim() || null;
   const before = await requireRun(ctx, scope, id);
-  const ended = await markRunEnded(ctx.db, scope, before.id, { status, error, endedAt: ctx.now() });
+  const { status, error, answer } = endingOf(before, input);
+  const endedAt = ctx.now();
+  const ended = await inTransaction(ctx, async (trx) => {
+    const marked = await markRunEnded(trx, scope, before.id, { status, error, endedAt });
+    if (marked && answer) await saveAnswer(trx, before, { ...answer, at: endedAt });
+    return marked;
+  });
   const after = await requireRun(ctx, scope, id);
   if (!ended && after.status !== status) {
     throw conflict(`This run already ended (${after.status}).`);

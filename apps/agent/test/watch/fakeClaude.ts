@@ -15,6 +15,17 @@ if (process.argv[2] === 'mcp') {
 let prompt = '';
 process.stdin.on('data', (chunk) => { prompt += chunk; });
 process.stdin.on('end', () => {
+  if (process.argv.includes('--output-format')) {
+    const session_id = '11111111-2222-4333-8444-555555555555';
+    const result = 'ARGS ' + JSON.stringify(process.argv.slice(2)) + '\\nPROMPT ' + prompt;
+    if (prompt.includes('ASK FAIL')) {
+      console.log(JSON.stringify({ is_error: true, result: 'Credit balance is too low', session_id }));
+      process.exit(1);
+    }
+    if (prompt.includes('WAIT')) { setTimeout(() => process.exit(0), 60000); return; }
+    console.log(JSON.stringify({ type: 'result', is_error: false, result, session_id }));
+    process.exit(0);
+  }
   console.log('ARGS ' + JSON.stringify(process.argv.slice(2)));
   console.log('CWD ' + process.cwd());
   console.log('PROMPT ' + prompt);

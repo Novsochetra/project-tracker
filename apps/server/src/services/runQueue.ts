@@ -34,5 +34,5 @@ export async function takeNextRun(
   if (!next || !(await markRunStarted(ctx.db, scope, next.id, ctx.now()))) return null;
   const started = await requireRun(ctx, scope, next.id);
   notifyRun(ctx, scope, started);
-  return { run: toRun(started), prompt: started.prompt };
+  return { run: toRun(started), prompt: started.prompt, resumeSessionId: started.resumeSessionId };
 }

@@ -1,15 +1,29 @@
-import { Plus } from 'lucide-react';
+import { skipToken, useQuery } from '@tanstack/react-query';
+import type { ChatDetail } from '@tracker/shared';
+import { Plus, SquarePen } from 'lucide-react';
+import { queryKeys } from '../api';
 import { Button } from '../components';
 import { ProjectOptionsButton } from '../features/projects/ProjectOptionsButton';
 import { useProjectSummary } from '../features/projects/useProjectSummary';
 import { useNavigation, type Route } from '../navigation';
 import { Breadcrumb } from './Breadcrumb';
-import { breadcrumbFor, projectKeyOf } from './crumbs';
+import { breadcrumbFor, NEW_CHAT_LABEL, projectKeyOf } from './crumbs';
 import styles from './DesktopHeader.module.css';
 import { useSheets } from './sheets/context';
 
+// Read from the chat screen's own query, so the header never asks for the chat itself.
+function useChatTitle(route: Route): string | undefined {
+  const chatId = route.name === 'chat' ? route.chatId : null;
+  const chat = useQuery<ChatDetail>({
+    queryKey: queryKeys.chat(chatId ?? ''),
+    queryFn: skipToken,
+  });
+  return chatId ? chat.data?.chat.title : undefined;
+}
+
 function HeaderActions({ route, projectKey }: { route: Route; projectKey: string }) {
   const sheets = useSheets();
+  const { push } = useNavigation();
   switch (route.name) {
     case 'projects':
       return (
@@ -30,7 +44,18 @@ function HeaderActions({ route, projectKey }: { route: Route; projectKey: string
           <ProjectOptionsButton projectKey={projectKey} placement="header" />
         </div>
       );
+    case 'chats':
+      return (
+        <Button
+          variant="primary"
+          icon={SquarePen}
+          onClick={() => push({ name: 'chat', key: projectKey, chatId: null })}
+        >
+          {NEW_CHAT_LABEL}
+        </Button>
+      );
     case 'ticket':
+    case 'chat':
       return null;
   }
 }
@@ -39,9 +64,10 @@ export function DesktopHeader() {
   const { route } = useNavigation();
   const routeKey = projectKeyOf(route) ?? '';
   const project = useProjectSummary(routeKey);
+  const chatTitle = useChatTitle(route);
   return (
     <header className={styles.header}>
-      <Breadcrumb crumbs={breadcrumbFor(route, project)} />
+      <Breadcrumb crumbs={breadcrumbFor(route, project, chatTitle)} />
       <HeaderActions route={route} projectKey={project?.key ?? routeKey} />
     </header>
   );
