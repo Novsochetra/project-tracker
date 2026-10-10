@@ -32,11 +32,13 @@ export interface PermissionLabel {
 export function permissionLabel(name: string, input: ToolInput, folder: string): PermissionLabel {
   const whole = Object.hasOwn(WHOLE, name) ? WHOLE[name]?.(input) : undefined;
   const label = whole ?? oneLine(toolLabel(name, input, folder));
-  const masked = maskSecrets(label.slice(0, RUN_PERMISSION_LABEL_MAX + MASK_ROOM)).trim();
-  return {
-    label: cutTo(masked, RUN_PERMISSION_LABEL_MAX),
-    cut: masked.length > RUN_PERMISSION_LABEL_MAX,
-  };
+  const room = RUN_PERMISSION_LABEL_MAX + MASK_ROOM;
+  const masked = maskSecrets(label.slice(0, room)).trim();
+  // Masking can shorten a sliced command below the limit, so the slice says it was cut too.
+  const sliced = label.length > room;
+  if (!sliced && masked.length <= RUN_PERMISSION_LABEL_MAX) return { label: masked, cut: false };
+  const shown = sliced ? `${masked}…` : masked;
+  return { label: cutTo(shown, RUN_PERMISSION_LABEL_MAX), cut: true };
 }
 
 export function labelHead(label: string): string {

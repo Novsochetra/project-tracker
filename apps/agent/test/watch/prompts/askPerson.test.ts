@@ -5,6 +5,7 @@ import { createAskPerson, type AskPersonDeps } from '../../../src/watch/prompts/
 import { NO_ANSWER, RUN_ENDED, UNSHOWN } from '../../../src/watch/prompts/decisionOf';
 import { CALL_CLOSED, RUN_STOPPED } from '../../../src/watch/prompts/promptSocket';
 import {
+  HELPER_OUTDATED,
   HELPER_REFUSED,
   NOT_RUNNING,
   RUN_GONE,
@@ -85,6 +86,7 @@ describe('asking the person', () => {
     [404, RUN_GONE],
     [401, HELPER_REFUSED],
     [403, HELPER_REFUSED],
+    [400, HELPER_OUTDATED],
     [500, UNREACHABLE],
   ])('says why when the tracker takes no request (%i)', async (status, message) => {
     const { ask, api, log } = setup([]);

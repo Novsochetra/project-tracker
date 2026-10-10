@@ -31,13 +31,28 @@ export interface SecretRule {
   replace: Replace;
 }
 
+const masked = (head = '') => `${head}${MASK}`;
+
+// `$(…)`, `${…}` and a backtick run or expand in a bare or double-quoted value, so it is what the
+// person allows, never a literal secret; a single-quoted value doesn't expand (PT-165 review).
+const isExpression = (value: string): boolean =>
+  !value.startsWith("'") && /\$[({]|\x60/.test(value);
+
+// Every rule keeps its head and puts MASK in place of the rest, which is checked here once.
+const keepingExpressions =
+  (replace: Replace): Replace =>
+  (match, ...groups) => {
+    const result = replace(match, ...groups);
+    if (result === match || !result.endsWith(MASK)) return result;
+    const hidden = match.slice(result.length - MASK.length);
+    return isExpression(hidden) ? match : result;
+  };
+
 const rule = (name: string, pattern: string, flags: string, replace: Replace): SecretRule => ({
   name,
   pattern: new RegExp(pattern, flags),
-  replace,
+  replace: keepingExpressions(replace),
 });
-
-const masked = (head = '') => `${head}${MASK}`;
 
 export const SECRET_RULES: readonly SecretRule[] = [
   rule(
