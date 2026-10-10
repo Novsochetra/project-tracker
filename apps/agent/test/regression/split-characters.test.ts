@@ -15,7 +15,7 @@ describe('regression: characters split across chunks', () => {
       { command: fake.command, args: ['-p'], cwd: realpathSync(tmpdir()) },
       'SPLIT',
       new AbortController().signal,
-      (text) => shown.push(text),
+      { onOutput: (text) => shown.push(text), onEvent: () => undefined },
     );
     expect(exit.output).toContain('café ✓');
     expect(shown.join('')).toContain('café ✓');

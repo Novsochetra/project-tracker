@@ -8,24 +8,16 @@ import {
 import { Hono, type Context } from 'hono';
 import { createMiddleware } from 'hono/factory';
 import { requireScope } from '../../auth/scope';
-import { forbidden } from '../../errors';
 import type { ServiceContext } from '../../services/context';
 import { takeNextRun } from '../../services/runQueue';
 import { listRunners, registerRunner, removeRunner } from '../../services/runners';
 import { cancelRun, endRun, getRun, listTicketRuns, startRun } from '../../services/runs';
 import type { AppEnv } from '../env';
+import { helperOnly } from '../helperOnly';
 import { personOnly } from '../personOnly';
 import { jsonBody, queryParams, rejectInvalid } from '../validation';
 
 const scope = (c: Context<AppEnv>) => requireScope(c.get('access'));
-
-const helperOnly = createMiddleware<AppEnv>(async (c, next) => {
-  const kind = c.get('access')?.kind;
-  if (kind !== 'token' && kind !== 'open') {
-    throw forbidden('Only tracker watch does this, with an API token from Connect Claude Code.');
-  }
-  await next();
-});
 
 const validRunnerId = createMiddleware<AppEnv>(async (c, next) => {
   rejectInvalid(runnerId.safeParse(c.req.param('id')));

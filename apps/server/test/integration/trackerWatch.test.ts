@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { once } from 'node:events';
-import { existsSync, mkdtempSync, readdirSync, realpathSync } from 'node:fs';
+import { existsSync, mkdtempSync, readdirSync, realpathSync, writeFileSync } from 'node:fs';
 import { connect, createServer, type AddressInfo, type Socket } from 'node:net';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -8,8 +8,7 @@ import { serve } from '@hono/node-server';
 import { TrackerClient } from '@tracker/client';
 import type { RunStatus } from '@tracker/shared';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
-import { askArgs } from '../../../agent/src/watch/ask/askArgs';
-import { runClaude } from '../../../agent/src/watch/claude';
+import { claudeRunners } from '../../../agent/src/watch/claudeRunners';
 import { followRunEvents } from '../../../agent/src/watch/liveStream';
 import { watch } from '../../../agent/src/watch/watch';
 import { createWatcher } from '../../../agent/src/watch/watcher';
@@ -82,7 +81,7 @@ describe('tracker watch against a real tracker', () => {
     person = tracker.person;
     link = await cuttableLink(tracker.port);
     await person.createProject({ name: 'Mobile', key: 'MOB' });
-    for (const title of ['Crash', 'Login', 'Offline', 'Slow', 'Report']) {
+    for (const title of ['Crash', 'Login', 'Offline', 'Slow', 'Report', 'Steps']) {
       await person.createTicket('MOB', { title });
     }
     const helper = new TrackerClient({
@@ -92,20 +91,9 @@ describe('tracker watch against a real tracker', () => {
     const settings = { runnerId, name: 'Test Mac', projectKey: 'MOB', trackerUrl: link.url };
     await helper.registerRunner(runnerId, { name: settings.name, projectKeys: ['MOB'] });
     const cwd = realpathSync(tmpdir());
+    const claude = claudeRunners({ command: fake.command, cwd, write: () => undefined });
     const watcher = createWatcher(
-      {
-        api: helper,
-        log: (text) => logs.push(text),
-        runClaude: (prompt, signal) =>
-          runClaude({ command: fake.command, args: ['-p'], cwd }, prompt, signal, () => undefined),
-        runAsk: (job, signal) =>
-          runClaude(
-            { command: fake.command, args: askArgs(job), cwd },
-            job.prompt,
-            signal,
-            () => undefined,
-          ),
-      },
+      { api: helper, log: (text) => logs.push(text), stepEvery: 50, ...claude },
       settings,
     );
     const stream = followRunEvents({
@@ -164,6 +152,16 @@ describe('tracker watch against a real tracker', () => {
     expect(reports[0]!.text).not.toContain('Did the work.');
   });
 
+  it('shows the steps while Claude works, never what a tool gave back', async () => {
+    const runId = await start('MOB-6', 'SLOW STEPS on MOB-6');
+    const labels = async () => (await person.listRunSteps(runId)).map(({ label }) => label);
+    await vi.waitFor(async () => expect(await labels()).toEqual(['Read src/app.ts']), settle);
+    expect(await statusOf(runId)).toBe('running');
+    writeFileSync(join(fake.dir, 'go'), '');
+    await vi.waitFor(async () => expect(await statusOf(runId)).toBe('done'), settle);
+    expect(await labels()).toEqual(['Read src/app.ts', 'Ran npm test', 'Done slowly.']);
+  });
+
   it('answers a chat question read-only and continues the session on the next one', async () => {
     const started = await person.startChat('MOB', { runnerId, text: 'Where are runs queued?' });
     const chatId = started.chat.id;
@@ -172,6 +170,11 @@ describe('tracker watch against a real tracker', () => {
     await vi.waitFor(async () => expect(await answers()).toHaveLength(1), settle);
     const [first] = await answers();
     expect(first?.text).toContain('"--permission-mode","plan","--strict-mcp-config"');
+    const run = (await person.getChat(chatId)).run;
+    expect((await person.listRunSteps(run!.id)).map(({ label }) => label)).toEqual([
+      'Read src/app.ts',
+      expect.stringContaining('ARGS'),
+    ]);
     expect(first?.text).toContain('Question:\nWhere are runs queued?');
 
     await person.ask(chatId, { runnerId, text: 'And who takes them?' });

@@ -99,4 +99,48 @@ describe.each(DIALECTS)('run events (%s)', (dialect) => {
     expect(aText).not.toContain(bRun.id);
     expect(aText).not.toContain('userId');
   });
+
+  it("tells only the run's own user that new steps came, named apart from run events", async () => {
+    clock.set(Date.now());
+    const a = await addUser(api.db, 'a@example.com', clock.now());
+    const b = await addUser(api.db, 'b@example.com', clock.now() + 1);
+    const [aPerson, aHelper] = [caller(() => api.app, a.person), caller(() => api.app, a.helper)];
+    await aPerson('POST', '/api/projects', { name: 'Mobile', key: 'MOB' });
+    await aPerson('POST', '/api/projects/MOB/tickets', { title: 'Crash' });
+    const runner = randomUUID();
+    await aHelper('PUT', `/api/runners/${runner}`, helperName('A Mac'));
+    const run = (
+      await aPerson<Run>('POST', '/api/tickets/MOB-1/runs', { runnerId: runner, prompt: 'Go' })
+    ).body;
+    await aHelper('POST', `/api/runners/${runner}/next`);
+    const aStream = await stream(a.person);
+    const bStream = await stream(b.person);
+    const steps = [
+      { kind: 'tool', label: 'Read a.ts' },
+      { kind: 'text', label: 'Done.' },
+    ];
+    await aHelper('POST', `/api/runs/${run.id}/steps`, { runnerId: runner, steps });
+
+    const aText = await readUntil(aStream, /^event: run-step\ndata: .+\n\n/m);
+    const [, data = ''] = /^event: run-step\ndata: (.+)$/m.exec(aText) ?? [];
+    expect(JSON.parse(data)).toEqual({
+      type: 'run-step',
+      runId: run.id,
+      projectId: expect.any(String),
+      ticketId: expect.any(String),
+      chatId: null,
+      count: 2,
+    });
+    expect(runEvents(aText)).toEqual([]);
+
+    // Writes keep their order, so B's own run event arriving means A's steps never went to B.
+    const bRunner = randomUUID();
+    await caller(() => api.app, b.helper)('PUT', `/api/runners/${bRunner}`, helperName('B Mac'));
+    await aPerson('POST', '/api/projects/MOB/tickets', { title: 'Login' });
+    const bPerson = caller(() => api.app, b.person);
+    await bPerson('POST', '/api/tickets/MOB-2/runs', { runnerId: bRunner, prompt: 'Go' });
+    const bText = await readUntil(bStream, /^event: run\ndata: .+\n\n/m);
+    expect(bText).not.toContain(run.id);
+    expect(bText).not.toContain('run-step');
+  });
 });

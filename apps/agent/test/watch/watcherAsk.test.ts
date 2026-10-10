@@ -1,19 +1,14 @@
 import { describe, expect, it, vi } from 'vitest';
-import type { ClaudeExit } from '../../src/watch/outcome';
 import { createWatcher } from '../../src/watch/watcher';
-import { askJob, fakeTracker, RUNNER } from './fakeTracker';
+import { answered, askJob, fakeTracker, RUNNER } from './fakeTracker';
 
 const SESSION = '11111111-2222-4333-8444-555555555555';
-const answered = (result: string): ClaudeExit => {
-  const stdout = JSON.stringify({ result, session_id: SESSION });
-  return { code: 0, signal: null, output: stdout, stdout };
-};
 
 describe('the watcher with a chat question', () => {
   it('asks read-only Claude and hands back the answer, never as a ticket run', async () => {
     const tracker = fakeTracker([askJob('r-1', 'c0ffee00-chat', SESSION)]);
     const runClaude = vi.fn();
-    const runAsk = vi.fn(() => Promise.resolve(answered('It lives in runQueue.ts.')));
+    const runAsk = vi.fn(() => Promise.resolve(answered('It lives in runQueue.ts.', SESSION)));
     const log: string[] = [];
     const watcher = createWatcher(
       { api: tracker.api, runClaude, runAsk, log: (text) => log.push(text) },
@@ -24,6 +19,7 @@ describe('the watcher with a chat question', () => {
     expect(runAsk).toHaveBeenCalledWith(
       expect.objectContaining({ prompt: 'Question in c0ffee00-chat', resumeSessionId: SESSION }),
       expect.any(AbortSignal),
+      expect.any(Function),
     );
     expect(tracker.ended).toEqual([
       { id: 'r-1', status: 'done', answer: 'It lives in runQueue.ts.', sessionId: SESSION },

@@ -1,9 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { ClaudeExit } from '../../src/watch/outcome';
 import { createWatcher } from '../../src/watch/watcher';
-import { askJob, fakeTracker, job, RUNNER } from '../watch/fakeTracker';
-
-const answer = JSON.stringify({ result: 'In runQueue.ts.' });
+import { answered, askJob, fakeTracker, job, RUNNER } from '../watch/fakeTracker';
 
 // With one lane a question waited for the whole ticket run on the same Mac (PT-156 review).
 describe('regression: a question while a ticket run works', () => {
@@ -11,13 +9,13 @@ describe('regression: a question while a ticket run works', () => {
     const tracker = fakeTracker([job('r-1', 'MOB-1'), askJob('r-2', 'c0ffee00-chat')]);
     let finishTicket = () => undefined as void;
     const ticketRun = new Promise<ClaudeExit>((resolve) => {
-      finishTicket = () => resolve({ code: 0, signal: null, output: '', stdout: '' });
+      finishTicket = () => resolve({ code: 0, signal: null, output: '', result: null });
     });
     const watcher = createWatcher(
       {
         api: tracker.api,
         runClaude: () => ticketRun,
-        runAsk: () => Promise.resolve({ code: 0, signal: null, output: answer, stdout: answer }),
+        runAsk: () => Promise.resolve(answered('In runQueue.ts.')),
         log: () => undefined,
       },
       { runnerId: RUNNER, name: 'Mac', projectKey: 'MOB', trackerUrl: 'http://tracker.test' },

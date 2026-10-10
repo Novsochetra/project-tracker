@@ -18,15 +18,18 @@ const claude = claudeRunners({
   write: () => undefined,
 });
 
+const noSteps = () => undefined;
+
 const ask = async (prompt: string, resume: string | null = null, mode: AskMode = 'ask') => {
   const job = { ...askJob('r-1', 'c-1', resume, { model: 'default', mode }), prompt };
-  return askOutcomeOf(await claude.runAsk(job, new AbortController().signal), false);
+  return askOutcomeOf(await claude.runAsk(job, new AbortController().signal, noSteps), false);
 };
 
 const READ_ONLY_ARGS = [
   '-p',
   '--output-format',
-  'json',
+  'stream-json',
+  '--verbose',
   '--permission-mode',
   'plan',
   '--strict-mcp-config',
@@ -58,7 +61,10 @@ describe('regression: an ask runs Claude read-only', () => {
 
   it("gives an older server's question with no options the read-only flags", async () => {
     const job = { ...askJob('r-1', 'c-1'), prompt: 'where?' };
-    const outcome = askOutcomeOf(await claude.runAsk(job, new AbortController().signal), false);
+    const outcome = askOutcomeOf(
+      await claude.runAsk(job, new AbortController().signal, noSteps),
+      false,
+    );
     expect(argsOf(outcome.answer)).toEqual(READ_ONLY_ARGS);
   });
 
@@ -67,7 +73,8 @@ describe('regression: an ask runs Claude read-only', () => {
     expect(args).toEqual([
       '-p',
       '--output-format',
-      'json',
+      'stream-json',
+      '--verbose',
       '--permission-mode',
       'bypassPermissions',
     ]);
@@ -76,8 +83,15 @@ describe('regression: an ask runs Claude read-only', () => {
   });
 
   it('still gives ticket runs the mode the person chose', async () => {
-    const exit = await claude.runClaude('Fix MOB-1', new AbortController().signal);
-    expect(exit.output).toContain('ARGS ["-p","--permission-mode","bypassPermissions"]');
+    const exit = await claude.runClaude('Fix MOB-1', new AbortController().signal, noSteps);
+    expect(argsOf(exit.result?.text)).toEqual([
+      '-p',
+      '--output-format',
+      'stream-json',
+      '--verbose',
+      '--permission-mode',
+      'bypassPermissions',
+    ]);
   });
 
   it("resumes the chat's session and hands back the new one", async () => {

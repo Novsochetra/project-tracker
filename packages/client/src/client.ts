@@ -1,5 +1,6 @@
 import type {
   Activity,
+  AddRunStepsInput,
   ApiToken,
   AskInput,
   Attachment,
@@ -34,6 +35,7 @@ import type {
   RunJob,
   RunKind,
   Runner,
+  RunStep,
   ServerMeta,
   SessionState,
   StartRunInput,
@@ -258,6 +260,18 @@ export class TrackerClient {
 
   finishRun = (runId: string, input: FinishRunInput) =>
     this.http.request<Run>('POST', `/api/runs/${segment(runId)}/finish`, { body: input });
+
+  addRunSteps = (
+    runId: string,
+    input: AddRunStepsInput,
+    { signal }: { signal?: AbortSignal } = {},
+  ) =>
+    this.http.request<void>('POST', `/api/runs/${segment(runId)}/steps`, { body: input, signal });
+
+  listRunSteps = (runId: string, { after }: { after?: number } = {}) =>
+    this.http.request<RunStep[]>('GET', `/api/runs/${segment(runId)}/steps`, {
+      query: { after: after === undefined ? undefined : String(after) },
+    });
 
   listChats = (projectKey: string) =>
     this.http.request<Chat[]>('GET', `/api/projects/${segment(projectKey)}/chats`);

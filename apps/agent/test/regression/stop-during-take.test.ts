@@ -37,7 +37,7 @@ describe('regression: stopping while a run is being taken', () => {
       finishRun,
     } as unknown as WatchApi;
     const runClaude = vi.fn(() =>
-      Promise.resolve({ code: 0, signal: null, output: '', stdout: '' }),
+      Promise.resolve({ code: 0, signal: null, output: '', result: null }),
     );
     const watcher = createWatcher(
       { api, runClaude, runAsk: noAsks, log: () => undefined, retryDelay: () => 0 },

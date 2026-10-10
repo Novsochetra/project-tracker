@@ -1,11 +1,12 @@
 import { RUN_ERROR_MAX, type FinishRunInput } from '@tracker/shared';
+import type { ClaudeResult } from './stream/claudeResult';
 
 export interface ClaudeExit {
   code: number | null;
   signal: NodeJS.Signals | null;
-  // The last of stdout and stderr together, as the person would have seen it.
+  // The last of what the helper's window showed: stderr, stray lines and the result's text.
   output: string;
-  stdout: string;
+  result: ClaudeResult | null;
 }
 
 export function lastLines(text: string, max = RUN_ERROR_MAX): string {
@@ -21,7 +22,7 @@ export function reasonOf({ code, signal }: Pick<ClaudeExit, 'code' | 'signal'>):
   return signal ? `Claude Code was stopped (${signal}).` : 'Claude Code did not start.';
 }
 
-export function outcomeOf(exit: Omit<ClaudeExit, 'stdout'>, cancelled: boolean): FinishRunInput {
+export function outcomeOf(exit: Omit<ClaudeExit, 'result'>, cancelled: boolean): FinishRunInput {
   if (cancelled) return { status: 'cancelled' };
   if (exit.code === 0) return { status: 'done' };
   return { status: 'failed', error: lastLines(`${reasonOf(exit)}\n${exit.output}`) };

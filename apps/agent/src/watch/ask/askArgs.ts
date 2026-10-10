@@ -1,4 +1,5 @@
 import type { AskOptions, RunJob } from '@tracker/shared';
+import { STREAM_JSON } from '../claude';
 import { askModeArgs } from './askModeArgs';
 import { askModelArgs } from './askModelArgs';
 
@@ -19,8 +20,7 @@ export function askArgs(
   const options = run.askOptions as Partial<Record<keyof AskOptions, unknown>> | null | undefined;
   return [
     '-p',
-    '--output-format',
-    'json',
+    ...STREAM_JSON,
     ...askModeArgs(options?.mode, permissionMode),
     ...askModelArgs(options?.model),
     ...resumeArgs(resumeSessionId),

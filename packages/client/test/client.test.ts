@@ -280,6 +280,29 @@ const routes: Route[] = [
     path: '/api/tokens/t%2F1',
     call: (c) => c.revokeApiToken('t/1'),
   },
+  {
+    name: 'addRunSteps',
+    method: 'POST',
+    path: '/api/runs/r%201/steps',
+    body: { runnerId: 'r-1', steps: [{ kind: 'tool', label: 'Read a.ts', subAgent: false }] },
+    call: (c) =>
+      c.addRunSteps('r 1', {
+        runnerId: 'r-1',
+        steps: [{ kind: 'tool', label: 'Read a.ts', subAgent: false }],
+      }),
+  },
+  {
+    name: 'listRunSteps',
+    method: 'GET',
+    path: '/api/runs/r-1/steps',
+    call: (c) => c.listRunSteps('r-1'),
+  },
+  {
+    name: 'listRunSteps after a step',
+    method: 'GET',
+    path: '/api/runs/r-1/steps?after=12',
+    call: (c) => c.listRunSteps('r-1', { after: 12 }),
+  },
 ];
 
 afterEach(() => {
@@ -470,6 +493,15 @@ describe('fresh reads', () => {
     const controller = new AbortController();
 
     await client.checkHealth({ signal: controller.signal });
+
+    expect(last().init.signal).toBe(controller.signal);
+  });
+
+  it("can stop sending a run's steps that waits too long", async () => {
+    const { client, last } = setup(noContent);
+    const controller = new AbortController();
+
+    await client.addRunSteps('r-1', { runnerId: 'r', steps: [] }, { signal: controller.signal });
 
     expect(last().init.signal).toBe(controller.signal);
   });

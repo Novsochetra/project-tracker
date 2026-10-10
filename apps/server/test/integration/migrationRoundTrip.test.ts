@@ -276,6 +276,7 @@ const DATA_MODEL: SchemaShape = {
       'resume_session_id text',
       'ask_model text',
       'ask_mode text',
+      'step_count integer not null default 0',
     ],
     indexes: [
       'index (runner_id, status)',
@@ -290,6 +291,18 @@ const DATA_MODEL: SchemaShape = {
       'ticket_id -> tickets.id on delete cascade',
       'user_id -> users.id on delete cascade',
     ],
+  },
+  run_steps: {
+    columns: [
+      'run_id text primary key',
+      'seq integer primary key',
+      'kind text not null',
+      'label text not null',
+      'sub_agent integer not null',
+      'created_at bigint not null',
+    ],
+    indexes: [],
+    foreignKeys: ['run_id -> runs.id on delete cascade'],
   },
   chats: {
     columns: [
