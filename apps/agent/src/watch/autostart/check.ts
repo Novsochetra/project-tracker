@@ -33,8 +33,8 @@ async function trackerLine(
   }
 }
 
-function jobLines(label: string): string[] {
-  if (process.platform !== 'darwin' || !isInstalled(label)) return ['Installed: no.'];
+function jobLines(label: string, installed: boolean): string[] {
+  if (!installed) return ['Installed: no.'];
   const state = jobState(label);
   const pid = pidFrom(state);
   if (pid !== undefined) return ['Installed: yes.', `Running by itself: yes (process ${pid}).`];
@@ -48,10 +48,13 @@ function jobLines(label: string): string[] {
 export async function check(global: GlobalValues, io: WatchIo): Promise<void> {
   const folder = canonicalPath(io.cwd);
   const label = labelFor(folder);
-  const url = (process.platform === 'darwin' && plistUrl(label)) || global.url;
+  const installed = process.platform === 'darwin' && isInstalled(label);
+  const url = (installed && plistUrl(label)) || global.url;
   io.stdout(
-    [`Folder: ${folder}`, ...jobLines(label), await trackerLine(url, global, io, folder)].join(
-      '\n',
-    ),
+    [
+      `Folder: ${folder}`,
+      ...jobLines(label, installed),
+      await trackerLine(url, global, io, folder),
+    ].join('\n'),
   );
 }

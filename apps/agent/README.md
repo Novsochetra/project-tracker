@@ -108,7 +108,8 @@ tracker watch --uninstall
 
 - The token stays in the config file, never in the plist: log in with `tracker login` first (a token from an environment variable is refused).
 - The job gets only `PATH` and the config file's location, so `claude` must be logged in itself (`claude`, then `/login`), not through `ANTHROPIC_API_KEY` or other variables.
-- If the code is in Documents, Desktop or Downloads, macOS asks for permission for node to use that folder, and asks again after a node upgrade. A folder like `~/code` avoids that.
+- If the code or the project-tracker checkout (the CLI) is in Documents, Desktop or Downloads, macOS asks for permission for node to use that folder, and asks again after a node upgrade. Folders like `~/code` avoid that.
+- To change `--name` or another choice, run `--install` again with the new ones; it replaces the installed helper.
 - A LaunchAgent runs only while you are logged in: after a restart with FileVault on, the Mac waits for your password. "Start up automatically after a power failure" (System Settings → Energy) helps a Mac at home.
 - When the Mac is off, asleep or offline, a run waits 30 minutes and then fails with "Your computer didn't take the run."
 

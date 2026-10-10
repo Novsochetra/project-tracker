@@ -16,3 +16,9 @@ export const untilSignal = (): Promise<void> =>
 export function ignoreClosedTerminal(stream: Writable): void {
   stream.on('error', () => undefined);
 }
+
+export const stampLines = (text: string, at: Date): string =>
+  text
+    .split('\n')
+    .map((line) => `${at.toISOString()} ${line}`)
+    .join('\n');

@@ -4,6 +4,13 @@ import { join } from 'node:path';
 
 export class FolderBusyError extends Error {
   override name = 'FolderBusyError';
+
+  constructor(
+    message: string,
+    readonly holder?: number,
+  ) {
+    super(message);
+  }
 }
 
 const codeOf = (error: unknown): unknown => (error as NodeJS.ErrnoException).code;
@@ -48,7 +55,8 @@ export function lockFolder(lockFolderPath: string, folder: string): () => void {
     const holder = holderOf(path);
     if (holder !== undefined) {
       throw new FolderBusyError(
-        `tracker watch already runs in this folder (process ${holder}). If it doesn't, delete ${path}.`,
+        `tracker watch already runs in this folder (process ${holder}). Stop it first, or run "tracker watch --uninstall" if it was installed. If no helper runs, delete ${path}.`,
+        holder,
       );
     }
     rmSync(path, { force: true });

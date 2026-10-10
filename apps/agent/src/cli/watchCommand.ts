@@ -5,7 +5,7 @@ import { install, uninstall } from '../watch/autostart/install';
 import { watch } from '../watch/watch';
 import type { WatchArgs, WatchIo } from '../watch/watchIo';
 import { UsageError, type ParsedArgs } from './args';
-import { ignoreClosedTerminal, untilSignal } from './terminal';
+import { ignoreClosedTerminal, stampLines, untilSignal } from './terminal';
 import { EXIT_ERROR, EXIT_OK } from './exitCodes';
 import type { CliIo } from './run';
 
@@ -41,10 +41,6 @@ export function checkWatchArgs(parsed: ParsedArgs): void {
   }
 }
 
-// Started at login, the output goes to a log file, where a line needs its time.
-const stamped = (text: string): string =>
-  process.stdout.isTTY ? text : `${new Date().toISOString()} ${text}`;
-
 function run(parsed: ParsedArgs, args: WatchArgs, io: WatchIo): Promise<void> {
   if (parsed.flags.install) return install(parsed.global, args, io);
   if (parsed.flags.uninstall) return Promise.resolve(uninstall(io));
@@ -52,13 +48,21 @@ function run(parsed: ParsedArgs, args: WatchArgs, io: WatchIo): Promise<void> {
   return watch(parsed.global, args, io);
 }
 
+// Started at login, the helper writes to a log file, where every line needs its time.
+function lineFormat(parsed: ParsedArgs): (text: string) => string {
+  const { install: installing, uninstall: removing, check: checking } = parsed.flags;
+  const logged = !process.stdout.isTTY && !installing && !removing && !checking;
+  return (text) => (logged ? stampLines(text, new Date()) : text);
+}
+
 export async function watchCommand(parsed: ParsedArgs, io: CliIo): Promise<number> {
   ignoreClosedTerminal(process.stdout);
   ignoreClosedTerminal(process.stderr);
+  const line = lineFormat(parsed);
   const watchIo: WatchIo = {
     env: io.env,
     store: io.store,
-    stdout: (text) => io.stdout(stamped(text)),
+    stdout: (text) => io.stdout(line(text)),
     cwd: io.cwd ?? process.cwd(),
     write: io.write ?? ((text) => process.stdout.write(text)),
     untilStopped: io.untilStopped ?? untilSignal,
@@ -73,7 +77,7 @@ export async function watchCommand(parsed: ParsedArgs, io: CliIo): Promise<numbe
     await run(parsed, args, watchIo);
     return EXIT_OK;
   } catch (error) {
-    io.stderr(`Error: ${describeError(error, connectionOf(parsed, io))}`);
+    io.stderr(line(`Error: ${describeError(error, connectionOf(parsed, io))}`));
     return EXIT_ERROR;
   }
 }

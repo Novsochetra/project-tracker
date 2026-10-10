@@ -22,13 +22,16 @@ function projectKeyOf(key: string): string {
   return key;
 }
 
+// One argument each, so a value that starts with "-" can't be read as a flag.
+const option = (name: string, value: string | undefined): string[] =>
+  value ? [`--${name}=${value}`] : [];
+
 export const watchArgsFor = ({ config, projectKey, args }: JobInput): string[] => [
   'watch',
-  '--url',
-  config.url,
-  ...(config.agentName === DEFAULT_AGENT_NAME ? [] : ['--as', config.agentName]),
-  ...(args.name ? ['--name', args.name] : []),
-  ...(args.permissionMode ? ['--permission-mode', args.permissionMode] : []),
+  ...option('url', config.url),
+  ...option('as', config.agentName === DEFAULT_AGENT_NAME ? undefined : config.agentName),
+  ...option('name', args.name),
+  ...option('permission-mode', args.permissionMode),
   ...(args.keepAwake === false ? ['--no-keep-awake'] : []),
   projectKeyOf(projectKey),
 ];

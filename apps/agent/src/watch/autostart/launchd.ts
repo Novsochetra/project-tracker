@@ -5,24 +5,31 @@ import { AutostartError } from './errors';
 import { plistPathOf } from './names';
 import { launchAgentPlist, type LaunchAgent } from './plist';
 
-const NOT_LOADED = 3;
-
 const domain = (): string => `gui/${process.getuid!()}`;
 
-const launchctl = (...args: string[]): string =>
-  execFileSync('/bin/launchctl', args, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
+const run = (command: string, args: string[]): string =>
+  execFileSync(command, args, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
 
-const failureOf = (error: unknown): { status?: number; text: string } => {
-  const failed = error as { status?: number; stderr?: string; message?: string };
-  return { status: failed.status, text: (failed.stderr || failed.message || '').trim() };
+const failureOf = (error: unknown): string => {
+  const failed = error as { stderr?: string; message?: string };
+  return (failed.stderr || failed.message || '').trim();
 };
 
-function stopJob(label: string): void {
+export const jobState = (label: string): string | undefined => {
   try {
-    launchctl('bootout', `${domain()}/${label}`);
+    return run('/bin/launchctl', ['print', `${domain()}/${label}`]);
+  } catch {
+    return undefined;
+  }
+};
+
+// Booting out a job that isn't loaded fails with a code that differs between macOS versions.
+function stopJob(label: string): void {
+  if (jobState(label) === undefined) return;
+  try {
+    run('/bin/launchctl', ['bootout', `${domain()}/${label}`]);
   } catch (error) {
-    const { status, text } = failureOf(error);
-    if (status !== NOT_LOADED) throw new AutostartError(`launchctl couldn't stop it: ${text}`);
+    throw new AutostartError(`launchctl couldn't stop it: ${failureOf(error)}`);
   }
 }
 
@@ -35,10 +42,10 @@ export function installAgent(agent: LaunchAgent): void {
   stopJob(agent.label);
   writeFileSync(path, launchAgentPlist(agent), { mode: 0o644 });
   try {
-    launchctl('bootstrap', domain(), path);
+    run('/bin/launchctl', ['bootstrap', domain(), path]);
   } catch (error) {
     rmSync(path, { force: true });
-    throw new AutostartError(`launchctl couldn't start it: ${failureOf(error).text}`);
+    throw new AutostartError(`launchctl couldn't start it: ${failureOf(error)}`);
   }
 }
 
@@ -49,26 +56,12 @@ export function uninstallAgent(label: string): boolean {
   return true;
 }
 
-export const jobState = (label: string): string | undefined => {
-  try {
-    return launchctl('print', `${domain()}/${label}`);
-  } catch {
-    return undefined;
-  }
-};
-
 export function plistUrl(label: string): string | undefined {
   try {
-    const json = execFileSync(
-      '/usr/bin/plutil',
-      ['-convert', 'json', '-o', '-', plistPathOf(label)],
-      {
-        encoding: 'utf8',
-      },
-    );
+    const json = run('/usr/bin/plutil', ['-convert', 'json', '-o', '-', plistPathOf(label)]);
     const program = (JSON.parse(json) as { ProgramArguments?: string[] }).ProgramArguments ?? [];
-    const at = program.indexOf('--url');
-    return at === -1 ? undefined : program[at + 1];
+    const url = program.find((arg) => arg.startsWith('--url='));
+    return url?.slice('--url='.length);
   } catch {
     return undefined;
   }

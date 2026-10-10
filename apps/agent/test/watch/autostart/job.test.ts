@@ -30,14 +30,10 @@ describe('the job tracker watch installs', () => {
     expect(job.program).toEqual([
       ...CLI,
       'watch',
-      '--url',
-      'https://t.example.com',
-      '--as',
-      'Claude (home)',
-      '--name',
-      'Mac',
-      '--permission-mode',
-      'acceptEdits',
+      '--url=https://t.example.com',
+      '--as=Claude (home)',
+      '--name=Mac',
+      '--permission-mode=acceptEdits',
       '--no-keep-awake',
       'MOB',
     ]);

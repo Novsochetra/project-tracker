@@ -69,7 +69,9 @@ describe('tracker watch', () => {
     process.env.PATH = '/nowhere';
     expect(await cli(['watch', 'MOB'])).toEqual({
       code: EXIT_ERROR,
-      stderr: 'Error: Claude Code (the claude command) is not on PATH here.',
+      stderr: expect.stringMatching(
+        /^(\S+ )?Error: Claude Code \(the claude command\) is not on PATH here\.$/,
+      ),
     });
   });
 });

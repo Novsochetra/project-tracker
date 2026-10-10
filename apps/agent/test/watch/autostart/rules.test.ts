@@ -7,13 +7,20 @@ describe('install rules', () => {
     expect(() => refuseTokenFromEnv({ ...base, tokenSource: 'tracker login' })).not.toThrow();
     expect(() => refuseTokenFromEnv({ ...base, token: undefined })).not.toThrow();
     expect(() => refuseTokenFromEnv({ ...base, tokenSource: 'TRACKER_API_TOKEN' })).toThrow(
-      'The token comes from TRACKER_API_TOKEN. Unset it, run "tracker login --url https://t.example.com", then install again.',
+      'Unset TRACKER_API_TOKEN, run "tracker login --url https://t.example.com", then install again',
+    );
+    expect(() => refuseTokenFromEnv({ ...base, tokenSource: '--token' })).toThrow(
+      'Leave out --token, run "tracker login',
     );
   });
 
-  it('warns about folders macOS guards', () => {
-    expect(privacyNote('/Users/dara/Documents/code/app', '/Users/dara')).toContain('Documents');
-    expect(privacyNote('/Users/dara/code/app', '/Users/dara')).toBeUndefined();
-    expect(privacyNote('/Users/dara/Documentsx/app', '/Users/dara')).toBeUndefined();
+  it('warns about folders macOS guards, for the code and for the tracker CLI', () => {
+    const cli = '/Users/dara/Documents/tracker/apps/agent/dist/cli.js';
+    expect(privacyNote(['/Users/dara/code/app', cli], '/Users/dara')).toContain('Documents');
+    expect(privacyNote(['/Users/dara/Desktop/app', '/opt/cli.js'], '/Users/dara')).toContain(
+      'Desktop',
+    );
+    expect(privacyNote(['/Users/dara/code/app', '/opt/cli.js'], '/Users/dara')).toBeUndefined();
+    expect(privacyNote(['/Users/dara/Documentsx/app'], '/Users/dara')).toBeUndefined();
   });
 });
