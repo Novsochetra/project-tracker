@@ -74,8 +74,9 @@ export function useCaptureSync(reachability: Reachability): void {
   useEffect(() => {
     const sync = () => void runSync();
     sync();
-    const stopListening = reachability.subscribe(() => {
-      if (!reachability.isUnreachable()) sync();
+    const { tracker } = reachability;
+    const stopListening = tracker.subscribe(() => {
+      if (!tracker.isUnreachable()) sync();
     });
     const stopWatching = onReturn(sync);
     return () => {

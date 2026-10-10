@@ -1,4 +1,4 @@
-import type { Reachability } from './reachability';
+import type { ReachabilityFlag } from './reachability';
 
 // While the tracker can't be reached, only the live stream asked whether it was back, with tries
 // up to 15 s apart, and the banner went up to about 26 s after the API answered again (PT-113).
@@ -14,7 +14,7 @@ const recheckDelay = (rechecks: number): number =>
 const isHidden = (): boolean => document.visibilityState === 'hidden';
 
 export function recheckWhileUnreachable(
-  reachability: Reachability,
+  reachability: ReachabilityFlag,
   recheck: () => Promise<unknown>,
 ): () => void {
   let timer: ReturnType<typeof setTimeout> | undefined;

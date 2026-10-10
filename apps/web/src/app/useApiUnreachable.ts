@@ -6,7 +6,7 @@ import { createReachability, watchApiTraffic, type Reachability } from './reacha
 import { trackerCheckOf } from './trackerCheck';
 import { useOnline } from './useOnline';
 
-// Called once for the app, so the banner and capture sync follow the same store.
+// Called once for the app, so the banner, capture sync and the live stream follow the same stores.
 export function useReachability(): Reachability {
   const queryClient = useQueryClient();
   const client = useApi();
@@ -22,7 +22,8 @@ export function useReachability(): Reachability {
 
 export function useApiUnreachable(reachability: Reachability): boolean {
   const online = useOnline();
-  const unreachable = useSyncExternalStore(reachability.subscribe, reachability.isUnreachable);
+  const { banner } = reachability;
+  const unreachable = useSyncExternalStore(banner.subscribe, banner.isUnreachable);
   return !online || unreachable;
 }
 

@@ -45,8 +45,9 @@ describe('signalOf', () => {
     expect(signalOf({ type: 'error', error: new SyntaxError('Unexpected token') })).toBeNull();
   });
 
-  it('counts a read the service worker answered from its cache as unreachable', () => {
-    expect(signalOf({ type: 'success' }, true)).toBe('unreachable');
+  it('tells a read the service worker answered from its cache from one that got no answer', () => {
+    expect(signalOf({ type: 'success' }, true)).toBe('saved');
+    expect(signalOf({ type: 'error', error: NETWORK_DOWN }, true)).toBe('unreachable');
     expect(signalOf({ type: 'success', manual: true }, true)).toBeNull();
     expect(signalOf({ type: 'error', error: new ApiError(404, 'not_found', 'x') }, true)).toBe(
       'reachable',
@@ -56,18 +57,29 @@ describe('signalOf', () => {
 
 describe('createReachability', () => {
   it('starts reachable and tells listeners only about changes', () => {
-    const reachability = createReachability();
+    const { banner } = createReachability();
     const listener = vi.fn();
-    reachability.subscribe(listener);
-    expect(reachability.isUnreachable()).toBe(false);
+    banner.subscribe(listener);
+    expect(banner.isUnreachable()).toBe(false);
 
-    expect(reachability.setUnreachable(true)).toBe(true);
-    expect(reachability.setUnreachable(true)).toBe(false);
-    expect(reachability.isUnreachable()).toBe(true);
+    expect(banner.setUnreachable(true)).toBe(true);
+    expect(banner.setUnreachable(true)).toBe(false);
+    expect(banner.isUnreachable()).toBe(true);
     expect(listener).toHaveBeenCalledTimes(1);
 
-    expect(reachability.setUnreachable(false)).toBe(true);
+    expect(banner.setUnreachable(false)).toBe(true);
     expect(listener).toHaveBeenCalledTimes(2);
+  });
+
+  it('keeps the banner and the tracker apart', () => {
+    const { banner, tracker } = createReachability();
+    const listener = vi.fn();
+    tracker.subscribe(listener);
+
+    banner.setUnreachable(true);
+
+    expect(tracker.isUnreachable()).toBe(false);
+    expect(listener).not.toHaveBeenCalled();
   });
 });
 
@@ -98,24 +110,24 @@ describe('watchApiTraffic', () => {
 
   it('notices a query that cannot reach the server', async () => {
     await load(queryKeys.board('MOB'), () => Promise.reject(NETWORK_DOWN));
-    expect(reachability.isUnreachable()).toBe(true);
+    expect(reachability.banner.isUnreachable()).toBe(true);
   });
 
   it('notices a write that cannot reach the server', async () => {
     await write(() => Promise.reject(NETWORK_DOWN));
-    expect(reachability.isUnreachable()).toBe(true);
+    expect(reachability.banner.isUnreachable()).toBe(true);
   });
 
   it('recovers on a successful write', async () => {
-    reachability.setUnreachable(true);
+    reachability.banner.setUnreachable(true);
     await write(() => Promise.resolve('saved'));
-    expect(reachability.isUnreachable()).toBe(false);
+    expect(reachability.banner.isUnreachable()).toBe(false);
   });
 
   it('ignores data written straight into the cache', () => {
-    reachability.setUnreachable(true);
+    reachability.banner.setUnreachable(true);
     queryClient.setQueryData(queryKeys.board('MOB'), makeBoard());
-    expect(reachability.isUnreachable()).toBe(true);
+    expect(reachability.banner.isUnreachable()).toBe(true);
   });
 
   it('refreshes the project list when another answer comes back', async () => {
@@ -125,16 +137,16 @@ describe('watchApiTraffic', () => {
 
     await load(queryKeys.board('MOB'), () => Promise.resolve(makeBoard()));
 
-    expect(reachability.isUnreachable()).toBe(false);
+    expect(reachability.banner.isUnreachable()).toBe(false);
     expect(isInvalidated(queryClient, queryKeys.projects())).toBe(true);
   });
 
   it('does not refetch the project list when it is the answer that came back', async () => {
-    reachability.setUnreachable(true);
+    reachability.banner.setUnreachable(true);
     const listProjects = vi.fn(() => Promise.resolve([]));
     await load(queryKeys.projects(), listProjects);
 
-    expect(reachability.isUnreachable()).toBe(false);
+    expect(reachability.banner.isUnreachable()).toBe(false);
     expect(isInvalidated(queryClient, queryKeys.projects())).toBe(false);
     expect(listProjects).toHaveBeenCalledTimes(1);
   });
@@ -142,7 +154,7 @@ describe('watchApiTraffic', () => {
   it('stops listening', async () => {
     stop();
     await load(queryKeys.board('MOB'), () => Promise.reject(NETWORK_DOWN));
-    expect(reachability.isUnreachable()).toBe(false);
+    expect(reachability.banner.isUnreachable()).toBe(false);
   });
 
   it('notices a request that never reached the server without a check', async () => {
@@ -154,7 +166,7 @@ describe('watchApiTraffic', () => {
     it('checks the tracker, and stays reachable while it answers', async () => {
       await write(() => Promise.reject(BARE_500));
       await vi.waitFor(() => expect(check).toHaveBeenCalledTimes(1));
-      expect(reachability.isUnreachable()).toBe(false);
+      expect(reachability.banner.isUnreachable()).toBe(false);
     });
 
     it.each([
@@ -163,14 +175,14 @@ describe('watchApiTraffic', () => {
     ])('counts as unreachable when the check gets %s too', async (_name, error) => {
       check.mockRejectedValue(error);
       await load(queryKeys.board('MOB'), () => Promise.reject(BARE_502));
-      await vi.waitFor(() => expect(reachability.isUnreachable()).toBe(true));
+      await vi.waitFor(() => expect(reachability.banner.isUnreachable()).toBe(true));
     });
 
     it('counts any other answer to the check as reachable', async () => {
       check.mockRejectedValue(new ApiError(500, 'internal', 'Database is locked.'));
       await write(() => Promise.reject(BARE_500));
       await vi.waitFor(() => expect(check).toHaveBeenCalledTimes(1));
-      expect(reachability.isUnreachable()).toBe(false);
+      expect(reachability.banner.isUnreachable()).toBe(false);
     });
 
     it('checks once at a time', async () => {
@@ -187,10 +199,10 @@ describe('watchApiTraffic', () => {
     });
 
     it('checks nothing while the tracker is already unreachable', async () => {
-      reachability.setUnreachable(true);
+      reachability.banner.setUnreachable(true);
       await write(() => Promise.reject(BARE_500));
       expect(check).not.toHaveBeenCalled();
-      expect(reachability.isUnreachable()).toBe(true);
+      expect(reachability.banner.isUnreachable()).toBe(true);
     });
 
     it('ignores a check that ends after it stopped listening', async () => {
@@ -202,7 +214,7 @@ describe('watchApiTraffic', () => {
       answer.reject(NETWORK_DOWN);
       await settled();
 
-      expect(reachability.isUnreachable()).toBe(false);
+      expect(reachability.banner.isUnreachable()).toBe(false);
     });
   });
 
@@ -223,13 +235,26 @@ describe('watchApiTraffic', () => {
       await write(() => Promise.reject(NETWORK_DOWN));
       await vi.advanceTimersByTimeAsync(RECHECK_MS);
       expect(check).toHaveBeenCalledTimes(1);
-      expect(reachability.isUnreachable()).toBe(true);
+      expect(reachability.banner.isUnreachable()).toBe(true);
 
       check.mockResolvedValue({ ok: true });
       await vi.advanceTimersByTimeAsync(RECHECK_MAX_MS);
 
-      expect(reachability.isUnreachable()).toBe(false);
+      expect(reachability.banner.isUnreachable()).toBe(false);
+      expect(reachability.tracker.isUnreachable()).toBe(false);
       expect(isInvalidated(queryClient, queryKeys.projects())).toBe(true);
+    });
+
+    it('takes the banner down on a check’s answer when a read after a saved one got none', async () => {
+      stop();
+      stop = watchApiTraffic(queryClient, reachability, sharedCheck(check), { recheck: true });
+      noteAnswer(fromCache());
+      await load(queryKeys.board('MOB'), () => Promise.reject(NETWORK_DOWN));
+      expect(reachability.banner.isUnreachable()).toBe(true);
+
+      await vi.advanceTimersByTimeAsync(RECHECK_MS);
+
+      expect(reachability.banner.isUnreachable()).toBe(false);
     });
 
     it('only when asked to: one schedule for the banner, not one per watcher', async () => {
@@ -257,8 +282,21 @@ describe('watchApiTraffic', () => {
         await vi.advanceTimersByTimeAsync(30_000);
 
         expect(check.mock.calls.length).toBeGreaterThan(5);
-        expect(reachability.isUnreachable()).toBe(true);
+        expect(reachability.banner.isUnreachable()).toBe(true);
         expect(refreshes).toHaveBeenCalledTimes(1);
+      });
+
+      it('tells what waits for the tracker, such as capture sync, once a check answers', async () => {
+        const back = vi.fn<(unreachable: boolean) => void>();
+        reachability.tracker.subscribe(() => {
+          back(reachability.tracker.isUnreachable());
+        });
+        expect(reachability.tracker.isUnreachable()).toBe(true);
+
+        await vi.advanceTimersByTimeAsync(RECHECK_MS);
+
+        expect(back.mock.calls).toEqual([[false]]);
+        expect(reachability.banner.isUnreachable()).toBe(true);
       });
 
       it('counts the tracker back once that read gets its answer', async () => {
@@ -268,7 +306,7 @@ describe('watchApiTraffic', () => {
         noteAnswer(fromNetwork());
         await load(queryKeys.projects(), () => Promise.resolve([]));
 
-        expect(reachability.isUnreachable()).toBe(false);
+        expect(reachability.banner.isUnreachable()).toBe(false);
       });
 
       it('reads the project list again when a check answers after one that got none', async () => {
@@ -276,12 +314,14 @@ describe('watchApiTraffic', () => {
         check.mockRejectedValue(NETWORK_DOWN);
         await vi.advanceTimersByTimeAsync(10_000);
         expect(refreshes).toHaveBeenCalledTimes(1);
+        expect(reachability.tracker.isUnreachable()).toBe(true);
 
         check.mockResolvedValue({ ok: true });
         await vi.advanceTimersByTimeAsync(RECHECK_MAX_MS);
 
         expect(refreshes).toHaveBeenCalledTimes(2);
-        expect(reachability.isUnreachable()).toBe(true);
+        expect(reachability.tracker.isUnreachable()).toBe(false);
+        expect(reachability.banner.isUnreachable()).toBe(true);
       });
     });
   });
@@ -293,19 +333,22 @@ describe('watchApiTraffic', () => {
     it('notices the server is down even though every read succeeds', async () => {
       noteAnswer(fromCache());
       await loadBoard();
-      expect(reachability.isUnreachable()).toBe(true);
+      expect(reachability.banner.isUnreachable()).toBe(true);
     });
 
     it('never tells listeners, such as capture sync, that the server is back', async () => {
-      reachability.setUnreachable(true);
+      reachability.banner.setUnreachable(true);
+      reachability.tracker.setUnreachable(true);
       queryClient.setQueryData(queryKeys.projects(), []);
       const listener = vi.fn();
-      reachability.subscribe(listener);
+      reachability.banner.subscribe(listener);
+      reachability.tracker.subscribe(listener);
 
       noteAnswer(fromCache());
       await loadBoard();
 
-      expect(reachability.isUnreachable()).toBe(true);
+      expect(reachability.banner.isUnreachable()).toBe(true);
+      expect(reachability.tracker.isUnreachable()).toBe(true);
       expect(listener).not.toHaveBeenCalled();
       expect(isInvalidated(queryClient, queryKeys.projects())).toBe(false);
     });
@@ -317,14 +360,14 @@ describe('watchApiTraffic', () => {
       noteAnswer(fromNetwork());
       await loadBoard('WEB');
 
-      expect(reachability.isUnreachable()).toBe(false);
+      expect(reachability.banner.isUnreachable()).toBe(false);
     });
 
     it('still counts a successful write, which never comes from the cache', async () => {
-      reachability.setUnreachable(true);
+      reachability.banner.setUnreachable(true);
       noteAnswer(fromCache());
       await write(() => Promise.resolve('saved'));
-      expect(reachability.isUnreachable()).toBe(false);
+      expect(reachability.banner.isUnreachable()).toBe(false);
     });
   });
 });

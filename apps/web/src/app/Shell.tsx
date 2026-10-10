@@ -22,7 +22,7 @@ const FIRST_LOAD = <ScreenLoading quiet />;
 
 export function Shell() {
   const reachability = useReachability();
-  useLiveUpdates(reachability);
+  useLiveUpdates(reachability.tracker);
   useToastRaise(useBottomBarVisible());
   const isPhone = useIsPhone();
   const unreachable = useApiUnreachable(reachability);

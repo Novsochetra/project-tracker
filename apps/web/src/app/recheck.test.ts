@@ -1,10 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { deferred } from '../api/test/deferred';
-import { createReachability, type Reachability } from './reachability';
+import { createReachability, type ReachabilityFlag } from './reachability';
 import { RECHECK_MS, recheckWhileUnreachable } from './recheck';
 
 let stop: () => void = () => undefined;
-let reachability: Reachability;
+let reachability: ReachabilityFlag;
 let started: number;
 // When each recheck started, in ms since the test began.
 let asked: number[];
@@ -29,7 +29,7 @@ beforeEach(() => {
   vi.useFakeTimers();
   started = Date.now();
   asked = [];
-  reachability = createReachability();
+  reachability = createReachability().banner;
 });
 
 afterEach(() => {

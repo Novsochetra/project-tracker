@@ -110,8 +110,8 @@ describe('QuickCapture sync', () => {
     });
 
     act(() => {
-      reachability.setUnreachable(true);
-      reachability.setUnreachable(false);
+      reachability.tracker.setUnreachable(true);
+      reachability.tracker.setUnreachable(false);
     });
 
     expect(await screen.findByText('1 ticket added')).toBeInTheDocument();

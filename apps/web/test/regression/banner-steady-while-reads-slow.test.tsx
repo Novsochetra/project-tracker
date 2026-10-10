@@ -15,7 +15,6 @@ import { savedAnswerPlugin } from '../../src/pwa/savedAnswerPlugin';
 // up and down every 4 s, and the list was read 6 times in 30 s (PT-113 review).
 
 const ORIGIN = 'http://localhost:5173';
-// The service worker's networkTimeoutSeconds, after which it answers from its saved copy.
 const WORKER_WAIT_MS = 3_000;
 const A_WHILE_MS = 30_000;
 const PROJECTS = [projectSummary()];
@@ -88,7 +87,7 @@ it('stays up while reads are slow and the tracker answers its checks, reading th
   await wait(A_WHILE_MS);
 
   expect(shown).toEqual([false, true]);
-  // The first read, and one when a check first finds the tracker answering.
+  // Read again on a check's first answer: were reads quick again, it would take the banner down.
   expect(net.listReads.map((at) => at - started)).toEqual([0, WORKER_WAIT_MS + 1_000]);
 });
 

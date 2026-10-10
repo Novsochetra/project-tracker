@@ -163,8 +163,9 @@ function syncOnReconnect(queryClient: QueryClient, sync: Sync, check: TrackerChe
     reachability,
     retryingAfter(check, () => !stopped && all.soon()),
   );
-  const stopListening = reachability.subscribe(() => {
-    if (!reachability.isUnreachable()) all.soon();
+  const { tracker } = reachability;
+  const stopListening = tracker.subscribe(() => {
+    if (!tracker.isUnreachable()) all.soon();
   });
   const stopChanges = onReportedChange(queryClient, (projectKey) => {
     scope.add(projectKey);

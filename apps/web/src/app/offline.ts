@@ -3,7 +3,9 @@ import { isNetworkError } from '../api';
 
 // 'unsure': a bare 5xx. A proxy answers that way for a stopped API, but so can the API itself, or a
 // proxy whose connection to it broke during one request, so the tracker is checked first.
-export type ApiSignal = 'reachable' | 'unreachable' | 'unsure';
+// A read the service worker answered from its saved copy only got no answer in time: a check or a
+// write may still get one at once (PT-126).
+export type ApiSignal = 'reachable' | 'unreachable' | 'unsure' | 'saved';
 
 export interface CacheAction {
   type: string;
@@ -22,5 +24,5 @@ export function signalOfError(error: unknown): ApiSignal | null {
 export function signalOf(action: CacheAction, fromCache = false): ApiSignal | null {
   if (action.type === 'error') return signalOfError(action.error);
   if (action.type !== 'success' || action.manual) return null;
-  return fromCache ? 'unreachable' : 'reachable';
+  return fromCache ? 'saved' : 'reachable';
 }
