@@ -1,5 +1,3 @@
-// What Claude Code sends the permission prompt tool: the tool it wants to use and that tool's
-// input, or AskUserQuestion with the questions (seen with Claude Code 2.1.296).
 export interface PromptCall {
   toolName: string;
   input: Readonly<Record<string, unknown>>;

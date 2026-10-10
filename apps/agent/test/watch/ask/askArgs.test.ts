@@ -36,7 +36,14 @@ describe('askArgs', () => {
       '--permission-mode',
       'acceptEdits',
     ]);
-    expect(argsFor({ model: 'default', mode: 'edit' })).toEqual(JSON_OUT);
+  });
+
+  it('asks the person before each step of an Edit question when the helper got no mode', () => {
+    expect(argsFor({ model: 'default', mode: 'edit' })).toEqual([
+      ...JSON_OUT,
+      '--permission-mode',
+      'default',
+    ]);
   });
 
   it.each(['opus', 'sonnet', 'haiku'])('picks the %s model by its fixed name', (model) => {

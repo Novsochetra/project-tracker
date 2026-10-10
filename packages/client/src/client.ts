@@ -3,6 +3,7 @@ import type {
   AddRunRequestInput,
   AddRunStepsInput,
   AnswerRunRequestInput,
+  CancelRunRequestInput,
   ApiToken,
   AskInput,
   Attachment,
@@ -290,6 +291,16 @@ export class TrackerClient {
   // A long poll: it may answer with the request still open, and is called again then.
   waitForRunRequest = (requestId: string, { signal }: { signal?: AbortSignal } = {}) =>
     this.http.request<RunRequest>('GET', `/api/requests/${segment(requestId)}/wait`, { signal });
+
+  cancelRunRequest = (
+    requestId: string,
+    input: CancelRunRequestInput,
+    { signal }: { signal?: AbortSignal } = {},
+  ) =>
+    this.http.request<RunRequest>('POST', `/api/requests/${segment(requestId)}/cancel`, {
+      body: input,
+      signal,
+    });
 
   listChats = (projectKey: string) =>
     this.http.request<Chat[]>('GET', `/api/projects/${segment(projectKey)}/chats`);

@@ -7,8 +7,6 @@ export const DENIED = 'The person said no to this from their phone. Go on withou
 export const DECLINED = 'The person chose not to answer from their phone. Go on without an answer.';
 export const NO_ANSWER = `Nobody answered on the phone within ${MINUTES} minutes, so this was not allowed. Go on without it.`;
 export const RUN_ENDED = 'The run was stopped, so nobody will answer.';
-export const UNREACHABLE =
-  "The tracker couldn't be reached to ask the person, so this was not allowed.";
 export const UNSHOWN = "This question couldn't be shown on the phone. Go on without an answer.";
 
 const questionTexts = (input: PromptCall['input']): unknown[] =>

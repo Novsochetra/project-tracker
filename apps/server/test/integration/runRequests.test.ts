@@ -202,6 +202,34 @@ describe.each(DIALECTS)('run requests (%s)', (dialect) => {
     expect((await person<Run>('GET', `/api/runs/${run.id}`)).body.status).toBe('running');
   });
 
+  it('lets the helper that took the run end a request Claude no longer waits for', async () => {
+    await take();
+    const request = await opened();
+    const cancel = (as = helper, runnerId = runner) =>
+      as<RunRequest>('POST', `/api/requests/${request.id}/cancel`, { runnerId });
+    expect((await cancel(person)).status).toBe(403);
+    expect((await cancel(other.helper)).status).toBe(404);
+    const otherRunner = randomUUID();
+    await helper('PUT', `/api/runners/${otherRunner}`, helperName('A iMac'));
+    expect(await cancel(helper, otherRunner)).toMatchObject({
+      status: 403,
+      body: { error: { message: 'Only the helper that took this run ends its requests.' } },
+    });
+    expect((await cancel()).body).toMatchObject({ status: 'cancelled', endedAt: clock.now() });
+    expect((await list()).body[0]?.status).toBe('cancelled');
+    expect((await answer(request.id, { decision: 'allow' })).status).toBe(409);
+  });
+
+  it('keeps an answer that landed before the helper gave up', async () => {
+    await take();
+    const request = await opened();
+    await answer(request.id, { decision: 'deny' });
+    const cancelled = await helper<RunRequest>('POST', `/api/requests/${request.id}/cancel`, {
+      runnerId: runner,
+    });
+    expect(cancelled.body).toMatchObject({ status: 'answered', decision: 'deny' });
+  });
+
   it('refuses an answer that does not fit its request', async () => {
     await take();
     const request = await opened();

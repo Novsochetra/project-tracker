@@ -3,7 +3,6 @@ import { cutTo } from '../runSteps/cut';
 import { permissionLabel } from './permissionLabel';
 import { questionsOf } from './questions';
 
-// Claude Code sends its questions to the permission prompt tool as a call of this tool.
 export const QUESTION_TOOL = 'AskUserQuestion';
 
 const isJson = (value: unknown): value is Readonly<Record<string, unknown>> =>

@@ -40,6 +40,16 @@ export async function markRequestAnswered(db: Db, id: string, answer: Answered) 
   return Number(result.numUpdatedRows) > 0;
 }
 
+export async function markRequestCancelled(db: Db, id: string, endedAt: number) {
+  const result = await db
+    .updateTable('runRequests')
+    .set({ status: 'cancelled', endedAt })
+    .where('id', '=', id)
+    .where('status', '=', 'open')
+    .executeTakeFirst();
+  return Number(result.numUpdatedRows) > 0;
+}
+
 export const cancelRequestsOfEndedRuns = (db: Db, endedAt: number) =>
   db
     .updateTable('runRequests')
