@@ -81,7 +81,7 @@ describe('tracker watch against a real tracker', () => {
     person = tracker.person;
     link = await cuttableLink(tracker.port);
     await person.createProject({ name: 'Mobile', key: 'MOB' });
-    for (const title of ['Crash', 'Login', 'Offline', 'Slow']) {
+    for (const title of ['Crash', 'Login', 'Offline', 'Slow', 'Report']) {
       await person.createTicket('MOB', { title });
     }
     const helper = new TrackerClient({
@@ -142,6 +142,18 @@ describe('tracker watch against a real tracker', () => {
     await person.cancelRun(runId);
     await vi.waitFor(() => expect(logs).toContain('MOB-4: Cancelled.'), settle);
     expect(await statusOf(runId)).toBe('cancelled');
+  });
+
+  it('puts a printed report on the ticket, as Claude had no tracker tools', async () => {
+    const runId = await start('MOB-5', 'REPORT on MOB-5');
+    await vi.waitFor(async () => expect(await statusOf(runId)).toBe('done'), settle);
+    await vi.waitFor(() => expect(logs).toContain("Put Claude's report on MOB-5."), settle);
+    const ticket = await person.getTicket('MOB-5');
+    expect(ticket.status.name).toBe('Need review');
+    const reports = ticket.activity.filter((entry) => entry.type === 'report');
+    expect(reports).toHaveLength(1);
+    expect(reports[0]!.text).toContain('SUMMARY: Fixed it.');
+    expect(reports[0]!.text).not.toContain('Did the work.');
   });
 });
 
@@ -205,5 +217,33 @@ describe('tracker watch, the command', () => {
     expect(readdirSync(config).filter((name) => name.endsWith('.lock'))).toEqual([]);
     expect(existsSync(join(config, 'config.json'))).toBe(false);
     expect(store.read().runners).toEqual({ [`${tracker.url} ${folder}`]: runner!.id });
+  });
+
+  it('refuses to watch while Claude Code cannot start the tracker MCP server', async () => {
+    process.env.FAKE_MCP = 'broken';
+    const folder = realpathSync(mkdtempSync(join(tmpdir(), 'broken-mcp-')));
+    const config = mkdtempSync(join(tmpdir(), 'watch-config-'));
+    const store = Object.assign(memoryStore(), { path: join(config, 'config.json') });
+    const lines: string[] = [];
+    try {
+      await expect(
+        watch(
+          { url: tracker.url, json: false, help: false },
+          { keepAwake: false },
+          {
+            env: {},
+            store,
+            cwd: folder,
+            stdout: (text) => lines.push(text),
+            write: () => undefined,
+            untilStopped: () => new Promise<void>(() => undefined),
+          },
+        ),
+      ).rejects.toThrow(/\/gone\/apps\/agent\/dist\/mcp\.js/);
+      expect(lines).toEqual([]);
+      expect(readdirSync(config).filter((name) => name.endsWith('.lock'))).toEqual([]);
+    } finally {
+      delete process.env.FAKE_MCP;
+    }
   });
 });

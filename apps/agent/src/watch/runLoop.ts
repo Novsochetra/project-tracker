@@ -11,6 +11,8 @@ export interface RunLoopDeps {
   log: (text: string) => void;
   describe: (error: unknown) => string;
   onProblem: (error: unknown) => void;
+  handBack: (job: RunJob, output: string) => Promise<void>;
+  signOfLife: (ticketKey: string) => () => void;
   retryDelay?: ((attempt: number) => number) | undefined;
 }
 
@@ -68,9 +70,14 @@ export function createRunLoop(deps: RunLoopDeps, settings: RunLoopSettings) {
     log(`Claude Code is working on ${job.run.ticketKey}…`);
     const stop = new AbortController();
     current = { runId: job.run.id, stop };
+    const quiet = deps.signOfLife(job.run.ticketKey);
     const exit = await deps.runClaude(job.prompt, stop.signal);
+    quiet();
     current = undefined;
-    await end(job, outcomeOf(exit, stop.signal.aborted));
+    const outcome = outcomeOf(exit, stop.signal.aborted);
+    // A cancelled run was stopped part way, so whatever it printed is not a report of the work.
+    if (outcome.status !== 'cancelled') await deps.handBack(job, exit.output);
+    await end(job, outcome);
   }
 
   async function takeRuns() {

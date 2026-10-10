@@ -1,47 +1,10 @@
 import { ApiError } from '@tracker/client';
-import type { FinishRunInput, Run, RunJob } from '@tracker/shared';
+import type { Run } from '@tracker/shared';
 import { describe, expect, it, vi } from 'vitest';
 import type { ClaudeExit } from '../../src/watch/outcome';
 import { createWatcher } from '../../src/watch/watcher';
 import type { WatchApi } from '../../src/watch/watchApi';
-
-const RUNNER = 'runner-1';
-
-const runOf = (id: string, ticketKey: string): Run => ({
-  id,
-  ticketKey,
-  runnerId: RUNNER,
-  runnerName: 'Mac',
-  status: 'running',
-  error: null,
-  createdAt: 1,
-  startedAt: 2,
-  endedAt: null,
-});
-
-function fakeTracker(jobs: RunJob[]) {
-  const ended: (FinishRunInput & { id: string })[] = [];
-  const statuses = new Map<string, Run['status']>();
-  const api: WatchApi = {
-    listProjects: vi.fn(),
-    eventsUrl: () => 'http://tracker.test/api/events',
-    registerRunner: vi.fn(() => Promise.resolve({} as never)),
-    takeNextRun: vi.fn(() => Promise.resolve(jobs.shift() ?? null)),
-    finishRun: vi.fn((id: string, input: FinishRunInput) => {
-      ended.push({ id, ...input });
-      return Promise.resolve({} as Run);
-    }),
-    getRun: vi.fn((id: string) =>
-      Promise.resolve({ ...runOf(id, 'MOB-1'), status: statuses.get(id) ?? 'running' }),
-    ),
-  };
-  return { api, ended, statuses };
-}
-
-const job = (id: string, ticketKey: string, prompt = `Work on ${ticketKey}`): RunJob => ({
-  run: runOf(id, ticketKey),
-  prompt,
-});
+import { fakeTracker, job, RUNNER } from './fakeTracker';
 
 function watcherWith(
   api: WatchApi,

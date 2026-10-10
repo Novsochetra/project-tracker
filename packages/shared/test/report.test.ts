@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { StatusCategory } from '../src/domain/status';
-import { normalizeReportStatus, parseReport } from '../src/logic/report';
+import { normalizeReportStatus, parseReport, reportBlockFor } from '../src/logic/report';
 
 const FENCE = '```';
 
@@ -298,5 +298,43 @@ describe('parseReport', () => {
         ),
       },
     ]);
+  });
+});
+
+describe('the report block in a reply', () => {
+  const reply = lines(
+    'I read the ticket and changed the parser.',
+    '',
+    FENCE,
+    'TICKET: mob-4',
+    'STATUS: done',
+    'SUMMARY: Fixed the parser.',
+    'FILES: src/parse.ts',
+    'NEXT: none',
+    FENCE,
+  );
+
+  it('takes only the block for that ticket, without the working notes or the fences', () => {
+    expect(reportBlockFor(reply, 'MOB-4')).toBe(
+      lines(
+        'TICKET: mob-4',
+        'STATUS: done',
+        'SUMMARY: Fixed the parser.',
+        'FILES: src/parse.ts',
+        'NEXT: none',
+      ),
+    );
+    expect(reportBlockFor(reply, 'mob-4')).toBe(reportBlockFor(reply, 'MOB-4'));
+  });
+
+  it('finds nothing for another ticket or a reply without a block', () => {
+    expect(reportBlockFor(reply, 'MOB-5')).toBeNull();
+    expect(reportBlockFor('Done. I changed src/parse.ts.', 'MOB-4')).toBeNull();
+    expect(reportBlockFor('', 'MOB-4')).toBeNull();
+  });
+
+  it('takes the last block when the reply has the same ticket twice', () => {
+    const twice = lines(reply, '', FENCE, 'TICKET: MOB-4', 'STATUS: blocked', FENCE);
+    expect(reportBlockFor(twice, 'MOB-4')).toBe(lines('TICKET: MOB-4', 'STATUS: blocked'));
   });
 });

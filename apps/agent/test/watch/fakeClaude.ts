@@ -4,6 +4,14 @@ import { join } from 'node:path';
 
 const SCRIPT = `#!/usr/bin/env node
 if (process.argv[2] === '--version') { console.log('9.9.9 (fake)'); process.exit(0); }
+if (process.argv[2] === 'mcp') {
+  const state = process.env.FAKE_MCP === 'broken'
+    ? '\u2717 Failed to connect'
+    : '\u2714 Connected';
+  if (process.env.FAKE_MCP === 'unreadable') { console.log('mcp list is not available'); }
+  else { console.log('tracker: node /gone/apps/agent/dist/mcp.js - ' + state); }
+  process.exit(0);
+}
 let prompt = '';
 process.stdin.on('data', (chunk) => { prompt += chunk; });
 process.stdin.on('end', () => {
@@ -20,6 +28,11 @@ process.stdin.on('end', () => {
     process.stderr.write('first line\\n');
     setTimeout(() => { process.stderr.write('second line\\n'); process.exit(4); }, 100);
     return;
+  }
+  if (prompt.includes('REPORT')) {
+    console.log('Did the work.\\n\\n\u0060\u0060\u0060\\nTICKET: ' + /\\b[A-Z]+-\\d+/.exec(prompt)[0]
+      + '\\nSTATUS: done\\nSUMMARY: Fixed it.\\nFILES: a.ts\\nNEXT: none\\n\u0060\u0060\u0060');
+    process.exit(0);
   }
   if (prompt.includes('FAIL')) { console.error('boom'); process.exit(3); }
   if (prompt.includes('WAIT')) setTimeout(() => process.exit(0), 60000);

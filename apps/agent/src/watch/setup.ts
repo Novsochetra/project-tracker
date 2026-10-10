@@ -4,6 +4,8 @@ import type { GlobalValues } from '../cli/options';
 import { loadConfig, type Config } from '../config';
 import { describeError } from '../errors';
 import { CLAUDE, claudeIsInstalled } from './claude';
+import { requireTrackerTools } from './mcp/checkTools';
+import { mcpListOutput } from './mcp/mcpStatus';
 import { canonicalPath } from './paths';
 import { computerName, runnerIdFor } from './identity';
 import { pickProject } from './project';
@@ -40,6 +42,11 @@ export async function setUp(
   if (!(await claudeIsInstalled(CLAUDE))) {
     throw new ClaudeMissingError('Claude Code (the claude command) is not on PATH here.');
   }
+  const folder = canonicalPath(io.cwd);
+  await requireTrackerTools({
+    listOutput: () => mcpListOutput(CLAUDE, folder),
+    log: io.stdout,
+  });
   const api = clientFor(config);
   const untilAnswered = <T>(task: () => Promise<T>) =>
     retryUntilAnswered(task, {
@@ -47,7 +54,6 @@ export async function setUp(
       onWait: (error) =>
         io.stdout(`Waiting for the tracker: ${describeError(error, { trackerUrl: config.url })}`),
     });
-  const folder = canonicalPath(io.cwd);
   const projects = await untilAnswered(() => api.listProjects());
   const where = { cwd: folder, home: homedir(), canonical: canonicalPath };
   const settings: WatcherSettings = {

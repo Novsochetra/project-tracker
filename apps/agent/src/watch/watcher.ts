@@ -1,7 +1,9 @@
 import type { RunEvent } from '@tracker/shared';
 import { describeError } from '../errors';
 import { createProblemLog } from './problems';
+import { handBackReport } from './report/handBack';
 import { createRunLoop, type RunLoopDeps } from './runLoop';
+import { showStillWorking } from './stillWorking';
 
 export interface WatcherSettings {
   runnerId: string;
@@ -10,14 +12,30 @@ export interface WatcherSettings {
   trackerUrl: string;
 }
 
-export type WatcherDeps = Omit<RunLoopDeps, 'describe' | 'onProblem'>;
+export type WatcherDeps = Omit<
+  RunLoopDeps,
+  'describe' | 'onProblem' | 'handBack' | 'signOfLife'
+> & {
+  aliveEvery?: number | undefined;
+};
 
 export function createWatcher(deps: WatcherDeps, settings: WatcherSettings) {
   const describe = (error: unknown) => describeError(error, { trackerUrl: settings.trackerUrl });
   const noteProblem = createProblemLog(deps.log);
   const onProblem = (error: unknown) =>
     noteProblem(error === undefined ? undefined : describe(error));
-  const runs = createRunLoop({ ...deps, describe, onProblem }, settings);
+  const runs = createRunLoop(
+    {
+      ...deps,
+      describe,
+      onProblem,
+      handBack: (job, output) =>
+        handBackReport({ api: deps.api, log: deps.log, describe }, job, output),
+      signOfLife: (ticketKey) =>
+        showStillWorking(ticketKey, { log: deps.log, every: deps.aliveEvery }),
+    },
+    settings,
+  );
 
   async function stopIfCancelled() {
     const runId = runs.currentRunId();

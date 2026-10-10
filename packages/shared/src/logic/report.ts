@@ -62,3 +62,11 @@ export function parseReport(text: string): ParsedReportBlock[] {
     return { key: block.key, category: status ? normalizeReportStatus(status) : null, text: body };
   });
 }
+
+// Claude's reply ends with the report block; everything before it is its working notes, so only
+// the block for this ticket goes on the ticket. The last one wins if it wrote the block twice.
+export function reportBlockFor(text: string, ticketKey: string): string | null {
+  const key = ticketKey.toUpperCase();
+  const blocks = parseReport(text).filter((block) => block.key === key);
+  return blocks.at(-1)?.text ?? null;
+}
