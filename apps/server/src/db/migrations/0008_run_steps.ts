@@ -23,9 +23,17 @@ export async function up(db: SchemaDb): Promise<void> {
   // Claude's answer keeps the run that gave it, so its steps can fold under it. No foreign key:
   // SQLite can't drop a column that has one, and an ask run goes only with its chat.
   await db.schema.alterTable('chat_messages').addColumn('run_id', 'text').execute();
+  // A chat reads its latest ask and its stopped ones on every look; without this, both walked the
+  // runs of every chat by status.
+  await db.schema
+    .createIndex('runs_chat_created_idx')
+    .on('runs')
+    .columns(['chat_id', 'created_at'])
+    .execute();
 }
 
 export async function down(db: SchemaDb): Promise<void> {
+  await db.schema.dropIndex('runs_chat_created_idx').execute();
   await db.schema.alterTable('chat_messages').dropColumn('run_id').execute();
   await db.schema.dropTable('run_steps').execute();
   await db.schema.alterTable('runs').dropColumn('step_count').execute();
