@@ -9,8 +9,12 @@ type Step = Omit<RunStepInput, 'subAgent'>;
 // Claude Code has called the sub agent tool both Task and Agent.
 const SUB_AGENT_TOOLS = new Set(['Agent', 'Task']);
 
-export const labelOf = (text: string): string =>
-  cutTo(oneLine(maskSecrets(text)), RUN_STEP_LABEL_MAX);
+// Masking runs in stdout's listener, so a line of megabytes is cut first; far past anything shown,
+// so the cut never splits a secret in the part a step keeps.
+const SAFETY_CUT = 65_536;
+const masked = (text: string): string => maskSecrets(text.slice(0, SAFETY_CUT));
+
+export const labelOf = (text: string): string => cutTo(oneLine(masked(text)), RUN_STEP_LABEL_MAX);
 
 function toolStep(name: string, toolId: string | null, input: Json, folder: string): Step {
   if (!SUB_AGENT_TOOLS.has(name)) {
@@ -24,7 +28,9 @@ function stepOfBlock(block: unknown, folder: string): Step[] {
   if (!isJson(block)) return [];
   if (block.type === 'text' && typeof block.text === 'string') {
     const text = block.text.trim();
-    return text ? [{ kind: 'text', label: cutTo(text, RUN_STEP_TEXT_MAX), toolId: null }] : [];
+    // Claude may repeat a command it ran; the run's answer itself stays as Claude wrote it.
+    const label = cutTo(masked(text), RUN_STEP_TEXT_MAX);
+    return text ? [{ kind: 'text', label, toolId: null }] : [];
   }
   if (block.type !== 'tool_use' || typeof block.name !== 'string') return [];
   const toolId = typeof block.id === 'string' ? block.id : null;

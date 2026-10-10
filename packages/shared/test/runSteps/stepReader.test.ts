@@ -178,9 +178,12 @@ describe('createStepReader', () => {
     ]);
   });
 
-  it('masks a secret on a command line', () => {
+  it("masks a secret on a command line, and in Claude's words about it", () => {
     const read = createStepReader(STREAM_FOLDER);
     const [step] = read(toolUse('Bash', { command: 'GITHUB_TOKEN=ghp_abc123 gh pr list' }));
     expect(step?.label).toBe('Run GITHUB_TOKEN=*** gh pr list');
+    const said = 'I ran `export GITHUB_TOKEN=ghp_abc123` first.';
+    const words = { type: 'assistant', message: { content: [{ type: 'text', text: said }] } };
+    expect(read(words)[0]?.label).toBe('I ran `export GITHUB_TOKEN=***` first.');
   });
 });
