@@ -54,6 +54,15 @@ describe('tracker watch', () => {
     expect((await cli(['projects', '--install'])).stderr).toContain(
       '"projects" has no --install option.',
     );
+    expect((await cli(['login', '--install'])).stderr).toContain(
+      '"login" has no --install option.',
+    );
+    expect((await cli(['watch', 'MOB', '--check'])).stderr).toContain(
+      '--check takes no project or other options: run it in the folder.',
+    );
+    expect((await cli(['watch', '--uninstall', '--name', 'Mac'])).stderr).toContain(
+      '--uninstall takes no project or other options',
+    );
   });
 
   it('says so when Claude Code is not installed', async () => {

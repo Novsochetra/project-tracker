@@ -2,7 +2,14 @@ import { createTrackerClient, type TrackerApi } from '../client';
 import { loadConfig, type Config, type Env } from '../config';
 import type { ConfigStore } from '../configFile';
 import { describeError } from '../errors';
-import { parseCliArgs, prepareCommand, UsageError, type ParsedArgs, type Prepared } from './args';
+import {
+  parseCliArgs,
+  prepareCommand,
+  setFlagOf,
+  UsageError,
+  type ParsedArgs,
+  type Prepared,
+} from './args';
 import { EXIT_ERROR, EXIT_OK, EXIT_USAGE } from './exitCodes';
 import { login, logout } from './login';
 import { USAGE } from './usage';
@@ -48,6 +55,8 @@ function checkSetupArgs(parsed: ParsedArgs): void {
   if (parsed.args.length > 0) {
     throw new UsageError(`Unexpected argument "${parsed.args[0]}".`, usage);
   }
+  const flag = setFlagOf(parsed);
+  if (flag) throw new UsageError(`"${parsed.command}" has no --${flag} option.`, usage);
   if (parsed.global.token !== undefined) {
     throw new UsageError(
       'Paste the token when asked, or pipe it in: a --token flag stays in your shell history.',

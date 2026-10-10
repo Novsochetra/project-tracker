@@ -172,7 +172,7 @@ describe('tracker watch, the command', () => {
     let pressCtrlC = () => undefined as void;
     const watching = watch(
       { url: tracker.url, json: false, help: false },
-      { name: 'Test Mac' },
+      { name: 'Test Mac', keepAwake: false },
       {
         env: {},
         store,

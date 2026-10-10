@@ -32,7 +32,18 @@ export function checkWatchArgs(parsed: ParsedArgs): void {
   if ([installing, removing, checking].filter(Boolean).length > 1) {
     throw new UsageError('Use one of --install, --uninstall and --check.', WATCH_USAGE);
   }
+  const choices = parsed.args.length + Object.keys(parsed.options).length;
+  if ((removing || checking) && (choices > 0 || parsed.flags['no-keep-awake'])) {
+    throw new UsageError(
+      `--${removing ? 'uninstall' : 'check'} takes no project or other options: run it in the folder.`,
+      WATCH_USAGE,
+    );
+  }
 }
+
+// Started at login, the output goes to a log file, where a line needs its time.
+const stamped = (text: string): string =>
+  process.stdout.isTTY ? text : `${new Date().toISOString()} ${text}`;
 
 function run(parsed: ParsedArgs, args: WatchArgs, io: WatchIo): Promise<void> {
   if (parsed.flags.install) return install(parsed.global, args, io);
@@ -47,7 +58,7 @@ export async function watchCommand(parsed: ParsedArgs, io: CliIo): Promise<numbe
   const watchIo: WatchIo = {
     env: io.env,
     store: io.store,
-    stdout: (text) => io.stdout(text),
+    stdout: (text) => io.stdout(stamped(text)),
     cwd: io.cwd ?? process.cwd(),
     write: io.write ?? ((text) => process.stdout.write(text)),
     untilStopped: io.untilStopped ?? untilSignal,

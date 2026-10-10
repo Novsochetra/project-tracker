@@ -41,7 +41,7 @@ export const USAGE = [
   `  ${WATCH_USAGE}`,
   '      Run this in your code folder and leave it open. "Run in Claude Code" in the app',
   '      starts claude -p here. PROJECT defaults to the project whose repo is this folder.',
-  '      --name names this computer in the app (default: its Mac name). --permission-mode',
+  "      --name names this computer in the app (default: this computer's name). --permission-mode",
   '      is passed to claude; without it, your own Claude Code settings decide.',
   '      It keeps the Mac from idle sleep while it runs (--no-keep-awake turns that off).',
   '      --install makes it start by itself when you log in (macOS), --uninstall stops',

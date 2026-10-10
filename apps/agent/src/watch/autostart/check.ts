@@ -1,4 +1,3 @@
-import { existsSync } from 'node:fs';
 import { TrackerClient } from '@tracker/client';
 import { formatRelative } from '@tracker/shared';
 import type { GlobalValues } from '../../cli/options';
@@ -7,12 +6,18 @@ import { describeError } from '../../errors';
 import { trackerKey } from '../../savedConfig';
 import { canonicalPath } from '../paths';
 import type { WatchIo } from '../watchIo';
-import { plistPathOf, runningPid } from './launchd';
-import { labelFor } from './plist';
+import { lastExitFrom, pidFrom } from './jobState';
+import { isInstalled, jobState, plistUrl } from './launchd';
+import { labelFor, logPathOf } from './names';
 
-async function trackerLine(global: GlobalValues, io: WatchIo, folder: string): Promise<string> {
+async function trackerLine(
+  url: string | undefined,
+  global: GlobalValues,
+  io: WatchIo,
+  folder: string,
+) {
   const saved = io.store.read();
-  const config = loadConfig(io.env, global, saved);
+  const config = loadConfig(io.env, url ? { ...global, url } : global, saved);
   const runnerId = saved.runners?.[`${trackerKey(config.url)} ${folder}`];
   if (!runnerId) return `At the tracker: this folder has never checked in to ${config.url}.`;
   try {
@@ -28,17 +33,25 @@ async function trackerLine(global: GlobalValues, io: WatchIo, folder: string): P
   }
 }
 
+function jobLines(label: string): string[] {
+  if (process.platform !== 'darwin' || !isInstalled(label)) return ['Installed: no.'];
+  const state = jobState(label);
+  const pid = pidFrom(state);
+  if (pid !== undefined) return ['Installed: yes.', `Running by itself: yes (process ${pid}).`];
+  return [
+    'Installed: yes.',
+    `Running by itself: no (last exit code: ${lastExitFrom(state) ?? 'unknown'}).`,
+    `Log: ${logPathOf(label)}`,
+  ];
+}
+
 export async function check(global: GlobalValues, io: WatchIo): Promise<void> {
   const folder = canonicalPath(io.cwd);
   const label = labelFor(folder);
-  const installed = process.platform === 'darwin' && existsSync(plistPathOf(label));
-  const pid = installed ? runningPid(label) : undefined;
+  const url = (process.platform === 'darwin' && plistUrl(label)) || global.url;
   io.stdout(
-    [
-      `Folder: ${folder}`,
-      installed ? 'Installed: yes, it starts when you log in.' : 'Installed: no.',
-      pid === undefined ? 'Running by itself: no.' : `Running by itself: yes (process ${pid}).`,
-      await trackerLine(global, io, folder),
-    ].join('\n'),
+    [`Folder: ${folder}`, ...jobLines(label), await trackerLine(url, global, io, folder)].join(
+      '\n',
+    ),
   );
 }

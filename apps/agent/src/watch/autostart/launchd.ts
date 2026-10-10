@@ -1,47 +1,74 @@
 import { execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
-import { homedir } from 'node:os';
-import { dirname, join } from 'node:path';
+import { dirname } from 'node:path';
+import { AutostartError } from './errors';
+import { plistPathOf } from './names';
 import { launchAgentPlist, type LaunchAgent } from './plist';
 
-export const plistPathOf = (label: string): string =>
-  join(homedir(), 'Library', 'LaunchAgents', `${label}.plist`);
+const NOT_LOADED = 3;
 
-const domain = (): string => `gui/${process.getuid?.() ?? 0}`;
+const domain = (): string => `gui/${process.getuid!()}`;
 
 const launchctl = (...args: string[]): string =>
-  execFileSync('launchctl', args, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
+  execFileSync('/bin/launchctl', args, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
+
+const failureOf = (error: unknown): { status?: number; text: string } => {
+  const failed = error as { status?: number; stderr?: string; message?: string };
+  return { status: failed.status, text: (failed.stderr || failed.message || '').trim() };
+};
 
 function stopJob(label: string): void {
   try {
     launchctl('bootout', `${domain()}/${label}`);
-  } catch {
-    return;
+  } catch (error) {
+    const { status, text } = failureOf(error);
+    if (status !== NOT_LOADED) throw new AutostartError(`launchctl couldn't stop it: ${text}`);
   }
 }
 
-export function installAgent(agent: LaunchAgent): string {
+export const isInstalled = (label: string): boolean => existsSync(plistPathOf(label));
+
+export function installAgent(agent: LaunchAgent): void {
   const path = plistPathOf(agent.label);
   mkdirSync(dirname(path), { recursive: true });
   mkdirSync(dirname(agent.logPath), { recursive: true });
   stopJob(agent.label);
   writeFileSync(path, launchAgentPlist(agent), { mode: 0o644 });
-  launchctl('bootstrap', domain(), path);
-  return path;
+  try {
+    launchctl('bootstrap', domain(), path);
+  } catch (error) {
+    rmSync(path, { force: true });
+    throw new AutostartError(`launchctl couldn't start it: ${failureOf(error).text}`);
+  }
 }
 
 export function uninstallAgent(label: string): boolean {
-  const path = plistPathOf(label);
   stopJob(label);
-  if (!existsSync(path)) return false;
-  rmSync(path);
+  if (!isInstalled(label)) return false;
+  rmSync(plistPathOf(label));
   return true;
 }
 
-export function runningPid(label: string): number | undefined {
+export const jobState = (label: string): string | undefined => {
   try {
-    const pid = /^\s*pid = (\d+)$/m.exec(launchctl('print', `${domain()}/${label}`))?.[1];
-    return pid === undefined ? undefined : Number(pid);
+    return launchctl('print', `${domain()}/${label}`);
+  } catch {
+    return undefined;
+  }
+};
+
+export function plistUrl(label: string): string | undefined {
+  try {
+    const json = execFileSync(
+      '/usr/bin/plutil',
+      ['-convert', 'json', '-o', '-', plistPathOf(label)],
+      {
+        encoding: 'utf8',
+      },
+    );
+    const program = (JSON.parse(json) as { ProgramArguments?: string[] }).ProgramArguments ?? [];
+    const at = program.indexOf('--url');
+    return at === -1 ? undefined : program[at + 1];
   } catch {
     return undefined;
   }

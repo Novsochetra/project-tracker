@@ -9,6 +9,7 @@ import {
   type CommandOption,
   type CommandValues,
   type GlobalValues,
+  type WatchFlag,
   type WatchFlags,
 } from './options';
 
@@ -45,21 +46,20 @@ export function parseCliArgs(argv: readonly string[]): ParsedArgs {
   }
   const { url, as, token, json = false, help = false, ...rest } = parsed.values;
   const { install, uninstall, check, 'no-keep-awake': noKeepAwake, ...options } = rest;
-  const flags = Object.fromEntries(
-    Object.entries({ install, uninstall, check, 'no-keep-awake': noKeepAwake }).filter(
-      ([, value]) => value !== undefined,
-    ),
-  ) as WatchFlags;
+  const flags = { install, uninstall, check, 'no-keep-awake': noKeepAwake };
   const [command, ...args] = parsed.positionals;
   return { command, args, global: { url, as, token, json, help }, options, flags };
 }
+
+export const setFlagOf = (parsed: ParsedArgs): WatchFlag | undefined =>
+  (Object.keys(parsed.flags) as WatchFlag[]).find((name) => parsed.flags[name]);
 
 function checkArgs(command: Command, parsed: ParsedArgs): void {
   const fail = (message: string) => {
     throw new UsageError(message, command.usage);
   };
-  const names = [...Object.keys(parsed.options), ...Object.keys(parsed.flags)] as CommandOption[];
-  const unknown = names.find((name) => !command.options.includes(name));
+  const names = Object.keys(parsed.options) as CommandOption[];
+  const unknown = names.find((name) => !command.options.includes(name)) ?? setFlagOf(parsed);
   if (unknown) fail(`"${command.name}" has no --${unknown} option.`);
   const missingArg = command.args[parsed.args.length];
   if (missingArg) fail(`Missing <${missingArg}>.`);

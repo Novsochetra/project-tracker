@@ -104,7 +104,13 @@ tracker watch --check           # installed? running? online at the tracker?
 tracker watch --uninstall
 ```
 
-`--install` checks everything a normal start does, then writes a LaunchAgent (`~/Library/LaunchAgents/com.project-tracker.watch.<id>.plist`) that runs `tracker watch` in this folder with the same choices; logs go to `~/Library/Logs/project-tracker-watch-<PROJECT>.log`. The token stays in the config file, never in the plist, so log in with `tracker login` first (a token from an environment variable is refused). A LaunchAgent runs only while you are logged in: after a restart with FileVault on, the Mac waits for your password. "Start up automatically after a power failure" (System Settings → Energy) helps a Mac at home. When the Mac is off, asleep or offline, a run waits 30 minutes and then fails with "Your computer didn't take the run."
+`--install` checks everything a normal start does, then writes a LaunchAgent (`~/Library/LaunchAgents/com.project-tracker.watch.<id>.plist`) that runs `tracker watch` in this folder with the same choices; logs go to `~/Library/Logs/com.project-tracker.watch.<id>.log` (`--check` shows the path). Things to know:
+
+- The token stays in the config file, never in the plist: log in with `tracker login` first (a token from an environment variable is refused).
+- The job gets only `PATH` and the config file's location, so `claude` must be logged in itself (`claude`, then `/login`), not through `ANTHROPIC_API_KEY` or other variables.
+- If the code is in Documents, Desktop or Downloads, macOS asks for permission for node to use that folder, and asks again after a node upgrade. A folder like `~/code` avoids that.
+- A LaunchAgent runs only while you are logged in: after a restart with FileVault on, the Mac waits for your password. "Start up automatically after a power failure" (System Settings → Energy) helps a Mac at home.
+- When the Mac is off, asleep or offline, a run waits 30 minutes and then fails with "Your computer didn't take the run."
 
 ## Workflow: worker → reviewer → person
 
