@@ -38,21 +38,27 @@ export const listTicketRunRows = (db: Db, userId: UserScope, ticketId: string, l
     .limit(limit)
     .execute();
 
-export const latestChatRunRow = (db: Db, userId: UserScope, chatId: string) =>
+// Both run on every look at a chat, so the plan test (chatRunReads) checks they use
+// runs_chat_created_idx.
+export const latestChatRunQuery = (db: Db, userId: UserScope, chatId: string) =>
   runsOf(db, userId)
     .where('runs.chatId', '=', chatId)
     .orderBy('runs.createdAt', 'desc')
-    .orderBy('runs.id', 'desc')
-    .executeTakeFirst();
+    .orderBy('runs.id', 'desc');
 
-export const listStoppedChatRunRows = (db: Db, userId: UserScope, chatId: string) =>
+export const stoppedChatRunsQuery = (db: Db, userId: UserScope, chatId: string) =>
   runsOf(db, userId)
     .where('runs.chatId', '=', chatId)
     .where('runs.status', 'in', ['failed', 'cancelled'])
     .where('runs.stepCount', '>', 0)
     .orderBy('runs.createdAt')
-    .orderBy('runs.id')
-    .execute();
+    .orderBy('runs.id');
+
+export const latestChatRunRow = (db: Db, userId: UserScope, chatId: string) =>
+  latestChatRunQuery(db, userId, chatId).executeTakeFirst();
+
+export const listStoppedChatRunRows = (db: Db, userId: UserScope, chatId: string) =>
+  stoppedChatRunsQuery(db, userId, chatId).execute();
 
 // The helper's lane, not the run's kind: an Edit question changes the folder, so it waits in the
 // ticket lane, as laneOf in shared says. Older asks have no mode and stay in the ask lane.

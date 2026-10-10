@@ -279,6 +279,7 @@ const DATA_MODEL: SchemaShape = {
       'step_count integer not null default 0',
     ],
     indexes: [
+      'index (chat_id, created_at)',
       'index (runner_id, status)',
       'index (status, created_at)',
       'unique (chat_id)',
