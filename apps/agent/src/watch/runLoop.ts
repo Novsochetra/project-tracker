@@ -57,16 +57,16 @@ const runAsk: Runner = async (deps, job, stop, onSteps) =>
   askOutcomeOf(await deps.runAsk(job, stop, onSteps), stop.aborted);
 
 // Claude never ran, as when the prompt tool's socket can't open, so the run ends with why rather
-// than leave it running on the tracker and this lane stuck on it.
+// than leave it running on the tracker and this lane stuck on it. The window says why too, since
+// no output of Claude's shows it there.
 const runSafely: Runner = async (deps, job, stop, onSteps) => {
   try {
     return await (job.run.kind === 'ask' ? runAsk : runTicket)(deps, job, stop, onSteps);
   } catch (error) {
     if (stop.aborted) return { status: 'cancelled' };
-    return {
-      status: 'failed',
-      error: lastLines(`Claude Code could not start: ${deps.describe(error)}`),
-    };
+    const why = `Claude Code could not start: ${deps.describe(error)}`;
+    deps.log(`${runName(job.run)}: ${why}`);
+    return { status: 'failed', error: lastLines(why) };
   }
 };
 

@@ -4,8 +4,9 @@ import { join } from 'node:path';
 
 const PREFIX = 'tracker-prompt-';
 const NAME = 'prompt.sock';
-// macOS keeps 104 bytes of a socket's path and binds a longer one cut, outside its folder, where
-// it is never removed and the next run's socket can't bind. Linux keeps 108.
+// macOS keeps 104 bytes of a socket's path and binds a longer one cut, outside the 0700 folder:
+// that bind fails when something already has the cut path, as a socket a killed helper left
+// there. Linux keeps 108.
 const PATH_MAX = 100;
 const SHORT_BASE = '/tmp';
 

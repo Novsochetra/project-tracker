@@ -134,3 +134,10 @@ export async function settled(locator: Locator): Promise<void> {
     );
   }
 }
+
+// A list or card that fades in fills backwards, and reduced motion only shortens that, so a
+// screenshot before its first frame shows it hidden.
+export async function settledScreenshot(page: Page, path: string): Promise<void> {
+  await settled(page.locator('body'));
+  await page.screenshot({ path });
+}

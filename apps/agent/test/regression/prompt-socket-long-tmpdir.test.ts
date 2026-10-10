@@ -48,6 +48,7 @@ describe('regression: the prompt socket under a long TMPDIR', () => {
   it('ends the run failed with the reason, stops its steps and takes the next run', async () => {
     const tracker = fakeTracker([job('r-1', 'MOB-1'), job('r-2', 'MOB-2')]);
     const end = vi.fn(() => Promise.resolve());
+    const log: string[] = [];
     const reason = "Couldn't open the socket Claude asks the phone through: listen EADDRINUSE";
     const runClaude = vi
       .fn()
@@ -58,7 +59,7 @@ describe('regression: the prompt socket under a long TMPDIR', () => {
         api: tracker.api,
         runClaude,
         runAsk: noAsks,
-        log: () => undefined,
+        log: (text) => log.push(text),
         describe: (error) => (error as Error).message,
         onProblem: vi.fn(),
         handBack: () => Promise.resolve(),
@@ -71,6 +72,11 @@ describe('regression: the prompt socket under a long TMPDIR', () => {
     expect(tracker.ended).toEqual([
       { id: 'r-1', status: 'failed', error: `Claude Code could not start: ${reason}` },
       { id: 'r-2', status: 'done' },
+    ]);
+    expect(log.slice(0, 3)).toEqual([
+      'Claude Code is working on MOB-1…',
+      `MOB-1: Claude Code could not start: ${reason}`,
+      'MOB-1: Claude Code stopped with an error.',
     ]);
     expect(end).toHaveBeenCalledTimes(2);
     expect(lane.currentRunId()).toBeUndefined();

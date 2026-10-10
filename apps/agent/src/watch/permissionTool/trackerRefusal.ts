@@ -5,7 +5,7 @@ export const UNREACHABLE =
   "The tracker couldn't be reached to ask the person, so this was not allowed.";
 export const NOT_RUNNING = 'This run is no longer running on the tracker, so nobody can answer.';
 export const HELPER_REFUSED =
-  "The tracker didn't let this helper ask the person (its API token was refused), so this was not allowed.";
+  "The tracker didn't let this helper ask the person (its API token was refused, or another helper took this run), so this was not allowed.";
 export const HELPER_OUTDATED =
   "The tracker didn't take this helper's request, so this was not allowed. Update and restart tracker watch.";
 export const RUN_GONE = 'This run is gone from the tracker, so nobody can answer.';

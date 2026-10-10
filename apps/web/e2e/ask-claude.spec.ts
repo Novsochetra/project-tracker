@@ -3,7 +3,7 @@ import type { TrackerClient } from '@tracker/client';
 import type { RunStepInput } from '@tracker/shared';
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { seedProject, toast } from './helpers';
+import { seedProject, settledScreenshot, toast } from './helpers';
 
 const HELPER = "Dara's MacBook";
 
@@ -115,7 +115,7 @@ test('offers no Send without a helper online, and stops a question with Stop in 
   const stop = page.getByRole('button', { name: 'Stop', exact: true });
   await expect(send).toHaveCount(0);
   expect(await stop.boundingBox()).toEqual(sendBox);
-  await page.screenshot({ path: info.outputPath(`ask-stop-${info.project.name}.png`) });
+  await settledScreenshot(page, info.outputPath(`ask-stop-${info.project.name}.png`));
 
   await stop.click();
   await expect(page.getByText('Stopped.', { exact: true })).toBeVisible();
@@ -157,9 +157,7 @@ test('says an Edit question Claude had started stopped part way, and keeps its s
     'Read apps/web/src/sync/queue.ts',
     'Edit apps/web/src/sync/queue.ts',
   ]);
-  // The open list fades in; a screenshot taken before its first frame showed it folded.
-  await page.evaluate(() => Promise.all(document.getAnimations().map(({ finished }) => finished)));
-  await page.screenshot({ path: info.outputPath(`ask-stopped-edit-${info.project.name}.png`) });
+  await settledScreenshot(page, info.outputPath(`ask-stopped-edit-${info.project.name}.png`));
 
   await ask(page, 'Rename it to captureQueue');
   await expect(page.getByText(/Stopped part way/)).toBeHidden();
@@ -200,7 +198,7 @@ test('picks the model and mode on one row above the box, and sends them', async 
   await expect(page.getByText(/Claude can change files and tickets/)).toBeVisible();
   await expect(page.getByRole('listbox')).toBeHidden();
   await expect(modes.getByRole('button', { name: 'Edit' })).toHaveAttribute('aria-pressed', 'true');
-  await page.screenshot({ path: info.outputPath(`ask-options-${info.project.name}.png`) });
+  await settledScreenshot(page, info.outputPath(`ask-options-${info.project.name}.png`));
 
   await ask(page, 'Rename the sync queue');
   await expect(page).toHaveURL(/\/p\/MOB\/ask\/[\w-]+$/);
@@ -246,7 +244,7 @@ test('shows what Claude does while it answers, then folds the steps above the an
   await expect(workingSteps.last()).toHaveText('Captures now go in batches of ten.');
   await expect(working.getByRole('button', { name: '3 earlier steps' })).toBeVisible();
   await expect(page.getByText(`Claude is thinking on ${HELPER}…`)).toBeVisible();
-  await page.screenshot({ path: info.outputPath(`ask-working-${info.project.name}.png`) });
+  await settledScreenshot(page, info.outputPath(`ask-working-${info.project.name}.png`));
 
   const text = 'Captures now go in batches of ten.';
   await api.finishRun(job!.run.id, { status: 'done', answer: text, sessionId: randomUUID() });
@@ -260,7 +258,7 @@ test('shows what Claude does while it answers, then folds the steps above the an
   const folded = answer.getByRole('list', { name: "Claude's steps" }).getByRole('listitem');
   await expect(folded).toHaveCount(7);
   await expect(folded.nth(2)).toContainText('Run echo hello > out.txt');
-  await page.screenshot({ path: info.outputPath(`ask-steps-${info.project.name}.png`) });
+  await settledScreenshot(page, info.outputPath(`ask-steps-${info.project.name}.png`));
 });
 
 test('answers Claude from the phone: Allow, Deny and a choice, and Claude goes on', async ({
@@ -293,7 +291,7 @@ test('answers Claude from the phone: Allow, Deny and a choice, and Claude goes o
   });
   await expect(testCard.getByRole('button', { name: 'Allow' })).toBeVisible();
   await expect(page.getByText('Claude is waiting for your answer.')).toBeVisible();
-  await page.screenshot({ path: info.outputPath(`ask-permission-${info.project.name}.png`) });
+  await settledScreenshot(page, info.outputPath(`ask-permission-${info.project.name}.png`));
   await testCard.getByRole('button', { name: 'Allow' }).click();
   expect(await allowed).toMatchObject({ status: 'answered', decision: 'allow' });
   await expect(testCard).toContainText('Allowed');
@@ -330,11 +328,11 @@ test('answers Claude from the phone: Allow, Deny and a choice, and Claude goes o
   });
   const nameCard = working.getByRole('region', { name: `Claude asks: ${name}` });
   await expect(nameCard.getByRole('button', { name: 'uploadQueue' })).toBeVisible();
-  await page.screenshot({ path: info.outputPath(`ask-question-${info.project.name}.png`) });
+  await settledScreenshot(page, info.outputPath(`ask-question-${info.project.name}.png`));
   await nameCard.getByRole('button', { name: 'uploadQueue' }).click();
   expect(await answered).toMatchObject({ decision: 'allow', answers: ['uploadQueue'] });
   await expect(nameCard).toContainText('uploadQueue');
-  await page.screenshot({ path: info.outputPath(`ask-answered-${info.project.name}.png`) });
+  await settledScreenshot(page, info.outputPath(`ask-answered-${info.project.name}.png`));
 
   const both = asks({
     runnerId: helperId,
@@ -379,7 +377,7 @@ test('answers Claude from the phone: Allow, Deny and a choice, and Claude goes o
       return button!.y + button!.height <= cover!.y;
     })
     .toBe(true);
-  await page.screenshot({ path: info.outputPath(`ask-two-questions-${info.project.name}.png`) });
+  await settledScreenshot(page, info.outputPath(`ask-two-questions-${info.project.name}.png`));
   await sendAnswer.click();
   expect(await both).toMatchObject({ answers: ['Vitest', 'The sync tests'] });
 
@@ -481,7 +479,7 @@ test('folds a long step and the rows before it away calmly when a batch comes', 
   await send(reads(5));
   expect(await folds).toBeLessThan(40);
   await expect(page.getByText('Line 9: one capture at a time.')).toHaveCount(0);
-  await page.screenshot({ path: info.outputPath(`ask-folded-batch-${info.project.name}.png`) });
+  await settledScreenshot(page, info.outputPath(`ask-folded-batch-${info.project.name}.png`));
 });
 
 test('folds the longest text step the helper sends as calmly, step by step', async ({
