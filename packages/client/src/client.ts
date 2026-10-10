@@ -32,6 +32,7 @@ import type {
   ReviewInput,
   Run,
   RunJob,
+  RunKind,
   Runner,
   ServerMeta,
   SessionState,
@@ -246,10 +247,14 @@ export class TrackerClient {
   registerRunner = (runnerId: string, input: RegisterRunnerInput) =>
     this.http.request<Runner>('PUT', `/api/runners/${segment(runnerId)}`, { body: input });
 
-  takeNextRun = (runnerId: string) =>
-    this.http.request<RunJob | null>('POST', `/api/runners/${segment(runnerId)}/next`, {
-      allowEmpty: true,
-    });
+  takeNextRun = (runnerId: string, kind: RunKind) =>
+    this.http.request<RunJob | null>(
+      'POST',
+      `/api/runners/${segment(runnerId)}/next?kind=${kind}`,
+      {
+        allowEmpty: true,
+      },
+    );
 
   finishRun = (runId: string, input: FinishRunInput) =>
     this.http.request<Run>('POST', `/api/runs/${segment(runId)}/finish`, { body: input });

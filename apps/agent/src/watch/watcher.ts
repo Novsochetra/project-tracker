@@ -2,7 +2,8 @@ import type { RunEvent } from '@tracker/shared';
 import { describeError } from '../errors';
 import { createProblemLog } from './problems';
 import { handBackReport } from './report/handBack';
-import { createRunLoop, type RunLoopDeps } from './runLoop';
+import { createLanes } from './lanes';
+import type { RunLoopDeps } from './runLoop';
 import { showStillWorking } from './stillWorking';
 
 export interface WatcherSettings {
@@ -24,7 +25,7 @@ export function createWatcher(deps: WatcherDeps, settings: WatcherSettings) {
   const noteProblem = createProblemLog(deps.log);
   const onProblem = (error: unknown) =>
     noteProblem(error === undefined ? undefined : describe(error));
-  const runs = createRunLoop(
+  const runs = createLanes(
     {
       ...deps,
       describe,
@@ -38,8 +39,9 @@ export function createWatcher(deps: WatcherDeps, settings: WatcherSettings) {
   );
 
   async function stopIfCancelled() {
-    const runId = runs.currentRunId();
-    if (runId && (await deps.api.getRun(runId)).status === 'cancelled') runs.cancel(runId);
+    for (const runId of runs.currentRunIds()) {
+      if ((await deps.api.getRun(runId)).status === 'cancelled') runs.cancel(runId);
+    }
   }
 
   async function checkIn() {

@@ -1,11 +1,12 @@
-import type { Run } from '@tracker/shared';
+import type { Run, Runner } from '@tracker/shared';
 import { useState } from 'react';
 import { useRunners } from '../../api/hooks/runs';
 import { readLastHelper } from '../claude/lastHelper';
-import { chatFooter, type ChatFooter } from './chatFooter';
+import { chatFooter, runHelper, type ChatFooter } from './chatFooter';
 
 export interface AskHelper {
   footer: ChatFooter;
+  cardHelper: Runner | null;
   choose: (helperId: string) => void;
 }
 
@@ -13,5 +14,6 @@ export interface AskHelper {
 export function useAskHelper(projectKey: string, run: Run | null | undefined): AskHelper {
   const runners = useRunners();
   const [lastUsedId, choose] = useState(readLastHelper);
-  return { footer: chatFooter({ runners: runners.data, run, projectKey, lastUsedId }), choose };
+  const input = { runners: runners.data, projectKey, lastUsedId };
+  return { footer: chatFooter({ ...input, run }), cardHelper: runHelper(input), choose };
 }

@@ -29,7 +29,7 @@ export function ChatView({ projectKey, chatId, detail }: ChatViewProps) {
         {messages.length === 0 ? (
           <p className={styles.intro}>{ASK_INTRO}</p>
         ) : (
-          <MessageList chatId={chatId ?? ''} messages={messages} footer={helper.footer} />
+          <MessageList chatId={chatId ?? ''} messages={messages} helper={helper.cardHelper} />
         )}
       </div>
       <ChatFooterArea projectKey={projectKey} chatId={chatId} helper={helper} />

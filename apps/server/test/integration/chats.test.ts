@@ -35,7 +35,7 @@ describe.each(DIALECTS)('chats with Claude Code (%s)', (dialect) => {
     person<ChatDetail>('POST', '/api/projects/MOB/chats', { runnerId, text });
   const ask = (chatId: string, text: string, runnerId = runner) =>
     person<ChatDetail>('POST', `/api/chats/${chatId}/messages`, { runnerId, text });
-  const next = (id = runner) => helper<RunJob | null>('POST', `/api/runners/${id}/next`);
+  const next = (id = runner) => helper<RunJob | null>('POST', `/api/runners/${id}/next?kind=ask`);
   const finish = (id: string, body: unknown) => helper<Run>('POST', `/api/runs/${id}/finish`, body);
   const chat = (id: string) => person<ChatDetail>('GET', `/api/chats/${id}`);
 

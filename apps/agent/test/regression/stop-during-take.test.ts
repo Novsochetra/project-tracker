@@ -29,7 +29,10 @@ describe('regression: stopping while a run is being taken', () => {
     };
     const finishRun = vi.fn(() => Promise.resolve({} as Run));
     const api = {
-      takeNextRun: () => new Promise<RunJob>((resolve) => (answer = resolve)),
+      takeNextRun: (_id: string, kind: string) =>
+        kind === 'ticket'
+          ? new Promise<RunJob>((resolve) => (answer = resolve))
+          : Promise.resolve(null),
       finishRun,
     } as unknown as WatchApi;
     const runClaude = vi.fn(() =>

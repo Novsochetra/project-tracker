@@ -1,4 +1,4 @@
-import type { FinishRunInput, RunJob } from '@tracker/shared';
+import type { FinishRunInput, RunJob, RunKind } from '@tracker/shared';
 import { askOutcomeOf } from './ask/askOutcome';
 import type { ClaudeExit } from './outcome';
 import { outcomeOf } from './outcome';
@@ -22,6 +22,7 @@ export interface RunLoopDeps {
 export interface RunLoopSettings {
   runnerId: string;
   projectKey: string;
+  kind: RunKind;
 }
 
 const ENDINGS: Record<FinishRunInput['status'], string> = {
@@ -78,13 +79,13 @@ export function createRunLoop(deps: RunLoopDeps, settings: RunLoopSettings) {
 
   async function work(job: RunJob) {
     const label = labelOf(job.run);
-    const refusal = refusalOf(job, settings.projectKey);
+    const refusal = refusalOf(job, settings);
     if (refusal) {
       log(`Refused ${label}: ${refusal}`);
       return report(job, { status: 'failed', error: refusal });
     }
     if (stopped) return end(job, { status: 'cancelled' });
-    const asking = job.run.kind === 'ask';
+    const asking = settings.kind === 'ask';
     log(
       asking
         ? `Claude Code is answering a question in ${label}…`
@@ -102,7 +103,7 @@ export function createRunLoop(deps: RunLoopDeps, settings: RunLoopSettings) {
   async function takeRuns() {
     try {
       while (!stopped) {
-        const job = await api.takeNextRun(settings.runnerId);
+        const job = await api.takeNextRun(settings.runnerId, settings.kind);
         if (!job) break;
         await work(job);
       }

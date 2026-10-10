@@ -1,4 +1,10 @@
-import { finishRunInput, registerRunnerInput, runnerId, startRunInput } from '@tracker/shared';
+import {
+  finishRunInput,
+  registerRunnerInput,
+  runnerId,
+  startRunInput,
+  takeRunQuery,
+} from '@tracker/shared';
 import { Hono, type Context } from 'hono';
 import { createMiddleware } from 'hono/factory';
 import { requireScope } from '../../auth/scope';
@@ -9,7 +15,7 @@ import { listRunners, registerRunner, removeRunner } from '../../services/runner
 import { cancelRun, endRun, getRun, listTicketRuns, startRun } from '../../services/runs';
 import type { AppEnv } from '../env';
 import { personOnly } from '../personOnly';
-import { jsonBody, rejectInvalid } from '../validation';
+import { jsonBody, queryParams, rejectInvalid } from '../validation';
 
 const scope = (c: Context<AppEnv>) => requireScope(c.get('access'));
 
@@ -52,8 +58,9 @@ const runnerRoutes = (ctx: ServiceContext) =>
       await removeRunner(ctx, scope(c), c.req.param('id'));
       return c.body(null, 204);
     })
-    .post('/runners/:id/next', helperOnly, async (c) => {
-      const job = await takeNextRun(ctx, scope(c), c.req.param('id'));
+    .post('/runners/:id/next', helperOnly, queryParams(takeRunQuery), async (c) => {
+      const { kind } = c.req.valid('query');
+      const job = await takeNextRun(ctx, scope(c), c.req.param('id'), kind);
       return job ? c.json(job) : c.body(null, 204);
     });
 

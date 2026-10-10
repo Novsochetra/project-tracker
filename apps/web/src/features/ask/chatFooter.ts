@@ -22,6 +22,15 @@ export const thinkingText = (run: Pick<Run, 'runnerName'>): string =>
 const stoppedOf = (run: Run | null | undefined): string | null =>
   run?.status === 'failed' ? stoppedText(run) : null;
 
+// A card's Run takes a helper's ticket lane, free while its ask lane answers a question.
+export function runHelper({
+  runners,
+  projectKey,
+  lastUsedId,
+}: Omit<ChatFooterInput, 'run'>): Runner | null {
+  return runners ? (pickHelper(helpersFor(runners, projectKey), lastUsedId) ?? null) : null;
+}
+
 export function chatFooter({ runners, run, projectKey, lastUsedId }: ChatFooterInput): ChatFooter {
   if (run && isWorking(run)) return { kind: 'thinking', run };
   if (!runners) return { kind: 'loading' };

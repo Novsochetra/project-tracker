@@ -1,4 +1,9 @@
-import { ACTIVE_RUN_STATUSES, type EndedRunStatus, type RunStatus } from '@tracker/shared';
+import {
+  ACTIVE_RUN_STATUSES,
+  type EndedRunStatus,
+  type RunKind,
+  type RunStatus,
+} from '@tracker/shared';
 import type { ExpressionBuilder } from 'kysely';
 import type { UserScope } from '../auth/scope';
 import type { RunRow } from '../db/runTables';
@@ -40,16 +45,22 @@ export const latestChatRunRow = (db: Db, userId: UserScope, chatId: string) =>
     .orderBy('runs.id', 'desc')
     .executeTakeFirst();
 
+export interface QueueSlot {
+  runnerId: string;
+  kind: RunKind;
+  projectIds: readonly string[];
+}
+
 export const nextQueuedRun = (
   db: Db,
   userId: UserScope,
-  runnerId: string,
-  projectIds: readonly string[],
+  { runnerId, kind, projectIds }: QueueSlot,
 ) =>
   projectIds.length === 0
     ? Promise.resolve(undefined)
     : runsOf(db, userId)
         .where('runs.runnerId', '=', runnerId)
+        .where('runs.kind', '=', kind)
         .where('runs.status', '=', 'queued')
         .where('runs.projectId', 'in', projectIds)
         .orderBy('runs.createdAt')
@@ -125,7 +136,7 @@ export const failRunsOfSilentHelpers = (
 export const failRunsOf = (
   db: Db,
   userId: UserScope,
-  of: { runnerId: string; statuses: readonly RunStatus[] },
+  of: { runnerId: string; statuses: readonly RunStatus[]; kind?: RunKind },
   ended: { error: string; endedAt: number },
 ) =>
   db
@@ -134,6 +145,7 @@ export const failRunsOf = (
     .where(ownedBy(userId))
     .where('runnerId', '=', of.runnerId)
     .where('status', 'in', of.statuses)
+    .$if(of.kind !== undefined, (query) => query.where('kind', '=', of.kind as RunKind))
     .returningAll()
     .execute();
 

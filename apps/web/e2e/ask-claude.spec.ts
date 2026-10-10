@@ -24,7 +24,7 @@ const card = (title: string, priority: string, steps: string) =>
 
 // The helper's side, as `tracker watch` reports an answer (apps/agent/src/watch/ask).
 async function answer(api: TrackerClient, helperId: string, text: string): Promise<void> {
-  const job = await api.takeNextRun(helperId);
+  const job = await api.takeNextRun(helperId, 'ask');
   expect(job?.run.kind).toBe('ask');
   await api.finishRun(job!.run.id, { status: 'done', answer: text, sessionId: randomUUID() });
 }
@@ -77,7 +77,7 @@ test('asks Claude about a project, shapes a ticket card, creates it and runs it'
   await made.getByRole('button', { name: 'Run MOB-2 in Claude Code' }).click();
   await expect(toast(page, `Sent to Claude on ${HELPER}`)).toBeVisible();
   await expect(made).toContainText(`Claude is working on ${HELPER}…`);
-  const job = await api.takeNextRun(helperId);
+  const job = await api.takeNextRun(helperId, 'ticket');
   expect(job?.run).toMatchObject({ kind: 'ticket', ticketKey: 'MOB-2' });
   expect(job?.prompt).toContain('MOB-2');
   await api.finishRun(job!.run.id, { status: 'done' });

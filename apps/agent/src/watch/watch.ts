@@ -1,7 +1,7 @@
 import { dirname } from 'node:path';
 import type { GlobalValues } from '../cli/options';
-import { askArgs } from './ask/askArgs';
-import { CLAUDE, claudeArgs, runClaude } from './claude';
+import { CLAUDE } from './claude';
+import { claudeRunners } from './claudeRunners';
 import { lockFolder } from './folderLock';
 import { keepMacAwake } from './keepAwake';
 import { followRunEvents } from './liveStream';
@@ -20,18 +20,13 @@ const aborted = (signal: AbortSignal): Promise<void> =>
 
 async function keepWatching(setup: Setup, args: WatchArgs, io: WatchIo, signal: AbortSignal) {
   const { api, config, folder, settings } = setup;
-  const claude = { command: CLAUDE, args: claudeArgs(args.permissionMode), cwd: folder };
-  // An answer is one JSON object for the tracker, not text for this window.
-  const ask = (resumeSessionId: string | null) => ({ ...claude, args: askArgs(resumeSessionId) });
-  const watcher = createWatcher(
-    {
-      api,
-      log: io.stdout,
-      runClaude: (prompt, stop) => runClaude(claude, prompt, stop, io.write),
-      runAsk: (job, stop) => runClaude(ask(job.resumeSessionId), job.prompt, stop, () => undefined),
-    },
-    settings,
-  );
+  const claude = claudeRunners({
+    command: CLAUDE,
+    cwd: folder,
+    permissionMode: args.permissionMode,
+    write: io.write,
+  });
+  const watcher = createWatcher({ api, log: io.stdout, ...claude }, settings);
   io.stdout(
     `Watching ${settings.projectKey} on ${config.url} as "${settings.name}". ` +
       `Runs started from the app open Claude Code in ${folder}. Leave this open; Ctrl-C stops.`,

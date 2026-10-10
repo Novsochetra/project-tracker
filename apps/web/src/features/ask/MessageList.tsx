@@ -3,14 +3,14 @@ import { useMemo } from 'react';
 import { AgentAvatar } from '../../components';
 import { LinkedText } from '../ticket/activity/LinkedText';
 import { messageCards, type MessageCard } from './cards';
-import { helperOf, type ChatFooter } from './chatFooter';
 import styles from './ChatScreen.module.css';
 import { TicketCardView } from './TicketCardView';
 
 export interface MessageListProps {
   chatId: string;
   messages: ChatMessage[];
-  footer: ChatFooter;
+  // The helper a created card's Run starts on.
+  helper: Runner | null;
 }
 
 // Rendered as text and links only, as comments are, so nothing Claude writes becomes markup.
@@ -56,9 +56,8 @@ function ClaudeMessage({ chatId, message, card, helper }: ClaudeMessageProps) {
   );
 }
 
-export function MessageList({ chatId, messages, footer }: MessageListProps) {
+export function MessageList({ chatId, messages, helper }: MessageListProps) {
   const cards = useMemo(() => messageCards(messages), [messages]);
-  const helper = helperOf(footer);
   return (
     <ol className={styles.messages} aria-label="Messages">
       {messages.map((message) => (

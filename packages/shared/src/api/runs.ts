@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { CHAT_ANSWER_MAX } from '../domain/chat';
 import {
   ENDED_RUN_STATUSES,
+  RUN_KINDS,
   RUN_ERROR_MAX,
   RUN_PROMPT_MAX,
   RUNNER_NAME_MAX,
@@ -33,6 +34,10 @@ export const registerRunnerInput = z.object({
     .max(RUNNER_PROJECTS_MAX),
 });
 export type RegisterRunnerInput = z.input<typeof registerRunnerInput>;
+
+// A helper runs one run of each kind at a time. One that names no kind predates asks.
+export const takeRunQuery = z.object({ kind: z.enum(RUN_KINDS).default('ticket') });
+export type TakeRunQuery = z.input<typeof takeRunQuery>;
 
 export const finishRunInput = z.object({
   status: z.enum(ENDED_RUN_STATUSES),

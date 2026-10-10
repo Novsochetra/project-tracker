@@ -4,6 +4,7 @@ import type {
   ReportInput,
   Run,
   RunJob,
+  RunKind,
   TicketDetail,
 } from '@tracker/shared';
 import { vi } from 'vitest';
@@ -57,7 +58,10 @@ export function fakeTracker(jobs: RunJob[]) {
     listProjects: vi.fn(),
     eventsUrl: () => 'http://tracker.test/api/events',
     registerRunner: vi.fn(() => Promise.resolve({} as never)),
-    takeNextRun: vi.fn(() => Promise.resolve(jobs.shift() ?? null)),
+    takeNextRun: vi.fn((_runnerId: string, kind: RunKind) => {
+      const index = jobs.findIndex((queued) => queued.run.kind === kind);
+      return Promise.resolve(index === -1 ? null : (jobs.splice(index, 1)[0] ?? null));
+    }),
     finishRun: vi.fn((id: string, input: FinishRunInput) => {
       ended.push({ id, ...input });
       return Promise.resolve({} as Run);

@@ -53,7 +53,7 @@ test('runs a ticket on a helper and follows the run on the ticket', async ({ pag
   await expect(dialog).toBeHidden();
   await expect(card).toContainText(`Claude is working on ${HELPER}…`);
 
-  const job = await api.takeNextRun(helperId);
+  const job = await api.takeNextRun(helperId, 'ticket');
   expect(job?.prompt).toBe('Fix MOB-1, please.');
   await api.finishRun(job!.run.id, { status: 'failed', error: 'Claude exited with code 1.' });
   await expect(card).toContainText('Claude stopped: Claude exited with code 1.');
@@ -61,7 +61,7 @@ test('runs a ticket on a helper and follows the run on the ticket', async ({ pag
   await card.getByRole('button', { name: 'Try again' }).click();
   await run.click();
   await expect(card).toContainText(`Claude is working on ${HELPER}…`);
-  const again = await api.takeNextRun(helperId);
+  const again = await api.takeNextRun(helperId, 'ticket');
   await api.finishRun(again!.run.id, { status: 'done' });
   await expect(card).toHaveCount(0);
 });

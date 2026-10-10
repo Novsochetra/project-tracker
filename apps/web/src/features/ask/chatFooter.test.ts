@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { DARA, makeRun, makeRunner } from '../../api/test/runFixtures';
-import { chatFooter, helperOf, thinkingText } from './chatFooter';
+import { chatFooter, helperOf, runHelper, thinkingText } from './chatFooter';
 
 const dara = makeRunner();
 const studio = makeRunner({ id: 'h-studio', name: 'Studio' });
@@ -52,5 +52,12 @@ describe('chatFooter', () => {
     for (const status of ['done', 'cancelled'] as const) {
       expect(chatFooter({ ...input, run: ask({ status }) })).toMatchObject({ stopped: null });
     }
+  });
+
+  it("picks the card's Run helper whether or not Claude is thinking", () => {
+    const runners = [dara, studio];
+    expect(runHelper({ ...input, runners, lastUsedId: studio.id })).toBe(studio);
+    expect(runHelper({ ...input, runners: undefined })).toBeNull();
+    expect(runHelper({ ...input, runners: [makeRunner({ online: false })] })).toBeNull();
   });
 });
