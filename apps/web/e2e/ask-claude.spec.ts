@@ -119,6 +119,7 @@ test('offers no Send without a helper online, and stops a question with Stop in 
 });
 
 test('says an Edit question Claude had started stopped part way', async ({ page, api }, info) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
   await seedProject(api, 'Mobile app', 'MOB');
   const helperId = randomUUID();
   await api.registerRunner(helperId, { name: HELPER, projectKeys: ['MOB'] });
