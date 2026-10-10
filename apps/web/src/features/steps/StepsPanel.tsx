@@ -3,9 +3,10 @@ import { useMemo } from 'react';
 import type { TrackerQuery } from '../../api/types';
 import { Button, Spinner } from '../../components';
 import { notKeptText, STEPS_FAILED_TEXT } from './stepCopy';
-import { StepList, type StepVariant } from './StepList';
+import { StepList } from './StepList';
 import { stepRows } from './stepRows';
 import styles from './Steps.module.css';
+import type { StepVariant } from './stepVariant';
 import { visibleSteps } from './visibleSteps';
 
 export interface StepsPanelProps {

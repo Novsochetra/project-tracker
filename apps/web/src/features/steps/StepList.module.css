@@ -56,12 +56,12 @@
   line-height: 1.45;
 }
 
-.history .text .label {
+.clamped .label {
   display: -webkit-box;
   overflow: hidden;
   -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-  line-clamp: 2;
+  -webkit-line-clamp: var(--step-lines);
+  line-clamp: var(--step-lines);
 }
 
 .sub {
