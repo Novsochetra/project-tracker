@@ -5,7 +5,9 @@ import {
   type Run,
   type RunRequest,
 } from '@tracker/shared';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { createBroadcaster } from '../../src/events/broadcaster';
+import type { RunNotice } from '../../src/events/runNotice';
 import { testClock } from '../helpers/auth';
 import { addUser, caller, helperName, type Caller } from '../helpers/runs';
 import { DIALECTS, useTestServer } from '../helpers/server';
@@ -24,7 +26,8 @@ const QUESTIONS = [
 
 describe.each(DIALECTS)('run requests (%s)', (dialect) => {
   const clock = testClock();
-  const api = useTestServer(dialect, { now: clock.now });
+  const runEvents = createBroadcaster<RunNotice>();
+  const api = useTestServer(dialect, { now: clock.now, runEvents });
   let person: Caller;
   let helper: Caller;
   let other: { person: Caller; helper: Caller };
@@ -177,6 +180,20 @@ describe.each(DIALECTS)('run requests (%s)', (dialect) => {
     });
     const winner = first.status === 200 ? first : second;
     expect((await list()).body[0]?.decision).toBe(winner.body.decision);
+  });
+
+  it("keeps a helper's wait through the run's steps, and wakes it for the answer", async () => {
+    await take();
+    const request = await opened();
+    const waiting = wait(request.id);
+    await vi.waitFor(() => expect(runEvents.listenerCount()).toBe(1));
+    const step = { kind: 'tool', label: 'Read a.ts', subAgent: false, toolId: null };
+    expect(
+      (await helper('POST', `/api/runs/${run.id}/steps`, { runnerId: runner, steps: [step] }))
+        .status,
+    ).toBe(204);
+    await answer(request.id, { decision: 'allow' });
+    expect((await waiting).body).toMatchObject({ status: 'answered', decision: 'allow' });
   });
 
   it('ends the open requests of a cancelled run, waking a helper that waits', async () => {

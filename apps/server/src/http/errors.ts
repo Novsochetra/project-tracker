@@ -1,3 +1,4 @@
+import { UNKNOWN_ROUTE_MESSAGE } from '@tracker/shared';
 import type { Context, ErrorHandler, NotFoundHandler } from 'hono';
 import { HTTPException } from 'hono/http-exception';
 import type { ContentfulStatusCode } from 'hono/utils/http-status';
@@ -18,4 +19,4 @@ export const handleError: ErrorHandler = (error, c) => {
 };
 
 export const handleNotFound: NotFoundHandler = (c) =>
-  errorJson(c, 'not_found', 'Nothing was found at this address.', 404);
+  errorJson(c, 'not_found', UNKNOWN_ROUTE_MESSAGE, 404);

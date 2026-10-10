@@ -1,7 +1,7 @@
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import type { ErrorBody, ServerMeta } from '@tracker/shared';
+import { UNKNOWN_ROUTE_MESSAGE, type ErrorBody, type ServerMeta } from '@tracker/shared';
 import { afterAll, describe, expect, it } from 'vitest';
 import { createApp, type AppDeps } from '../../src/app';
 import { REPO_ROOT } from '../../src/config';
@@ -28,7 +28,7 @@ describe.each(DIALECTS)('http surface (%s)', (dialect) => {
   it('answers unknown API routes with a JSON 404', async () => {
     const res = await api.get<ErrorBody>('/api/nope');
     expect(res.status).toBe(404);
-    expect(res.body.error.code).toBe('not_found');
+    expect(res.body.error).toEqual({ code: 'not_found', message: UNKNOWN_ROUTE_MESSAGE });
     expect((await api.get('/index.html')).status).toBe(404);
   });
 

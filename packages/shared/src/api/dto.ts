@@ -55,6 +55,10 @@ export interface ErrorBody {
   error: { code: string; message: string };
 }
 
+// Every tracker has answered an address it has no route for with this 404, and a run or request
+// that is gone with another message, so a client newer than its tracker can tell the two apart.
+export const UNKNOWN_ROUTE_MESSAGE = 'Nothing was found at this address.';
+
 export interface ServerMeta {
   version: string;
   serverUrl: string;

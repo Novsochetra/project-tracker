@@ -1,17 +1,21 @@
 import { nextWaitMs, type RunRequest } from '@tracker/shared';
 import type { UserScope } from '../auth/scope';
+import type { RunNotice } from '../events/runNotice';
 import type { ServiceContext } from './context';
 import { toRunRequest } from './runRequestMappers';
 import { requireRunRequest } from './runRequests';
 import { settleRequests } from './runRequestSweep';
 
-// Any event of the run can end the wait: its request answered or ended, or the run itself ended.
+// Only its request answered or ended, or the run's end, ends the wait: a sub agent that works
+// meanwhile sends steps about once a second, and each would end the helper's long poll.
+const ENDS_WAIT: ReadonlySet<RunNotice['event']['type']> = new Set(['run', 'run-request']);
+
 function untilRunNotice(ctx: ServiceContext, runId: string, ms: number, signal: AbortSignal) {
   let stop = () => undefined as void;
   const woken = new Promise<void>((resolve) => {
     const timer = setTimeout(() => stop(), ms);
     const unsubscribe = ctx.runEvents.subscribe(({ event }) => {
-      if (event.runId === runId) stop();
+      if (event.runId === runId && ENDS_WAIT.has(event.type)) stop();
     });
     stop = () => {
       clearTimeout(timer);

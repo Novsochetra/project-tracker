@@ -178,6 +178,8 @@ Agents on your Mac reach the online tracker with its address and an API token yo
 
 3. Restart Claude Code and check with `node apps/agent/dist/cli.js projects`.
 
+**Updating:** deploy the tracker first (push to `main` and wait for the deployment to go Active), then rebuild the agent (`npm run build -w @tracker/agent`) and restart `tracker watch` on each computer. A helper newer than its tracker may call routes the tracker doesn't have yet: then every step Claude asks you about is denied with "Update the tracker."
+
 ## Backups
 
 - **Railway:** Postgres service → **Backups** → **Create backup** before any risky change, and add a **Daily** schedule (kept 6 days). Restore from the same tab (it mounts the backup as a new volume; click **Deploy**).
