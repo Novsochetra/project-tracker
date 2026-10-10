@@ -1,18 +1,39 @@
 const MASK = '***';
-// A quoted value whole, spaces and all, or a bare one up to the next space or quote.
-const VALUE = String.raw`(?:"[^"]*"|'[^']*'|[^\s"']+)`;
-const NAMED = String.raw`[\w-]*(?:token|key|secret|password|passwd)[\w-]*`;
+// A quoted value whole, or a bare one that stops at a quote, a backtick or a shell symbol, so it
+// never takes the next shell word (`--with-token < token.txt`).
+const VALUE = String.raw`(?:"[^"]*"|'[^']*'|[^\s"'\x60<>|;&)]+)`;
+const NAMED = String.raw`[\w-]*(?:token|key|secret|password|passwd|pass)[\w-]*`;
+const HEADER = String.raw`authorization|cookie|[\w-]*(?:token|key|secret|password)[\w-]*`;
+const PREFIXED = [
+  String.raw`gh[pousr]_\w+`,
+  String.raw`github_pat_\w+`,
+  String.raw`sk-[\w-]+`,
+  String.raw`sk_(?:live|test)_\w+`,
+  String.raw`xox[abprs]-[\w-]+`,
+  String.raw`glpat-[\w-]+`,
+  String.raw`AKIA[0-9A-Z]{16}`,
+].join('|');
 
-// Only the shapes a command line or an address usually carries a secret in, so the rest of a
-// label stays readable; a few harmless values get masked too (`--sort-key=name`).
-const PATTERNS: readonly RegExp[] = [
-  new RegExp(String.raw`(authorization:\s*(?:(?:bearer|basic|token)\s+)?)${VALUE}`, 'gi'),
-  new RegExp(String.raw`(\bbearer\s+)${VALUE}`, 'gi'),
-  new RegExp(String.raw`(\s--?${NAMED}(?:=|\s+))${VALUE}`, 'gi'),
-  new RegExp(String.raw`(\b${NAMED}=)${VALUE}`, 'gi'),
-  /(\/\/[^\s/:@]+:)[^\s/@]+(?=@)/g,
+// Best effort, for the shapes a command line or a link usually carries a secret in, so the rest
+// stays readable. A short `-p`/`-a` password is left: it can't be told from `mkdir -p`.
+const RULES: readonly (readonly [RegExp, string])[] = [
+  [new RegExp(String.raw`(["'](?:${HEADER}):\s*)[^"'\n]*`, 'gi'), `$1${MASK}`],
+  [new RegExp(String.raw`(\bbearer\s+)${VALUE}`, 'gi'), `$1${MASK}`],
+  [new RegExp(String.raw`(\s(?:-u|--user)(?:=|\s+)[^\s:"']+:)${VALUE}`, 'g'), `$1${MASK}`],
+  [/(\/\/[^\s/:@"']*:)[^\s/@"']+(?=@)/g, `$1${MASK}`],
+  [/\/\/[^\s/:@"']+(?=@)/g, `//${MASK}`],
+  [
+    new RegExp(
+      String.raw`(\s--?[\w-]*(?:token|key|secret|password|passwd)(?:=|\s+))${VALUE}`,
+      'gi',
+    ),
+    `$1${MASK}`,
+  ],
+  [new RegExp(String.raw`(\b${NAMED}=)${VALUE}`, 'gi'), `$1${MASK}`],
+  [new RegExp(String.raw`\b(?:${PREFIXED})`, 'g'), MASK],
+  [/(hooks\.slack\.com\/services\/)[^\s"']+/g, `$1${MASK}`],
 ];
 
 export function maskSecrets(text: string): string {
-  return PATTERNS.reduce((masked, pattern) => masked.replace(pattern, `$1${MASK}`), text);
+  return RULES.reduce((masked, [pattern, mask]) => masked.replace(pattern, mask), text);
 }

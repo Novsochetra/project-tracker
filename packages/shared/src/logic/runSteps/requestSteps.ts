@@ -24,7 +24,9 @@ function stepOfBlock(block: unknown, folder: string): Step[] {
   if (!isJson(block)) return [];
   if (block.type === 'text' && typeof block.text === 'string') {
     const text = block.text.trim();
-    return text ? [{ kind: 'text', label: cutTo(text, RUN_STEP_TEXT_MAX), toolId: null }] : [];
+    // Claude may repeat a command it ran; the run's answer itself stays as Claude wrote it.
+    const label = cutTo(maskSecrets(text), RUN_STEP_TEXT_MAX);
+    return text ? [{ kind: 'text', label, toolId: null }] : [];
   }
   if (block.type !== 'tool_use' || typeof block.name !== 'string') return [];
   const toolId = typeof block.id === 'string' ? block.id : null;
