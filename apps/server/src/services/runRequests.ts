@@ -25,7 +25,7 @@ import { requireRun } from './runs';
 const ENDED: Readonly<Record<Exclude<RunRequestStatus, 'open'>, string>> = {
   answered: 'This was already answered.',
   expired: 'Nobody answered in time, so Claude went on without it.',
-  cancelled: 'The run ended, so Claude no longer waits for this.',
+  cancelled: 'Claude no longer waits for this.',
 };
 
 // 404 rather than 403 for another user's request, like runs.

@@ -7,6 +7,10 @@ import { deny, type PromptDecision } from './promptCall';
 // A Write's call holds the whole file; anything past this is no call of Claude Code's.
 const LINE_MAX = 16 * 1024 * 1024;
 
+// Why a wait was stopped: the run ended, or Claude closed the call while the run goes on.
+export const RUN_STOPPED = 'run-stopped';
+export const CALL_CLOSED = 'call-closed';
+
 export type Answer = (args: unknown, signal: AbortSignal) => Promise<PromptDecision>;
 
 export interface PromptSocket {
@@ -38,9 +42,8 @@ function parsed(line: string): unknown {
 }
 
 async function serve(socket: Socket, answer: Answer, stopped: AbortSignal): Promise<void> {
-  // Claude gave up on the call (it was stopped, or cancelled the call), so nobody waits for it.
   const gone = new AbortController();
-  socket.on('close', () => gone.abort());
+  socket.on('close', () => gone.abort(CALL_CLOSED));
   let decision: PromptDecision;
   try {
     decision = await answer(
@@ -73,7 +76,7 @@ export async function openPromptSocket(answer: Answer): Promise<PromptSocket> {
   return {
     path,
     close: () => {
-      stopped.abort();
+      stopped.abort(RUN_STOPPED);
       for (const socket of sockets) socket.destroy();
       server.close();
       rmSync(dir, { recursive: true, force: true });

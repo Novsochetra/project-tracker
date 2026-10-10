@@ -2,7 +2,11 @@ import { existsSync, statSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { describe, expect, it, vi } from 'vitest';
 import { askHelper, HELPER_GONE } from '../../../src/watch/prompts/askHelper';
-import { openPromptSocket } from '../../../src/watch/prompts/promptSocket';
+import {
+  CALL_CLOSED,
+  openPromptSocket,
+  RUN_STOPPED,
+} from '../../../src/watch/prompts/promptSocket';
 
 const call = { tool_name: 'Bash', input: { command: 'ls' }, tool_use_id: 't-1' };
 
@@ -48,7 +52,7 @@ describe('the prompt socket', () => {
     const asking = askHelper(socket.path, call);
     await vi.waitFor(() => expect(waiting).toBeDefined());
     socket.close();
-    expect(waiting?.aborted).toBe(true);
+    expect(waiting?.reason).toBe(RUN_STOPPED);
     expect(await asking).toEqual({ behavior: 'deny', message: HELPER_GONE });
   });
 
@@ -64,7 +68,7 @@ describe('the prompt socket', () => {
       await vi.waitFor(() => expect(waiting).toBeDefined());
       giveUp.abort();
       expect(await asking).toEqual({ behavior: 'deny', message: HELPER_GONE });
-      await vi.waitFor(() => expect(waiting?.aborted).toBe(true));
+      await vi.waitFor(() => expect(waiting?.reason).toBe(CALL_CLOSED));
     } finally {
       socket.close();
     }

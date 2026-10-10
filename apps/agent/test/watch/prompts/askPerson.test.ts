@@ -3,6 +3,7 @@ import type { AddRunRequestInput, RunRequest } from '@tracker/shared';
 import { describe, expect, it, vi } from 'vitest';
 import { createAskPerson, type AskPersonDeps } from '../../../src/watch/prompts/askPerson';
 import { NO_ANSWER, RUN_ENDED, UNSHOWN } from '../../../src/watch/prompts/decisionOf';
+import { CALL_CLOSED, RUN_STOPPED } from '../../../src/watch/prompts/promptSocket';
 import {
   HELPER_REFUSED,
   NOT_RUNNING,
@@ -131,16 +132,20 @@ describe('asking the person', () => {
     expect(cancelled(api)).toEqual([['q-1', { runnerId: RUNNER }]]);
   });
 
-  it('ends the request on the tracker when Claude stops waiting or the run stops', async () => {
-    const { ask, api } = setup([]);
+  it.each([
+    [RUN_STOPPED, 'MOB-1: the run stopped before an answer.'],
+    [CALL_CLOSED, 'MOB-1: Claude stopped waiting for an answer.'],
+  ])('ends the request on the tracker when the wait stops (%s)', async (reason, line) => {
+    const { ask, api, log } = setup([]);
     const stop = new AbortController();
     const asking = ask(run, bash, stop.signal);
     await vi.waitFor(() => expect(api.waitForRunRequest).toHaveBeenCalled());
-    stop.abort();
+    stop.abort(reason);
     expect(await asking).toEqual({ behavior: 'deny', message: RUN_ENDED });
     const [, options] = vi.mocked(api.waitForRunRequest).mock.calls[0]!;
     expect(options?.signal?.aborted).toBe(true);
     expect(cancelled(api)).toEqual([['q-1', { runnerId: RUNNER }]]);
+    expect(log.at(-1)).toBe(line);
   });
 
   it('still answers Claude when the tracker cannot take the end', async () => {

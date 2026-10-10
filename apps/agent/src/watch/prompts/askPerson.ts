@@ -12,6 +12,7 @@ import { wait } from '../wait';
 import type { WatchApi } from '../watchApi';
 import { decisionOf, NO_ANSWER, RUN_ENDED, UNSHOWN } from './decisionOf';
 import { deny, type PromptCall, type PromptDecision } from './promptCall';
+import { CALL_CLOSED } from './promptSocket';
 import { refusalOf, UNREACHABLE } from './trackerRefusal';
 
 // A wait the tracker holds a little longer than it should is still answered, but one a proxy
@@ -38,7 +39,12 @@ export type AskPerson = (
   signal: AbortSignal,
 ) => Promise<PromptDecision>;
 
-type Ending = { request: RunRequest } | { gaveUp: string };
+type Ending = { request: RunRequest } | { gaveUp: string; note: string };
+
+const gaveUp = (message: string): Ending => ({
+  gaveUp: message,
+  note: `stopped waiting: ${message}`,
+});
 
 const waitOnce = (deps: AskPersonDeps, id: string, signal: AbortSignal) =>
   deps.api.waitForRunRequest(id, {
@@ -62,14 +68,19 @@ async function untilEnded(
     } catch (error) {
       if (signal.aborted) break;
       const refusal = refusalOf(error);
-      if (refusal) return { gaveUp: refusal };
-      if (requestIsOverdue(giveUpAt, now())) return { gaveUp: NO_ANSWER };
+      if (refusal) return gaveUp(refusal);
+      if (requestIsOverdue(giveUpAt, now())) return gaveUp(NO_ANSWER);
       if (failures === 0) deps.log(`Waiting for the tracker: ${deps.describe(error)}`);
       await wait(delay(failures), signal);
       failures += 1;
     }
   }
-  return { gaveUp: RUN_ENDED };
+  // Claude closing one call leaves the run going, so the window mustn't say the run stopped.
+  const closed = signal.reason === CALL_CLOSED;
+  const note = closed
+    ? 'Claude stopped waiting for an answer.'
+    : 'the run stopped before an answer.';
+  return { gaveUp: RUN_ENDED, note };
 }
 
 // So the phone never shows a card nobody waits for. A tracker that can't take it ends the
@@ -110,7 +121,7 @@ async function ask(deps: AskPersonDeps, run: Run, call: PromptCall, signal: Abor
     return decisionOf(call, ending.request);
   }
   await endOnTracker(deps, request);
-  deps.log(`${labelOf(run)}: stopped waiting: ${ending.gaveUp}`);
+  deps.log(`${labelOf(run)}: ${ending.note}`);
   return deny(ending.gaveUp);
 }
 
