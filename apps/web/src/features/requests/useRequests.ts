@@ -8,6 +8,7 @@ export interface RunRequests {
   shown: RunRequest[];
   waiting: boolean;
   now: number;
+  loaded: boolean;
 }
 
 export function useRequests(runId: string | null): RunRequests {
@@ -15,6 +16,7 @@ export function useRequests(runId: string | null): RunRequests {
   const now = useNow();
   return useMemo(() => {
     const all = runId ? (requests ?? []) : [];
-    return { shown: shownRequests(all, now), waiting: isWaiting(all, now), now };
+    const loaded = runId !== null && requests !== undefined;
+    return { shown: shownRequests(all, now), waiting: isWaiting(all, now), now, loaded };
   }, [runId, requests, now]);
 }

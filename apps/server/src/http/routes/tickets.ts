@@ -5,7 +5,8 @@ import {
   moveTicketInput,
   updateTicketRequest,
 } from '@tracker/shared';
-import { Hono } from 'hono';
+import { Hono, type Context } from 'hono';
+import { requireScope } from '../../auth/scope';
 import type { ServiceContext } from '../../services/context';
 import { ticketPrompt } from '../../services/prompts';
 import {
@@ -19,13 +20,15 @@ import { markSent } from '../../services/workflow';
 import type { AppEnv } from '../env';
 import { jsonBody, queryParams } from '../validation';
 
+const scope = (c: Context<AppEnv>) => requireScope(c.get('access'));
+
 export const ticketRoutes = (ctx: ServiceContext) =>
   new Hono<AppEnv>()
     .get('/tickets', queryParams(listTicketsQuery), async (c) =>
-      c.json(await listAllTickets(ctx, c.req.valid('query'))),
+      c.json(await listAllTickets(ctx, scope(c), c.req.valid('query'))),
     )
     .get('/projects/:key/tickets', queryParams(listTicketsQuery), async (c) =>
-      c.json(await listTickets(ctx, c.req.param('key'), c.req.valid('query'))),
+      c.json(await listTickets(ctx, scope(c), c.req.param('key'), c.req.valid('query'))),
     )
     .post('/projects/:key/tickets', jsonBody(createTicketInput), async (c) =>
       c.json(await createTicket(ctx, c.get('actor'), c.req.param('key'), c.req.valid('json')), 201),

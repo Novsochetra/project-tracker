@@ -7,9 +7,13 @@ import { BoardCardFace } from './BoardCardFace';
 const SENT_BACK: Review = { verdict: 'changes_requested', rating: 2 };
 const APPROVED: Review = { verdict: 'approved', rating: 4 };
 
-function renderCard(category: StatusCategory, lastReview: Review | null, due = '2026-10-09') {
+function renderCard(
+  category: StatusCategory,
+  lastReview: Review | null,
+  { due = '2026-10-09', waiting = false } = {},
+) {
   const status = statuses.find((candidate) => candidate.category === category)!;
-  const ticket = listItem(3, status.id, 0, { title: 'Dark mode colors', due, lastReview });
+  const ticket = listItem(3, status.id, 0, { title: 'Dark mode colors', due, lastReview, waiting });
   render(
     <button type="button">
       <BoardCardFace ticket={ticket} status={status} />
@@ -33,7 +37,7 @@ describe('BoardCardFace', () => {
   );
 
   it('shows the chip without a due date', () => {
-    expect(renderCard('todo', SENT_BACK, '')).toHaveAccessibleName(
+    expect(renderCard('todo', SENT_BACK, { due: '' })).toHaveAccessibleName(
       'MOB-3 Dark mode colors Changes requested Unassigned',
     );
   });
@@ -55,5 +59,23 @@ describe('BoardCardFace', () => {
 
   it('shows no chip on a ticket nobody reviewed', () => {
     expect(renderCard('in_progress', null).querySelector('[data-verdict]')).toBeNull();
+  });
+
+  it('says Claude waits for the person first in the meta line, beside the chip and due date', () => {
+    const card = renderCard('in_progress', SENT_BACK, { waiting: true });
+    expect(card).toHaveAccessibleName(
+      'MOB-3 Dark mode colors Claude is waiting for you Changes requested Oct 9 Unassigned',
+    );
+    const mark = screen.getByText('Waiting for you');
+    expect(mark).toBeVisible();
+    expect(mark.parentElement?.parentElement).toBe(
+      card.querySelector('[data-verdict]')?.parentElement,
+    );
+  });
+
+  it('shows the mark on a card with no due date or chip', () => {
+    expect(renderCard('in_progress', null, { due: '', waiting: true })).toHaveAccessibleName(
+      'MOB-3 Dark mode colors Claude is waiting for you Unassigned',
+    );
   });
 });

@@ -74,6 +74,7 @@ export function listItem(
     commentCount: 0,
     attachmentCount: 0,
     lastReview: null,
+    waiting: false,
     ...overrides,
   };
 }

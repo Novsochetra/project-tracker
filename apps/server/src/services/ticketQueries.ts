@@ -9,6 +9,7 @@ import {
   type TicketListItem,
   type TicketsAcrossProjects,
 } from '@tracker/shared';
+import type { UserScope } from '../auth/scope';
 import type { AttachmentRow, Db, StatusRow, TicketRow } from '../db/schema';
 import { listTicketActivities } from '../repositories/activities';
 import { listTicketAttachments } from '../repositories/attachments';
@@ -71,10 +72,16 @@ export function sortForBoard<T extends TicketRow>(
   return [...tickets].sort((a, b) => position(a) - position(b) || byRank(a, b));
 }
 
-export async function getBoard(ctx: ServiceContext, projectKey: string): Promise<ProjectBoard> {
+const readerOf = (ctx: ServiceContext, userId: UserScope) => ({ userId, now: ctx.now() });
+
+export async function getBoard(
+  ctx: ServiceContext,
+  userId: UserScope,
+  projectKey: string,
+): Promise<ProjectBoard> {
   const project = await requireProject(ctx.db, projectKey);
   const statuses = await listStatusRows(ctx.db, project.id);
-  const tickets = await listTicketItemRows(ctx.db, project.id);
+  const tickets = await listTicketItemRows(ctx.db, readerOf(ctx, userId), project.id);
   return {
     project: toProject(project),
     statuses: statuses.map(toStatus),
@@ -95,10 +102,11 @@ function allowedStatusIds(statuses: readonly StatusFields[], query: ListTicketsQ
 
 export async function listTickets(
   ctx: ServiceContext,
+  userId: UserScope,
   projectKey: string,
   query: ListTicketsQuery,
 ): Promise<TicketListItem[]> {
-  const board = await getBoard(ctx, projectKey);
+  const board = await getBoard(ctx, userId, projectKey);
   const allowed = new Set(allowedStatusIds(board.statuses, query));
   return board.tickets.filter(
     (ticket) => allowed.has(ticket.statusId) && matchesSearch(ticket, query.q ?? ''),
@@ -107,11 +115,13 @@ export async function listTickets(
 
 export async function listAllTickets(
   ctx: ServiceContext,
+  userId: UserScope,
   query: ListTicketsQuery,
 ): Promise<TicketsAcrossProjects> {
   const projectKeys = new Map((await listProjectRows(ctx.db)).map((row) => [row.id, row.key]));
   const statuses = await listAllStatusRows(ctx.db);
-  const rows = await listTicketItemRowsInStatuses(ctx.db, allowedStatusIds(statuses, query));
+  const statusIds = allowedStatusIds(statuses, query);
+  const rows = await listTicketItemRowsInStatuses(ctx.db, readerOf(ctx, userId), statusIds);
   const tickets = rows
     .map((row) => toTicketListItem(row, projectKeys.get(row.projectId) ?? ''))
     .filter((ticket) => matchesSearch(ticket, query.q ?? ''));

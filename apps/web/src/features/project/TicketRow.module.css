@@ -244,6 +244,34 @@
     grid-area: chip;
   }
 
+  /* Claude's question can't wait the way a due date can, so while it waits its mark takes the due
+     date's place on the row's second line, and the date comes back once the person answers. */
+  .main:has(.waiting) {
+    grid-template-areas:
+      'title title title assignee'
+      'priority key wait assignee';
+  }
+
+  .main:has(.waiting):has(.sentBack) {
+    grid-template-areas:
+      'title title title title assignee'
+      'priority key chip wait assignee';
+  }
+
+  .main:has(.waiting) .due {
+    display: none;
+  }
+
+  /* Where the words don't fit beside the key and chip (a sent-back TRACK-123 at 320px), they wrap
+     out of sight whole, rather than end in half a word, and the icon stays. */
+  .main .waiting {
+    display: flex;
+    flex-wrap: wrap;
+    grid-area: wait;
+    height: 1lh;
+    overflow: hidden;
+  }
+
   .assignee {
     grid-area: assignee;
   }

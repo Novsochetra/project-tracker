@@ -19,6 +19,7 @@ export function RequestCard({ request, now }: { request: RunRequest; now: number
       ref={cardRef}
       aria-label={requestName(subjectOf(request))}
       className={clsx(styles.card, open ? 'fade-in' : styles.settled)}
+      data-open={open || undefined}
     >
       {!open ? (
         <SettledRequest request={request} now={now} takeFocus={answer.focusAnswer} />

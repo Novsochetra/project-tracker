@@ -138,6 +138,22 @@ describe('useLiveUpdates', () => {
     expect(isInvalidated(queryClient, queryKeys.ticket('MOB-1'))).toBe(false);
   });
 
+  it("reads the board again for a request of a ticket's run, as its row says Claude waits", () => {
+    const { queryClient, wrapper } = setupApi();
+    seed(queryClient);
+    queryClient.setQueryData(queryKeys.runRequests('r-1'), []);
+    renderHook(() => useLiveUpdates(), { wrapper });
+
+    const request = { type: 'run-request', runId: 'r-1', requestId: 'q-1', projectId: 'p-mob' };
+    const event = { ...request, ticketId: 't-1', chatId: null, status: 'open' };
+    act(() => MockEventSource.latest().emit(event, 'run-request'));
+
+    expect(isInvalidated(queryClient, queryKeys.runRequests('r-1'))).toBe(true);
+    expect(isInvalidated(queryClient, queryKeys.board('MOB'))).toBe(true);
+    expect(isInvalidated(queryClient, queryKeys.board('WEB'))).toBe(false);
+    expect(isInvalidated(queryClient, queryKeys.ticket('MOB-1'))).toBe(false);
+  });
+
   it("reads a run's last steps and its ended requests when it ends", () => {
     const { queryClient, wrapper } = setupApi();
     seed(queryClient);
@@ -150,6 +166,8 @@ describe('useLiveUpdates', () => {
 
     expect(isInvalidated(queryClient, queryKeys.runSteps('r-1'))).toBe(true);
     expect(isInvalidated(queryClient, queryKeys.runRequests('r-1'))).toBe(true);
+    expect(isInvalidated(queryClient, queryKeys.board('MOB'))).toBe(true);
+    expect(isInvalidated(queryClient, queryKeys.board('WEB'))).toBe(false);
   });
 
   it('refreshes chats and steps after a reconnect, which may have missed an answer or steps', () => {

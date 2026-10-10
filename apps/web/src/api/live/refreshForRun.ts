@@ -4,6 +4,7 @@ import { queryKeys } from '../queryKeys';
 import { changeScope } from './changeScope';
 import { cachedEntries } from './refreshForChange';
 import { refreshRunSteps } from './refreshRunSteps';
+import { endsRun, refreshWaiting } from './refreshWaiting';
 
 const isTicketRuns = (queryKey: readonly unknown[]): boolean =>
   queryKey[0] === 'ticket' && queryKey[2] === 'runs';
@@ -24,15 +25,19 @@ function refreshTicketRuns(queryClient: QueryClient, ticketId: string, projectId
 export const refreshRunRequests = (queryClient: QueryClient, runId: string): void =>
   void queryClient.invalidateQueries({ queryKey: queryKeys.runRequests(runId), exact: true });
 
-// A chat's row says whether Claude waits for the person there.
+// A chat's row, and a ticket's row and card, say whether Claude waits for the person there.
 export function refreshForRunRequest(queryClient: QueryClient, event: RunRequestEvent): void {
   refreshRunRequests(queryClient, event.runId);
   if (event.chatId) void queryClient.invalidateQueries({ queryKey: queryKeys.allChats() });
+  if (event.ticketId) refreshWaiting(queryClient, event.projectId, event.ticketId);
 }
 
 // A helper that takes or ends a run has just been seen, so its online state may have changed too.
 export function refreshForRun(queryClient: QueryClient, event: RunEvent): void {
   if (event.ticketId) refreshTicketRuns(queryClient, event.ticketId, event.projectId);
+  if (event.ticketId && endsRun(event.status)) {
+    refreshWaiting(queryClient, event.projectId, event.ticketId);
+  }
   if (event.chatId) {
     void queryClient.invalidateQueries({ queryKey: queryKeys.chat(event.chatId), exact: true });
     // An answer moves its chat to the top of the list.

@@ -9,6 +9,7 @@ import {
 import clsx from 'clsx';
 import { Calendar } from 'lucide-react';
 import { Avatar, Icon, PriorityBars, StatusGlyph, VerdictChip } from '../../components';
+import { WaitingMark } from '../requests/WaitingMark';
 import { DragHandle } from './DragHandle';
 import type { RowCallbacks } from './rowTypes';
 import styles from './TicketRow.module.css';
@@ -66,6 +67,7 @@ export function TicketRowContent({ ticket, status, dragged, callbacks }: TicketR
         <span className={styles.title} data-done={isDone || undefined}>
           {ticket.title || 'Untitled'}
         </span>{' '}
+        {ticket.waiting && <WaitingMark size="caption" className={styles.waiting} />}{' '}
         {isSentBack(ticket.lastReview, status.category) && (
           <VerdictChip verdict="changes_requested" compact className={styles.sentBack} />
         )}{' '}

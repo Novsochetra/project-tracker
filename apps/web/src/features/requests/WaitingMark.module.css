@@ -1,0 +1,21 @@
+.mark {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: var(--space-1);
+  color: var(--link);
+  white-space: nowrap;
+}
+
+.mark svg {
+  flex: none;
+}
+
+.secondary {
+  font: var(--text-secondary);
+  font-weight: var(--weight-medium);
+}
+
+.caption {
+  font: var(--text-caption);
+}

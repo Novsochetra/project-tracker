@@ -120,6 +120,30 @@
     grid-area: chip;
   }
 
+  .row:has(.waiting) {
+    grid-template-areas:
+      'grip title title title assignee'
+      'grip priority key wait assignee';
+  }
+
+  .row:has(.waiting):has(.sentBack) {
+    grid-template-areas:
+      'grip title title title title assignee'
+      'grip priority key chip wait assignee';
+  }
+
+  .row:has(.waiting) .due {
+    display: none;
+  }
+
+  .row .waiting {
+    display: flex;
+    flex-wrap: wrap;
+    grid-area: wait;
+    height: 1lh;
+    overflow: hidden;
+  }
+
   .assignee {
     grid-area: assignee;
   }

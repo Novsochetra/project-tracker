@@ -1,5 +1,6 @@
 import { createProjectInput, updateProjectInput } from '@tracker/shared';
 import { Hono } from 'hono';
+import { requireScope } from '../../auth/scope';
 import type { ServiceContext } from '../../services/context';
 import {
   createProject,
@@ -27,7 +28,9 @@ export const projectRoutes = (ctx: ServiceContext) =>
       await deleteProject(ctx, c.req.param('key'));
       return c.body(null, 204);
     })
-    .get('/projects/:key/board', async (c) => c.json(await getBoard(ctx, c.req.param('key'))))
+    .get('/projects/:key/board', async (c) =>
+      c.json(await getBoard(ctx, requireScope(c.get('access')), c.req.param('key'))),
+    )
     .get('/projects/:key/prompt', async (c) =>
       c.json(await projectPrompt(ctx, c.req.param('key'))),
     );

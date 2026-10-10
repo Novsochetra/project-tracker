@@ -13,6 +13,7 @@ const ticketWith = (overrides: Partial<Ticket>): Ticket => {
     commentCount: _c,
     attachmentCount: _a,
     lastReview: _r,
+    waiting: _w,
     ...ticket
   } = listItem(7, STATUS.todo, 0, overrides);
   return ticket;
