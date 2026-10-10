@@ -8,6 +8,7 @@ import {
   RUN_QUESTIONS_MAX,
   RUN_REQUEST_ANSWER_MAX,
   RUN_REQUEST_DECISIONS,
+  RUN_PERMISSION_LABEL_MAX,
   RUN_REQUEST_LABEL_MAX,
 } from '../domain/runRequest';
 import { runnerId } from './runs';
@@ -28,15 +29,21 @@ const runQuestion = z.object({
   multiSelect: z.boolean(),
 });
 
-const label = text(RUN_REQUEST_LABEL_MAX, 1);
+const questionLabel = text(RUN_REQUEST_LABEL_MAX, 1);
+const permissionLabel = text(RUN_PERMISSION_LABEL_MAX, 1);
 
 // The helper names itself, so only the helper that took the run asks in it.
 export const addRunRequestInput = z.discriminatedUnion('kind', [
-  z.object({ runnerId, kind: z.literal('permission'), label, questions: z.null() }),
+  z.object({
+    runnerId,
+    kind: z.literal('permission'),
+    label: permissionLabel,
+    questions: z.null(),
+  }),
   z.object({
     runnerId,
     kind: z.literal('question'),
-    label,
+    label: questionLabel,
     questions: z.array(runQuestion).min(1).max(RUN_QUESTIONS_MAX),
   }),
 ]);

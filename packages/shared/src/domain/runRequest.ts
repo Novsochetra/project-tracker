@@ -12,8 +12,10 @@ export const RUN_REQUEST_DEADLINE_MS = 30 * 60_000;
 // One wait of the helper's ends after this and it asks again, well under any proxy's idle limit.
 export const RUN_REQUEST_WAIT_MS = 25_000;
 
-// Room for a command's first line or a path; never a file's contents.
 export const RUN_REQUEST_LABEL_MAX = 300;
+// A permission shows what will run, every line of a command and an address with its query, since
+// the person decides on it; generous, so a cut is rare and then said (labelIsCut).
+export const RUN_PERMISSION_LABEL_MAX = 4000;
 export const RUN_QUESTION_MAX = 500;
 export const RUN_QUESTION_HEADER_MAX = 60;
 export const RUN_QUESTION_OPTION_MAX = 200;

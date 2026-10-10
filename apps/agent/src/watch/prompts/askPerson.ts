@@ -1,6 +1,7 @@
 import {
   RUN_REQUEST_DEADLINE_MS,
   RUN_REQUEST_WAIT_MS,
+  labelHead,
   requestIsOverdue,
   requestOfCall,
   type Run,
@@ -114,7 +115,7 @@ async function ask(deps: AskPersonDeps, run: Run, call: PromptCall, signal: Abor
     deps.log(`Couldn't ask on the phone for ${labelOf(run)}: ${deps.describe(error)}`);
     return deny(refusalOf(error) ?? UNREACHABLE);
   }
-  deps.log(`${labelOf(run)}: Claude asks on the phone: ${request.label}`);
+  deps.log(`${labelOf(run)}: Claude asks on the phone: ${labelHead(request.label)}`);
   const ending = await untilEnded(deps, request, signal);
   if ('request' in ending) {
     deps.log(`${labelOf(run)}: ${ENDINGS[ending.request.status]}.`);

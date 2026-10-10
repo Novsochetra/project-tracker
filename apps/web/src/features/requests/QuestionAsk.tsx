@@ -1,10 +1,11 @@
 import type { RunQuestion } from '@tracker/shared';
 import { MessageCircleQuestion } from 'lucide-react';
-import { useState, type MouseEvent } from 'react';
+import { useRef, useState, type MouseEvent } from 'react';
 import { Button } from '../../components';
 import { QUESTION_HEAD, SEND_LABEL, SKIP_LABEL } from './copy';
 import { QuestionBlock } from './QuestionBlock';
 import { RequestHead } from './RequestHead';
+import { revealActions } from './revealActions';
 import {
   answersAtOnce,
   choiceAnswer,
@@ -26,6 +27,7 @@ export interface QuestionAskProps {
 
 export function QuestionAsk({ questions, answer }: QuestionAskProps) {
   const [picks, setPicks] = useState<QuestionPick[]>(() => noPicks(questions));
+  const buttonsRef = useRef<HTMLDivElement>(null);
   const atOnce = answersAtOnce(questions);
   const ready = questionAnswers(picks);
   const setPick = (index: number, pick: QuestionPick) =>
@@ -38,7 +40,7 @@ export function QuestionAsk({ questions, answer }: QuestionAskProps) {
       <RequestHead icon={MessageCircleQuestion} text={QUESTION_HEAD} />
       {questions.map((question, index) => {
         const pick = picks[index] ?? NO_PICK;
-        const choose = (label: string, event: MouseEvent<HTMLButtonElement>) => {
+        const choose = (label: string, event?: MouseEvent<HTMLButtonElement>) => {
           setPick(index, togglePick(question, pick, label));
           if (atOnce) answer.send(choiceAnswer(label), event);
         };
@@ -51,11 +53,12 @@ export function QuestionAsk({ questions, answer }: QuestionAskProps) {
             disabled={answer.pending}
             onChoose={choose}
             onOther={(text) => setPick(index, typeOther(question, pick, text))}
+            onOtherFocus={() => revealActions(buttonsRef.current)}
             onEnter={() => sendReady()}
           />
         );
       })}
-      <div className={styles.buttons}>
+      <div ref={buttonsRef} className={styles.buttons}>
         <Button
           variant="primary"
           size="lg"

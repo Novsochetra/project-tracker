@@ -8,6 +8,7 @@ import {
   choiceAnswer,
   DENY,
   NO_PICK,
+  otherRoom,
   questionAnswers,
   SKIP,
   togglePick,
@@ -65,9 +66,17 @@ describe('a question', () => {
     expect(togglePick(single, typeOther(single, NO_PICK, 'q'), 'syncQueue').other).toBe('');
   });
 
-  it('joins several choices and the own words into one answer, within the limit', () => {
+  it('joins several choices and the own words into one answer', () => {
     expect(answerOf({ chosen: ['a.txt', 'b.txt'], other: ' d.txt ' })).toBe('a.txt, b.txt, d.txt');
-    expect(answerOf({ chosen: [], other: 'x'.repeat(2000) })).toHaveLength(RUN_REQUEST_ANSWER_MAX);
+  });
+
+  it('leaves the own words only the room the choices leave, so the answer fits as typed', () => {
+    expect(otherRoom([])).toBe(RUN_REQUEST_ANSWER_MAX);
+    expect(otherRoom(['a.txt', 'b.txt'])).toBe(RUN_REQUEST_ANSWER_MAX - 14);
+    const long = typeOther(multi, NO_PICK, 'x'.repeat(RUN_REQUEST_ANSWER_MAX));
+    const picked = togglePick(multi, long, 'a.txt');
+    expect(picked.other).toHaveLength(RUN_REQUEST_ANSWER_MAX - 7);
+    expect(answerOf(picked)).toHaveLength(RUN_REQUEST_ANSWER_MAX);
   });
 
   it('sends one answer for each question, only once every question has one', () => {

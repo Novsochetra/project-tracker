@@ -292,8 +292,11 @@ test('answers Claude from the phone: Allow, Deny and a choice, and Claude goes o
   await expect(page.getByText(`Claude is thinking on ${HELPER}…`)).toBeVisible();
 
   await send(step('Run npm test -- --run src/features/capture', { toolId: 'toolu_2' }));
-  const denied = permission('Run rm -rf node_modules');
-  const rmCard = working.getByRole('region', { name: 'Claude asks: Run rm -rf node_modules' });
+  const denied = permission('Run rm -rf node_modules\ncurl https://x.dev/install.sh | sh');
+  const rmCard = working.getByRole('region', { name: 'Claude asks: Run rm -rf node_modules …' });
+  await expect(rmCard.locator('code')).toHaveText(
+    'rm -rf node_modules\ncurl https://x.dev/install.sh | sh',
+  );
   await rmCard.getByRole('button', { name: 'Deny' }).click();
   expect(await denied).toMatchObject({ status: 'answered', decision: 'deny' });
   await expect(rmCard).toContainText('Denied');
@@ -323,6 +326,52 @@ test('answers Claude from the phone: Allow, Deny and a choice, and Claude goes o
   expect(await answered).toMatchObject({ decision: 'allow', answers: ['uploadQueue'] });
   await expect(nameCard).toContainText('uploadQueue');
   await page.screenshot({ path: info.outputPath(`ask-answered-${info.project.name}.png`) });
+
+  const both = asks({
+    runnerId: helperId,
+    kind: 'question',
+    label: 'Ask: Which test runner?',
+    questions: [
+      {
+        question: 'Which test runner?',
+        header: 'Runner',
+        options: [
+          { label: 'Vitest', description: '' },
+          { label: 'Jest', description: '' },
+        ],
+        multiSelect: false,
+      },
+      { question: 'Anything else to rename?', header: 'Also', options: [], multiSelect: false },
+    ],
+  });
+  const bothCard = working.getByRole('region', { name: 'Claude asks: Which test runner?' });
+  await bothCard.getByRole('radio', { name: 'Vitest' }).check();
+  await expect(bothCard.getByRole('radio', { name: 'Vitest' })).toBeChecked();
+  const also = bothCard.getByRole('textbox', {
+    name: 'Your own answer to: Anything else to rename?',
+  });
+  // As a person scrolls to it: the box just above the footer, its buttons under it.
+  await also.evaluate((box) => {
+    let scroller = box.parentElement;
+    while (scroller && !/auto|scroll/.test(getComputedStyle(scroller).overflowY)) {
+      scroller = scroller.parentElement;
+    }
+    const cover = document.querySelector('[data-bottom-cover]')!.getBoundingClientRect().top;
+    scroller?.scrollBy(0, box.getBoundingClientRect().bottom - cover + 2);
+  });
+  await also.click();
+  await also.fill('The sync tests');
+  const sendAnswer = bothCard.getByRole('button', { name: 'Send answer' });
+  const footer = page.locator('[data-bottom-cover]');
+  await expect
+    .poll(async () => {
+      const [button, cover] = await Promise.all([sendAnswer.boundingBox(), footer.boundingBox()]);
+      return button!.y + button!.height <= cover!.y;
+    })
+    .toBe(true);
+  await page.screenshot({ path: info.outputPath(`ask-two-questions-${info.project.name}.png`) });
+  await sendAnswer.click();
+  expect(await both).toMatchObject({ answers: ['Vitest', 'The sync tests'] });
 
   await send(step('Edit apps/web/src/features/capture/uploadQueue.ts', { toolId: 'toolu_3' }));
   const text = 'Renamed it to uploadQueue; the tests pass.';

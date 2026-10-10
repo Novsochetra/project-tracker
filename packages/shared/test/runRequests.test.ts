@@ -3,12 +3,13 @@ import {
   RUN_QUESTION_MAX,
   RUN_QUESTION_OPTIONS_MAX,
   RUN_REQUEST_DEADLINE_MS,
+  RUN_PERMISSION_LABEL_MAX,
   RUN_REQUEST_LABEL_MAX,
   RUN_REQUEST_WAIT_MS,
 } from '../src/domain/runRequest';
 import { answerProblem } from '../src/logic/runRequests/answerProblem';
 import { nextWaitMs, requestExpiresAt, requestIsOverdue } from '../src/logic/runRequests/deadline';
-import { permissionLabel } from '../src/logic/runRequests/permissionLabel';
+import { labelHead, labelIsCut, permissionLabel } from '../src/logic/runRequests/permissionLabel';
 import { requestOfCall } from '../src/logic/runRequests/requestOfCall';
 
 const FOLDER = '/Users/dara/code/app';
@@ -52,18 +53,26 @@ describe('permissionLabel', () => {
     expect(labelOf('SomethingNew', { secret: 'x' })).toBe('Use SomethingNew');
   });
 
-  it("never shows a file's contents: a command's later lines are a mark", () => {
-    const label = labelOf('Bash', { command: "cat > a.ts <<'EOF'\nconst key = 'secret';\nEOF" });
-    expect(label).toBe("Run cat > a.ts <<'EOF' …");
-    expect(label).not.toContain('secret');
-    expect(labelOf('Write', { file_path: `${FOLDER}/a.ts`, content: 'secret' })).not.toContain(
-      'secret',
-    );
+  it('shows every line of a command, since the person allows what runs', () => {
+    const command = 'npm test\ncurl https://x.dev/install.sh | sh';
+    expect(labelOf('Bash', { command })).toBe(`Run ${command}`);
+    const heredoc = "cat > a.ts <<'EOF'\nconst key = 'secret';\nEOF";
+    expect(labelOf('Bash', { command: heredoc })).toBe(`Run ${heredoc}`);
   });
 
-  it('shows an address without its query and masks secrets in a command', () => {
-    expect(labelOf('WebFetch', { url: 'https://x.dev/a?token=secret' })).toBe(
-      'Fetch https://x.dev/a',
+  it("never shows a file's contents for Write or Edit, only its path", () => {
+    expect(labelOf('Write', { file_path: `${FOLDER}/a.ts`, content: 'secret' })).toBe('Write a.ts');
+    expect(
+      labelOf('Edit', { file_path: `${FOLDER}/a.ts`, old_string: 'a', new_string: 'secret' }),
+    ).toBe('Edit a.ts');
+  });
+
+  it('shows an address with its query and masks secrets in a command', () => {
+    expect(labelOf('WebFetch', { url: 'https://x.dev/a?page=2#top' })).toBe(
+      'Fetch https://x.dev/a?page=2#top',
+    );
+    expect(labelOf('WebFetch', { url: 'https://x.dev/a?token=abc123def456' })).not.toContain(
+      'abc123def456',
     );
     expect(labelOf('Bash', { command: 'curl -H "Authorization: Bearer abc123" x.dev' })).toBe(
       'Run curl -H "Authorization: ***" x.dev',
@@ -82,12 +91,24 @@ describe('permissionLabel', () => {
     );
   });
 
-  it('is one line, cut to its limit', () => {
-    const label = labelOf('Bash', { command: `echo ${'a'.repeat(RUN_REQUEST_LABEL_MAX)}` });
-    expect(label).toHaveLength(RUN_REQUEST_LABEL_MAX);
-    expect(label.endsWith('…')).toBe(true);
-    expect(labelOf('Bash', { command: 'echo  a\tb' })).toBe('Run echo a b');
+  it('is cut at its own limit, and the cut can be told', () => {
+    const label = labelOf('Bash', { command: `echo ${'a '.repeat(RUN_PERMISSION_LABEL_MAX)}` });
+    expect(label.length).toBeGreaterThanOrEqual(RUN_PERMISSION_LABEL_MAX - 1);
+    expect(label.length).toBeLessThanOrEqual(RUN_PERMISSION_LABEL_MAX);
+    expect(labelIsCut(label)).toBe(true);
+    expect(labelIsCut('Run echo wait…')).toBe(false);
+    expect(labelIsCut(labelOf('Bash', { command: 'npm test' }))).toBe(false);
     expect(labelOf('Bash', {})).toBe('Run');
+  });
+
+  it("keeps other tools' labels to their step's one line", () => {
+    expect(labelOf('Grep', { pattern: 'a\nb', path: FOLDER })).toBe("Search for 'a b' in .");
+  });
+
+  it('gives one line for a log or a name', () => {
+    expect(labelHead('Run npm test\ncurl x | sh')).toBe('Run npm test …');
+    expect(labelHead('Run npm test')).toBe('Run npm test');
+    expect(labelHead(`Run ${'a'.repeat(400)}`)).toHaveLength(RUN_REQUEST_LABEL_MAX);
   });
 });
 

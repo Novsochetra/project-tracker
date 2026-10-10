@@ -26,6 +26,17 @@ export const answersAtOnce = (questions: readonly RunQuestion[]): boolean =>
 const inOptionOrder = (question: RunQuestion, labels: ReadonlySet<string>): string[] =>
   question.options.map(({ label }) => label).filter((label) => labels.has(label));
 
+const SEPARATOR = ', ';
+
+// What the own words may take beside the picked choices, so the answer fits the tracker's limit
+// as typed and nothing is cut unseen.
+export const otherRoom = (chosen: readonly string[]): number =>
+  Math.max(
+    0,
+    RUN_REQUEST_ANSWER_MAX -
+      chosen.reduce((sum, label) => sum + label.length + SEPARATOR.length, 0),
+  );
+
 // One choice, or one's own words: picking either drops the other.
 export function togglePick(question: RunQuestion, pick: QuestionPick, label: string): QuestionPick {
   if (!question.multiSelect) {
@@ -34,7 +45,9 @@ export function togglePick(question: RunQuestion, pick: QuestionPick, label: str
   const labels = new Set(pick.chosen);
   if (labels.has(label)) labels.delete(label);
   else labels.add(label);
-  return { ...pick, chosen: inOptionOrder(question, labels) };
+  const chosen = inOptionOrder(question, labels);
+  // A choice added after long own words shortens them in the box, where the person sees it.
+  return { chosen, other: pick.other.slice(0, otherRoom(chosen)) };
 }
 
 export const typeOther = (
@@ -46,7 +59,7 @@ export const typeOther = (
 
 // Several choices go back as one answer, as Claude Code joins them.
 export const answerOf = ({ chosen, other }: QuestionPick): string =>
-  [...chosen, other.trim()].filter(Boolean).join(', ').slice(0, RUN_REQUEST_ANSWER_MAX).trim();
+  [...chosen, other.trim()].filter(Boolean).join(SEPARATOR);
 
 export function questionAnswers(picks: readonly QuestionPick[]): AnswerRunRequestInput | null {
   const answers = picks.map(answerOf);

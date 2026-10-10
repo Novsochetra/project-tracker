@@ -1,9 +1,11 @@
-import { stepIcon } from '../steps/stepIcon';
+import { labelIsCut } from '@tracker/shared';
 import { Icon } from '../../components';
+import { stepIcon } from '../steps/stepIcon';
+import { LABEL_CUT_TEXT } from './copy';
 import styles from './Requests.module.css';
 import { labelParts } from './requestText';
 
-// A command or a path shows whole, never cut, since the person decides on it.
+// Every line of a command shows, since the person decides on it; one the helper had to cut says so.
 export function RequestAction({ label }: { label: string }) {
   const { verb, detail } = labelParts(label);
   return (
@@ -13,6 +15,7 @@ export function RequestAction({ label }: { label: string }) {
         {verb}
       </p>
       {detail && <code className={styles.code}>{detail}</code>}
+      {labelIsCut(label) && <p className={styles.cut}>{LABEL_CUT_TEXT}</p>}
     </div>
   );
 }

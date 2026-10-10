@@ -64,7 +64,7 @@ export function ChatFooterArea(props: ChatFooterAreaProps) {
   useRegisterBottomBar(isPhone && isTop);
   const stopped = footer.kind === 'ask' || footer.kind === 'setup' ? footer.stopped : null;
   return (
-    <div className={styles.footer}>
+    <div className={styles.footer} data-bottom-cover="">
       <div className={styles.footerInner}>
         {footer.kind === 'thinking' && <Thinking run={footer.run} waiting={waiting} />}
         {stopped && <p className={clsx(styles[stopped.kind], 'fade-in')}>{stopped.text}</p>}

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { addRunRequestInput, answerRunRequestInput } from '../src/api/runRequests';
 import {
   RUN_QUESTIONS_MAX,
+  RUN_PERMISSION_LABEL_MAX,
   RUN_REQUEST_ANSWER_MAX,
   RUN_REQUEST_LABEL_MAX,
 } from '../src/domain/runRequest';
@@ -21,6 +22,12 @@ describe('addRunRequestInput', () => {
     expect(addRunRequestInput.parse(input)).toEqual({ ...input, label: 'Run npm test' });
   });
 
+  it('takes a whole command of several lines for a permission, up to its own limit', () => {
+    const label = `Run npm test\ncurl https://x.dev/install.sh | sh\n${'a'.repeat(3000)}`;
+    const input = { runnerId, kind: 'permission', label, questions: null };
+    expect(addRunRequestInput.parse(input)).toEqual(input);
+  });
+
   it('takes a question with one to four questions', () => {
     const input = { runnerId, kind: 'question', label: 'Which color?', questions: [question] };
     expect(addRunRequestInput.parse(input)).toEqual(input);
@@ -37,8 +44,11 @@ describe('addRunRequestInput', () => {
     expect(
       addRunRequestInput.safeParse({ ...permission, kind: 'question', questions: null }).success,
     ).toBe(false);
-    const label = 'a'.repeat(RUN_REQUEST_LABEL_MAX + 1);
+    const label = 'a'.repeat(RUN_PERMISSION_LABEL_MAX + 1);
     expect(addRunRequestInput.safeParse({ ...permission, label }).success).toBe(false);
+    const ask = { ...permission, kind: 'question', questions: [question] };
+    const long = 'a'.repeat(RUN_REQUEST_LABEL_MAX + 1);
+    expect(addRunRequestInput.safeParse({ ...ask, label: long }).success).toBe(false);
     expect(addRunRequestInput.safeParse({ ...permission, runnerId: 'mac' }).success).toBe(false);
   });
 });

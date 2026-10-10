@@ -1,4 +1,4 @@
-import type { RunQuestion, RunRequest } from '@tracker/shared';
+import { labelHead, type RunQuestion, type RunRequest } from '@tracker/shared';
 import { OUTCOME_TEXT, PERMISSION_HEAD, QUESTION_HEAD } from './copy';
 import { requestState } from './requestState';
 
@@ -18,8 +18,11 @@ export function labelParts(label: string): LabelParts {
   return verb ? { verb, detail: label.slice(verb.length + 1) } : { verb: label, detail: '' };
 }
 
+// One line: a permission's command may run over many.
 export const subjectOf = (request: RunRequest): string =>
-  request.kind === 'question' ? (request.questions[0]?.question ?? request.label) : request.label;
+  request.kind === 'question'
+    ? (request.questions[0]?.question ?? request.label)
+    : labelHead(request.label);
 
 export function outcomeOf(request: RunRequest, now: number): Outcome {
   const state = requestState(request, now);
