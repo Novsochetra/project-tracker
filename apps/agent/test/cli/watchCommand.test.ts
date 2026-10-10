@@ -28,20 +28,31 @@ describe('tracker watch', () => {
   });
 
   it('is in the usage', () => {
-    expect(USAGE).toContain('\n  watch [PROJECT] [--name NAME] [--permission-mode MODE]\n');
+    expect(USAGE).toContain(
+      '\n  watch [PROJECT] [--name NAME] [--permission-mode MODE] [--no-keep-awake] [--install | --uninstall | --check]\n',
+    );
   });
 
   it('takes one project and only its own options', async () => {
     expect(await cli(['watch', 'MOB', 'WEB'])).toEqual({
       code: EXIT_USAGE,
       stderr:
-        'Unexpected argument "WEB".\nUsage: tracker watch [PROJECT] [--name NAME] [--permission-mode MODE]',
+        'Unexpected argument "WEB".\nUsage: tracker watch [PROJECT] [--name NAME] [--permission-mode MODE] [--no-keep-awake] [--install | --uninstall | --check]',
     });
     expect((await cli(['watch', '--title', 'x'])).stderr).toContain(
       '"watch" has no --title option.',
     );
     expect((await cli(['claim', 'MOB', '--name', 'x'])).stderr).toContain(
       '"claim" has no --name option.',
+    );
+  });
+
+  it('takes one of --install, --uninstall and --check, and only for watch', async () => {
+    expect((await cli(['watch', '--install', '--check'])).stderr).toContain(
+      'Use one of --install, --uninstall and --check.',
+    );
+    expect((await cli(['projects', '--install'])).stderr).toContain(
+      '"projects" has no --install option.',
     );
   });
 

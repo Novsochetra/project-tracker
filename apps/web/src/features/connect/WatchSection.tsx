@@ -24,7 +24,7 @@ export function WatchSection({ info, projectKey, onCopy }: WatchSectionProps) {
         <ul className={styles.rows}>
           <CommandRow
             command={watchCommand(info, projectKey)}
-            description="Waits for your runs and works on one ticket at a time, in this folder."
+            description="Waits for your runs and works on one ticket at a time, in this folder. Add --install to start it by itself when you log in to your Mac."
             copyLabel="Copy watch command"
             onCopy={onCopy}
           />

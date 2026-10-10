@@ -2,6 +2,7 @@ import { dirname } from 'node:path';
 import type { GlobalValues } from '../cli/options';
 import { CLAUDE, runClaude } from './claude';
 import { lockFolder } from './folderLock';
+import { keepMacAwake } from './keepAwake';
 import { followRunEvents } from './liveStream';
 import { canonicalPath } from './paths';
 import { setUp, type Setup } from './setup';
@@ -45,6 +46,7 @@ export async function watch(global: GlobalValues, args: WatchArgs, io: WatchIo):
   const stopping = new AbortController();
   void io.untilStopped().then(() => stopping.abort());
   const release = lockFolder(dirname(io.store.path), canonicalPath(io.cwd));
+  if (args.keepAwake !== false) keepMacAwake();
   try {
     await keepWatching(await setUp(global, args, io, stopping.signal), args, io, stopping.signal);
   } catch (error) {

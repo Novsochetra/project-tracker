@@ -43,6 +43,7 @@ describe('parseCliArgs', () => {
       args: ['MOB'],
       global: { url: 'http://x:1', as: 'Bot', token: undefined, json: true, help: false },
       options: { status: 'To do' },
+      flags: {},
     });
   });
 

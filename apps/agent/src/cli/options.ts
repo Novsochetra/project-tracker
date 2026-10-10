@@ -26,6 +26,17 @@ export const COMMAND_OPTIONS = {
   'permission-mode': { type: 'string' },
 } as const satisfies NonNullable<ParseArgsConfig['options']>;
 
+export const WATCH_FLAGS = {
+  install: { type: 'boolean' },
+  uninstall: { type: 'boolean' },
+  check: { type: 'boolean' },
+  'no-keep-awake': { type: 'boolean' },
+} as const satisfies NonNullable<ParseArgsConfig['options']>;
+
+export type WatchFlag = keyof typeof WATCH_FLAGS;
+
+export type WatchFlags = Partial<Record<WatchFlag, boolean>>;
+
 export type CommandOption = keyof typeof COMMAND_OPTIONS;
 
 export type CommandValues = Partial<Record<CommandOption, string>>;

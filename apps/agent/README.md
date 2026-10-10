@@ -92,7 +92,19 @@ tracker watch MOB --name "Dara's MacBook"
 - It only calls out to the tracker over https (or to `localhost`), so it works behind a home router with no open port. It waits for the tracker when it can't reach it, reconnects by itself after a drop, a deploy or sleep, and checks for runs every 20 s besides.
 - One run at a time. The prompt goes to `claude -p` on stdin, in this folder. The tracker never sends it a command, folder or flag.
 - `claude` must be installed and logged in here, with the tracker's MCP tools added (above), so Claude can claim, comment and submit. Your Claude Code settings decide what it may do; `--permission-mode` (for example `acceptEdits`) is passed on to `claude`.
+- It keeps the Mac from idle sleep while it runs (`caffeinate -i`; the screen can still turn off). `--no-keep-awake` turns that off. A closed laptop lid still sleeps unless it is on power with a display.
 - Ctrl-C (or closing the terminal) stops it, and a run in progress is reported as cancelled. If the tracker can't be reached then, it keeps trying to report; a second Ctrl-C quits at once.
+
+### Start it by itself (macOS)
+
+```bash
+cd ~/code/mobile
+tracker watch MOB --install     # starts now, at every login, and again after a crash
+tracker watch --check           # installed? running? online at the tracker?
+tracker watch --uninstall
+```
+
+`--install` checks everything a normal start does, then writes a LaunchAgent (`~/Library/LaunchAgents/com.project-tracker.watch.<id>.plist`) that runs `tracker watch` in this folder with the same choices; logs go to `~/Library/Logs/project-tracker-watch-<PROJECT>.log`. The token stays in the config file, never in the plist, so log in with `tracker login` first (a token from an environment variable is refused). A LaunchAgent runs only while you are logged in: after a restart with FileVault on, the Mac waits for your password. "Start up automatically after a power failure" (System Settings → Energy) helps a Mac at home. When the Mac is off, asleep or offline, a run waits 30 minutes and then fails with "Your computer didn't take the run."
 
 ## Workflow: worker → reviewer → person
 
