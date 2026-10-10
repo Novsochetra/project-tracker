@@ -24,16 +24,28 @@ describe('planImage: photos', () => {
   it('shrinks a 12 MP photo, either way up, to the server’s 4.9 MP budget', () => {
     expect(planImage(source('image/jpeg', 4032, 3024, 4 * MB))).toEqual({
       encodings: [photoOf(2560, 1920)],
-      mustConvert: true,
+      mustConvert: false,
     });
     expect(planImage(source('image/jpeg', 3024, 4032, 1.5 * MB))?.encodings).toEqual([
       photoOf(1920, 2560),
     ]);
   });
 
-  it('shrinks a photo just past the budget, however light', () => {
+  it('shrinks a photo just past the budget, sent only if smaller, as the server shrinks it', () => {
+    expect(planImage(source('image/jpeg', 2592, 1944, 239_000))).toEqual({
+      encodings: [photoOf(2560, 1920)],
+      mustConvert: false,
+    });
     expect(planImage(source('image/webp', 2561, 1920, 200_000))).toEqual({
       encodings: [photoOf(2560, 1919)],
+      mustConvert: false,
+    });
+  });
+
+  it('always sends the JPEG of a photo past 25 MP, which the server may keep as it came', () => {
+    expect(planImage(source('image/jpeg', 5712, 4284, 3 * MB))?.mustConvert).toBe(false);
+    expect(planImage(source('image/jpeg', 6000, 4500, 3 * MB))).toEqual({
+      encodings: [photoOf(2560, 1920)],
       mustConvert: true,
     });
   });

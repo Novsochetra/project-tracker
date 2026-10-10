@@ -185,6 +185,21 @@ describe('what the web app sends as it is', () => {
     expect((await metadataOf(image.bytes)).exif).toBeUndefined();
   });
 
+  it.each(['jpeg', 'webp'] as const)(
+    'stores a %s just past the budget within it, without its GPS and camera',
+    async (format) => {
+      const create = { width: 2592, height: 1944, channels: 3, background: 'white' } as const;
+      const photo = new Uint8Array(
+        await sharp({ create }).withExif(CAMERA_EXIF).toFormat(format).toBuffer(),
+      );
+      expect(containsText(photo, 'iPhone 15 Pro')).toBe(true);
+      const image = await compressImage(photo, `image/${format}`);
+      expect(image).toMatchObject({ mimeType: 'image/webp', width: 2560, height: 1920 });
+      expect((await metadataOf(image.bytes)).exif).toBeUndefined();
+      expect(containsText(image.bytes, 'iPhone 15 Pro')).toBe(false);
+    },
+  );
+
   it('stores a screenshot with an eXIf chunk lossless, every pixel kept, without it', async () => {
     const pixels = screenPixels(1170, 2532);
     const shot = new Uint8Array(

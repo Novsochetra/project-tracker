@@ -2,6 +2,7 @@ import {
   ATTACHMENT_KINDS,
   MAX_LOSSLESS_PIXELS,
   MAX_PHOTO_PIXELS,
+  MAX_WHOLE_DECODE_PIXELS,
   sizeWithin,
   type AttachmentMimeType,
   type PixelSize,
@@ -55,10 +56,12 @@ function planPng(source: SourceImage): ImagePlan | null {
   return { encodings, mustConvert: true };
 }
 
+// The original goes when it is the smaller, even past the budget: the server drops its GPS and,
+// up to what it decodes, shrinks it to the budget in its one lossy pass (PT-145).
 function planPhoto(source: SourceImage): ImagePlan | null {
-  const fits = pixelsOf(source) <= MAX_PHOTO_PIXELS;
-  if (fits && source.bytes <= MAX_UNTOUCHED_PHOTO_BYTES) return null;
-  return { encodings: [asPhoto(source)], mustConvert: !fits };
+  const pixels = pixelsOf(source);
+  if (pixels <= MAX_PHOTO_PIXELS && source.bytes <= MAX_UNTOUCHED_PHOTO_BYTES) return null;
+  return { encodings: [asPhoto(source)], mustConvert: pixels > MAX_WHOLE_DECODE_PIXELS };
 }
 
 // Null sends the image as it is. Only Safari shows HEIC and the server can neither read one nor

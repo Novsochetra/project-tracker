@@ -1,6 +1,7 @@
 import {
   MAX_LOSSLESS_PIXELS,
   MAX_PHOTO_PIXELS,
+  MAX_WHOLE_DECODE_PIXELS,
   longSideWithin,
   type AttachmentMimeType,
 } from '@tracker/shared';
@@ -13,7 +14,6 @@ const MB = 1024 * 1024;
 // (wholePixels), up to 8 bytes a pixel, is kept to 25 MP: a 24 MP photo (an iPhone's 5712×4284, a
 // camera's 6000×4000) still fits.
 export const MAX_INPUT_PIXELS = 50_000_000;
-export const MAX_WHOLE_DECODE_PIXELS = 25_000_000;
 
 // libjpeg reads every scan of a JPEG before its first row comes out, and sharp checks its timeout
 // only between rows, so nothing stops a JPEG made of scans: 950,000 empty ones in 14 MB ran 160 s

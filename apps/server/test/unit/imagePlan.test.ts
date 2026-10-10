@@ -1,10 +1,14 @@
-import { MAX_LOSSLESS_PIXELS, MAX_PHOTO_PIXELS, longSideWithin } from '@tracker/shared';
+import {
+  MAX_LOSSLESS_PIXELS,
+  MAX_PHOTO_PIXELS,
+  MAX_WHOLE_DECODE_PIXELS,
+  longSideWithin,
+} from '@tracker/shared';
 import { describe, expect, it } from 'vitest';
 import { renamedFor } from '../../src/images/imageFileName';
 import {
   MAX_INPUT_PIXELS,
   MAX_JPEG_SCANS,
-  MAX_WHOLE_DECODE_PIXELS,
   MAX_WORK_BYTES,
   isWorthStoring,
   planImage,

@@ -10,6 +10,11 @@ export const MAX_PHOTO_PIXELS = 2560 * 1920;
 // (3840×2160: a phone's, an iPad's or a MacBook's screen fits), so small text stays sharp.
 export const MAX_LOSSLESS_PIXELS = 3840 * 2160;
 
+// The server decodes an image it must hold whole only up to this (a 24 MP photo, 6000×4000, fits),
+// so it shrinks any photo up to this to the budget itself; past it, a progressive JPEG or a WebP is
+// kept as it came, larger than the budget.
+export const MAX_WHOLE_DECODE_PIXELS = 25_000_000;
+
 export interface PixelSize {
   width: number;
   height: number;
