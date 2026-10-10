@@ -2,7 +2,7 @@ import { join } from 'node:path';
 import { describe, expect, it, vi } from 'vitest';
 import { createClock } from '../../src/clock';
 import { DEFAULT_PORT, REPO_ROOT, loadConfig } from '../../src/config';
-import { isPostgresUrl } from '../../src/db/createDatabase';
+import { isPostgresUrl, looksLikeUrl } from '../../src/db/createDatabase';
 import { isUniqueViolation } from '../../src/db/errors';
 import { createBroadcaster } from '../../src/events/broadcaster';
 
@@ -88,6 +88,37 @@ describe('loadConfig', () => {
     expect(isPostgresUrl('postgresql://u@h/db')).toBe(true);
     expect(isPostgresUrl(':memory:')).toBe(false);
     expect(isPostgresUrl('/data/tracker.db')).toBe(false);
+  });
+});
+
+describe('looksLikeUrl', () => {
+  it.each([
+    'mysql://root:pw@h/db',
+    's3://bucket/tracker.db',
+    'postgresql:/postgres:pw@h/db',
+    'postgres:postgres:pw@h/db',
+    'mysql:/root:pw@h/db',
+    '"postgresql:/postgres:pw@h/db"',
+    ' postgresql:/postgres:pw@h/db',
+    'DATABASE_URL=postgresql:/postgres:pw@h/db',
+    'DATABASE_URL=postgres:postgres:pw@h/db',
+  ])('takes %s for a URL', (value) => {
+    expect(looksLikeUrl(value)).toBe(true);
+  });
+
+  it.each([
+    'data/tracker.db',
+    ':memory:',
+    'tracker-10:30.db',
+    'backup:2026.db',
+    'data/a:b.db',
+    './a:b.db',
+    '/srv/back:up/tracker:1.db',
+    'C:\\data\\tracker.db',
+    'C:/data/tracker.db',
+    'c:tracker.db',
+  ])('takes %s for a file path', (value) => {
+    expect(looksLikeUrl(value)).toBe(false);
   });
 });
 

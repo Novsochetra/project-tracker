@@ -28,6 +28,19 @@ describe('withoutNulInJson', () => {
     expect(withoutNulInJson('Lo\u0000gs')).toBe('Logs');
   });
 
+  it('reaches strings nested deeper than recursion could go, and leaves the body as sent', () => {
+    const depth = 200_000;
+    const body = JSON.parse(`${'['.repeat(depth)}"x\\u0000"${']'.repeat(depth)}`) as unknown;
+    let cleaned = withoutNulInJson(body);
+    let sent = body;
+    for (let level = 0; level < depth; level += 1) {
+      cleaned = (cleaned as unknown[])[0];
+      sent = (sent as unknown[])[0];
+    }
+    expect(cleaned).toBe('x');
+    expect(sent).toBe('x\u0000');
+  });
+
   it('keeps a __proto__ key a plain field', () => {
     const body = JSON.parse('{"__proto__":{"polluted":"y\\u0000"}}') as unknown;
     const cleaned = withoutNulInJson(body) as Record<string, unknown>;

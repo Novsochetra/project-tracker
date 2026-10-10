@@ -9,10 +9,11 @@ import { StripNulPlugin } from './stripNul';
 
 export const isPostgresUrl = (url: string): boolean => /^postgres(ql)?:\/\//i.test(url);
 
-// Anything that starts with a scheme is a URL, typo or not: as a SQLite path, postgresql:/user:pw@…
-// (one slash) made folders named after the password. One letter is a Windows drive, not a scheme.
-export const looksLikeUrl = (url: string): boolean =>
-  url.includes('://') || /^[a-z][a-z\d+.-]+:/i.test(url);
+// A URL, typo or not, wherever it starts (quotes, a space or its name in front): as a SQLite path,
+// postgresql:/user:pw@… (one slash) was printed and made folders named after the password. A scheme
+// is two or more letters before :/ (a Windows drive has one); with no slash only postgres: counts, so
+// a file name holding a colon (tracker-10:30.db) stays a path, as it was before PT-137.
+export const looksLikeUrl = (url: string): boolean => /:\/\/|[a-z]{2}:\/|postgres(ql)?:/i.test(url);
 
 export function createKysely(dialect: Dialect): Db {
   return new Kysely<Database>({ dialect, plugins: [new CamelCasePlugin(), new StripNulPlugin()] });
