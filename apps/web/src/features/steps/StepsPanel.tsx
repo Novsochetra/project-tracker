@@ -1,10 +1,10 @@
-import type { RunStep } from '@tracker/shared';
+import { withoutAnswer, type RunStep } from '@tracker/shared';
 import { useMemo } from 'react';
 import type { TrackerQuery } from '../../api/types';
 import { Button, Spinner } from '../../components';
 import { notKeptText, STEPS_FAILED_TEXT } from './stepCopy';
 import { StepList } from './StepList';
-import { stepRows, withoutAnswer } from './stepRows';
+import { stepRows } from './stepRows';
 import styles from './Steps.module.css';
 import type { StepVariant } from './stepVariant';
 import { visibleSteps } from './visibleSteps';

@@ -1,4 +1,10 @@
-import { CHAT_TITLE_MAX, formatTicketKey, type Chat, type ChatMessage } from '@tracker/shared';
+import {
+  CHAT_TITLE_MAX,
+  formatTicketKey,
+  isAnswerStep,
+  type Chat,
+  type ChatMessage,
+} from '@tracker/shared';
 import type { ChatWithKey, MessageWithKey } from '../repositories/chats';
 
 export const toChat = (row: ChatWithKey): Chat => ({
@@ -12,6 +18,19 @@ export const toChat = (row: ChatWithKey): Chat => ({
   updatedAt: row.updatedAt,
 });
 
+// The count above an answer is what its open list shows, which leaves out Claude's last words
+// when they are the answer itself.
+function shownStepCount(row: MessageWithKey): number {
+  const count = row.stepCount ?? 0;
+  if (row.lastStepKind === null || row.lastStepLabel === null) return count;
+  const last = {
+    kind: row.lastStepKind,
+    label: row.lastStepLabel,
+    subAgent: row.lastStepSubAgent === 1,
+  };
+  return isAnswerStep(last, row.text) ? count - 1 : count;
+}
+
 export const toMessage = (row: MessageWithKey): ChatMessage => ({
   id: row.id,
   chatId: row.chatId,
@@ -22,7 +41,7 @@ export const toMessage = (row: MessageWithKey): ChatMessage => ({
       ? null
       : formatTicketKey(row.projectKey, row.ticketNum),
   runId: row.runId,
-  stepCount: row.stepCount ?? 0,
+  stepCount: shownStepCount(row),
   createdAt: row.createdAt,
 });
 

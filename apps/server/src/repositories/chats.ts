@@ -1,3 +1,4 @@
+import type { RunStepKind } from '@tracker/shared';
 import type { ExpressionBuilder } from 'kysely';
 import type { UserScope } from '../auth/scope';
 import type { ChatMessageRow, ChatRow } from '../db/chatTables';
@@ -12,6 +13,9 @@ export interface MessageWithKey extends ChatMessageRow {
   projectKey: string | null;
   ticketNum: number | null;
   stepCount: number | null;
+  lastStepKind: RunStepKind | null;
+  lastStepLabel: string | null;
+  lastStepSubAgent: number | null;
 }
 
 // '=' never matches a null user, so the open tracker's rows need 'is'.
@@ -65,8 +69,17 @@ export const listMessageRows = (db: Db, chatId: string) =>
     .leftJoin('tickets', 'tickets.id', 'chatMessages.ticketId')
     .leftJoin('projects', 'projects.id', 'tickets.projectId')
     .leftJoin('runs', 'runs.id', 'chatMessages.runId')
+    // A step's seq counts the run's steps, so the last one's is the run's stepCount.
+    .leftJoin('runSteps as lastStep', (join) =>
+      join.onRef('lastStep.runId', '=', 'runs.id').onRef('lastStep.seq', '=', 'runs.stepCount'),
+    )
     .selectAll('chatMessages')
     .select(['projects.key as projectKey', 'tickets.num as ticketNum', 'runs.stepCount'])
+    .select([
+      'lastStep.kind as lastStepKind',
+      'lastStep.label as lastStepLabel',
+      'lastStep.subAgent as lastStepSubAgent',
+    ])
     .where('chatMessages.chatId', '=', chatId)
     .orderBy('chatMessages.createdAt')
     .orderBy('chatMessages.id')

@@ -252,12 +252,12 @@ test('shows what Claude does while it answers, then folds the steps above the an
   await api.finishRun(job!.run.id, { status: 'done', answer: text, sessionId: randomUUID() });
   await expect(working).toBeHidden();
   const answer = page.getByRole('article', { name: 'Claude', exact: true });
-  const toggle = answer.getByRole('button', { name: '8 steps' });
+  // Every step but the last, Claude's words that are the answer right under the list.
+  const toggle = answer.getByRole('button', { name: '7 steps' });
   await expect(toggle).toHaveAttribute('aria-expanded', 'false');
   await page.reload();
   await toggle.click();
   const folded = answer.getByRole('list', { name: "Claude's steps" }).getByRole('listitem');
-  // Every step but the last, Claude's words that are the answer right under the list.
   await expect(folded).toHaveCount(7);
   await expect(folded.nth(2)).toContainText('Run echo hello > out.txt');
   await page.screenshot({ path: info.outputPath(`ask-steps-${info.project.name}.png`) });

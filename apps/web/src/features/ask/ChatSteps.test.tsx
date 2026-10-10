@@ -110,13 +110,14 @@ describe('Ask: what Claude is doing', () => {
     expect(screen.queryByRole('article', { name: WORKING_LABEL })).not.toBeInTheDocument();
   });
 
-  it('folds the steps of an answer, and opens them without its own words', async () => {
+  it('folds the steps of an answer, and opens as many as it counts, without its own words', async () => {
+    // The tracker counts 22 of the run's 23 steps: the last are the answer's own words.
     const answer = makeMessage({
       id: 'm-2',
       role: 'claude',
       text: 'In runQueue.ts.',
       runId: 'r-old',
-      stepCount: 23,
+      stepCount: 22,
     });
     const steps = [
       makeStep(22),
@@ -126,7 +127,7 @@ describe('Ask: what Claude is doing', () => {
     setup(makeChatDetail({ messages: [question, answer] }), listRunSteps);
     const user = userEvent.setup();
     const claude = await screen.findByRole('article', { name: 'Claude' });
-    const toggle = within(claude).getByRole('button', { name: '23 steps' });
+    const toggle = within(claude).getByRole('button', { name: '22 steps' });
 
     expect(toggle).toHaveAttribute('aria-expanded', 'false');
     expect(listRunSteps).not.toHaveBeenCalled();
