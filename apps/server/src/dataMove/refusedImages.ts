@@ -29,8 +29,9 @@ export function refusedImageProblems(
   if (refused.length === 0) return [];
   return [
     `${refused.length} image(s) can't go online as they are: their metadata (such as where a ` +
-      'photo was taken) can’t be removed. Delete them in the local tracker, or attach a copy ' +
-      'saved again, then run the move again:',
+      'photo was taken) can’t be removed. In the local tracker, delete each from the ticket or ' +
+      'comment named below (and attach a copy saved again if you need it), then run the move ' +
+      'again:',
     ...refused.map(
       ({ before, refusal }) =>
         `  - ${before.id} (${place(before)}, ${before.fileName}, ${formatBytes(before.size)}): ` +

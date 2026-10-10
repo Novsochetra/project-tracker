@@ -11,11 +11,13 @@ const say = (line: string) => process.stdout.write(`${line}\n`);
 
 let phase: MovePhase = 'no-rows';
 
-// Ctrl-C would end the process without the move's cleanup, leaving the copy of the whole
-// database in the temp folder. An open transaction ends with the connection, uncommitted.
+// Ctrl-C, a kill or closing the terminal tab (SIGHUP) would end the process without the move's
+// cleanup, leaving the copy of the whole database in the temp folder. An open transaction ends
+// with the connection, uncommitted.
 for (const [signal, code] of [
   ['SIGINT', 130],
   ['SIGTERM', 143],
+  ['SIGHUP', 129],
 ] as const) {
   process.once(signal, () => {
     removeSourceCopies();

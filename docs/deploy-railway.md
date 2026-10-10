@@ -111,10 +111,10 @@ unset DB
 
 A one-time command copies your local tracker (`data/tracker.db` and `data/uploads`) into Railway's Postgres and your S3 bucket: every project, status, ticket, comment, report, review and file, with the same ids, so ticket keys (PT-1…), ranks, counters and links stay as they are. Run it right after setting the owner (step 6), before you open the online tracker or add anything to it (steps 8 and 9): it refuses a database that already holds projects or tickets.
 
-- **It only reads your local data.** It backs `data/tracker.db` up to a temporary copy and migrates the copy (your local tracker may be on an older schema); the file and the folder are never changed. The copy is deleted at the end, also when you stop it with Ctrl-C.
+- **It only reads your local data.** It backs `data/tracker.db` up to a temporary copy and migrates the copy (your local tracker may be on an older schema); the file and the folder are never changed. The copy is deleted at the end, also when you stop it with Ctrl-C or close its terminal tab.
 - **Only into Railway.** `DATABASE_URL` must be a `postgres://` URL and the files go only to the S3 bucket, never to a SQLite file or a folder on your Mac, which the online tracker could not read.
 - **Images are compressed** as new uploads are (`docs/architecture.md` §3), and only the compressed copy, or one stripped of its metadata, goes to S3: a screenshot `….png` becomes `….webp`, with the same id, so its tile, its place and links to it stay. The bytes decide the type, so a JPEG once saved as `….png` goes online as what it is. Text that names a file by its old name still reads the same; the command says how many texts do. Other files are copied as they are.
-- **Images that can't go online as they are** (a TIFF, or one cut off before its picture), whose metadata such as a photo's location can't be removed, stop the move before any file or row is written. The dry run lists them by attachment id, ticket key, file name, size and reason; delete them in the local tracker (or attach a copy saved again), then run it again.
+- **Images that can't go online as they are** (a TIFF, or one cut off before its picture), whose metadata such as a photo's location can't be removed, stop the move before any file or row is written. The dry run lists them by attachment id, ticket key (or a comment on it), file name, size and reason. Start the local tracker again, delete each from that ticket or comment (and attach a copy saved again if you need it), stop the tracker, then run the dry run again. Starting it migrates `data/tracker.db` to this commit's schema if it was older (the move itself never changes the file); the backup from step 2 keeps the file and the uploads as they were.
 - **Not copied:** sign-in (`users`, `sessions`, `api_tokens`). The online owner is the one you set in step 6; make new API tokens online for your agents (step 9). Nor uploads on no ticket or comment yet (files picked in a New ticket that wasn't created, or an upload cut off when the tracker stopped): only your local tracker could attach them. The command says how many it left out.
 - **Files first, rows after.** The rows go in one transaction, so a run that stops halfway (network, a refused upload, Ctrl-C) leaves no row pointing at a missing file. Its last line says whether rows were written; when none were, run the same command again: it starts over, writing the files again under the same keys.
 - **It refuses** a database that already holds projects or tickets, and says what is there (`--allow-existing` adds your data next to them); one where your data is already there; and one an older build migrated (deploy this commit first, so the online tracker and the move agree on the schema).
@@ -181,15 +181,16 @@ Agents on your Mac reach the online tracker with its address and an API token yo
 ## Backups
 
 - **Railway:** Postgres service → **Backups** → **Create backup** before any risky change, and add a **Daily** schedule (kept 6 days). Restore from the same tab (it mounts the backup as a new volume; click **Deploy**).
-- **Your own copy** (needs `brew install libpq`, whose `pg_dump` must be at least the server's version). Paste `DATABASE_PUBLIC_URL` from the Postgres service at `read -rs DB`; libpq reads `PGSSLMODE` as it reads `sslmode` in a URL, and with `DB` empty it would reach a Postgres on your Mac instead, so the shell stops as in step 6:
+- **Your own copy** (needs `brew install libpq`, whose `pg_dump` must be at least the server's version). Run it in the repo folder: the dump goes to `data/backups`, which git ignores. Paste `DATABASE_PUBLIC_URL` from the Postgres service at `read -rs DB`; libpq reads `PGSSLMODE` as it reads `sslmode` in a URL, and with `DB` empty it would reach a Postgres on your Mac instead, so the shell stops as in step 6:
 
   ```bash
+  mkdir -p data/backups
   read -rs DB
-  PGSSLMODE=require "$(brew --prefix libpq)/bin/pg_dump" "${DB:?is empty, run read -rs DB again}" -Fc -f tracker-$(date +%F).dump
+  PGSSLMODE=require "$(brew --prefix libpq)/bin/pg_dump" "${DB:?is empty, run read -rs DB again}" -Fc -f data/backups/tracker-$(date +%F).dump
   unset DB
   ```
 
-  Restore into an empty database with `PGSSLMODE=require "$(brew --prefix libpq)/bin/pg_restore" --no-owner -d "${DB:?is empty, run read -rs DB again}" tracker-<date>.dump` after `read -rs DB` (Homebrew's libpq isn't on your `PATH`).
+  Restore into an empty database with `PGSSLMODE=require "$(brew --prefix libpq)/bin/pg_restore" --no-owner -d "${DB:?is empty, run read -rs DB again}" data/backups/tracker-<date>.dump` after `read -rs DB` (Homebrew's libpq isn't on your `PATH`).
 
 - **Files:** S3 keeps them; turn on bucket versioning if you want deleted files to be recoverable.
 
