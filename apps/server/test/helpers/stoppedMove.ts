@@ -1,7 +1,6 @@
 import { once } from 'node:events';
 import { mkdtemp, readdir, rm } from 'node:fs/promises';
-import { createServer, type Socket } from 'node:net';
-import type { AddressInfo } from 'node:net';
+import { createServer, type AddressInfo, type Socket } from 'node:net';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { onTestFinished } from 'vitest';

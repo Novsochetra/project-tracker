@@ -12,10 +12,12 @@ export function placeOf(rows: TableRows): (row: AttachmentRow) => string {
       formatTicketKey(keys.get(ticket.projectId) ?? '?', ticket.num),
     ]),
   );
+  const items = new Map(rows.activities.map((activity) => [activity.id, activity.type]));
   return (row) => {
     const key = row.ticketId ? tickets.get(row.ticketId) : undefined;
     if (!key) return 'not on a ticket yet';
-    return row.activityId ? `a comment on ${key}` : key;
+    if (!row.activityId) return key;
+    return `a ${items.get(row.activityId) ?? 'comment'} on ${key}`;
   };
 }
 
@@ -29,9 +31,11 @@ export function refusedImageProblems(
   if (refused.length === 0) return [];
   return [
     `${refused.length} image(s) can't go online as they are: their metadata (such as where a ` +
-      'photo was taken) can’t be removed. In the local tracker, delete each from the ticket or ' +
-      'comment named below (and attach a copy saved again if you need it), then run the move ' +
-      'again:',
+      'photo was taken) can’t be removed. In the local tracker, remove each one listed with only ' +
+      'a ticket key from that ticket’s files. A file on a comment, report or review can’t be ' +
+      'removed alone: delete that comment, report or review instead (copy its text first if you ' +
+      'want to post it again as a comment, with a copy of the image saved again). Then run the ' +
+      'move again:',
     ...refused.map(
       ({ before, refusal }) =>
         `  - ${before.id} (${place(before)}, ${before.fileName}, ${formatBytes(before.size)}): ` +

@@ -86,3 +86,11 @@ To run the whole server against a bucket locally: `npm run build`, then `node --
 ## Existing files
 
 Turning S3 on doesn't move files already on disk; until they are moved those attachments answer 404 (500 without `s3:ListBucket`). Move them with the data move, which moves a local tracker's files with its database to Railway in one command, compresses images as new uploads are and stores only the compressed or stripped copy (`data-move.js`, `docs/deploy-railway.md` step 7, PT-124). Don't copy the folder to the bucket yourself (`aws s3 sync data/uploads …`): that skips the move's compression and stripping, so images uploaded before PT-127 would go online as they came, with their metadata such as where a photo was taken. A tracker that stays local keeps its files on disk (`S3_BUCKET` empty).
+
+Files a Railway deployment kept on its volume (`UPLOADS_DIR`) are different: they are already online and their keys stay the same, so copying them as they are is right. Set `S3_BUCKET`, `AWS_REGION` and the keys on the service and let it deploy, so nothing new lands on the volume; until the copy is done those attachments are missing (above). Then, on your Mac with the [Railway CLI](https://docs.railway.com/cli) linked to the service and the bucket's keys in the shell, download the folder (`<folder>` is its path inside the volume, which `railway volume browse /` shows) and copy it under `attachments/`, leaving out dot files (uploads cut off half way, which no row names), then delete the download. It uses `cp` because `sync` also needs `s3:ListBucket`:
+
+```bash
+railway volume files download <folder> ./uploads-from-volume
+aws s3 cp --recursive --exclude '.*' ./uploads-from-volume s3://<bucket>/attachments/
+rm -r ./uploads-from-volume
+```

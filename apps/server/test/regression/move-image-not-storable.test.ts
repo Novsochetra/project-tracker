@@ -97,8 +97,11 @@ describe.each(DIALECTS)('a source with images that can’t be stored (%s)', (dia
     expect(ok).toBe(false);
     expect(lines).toContain(
       "  2 image(s) can't go online as they are: their metadata (such as where a photo was " +
-        'taken) can’t be removed. In the local tracker, delete each from the ticket or comment ' +
-        'named below (and attach a copy saved again if you need it), then run the move again:',
+        'taken) can’t be removed. In the local tracker, remove each one listed with only a ticket ' +
+        'key from that ticket’s files. A file on a comment, report or review can’t be removed ' +
+        'alone: delete that comment, report or review instead (copy its text first if you want ' +
+        'to post it again as a comment, with a copy of the image saved again). Then run the move ' +
+        'again:',
     );
     expect(lines).toContain(
       `    - f-scan (MOB-1, scan.jpg, ${formatBytes(scan.byteLength)}): ${UNSUPPORTED_ATTACHMENT_MESSAGE}`,
