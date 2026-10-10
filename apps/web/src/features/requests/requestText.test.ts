@@ -5,7 +5,7 @@ import {
   answerLines,
   labelParts,
   outcomeLines,
-  outcomeOf,
+  requestOutcome,
   subjectOf,
 } from './requestText';
 
@@ -53,7 +53,7 @@ describe('outcomes', () => {
     expect(outcomeLines(makeRequest({ status: 'cancelled', endedAt: NOW }), NOW)).toEqual([
       'No answer',
     ]);
-    expect(outcomeOf(makeRequest({ expiresAt: NOW }), NOW)).toBe('none');
+    expect(requestOutcome(makeRequest({ expiresAt: NOW }), NOW)).toBe('none');
   });
 
   it('shows the answer to one question, and each answer after its question for several', () => {

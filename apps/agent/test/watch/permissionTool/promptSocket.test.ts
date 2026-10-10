@@ -1,12 +1,12 @@
 import { existsSync, statSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { describe, expect, it, vi } from 'vitest';
-import { askHelper, HELPER_GONE } from '../../../src/watch/prompts/askHelper';
+import { askHelper, HELPER_GONE } from '../../../src/watch/permissionTool/askHelper';
 import {
   CALL_CLOSED,
   openPromptSocket,
   RUN_STOPPED,
-} from '../../../src/watch/prompts/promptSocket';
+} from '../../../src/watch/permissionTool/promptSocket';
 
 const call = { tool_name: 'Bash', input: { command: 'ls' }, tool_use_id: 't-1' };
 

@@ -2,7 +2,7 @@ import { realpathSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { afterAll, describe, expect, it } from 'vitest';
 import { runClaude } from '../../src/watch/claude';
-import { outcomeOf } from '../../src/watch/outcome';
+import { ticketOutcomeOf } from '../../src/watch/outcome';
 import { installFakeClaude } from '../watch/fakeClaude';
 
 // Reviewer 140: the output was trimmed after every chunk, so lines that arrived apart were glued
@@ -18,7 +18,7 @@ describe('regression: Claude output keeps its line breaks', () => {
       new AbortController().signal,
       { onOutput: () => undefined, onEvent: () => undefined },
     );
-    expect(outcomeOf(exit, false)).toMatchObject({
+    expect(ticketOutcomeOf(exit, false)).toMatchObject({
       status: 'failed',
       error: expect.stringContaining('first line\nsecond line'),
     });

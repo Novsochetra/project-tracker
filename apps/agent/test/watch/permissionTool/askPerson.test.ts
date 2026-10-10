@@ -1,16 +1,16 @@
 import { ApiError } from '@tracker/client';
 import type { AddRunRequestInput, RunRequest } from '@tracker/shared';
 import { describe, expect, it, vi } from 'vitest';
-import { createAskPerson, type AskPersonDeps } from '../../../src/watch/prompts/askPerson';
-import { NO_ANSWER, RUN_ENDED, UNSHOWN } from '../../../src/watch/prompts/decisionOf';
-import { CALL_CLOSED, RUN_STOPPED } from '../../../src/watch/prompts/promptSocket';
+import { createAskPerson, type AskPersonDeps } from '../../../src/watch/permissionTool/askPerson';
+import { NO_ANSWER, RUN_ENDED, UNSHOWN } from '../../../src/watch/permissionTool/decisionOf';
+import { CALL_CLOSED, RUN_STOPPED } from '../../../src/watch/permissionTool/promptSocket';
 import {
   HELPER_OUTDATED,
   HELPER_REFUSED,
   NOT_RUNNING,
   RUN_GONE,
   UNREACHABLE,
-} from '../../../src/watch/prompts/trackerRefusal';
+} from '../../../src/watch/permissionTool/trackerRefusal';
 import { job, RUNNER } from '../fakeTracker';
 import { permissionRequest } from './requests';
 

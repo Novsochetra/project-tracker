@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { promptCallOf } from '../../../src/watch/prompts/promptCall';
-import { promptToolArgs, promptToolCommand } from '../../../src/watch/prompts/promptToolArgs';
+import { promptCallOf } from '../../../src/watch/permissionTool/promptCall';
+import {
+  promptToolArgs,
+  promptToolCommand,
+} from '../../../src/watch/permissionTool/promptToolArgs';
 
 describe('promptToolArgs', () => {
   it('adds one stdio server holding only the socket, and names its tool as the prompt tool', () => {

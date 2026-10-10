@@ -2,8 +2,8 @@ import { mkdirSync, mkdtempSync, rmSync, statSync, writeFileSync } from 'node:fs
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { afterAll, afterEach, describe, expect, it, vi } from 'vitest';
-import { askHelper } from '../../src/watch/prompts/askHelper';
-import { openPromptSocket } from '../../src/watch/prompts/promptSocket';
+import { askHelper } from '../../src/watch/permissionTool/askHelper';
+import { openPromptSocket } from '../../src/watch/permissionTool/promptSocket';
 import { createRunLoop } from '../../src/watch/runLoop';
 import { fakeTracker, job, noAsks } from '../watch/fakeTracker';
 

@@ -277,7 +277,7 @@ test('answers Claude from the phone: Allow, Deny and a choice, and Claude goes o
   const job = await api.takeNextRun(helperId, 'ticket');
   const runId = job!.run.id;
   const send = (...steps: RunStepInput[]) => api.addRunSteps(runId, { runnerId: helperId, steps });
-  // The helper's side (apps/agent/src/watch/prompts): ask, then wait for the person.
+  // The helper's side (apps/agent/src/watch/permissionTool): ask, then wait for the person.
   const asks = async (input: Parameters<TrackerClient['addRunRequest']>[1]) => {
     const request = await api.addRunRequest(runId, input);
     return api.waitForRunRequest(request.id);

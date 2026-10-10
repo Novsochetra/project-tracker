@@ -5,7 +5,7 @@ import {
   decisionOf,
   NO_ANSWER,
   RUN_ENDED,
-} from '../../../src/watch/prompts/decisionOf';
+} from '../../../src/watch/permissionTool/decisionOf';
 import { permissionRequest, QUESTION_INPUT, questionRequest } from './requests';
 
 const bash = { toolName: 'Bash', input: { command: 'npm test', description: 'Test' } };

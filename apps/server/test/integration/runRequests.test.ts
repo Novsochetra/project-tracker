@@ -146,7 +146,10 @@ describe.each(DIALECTS)('run requests (%s)', (dialect) => {
   it('lets only a person read and answer requests, and only the helper wait', async () => {
     await take();
     const request = await opened();
-    expect((await list(helper)).status).toBe(403);
+    expect(await list(helper)).toMatchObject({
+      status: 403,
+      body: { error: { message: 'Only a person reads what Claude asks.' } },
+    });
     expect(await answer(request.id, { decision: 'allow' }, helper)).toMatchObject({
       status: 403,
       body: { error: { message: 'Only a person answers what Claude asks.' } },

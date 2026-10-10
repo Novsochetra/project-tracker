@@ -2,9 +2,9 @@ import type { FinishRunInput, RunJob, RunKind } from '@tracker/shared';
 import { askOutcomeOf } from './ask/askOutcome';
 import type { OnSteps } from './claudeRunners';
 import type { ClaudeExit } from './outcome';
-import { lastLines, outcomeOf } from './outcome';
+import { lastLines, ticketOutcomeOf } from './outcome';
 import { refusalOf } from './refusal';
-import { labelOf } from './runLabel';
+import { runName } from './runName';
 import { retryUntilAnswered } from './retry';
 import type { StepBatcher } from './steps/stepBatcher';
 import type { WatchApi } from './watchApi';
@@ -47,7 +47,7 @@ type Runner = (
 
 const runTicket: Runner = async (deps, job, stop, onSteps) => {
   const exit = await deps.runClaude(job, stop, onSteps);
-  const outcome = outcomeOf(exit, stop.aborted);
+  const outcome = ticketOutcomeOf(exit, stop.aborted);
   // A cancelled run was stopped part way, so whatever it printed is not a report of the work.
   if (outcome.status !== 'cancelled') await deps.handBack(job, reportTexts(exit));
   return outcome;
@@ -81,7 +81,7 @@ export function createRunLoop(deps: RunLoopDeps, settings: RunLoopSettings) {
     log(`Still telling the tracker how ${unreported} ended. Press Ctrl-C again to quit now.`);
 
   async function report({ run }: RunJob, outcome: FinishRunInput) {
-    const label = labelOf(run);
+    const label = runName(run);
     const onWait = () => {
       unreported = label;
       if (stopped) stillReporting();
@@ -100,12 +100,12 @@ export function createRunLoop(deps: RunLoopDeps, settings: RunLoopSettings) {
   }
 
   async function end(job: RunJob, outcome: FinishRunInput) {
-    log(`${labelOf(job.run)}: ${ENDINGS[outcome.status]}.`);
+    log(`${runName(job.run)}: ${ENDINGS[outcome.status]}.`);
     await report(job, outcome);
   }
 
   async function work(job: RunJob) {
-    const label = labelOf(job.run);
+    const label = runName(job.run);
     const refusal = refusalOf(job, settings);
     if (refusal) {
       log(`Refused ${label}: ${refusal}`);

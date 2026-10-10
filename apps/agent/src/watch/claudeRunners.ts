@@ -8,7 +8,7 @@ import {
 import { askArgs } from './ask/askArgs';
 import { claudeArgs, runClaude } from './claude';
 import type { ClaudeExit } from './outcome';
-import { withPromptTool, type PromptTool } from './prompts/withPromptTool';
+import { withPromptTool, type PromptTool } from './permissionTool/withPromptTool';
 
 export type OnSteps = (steps: RunStepInput[]) => void;
 type StepReader = (event: unknown) => RunStepInput[];

@@ -27,7 +27,7 @@ export const subjectOf = (request: RunRequest): string =>
       : labelHead(request.label),
   );
 
-export function outcomeOf(request: RunRequest, now: number): Outcome {
+export function requestOutcome(request: RunRequest, now: number): Outcome {
   const state = requestState(request, now);
   if (state === 'ended') return 'none';
   if (request.decision === 'deny') return request.kind === 'question' ? 'skipped' : 'denied';
@@ -47,7 +47,7 @@ export function answerLines(request: RunRequest): string[] {
 }
 
 export const outcomeLines = (request: RunRequest, now: number): string[] => {
-  const outcome = outcomeOf(request, now);
+  const outcome = requestOutcome(request, now);
   return outcome === 'answered' ? answerLines(request) : [OUTCOME_TEXT[outcome]];
 };
 

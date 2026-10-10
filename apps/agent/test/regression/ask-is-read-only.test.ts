@@ -4,7 +4,7 @@ import type { AskMode } from '@tracker/shared';
 import { afterAll, describe, expect, it, vi } from 'vitest';
 import { askOutcomeOf } from '../../src/watch/ask/askOutcome';
 import { claudeRunners } from '../../src/watch/claudeRunners';
-import type { AskPerson } from '../../src/watch/prompts/askPerson';
+import type { AskPerson } from '../../src/watch/permissionTool/askPerson';
 import { askJob, job } from '../watch/fakeTracker';
 import { installFakeClaude } from '../watch/fakeClaude';
 

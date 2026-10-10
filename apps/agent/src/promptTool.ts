@@ -1,5 +1,5 @@
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
-import { createPromptToolServer } from './watch/prompts/promptToolServer';
+import { createPromptToolServer } from './watch/permissionTool/promptToolServer';
 
 // stdout carries the MCP protocol, so nothing else may print there.
 const [socketPath] = process.argv.slice(2);

@@ -1,10 +1,10 @@
 import { ApiError } from '@tracker/client';
 import { UNKNOWN_ROUTE_MESSAGE } from '@tracker/shared';
 import { describe, expect, it, vi } from 'vitest';
-import { createAskPerson, type AskPersonDeps } from '../../src/watch/prompts/askPerson';
-import { RUN_GONE, TRACKER_OUTDATED } from '../../src/watch/prompts/trackerRefusal';
+import { createAskPerson, type AskPersonDeps } from '../../src/watch/permissionTool/askPerson';
+import { RUN_GONE, TRACKER_OUTDATED } from '../../src/watch/permissionTool/trackerRefusal';
 import { job, RUNNER } from '../watch/fakeTracker';
-import { permissionRequest } from '../watch/prompts/requests';
+import { permissionRequest } from '../watch/permissionTool/requests';
 
 const run = job('r-1', 'MOB-1').run;
 const bash = { toolName: 'Bash', input: { command: 'npm test' } };

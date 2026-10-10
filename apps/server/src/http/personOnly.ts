@@ -17,5 +17,8 @@ export const personOnly = refuseAgents(
 // Steps are for the person watching from the phone; an agent has the tracker's own tools.
 export const personReadsSteps = refuseAgents('Only a person reads what Claude did in a run.');
 
+// Requests are for the person answering on the phone; the helper that asked waits on each by id.
+export const personReadsRequests = refuseAgents('Only a person reads what Claude asks.');
+
 // Only the person decides what Claude may do; an agent could otherwise allow itself anything.
 export const personAnswers = refuseAgents('Only a person answers what Claude asks.');

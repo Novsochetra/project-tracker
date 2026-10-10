@@ -14,14 +14,14 @@ const SUB_AGENT_TOOLS = new Set(['Agent', 'Task']);
 const SAFETY_CUT = 65_536;
 const masked = (text: string): string => maskSecrets(text.slice(0, SAFETY_CUT));
 
-export const labelOf = (text: string): string => cutTo(oneLine(masked(text)), RUN_STEP_LABEL_MAX);
+export const stepLabel = (text: string): string => cutTo(oneLine(masked(text)), RUN_STEP_LABEL_MAX);
 
 function toolStep(name: string, toolId: string | null, input: Json, folder: string): Step {
   if (!SUB_AGENT_TOOLS.has(name)) {
-    return { kind: 'tool', label: labelOf(toolLabel(name, input, folder)), toolId };
+    return { kind: 'tool', label: stepLabel(toolLabel(name, input, folder)), toolId };
   }
   const description = typeof input.description === 'string' ? input.description : '';
-  return { kind: 'agent', label: labelOf(`Start sub agent: ${description}`), toolId };
+  return { kind: 'agent', label: stepLabel(`Start sub agent: ${description}`), toolId };
 }
 
 function stepOfBlock(block: unknown, folder: string): Step[] {
@@ -37,7 +37,7 @@ function stepOfBlock(block: unknown, folder: string): Step[] {
   return [toolStep(block.name, toolId, isJson(block.input) ? block.input : {}, folder)];
 }
 
-export function requestSteps(event: Json, folder: string): RunStepInput[] {
+export function messageSteps(event: Json, folder: string): RunStepInput[] {
   const content = isJson(event.message) ? event.message.content : undefined;
   if (!Array.isArray(content)) return [];
   const subAgent = typeof event.parent_tool_use_id === 'string';

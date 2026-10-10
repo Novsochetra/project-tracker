@@ -2,7 +2,7 @@ import type { RunQuestion } from '@tracker/shared';
 import { MessageCircleQuestion } from 'lucide-react';
 import { useRef, useState, type MouseEvent } from 'react';
 import { Button } from '../../components';
-import { QUESTION_HEAD, SEND_LABEL, SKIP_LABEL } from './copy';
+import { QUESTION_HEAD, SEND_ANSWER_LABEL, SKIP_LABEL } from './copy';
 import { QuestionBlock } from './QuestionBlock';
 import { RequestHead } from './RequestHead';
 import { revealActions } from './revealActions';
@@ -65,7 +65,7 @@ export function QuestionAsk({ questions, answer }: QuestionAskProps) {
           disabled={!ready || answer.pending}
           onClick={(event) => sendReady(event)}
         >
-          {SEND_LABEL}
+          {SEND_ANSWER_LABEL}
         </Button>
         <Button
           variant="text"

@@ -15,7 +15,7 @@ const SEGMENTED = 'components/Segmented/Segmented.module.css';
 // "Board" in the phone's 14px medium Geist, measured in WebKit.
 const BOARD_LABEL = 39.2;
 // "Send open tickets" with its icon and padding, and the bar's 48px squares and 10px gaps.
-const SEND_LABEL = 184;
+const SEND_TICKETS_WIDTH = 184;
 const BAR_SQUARE = 48;
 const BAR_GAP = 10;
 
@@ -118,6 +118,6 @@ describe('regression: 320px phones keep the filter row and bottom bar inside the
       const square = phoneStyle(screen.getByRole('button', { name }), MODULE, 375);
       expect([square.get('flex'), pixels(square.get('width'))]).toEqual(['none', BAR_SQUARE]);
     }
-    expect(32 + 2 * BAR_SQUARE + 2 * BAR_GAP + SEND_LABEL).toBeLessThanOrEqual(375);
+    expect(32 + 2 * BAR_SQUARE + 2 * BAR_GAP + SEND_TICKETS_WIDTH).toBeLessThanOrEqual(375);
   });
 });

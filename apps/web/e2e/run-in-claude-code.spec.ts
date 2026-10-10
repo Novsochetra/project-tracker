@@ -168,7 +168,7 @@ test('answers what Claude asks during a ticket run, and the run goes on', async 
   const card = page.getByRole('region', { name: 'Claude Code run' });
   await expect(card).toContainText(`Claude is working on ${HELPER}…`);
 
-  // The helper's side (apps/agent/src/watch/prompts): ask, then wait for the person.
+  // The helper's side (apps/agent/src/watch/permissionTool): ask, then wait for the person.
   const asked = await api.addRunRequest(runId, {
     runnerId: helperId,
     kind: 'permission',

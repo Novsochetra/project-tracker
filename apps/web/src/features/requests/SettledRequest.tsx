@@ -4,7 +4,7 @@ import { useEffect, useRef } from 'react';
 import { Icon } from '../../components';
 import { stepIcon } from '../steps/stepIcon';
 import styles from './Requests.module.css';
-import { outcomeLines, outcomeOf, subjectOf, type Outcome } from './requestText';
+import { outcomeLines, requestOutcome, subjectOf, type Outcome } from './requestText';
 
 const OUTCOME_ICONS: Record<Outcome, LucideIcon> = {
   allowed: Check,
@@ -25,7 +25,7 @@ export function SettledRequest({ request, now, takeFocus }: SettledRequestProps)
   useEffect(() => {
     if (takeFocus) outcomeRef.current?.focus({ preventScroll: true });
   }, [takeFocus]);
-  const outcome = outcomeOf(request, now);
+  const outcome = requestOutcome(request, now);
   const subject = subjectOf(request);
   const icon =
     request.kind === 'question'

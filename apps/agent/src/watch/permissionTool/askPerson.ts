@@ -8,7 +8,7 @@ import {
   type RunRequest,
 } from '@tracker/shared';
 import { retryDelay } from '../retry';
-import { labelOf } from '../runLabel';
+import { runName } from '../runName';
 import { wait } from '../wait';
 import type { WatchApi } from '../watchApi';
 import { decisionOf, NO_ANSWER, RUN_ENDED, UNSHOWN } from './decisionOf';
@@ -112,17 +112,17 @@ async function ask(deps: AskPersonDeps, run: Run, call: PromptCall, signal: Abor
   try {
     request = await deps.api.addRunRequest(run.id, { runnerId: deps.runnerId, ...input });
   } catch (error) {
-    deps.log(`Couldn't ask on the phone for ${labelOf(run)}: ${deps.describe(error)}`);
+    deps.log(`Couldn't ask on the phone for ${runName(run)}: ${deps.describe(error)}`);
     return deny(refusalOf(error) ?? UNREACHABLE);
   }
-  deps.log(`${labelOf(run)}: Claude asks on the phone: ${labelHead(request.label)}`);
+  deps.log(`${runName(run)}: Claude asks on the phone: ${labelHead(request.label)}`);
   const ending = await untilEnded(deps, request, signal);
   if ('request' in ending) {
-    deps.log(`${labelOf(run)}: ${ENDINGS[ending.request.status]}.`);
+    deps.log(`${runName(run)}: ${ENDINGS[ending.request.status]}.`);
     return decisionOf(call, ending.request);
   }
   await endOnTracker(deps, request);
-  deps.log(`${labelOf(run)}: ${ending.note}`);
+  deps.log(`${runName(run)}: ${ending.note}`);
   return deny(ending.gaveUp);
 }
 
