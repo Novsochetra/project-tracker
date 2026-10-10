@@ -4,11 +4,14 @@ import { existsSync, mkdtempSync, readdirSync, realpathSync, writeFileSync } fro
 import { connect, createServer, type AddressInfo, type Socket } from 'node:net';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { serve } from '@hono/node-server';
 import { TrackerClient } from '@tracker/client';
-import type { RunStatus } from '@tracker/shared';
+import type { RunRequest, RunStatus } from '@tracker/shared';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { claudeRunners } from '../../../agent/src/watch/claudeRunners';
+import { createAskPerson } from '../../../agent/src/watch/prompts/askPerson';
+import { DENIED } from '../../../agent/src/watch/prompts/decisionOf';
 import { followRunEvents } from '../../../agent/src/watch/liveStream';
 import { watch } from '../../../agent/src/watch/watch';
 import { createWatcher } from '../../../agent/src/watch/watcher';
@@ -63,11 +66,23 @@ async function cuttableLink(targetPort: number) {
 
 const settle = { timeout: 15_000 };
 
+// The prompt tool from source, the way tracker watch starts its build.
+const PROMPT_TOOL = [
+  process.execPath,
+  '--import',
+  import.meta.resolve('tsx'),
+  fileURLToPath(new URL('../../../agent/src/promptTool.ts', import.meta.url)),
+];
+
+const promptCall = (toolName: string, input: unknown) =>
+  `PROMPT TOOL ${JSON.stringify({ tool_name: toolName, input, tool_use_id: 'toolu_1' })}`;
+
 describe('tracker watch against a real tracker', () => {
   const fake = installFakeClaude();
   const stop = new AbortController();
   const runnerId = randomUUID();
   const logs: string[] = [];
+  const written: string[] = [];
   let close: () => Promise<void> = () => Promise.resolve();
   let person: TrackerClient;
   let link: Awaited<ReturnType<typeof cuttableLink>>;
@@ -81,7 +96,7 @@ describe('tracker watch against a real tracker', () => {
     person = tracker.person;
     link = await cuttableLink(tracker.port);
     await person.createProject({ name: 'Mobile', key: 'MOB' });
-    for (const title of ['Crash', 'Login', 'Offline', 'Slow', 'Report', 'Steps']) {
+    for (const title of ['Crash', 'Login', 'Offline', 'Slow', 'Report', 'Steps', 'Ask', 'Stop']) {
       await person.createTicket('MOB', { title });
     }
     const helper = new TrackerClient({
@@ -91,7 +106,19 @@ describe('tracker watch against a real tracker', () => {
     const settings = { runnerId, name: 'Test Mac', projectKey: 'MOB', trackerUrl: link.url };
     await helper.registerRunner(runnerId, { name: settings.name, projectKeys: ['MOB'] });
     const cwd = realpathSync(tmpdir());
-    const claude = claudeRunners({ command: fake.command, cwd, write: () => undefined });
+    const ask = createAskPerson({
+      api: helper,
+      runnerId,
+      folder: cwd,
+      log: (text) => logs.push(text),
+      describe: String,
+    });
+    const claude = claudeRunners({
+      command: fake.command,
+      cwd,
+      write: (text) => written.push(text),
+      prompts: { command: PROMPT_TOOL, ask },
+    });
     const watcher = createWatcher(
       { api: helper, log: (text) => logs.push(text), stepEvery: 50, ...claude },
       settings,
@@ -185,6 +212,73 @@ describe('tracker watch against a real tracker', () => {
     await vi.waitFor(async () => expect(await answers()).toHaveLength(2), settle);
     const second = (await answers())[1];
     expect(second?.text).toContain('"--resume","11111111-2222-4333-8444-555555555555"');
+  });
+
+  const openRequest = async (runId: string) => {
+    let open: RunRequest | undefined;
+    await vi.waitFor(async () => {
+      open = (await person.listRunRequests(runId)).find(({ status }) => status === 'open');
+      expect(open).toBeDefined();
+    }, settle);
+    return open!;
+  };
+
+  const editChat = async (text: string) => {
+    const { chat } = await person.startChat('MOB', { runnerId, text, mode: 'edit' });
+    const runId = (await person.getChat(chat.id)).run!.id;
+    const answer = async () =>
+      (await person.getChat(chat.id)).messages.find(({ role }) => role === 'claude')?.text;
+    return { chatId: chat.id, runId, answer };
+  };
+
+  it('lets an Edit question ask for permission, wait, and go on once the person allows', async () => {
+    const chat = await editChat(promptCall('Bash', { command: 'npm test', description: 'Test' }));
+    const request = await openRequest(chat.runId);
+    expect(request).toMatchObject({ kind: 'permission', label: 'Run npm test' });
+    expect(await statusOf(chat.runId)).toBe('running');
+    await person.answerRunRequest(request.id, { decision: 'allow' });
+    await vi.waitFor(async () => expect(await chat.answer()).toBeDefined(), settle);
+    expect(await chat.answer()).toBe(
+      'DECISION {"behavior":"allow","updatedInput":{"command":"npm test","description":"Test"}}',
+    );
+    const where = `chat ${chat.chatId.slice(0, 8)}`;
+    expect(logs).toContain(`${where}: Claude asks on the phone: Run npm test`);
+    expect(logs).toContain(`${where}: the person answered.`);
+  });
+
+  it("gives Claude the person's choice for a question", async () => {
+    const question = { question: 'Which color?', header: 'Color', multiSelect: false };
+    const options = [{ label: 'Red' }, { label: 'Green' }];
+    const chat = await editChat(
+      promptCall('AskUserQuestion', { questions: [{ ...question, options }] }),
+    );
+    const request = await openRequest(chat.runId);
+    expect(request.questions?.[0]?.options.map(({ label }) => label)).toEqual(['Red', 'Green']);
+    await person.answerRunRequest(request.id, { decision: 'allow', answers: ['Green'] });
+    await vi.waitFor(async () => expect(await chat.answer()).toBeDefined(), settle);
+    expect(await chat.answer()).toContain('"answers":{"Which color?":"Green"}');
+  });
+
+  it('lets a ticket run go on without a step the person denied', async () => {
+    const runId = await start('MOB-7', promptCall('Bash', { command: 'git push --force' }));
+    const request = await openRequest(runId);
+    expect(request.label).toBe('Run git push --force');
+    await person.answerRunRequest(request.id, { decision: 'deny' });
+    await vi.waitFor(async () => expect(await statusOf(runId)).toBe('done'), settle);
+    expect(written.join('')).toContain(`DECISION {"behavior":"deny","message":"${DENIED}"}`);
+  });
+
+  it('ends the open request of a run the person stops', async () => {
+    const runId = await start('MOB-8', promptCall('Bash', { command: 'npm test' }));
+    const request = await openRequest(runId);
+    await person.cancelRun(runId);
+    await vi.waitFor(async () => expect(await statusOf(runId)).toBe('cancelled'), settle);
+    expect((await person.listRunRequests(runId)).map(({ status }) => status)).toEqual([
+      'cancelled',
+    ]);
+    await expect(person.answerRunRequest(request.id, { decision: 'allow' })).rejects.toThrow(
+      'The run ended, so Claude no longer waits for this.',
+    );
   });
 });
 

@@ -1,4 +1,13 @@
-import type { AskMode, AskModel, RunKind, RunStatus, RunStepKind } from '@tracker/shared';
+import type {
+  AskMode,
+  AskModel,
+  RunKind,
+  RunRequestDecision,
+  RunRequestKind,
+  RunRequestStatus,
+  RunStatus,
+  RunStepKind,
+} from '@tracker/shared';
 
 export interface RunnerRow {
   id: string;
@@ -45,8 +54,24 @@ export interface RunStepRow {
   createdAt: number;
 }
 
+export interface RunRequestRow {
+  id: string;
+  runId: string;
+  kind: RunRequestKind;
+  label: string;
+  // JSON as text, like runners.project_ids: no JSON columns (§2). Null for a permission.
+  questions: string | null;
+  status: RunRequestStatus;
+  decision: RunRequestDecision | null;
+  answers: string | null;
+  createdAt: number;
+  expiresAt: number;
+  endedAt: number | null;
+}
+
 export interface RunTables {
   runners: RunnerRow;
   runs: RunRow;
   runSteps: RunStepRow;
+  runRequests: RunRequestRow;
 }

@@ -11,7 +11,7 @@ import type { WatchApi } from './watchApi';
 
 export interface RunLoopDeps {
   api: WatchApi;
-  runClaude: (prompt: string, signal: AbortSignal, onSteps: OnSteps) => Promise<ClaudeExit>;
+  runClaude: (job: RunJob, signal: AbortSignal, onSteps: OnSteps) => Promise<ClaudeExit>;
   runAsk: (job: RunJob, signal: AbortSignal, onSteps: OnSteps) => Promise<ClaudeExit>;
   log: (text: string) => void;
   describe: (error: unknown) => string;
@@ -46,7 +46,7 @@ type Runner = (
 ) => Promise<FinishRunInput>;
 
 const runTicket: Runner = async (deps, job, stop, onSteps) => {
-  const exit = await deps.runClaude(job.prompt, stop, onSteps);
+  const exit = await deps.runClaude(job, stop, onSteps);
   const outcome = outcomeOf(exit, stop.aborted);
   // A cancelled run was stopped part way, so whatever it printed is not a report of the work.
   if (outcome.status !== 'cancelled') await deps.handBack(job, reportTexts(exit));

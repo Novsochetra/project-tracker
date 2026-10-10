@@ -7,6 +7,7 @@ import * as runs from './0005_runs';
 import * as chats from './0006_chats';
 import * as askOptions from './0007_ask_options';
 import * as runSteps from './0008_run_steps';
+import * as runRequests from './0009_run_requests';
 
 // Keyed by file name; they run in name order, so the four-digit number decides. The bundled server
 // can't list a folder, so a new file is added here too (test/unit/migrationFiles checks it is).
@@ -19,4 +20,5 @@ export const MIGRATIONS: Record<string, Migration> = {
   '0006_chats': chats,
   '0007_ask_options': askOptions,
   '0008_run_steps': runSteps,
+  '0009_run_requests': runRequests,
 };

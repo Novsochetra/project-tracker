@@ -1,6 +1,8 @@
 import type {
   Activity,
+  AddRunRequestInput,
   AddRunStepsInput,
+  AnswerRunRequestInput,
   ApiToken,
   AskInput,
   Attachment,
@@ -35,6 +37,7 @@ import type {
   RunJob,
   RunKind,
   Runner,
+  RunRequest,
   RunStep,
   ServerMeta,
   SessionState,
@@ -272,6 +275,21 @@ export class TrackerClient {
     this.http.request<RunStep[]>('GET', `/api/runs/${segment(runId)}/steps`, {
       query: { after: after === undefined ? undefined : String(after) },
     });
+
+  addRunRequest = (runId: string, input: AddRunRequestInput) =>
+    this.http.request<RunRequest>('POST', `/api/runs/${segment(runId)}/requests`, { body: input });
+
+  listRunRequests = (runId: string) =>
+    this.http.request<RunRequest[]>('GET', `/api/runs/${segment(runId)}/requests`);
+
+  answerRunRequest = (requestId: string, input: AnswerRunRequestInput) =>
+    this.http.request<RunRequest>('POST', `/api/requests/${segment(requestId)}/answer`, {
+      body: input,
+    });
+
+  // A long poll: it may answer with the request still open, and is called again then.
+  waitForRunRequest = (requestId: string, { signal }: { signal?: AbortSignal } = {}) =>
+    this.http.request<RunRequest>('GET', `/api/requests/${segment(requestId)}/wait`, { signal });
 
   listChats = (projectKey: string) =>
     this.http.request<Chat[]>('GET', `/api/projects/${segment(projectKey)}/chats`);

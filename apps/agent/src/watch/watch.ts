@@ -1,11 +1,16 @@
+import { realpathSync } from 'node:fs';
 import { dirname } from 'node:path';
 import type { GlobalValues } from '../cli/options';
+import { describeError } from '../errors';
 import { CLAUDE } from './claude';
 import { claudeRunners } from './claudeRunners';
 import { lockFolder } from './folderLock';
 import { keepMacAwake } from './keepAwake';
 import { followRunEvents } from './liveStream';
 import { canonicalPath } from './paths';
+import { createAskPerson } from './prompts/askPerson';
+import { promptToolCommand } from './prompts/promptToolArgs';
+import type { PromptTool } from './prompts/withPromptTool';
 import { setUp, type Setup } from './setup';
 import { createWatcher } from './watcher';
 import type { WatchArgs, WatchIo } from './watchIo';
@@ -18,6 +23,18 @@ const aborted = (signal: AbortSignal): Promise<void> =>
     signal.addEventListener('abort', () => resolve(), { once: true });
   });
 
+function promptTool({ api, folder, settings }: Setup, io: WatchIo): PromptTool {
+  const ask = createAskPerson({
+    api,
+    folder,
+    runnerId: settings.runnerId,
+    log: io.stdout,
+    describe: (error) => describeError(error, { trackerUrl: settings.trackerUrl }),
+  });
+  const script = realpathSync(process.argv[1] ?? '');
+  return { command: promptToolCommand(process.execPath, process.execArgv, script), ask };
+}
+
 async function keepWatching(setup: Setup, args: WatchArgs, io: WatchIo, signal: AbortSignal) {
   const { api, config, folder, settings } = setup;
   const claude = claudeRunners({
@@ -25,6 +42,7 @@ async function keepWatching(setup: Setup, args: WatchArgs, io: WatchIo, signal: 
     cwd: folder,
     permissionMode: args.permissionMode,
     write: io.write,
+    prompts: promptTool(setup, io),
   });
   const watcher = createWatcher({ api, log: io.stdout, ...claude }, settings);
   io.stdout(

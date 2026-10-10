@@ -15,6 +15,7 @@ export interface ClaudeCommand {
   command: string;
   args: readonly string[];
   cwd: string;
+  env?: NodeJS.ProcessEnv | undefined;
 }
 
 export interface ClaudeListeners {
@@ -60,7 +61,7 @@ function collect({ onOutput, onEvent }: ClaudeListeners) {
 
 // The prompt goes in on stdin, never as an argument, so text from the tracker can't become a flag.
 export function runClaude(
-  { command, args, cwd }: ClaudeCommand,
+  { command, args, cwd, env }: ClaudeCommand,
   prompt: string,
   signal: AbortSignal,
   listeners: ClaudeListeners,
@@ -72,7 +73,7 @@ export function runClaude(
       if (!ended) resolve(seen.exit(code, exitSignal));
       ended = true;
     };
-    const child = spawn(command, [...args], { cwd, signal, stdio: 'pipe' });
+    const child = spawn(command, [...args], { cwd, env, signal, stdio: 'pipe' });
     child.stdout.setEncoding('utf8');
     child.stdout.on('data', seen.push);
     child.stderr.setEncoding('utf8');
