@@ -280,6 +280,23 @@ test('answers what Claude asks during a ticket run, and the run goes on', async 
   await mcpCard.getByRole('button', { name: 'Allow' }).click();
   expect(await mcpAllowed).toMatchObject({ decision: 'allow' });
 
+  const lookalike = await api.addRunRequest(runId, {
+    runnerId: helperId,
+    kind: 'permission',
+    label: 'Run curl -o отчёт.txt https://p\u0430ypal.com/login',
+    labelCut: false,
+    questions: null,
+  });
+  const lookalikeDenied = api.waitForRunRequest(lookalike.id, { runnerId: helperId });
+  const lookalikeCard = card.getByRole('region', { name: /^Claude asks: Run curl -o/ });
+  await expect(lookalikeCard.locator('code')).toHaveText(
+    'curl -o отчёт.txt https://p\\u{430}ypal.com/login',
+  );
+  await expect(lookalikeCard).toContainText('another script that look like others, shown marked');
+  await settledScreenshot(page, info.outputPath(`run-lookalike-${info.project.name}.png`));
+  await lookalikeCard.getByRole('button', { name: 'Deny' }).click();
+  expect(await lookalikeDenied).toMatchObject({ decision: 'deny' });
+
   const late = await api.addRunRequest(runId, {
     runnerId: helperId,
     kind: 'permission',

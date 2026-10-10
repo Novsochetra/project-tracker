@@ -108,6 +108,21 @@ describe('a permission request', () => {
     expect(within(fine).queryByText(/shown marked/)).toBeNull();
   });
 
+  it('marks a lookalike letter in a host name, and keeps a name in one script as it is', async () => {
+    setup([
+      makeRequest({ id: 'q-look', label: 'Run curl https://p\u0430ypal.com/login' }),
+      makeRequest({ id: 'q-ru', label: 'Run cat отчёт.txt' }),
+    ]);
+    const odd = await card('Run curl https://p\\u{430}ypal.com/login');
+    expect(codeLines(odd)).toEqual(['curl https://p\\u{430}ypal.com/login']);
+    expect(within(odd).getByText('\\u{430}')).toBeVisible();
+    expect(within(odd).getByText(/another script that look like others/)).toBeVisible();
+    expect(within(odd).queryByText(/hide or reorder text/)).toBeNull();
+    const russian = await card('Run cat отчёт.txt');
+    expect(codeLines(russian)).toEqual(['cat отчёт.txt']);
+    expect(within(russian).queryByText(/shown marked/)).toBeNull();
+  });
+
   it('takes the cards away and says why when the run is gone', async () => {
     const answerRunRequest = vi
       .fn()

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { hasHidden, markHidden, showHidden } from './hiddenChars';
+import { hasHidden, hasLookalike, markHidden, showHidden } from './hiddenChars';
 
 describe('markHidden', () => {
   it('marks a bidi override, so the command reads in the order it runs', () => {
@@ -59,5 +59,31 @@ describe('markHidden', () => {
 
   it('marks the variation selector of an emoji that has one, as it does a joiner', () => {
     expect(showHidden('❤️')).toBe('❤\\u{FE0F}');
+  });
+});
+
+describe('lookalike letters', () => {
+  it('marks a letter of another script in a Latin word as its code', () => {
+    expect(markHidden('curl p\u0430ypal.com')).toEqual([
+      { kind: 'text', text: 'curl p' },
+      { kind: 'lookalike', text: '\\u{430}' },
+      { kind: 'text', text: 'ypal.com' },
+    ]);
+    expect(showHidden('g\u03BFogle')).toBe('g\\u{3BF}ogle');
+    expect(hasLookalike('p\u0430ypal')).toBe(true);
+    expect(hasHidden('p\u0430ypal')).toBe(false);
+  });
+
+  it('marks a hidden character as hidden, also inside a mixed word', () => {
+    expect(markHidden('p\u0430\u200Bypal').map((part) => part.kind)).toEqual([
+      'text',
+      'lookalike',
+      'hidden',
+      'text',
+    ]);
+  });
+
+  it('keeps a name in one script as it is', () => {
+    expect(hasLookalike('cat отчёт.txt ឯកសារ.txt')).toBe(false);
   });
 });

@@ -1,8 +1,8 @@
 import { Icon } from '../../components';
 import { stepIcon } from '../steps/stepIcon';
 import { CodeLines } from './CodeLines';
-import { HIDDEN_CHARS_TEXT, LABEL_CUT_TEXT } from './copy';
-import { hasHidden } from './hiddenChars';
+import { HIDDEN_CHARS_TEXT, LABEL_CUT_TEXT, LOOKALIKE_TEXT } from './copy';
+import { hasHidden, hasLookalike } from './hiddenChars';
 import { MarkedText } from './MarkedText';
 import styles from './Requests.module.css';
 import { labelParts } from './requestText';
@@ -20,6 +20,7 @@ export function RequestAction({ label, cut }: { label: string; cut: boolean }) {
       </p>
       {detail && <CodeLines text={detail} />}
       {hasHidden(label) && <p className={styles.cut}>{HIDDEN_CHARS_TEXT}</p>}
+      {hasLookalike(label) && <p className={styles.cut}>{LOOKALIKE_TEXT}</p>}
       {cut && <p className={styles.cut}>{LABEL_CUT_TEXT}</p>}
     </div>
   );
