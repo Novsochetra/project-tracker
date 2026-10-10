@@ -45,6 +45,8 @@ export function watchApiTraffic(
 ): () => void {
   let stopped = false;
   let checking = false;
+  let savedReads = false;
+  let checkAnswered = false;
   // The sidebar and breadcrumb read the project list; one that failed during the outage stays empty.
   const refreshProjects = () =>
     void queryClient.invalidateQueries(
@@ -54,7 +56,22 @@ export function watchApiTraffic(
   const settle = (signal: ApiSignal | null, fromProjects: boolean) => {
     if (signal === null || signal === 'unsure') return;
     if (!reachability.setUnreachable(signal === 'unreachable')) return;
-    if (signal === 'reachable' && !fromProjects) refreshProjects();
+    if (signal === 'unreachable') return;
+    savedReads = false;
+    checkAnswered = false;
+    if (!fromProjects) refreshProjects();
+  };
+  // /api/health answers at once while reads wait longer than the service worker gives them, so a
+  // check's answer doesn't end saved answers: it took the banner down and read the project list
+  // again, whose saved answer put the banner back, every 4 s (PT-126). Only an answer to a read or
+  // a write ends them. The first check that answers after none reads the project list, whose
+  // answer lands at once when the tracker is back; the next ones read nothing, so no loop.
+  const settleRecheck = (signal: ApiSignal | null) => {
+    const answered = signal === 'reachable';
+    const firstAnswer = answered && !checkAnswered;
+    checkAnswered = answered;
+    if (!savedReads || !answered) settle(signal, false);
+    else if (firstAnswer) refreshProjects();
   };
   // Unreachable already, a bare 5xx changes nothing.
   const confirm = () => {
@@ -69,16 +86,17 @@ export function watchApiTraffic(
     signal === 'unsure' ? confirm() : settle(signal, fromProjects);
   const recheck = () =>
     check().then((signal) => {
-      if (!stopped) settle(signal, false);
+      if (!stopped) settleRecheck(signal);
     });
   const stopRechecks = options.recheck
     ? recheckWhileUnreachable(reachability, recheck)
     : () => undefined;
   const stopQueries = queryClient.getQueryCache().subscribe((event) => {
-    if (event.type === 'updated') {
-      const signal = signalOf(event.action, lastAnswerWasSaved());
-      apply(signal, event.query.queryHash === PROJECTS_HASH);
-    }
+    if (event.type !== 'updated') return;
+    const saved = lastAnswerWasSaved();
+    const signal = signalOf(event.action, saved);
+    if (saved && signal === 'unreachable') savedReads = true;
+    apply(signal, event.query.queryHash === PROJECTS_HASH);
   });
   // Writes never come from the service worker's cache.
   const stopMutations = queryClient.getMutationCache().subscribe((event) => {

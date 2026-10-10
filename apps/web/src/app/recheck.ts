@@ -54,6 +54,8 @@ export function recheckWhileUnreachable(
   };
   const stopListening = reachability.subscribe(startOver);
   document.addEventListener('visibilitychange', onVisibilityChange);
+  // Started during an outage, as by a watcher made again for a new client, no change would start it.
+  schedule();
   return () => {
     stopped = true;
     cancel();

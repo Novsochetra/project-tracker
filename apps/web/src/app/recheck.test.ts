@@ -54,6 +54,15 @@ describe('recheckWhileUnreachable', () => {
     expect(asked).toEqual([1_000, 3_000, 6_000, 9_000, 12_000]);
   });
 
+  it('asks soon when it starts while the tracker is already lost', async () => {
+    reachability.setUnreachable(true);
+    watch();
+
+    await wait(3_000);
+
+    expect(asked).toEqual([1_000, 3_000]);
+  });
+
   it('stops once the tracker answers, and starts over when it is lost again', async () => {
     watch();
     reachability.setUnreachable(true);

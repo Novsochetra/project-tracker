@@ -3,17 +3,22 @@ import { act, renderHook } from '@testing-library/react';
 import { ApiError } from '@tracker/client';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { setupApi } from '../../src/api/test/render';
+import { RECHECK_MAX_MS } from '../../src/app/recheck';
+import { CHECK_TIMEOUT_MS } from '../../src/app/trackerCheck';
 import { useApiUnreachable, useReachability } from '../../src/app/useApiUnreachable';
 
 // The check of a bare 5xx had no time limit. One left waiting, as on a proxy that holds the
 // connection to a stuck API, kept the tracker reachable and left every later bare 5xx unchecked
 // (PT-101 review).
 
+type HealthRead = (options?: { signal?: AbortSignal }) => Promise<unknown>;
+
 const bare500 = () => new ApiError(500, 'http_error', 'Internal Server Error');
+const bare502 = () => new ApiError(502, 'http_error', 'Bad Gateway');
 // Longer than the tracker takes to answer, even on a slow phone connection.
 const A_LONG_WAIT_MS = 30_000;
 
-function renderShell(checkHealth: (options?: { signal?: AbortSignal }) => Promise<unknown>) {
+function renderShell(checkHealth: HealthRead) {
   const api = setupApi({ checkHealth });
   const view = renderHook(() => useApiUnreachable(useReachability()), { wrapper: api.wrapper });
   const settle = (answer: () => Promise<unknown>) =>
@@ -49,16 +54,20 @@ it('counts a check left without an answer as unreachable, and stops its request'
 });
 
 it('checks a later bare 5xx once the tracker answers again', async () => {
-  const checkHealth = vi.fn(() => new Promise<never>(() => undefined));
+  const checkHealth = vi.fn<HealthRead>(() => new Promise<never>(() => undefined));
   const { result, settle } = renderShell(checkHealth);
   await settle(() => Promise.reject(bare500()));
   await act(() => vi.advanceTimersByTimeAsync(A_LONG_WAIT_MS));
+  expect(result.current).toBe(true);
 
-  await settle(() => Promise.resolve('saved'));
+  // Its rechecks find it back (PT-113), so no check is left on its way for the next one to share.
+  checkHealth.mockImplementation(() => Promise.resolve({ ok: true }));
+  await act(() => vi.advanceTimersByTimeAsync(CHECK_TIMEOUT_MS + RECHECK_MAX_MS));
   expect(result.current).toBe(false);
-  // While it was unreachable, the tracker was checked again every few seconds (PT-113).
-  const checksBefore = checkHealth.mock.calls.length;
-  await settle(() => Promise.reject(bare500()));
 
-  expect(checkHealth).toHaveBeenCalledTimes(checksBefore + 1);
+  checkHealth.mockImplementation(() => Promise.reject(bare502()));
+  await settle(() => Promise.reject(bare500()));
+  await act(() => vi.advanceTimersByTimeAsync(0));
+
+  expect(result.current).toBe(true);
 });

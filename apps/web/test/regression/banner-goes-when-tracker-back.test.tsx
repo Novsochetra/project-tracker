@@ -7,7 +7,7 @@ import { useApiUnreachable, useReachability } from '../../src/app/useApiUnreacha
 
 // With the API stopped behind a proxy that answers a bare 502, only the live stream asked whether
 // the tracker was back, and it waits up to 15 s between tries: the banner went about 26 s after
-// the API answered again (PT-109).
+// the API answered again (PT-113).
 
 type HealthRead = (options?: { signal?: AbortSignal }) => Promise<unknown>;
 

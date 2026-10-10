@@ -237,6 +237,53 @@ describe('watchApiTraffic', () => {
       await vi.advanceTimersByTimeAsync(30_000);
       expect(check).not.toHaveBeenCalled();
     });
+
+    describe('after a read answered from a saved copy', () => {
+      let refreshes: Mock;
+
+      beforeEach(async () => {
+        stop();
+        stop = watchApiTraffic(queryClient, reachability, sharedCheck(check), { recheck: true });
+        noteAnswer(fromCache());
+        await load(queryKeys.board('MOB'), () => Promise.resolve(makeBoard()));
+        refreshes = vi.fn();
+        vi.spyOn(queryClient, 'invalidateQueries').mockImplementation(() => {
+          refreshes();
+          return Promise.resolve();
+        });
+      });
+
+      it('stays unreachable while only the check answers, and reads the project list once', async () => {
+        await vi.advanceTimersByTimeAsync(30_000);
+
+        expect(check.mock.calls.length).toBeGreaterThan(5);
+        expect(reachability.isUnreachable()).toBe(true);
+        expect(refreshes).toHaveBeenCalledTimes(1);
+      });
+
+      it('counts the tracker back once that read gets its answer', async () => {
+        await vi.advanceTimersByTimeAsync(RECHECK_MS);
+        expect(refreshes).toHaveBeenCalledTimes(1);
+
+        noteAnswer(fromNetwork());
+        await load(queryKeys.projects(), () => Promise.resolve([]));
+
+        expect(reachability.isUnreachable()).toBe(false);
+      });
+
+      it('reads the project list again when a check answers after one that got none', async () => {
+        await vi.advanceTimersByTimeAsync(RECHECK_MS);
+        check.mockRejectedValue(NETWORK_DOWN);
+        await vi.advanceTimersByTimeAsync(10_000);
+        expect(refreshes).toHaveBeenCalledTimes(1);
+
+        check.mockResolvedValue({ ok: true });
+        await vi.advanceTimersByTimeAsync(RECHECK_MAX_MS);
+
+        expect(refreshes).toHaveBeenCalledTimes(2);
+        expect(reachability.isUnreachable()).toBe(true);
+      });
+    });
   });
 
   describe('with reads answered from the service worker cache', () => {
