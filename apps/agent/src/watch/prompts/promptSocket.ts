@@ -1,8 +1,7 @@
-import { mkdtempSync, rmSync } from 'node:fs';
+import { rmSync } from 'node:fs';
 import { createServer, type Socket } from 'node:net';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
 import { deny, type PromptDecision } from './promptCall';
+import { makeSocketFolder, type SocketFolder } from './socketFolder';
 
 // A Write's call holds the whole file; anything past this is no call of Claude Code's.
 const LINE_MAX = 16 * 1024 * 1024;
@@ -56,12 +55,9 @@ async function serve(socket: Socket, answer: Answer, stopped: AbortSignal): Prom
   if (!socket.destroyed) socket.end(`${JSON.stringify(decision)}\n`);
 }
 
-// The prompt tool asks the helper rather than the tracker: it needs no token, nothing secret
-// goes into Claude's argv, and the helper keeps the run's lifecycle and its own --url and
-// --token. mkdtemp makes the folder 0700, so only this user can reach the socket.
-export async function openPromptSocket(answer: Answer): Promise<PromptSocket> {
-  const dir = mkdtempSync(join(tmpdir(), 'tracker-prompt-'));
-  const path = join(dir, 'prompt.sock');
+const SOCKET_FAILED = "Couldn't open the socket Claude asks the phone through";
+
+async function listenIn({ dir, path }: SocketFolder, answer: Answer): Promise<PromptSocket> {
   const stopped = new AbortController();
   const sockets = new Set<Socket>();
   const server = createServer((socket) => {
@@ -69,17 +65,31 @@ export async function openPromptSocket(answer: Answer): Promise<PromptSocket> {
     socket.on('close', () => sockets.delete(socket));
     void serve(socket, answer, stopped.signal);
   });
-  await new Promise<void>((resolve, reject) => {
-    server.once('error', reject);
-    server.listen(path, resolve);
-  });
-  return {
-    path,
-    close: () => {
-      stopped.abort(RUN_STOPPED);
-      for (const socket of sockets) socket.destroy();
-      server.close();
-      rmSync(dir, { recursive: true, force: true });
-    },
+  const close = () => {
+    stopped.abort(RUN_STOPPED);
+    for (const socket of sockets) socket.destroy();
+    server.close();
+    rmSync(dir, { recursive: true, force: true });
   };
+  try {
+    await new Promise<void>((resolve, reject) => {
+      server.once('error', reject);
+      server.listen(path, resolve);
+    });
+  } catch (error) {
+    close();
+    throw error;
+  }
+  return { path, close };
+}
+
+// The prompt tool asks the helper rather than the tracker: it needs no token, nothing secret
+// goes into Claude's argv, and the helper keeps the run's lifecycle and its own --url and
+// --token.
+export async function openPromptSocket(answer: Answer): Promise<PromptSocket> {
+  try {
+    return await listenIn(makeSocketFolder(), answer);
+  } catch (error) {
+    throw new Error(`${SOCKET_FAILED}: ${error instanceof Error ? error.message : String(error)}`);
+  }
 }

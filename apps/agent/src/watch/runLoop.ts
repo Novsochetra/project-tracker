@@ -2,7 +2,7 @@ import type { FinishRunInput, RunJob, RunKind } from '@tracker/shared';
 import { askOutcomeOf } from './ask/askOutcome';
 import type { OnSteps } from './claudeRunners';
 import type { ClaudeExit } from './outcome';
-import { outcomeOf } from './outcome';
+import { lastLines, outcomeOf } from './outcome';
 import { refusalOf } from './refusal';
 import { labelOf } from './runLabel';
 import { retryUntilAnswered } from './retry';
@@ -55,6 +55,20 @@ const runTicket: Runner = async (deps, job, stop, onSteps) => {
 
 const runAsk: Runner = async (deps, job, stop, onSteps) =>
   askOutcomeOf(await deps.runAsk(job, stop, onSteps), stop.aborted);
+
+// Claude never ran, as when the prompt tool's socket can't open, so the run ends with why rather
+// than leave it running on the tracker and this lane stuck on it.
+const runSafely: Runner = async (deps, job, stop, onSteps) => {
+  try {
+    return await (job.run.kind === 'ask' ? runAsk : runTicket)(deps, job, stop, onSteps);
+  } catch (error) {
+    if (stop.aborted) return { status: 'cancelled' };
+    return {
+      status: 'failed',
+      error: lastLines(`Claude Code could not start: ${deps.describe(error)}`),
+    };
+  }
+};
 
 export function createRunLoop(deps: RunLoopDeps, settings: RunLoopSettings) {
   const { api, log } = deps;
@@ -109,7 +123,7 @@ export function createRunLoop(deps: RunLoopDeps, settings: RunLoopSettings) {
     current = { runId: job.run.id, stop };
     const quiet = deps.signOfLife(label);
     const steps = deps.stepsFor(job.run.id);
-    const outcome = await (asking ? runAsk : runTicket)(deps, job, stop.signal, steps.add);
+    const outcome = await runSafely(deps, job, stop.signal, steps.add);
     quiet();
     await steps.end();
     current = undefined;
