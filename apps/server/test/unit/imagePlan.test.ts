@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { renamedFor } from '../../src/images/imageFileName';
 import {
   MAX_INPUT_PIXELS,
+  MAX_JPEG_SCANS,
   MAX_WHOLE_DECODE_PIXELS,
   MAX_WORK_BYTES,
   isWorthStoring,
@@ -20,6 +21,7 @@ const facts = (overrides: Partial<ImageFacts> = {}): ImageFacts => ({
   channels: 3,
   format: 'jpeg',
   progressive: false,
+  scans: 1,
   hasMetadata: false,
   ...overrides,
 });
@@ -53,6 +55,16 @@ describe('planImage', () => {
     expect(planImage('image/webp', facts({ pages: 12 }))).toBeNull();
     expect(planImage('image/png', facts({ width: 20_000, height: 20_000 }))).toBeNull();
     expect(20_000 * 20_000).toBeGreaterThan(MAX_INPUT_PIXELS);
+  });
+
+  it('leaves a JPEG made of more scans than any encoder writes as it came', () => {
+    expect(planImage('image/jpeg', facts({ progressive: true, scans: 10 }))).not.toBeNull();
+    expect(
+      planImage('image/jpeg', facts({ progressive: true, scans: MAX_JPEG_SCANS })),
+    ).not.toBeNull();
+    expect(
+      planImage('image/jpeg', facts({ progressive: true, scans: MAX_JPEG_SCANS + 1 })),
+    ).toBeNull();
   });
 
   it('decodes a 48 MP iPhone photo, read a strip at a time', () => {

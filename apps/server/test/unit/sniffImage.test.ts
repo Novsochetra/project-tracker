@@ -16,6 +16,14 @@ describe('sniffImageType', () => {
     expect(sniffImageType(await bytesOf(solid().tiff().toBuffer()))).toBe('image/tiff');
   });
 
+  it('knows a JPEG by its start marker alone, as libjpeg does', async () => {
+    const jpeg = await bytesOf(solid().jpeg().toBuffer());
+    const stray = Buffer.concat([jpeg.subarray(0, 2), Buffer.from([0x00]), jpeg.subarray(2)]);
+    expect(sniffImageType(stray)).toBe('image/jpeg');
+    expect(sniffImageType(new Uint8Array([0xff, 0xd8]))).toBe('image/jpeg');
+    expect(sniffImageType(new Uint8Array([0xff, 0xd9, 0xff]))).toBeNull();
+  });
+
   it('knows nothing else', () => {
     for (const text of ['hello', '<svg xmlns="http://www.w3.org/2000/svg"/>', 'RIFF1234AVI ', '']) {
       expect(sniffImageType(new TextEncoder().encode(text)), text).toBeNull();

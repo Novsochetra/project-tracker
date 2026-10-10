@@ -115,6 +115,40 @@ export function claimingJpegSize(jpeg: Uint8Array, width: number, height: number
   return bytes;
 }
 
+// EOB runs pass over blocks without data, so a scan of a few bytes still costs a pass over all.
+function eobRuns(blocks: number): Buffer {
+  let bits = '';
+  let left = blocks;
+  while (left >= 16384) {
+    const run = Math.min(left, 32767);
+    bits += '00' + (run - 16384).toString(2).padStart(14, '0');
+    left -= run;
+  }
+  if (left > 0) bits += '01' + (left - 8192).toString(2).padStart(13, '0');
+  bits = bits.padEnd(Math.ceil(bits.length / 8) * 8, '1');
+  const data: number[] = [];
+  for (let at = 0; at < bits.length; at += 8) {
+    const byte = parseInt(bits.slice(at, at + 8), 2);
+    data.push(...(byte === 0xff ? [0xff, 0x00] : [byte]));
+  }
+  return Buffer.from(data);
+}
+
+export async function scanFlood(scans: number, width = 2000, height = 1500): Promise<Uint8Array> {
+  const base = await sharp({ create: { width, height, channels: 3, background: '#808080' } })
+    .jpeg({ progressive: true, quality: 80 })
+    .toBuffer();
+  const eoi = base.lastIndexOf(Buffer.from([0xff, 0xd9]));
+  const counts = Buffer.alloc(16);
+  counts[1] = 2;
+  const table = Buffer.concat([Buffer.from([0x11]), counts, Buffer.from([0xe0, 0xd0])]);
+  const dht = Buffer.concat([Buffer.from([0xff, 0xc4, 0, table.length + 2]), table]);
+  const sos = Buffer.from([0xff, 0xda, 0, 8, 1, 1, 0x01, 1, 63, 0x00]);
+  const scan = Buffer.concat([sos, eobRuns(Math.ceil(width / 8) * Math.ceil(height / 8))]);
+  const flood = Buffer.concat(Array<Buffer>(scans).fill(scan));
+  return Buffer.concat([base.subarray(0, eoi), dht, flood, Buffer.from([0xff, 0xd9])]);
+}
+
 export function pngChunk(type: string, data: Buffer): Buffer {
   const length = Buffer.alloc(4);
   length.writeUInt32BE(data.length);

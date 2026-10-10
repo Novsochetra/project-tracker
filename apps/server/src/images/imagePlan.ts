@@ -15,6 +15,12 @@ const MB = 1024 * 1024;
 export const MAX_INPUT_PIXELS = 50_000_000;
 export const MAX_WHOLE_DECODE_PIXELS = 25_000_000;
 
+// libjpeg reads every scan of a JPEG before its first row comes out, and sharp checks its timeout
+// only between rows, so nothing stops a JPEG made of scans: 950,000 empty ones in 14 MB ran 160 s
+// (PT-127 review). Encoders write about 10 (libjpeg: 10 for color, 18 for CMYK), and 100 passes
+// over a 25 MP picture held whole take well under a second.
+export const MAX_JPEG_SCANS = 100;
+
 // WebP's usual photo quality: about a quarter smaller than JPEG at the same look.
 export const PHOTO_QUALITY = 80;
 
@@ -43,6 +49,7 @@ export interface ImageFacts {
   format: 'jpeg' | 'png' | 'webp' | 'heif';
   // A progressive JPEG or an interlaced PNG.
   progressive: boolean;
+  scans: number;
   // EXIF, XMP, IPTC or text chunks: where a phone puts the place and the camera.
   hasMetadata: boolean;
 }
@@ -75,7 +82,8 @@ export function wholePixels(facts: ImageFacts, plan: ImagePlan): number {
 
 // Null keeps the image as it came: an animation would lose its frames.
 export function planImage(mimeType: AttachmentMimeType, facts: ImageFacts): ImagePlan | null {
-  if (facts.pages > 1 || facts.width * facts.height > MAX_INPUT_PIXELS) return null;
+  if (facts.pages > 1 || facts.scans > MAX_JPEG_SCANS) return null;
+  if (facts.width * facts.height > MAX_INPUT_PIXELS) return null;
   const lossless = LOSSLESS_SOURCES.has(mimeType);
   const budget = lossless ? MAX_LOSSLESS_PIXELS : MAX_PHOTO_PIXELS;
   const longSide = longSideWithin(facts.width, facts.height, budget);

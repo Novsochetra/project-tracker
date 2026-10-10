@@ -14,6 +14,7 @@ import {
   type ImageFacts,
   type ImagePlan,
 } from './imagePlan';
+import { countJpegScans } from './jpegSegments';
 import { keptAsItCame, type StoredImage } from './keptAsItCame';
 import { createWorkLimiter } from './limiter';
 import { sniffImageType } from './sniffImage';
@@ -84,6 +85,7 @@ async function factsOf(
     channels: meta.channels ?? 4,
     format,
     progressive: meta.isProgressive,
+    scans: format === 'jpeg' ? countJpegScans(original) : 1,
     hasMetadata: Boolean(meta.exif ?? meta.xmp ?? meta.iptc ?? meta.comments?.length),
   };
 }
