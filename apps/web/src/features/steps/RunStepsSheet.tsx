@@ -24,6 +24,7 @@ export function RunStepsSheet({ open, onClose, runId, ticketKey }: RunStepsSheet
   const seq = lastSeq(steps.data ?? []);
   const count = Math.max(run?.stepCount ?? 0, seq);
   const listRef = useRef<HTMLDivElement>(null);
+  const isPhone = useIsPhone();
   useFollowEnd(listRef, seq);
   return (
     <Sheet
@@ -36,7 +37,7 @@ export function RunStepsSheet({ open, onClose, runId, ticketKey }: RunStepsSheet
       left={<SheetTextButton onClick={onClose}>Close</SheetTextButton>}
     >
       {/* On desktop the sheet grows with its content, so a long run scrolls in here instead. */}
-      <div className={useIsPhone() ? styles.body : `${styles.body} ${styles.scrolls}`}>
+      <div className={isPhone ? styles.body : `${styles.body} ${styles.scrolls}`}>
         <div ref={listRef}>
           <StepsPanel steps={steps} variant="full" />
         </div>

@@ -1,4 +1,4 @@
-import type { RunStep } from '@tracker/shared';
+import { RUN_STEPS_KEPT, type RunStep } from '@tracker/shared';
 import { describe, expect, it } from 'vitest';
 import { lastSeq, mergeSteps } from './runSteps';
 
@@ -37,6 +37,14 @@ describe('mergeSteps', () => {
     const have = [step(1), step(2)];
     expect(mergeSteps(have, [])).toBe(have);
     expect(mergeSteps(have, [step(2)])).toBe(have);
+  });
+
+  it('keeps the newest steps the tracker keeps, so the oldest go as new ones come', () => {
+    const have = Array.from({ length: RUN_STEPS_KEPT }, (_, index) => step(index + 1));
+    const merged = mergeSteps(have, [step(RUN_STEPS_KEPT + 1), step(RUN_STEPS_KEPT + 2)]);
+    expect(merged).toHaveLength(RUN_STEPS_KEPT);
+    expect(merged[0]?.seq).toBe(3);
+    expect(lastSeq(merged)).toBe(RUN_STEPS_KEPT + 2);
   });
 
   it('starts from the first page the run has, which may begin past steps the tracker let go', () => {
