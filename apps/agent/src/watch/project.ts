@@ -9,12 +9,18 @@ export class WatchSetupError extends Error {
   override name = 'WatchSetupError';
 }
 
-const inFolder = (repo: string, home: string): string =>
-  resolve(repo.startsWith('~/') ? `${home}${repo.slice(1)}` : repo);
+export interface Folder {
+  cwd: string;
+  home: string;
+  canonical: (path: string) => string;
+}
+
+const inFolder = (repo: string, { home, canonical }: Folder): string =>
+  canonical(resolve(repo.startsWith('~/') ? `${home}${repo.slice(1)}` : repo));
 
 export function pickProject(
   projects: readonly ProjectRepo[],
-  folder: { cwd: string; home: string },
+  folder: Folder,
   wanted?: string,
 ): string {
   if (wanted !== undefined) {
@@ -22,9 +28,9 @@ export function pickProject(
     if (projects.some((project) => project.key === key)) return key;
     throw new WatchSetupError(`Project ${key} was not found on this tracker.`);
   }
-  const here = resolve(folder.cwd);
+  const here = folder.canonical(resolve(folder.cwd));
   const matches = projects.filter(
-    (project) => project.repo.trim() && inFolder(project.repo.trim(), folder.home) === here,
+    (project) => project.repo.trim() && inFolder(project.repo.trim(), folder) === here,
   );
   if (matches.length === 1) return matches[0]!.key;
   const keys = matches.map((project) => project.key).join(', ');

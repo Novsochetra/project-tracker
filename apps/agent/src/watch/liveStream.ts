@@ -1,5 +1,6 @@
 import { LIVE_STALE_MS, type RunEvent } from '@tracker/shared';
-import { retryDelay, wait } from './retryDelay';
+import { retryDelay } from './retry';
+import { wait } from './wait';
 import { createSseParser } from './sse';
 
 export interface LiveStreamOptions {
@@ -8,7 +9,6 @@ export interface LiveStreamOptions {
   signal: AbortSignal;
   onOpen: () => void;
   onRun: (event: RunEvent) => void;
-  onDrop: (reason: string) => void;
   staleMs?: number;
 }
 
@@ -50,7 +50,7 @@ async function readUntilDropped(response: Response, options: LiveStreamOptions):
 async function connectOnce(options: LiveStreamOptions): Promise<void> {
   const headers: Record<string, string> = { accept: 'text/event-stream' };
   if (options.token) headers.authorization = `Bearer ${options.token}`;
-  const response = await fetch(`${options.url}/api/events`, { headers, signal: options.signal });
+  const response = await fetch(options.url, { headers, signal: options.signal });
   if (!response.ok || !response.body) throw new Error(`the tracker answered ${response.status}`);
   options.onOpen();
   await readUntilDropped(response, options);
@@ -60,12 +60,8 @@ export async function followRunEvents(options: LiveStreamOptions): Promise<void>
   let attempt = 0;
   while (!options.signal.aborted) {
     const opened = Date.now();
-    try {
-      await connectOnce(options);
-    } catch (error) {
-      if (options.signal.aborted) return;
-      options.onDrop(error instanceof Error ? error.message : String(error));
-    }
+    // Check-ins every 20 s report a tracker that can't be reached; the stream only speeds up runs.
+    await connectOnce(options).catch(() => undefined);
     if (Date.now() - opened > (options.staleMs ?? LIVE_STALE_MS)) attempt = 0;
     await wait(retryDelay(attempt), options.signal);
     attempt += 1;

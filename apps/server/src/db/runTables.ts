@@ -1,6 +1,5 @@
 import type { RunStatus } from '@tracker/shared';
 
-// userId is null on a tracker without an owner; owner-set gives these rows to the owner.
 export interface RunnerRow {
   id: string;
   userId: string | null;

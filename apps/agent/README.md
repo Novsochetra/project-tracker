@@ -87,11 +87,12 @@ tracker login --url https://your-tracker.up.railway.app   # once
 tracker watch MOB --name "Dara's MacBook"
 ```
 
-- `PROJECT` can be left out when exactly one project has this folder as its repo.
-- It only calls out to the tracker over https (or to `localhost`), so it works behind a home router with no open port. It reconnects by itself after a drop, a deploy or sleep, and checks for runs every 20 s besides.
+- `PROJECT` can be left out when exactly one project has this folder as its repo. One helper per folder: a second one there is refused.
+- The app shows it under your Mac's name (System Settings → General → Sharing), or `--name`. Its id is made once per tracker and folder and kept in `~/.config/project-tracker/config.json`.
+- It only calls out to the tracker over https (or to `localhost`), so it works behind a home router with no open port. It waits for the tracker when it can't reach it, reconnects by itself after a drop, a deploy or sleep, and checks for runs every 20 s besides.
 - One run at a time. The prompt goes to `claude -p` on stdin, in this folder. The tracker never sends it a command, folder or flag.
 - `claude` must be installed and logged in here, with the tracker's MCP tools added (above), so Claude can claim, comment and submit. Your Claude Code settings decide what it may do; `--permission-mode` (for example `acceptEdits`) is passed on to `claude`.
-- Ctrl-C stops it, and a run in progress is reported as cancelled.
+- Ctrl-C (or closing the terminal) stops it, and a run in progress is reported as cancelled. If the tracker can't be reached then, it keeps trying to report; a second Ctrl-C quits at once.
 
 ## Workflow: worker → reviewer → person
 

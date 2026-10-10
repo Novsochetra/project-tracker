@@ -24,6 +24,7 @@ function fakeTracker(jobs: RunJob[]) {
   const statuses = new Map<string, Run['status']>();
   const api: WatchApi = {
     listProjects: vi.fn(),
+    eventsUrl: () => 'http://tracker.test/api/events',
     registerRunner: vi.fn(() => Promise.resolve({} as never)),
     takeNextRun: vi.fn(() => Promise.resolve(jobs.shift() ?? null)),
     finishRun: vi.fn((id: string, input: FinishRunInput) => {
@@ -49,7 +50,7 @@ function watcherWith(
   const log: string[] = [];
   const watcher = createWatcher(
     { api, runClaude, log: (text) => log.push(text), retryDelay: () => 1 },
-    { runnerId: RUNNER, name: 'Mac', projectKey: 'MOB' },
+    { runnerId: RUNNER, name: 'Mac', projectKey: 'MOB', trackerUrl: 'http://tracker.test' },
   );
   return { watcher, log };
 }
@@ -57,7 +58,7 @@ function watcherWith(
 const exits =
   (code: number, output = '') =>
   () =>
-    Promise.resolve({ code, output });
+    Promise.resolve({ code, signal: null, output });
 
 describe('the watcher', () => {
   it('runs each waiting run in turn and reports how it ended', async () => {
@@ -66,7 +67,9 @@ describe('the watcher', () => {
     const { watcher, log } = watcherWith(tracker.api, (prompt) => {
       prompts.push(prompt);
       return Promise.resolve(
-        prompt === 'FAIL' ? { code: 1, output: 'boom' } : { code: 0, output: '' },
+        prompt === 'FAIL'
+          ? { code: 1, signal: null, output: 'boom' }
+          : { code: 0, signal: null, output: '' },
       );
     });
     await watcher.lookForWork();
@@ -92,7 +95,10 @@ describe('the watcher', () => {
     const tracker = fakeTracker([job('r-1', 'MOB-1')]);
     let finish = () => undefined as void;
     const runClaude = vi.fn(
-      () => new Promise<ClaudeExit>((resolve) => (finish = () => resolve({ code: 0, output: '' }))),
+      () =>
+        new Promise<ClaudeExit>(
+          (resolve) => (finish = () => resolve({ code: 0, signal: null, output: '' })),
+        ),
     );
     const { watcher } = watcherWith(tracker.api, runClaude);
     const first = watcher.lookForWork();
@@ -118,7 +124,9 @@ describe('the watcher', () => {
         tracker.api,
         (_prompt, signal) =>
           new Promise((resolve) =>
-            signal.addEventListener('abort', () => resolve({ code: null, output: '' })),
+            signal.addEventListener('abort', () =>
+              resolve({ code: null, signal: 'SIGTERM', output: '' }),
+            ),
           ),
       );
       const working = watcher.lookForWork();
@@ -162,17 +170,20 @@ describe('the watcher', () => {
     await watcher.lookForWork();
     expect(finishRun).toHaveBeenCalledTimes(4);
     expect(log).toContain(
-      "Couldn't tell the tracker how MOB-2 ended: This run already ended (cancelled).",
+      "The tracker didn't take how MOB-2 ended: This run already ended (cancelled).",
     );
   });
 
   it('says once that the tracker is out of reach, and when it is back', async () => {
     let down = true;
     const tracker = fakeTracker([]);
+    const offline = Object.assign(new TypeError('fetch failed'), {
+      cause: new Error('connect ECONNREFUSED'),
+    });
     const fails =
       <T>(answer: () => Promise<T>) =>
       () =>
-        down ? Promise.reject(new TypeError('fetch failed')) : answer();
+        down ? Promise.reject(offline) : answer();
     const api = {
       ...tracker.api,
       registerRunner: vi.fn(fails(() => Promise.resolve({} as never))),
@@ -186,7 +197,7 @@ describe('the watcher', () => {
     await watcher.checkIn();
     await watcher.lookForWork();
     expect(log).toEqual([
-      "Couldn't reach the tracker: fetch failed",
+      'Could not reach the tracker at http://tracker.test (connect ECONNREFUSED). Is it running? Check TRACKER_URL (or --url).',
       'In touch with the tracker again.',
     ]);
   });

@@ -1,6 +1,7 @@
 import { trackerUrl } from '../config';
 import { describeError } from '../errors';
-import { watch, type WatchIo } from '../watch/command';
+import { watch } from '../watch/watch';
+import type { WatchIo } from '../watch/watchIo';
 import { UsageError, type ParsedArgs } from './args';
 import { EXIT_ERROR, EXIT_OK } from './exitCodes';
 import type { CliIo } from './run';
@@ -9,11 +10,20 @@ export const WATCH_USAGE = 'watch [PROJECT] [--name NAME] [--permission-mode MOD
 
 const WATCH_OPTIONS = new Set(['name', 'permission-mode']);
 
+// Once per signal, so a second Ctrl-C quits at once.
 const untilSignal = (): Promise<void> =>
   new Promise((resolve) => {
-    process.once('SIGINT', () => resolve());
-    process.once('SIGTERM', () => resolve());
+    for (const signal of ['SIGINT', 'SIGTERM', 'SIGHUP'] as const)
+      process.once(signal, () => resolve());
   });
+
+function connectionOf(parsed: ParsedArgs, io: CliIo) {
+  try {
+    return { trackerUrl: trackerUrl(io.env, parsed.global, io.store.read()) };
+  } catch {
+    return {};
+  }
+}
 
 export function checkWatchArgs(parsed: ParsedArgs): void {
   if (parsed.args.length > 1) {
@@ -41,8 +51,7 @@ export async function watchCommand(parsed: ParsedArgs, io: CliIo): Promise<numbe
     await watch(parsed.global, args, watchIo);
     return EXIT_OK;
   } catch (error) {
-    const url = trackerUrl(io.env, parsed.global, io.store.read());
-    io.stderr(`Error: ${describeError(error, { trackerUrl: url })}`);
+    io.stderr(`Error: ${describeError(error, connectionOf(parsed, io))}`);
     return EXIT_ERROR;
   }
 }

@@ -10,6 +10,11 @@ process.stdin.on('end', () => {
   console.log('ARGS ' + JSON.stringify(process.argv.slice(2)));
   console.log('CWD ' + process.cwd());
   console.log('PROMPT ' + prompt);
+  if (prompt.includes('TWO LINES')) {
+    process.stderr.write('first line\\n');
+    setTimeout(() => { process.stderr.write('second line\\n'); process.exit(4); }, 100);
+    return;
+  }
   if (prompt.includes('FAIL')) { console.error('boom'); process.exit(3); }
   if (prompt.includes('WAIT')) setTimeout(() => process.exit(0), 60000);
 });

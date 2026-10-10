@@ -1,3 +1,6 @@
+import { mkdtempSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { EXIT_ERROR, EXIT_USAGE, runCli } from '../../src/cli/run';
 import { USAGE } from '../../src/cli/usage';
@@ -7,10 +10,12 @@ async function cli(argv: string[]) {
   const stderr: string[] = [];
   const code = await runCli(argv, {
     env: {},
-    store: memoryStore(),
+    store: Object.assign(memoryStore(), {
+      path: join(mkdtempSync(join(tmpdir(), 'watch-')), 'config.json'),
+    }),
     stdout: () => undefined,
     stderr: (text) => stderr.push(text),
-    untilStopped: () => Promise.resolve(),
+    untilStopped: () => new Promise<void>(() => undefined),
   });
   return { code, stderr: stderr.join('\n') };
 }

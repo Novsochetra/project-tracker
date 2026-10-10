@@ -58,7 +58,6 @@ describe('followRunEvents', () => {
       signal: stop.signal,
       onOpen,
       onRun,
-      onDrop: () => undefined,
     });
     await vi.waitFor(() => expect(onOpen).toHaveBeenCalledTimes(1));
     server.send(`event: ping\ndata: \n\nevent: run\ndata: ${JSON.stringify(RUN)}\n\n`);
@@ -79,7 +78,6 @@ describe('followRunEvents', () => {
       signal: stop.signal,
       onOpen,
       onRun: () => undefined,
-      onDrop: () => undefined,
       staleMs: 100,
     });
     await vi.waitFor(() => expect(onOpen).toHaveBeenCalledTimes(2), { timeout: 5_000 });

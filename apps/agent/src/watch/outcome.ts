@@ -1,13 +1,9 @@
-import { RUN_ERROR_MAX, type FinishRunInput, type RunJob } from '@tracker/shared';
+import { RUN_ERROR_MAX, type FinishRunInput } from '@tracker/shared';
 
 export interface ClaudeExit {
   code: number | null;
+  signal: NodeJS.Signals | null;
   output: string;
-}
-
-export function refusalOf(job: RunJob, projectKey: string): string | undefined {
-  if (job.run.ticketKey.startsWith(`${projectKey}-`)) return undefined;
-  return `This helper only runs ${projectKey} tickets, not ${job.run.ticketKey}.`;
 }
 
 export function lastLines(text: string, max = RUN_ERROR_MAX): string {
@@ -18,10 +14,13 @@ export function lastLines(text: string, max = RUN_ERROR_MAX): string {
   return lineStart === -1 ? tail : tail.slice(lineStart + 1);
 }
 
+function reasonOf({ code, signal }: ClaudeExit): string {
+  if (code !== null) return `Claude Code exited with ${code}.`;
+  return signal ? `Claude Code was stopped (${signal}).` : 'Claude Code did not start.';
+}
+
 export function outcomeOf(exit: ClaudeExit, cancelled: boolean): FinishRunInput {
   if (cancelled) return { status: 'cancelled' };
   if (exit.code === 0) return { status: 'done' };
-  const reason =
-    exit.code === null ? 'Claude Code did not start.' : `Claude Code exited with ${exit.code}.`;
-  return { status: 'failed', error: lastLines(`${reason}\n${exit.output}`) };
+  return { status: 'failed', error: lastLines(`${reasonOf(exit)}\n${exit.output}`) };
 }

@@ -6,7 +6,7 @@ const projects = [
   { key: 'WEB', repo: '~/code/web/' },
   { key: 'OPS', repo: '' },
 ];
-const folder = (cwd: string) => ({ cwd, home: '/Users/dara' });
+const folder = (cwd: string) => ({ cwd, home: '/Users/dara', canonical: (path: string) => path });
 
 describe('pickProject', () => {
   it('takes the named project, in any case', () => {

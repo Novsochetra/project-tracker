@@ -1,23 +1,45 @@
-import { once } from 'node:events';
-import { realpathSync } from 'node:fs';
-import { createServer, connect, type AddressInfo, type Socket } from 'node:net';
-import { tmpdir } from 'node:os';
 import { randomUUID } from 'node:crypto';
+import { once } from 'node:events';
+import { existsSync, mkdtempSync, readdirSync, realpathSync } from 'node:fs';
+import { connect, createServer, type AddressInfo, type Socket } from 'node:net';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { serve } from '@hono/node-server';
 import { TrackerClient } from '@tracker/client';
 import type { RunStatus } from '@tracker/shared';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
+import { runClaude } from '../../../agent/src/watch/claude';
+import { followRunEvents } from '../../../agent/src/watch/liveStream';
+import { watch } from '../../../agent/src/watch/watch';
+import { createWatcher } from '../../../agent/src/watch/watcher';
+import { installFakeClaude } from '../../../agent/test/watch/fakeClaude';
+import { memoryStore } from '../../../agent/test/memoryStore';
 import { createApp } from '../../src/app';
 import { createDatabase } from '../../src/db/createDatabase';
 import { migrateToLatest } from '../../src/db/migrator';
 import { createBroadcaster } from '../../src/events/broadcaster';
 import { createMemoryStorage } from '../../src/storage/memoryStorage';
-import { runClaude } from '../../../agent/src/watch/claude';
-import { followRunEvents } from '../../../agent/src/watch/liveStream';
-import { createWatcher } from '../../../agent/src/watch/watcher';
-import { installFakeClaude } from '../../../agent/test/watch/fakeClaude';
 
 const portOf = (server: { address(): unknown }) => (server.address() as AddressInfo).port;
+
+async function startTracker() {
+  const db = createDatabase(':memory:');
+  await migrateToLatest(db);
+  const app = createApp({ db, storage: createMemoryStorage(), events: createBroadcaster() });
+  const server = serve({
+    fetch: app.fetch,
+    port: 0,
+    hostname: '127.0.0.1',
+    overrideGlobalObjects: false,
+  });
+  await once(server, 'listening');
+  const url = `http://127.0.0.1:${portOf(server)}`;
+  const close = async () => {
+    server.close();
+    await db.destroy();
+  };
+  return { url, port: portOf(server), person: new TrackerClient({ baseUrl: url }), close };
+}
 
 async function cuttableLink(targetPort: number) {
   const sockets = new Set<Socket>();
@@ -39,6 +61,8 @@ async function cuttableLink(targetPort: number) {
   };
 }
 
+const settle = { timeout: 15_000 };
+
 describe('tracker watch against a real tracker', () => {
   const fake = installFakeClaude();
   const stop = new AbortController();
@@ -53,18 +77,9 @@ describe('tracker watch against a real tracker', () => {
     (await person.startRun(ticketKey, { runnerId, prompt })).id;
 
   beforeAll(async () => {
-    const db = createDatabase(':memory:');
-    await migrateToLatest(db);
-    const app = createApp({ db, storage: createMemoryStorage(), events: createBroadcaster() });
-    const server = serve({
-      fetch: app.fetch,
-      port: 0,
-      hostname: '127.0.0.1',
-      overrideGlobalObjects: false,
-    });
-    await once(server, 'listening');
-    person = new TrackerClient({ baseUrl: `http://127.0.0.1:${portOf(server)}` });
-    link = await cuttableLink(portOf(server));
+    const tracker = await startTracker();
+    person = tracker.person;
+    link = await cuttableLink(tracker.port);
     await person.createProject({ name: 'Mobile', key: 'MOB' });
     for (const title of ['Crash', 'Login', 'Offline', 'Slow']) {
       await person.createTicket('MOB', { title });
@@ -73,7 +88,7 @@ describe('tracker watch against a real tracker', () => {
       baseUrl: link.url,
       actor: { kind: 'agent', name: 'Claude' },
     });
-    const settings = { runnerId, name: 'Test Mac', projectKey: 'MOB' };
+    const settings = { runnerId, name: 'Test Mac', projectKey: 'MOB', trackerUrl: link.url };
     await helper.registerRunner(runnerId, { name: settings.name, projectKeys: ['MOB'] });
     const cwd = realpathSync(tmpdir());
     const watcher = createWatcher(
@@ -86,19 +101,17 @@ describe('tracker watch against a real tracker', () => {
       settings,
     );
     const stream = followRunEvents({
-      url: link.url,
+      url: helper.eventsUrl(),
       token: undefined,
       signal: stop.signal,
       onOpen: () => void watcher.lookForWork(),
       onRun: watcher.onRunEvent,
-      onDrop: () => undefined,
     });
     close = async () => {
       stop.abort();
       await Promise.all([watcher.stop(), stream]);
       link.close();
-      server.close();
-      await db.destroy();
+      await tracker.close();
       fake.remove();
     };
   });
@@ -107,29 +120,90 @@ describe('tracker watch against a real tracker', () => {
 
   it('runs a run the person starts and reports it done', async () => {
     const runId = await start('MOB-1', 'Fix MOB-1');
-    await vi.waitFor(async () => expect(await statusOf(runId)).toBe('done'), { timeout: 10_000 });
+    await vi.waitFor(async () => expect(await statusOf(runId)).toBe('done'), settle);
     expect(logs).toContain('MOB-1: Claude Code finished.');
   });
 
   it('reports a failing Claude with what it printed', async () => {
     const runId = await start('MOB-2', 'FAIL on MOB-2');
-    await vi.waitFor(async () => expect(await statusOf(runId)).toBe('failed'), { timeout: 10_000 });
+    await vi.waitFor(async () => expect(await statusOf(runId)).toBe('failed'), settle);
     expect((await person.getRun(runId)).error).toContain('boom');
   });
 
   it('still runs a run queued while the connection was down', async () => {
     link.cut();
     const runId = await start('MOB-3', 'Fix MOB-3');
-    await vi.waitFor(async () => expect(await statusOf(runId)).toBe('done'), { timeout: 15_000 });
+    await vi.waitFor(async () => expect(await statusOf(runId)).toBe('done'), settle);
   });
 
   it('stops Claude when the person cancels', async () => {
     const runId = await start('MOB-4', 'WAIT on MOB-4');
-    await vi.waitFor(async () => expect(await statusOf(runId)).toBe('running'), {
-      timeout: 10_000,
-    });
+    await vi.waitFor(async () => expect(await statusOf(runId)).toBe('running'), settle);
     await person.cancelRun(runId);
-    await vi.waitFor(() => expect(logs).toContain('MOB-4: Cancelled.'), { timeout: 10_000 });
+    await vi.waitFor(() => expect(logs).toContain('MOB-4: Cancelled.'), settle);
     expect(await statusOf(runId)).toBe('cancelled');
+  });
+});
+
+describe('tracker watch, the command', () => {
+  const fake = installFakeClaude();
+  const path = process.env.PATH;
+  let tracker: Awaited<ReturnType<typeof startTracker>>;
+
+  beforeAll(async () => {
+    tracker = await startTracker();
+    process.env.PATH = `${fake.dir}:${path}`;
+  });
+
+  afterAll(async () => {
+    process.env.PATH = path;
+    await tracker.close();
+    fake.remove();
+  });
+
+  it('finds the project from its folder, runs with claude from PATH, and Ctrl-C cancels', async () => {
+    const folder = realpathSync(mkdtempSync(join(tmpdir(), 'mobile-')));
+    const config = mkdtempSync(join(tmpdir(), 'watch-config-'));
+    const store = Object.assign(memoryStore(), { path: join(config, 'config.json') });
+    await tracker.person.createProject({ name: 'Mobile', key: 'MOB', repo: folder });
+    await tracker.person.createTicket('MOB', { title: 'Crash' });
+    await tracker.person.createTicket('MOB', { title: 'Login' });
+    const lines: string[] = [];
+    let pressCtrlC = () => undefined as void;
+    const watching = watch(
+      { url: tracker.url, json: false, help: false },
+      { name: 'Test Mac' },
+      {
+        env: {},
+        store,
+        cwd: folder,
+        stdout: (text) => lines.push(text),
+        write: () => undefined,
+        untilStopped: () => new Promise((resolve) => (pressCtrlC = resolve)),
+      },
+    );
+    await vi.waitFor(() => expect(lines.join('\n')).toContain('Watching MOB'), settle);
+    const [runner] = await tracker.person.listRunners();
+    expect(runner).toMatchObject({ name: 'Test Mac', projectKeys: ['MOB'], online: true });
+
+    const done = await tracker.person.startRun('MOB-1', { runnerId: runner!.id, prompt: 'Fix it' });
+    await vi.waitFor(
+      async () => expect((await tracker.person.getRun(done.id)).status).toBe('done'),
+      settle,
+    );
+    const waiting = await tracker.person.startRun('MOB-2', {
+      runnerId: runner!.id,
+      prompt: 'WAIT',
+    });
+    await vi.waitFor(
+      async () => expect((await tracker.person.getRun(waiting.id)).status).toBe('running'),
+      settle,
+    );
+    pressCtrlC();
+    await watching;
+    expect((await tracker.person.getRun(waiting.id)).status).toBe('cancelled');
+    expect(readdirSync(config).filter((name) => name.endsWith('.lock'))).toEqual([]);
+    expect(existsSync(join(config, 'config.json'))).toBe(false);
+    expect(store.read().runners).toEqual({ [`${tracker.url} ${folder}`]: runner!.id });
   });
 });

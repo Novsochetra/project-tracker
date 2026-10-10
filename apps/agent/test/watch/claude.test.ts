@@ -37,7 +37,7 @@ describe('runClaude', () => {
     const stop = new AbortController();
     const exit = run('WAIT', stop.signal);
     setTimeout(() => stop.abort(), 200);
-    expect((await exit).code).not.toBe(0);
+    expect(await exit).toMatchObject({ code: null, signal: 'SIGTERM' });
   });
 
   it('says whether Claude Code is installed', async () => {
