@@ -1,6 +1,6 @@
 import { RUN_STEP_LABEL_MAX, RUN_STEP_TEXT_MAX, type RunStepInput } from '../../domain/runStep';
 import { cutTo, oneLine } from './cut';
-import { isJson, type Json } from './json';
+import { isJson, type Json } from '../json';
 import { maskSecrets } from './secrets';
 import { toolLabel } from './toolLabel';
 

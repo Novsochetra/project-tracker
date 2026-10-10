@@ -1,6 +1,6 @@
 import type { RunStepInput } from '../../domain/runStep';
 import { answeredToolIds, deniedToolIds } from './denials';
-import { isJson, type Json } from './json';
+import { isJson, type Json } from '../json';
 import { labelOf, requestSteps } from './requestSteps';
 
 // Reads one run's claude -p --output-format stream-json --verbose, an event at a time. Only what

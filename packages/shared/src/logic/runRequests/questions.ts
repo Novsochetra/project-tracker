@@ -8,12 +8,8 @@ import {
   type RunQuestion,
   type RunQuestionOption,
 } from '../../domain/runRequest';
+import { isJson, type Json } from '../json';
 import { cutTo, oneLine } from '../runSteps/cut';
-
-type Json = Readonly<Record<string, unknown>>;
-
-const isJson = (value: unknown): value is Json =>
-  typeof value === 'object' && value !== null && !Array.isArray(value);
 
 const textOf = (value: unknown, max: number): string =>
   typeof value === 'string' ? cutTo(oneLine(value), max) : '';

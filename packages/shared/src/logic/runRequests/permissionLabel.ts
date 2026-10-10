@@ -1,14 +1,7 @@
 import { RUN_PERMISSION_LABEL_MAX, RUN_REQUEST_LABEL_MAX } from '../../domain/runRequest';
-import { cutTo, oneLine } from '../runSteps/cut';
-import { toolLabel, type ToolInput } from '../runSteps/toolLabel';
+import { cutTo, oneLine, sliceWhole } from '../runSteps/cut';
+import { field, said, toolLabel, type ToolInput } from '../runSteps/toolLabel';
 import { maskForPermission } from './permissionMask';
-
-const field = (input: ToolInput, name: string): string => {
-  const value = input[name];
-  return typeof value === 'string' ? value.trim() : '';
-};
-
-const said = (verb: string, detail: string): string => (detail ? `${verb} ${detail}` : verb);
 
 // A step shows a command's first line and an address without its query (toolLabel), but the
 // person allows what runs: every line, a heredoc's body included, and the whole address.
@@ -27,12 +20,6 @@ export interface PermissionLabel {
   // person never allows what they could not see.
   cut: boolean;
 }
-
-const HIGH_SURROGATE = /[\uD800-\uDBFF]/;
-
-// Never half of an emoji at the end, which no font can draw.
-const sliceWhole = (text: string, end: number): string =>
-  text.slice(0, HIGH_SURROGATE.test(text.charAt(end - 1)) ? end - 1 : end);
 
 // Never a file's contents: a Write or Edit shows only its path, as its step does.
 export function permissionLabel(name: string, input: ToolInput, folder: string): PermissionLabel {

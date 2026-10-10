@@ -25,6 +25,7 @@ export * from './logic/askPrompt';
 export * from './logic/avatar';
 export * from './logic/drop';
 export * from './logic/format';
+export * from './logic/json';
 export * from './logic/listView';
 export * from './logic/prefix';
 export * from './logic/prompt';

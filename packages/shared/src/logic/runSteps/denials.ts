@@ -1,4 +1,4 @@
-import { isJson, type Json } from './json';
+import { isJson, type Json } from '../json';
 
 const ids = (values: unknown): Json[] => (Array.isArray(values) ? values.filter(isJson) : []);
 

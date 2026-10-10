@@ -1,3 +1,5 @@
+import { isJson } from '@tracker/shared';
+
 export interface PromptCall {
   toolName: string;
   input: Readonly<Record<string, unknown>>;
@@ -7,9 +9,6 @@ export interface PromptCall {
 export type PromptDecision =
   | { behavior: 'allow'; updatedInput: Readonly<Record<string, unknown>> }
   | { behavior: 'deny'; message: string };
-
-const isJson = (value: unknown): value is Readonly<Record<string, unknown>> =>
-  typeof value === 'object' && value !== null && !Array.isArray(value);
 
 export function promptCallOf(args: unknown): PromptCall | null {
   if (!isJson(args) || typeof args.tool_name !== 'string') return null;

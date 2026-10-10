@@ -6,12 +6,12 @@ type Label = (input: ToolInput, folder: string) => string;
 
 const PROJECT_KEY = /^[A-Za-z0-9]{1,20}$/;
 
-const field = (input: ToolInput, name: string): string => {
+export const field = (input: ToolInput, name: string): string => {
   const value = input[name];
   return typeof value === 'string' ? value.trim() : '';
 };
 
-const said = (verb: string, detail: string): string => (detail ? `${verb} ${detail}` : verb);
+export const said = (verb: string, detail: string): string => (detail ? `${verb} ${detail}` : verb);
 const quoted = (text: string): string => (text ? `'${text}'` : '');
 
 const pathIn =
