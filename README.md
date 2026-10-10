@@ -123,6 +123,8 @@ Agents never move tickets to **Done**. See `apps/agent/README.md` for the tools 
 
 The app also keeps the copy/paste loop: **Send to Claude Code** copies a ready-made prompt, and **Paste report** reads Claude's reply back into the ticket.
 
+To start Claude Code from your phone instead, run `tracker watch` in the project's code folder on your computer and leave it open (`apps/agent/README.md`, Run Claude Code from your phone).
+
 ## Development
 
 ```bash

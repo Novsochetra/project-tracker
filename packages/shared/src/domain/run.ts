@@ -13,10 +13,11 @@ export type EndedRunStatus = (typeof ENDED_RUN_STATUSES)[number];
 export const RUNNER_ONLINE_MS = 60_000;
 
 // Long enough for a laptop to wake or a helper to restart, short enough that a phone stops waiting.
-export const RUN_PICKUP_MS = 30 * 60_000;
+export const HELPER_SILENCE_MS = 30 * 60_000;
 
 export const RUN_NOT_TAKEN = "Your computer didn't take the run.";
 export const RUN_LOST = 'Your computer stopped answering.';
+export const RUN_RESTARTED = 'The helper restarted before it finished.';
 export const RUNNER_REMOVED = 'That computer was removed.';
 
 export const RUNNER_NAME_MAX = 60;

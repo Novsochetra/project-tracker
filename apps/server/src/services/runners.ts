@@ -1,4 +1,9 @@
-import { RUNNER_REMOVED, type RegisterRunnerInput, type Runner } from '@tracker/shared';
+import {
+  ACTIVE_RUN_STATUSES,
+  RUNNER_REMOVED,
+  type RegisterRunnerInput,
+  type Runner,
+} from '@tracker/shared';
 import { inScope, type UserScope } from '../auth/scope';
 import { isUniqueViolation } from '../db/errors';
 import type { RunnerRow } from '../db/runTables';
@@ -10,7 +15,7 @@ import {
   listRunnerRows,
   updateRunnerRow,
 } from '../repositories/runners';
-import { failActiveRunsOf } from '../repositories/runs';
+import { failRunsOf } from '../repositories/runs';
 import type { ServiceContext } from './context';
 import { requireProject } from './lookups';
 import { notifyRun, toRunner } from './runMappers';
@@ -96,10 +101,15 @@ export async function removeRunner(
   id: string,
 ): Promise<void> {
   const row = await requireRunner(ctx, scope, id);
-  const ended = await failActiveRunsOf(ctx.db, scope, row.id, {
-    error: RUNNER_REMOVED,
-    endedAt: ctx.now(),
-  });
+  const ended = await failRunsOf(
+    ctx.db,
+    scope,
+    { runnerId: row.id, statuses: ACTIVE_RUN_STATUSES },
+    {
+      error: RUNNER_REMOVED,
+      endedAt: ctx.now(),
+    },
+  );
   await deleteRunnerRow(ctx.db, scope, row.id);
   for (const run of ended) notifyRun(ctx, scope, run);
 }

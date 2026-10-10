@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { RUN_LOST, RUN_PICKUP_MS, type Run } from '@tracker/shared';
+import { RUN_LOST, HELPER_SILENCE_MS, type Run } from '@tracker/shared';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { testClock } from '../helpers/auth';
 import { addUser, caller, helperName, type Caller } from '../helpers/runs';
@@ -45,7 +45,7 @@ describe.each(DIALECTS)('regression: a run waits for a busy helper (%s)', (diale
     clock.advance(1);
     const second = await start('MOB-2');
     await helper('POST', `/api/runners/${runner}/next`);
-    await checkInFor(RUN_PICKUP_MS + 60_000);
+    await checkInFor(HELPER_SILENCE_MS + 60_000);
     expect(await read(first)).toMatchObject({ status: 'running' });
     expect(await read(second)).toMatchObject({ status: 'queued' });
   });
@@ -53,7 +53,7 @@ describe.each(DIALECTS)('regression: a run waits for a busy helper (%s)', (diale
   it('ends a running run once its helper has been silent for the pickup time', async () => {
     const run = await start('MOB-1');
     await helper('POST', `/api/runners/${runner}/next`);
-    clock.advance(RUN_PICKUP_MS);
+    clock.advance(HELPER_SILENCE_MS);
     expect(await read(run)).toMatchObject({ status: 'failed', error: RUN_LOST });
     const again = await person('POST', '/api/tickets/MOB-1/runs', {
       runnerId: runner,

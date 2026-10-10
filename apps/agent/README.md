@@ -77,6 +77,22 @@ tracker --json show MOB-3
 
 Exit codes: `0` success, `1` the tracker refused or could not be reached, `2` usage error.
 
+## Run Claude Code from your phone
+
+`tracker watch` is a helper that waits for **Run in Claude Code** from the app and starts `claude -p` on this computer. Run it in the project's code folder and leave it open:
+
+```bash
+cd ~/code/mobile
+tracker login --url https://your-tracker.up.railway.app   # once
+tracker watch MOB --name "Dara's MacBook"
+```
+
+- `PROJECT` can be left out when exactly one project has this folder as its repo.
+- It only calls out to the tracker over https (or to `localhost`), so it works behind a home router with no open port. It reconnects by itself after a drop, a deploy or sleep, and checks for runs every 20 s besides.
+- One run at a time. The prompt goes to `claude -p` on stdin, in this folder. The tracker never sends it a command, folder or flag.
+- `claude` must be installed and logged in here, with the tracker's MCP tools added (above), so Claude can claim, comment and submit. Your Claude Code settings decide what it may do; `--permission-mode` (for example `acceptEdits`) is passed on to `claude`.
+- Ctrl-C stops it, and a run in progress is reported as cancelled.
+
 ## Workflow: worker → reviewer → person
 
 1. A person adds tickets (usually from their phone).

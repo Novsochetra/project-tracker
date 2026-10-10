@@ -115,18 +115,18 @@ export const failRunsOfSilentHelpers = (
     .returningAll()
     .execute();
 
-export const failActiveRunsOf = (
+export const failRunsOf = (
   db: Db,
   userId: UserScope,
-  runnerId: string,
+  of: { runnerId: string; statuses: readonly RunStatus[] },
   ended: { error: string; endedAt: number },
 ) =>
   db
     .updateTable('runs')
     .set({ status: 'failed', ...ended })
     .where(ownedBy(userId))
-    .where('runnerId', '=', runnerId)
-    .where('status', 'in', ACTIVE_RUN_STATUSES)
+    .where('runnerId', '=', of.runnerId)
+    .where('status', 'in', of.statuses)
     .returningAll()
     .execute();
 

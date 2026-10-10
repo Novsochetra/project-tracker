@@ -6,6 +6,7 @@ import type { Database, Db } from '../db/schema';
 const ownedBy = (userId: UserScope) => (eb: ExpressionBuilder<Database, 'runners'>) =>
   userId === null ? eb('userId', 'is', null) : eb('userId', '=', userId);
 
+// Any user's: a helper id another user took must answer 404, not become a new helper.
 export const findRunnerRow = (db: Db, id: string) =>
   db.selectFrom('runners').selectAll().where('id', '=', id).executeTakeFirst();
 

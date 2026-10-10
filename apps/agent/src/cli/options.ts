@@ -22,6 +22,8 @@ export const COMMAND_OPTIONS = {
   next: { type: 'string' },
   verdict: { type: 'string' },
   rating: { type: 'string' },
+  name: { type: 'string' },
+  'permission-mode': { type: 'string' },
 } as const satisfies NonNullable<ParseArgsConfig['options']>;
 
 export type CommandOption = keyof typeof COMMAND_OPTIONS;

@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import {
   RUN_NOT_TAKEN,
-  RUN_PICKUP_MS,
+  HELPER_SILENCE_MS,
   RUNNER_ONLINE_MS,
   RUNNER_REMOVED,
   type Run,
@@ -63,10 +63,9 @@ describe.each(DIALECTS)('Claude Code runs (%s)', (dialect) => {
       run: { ...started.body, status: 'running', startedAt: 1_005_000 },
       prompt: 'Fix the crash on MOB-1',
     });
-    expect((await next()).status).toBe(204);
-
     clock.advance(60_000);
     const done = await finish(started.body.id, { status: 'done', error: 'ignored' });
+    expect((await next()).status).toBe(204);
     expect(done.body).toMatchObject({ status: 'done', error: null, endedAt: 1_065_000 });
     const listed = await person<Run[]>('GET', '/api/tickets/MOB-1/runs');
     expect(listed.body.map((run) => run.status)).toEqual(['done']);
@@ -78,6 +77,7 @@ describe.each(DIALECTS)('Claude Code runs (%s)', (dialect) => {
     clock.advance(1);
     const second = await start('MOB-2');
     expect((await next()).body).toMatchObject({ run: { id: first.body.id } });
+    await finish(first.body.id, { status: 'done' });
     expect((await next()).body).toMatchObject({ run: { id: second.body.id } });
   });
 
@@ -115,12 +115,12 @@ describe.each(DIALECTS)('Claude Code runs (%s)', (dialect) => {
 
   it('fails a run no computer takes in time, so the phone stops waiting', async () => {
     const started = await start();
-    clock.advance(RUN_PICKUP_MS);
+    clock.advance(HELPER_SILENCE_MS);
     const read = await person<Run>('GET', `/api/runs/${started.body.id}`);
     expect(read.body).toMatchObject({
       status: 'failed',
       error: RUN_NOT_TAKEN,
-      endedAt: 1_000_000 + RUN_PICKUP_MS,
+      endedAt: 1_000_000 + HELPER_SILENCE_MS,
     });
     expect((await next()).status).toBe(204);
     expect((await start()).status).toBe(201);

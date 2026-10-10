@@ -6,6 +6,7 @@ import { parseCliArgs, prepareCommand, UsageError, type ParsedArgs, type Prepare
 import { EXIT_ERROR, EXIT_OK, EXIT_USAGE } from './exitCodes';
 import { login, logout } from './login';
 import { USAGE } from './usage';
+import { checkWatchArgs, watchCommand } from './watchCommand';
 
 export { EXIT_ERROR, EXIT_OK, EXIT_USAGE } from './exitCodes';
 
@@ -16,6 +17,9 @@ export interface CliIo {
   stderr(text: string): void;
   readSecret?: (prompt: string) => Promise<string>;
   connect?: (config: Config) => TrackerApi;
+  cwd?: string;
+  write?: (text: string) => void;
+  untilStopped?: () => Promise<void>;
 }
 
 const SETUP_COMMANDS = new Set(['login', 'logout']);
@@ -73,11 +77,13 @@ export async function runCli(argv: readonly string[], io: CliIo): Promise<number
       return EXIT_OK;
     }
     if (SETUP_COMMANDS.has(parsed.command ?? '')) checkSetupArgs(parsed);
+    else if (parsed.command === 'watch') checkWatchArgs(parsed);
     else prepared = prepareCommand(parsed);
   } catch (error) {
     if (!(error instanceof UsageError)) throw error;
     io.stderr(usageErrorText(error));
     return EXIT_USAGE;
   }
-  return prepared ? execute(prepared, parsed, io) : setup(parsed, io);
+  if (prepared) return execute(prepared, parsed, io);
+  return parsed.command === 'watch' ? watchCommand(parsed, io) : setup(parsed, io);
 }

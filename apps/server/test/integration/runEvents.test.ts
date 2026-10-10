@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { RUN_PICKUP_MS, type Run, type RunEvent } from '@tracker/shared';
+import { HELPER_SILENCE_MS, type Run, type RunEvent } from '@tracker/shared';
 import { afterEach, describe, expect, it } from 'vitest';
 import { testClock } from '../helpers/auth';
 import { addUser, caller, helperName, type Auth } from '../helpers/runs';
@@ -67,7 +67,7 @@ describe.each(DIALECTS)('run events (%s)', (dialect) => {
     const cancelled = await start();
     await aPerson('POST', `/api/runs/${cancelled.id}/cancel`);
     const expired = await start();
-    clock.advance(RUN_PICKUP_MS);
+    clock.advance(HELPER_SILENCE_MS);
     await aPerson('GET', `/api/runs/${expired.id}`);
     await checkIn();
     const removed = await start();

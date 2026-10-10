@@ -1,5 +1,6 @@
 import { DEFAULT_AGENT_NAME, DEFAULT_URL } from '../config';
 import { COMMANDS } from './commands';
+import { WATCH_USAGE } from './watchCommand';
 
 const GLOBAL_HELP: readonly (readonly [string, string])[] = [
   [
@@ -35,6 +36,13 @@ export const USAGE = [
   ...SETUP_HELP.flatMap(([usage, summary]) => [`  ${usage}`, `      ${summary}`]),
   '  Tokens are saved in ~/.config/project-tracker/config.json, which only you can read',
   '  (TRACKER_CONFIG moves it). The MCP server reads it too.',
+  '',
+  'Run Claude Code from your phone:',
+  `  ${WATCH_USAGE}`,
+  '      Run this in your code folder and leave it open. "Run in Claude Code" in the app',
+  '      starts claude -p here. PROJECT defaults to the project whose repo is this folder.',
+  '      --name names this computer in the app (default: its host name). --permission-mode',
+  '      is passed to claude; without it, your own Claude Code settings decide.',
   '',
   'Global options:',
   ...GLOBAL_HELP.map(([flag, text]) => `  ${flag.padEnd(16)}${text}`),

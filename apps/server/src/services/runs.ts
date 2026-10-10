@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto';
 import {
   RUN_LOST,
   RUN_NOT_TAKEN,
-  RUN_PICKUP_MS,
+  HELPER_SILENCE_MS,
   type EndedRunStatus,
   type FinishRunInput,
   type Run,
@@ -27,9 +27,9 @@ import { requireRunner } from './runners';
 
 const TICKET_RUNS_SHOWN = 20;
 
-export async function expireUntakenRuns(ctx: ServiceContext): Promise<void> {
+export async function expireSilentRuns(ctx: ServiceContext): Promise<void> {
   const endedAt = ctx.now();
-  const silentSince = endedAt - RUN_PICKUP_MS;
+  const silentSince = endedAt - HELPER_SILENCE_MS;
   const expired = [
     ...(await failRunsOfSilentHelpers(ctx.db, 'queued', silentSince, {
       error: RUN_NOT_TAKEN,
@@ -65,7 +65,7 @@ export async function startRun(
   if (!parseProjectIds(runner).includes(ref.project.id)) {
     throw conflict(`${runner.name} doesn't run ${ref.project.key}. Start tracker watch there.`);
   }
-  await expireUntakenRuns(ctx);
+  await expireSilentRuns(ctx);
   const row: RunRow = {
     id: randomUUID(),
     userId: scope,
@@ -96,13 +96,13 @@ export async function listTicketRuns(
   ticketKey: string,
 ): Promise<Run[]> {
   const ref = await requireTicket(ctx.db, ticketKey);
-  await expireUntakenRuns(ctx);
+  await expireSilentRuns(ctx);
   const rows = await listTicketRunRows(ctx.db, scope, ref.ticket.id, TICKET_RUNS_SHOWN);
   return rows.map(toRun);
 }
 
 export async function getRun(ctx: ServiceContext, scope: UserScope, id: string): Promise<Run> {
-  await expireUntakenRuns(ctx);
+  await expireSilentRuns(ctx);
   return toRun(await requireRun(ctx, scope, id));
 }
 
@@ -113,7 +113,7 @@ export async function endRun(
   id: string,
   input: FinishRunInput,
 ): Promise<Run> {
-  await expireUntakenRuns(ctx);
+  await expireSilentRuns(ctx);
   const status: EndedRunStatus = input.status;
   const error = status === 'done' ? null : input.error?.trim() || null;
   const before = await requireRun(ctx, scope, id);
