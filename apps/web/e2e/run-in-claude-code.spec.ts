@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import type { Locator, Page } from '@playwright/test';
-import type { RunStepInput } from '@tracker/shared';
+import { permissionLabel, type RunStepInput } from '@tracker/shared';
 import { expect, isPhone, test } from './fixtures';
 import { seedProject, settledScreenshot, toast } from './helpers';
 
@@ -234,6 +234,51 @@ test('answers what Claude asks during a ticket run, and the run goes on', async 
   await settledScreenshot(page, info.outputPath(`run-hidden-chars-${info.project.name}.png`));
   await bidiCard.getByRole('button', { name: 'Deny' }).click();
   expect(await denied).toMatchObject({ decision: 'deny' });
+
+  // Made as the helper makes it, from the MCP call Claude Code sends (PT-171).
+  const merge = permissionLabel(
+    'mcp__github__merge_pull_request',
+    {
+      owner: 'octo',
+      repo: 'app',
+      pull_number: 42,
+      commit_title:
+        `Fix the crash when rotating ${'the phone with the sheet open '.repeat(4)}`.trim(),
+      github_token: 'ghp_abcdefghijklmnop1234',
+    },
+    '/repo',
+  );
+  const mcp = await api.addRunRequest(runId, {
+    runnerId: helperId,
+    kind: 'permission',
+    label: merge.label,
+    labelCut: merge.cut,
+    questions: null,
+  });
+  const mcpAllowed = api.waitForRunRequest(mcp.id, { runnerId: helperId });
+  const mcpCard = card.getByRole('region', {
+    name: 'Claude asks: Use github: merge_pull_request …',
+  });
+  await expect(mcpCard).toContainText('Use github: merge_pull_request');
+  const args = mcpCard.locator('code > span');
+  await expect(args).toHaveText([
+    'owner: octo',
+    'repo: app',
+    'pull_number: 42',
+    /^commit_title: Fix the crash when rotating the phone/,
+    'github_token: ***',
+  ]);
+  // A wrapped value goes on indented, so it can't pass for the next argument.
+  const lefts = await args.nth(3).evaluate((line) => {
+    const range = document.createRange();
+    range.selectNodeContents(line);
+    return [...range.getClientRects()].map((rect) => Math.round(rect.left));
+  });
+  expect(lefts.length).toBeGreaterThan(1);
+  expect(Math.min(...lefts.slice(1))).toBeGreaterThan(lefts[0] ?? 0);
+  await settledScreenshot(page, info.outputPath(`run-mcp-arguments-${info.project.name}.png`));
+  await mcpCard.getByRole('button', { name: 'Allow' }).click();
+  expect(await mcpAllowed).toMatchObject({ decision: 'allow' });
 
   const late = await api.addRunRequest(runId, {
     runnerId: helperId,

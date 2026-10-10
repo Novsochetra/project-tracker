@@ -79,16 +79,99 @@ describe('permissionLabel', () => {
     );
   });
 
-  it('shows only a tracker key of an MCP tool, never its free text', () => {
-    expect(labelOf('mcp__tracker__move_ticket', { ticket: 'PT-12', status: 'Done' })).toBe(
-      'Use tracker: move_ticket PT-12',
+  it("shows an MCP call's arguments as one key: value line each, under its name", () => {
+    expect(
+      labelOf('mcp__github__merge_pull_request', {
+        owner: 'octo',
+        repo: 'app',
+        pull_number: 42,
+        merge_method: 'squash',
+        commit_title: 'Fix the crash when rotating',
+      }),
+    ).toBe(
+      [
+        'Use github: merge_pull_request',
+        'owner: octo',
+        'repo: app',
+        'pull_number: 42',
+        'merge_method: squash',
+        'commit_title: Fix the crash when rotating',
+      ].join('\n'),
     );
-    expect(labelOf('mcp__tracker__create_ticket', { project: 'PT', title: 'secret' })).toBe(
-      'Use tracker: create_ticket PT',
+    expect(labelOf('mcp__github__list_repos', {})).toBe('Use github: list_repos');
+    expect(labelOf('mcp__a\nb__c', { x: 1 })).toBe('Use a b: c\nx: 1');
+  });
+
+  it('shows nested values and strings that would read as something else as compact JSON', () => {
+    expect(
+      labelOf('mcp__github__create_issue', {
+        labels: ['bug', 'ui'],
+        options: { draft: true, reviewers: null },
+        number: '42',
+        flag: 'true',
+        empty: '',
+        padded: ' x ',
+        body: 'Steps:\nrepo: other',
+        quoted: '"x"',
+        half: 'a \uD83D',
+        'two words': 1,
+        'a: b': 2,
+      }),
+    ).toBe(
+      [
+        'Use github: create_issue',
+        'labels: ["bug","ui"]',
+        'options: {"draft":true,"reviewers":null}',
+        'number: "42"',
+        'flag: "true"',
+        'empty: ""',
+        'padded: " x "',
+        'body: "Steps:\\nrepo: other"',
+        'quoted: "\\"x\\""',
+        'half: "a \\ud83d"',
+        '"two words": 1',
+        '"a: b": 2',
+      ].join('\n'),
     );
-    expect(labelOf('mcp__github__create_issue', { body: 'secret' })).toBe(
-      'Use github: create_issue',
+  });
+
+  it("masks one literal word under a secret's name, and secrets inside a value", () => {
+    expect(
+      labelOf('mcp__api__call', {
+        api_key: 'abc123def456',
+        password: 123456,
+        token: '12345',
+        use_token: true,
+        secret: 'two words',
+        headers: { Authorization: 'Bearer abc123def456' },
+        note: 'use ghp_abcdefghijklmnop1234 here',
+      }),
+    ).toBe(
+      [
+        'Use api: call',
+        'api_key: ***',
+        'password: ***',
+        'token: "***"',
+        'use_token: true',
+        'secret: two words',
+        'headers: {"Authorization":"Bearer ***"}',
+        'note: use *** here',
+      ].join('\n'),
     );
+  });
+
+  it("cuts a long MCP call at the label's limit and says so", () => {
+    const long = permissionLabel(
+      'mcp__github__create_or_update_file',
+      { path: 'a.md', content: 'x'.repeat(RUN_PERMISSION_LABEL_MAX) },
+      FOLDER,
+    );
+    expect(long.label).toHaveLength(RUN_PERMISSION_LABEL_MAX);
+    expect(
+      long.label.startsWith('Use github: create_or_update_file\npath: a.md\ncontent: xxx'),
+    ).toBe(true);
+    expect(long.label.endsWith('x…')).toBe(true);
+    expect(long.cut).toBe(true);
   });
 
   it('is cut at its own limit, and says when it was', () => {

