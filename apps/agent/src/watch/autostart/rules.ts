@@ -1,6 +1,7 @@
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 import type { Config } from '../../config';
+import { FolderBusyError, lockFolder } from '../folderLock';
 import { AutostartError } from './errors';
 
 export function requireMac(): void {
@@ -18,6 +19,21 @@ export function refuseTokenFromEnv(config: Config): void {
   throw new AutostartError(
     `${drop}, run "tracker login --url ${config.url}", then install again: the helper started at login won't have that token.`,
   );
+}
+
+// An installed helper would only keep failing on the lock while another one runs; the installed
+// job itself may hold it, since installing again boots it out.
+export function requireFreeFolder(
+  lockFolderPath: string,
+  folder: string,
+  installedPid: () => number | undefined,
+): void {
+  try {
+    lockFolder(lockFolderPath, folder)();
+  } catch (error) {
+    if (error instanceof FolderBusyError && error.holder === installedPid()) return;
+    throw error;
+  }
 }
 
 const GUARDED_FOLDERS = ['Documents', 'Desktop', 'Downloads'];

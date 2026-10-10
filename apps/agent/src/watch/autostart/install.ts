@@ -1,7 +1,6 @@
 import { dirname } from 'node:path';
 import type { GlobalValues } from '../../cli/options';
 import { loadConfig } from '../../config';
-import { FolderBusyError, lockFolder } from '../folderLock';
 import { canonicalPath } from '../paths';
 import { setUp } from '../setup';
 import type { WatchArgs, WatchIo } from '../watchIo';
@@ -9,25 +8,13 @@ import { jobFor, thisCli } from './job';
 import { pidFrom } from './jobState';
 import { installAgent, jobState, uninstallAgent } from './launchd';
 import { labelFor } from './names';
-import { privacyNote, refuseTokenFromEnv, requireMac } from './rules';
-
-// An installed helper would only keep failing on the lock while another one runs; the installed
-// job itself may hold it, since installing again boots it out.
-function requireFreeFolder(io: WatchIo, folder: string): void {
-  try {
-    lockFolder(dirname(io.store.path), folder)();
-  } catch (error) {
-    if (error instanceof FolderBusyError && error.holder === pidFrom(jobState(labelFor(folder)))) {
-      return;
-    }
-    throw error;
-  }
-}
+import { privacyNote, refuseTokenFromEnv, requireFreeFolder, requireMac } from './rules';
 
 export async function install(global: GlobalValues, args: WatchArgs, io: WatchIo): Promise<void> {
   requireMac();
   refuseTokenFromEnv(loadConfig(io.env, global, io.store.read()));
-  requireFreeFolder(io, canonicalPath(io.cwd));
+  const here = canonicalPath(io.cwd);
+  requireFreeFolder(dirname(io.store.path), here, () => pidFrom(jobState(labelFor(here))));
   const { config, folder, settings } = await setUp(global, args, io, new AbortController().signal);
   const cli = thisCli();
   const job = jobFor(

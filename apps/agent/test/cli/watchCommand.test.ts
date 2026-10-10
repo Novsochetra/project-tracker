@@ -2,7 +2,9 @@ import { mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
+import { parseCliArgs } from '../../src/cli/args';
 import { EXIT_ERROR, EXIT_USAGE, runCli } from '../../src/cli/run';
+import { lineFormat } from '../../src/cli/watchCommand';
 import { USAGE } from '../../src/cli/usage';
 import { memoryStore } from '../memoryStore';
 
@@ -73,5 +75,20 @@ describe('tracker watch', () => {
         /^(\S+ )?Error: Claude Code \(the claude command\) is not on PATH here\.$/,
       ),
     });
+  });
+
+  it('puts the time on each line only for the helper writing to a log', () => {
+    const stamp = /^\d{4}-\d\d-\d\dT\S+Z /;
+    const logged = lineFormat(parseCliArgs(['watch', 'MOB']), false)('Error: no\nmore');
+    expect(logged.split('\n')).toEqual([
+      expect.stringMatching(stamp),
+      expect.stringMatching(stamp),
+    ]);
+    expect(lineFormat(parseCliArgs(['watch', 'MOB']), true)('Error: no')).toBe('Error: no');
+    for (const flag of ['--install', '--uninstall', '--check']) {
+      expect(lineFormat(parseCliArgs(['watch', flag]), false)('Installed: no.')).toBe(
+        'Installed: no.',
+      );
+    }
   });
 });

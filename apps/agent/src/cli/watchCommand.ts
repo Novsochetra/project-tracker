@@ -49,9 +49,12 @@ function run(parsed: ParsedArgs, args: WatchArgs, io: WatchIo): Promise<void> {
 }
 
 // Started at login, the helper writes to a log file, where every line needs its time.
-function lineFormat(parsed: ParsedArgs): (text: string) => string {
+export function lineFormat(
+  parsed: ParsedArgs,
+  inTerminal = process.stdout.isTTY,
+): (text: string) => string {
   const { install: installing, uninstall: removing, check: checking } = parsed.flags;
-  const logged = !process.stdout.isTTY && !installing && !removing && !checking;
+  const logged = !inTerminal && !installing && !removing && !checking;
   return (text) => (logged ? stampLines(text, new Date()) : text);
 }
 
