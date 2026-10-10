@@ -3,8 +3,9 @@ import { useProject, useTicket } from '../../api';
 import { useProjectPrompt, useTicketPrompt } from '../../api/hooks/prompts';
 import type { PromptScope, SheetProps } from '../../app/sheets/types';
 import { useToast } from '../../components';
+import { holdPresses } from '../../lib/holdPresses';
 import { PromptView } from './PromptView';
-import { offersRunSlot, sentText } from './runs';
+import { sentText } from './runs';
 import {
   joinSubtitle,
   movesOnSend,
@@ -38,13 +39,16 @@ function TicketPromptSheet({ open, onClose, ticketKey }: SheetProps & { ticketKe
     ticketKey,
     projectKey: ticket.data?.project.key,
     open,
+    // A closing sheet takes no taps, so the second tap of a double tap on Run would land on the
+    // screen under it. Held while the sheet still covers the screen's bars, those are held too.
     onStarted: (helper) => {
+      holdPresses(document.body);
       toast.show(sentText(helper));
       onClose();
     },
   });
-  // Claude claims the ticket itself when it runs, so the switch is only for Copy and Share.
-  const target = offersRunSlot(run.footer) ? null : sendTarget(ticket.data);
+  // Run leaves the switch to Copy and Share: Claude claims the ticket itself when it starts.
+  const target = sendTarget(ticket.data);
   const key = ticket.data?.ticket.key ?? ticketKey;
   return (
     <PromptView
@@ -55,7 +59,7 @@ function TicketPromptSheet({ open, onClose, ticketKey }: SheetProps & { ticketKe
       draft={draft}
       onSent={() => mark(movesOnSend(target, switchOn))}
       run={run}
-      boxNote={run.footer === 'setup' && <SetupLine />}
+      boxNote={run.footer.kind === 'setup' && <SetupLine />}
       sendSwitch={
         target &&
         draft.result &&

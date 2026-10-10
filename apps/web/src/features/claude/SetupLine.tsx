@@ -1,18 +1,20 @@
 import { useSheets } from '../../app/sheets/context';
+import { Button } from '../../components';
 import styles from './PromptSheet.module.css';
 
 export function SetupLine() {
   const sheets = useSheets();
   return (
-    <p className={styles.help}>
+    <p className={styles.setupLine}>
       Run Claude Code from here:{' '}
-      <button
-        type="button"
+      <Button
+        variant="text"
+        size="sm"
         className={styles.setUp}
         onClick={() => sheets.open({ type: 'connect' })}
       >
         set up your computer
-      </button>
+      </Button>
     </p>
   );
 }

@@ -1,28 +1,35 @@
-import type { ChangeEvent } from '@tracker/shared';
+import { RUN_STATUSES, type ChangeEvent, type RunEvent } from '@tracker/shared';
 import { isRecord } from '../../lib/isRecord';
 
 const idOrNull = (value: unknown): string | null =>
   typeof value === 'string' && value ? value : null;
 
-function parseEvent(data: unknown, type: string): ChangeEvent | null {
+function readJson(data: unknown): Record<string, unknown> | null {
   if (typeof data !== 'string') return null;
   try {
     const value: unknown = JSON.parse(data);
-    if (!isRecord(value) || value.type !== type) return null;
-    return {
-      type: 'changed',
-      projectId: idOrNull(value.projectId),
-      ticketId: idOrNull(value.ticketId),
-    };
+    return isRecord(value) ? value : null;
   } catch {
     return null;
   }
 }
 
-export const parseChangeEvent = (data: unknown): ChangeEvent | null => parseEvent(data, 'changed');
+export function parseChangeEvent(data: unknown): ChangeEvent | null {
+  const value = readJson(data);
+  if (value?.type !== 'changed') return null;
+  return {
+    type: 'changed',
+    projectId: idOrNull(value.projectId),
+    ticketId: idOrNull(value.ticketId),
+  };
+}
 
-// A run event changes only its ticket's runs, so it is read as a change of that ticket.
-export const parseRunChange = (data: unknown): ChangeEvent | null => {
-  const event = parseEvent(data, 'run');
-  return event?.ticketId ? event : null;
-};
+export function parseRunEvent(data: unknown): RunEvent | null {
+  const value = readJson(data);
+  const status = RUN_STATUSES.find((known) => known === value?.status);
+  const runId = idOrNull(value?.runId);
+  const projectId = idOrNull(value?.projectId);
+  const ticketId = idOrNull(value?.ticketId);
+  if (value?.type !== 'run' || !status || !runId || !projectId || !ticketId) return null;
+  return { type: 'run', runId, runnerId: idOrNull(value.runnerId), projectId, ticketId, status };
+}

@@ -83,14 +83,21 @@ describe('connectLiveUpdates', () => {
     expect(onChange).toHaveBeenCalledWith(event);
   });
 
-  it('passes named run events as a change of their ticket, apart from other changes', () => {
+  it('passes named run events apart from changes', () => {
     const { source, onChange, onRun } = connect();
-    const run = { type: 'run', runId: 'r1', runnerId: 'h1', projectId: 'p-mob', ticketId: 't-1' };
-    source.emit({ ...run, status: 'running' }, 'run');
+    const run = {
+      type: 'run',
+      runId: 'r1',
+      runnerId: 'h1',
+      projectId: 'p-mob',
+      ticketId: 't-1',
+      status: 'running',
+    };
+    source.emit(run, 'run');
     source.emit(run);
     source.emit(event, 'run');
     expect(onRun).toHaveBeenCalledTimes(1);
-    expect(onRun).toHaveBeenCalledWith({ type: 'changed', projectId: 'p-mob', ticketId: 't-1' });
+    expect(onRun).toHaveBeenCalledWith(run);
     expect(onChange).not.toHaveBeenCalled();
   });
 

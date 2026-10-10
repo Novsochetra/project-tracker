@@ -70,27 +70,19 @@
   align-self: flex-start;
 }
 
-.setUp {
-  position: relative;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  color: var(--link);
-  font: inherit;
-  cursor: pointer;
+.setupLine {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--size-secondary);
 }
 
-/* The line is about 20px tall, too short to hit with a finger. */
-.setUp::before {
-  content: '';
-  position: absolute;
-  inset: -12px -4px;
-}
-
-@media (hover: hover) {
-  .setUp:hover {
-    color: var(--link-hover);
-  }
+/* Part of the sentence, so it keeps the line's size; its touch target stays. */
+button.setUp {
+  padding-inline: var(--space-1);
+  font-size: inherit;
 }
 
 .actions {

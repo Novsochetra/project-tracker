@@ -52,6 +52,7 @@ describe('Claude Code run on the ticket screen', () => {
     await waitFor(() =>
       expect(screen.queryByRole('region', { name: 'Claude Code run' })).not.toBeInTheDocument(),
     );
+    expect(screen.getByRole('button', { name: /^Status/ })).toHaveFocus();
   });
 
   it('keeps the run and says why when the cancel fails', async () => {

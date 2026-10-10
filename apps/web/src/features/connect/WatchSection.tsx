@@ -3,6 +3,7 @@ import { CommandRow } from './CommandRow';
 import { isLocalTracker, watchCommand, type ConnectInfo } from './connectCommand';
 import styles from './ConnectSheet.module.css';
 import { HelperList } from './HelperList';
+import { WATCH_LIMITS } from './helperText';
 import { Section } from './Section';
 import type { CopyHandler } from './useCopyCommand';
 
@@ -30,6 +31,7 @@ export function WatchSection({ info, projectKey, onCopy }: WatchSectionProps) {
           />
         </ul>
       </GroupedCard>
+      <p className={styles.note}>{WATCH_LIMITS}</p>
       <HelperList />
     </Section>
   );

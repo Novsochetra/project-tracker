@@ -8,7 +8,6 @@ import {
   shownRun,
   STOPPED_SHOWN_MS,
   stoppedText,
-  workingRun,
   workingText,
 } from './runs';
 
@@ -37,13 +36,34 @@ describe('pickHelper', () => {
 });
 
 describe('runFooter', () => {
-  it('offers Run with a helper, the working line during a run and setup once helpers are known', () => {
-    const base = { helpersKnown: true, helperCount: 0, working: false };
-    expect(runFooter({ ...base, helperCount: 2 })).toBe('run');
-    expect(runFooter({ ...base, helperCount: 1, working: true })).toBe('working');
-    expect(runFooter({ ...base, working: true })).toBe('working');
-    expect(runFooter(base)).toBe('setup');
-    expect(runFooter({ ...base, helpersKnown: false })).toBe('copy');
+  const base = { runners: [dara, studio], runs: [], projectKey: 'MOB', lastUsedId: null };
+
+  it('offers Run on the helper used last, among the online ones serving the project', () => {
+    expect(runFooter(base)).toEqual({ kind: 'run', helpers: [dara, studio], helper: dara });
+    expect(runFooter({ ...base, lastUsedId: studio.id })).toMatchObject({ helper: studio });
+  });
+
+  it('says where Claude works while the latest run waits or works', () => {
+    const running = makeRun({ status: 'running' });
+    expect(runFooter({ ...base, runs: [running] })).toEqual({ kind: 'working', run: running });
+    expect(runFooter({ ...base, runners: [], runs: [running] })).toMatchObject({
+      kind: 'working',
+    });
+    expect(runFooter({ ...base, runs: [makeRun({ status: 'done' })] })).toMatchObject({
+      kind: 'run',
+    });
+  });
+
+  it('offers to set up a computer once the helpers are known and none can run it', () => {
+    expect(runFooter({ ...base, runners: [makeRunner({ online: false })] })).toEqual({
+      kind: 'setup',
+    });
+    expect(runFooter({ ...base, projectKey: 'WEB', runners: [dara] })).toEqual({ kind: 'setup' });
+  });
+
+  it('keeps Copy alone until the helpers and the project are known', () => {
+    expect(runFooter({ ...base, runners: undefined })).toEqual({ kind: 'copy' });
+    expect(runFooter({ ...base, projectKey: undefined })).toEqual({ kind: 'copy' });
   });
 });
 
@@ -55,15 +75,6 @@ describe('run texts', () => {
       'Claude stopped: Your computer stopped answering.',
     );
     expect(stoppedText(makeRun({ error: null }))).toBe('Claude stopped.');
-  });
-});
-
-describe('workingRun', () => {
-  it('is the latest run while it waits or works', () => {
-    const running = makeRun({ status: 'running' });
-    expect(workingRun([running, makeRun({ id: 'r-0', status: 'failed' })])).toBe(running);
-    expect(workingRun([makeRun({ status: 'done' }), running])).toBeUndefined();
-    expect(workingRun(undefined)).toBeUndefined();
   });
 });
 

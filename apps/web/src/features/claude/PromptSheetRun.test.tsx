@@ -10,6 +10,7 @@ import { useSheets } from '../../app/sheets/context';
 import { SheetsProvider } from '../../app/sheets/SheetsProvider';
 import { LAST_HELPER_STORAGE_KEY } from './lastHelper';
 import { PromptSheet } from './PromptSheet';
+import { PROMPT_HELP, RUN_PROMPT_HELP } from './sendPrompt';
 import { renderWithApi, setClipboard, sheetTestSetup } from './test/renderWithApi';
 
 const PROMPT = 'Please work on ticket MOB-1 from my "Mobile app" project.';
@@ -73,7 +74,7 @@ describe('PromptSheet with a helper online', () => {
     const run = await runButton();
 
     expect(comesBefore(copyButton(), run)).toBe(true);
-    expect(sendSwitch()).not.toBeInTheDocument();
+    expect(screen.getByText(RUN_PROMPT_HELP)).toBeInTheDocument();
     expect(screen.queryByText(/set up your computer/)).not.toBeInTheDocument();
     await user.click(run);
 
@@ -87,16 +88,17 @@ describe('PromptSheet with a helper online', () => {
     expect(api.markSent).not.toHaveBeenCalled();
   });
 
-  it('copies without moving the ticket, since the switch is hidden while Run is offered', async () => {
+  it('keeps the switch for Copy, which Run leaves alone', async () => {
     const api = client([dara]);
     renderWithApi(<Harness />, api);
     const user = userEvent.setup();
     setClipboard({ writeText: vi.fn().mockResolvedValue(undefined) });
     await promptBox();
     await runButton();
+    expect(sendSwitch()).toBeChecked();
     await user.click(copyButton());
     await waitFor(() =>
-      expect(api.markSent).toHaveBeenCalledWith('MOB-1', { moveToInProgress: false }),
+      expect(api.markSent).toHaveBeenCalledWith('MOB-1', { moveToInProgress: true }),
     );
   });
 
@@ -198,6 +200,6 @@ describe('PromptSheet while Claude works on the ticket', () => {
     expect(await screen.findByText(`Claude is working on ${DARA}…`)).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Run in Claude Code' })).not.toBeInTheDocument();
     expect(copyButton()).toBeInTheDocument();
-    expect(sendSwitch()).not.toBeInTheDocument();
+    expect(screen.getByText(PROMPT_HELP)).toBeInTheDocument();
   });
 });

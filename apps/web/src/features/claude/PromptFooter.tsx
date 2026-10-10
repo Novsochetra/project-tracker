@@ -1,9 +1,10 @@
-import type { Run } from '@tracker/shared';
+import type { Run, Runner } from '@tracker/shared';
 import { Check, Copy, Laptop, Play } from 'lucide-react';
+import type { ReactNode } from 'react';
 import { Button, GroupedCard, Icon, SelectRow, Spinner } from '../../components';
 import { useIsPhone } from '../../lib/media';
 import styles from './PromptSheet.module.css';
-import { offersRunSlot, workingText } from './runs';
+import { workingText } from './runs';
 import type { RunOffer } from './useRunOffer';
 
 export interface PromptFooterProps {
@@ -15,21 +16,44 @@ export interface PromptFooterProps {
 }
 
 export function PromptFooter({ copied, disabled, onCopy, run, onRun }: PromptFooterProps) {
+  const copy = (primary: boolean) => (
+    <CopyButton copied={copied} disabled={disabled} primary={primary} onClick={onCopy} />
+  );
+  if (!run) return copy(true);
+  const { footer } = run;
+  switch (footer.kind) {
+    case 'run':
+      return (
+        <RunActions
+          runOn={
+            footer.helpers.length > 1 && (
+              <RunOn helpers={footer.helpers} helper={footer.helper} onChoose={run.choose} />
+            )
+          }
+          action={<RunButton disabled={disabled || run.starting} onClick={onRun} />}
+          copy={copy(false)}
+        />
+      );
+    case 'working':
+      return <RunActions action={<WorkingLine run={footer.run} />} copy={copy(false)} />;
+    case 'copy':
+    case 'setup':
+      return copy(true);
+  }
+}
+
+interface RunActionsProps {
+  runOn?: ReactNode;
+  action: ReactNode;
+  copy: ReactNode;
+}
+
+// Phones stack the buttons with Run on top, so it comes first for focus and screen readers too.
+function RunActions({ runOn, action, copy }: RunActionsProps) {
   const isPhone = useIsPhone();
-  const withRun = run && offersRunSlot(run.footer) ? run : null;
-  const copy = (
-    <CopyButton copied={copied} disabled={disabled} primary={!withRun} onClick={onCopy} />
-  );
-  if (!withRun) return copy;
-  const action = withRun.working ? (
-    <WorkingLine run={withRun.working} />
-  ) : (
-    <RunButton disabled={disabled || withRun.starting} onClick={onRun} />
-  );
-  // Phones stack the buttons with Run on top, so it comes first for focus and screen readers too.
   return (
     <div className={styles.actions}>
-      {!withRun.working && withRun.helpers.length > 1 && <RunOn run={withRun} />}
+      {runOn}
       <div className={styles.buttons}>
         {isPhone ? action : copy}
         {isPhone ? copy : action}
@@ -90,16 +114,21 @@ function WorkingLine({ run }: { run: Run }) {
   );
 }
 
-function RunOn({ run }: { run: RunOffer }) {
-  const options = run.helpers.map((helper) => ({ value: helper.id, label: helper.name }));
+interface RunOnProps {
+  helpers: Runner[];
+  helper: Runner;
+  onChoose: (helperId: string) => void;
+}
+
+function RunOn({ helpers, helper, onChoose }: RunOnProps) {
   return (
     <GroupedCard>
       <SelectRow
         label="Run on"
         icon={<Icon icon={Laptop} className={styles.runOnIcon} />}
-        options={options}
-        value={run.helper?.id ?? ''}
-        onChange={run.choose}
+        options={helpers.map(({ id, name }) => ({ value: id, label: name }))}
+        value={helper.id}
+        onChange={onChoose}
       />
     </GroupedCard>
   );

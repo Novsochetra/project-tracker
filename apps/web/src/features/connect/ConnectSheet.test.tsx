@@ -161,6 +161,11 @@ describe('ConnectSheet: Run Claude Code from your phone', () => {
     const section = await step();
     const command = `node ${meta.cliEntry} watch MOB`;
     expect(within(section).getByText(command)).toBeInTheDocument();
+    expect(
+      within(section).getByText(
+        "Your Mac has to be on, awake and logged in; after a restart with FileVault it waits for your password. If it is off, asleep or offline, a run waits 30 minutes, then stops with “Your computer didn't take the run.”",
+      ),
+    ).toBeInTheDocument();
     const computers = await within(section).findByRole('list', { name: 'Your computers' });
     expect(
       within(computers)

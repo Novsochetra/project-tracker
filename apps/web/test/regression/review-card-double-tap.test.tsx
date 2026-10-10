@@ -44,12 +44,13 @@ it('keeps the card in place, taking no taps, while the second tap of a double ta
   const user = userEvent.setup();
   const { client } = renderReviewedTicket();
   await user.click(cardButton());
-  expect(client.updateTicket).toHaveBeenCalledExactlyOnceWith('MOB-3', { statusId: STATUS.done });
-  expect(await screen.findByText('MOB-3 moved to Done')).toBeInTheDocument();
-
+  // Checked within the double tap's window from the tap, not after the toast, which a loaded
+  // machine can show later than the hold lasts.
   await wait(150);
   expect(latest()).toBeInTheDocument();
   expect(latest()).toHaveAttribute('inert');
+  expect(client.updateTicket).toHaveBeenCalledExactlyOnceWith('MOB-3', { statusId: STATUS.done });
+  expect(await screen.findByText('MOB-3 moved to Done')).toBeInTheDocument();
   expect(screen.getByRole('button', { name: /^Status/ })).toHaveTextContent('Done');
 
   await waitFor(() => expect(latest()).not.toBeInTheDocument());

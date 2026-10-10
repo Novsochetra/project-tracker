@@ -1,15 +1,12 @@
-import type { Run, Runner } from '@tracker/shared';
+import type { Runner } from '@tracker/shared';
 import { useState } from 'react';
 import { useRunners, useStartRun, useTicketRuns } from '../../api/hooks/runs';
 import { readLastHelper, rememberHelper } from './lastHelper';
-import { helpersFor, pickHelper, runFooter, workingRun, type RunFooter } from './runs';
+import { runFooter, type RunFooter } from './runs';
 
 export interface RunOffer {
   footer: RunFooter;
-  helpers: Runner[];
-  helper: Runner | undefined;
   choose: (helperId: string) => void;
-  working: Run | undefined;
   start: (prompt: string) => void;
   starting: boolean;
   error: Error | null;
@@ -26,12 +23,11 @@ export function useRunOffer({ ticketKey, projectKey, open, onStarted }: RunOffer
   const runners = useRunners({ enabled: open });
   const runs = useTicketRuns(ticketKey);
   const startRun = useStartRun();
-  const [chosenId, choose] = useState(readLastHelper);
-  const helpers = projectKey ? helpersFor(runners.data ?? [], projectKey) : [];
-  const helper = pickHelper(helpers, chosenId);
-  const working = workingRun(runs.data);
+  const [lastUsedId, choose] = useState(readLastHelper);
+  const footer = runFooter({ runners: runners.data, runs: runs.data, projectKey, lastUsedId });
   const start = (prompt: string) => {
-    if (!helper) return;
+    if (footer.kind !== 'run') return;
+    const { helper } = footer;
     startRun.mutate(
       { ticketKey, input: { runnerId: helper.id, prompt } },
       {
@@ -42,18 +38,5 @@ export function useRunOffer({ ticketKey, projectKey, open, onStarted }: RunOffer
       },
     );
   };
-  return {
-    footer: runFooter({
-      helpersKnown: runners.data !== undefined && projectKey !== undefined,
-      helperCount: helpers.length,
-      working: working !== undefined,
-    }),
-    helpers,
-    helper,
-    choose,
-    working,
-    start,
-    starting: startRun.isPending,
-    error: startRun.error,
-  };
+  return { footer, choose, start, starting: startRun.isPending, error: startRun.error };
 }

@@ -12,7 +12,9 @@ import styles from './TicketScreen.module.css';
 import { useMoveToDone } from './useMoveToDone';
 
 // The Done buttons leave once the ticket moves, so focus goes on to the Status it changed: the
-// screen's first dropdown, the phone's Status chip or the side panel's Status row.
+// screen's first dropdown, the phone's Status chip or the side panel's Status row. A cancelled
+// run's card leaves too and sends focus there as well, rather than to a text field, which would
+// open a phone's keyboard.
 const focusStatus = (screen: HTMLElement | null) =>
   screen?.querySelector<HTMLElement>('[aria-haspopup="listbox"]')?.focus({ preventScroll: true });
 
@@ -21,13 +23,19 @@ export function TicketView({ detail }: { detail: TicketDetail }) {
   const isPhone = useIsPhone();
   const gridRef = useRef<HTMLDivElement>(null);
   const commentBox = useRef<HTMLFormElement>(null);
-  const done = useMoveToDone(detail, () => focusStatus(gridRef.current));
+  const toStatus = () => focusStatus(gridRef.current);
+  const done = useMoveToDone(detail, toStatus);
   return (
     <AttachmentViewerProvider>
       <NavBar title={ticket.key} mono backLabel={project.name} right={<NavBarSpacer />} />
       <div ref={gridRef} className={styles.grid}>
         {/* Phones move to Done from the bottom bar only, so the review card keeps no button. */}
-        <TicketMain detail={detail} done={isPhone ? null : done} className={styles.main} />
+        <TicketMain
+          detail={detail}
+          done={isPhone ? null : done}
+          onRunCancelled={toStatus}
+          className={styles.main}
+        />
         {!isPhone && (
           <TicketSidePanel detail={detail} offersDone={done !== null} className={styles.side} />
         )}

@@ -5,7 +5,11 @@ import {
   copyPromptFlow,
   joinSubtitle,
   movesOnSend,
+  NO_OPEN_TICKETS,
   openTicketsLabel,
+  PROMPT_HELP,
+  promptHelp,
+  RUN_PROMPT_HELP,
   sendTarget,
   sharePromptFlow,
   showsSwitch,
@@ -19,6 +23,14 @@ const inStatus = (statusId: string, list: Status[] = statuses): TicketDetail =>
   });
 
 const inProgress = statuses.find((status) => status.id === STATUS.progress)!;
+
+describe('promptHelp', () => {
+  it('speaks of both buttons only when Run is offered', () => {
+    expect(promptHelp(true, false)).toBe(PROMPT_HELP);
+    expect(promptHelp(true, true)).toBe(RUN_PROMPT_HELP);
+    expect(promptHelp(false, false)).toBe(NO_OPEN_TICKETS);
+  });
+});
 
 describe('subtitles', () => {
   it('counts open tickets in words', () => {

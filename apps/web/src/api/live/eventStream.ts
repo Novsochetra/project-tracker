@@ -1,11 +1,11 @@
-import { LIVE_STALE_MS, type ChangeEvent } from '@tracker/shared';
+import { LIVE_STALE_MS, type ChangeEvent, type RunEvent } from '@tracker/shared';
 import { retryDelay } from './backoff';
-import { parseChangeEvent, parseRunChange } from './changeEvent';
+import { parseChangeEvent, parseRunEvent } from './changeEvent';
 import { pauseWhileHidden } from './pauseWhileHidden';
 
 export interface LiveHandlers {
   onChange: (event: ChangeEvent) => void;
-  onRun: (event: ChangeEvent) => void;
+  onRun: (event: RunEvent) => void;
   onReconnect: () => void;
   // While true, reads can wait for onReconnect: it runs once the stream reports every later change.
   onRefreshPending: (pending: boolean) => void;
@@ -22,11 +22,7 @@ export interface TrackerReachability {
 type Timer = ReturnType<typeof setTimeout> | undefined;
 
 const relay =
-  (
-    alive: () => void,
-    parse: (data: unknown) => ChangeEvent | null,
-    deliver: LiveHandlers['onChange'],
-  ) =>
+  <T>(alive: () => void, parse: (data: unknown) => T | null, deliver: (event: T) => void) =>
   (message: MessageEvent) => {
     alive();
     const event = parse(message.data);
@@ -93,7 +89,7 @@ export function connectLiveUpdates(
     if (missed) handlers.onReconnect();
   };
   const onMessage = relay(alive, parseChangeEvent, handlers.onChange);
-  const onRun = relay(alive, parseRunChange, handlers.onRun);
+  const onRun = relay(alive, parseRunEvent, handlers.onRun);
   const onError = () => {
     if (source?.readyState === EventSource.CLOSED) {
       reopenLater();

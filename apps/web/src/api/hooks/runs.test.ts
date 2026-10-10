@@ -3,25 +3,10 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { queryKeys } from '../queryKeys';
 import { isInvalidated, setupApi } from '../test/render';
 import { makeRun } from '../test/runFixtures';
-import {
-  runsRefreshMs,
-  useCancelRun,
-  useStartRun,
-  useTicketRuns,
-  WORKING_RUN_REFRESH_MS,
-} from './runs';
+import { WORKING_RUN_REFRESH_MS } from '../workingRun';
+import { useCancelRun, useStartRun, useTicketRuns } from './runs';
 
 const older = makeRun({ id: 'r-0', status: 'failed', error: 'Exit 1' });
-
-describe('runsRefreshMs', () => {
-  it('reads the runs again only while the latest one waits or works', () => {
-    expect(runsRefreshMs([makeRun({ status: 'queued' })])).toBe(WORKING_RUN_REFRESH_MS);
-    expect(runsRefreshMs([makeRun({ status: 'running' }), older])).toBe(WORKING_RUN_REFRESH_MS);
-    expect(runsRefreshMs([older, makeRun({ status: 'running' })])).toBe(false);
-    expect(runsRefreshMs([])).toBe(false);
-    expect(runsRefreshMs(undefined)).toBe(false);
-  });
-});
 
 describe('useTicketRuns', () => {
   afterEach(() => {

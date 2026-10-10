@@ -1,15 +1,20 @@
 import type { Run, Runner } from '@tracker/shared';
-import { isWorking } from '../../api/hooks/runs';
+import { isWorking, workingRun } from '../../api/workingRun';
 
 // Long enough to see on the next look at the ticket, short enough not to linger once forgotten.
 export const STOPPED_SHOWN_MS = 24 * 60 * 60 * 1000;
 
-export type RunFooter = 'copy' | 'setup' | 'run' | 'working';
+export type RunFooter =
+  | { kind: 'copy' }
+  | { kind: 'setup' }
+  | { kind: 'run'; helpers: Runner[]; helper: Runner }
+  | { kind: 'working'; run: Run };
 
 export interface RunFooterInput {
-  helpersKnown: boolean;
-  helperCount: number;
-  working: boolean;
+  runners: readonly Runner[] | undefined;
+  runs: readonly Run[] | undefined;
+  projectKey: string | undefined;
+  lastUsedId: string | null;
 }
 
 export interface ShownRun {
@@ -38,19 +43,15 @@ export const pickHelper = (
   lastUsedId: string | null,
 ): Runner | undefined => helpers.find(({ id }) => id === lastUsedId) ?? helpers[0];
 
-export function workingRun(runs: readonly Run[] | undefined): Run | undefined {
-  const latest = runs?.[0];
-  return latest && isWorking(latest) ? latest : undefined;
+// Until the helpers are known the footer stays as it always was, Copy alone.
+export function runFooter({ runners, runs, projectKey, lastUsedId }: RunFooterInput): RunFooter {
+  const working = workingRun(runs);
+  if (working) return { kind: 'working', run: working };
+  if (!runners || !projectKey) return { kind: 'copy' };
+  const helpers = helpersFor(runners, projectKey);
+  const helper = pickHelper(helpers, lastUsedId);
+  return helper ? { kind: 'run', helpers, helper } : { kind: 'setup' };
 }
-
-export function runFooter({ helpersKnown, helperCount, working }: RunFooterInput): RunFooter {
-  if (working) return 'working';
-  if (helperCount > 0) return 'run';
-  return helpersKnown ? 'setup' : 'copy';
-}
-
-export const offersRunSlot = (footer: RunFooter | undefined): boolean =>
-  footer === 'run' || footer === 'working';
 
 export const runTime = (run: Run): number => run.endedAt ?? run.startedAt ?? run.createdAt;
 

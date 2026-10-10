@@ -62,7 +62,11 @@ const ticketKeysIn = (index: CacheIndex, projectId: string | null): string[] =>
     .filter((ticket) => projectId !== null && ticket.projectId === projectId)
     .map((ticket) => ticket.key);
 
-export function changeScope(event: ChangeEvent, entries: readonly CachedEntry[]): ChangeScope {
+// A run event names its ticket the same way, so it finds the ticket's cached key too.
+export function changeScope(
+  event: Pick<ChangeEvent, 'projectId' | 'ticketId'>,
+  entries: readonly CachedEntry[],
+): ChangeScope {
   if (!event.projectId && !event.ticketId) return EVERYTHING;
   const index = indexCache(entries);
   const ticket = event.ticketId ? index.tickets.get(event.ticketId) : undefined;
@@ -79,7 +83,7 @@ export function changeScope(event: ChangeEvent, entries: readonly CachedEntry[])
 export function isAffected(queryKey: QueryKey, scope: ChangeScope): boolean {
   const root = rootOf(queryKey);
   if (root === 'projects' || root === 'ready' || root === 'reportPreview') return true;
-  if (root === 'people') return scope.all;
+  if (root === 'people' || root === 'runners') return scope.all;
   const key = scopeOf(queryKey) ?? '';
   if (root === 'project') return scope.all || scope.projectKeys.has(key);
   if (root === 'ticket') return scope.all || scope.ticketKeys.has(key);

@@ -9,13 +9,7 @@ import { canShare, sharePrompt } from '../../lib/share';
 import { Sheet, SheetTextButton } from '../../overlays';
 import { PromptFooter } from './PromptFooter';
 import styles from './PromptSheet.module.css';
-import {
-  COPY_BLOCKED,
-  NO_OPEN_TICKETS,
-  PROMPT_HELP,
-  copyPromptFlow,
-  sharePromptFlow,
-} from './sendPrompt';
+import { COPY_BLOCKED, copyPromptFlow, promptHelp, sharePromptFlow } from './sendPrompt';
 import { useCopyState } from './useCopyState';
 import type { PromptDraft } from './usePromptDraft';
 import type { RunOffer } from './useRunOffer';
@@ -95,6 +89,7 @@ export function PromptView({
           draft={draft}
           fieldRef={fieldRef}
           copyFailed={copyOutcome === 'failed'}
+          offersRun={run?.footer.kind === 'run'}
           {...rest}
         />
       </div>
@@ -107,6 +102,7 @@ interface PromptBodyProps {
   draft: PromptDraft;
   fieldRef: RefObject<HTMLTextAreaElement | null>;
   copyFailed: boolean;
+  offersRun: boolean;
   boxNote?: ReactNode;
   sendSwitch?: ReactNode;
   sendError?: Error | null;
@@ -117,6 +113,7 @@ function PromptBody({
   draft,
   fieldRef,
   copyFailed,
+  offersRun,
   boxNote,
   sendSwitch,
   sendError,
@@ -133,7 +130,7 @@ function PromptBody({
   const hasPrompt = draft.result.text.length > 0;
   return (
     <>
-      <p className={styles.help}>{hasPrompt ? PROMPT_HELP : NO_OPEN_TICKETS}</p>
+      <p className={styles.help}>{promptHelp(hasPrompt, offersRun)}</p>
       {hasPrompt && (
         <textarea
           ref={fieldRef}

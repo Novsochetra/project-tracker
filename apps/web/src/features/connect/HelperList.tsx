@@ -3,7 +3,7 @@ import { GroupedCard } from '../../components';
 import { useNow } from '../../lib/useNow';
 import shared from './ConnectSheet.module.css';
 import { helperDetails } from './helperText';
-import styles from './Tokens.module.css';
+import styles from './HelperList.module.css';
 
 export function HelperList() {
   const runners = useRunners();

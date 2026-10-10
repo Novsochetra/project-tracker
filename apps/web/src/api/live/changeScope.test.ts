@@ -9,7 +9,7 @@ import {
   STATUS,
   summaryOf,
 } from '../test/fixtures';
-import { parseChangeEvent, parseRunChange } from './changeEvent';
+import { parseChangeEvent, parseRunEvent } from './changeEvent';
 import { changeScope, EVERYTHING, isAffected, type CachedEntry } from './changeScope';
 
 const entries: CachedEntry[] = [
@@ -22,7 +22,7 @@ const entries: CachedEntry[] = [
 ];
 
 const changed = (projectId: string | null, ticketId: string | null) =>
-  changeScope({ type: 'changed', projectId, ticketId }, entries);
+  changeScope({ projectId, ticketId }, entries);
 
 describe('changeScope', () => {
   it('maps a ticket change to its project key and ticket key', () => {
@@ -71,11 +71,13 @@ describe('isAffected', () => {
     expect(isAffected(queryKeys.ticket('MOB-3'), scope)).toBe(false);
   });
 
-  it('leaves session and meta alone and people for full refreshes', () => {
+  it('leaves session and meta alone, and people and helpers for full refreshes', () => {
     expect(isAffected(queryKeys.session(), EVERYTHING)).toBe(false);
     expect(isAffected(queryKeys.meta(), EVERYTHING)).toBe(false);
     expect(isAffected(queryKeys.people(), scope)).toBe(false);
     expect(isAffected(queryKeys.people(), EVERYTHING)).toBe(true);
+    expect(isAffected(queryKeys.runners(), scope)).toBe(false);
+    expect(isAffected(queryKeys.runners(), EVERYTHING)).toBe(true);
   });
 });
 
@@ -100,19 +102,25 @@ describe('parseChangeEvent', () => {
   });
 });
 
-describe('parseRunChange', () => {
-  it('reads a run event as a change of its ticket', () => {
-    const run = { type: 'run', runId: 'r1', runnerId: null, projectId: 'p', ticketId: 't' };
-    expect(parseRunChange(JSON.stringify({ ...run, status: 'failed' }))).toEqual({
-      type: 'changed',
-      projectId: 'p',
-      ticketId: 't',
+describe('parseRunEvent', () => {
+  const run = { type: 'run', runId: 'r1', runnerId: null, projectId: 'p', ticketId: 't' };
+
+  it('reads run events', () => {
+    expect(parseRunEvent(JSON.stringify({ ...run, status: 'failed' }))).toEqual({
+      ...run,
+      status: 'failed',
+    });
+    expect(parseRunEvent(JSON.stringify({ ...run, runnerId: 'h1', status: 'queued' }))).toEqual({
+      ...run,
+      runnerId: 'h1',
+      status: 'queued',
     });
   });
 
   it('ignores anything else', () => {
-    expect(parseRunChange('{"type":"changed","projectId":"p","ticketId":"t"}')).toBeNull();
-    expect(parseRunChange('{"type":"run","projectId":"p"}')).toBeNull();
-    expect(parseRunChange('not json')).toBeNull();
+    expect(parseRunEvent(JSON.stringify({ ...run, status: 'lost' }))).toBeNull();
+    expect(parseRunEvent(JSON.stringify({ ...run, ticketId: null, status: 'done' }))).toBeNull();
+    expect(parseRunEvent('{"type":"changed","projectId":"p","ticketId":"t"}')).toBeNull();
+    expect(parseRunEvent('not json')).toBeNull();
   });
 });

@@ -14,7 +14,12 @@ import { TimeAgo } from '../activity/TimeAgo';
 import { promptSheet } from '../ticketSheets';
 import styles from './LatestReview.module.css';
 
-export function LatestRun({ ticketKey }: { ticketKey: string }) {
+export interface LatestRunProps {
+  ticketKey: string;
+  onCancelled: () => void;
+}
+
+export function LatestRun({ ticketKey, onCancelled }: LatestRunProps) {
   const runs = useTicketRuns(ticketKey);
   const now = useNow();
   const shown = shownRun(runs.data, now);
@@ -30,7 +35,7 @@ export function LatestRun({ ticketKey }: { ticketKey: string }) {
           <p className={cardStyles.body}>{shown.text}</p>
         </PhoneFold>
         {shown.state === 'working' ? (
-          <CancelButton run={shown.run} />
+          <CancelButton run={shown.run} onCancelled={onCancelled} />
         ) : (
           <TryAgainButton ticketKey={ticketKey} />
         )}
@@ -39,7 +44,7 @@ export function LatestRun({ ticketKey }: { ticketKey: string }) {
   );
 }
 
-function CancelButton({ run }: { run: Run }) {
+function CancelButton({ run, onCancelled }: { run: Run; onCancelled: () => void }) {
   const cancel = useCancelRun();
   const toast = useToast();
   // The card leaves once the run is cancelled, and what moves up into its place must not take the
@@ -47,6 +52,7 @@ function CancelButton({ run }: { run: Run }) {
   const onClick = (event: MouseEvent<HTMLButtonElement>) => {
     if (event.detail !== 0) holdPresses(event.currentTarget);
     cancel.mutate(run, {
+      onSuccess: onCancelled,
       onError: (error) => toast.show(errorMessage(error), { kind: 'error' }),
     });
   };
