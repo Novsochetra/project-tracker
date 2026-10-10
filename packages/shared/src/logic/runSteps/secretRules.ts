@@ -11,7 +11,7 @@ const NAME = String.raw`[\w-]{1,60}`;
 // trk_ is this tracker's own API token (API_TOKEN_PREFIX in the server).
 const PREFIXED = String.raw`trk_[\w-]{20,}|gh[pousr]_\w+|github_pat_\w+|sk-ant-[\w-]+|sk-[\w-]{20,}|sk_(?:live|test)_\w+|xox[abprs]-[\w-]+|glpat-[\w-]+|AKIA[0-9A-Z]{16}`;
 
-const MASK = '***';
+export const MASK = '***';
 
 const quoted = (value: string): boolean => /^["']/.test(value);
 // `$TOKEN`, `$(gh auth token)`, a backtick or a `{expression}` names a secret without holding it.
@@ -31,28 +31,13 @@ export interface SecretRule {
   replace: Replace;
 }
 
-const masked = (head = '') => `${head}${MASK}`;
-
-// `$(…)`, `${…}` and a backtick run or expand in a bare or double-quoted value, so it is what the
-// person allows, never a literal secret; a single-quoted value doesn't expand (PT-165 review).
-const isExpression = (value: string): boolean =>
-  !value.startsWith("'") && /\$[({]|\x60/.test(value);
-
-// Every rule keeps its head and puts MASK in place of the rest, which is checked here once.
-const keepingExpressions =
-  (replace: Replace): Replace =>
-  (match, ...groups) => {
-    const result = replace(match, ...groups);
-    if (result === match || !result.endsWith(MASK)) return result;
-    const hidden = match.slice(result.length - MASK.length);
-    return isExpression(hidden) ? match : result;
-  };
-
 const rule = (name: string, pattern: string, flags: string, replace: Replace): SecretRule => ({
   name,
   pattern: new RegExp(pattern, flags),
-  replace: keepingExpressions(replace),
+  replace,
 });
+
+const masked = (head = '') => `${head}${MASK}`;
 
 export const SECRET_RULES: readonly SecretRule[] = [
   rule(

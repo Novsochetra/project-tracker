@@ -75,7 +75,7 @@ describe('permissionLabel', () => {
       'abc123def456',
     );
     expect(labelOf('Bash', { command: 'curl -H "Authorization: Bearer abc123" x.dev' })).toBe(
-      'Run curl -H "Authorization: ***" x.dev',
+      'Run curl -H "Authorization: Bearer ***" x.dev',
     );
   });
 

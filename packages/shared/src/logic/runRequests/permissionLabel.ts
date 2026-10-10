@@ -1,7 +1,7 @@
 import { RUN_PERMISSION_LABEL_MAX, RUN_REQUEST_LABEL_MAX } from '../../domain/runRequest';
 import { cutTo, oneLine } from '../runSteps/cut';
-import { maskSecrets } from '../runSteps/secrets';
 import { toolLabel, type ToolInput } from '../runSteps/toolLabel';
+import { maskForPermission } from './permissionMask';
 
 const field = (input: ToolInput, name: string): string => {
   const value = input[name];
@@ -28,12 +28,18 @@ export interface PermissionLabel {
   cut: boolean;
 }
 
+const HIGH_SURROGATE = /[\uD800-\uDBFF]/;
+
+// Never half of an emoji at the end, which no font can draw.
+const sliceWhole = (text: string, end: number): string =>
+  text.slice(0, HIGH_SURROGATE.test(text.charAt(end - 1)) ? end - 1 : end);
+
 // Never a file's contents: a Write or Edit shows only its path, as its step does.
 export function permissionLabel(name: string, input: ToolInput, folder: string): PermissionLabel {
   const whole = Object.hasOwn(WHOLE, name) ? WHOLE[name]?.(input) : undefined;
   const label = whole ?? oneLine(toolLabel(name, input, folder));
   const room = RUN_PERMISSION_LABEL_MAX + MASK_ROOM;
-  const masked = maskSecrets(label.slice(0, room)).trim();
+  const masked = maskForPermission(sliceWhole(label, room)).trim();
   // Masking can shorten a sliced command below the limit, so the slice says it was cut too.
   const sliced = label.length > room;
   if (!sliced && masked.length <= RUN_PERMISSION_LABEL_MAX) return { label: masked, cut: false };
