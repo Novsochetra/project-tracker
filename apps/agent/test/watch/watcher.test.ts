@@ -1,5 +1,5 @@
 import { ApiError } from '@tracker/client';
-import type { Run } from '@tracker/shared';
+import type { Run, RunJob } from '@tracker/shared';
 import { describe, expect, it, vi } from 'vitest';
 import type { OnSteps } from '../../src/watch/claudeRunners';
 import type { ClaudeExit } from '../../src/watch/outcome';
@@ -9,7 +9,7 @@ import { fakeTracker, job, noAsks, RUNNER } from './fakeTracker';
 
 function watcherWith(
   api: WatchApi,
-  runClaude: (prompt: string, signal: AbortSignal, onSteps: OnSteps) => Promise<ClaudeExit>,
+  runClaude: (job: RunJob, signal: AbortSignal, onSteps: OnSteps) => Promise<ClaudeExit>,
 ) {
   const log: string[] = [];
   const watcher = createWatcher(
@@ -28,7 +28,7 @@ describe('the watcher', () => {
   it('runs each waiting run in turn and reports how it ended', async () => {
     const tracker = fakeTracker([job('r-1', 'MOB-1'), job('r-2', 'MOB-2', 'FAIL')]);
     const prompts: string[] = [];
-    const { watcher, log } = watcherWith(tracker.api, (prompt) => {
+    const { watcher, log } = watcherWith(tracker.api, ({ prompt }) => {
       prompts.push(prompt);
       return Promise.resolve(
         prompt === 'FAIL'

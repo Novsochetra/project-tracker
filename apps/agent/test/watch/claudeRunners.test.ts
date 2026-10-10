@@ -4,7 +4,7 @@ import type { RunStepInput } from '@tracker/shared';
 import { afterAll, describe, expect, it } from 'vitest';
 import { askOutcomeOf } from '../../src/watch/ask/askOutcome';
 import { claudeRunners } from '../../src/watch/claudeRunners';
-import { askJob } from './fakeTracker';
+import { askJob, job } from './fakeTracker';
 import { installFakeClaude } from './fakeClaude';
 
 const fake = installFakeClaude();
@@ -17,7 +17,7 @@ describe('claudeRunners', () => {
   it("turns Claude's events into steps, never what a tool gave back", async () => {
     const claude = claudeRunners({ command: fake.command, cwd, write: () => undefined });
     const steps: RunStepInput[] = [];
-    await claude.runClaude('Fix MOB-1', new AbortController().signal, (more) =>
+    await claude.runClaude(job('r-1', 'MOB-1'), new AbortController().signal, (more) =>
       steps.push(...more),
     );
     expect(steps.map(({ kind, label }) => `${kind}: ${label.split('\n')[0]}`)).toEqual([

@@ -1,7 +1,7 @@
 import { defineConfig } from 'tsup';
 
 export default defineConfig({
-  entry: ['src/mcp.ts', 'src/cli.ts'],
+  entry: ['src/mcp.ts', 'src/cli.ts', 'src/promptTool.ts'],
   format: ['esm'],
   platform: 'node',
   target: 'node22',
