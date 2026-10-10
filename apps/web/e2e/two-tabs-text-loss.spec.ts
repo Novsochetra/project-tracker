@@ -162,3 +162,30 @@ test('a comment whose tab closes while it is sent comes back in the other tab', 
     [],
   );
 });
+
+// Reviewer 96 (PT-135): in WebKit under load, B's box was still empty 5 s after A closed mid-send.
+// The closing page's removal of its mark of the send never reached storage, so B waited for the
+// mark to run out, a minute after the send. Here A's last writes are lost on purpose.
+test('a comment whose tab closes comes back though that tab’s last writes are lost', async ({
+  page,
+  context,
+  api,
+}) => {
+  await seedProject(api, 'Mobile app', 'MOB', [{ title: 'Ticket 1' }]);
+  const a = await open(context, page);
+  const b = await open(context);
+  await hold(a, 'POST', (url) => url.pathname === '/api/tickets/MOB-1/comments');
+
+  await box(a).fill('Looks good');
+  await a.getByRole('button', { name: 'Comment', exact: true }).click();
+  await expect(box(a)).toHaveValue('');
+  await a.evaluate(() => {
+    Storage.prototype.setItem = () => undefined;
+    Storage.prototype.removeItem = () => undefined;
+  });
+  await a.close();
+  await expect(box(b)).toHaveValue('Looks good');
+  expect((await api.getTicket('MOB-1')).activity.filter((item) => item.type === 'comment')).toEqual(
+    [],
+  );
+});

@@ -6,7 +6,8 @@ import { queryKeys } from '../../../api';
 import { seedTicket, setupApi } from '../../../api/test/render';
 import { ToastProvider } from '../../../components';
 import { keepDraft, storedDrafts } from '../../../lib/storedDrafts';
-import { RETRY_GAP_MS, useTicketDrafts } from './useTicketDrafts';
+import { SAVE_MARKS_STORAGE_KEY } from '../fields/saveMarks';
+import { LEFT_SAVE_WAIT_MS, RETRY_GAP_MS, useTicketDrafts } from './useTicketDrafts';
 
 function Drafts({ enabled }: { enabled: boolean }) {
   useTicketDrafts(enabled);
@@ -98,5 +99,24 @@ describe('useTicketDrafts', () => {
     ).toBeInTheDocument();
     expect(client.updateTicket).not.toHaveBeenCalled();
     expect(kept()).toEqual(['title:MOB-1']);
+  });
+
+  // Another tab's saves settling are its own to follow up; once that tab is gone (here, frozen
+  // until its mark runs out), what it had on its way is this tab's to send (PT-135).
+  it('runs when another tab’s mark runs out, not when another tab marks or unmarks a draft', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    keepTitle('Fix the login');
+    const mark = { draft: 'title:MOB-1', page: 'frozen-tab', until: Date.now() + 60_000 };
+    localStorage.setItem(`${SAVE_MARKS_STORAGE_KEY}:frozen-tab:title:MOB-1`, JSON.stringify(mark));
+    const { client } = setup({});
+    act(() => {
+      window.dispatchEvent(new StorageEvent('storage', { key: SAVE_MARKS_STORAGE_KEY }));
+    });
+    await act(() => vi.advanceTimersByTimeAsync(LEFT_SAVE_WAIT_MS * 2));
+    expect(client.getTicket).not.toHaveBeenCalled();
+
+    await act(() => vi.advanceTimersByTimeAsync(60_000));
+    await waitFor(() => expect(kept()).toEqual([]));
+    expect(client.updateTicket).toHaveBeenCalledTimes(1);
   });
 });

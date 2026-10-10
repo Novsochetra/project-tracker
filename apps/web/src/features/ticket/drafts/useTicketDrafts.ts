@@ -59,10 +59,11 @@ function useDraftSync(): (takeScope: () => SyncScope) => void {
 
 export const RETRY_GAP_MS = 10_000;
 
-// A page that went while it sent a comment leaves the comment kept for this sync, which reads the
-// ticket once that page's marks go (at once for a page that closed, a minute on for one that was
-// killed). A moment later, so a request that reached the tracker as the page went has landed.
-export const LEFT_SEND_WAIT_MS = 1_000;
+// A page that went while it saved leaves what it saved kept for this sync, which reads the ticket
+// once that page's marks stop counting: as the page goes (closed or killed), or a minute on when
+// nothing says so (a page the browser froze, a browser without Web Locks). A moment later, so a
+// request that reached the tracker as the page went has landed.
+export const LEFT_SAVE_WAIT_MS = 1_000;
 
 function runLater(run: () => void, ms: number) {
   let timer: ReturnType<typeof setTimeout> | undefined;
@@ -171,9 +172,12 @@ function syncOnReconnect(queryClient: QueryClient, sync: Sync, check: TrackerChe
     scope.add(projectKey);
     runs.soon();
   });
-  const leftSends = runLater(all.now, LEFT_SEND_WAIT_MS);
-  const stopMarks = onOtherTabsMarks(() => {
-    if (hasLeftSends()) leftSends.soon();
+  const leftSaves = runLater(all.now, LEFT_SAVE_WAIT_MS);
+  // Most changes are a tab's saves settling, which that tab follows up itself, so only a comment a
+  // page left on its way needs this sync then. A tab that went, or a mark that ran out, may have
+  // left any kept text unsent (PT-135).
+  const stopMarks = onOtherTabsMarks((news) => {
+    if (news === 'left' ? hasClosedDrafts() : hasLeftSends()) leftSaves.soon();
   });
   window.addEventListener('online', all.now);
   all.now();
@@ -184,7 +188,7 @@ function syncOnReconnect(queryClient: QueryClient, sync: Sync, check: TrackerChe
     stopListening();
     stopChanges();
     stopMarks();
-    leftSends.stop();
+    leftSaves.stop();
     window.removeEventListener('online', all.now);
   };
 }

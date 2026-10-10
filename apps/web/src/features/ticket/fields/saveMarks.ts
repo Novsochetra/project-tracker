@@ -1,3 +1,5 @@
+import { holdPageLock, whenPageGone } from './pageLocks';
+
 // The saves of a draft on their way live in the memory of the tab that sent them. Other tabs
 // can't see that, and their app-wide sync would take the tracker having the first of them for a
 // change, so each tab also marks the drafts it is sending in storage, until a time after which a
@@ -6,6 +8,7 @@ export const SAVE_MARKS_STORAGE_KEY = 'tracker.draftSaves';
 const MARK_MS = 60_000;
 
 const PAGE = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
+holdPageLock(PAGE);
 
 interface Mark {
   draft: string;
@@ -84,41 +87,62 @@ function otherMarks(now: number): Mark[] {
 export const isSentElsewhere = (id: string): boolean =>
   otherMarks(Date.now()).some((mark) => mark.draft === id);
 
+function removeMarksOf(page: string): void {
+  for (const key of markKeys()) {
+    if (readMark(key)?.page === page) write(key, null);
+  }
+}
+
 // A tab that goes for good (closed, reloaded) takes its saves with it, so its marks go at once
 // rather than a minute later. Not one the browser keeps to show again: its saves may still answer.
 window.addEventListener('pagehide', (event) => {
-  if (event.persisted) return;
-  for (const key of markKeys()) {
-    if (readMark(key)?.page === PAGE) write(key, null);
-  }
+  if (!event.persisted) removeMarksOf(PAGE);
 });
+
+// Told apart because only 'left' leaves saves unsettled: a tab went (one whose marks this tab has
+// read) or one of its marks ran out. A mark written or removed is mostly a save its tab settles.
+export type MarksNews = 'changed' | 'left';
+
+const pageLeft = new Set<() => void>();
+
+// A page that went without removing its marks (killed, or its removal lost as it closed) is known
+// by its lock coming free, and its marks go then.
+function watchPages(marks: readonly Mark[]): void {
+  for (const { page } of marks) {
+    whenPageGone(page, () => {
+      removeMarksOf(page);
+      pageLeft.forEach((listener) => listener());
+    });
+  }
+}
 
 // Nothing tells a tab when another tab's mark runs out (that tab closed without a word), so the
 // listener also hears when the next one does.
-export function onOtherTabsMarks(listener: () => void): () => void {
+export function onOtherTabsMarks(listener: (news: MarksNews) => void): () => void {
   let timer: ReturnType<typeof setTimeout> | undefined;
   const wakeAtNextEnd = () => {
     clearTimeout(timer);
     const now = Date.now();
-    const ends = otherMarks(now).map((mark) => mark.until);
-    if (ends.length === 0) return;
-    timer = setTimeout(
-      () => {
-        wakeAtNextEnd();
-        listener();
-      },
-      Math.min(...ends) - now,
-    );
+    const marks = otherMarks(now);
+    watchPages(marks);
+    if (marks.length === 0) return;
+    timer = setTimeout(() => hear('left'), Math.min(...marks.map((mark) => mark.until)) - now);
+  };
+  const hear = (news: MarksNews) => {
+    wakeAtNextEnd();
+    listener(news);
   };
   const onStorage = (event: StorageEvent) => {
     if (event.key !== null && !isMarkKey(event.key)) return;
-    wakeAtNextEnd();
-    listener();
+    hear('changed');
   };
+  const onPageLeft = () => hear('left');
   window.addEventListener('storage', onStorage);
+  pageLeft.add(onPageLeft);
   wakeAtNextEnd();
   return () => {
     clearTimeout(timer);
     window.removeEventListener('storage', onStorage);
+    pageLeft.delete(onPageLeft);
   };
 }
