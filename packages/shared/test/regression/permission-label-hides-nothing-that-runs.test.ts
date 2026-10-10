@@ -95,6 +95,8 @@ describe('a permission label hides nothing that runs', () => {
       'a\\b',
       '#abc1',
       'a*b?c[1]',
+      // One symbol each, so no symbol's check hides behind another's.
+      ...[...';&|<>(){},$*?[#`"\' \\'].map((symbol) => `ab${symbol}cd`),
     ];
     const symbols = (text: string) => text.replace(/[^\s"'`$\\;&|<>(){},#*?[]/g, '');
     for (const shape of shapes) {
