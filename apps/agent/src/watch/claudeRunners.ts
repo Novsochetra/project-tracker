@@ -41,8 +41,9 @@ export function claudeRunners(setup: ClaudeSetup) {
   const { command, cwd, permissionMode, write, readSteps = createStepReader, prompts } = setup;
   // A reader a run: it remembers that run's open tool calls.
   const onEvent = (onSteps: OnSteps) => stepsOf(readSteps(cwd), onSteps);
-  // Only the runs that get the person's permission mode may ask the person: ticket runs and Edit
-  // questions. An Ask or Plan question gets no prompt tool, so no answer can widen what it may do.
+  // Only runs of the ticket lane, the ones that may change the folder, may ask the person: ticket
+  // runs and Edit questions. An Ask or Plan question gets no prompt tool, so no answer can widen
+  // what it may do.
   const asking = (run: Run, start: (promptArgs: string[]) => Promise<ClaudeExit>) =>
     prompts && laneOf(run.kind, run.askOptions) === 'ticket'
       ? withPromptTool(prompts, run, start)

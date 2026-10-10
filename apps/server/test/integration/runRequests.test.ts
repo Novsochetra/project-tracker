@@ -177,7 +177,7 @@ describe.each(DIALECTS)('run requests (%s)', (dialect) => {
     expect((await list()).body.map(({ status }) => status)).toEqual(['cancelled', 'answered']);
     expect(await answer(request.id, { decision: 'allow' })).toMatchObject({
       status: 409,
-      body: { error: { message: 'The run ended, so Claude no longer waits for this.' } },
+      body: { error: { message: 'Claude no longer waits for this.' } },
     });
   });
 
@@ -217,7 +217,22 @@ describe.each(DIALECTS)('run requests (%s)', (dialect) => {
     });
     expect((await cancel()).body).toMatchObject({ status: 'cancelled', endedAt: clock.now() });
     expect((await list()).body[0]?.status).toBe('cancelled');
-    expect((await answer(request.id, { decision: 'allow' })).status).toBe(409);
+    expect(await answer(request.id, { decision: 'allow' })).toMatchObject({
+      status: 409,
+      body: { error: { message: 'Claude no longer waits for this.' } },
+    });
+    expect((await person<Run>('GET', `/api/runs/${run.id}`)).body.status).toBe('running');
+  });
+
+  it('ends an overdue request as expired, not cancelled, when the helper gives up on it', async () => {
+    await take();
+    const request = await opened();
+    clock.advance(RUN_REQUEST_DEADLINE_MS);
+    await checkIn();
+    const cancelled = await helper<RunRequest>('POST', `/api/requests/${request.id}/cancel`, {
+      runnerId: runner,
+    });
+    expect(cancelled.body).toMatchObject({ status: 'expired', endedAt: request.expiresAt });
   });
 
   it('keeps an answer that landed before the helper gave up', async () => {

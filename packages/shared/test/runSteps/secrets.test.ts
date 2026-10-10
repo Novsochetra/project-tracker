@@ -48,6 +48,7 @@ describe('maskSecrets', () => {
     masks([
       ['curl -d \'{"password":"hunter2"}\' x', 'curl -d \'{"password":"***"}\' x'],
       ['curl -d \'{"api_key": "abc"}\' x', 'curl -d \'{"api_key": "***"}\' x'],
+      ['curl -d "{\\"password\\":\\"hunter2\\"}" x', 'curl -d "{\\"password\\":\\"***\\"}" x'],
     ]);
     keeps(['{"name": "x", "keyboard": "us"}']);
   });
@@ -56,6 +57,8 @@ describe('maskSecrets', () => {
     masks([
       ['curl -u alice:s3cret https://x', 'curl -u alice:*** https://x'],
       ['curl --user alice:s3cret https://x', 'curl --user alice:*** https://x'],
+      ['curl -u "alice:s3cret" https://x', 'curl -u "alice:***" https://x'],
+      ["curl -u 'alice:s3cret' https://x", "curl -u 'alice:***' https://x"],
     ]);
     keeps(['docker run -u 1000:1000 node:22', 'curl -u alice https://x', 'ps -u root']);
   });
@@ -107,6 +110,7 @@ describe('maskSecrets', () => {
   describe('known prefix', () => {
     masks([
       ['echo ghp_abcdef0123 | gh auth login', 'echo *** | gh auth login'],
+      ['tracker login trk_q2Wj8xYbN0aPz7vL1cKdF3sE', 'tracker login ***'],
       ['echo github_pat_11AB_cd | x', 'echo *** | x'],
       ['echo sk-ant-api03-abc | claude', 'echo *** | claude'],
       ['echo sk-proj-abcdefghijklmnopqrstuv | x', 'echo *** | x'],
@@ -130,6 +134,21 @@ describe('maskSecrets', () => {
     ]);
   });
 
+  describe('a long secret, masked whole', () => {
+    const token = 'IQoJb3JpZ2luX2Vj'.repeat(60);
+    masks([
+      [`export AWS_SESSION_TOKEN=${token} && ls`, 'export AWS_SESSION_TOKEN=*** && ls'],
+      [`export TOKEN="${token}"`, 'export TOKEN=***'],
+      [`curl -H "Authorization: Bearer ${token}" x`, 'curl -H "Authorization: ***" x'],
+      [`curl -H Authorization:\\ Bearer\\ ${token} x`, 'curl -H Authorization:\\ Bearer\\ *** x'],
+      [`vercel --token ${token}`, 'vercel --token ***'],
+      [`curl -d '{"id_token":"${token}"}' x`, `curl -d '{"id_token":"***"}' x`],
+      [`psql postgres://u:${token}@h/db`, 'psql postgres://u:***@h/db'],
+      [`echo ghp_${token}`, 'echo ***'],
+      [`export TOKEN="${token}`, 'export TOKEN=***'],
+    ]);
+  });
+
   it.each([
     ['key-key', 'key-'.repeat(5000)],
     ['kebab list', Array.from({ length: 2600 }, (_, i) => `item${i}`).join('-')],
@@ -142,16 +161,25 @@ describe('maskSecrets', () => {
     ['user flags', ' -u a:'.repeat(3500)],
     ['flags', ' --x'.repeat(5000)],
     ['bearers', 'bearer '.repeat(3000)],
-  ])('masks 20 KB of %s in well under 50 ms', (_name, text) => {
+  ])('masks 20 KB of %s in well under a second', (_name, text) => {
+    // Takes about a millisecond; the slow regex took seconds to minutes, and a GC pause in a
+    // parallel run must not fail it.
     const started = performance.now();
     maskSecrets(text);
-    expect(performance.now() - started).toBeLessThan(50);
+    expect(performance.now() - started).toBeLessThan(500);
   });
 });
 
 describe('secretName', () => {
   it('reads a name by its words', () => {
     for (const name of [
+      'GPG_PASSPHRASE',
+      'APISECRET',
+      'CLIENTSECRET',
+      'clientsecret',
+      'SECRETKEY',
+      'ACCESSKEY',
+      'AUTHKEY',
       'GITHUB_TOKEN',
       'PGPASSWORD',
       '_authToken',

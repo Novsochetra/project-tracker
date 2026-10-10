@@ -1,13 +1,15 @@
 import { secretName } from './secretNames';
 
-// Every repeat is bounded and every rule starts at a quote, a space or a word's start: the input
-// can be a long line, and an open-ended `[\w-]*` on both sides of a keyword backtracked for
-// minutes on a 13 KB kebab-case list while the helper's stdout listener waited. A bare value never
-// starts with `-` and stops at a quote, a backtick or a shell symbol, so it never takes the next
-// flag or shell word (`--with-token < token.txt`).
-const VALUE = String.raw`(?:"[^"\n]{0,400}"|'[^'\n]{0,400}'|[^\s"'\x60<>|;&)-][^\s"'\x60<>|;&)]{0,399})`;
+// Names are bounded and every rule starts at a quote, a space or a word's start: open-ended
+// `[\w-]*` on both sides of a keyword backtracked for minutes on a 13 KB kebab-case list while the
+// helper's stdout listener waited. A value runs to its end, since it ends each pattern and can't
+// backtrack, and a cut value would show the rest of a long token. A bare value never starts with
+// `-` and stops at a quote, a backtick or a shell symbol, so it never takes the next flag or shell
+// word (`--with-token < token.txt`); a quote left open masks to the line's end.
+const VALUE = String.raw`(?:"[^"\n]*"?|'[^'\n]*'?|[^\s"'\x60<>|;&)-][^\s"'\x60<>|;&)]*)`;
 const NAME = String.raw`[\w-]{1,60}`;
-const PREFIXED = String.raw`gh[pousr]_\w{1,255}|github_pat_\w{1,255}|sk-ant-[\w-]{1,255}|sk-[\w-]{20,255}|sk_(?:live|test)_\w{1,255}|xox[abprs]-[\w-]{1,255}|glpat-[\w-]{1,255}|AKIA[0-9A-Z]{16}`;
+// trk_ is this tracker's own API token (API_TOKEN_PREFIX in the server).
+const PREFIXED = String.raw`trk_[\w-]{20,}|gh[pousr]_\w+|github_pat_\w+|sk-ant-[\w-]+|sk-[\w-]{20,}|sk_(?:live|test)_\w+|xox[abprs]-[\w-]+|glpat-[\w-]+|AKIA[0-9A-Z]{16}`;
 
 const MASK = '***';
 
@@ -20,12 +22,7 @@ const looksSecret = (value: string): boolean =>
 
 type Replace = (match: string, ...groups: string[]) => string;
 
-// TOKEN=abc, ?access_token=abc. Only names that hold a keyword match at all, so a name that
-// doesn't (--from-literal=password=x) never takes the next one as its value.
 const KEYED = String.raw`[\w-]{0,40}(?:token|key|secret|pass|pwd|cookie)[\w-]{0,40}`;
-const NAME_VALUE = new RegExp(String.raw`(^|[^\w-])(${KEYED})=(${VALUE})`, 'gi');
-const nameValue: Replace = (match, pre = '', name = '', value = '') =>
-  secretName(name) && !reference(value) ? `${pre}${name}=${MASK}` : match;
 
 export interface SecretRule {
   // The shape it masks, as the tests name it.
@@ -45,7 +42,7 @@ const masked = (head = '') => `${head}${MASK}`;
 export const SECRET_RULES: readonly SecretRule[] = [
   rule(
     'quoted header',
-    String.raw`(["'](${NAME}):\s{0,4})[^"'\n]{1,400}`,
+    String.raw`(["'](${NAME}):\s{0,4})[^"'\n]+`,
     'g',
     (m, head = '', name = '') => (secretName(name) ? masked(head) : m),
   ),
@@ -67,24 +64,24 @@ export const SECRET_RULES: readonly SecretRule[] = [
   ),
   rule(
     'json key',
-    String.raw`("(${NAME})"\s{0,4}:\s{0,4}")[^"\n]{1,400}"`,
+    String.raw`(\\?"(${NAME})\\?"\s{0,4}:\s{0,4}\\?")(?:[^"\\\n]|\\(?!"))+`,
     'g',
-    (m, head = '', name = '') => (secretName(name) ? `${masked(head)}"` : m),
+    (m, head = '', name = '') => (secretName(name) ? masked(head) : m),
   ),
   // A numeric user is a uid (docker run -u 1000:1000), not a login.
   rule(
     'user password',
-    String.raw`(\s(?:-u|--user)(?:=|\s{1,4})([^\s:"']{1,60}):)(${VALUE})`,
+    String.raw`(\s(?:-u|--user)(?:=|\s{1,4})["']?([^\s:"']{1,60}):)(${VALUE})`,
     'g',
     (m, head = '', user = '') => (/^\d+$/.test(user) ? m : masked(head)),
   ),
   rule(
     'address password',
-    String.raw`(\/\/[^\s/:@"']{0,100}:)[^\s/@"']{1,400}(?=@)`,
+    String.raw`(\/\/[^\s/:@"']{0,100}:)[^\s/@"']+(?=@)`,
     'g',
     (_m, head = '') => masked(head),
   ),
-  rule('address token', String.raw`\/\/[^\s/:@"']{1,400}(?=@)`, 'g', () => masked('//')),
+  rule('address token', String.raw`\/\/[^\s/:@"']+(?=@)`, 'g', () => masked('//')),
   // `--token=abc` is a value; after `--token ` it may be prose ("Pass --token to the CLI").
   rule(
     'flag',
@@ -95,12 +92,17 @@ export const SECRET_RULES: readonly SecretRule[] = [
       return (head.endsWith('=') ? !reference(value) : looksSecret(value)) ? masked(head) : m;
     },
   ),
-  { name: 'name=value', pattern: NAME_VALUE, replace: nameValue },
-  rule('known prefix', String.raw`\b(?:${PREFIXED})`, 'g', () => MASK),
+  // Only a name that holds a keyword matches at all, so one that doesn't
+  // (--from-literal=password=x) never takes the next one as its value.
   rule(
-    'slack webhook',
-    String.raw`(hooks\.slack\.com\/services\/)[^\s"']{1,400}`,
-    'g',
-    (_m, head = '') => masked(head),
+    'name=value',
+    String.raw`(^|[^\w-])(${KEYED})=(${VALUE})`,
+    'gi',
+    (m, pre = '', name = '', value = '') =>
+      secretName(name) && !reference(value) ? `${pre}${name}=${MASK}` : m,
+  ),
+  rule('known prefix', String.raw`\b(?:${PREFIXED})`, 'g', () => MASK),
+  rule('slack webhook', String.raw`(hooks\.slack\.com\/services\/)[^\s"']+`, 'g', (_m, head = '') =>
+    masked(head),
   ),
 ];

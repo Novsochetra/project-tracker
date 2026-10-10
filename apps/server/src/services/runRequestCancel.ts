@@ -5,6 +5,7 @@ import { markRequestCancelled } from '../repositories/runRequests';
 import type { ServiceContext } from './context';
 import { notifyRunRequest, toRunRequest } from './runRequestMappers';
 import { requireRunRequest } from './runRequests';
+import { settleRequests } from './runRequestSweep';
 
 // A request that already ended stays as it ended: the helper may give up just as the person
 // answers, and the answer then stands.
@@ -14,6 +15,7 @@ export async function cancelRunRequest(
   id: string,
   { runnerId }: CancelRunRequestInput,
 ): Promise<RunRequest> {
+  await settleRequests(ctx);
   const { row, run } = await requireRunRequest(ctx, scope, id);
   if (run.runnerId !== runnerId) {
     throw forbidden('Only the helper that took this run ends its requests.');

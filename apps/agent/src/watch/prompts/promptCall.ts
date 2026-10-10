@@ -3,7 +3,7 @@ export interface PromptCall {
   input: Readonly<Record<string, unknown>>;
 }
 
-// The SDK's canUseTool answer, which Claude Code reads from the prompt tool's text.
+// Claude Code reads exactly this shape (the Agent SDK's canUseTool answer) from the tool's text.
 export type PromptDecision =
   | { behavior: 'allow'; updatedInput: Readonly<Record<string, unknown>> }
   | { behavior: 'deny'; message: string };

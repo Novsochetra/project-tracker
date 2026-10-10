@@ -298,7 +298,7 @@ describe('tracker watch against a real tracker', () => {
       'cancelled',
     ]);
     await expect(person.answerRunRequest(request.id, { decision: 'allow' })).rejects.toThrow(
-      'The run ended, so Claude no longer waits for this.',
+      'Claude no longer waits for this.',
     );
   });
 });
