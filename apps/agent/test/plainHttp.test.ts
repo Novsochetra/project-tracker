@@ -7,7 +7,6 @@ describe('plainHttpProblem', () => {
     'https://192.168.1.20:4100',
     'http://localhost:4100',
     'http://LOCALHOST:4100/',
-    'http://tracker.localhost:4100',
     'http://127.0.0.1:4100',
     'http://127.1.2.3:4100',
     'http://[::1]:4100',
@@ -22,6 +21,7 @@ describe('plainHttpProblem', () => {
     'http://192.168.1.20:4100',
     'http://localhost.example.com:4100',
     'http://127.0.0.1.example.com',
+    'http://tracker.localhost:4100',
   ])('keeps a token from %s, which is plain http to another computer', (url) => {
     expect(plainHttpProblem(url)).toBe(
       `Not sending an API token to ${url}: on plain http anyone on the network can read it. ` +

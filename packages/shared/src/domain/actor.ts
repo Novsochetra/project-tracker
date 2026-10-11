@@ -11,3 +11,9 @@ export const HUMAN: Actor = { kind: 'human', name: '' };
 
 export const actorLabel = (actor: Actor): string =>
   actor.kind === 'human' && !actor.name ? 'You' : actor.name || 'Agent';
+
+// The web app calls the person "You" and the CLI, which agents read, "User": an agent with either
+// name would read as the person.
+const PERSON_WORDS = new Set(['you', 'user']);
+
+export const isPersonWord = (name: string): boolean => PERSON_WORDS.has(name.trim().toLowerCase());

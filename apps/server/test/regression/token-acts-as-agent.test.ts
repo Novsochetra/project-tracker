@@ -38,7 +38,7 @@ describe('regression: an API token always acts as an agent', () => {
     });
     await send('POST', '/api/projects/MOB/tickets', owner, { title: 'Crash' });
     const done = project.statuses.find((status) => status.category === 'done')!;
-    const asHuman = { ...agent, 'x-actor-kind': 'human', 'x-actor-name': 'User' };
+    const asHuman = { ...agent, 'x-actor-kind': 'human', 'x-actor-name': 'Sam' };
 
     const moved = await send<ErrorBody>('PATCH', '/api/tickets/MOB-1', asHuman, {
       statusId: done.id,
@@ -52,7 +52,7 @@ describe('regression: an API token always acts as an agent', () => {
     expect(comment.status).toBe(201);
     const ticket = await send<TicketDetail>('GET', '/api/tickets/MOB-1', owner);
     const last = ticket.body.activity.at(-1)!;
-    expect(last.actor).toEqual({ kind: 'agent', name: 'User' });
+    expect(last.actor).toEqual({ kind: 'agent', name: 'Sam' });
   });
 
   it('names a token request Agent when it gives no name', async () => {
