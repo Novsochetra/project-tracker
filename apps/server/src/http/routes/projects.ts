@@ -1,5 +1,5 @@
 import { createProjectInput, updateProjectInput } from '@tracker/shared';
-import { Hono } from 'hono';
+import { Hono, type Context } from 'hono';
 import { requireScope } from '../../auth/scope';
 import type { ServiceContext } from '../../services/context';
 import {
@@ -13,6 +13,8 @@ import { projectPrompt } from '../../services/prompts';
 import { getBoard } from '../../services/ticketQueries';
 import type { AppEnv } from '../env';
 import { jsonBody } from '../validation';
+
+const scope = (c: Context<AppEnv>) => requireScope(c.get('access'));
 
 export const projectRoutes = (ctx: ServiceContext) =>
   new Hono<AppEnv>()
@@ -29,7 +31,7 @@ export const projectRoutes = (ctx: ServiceContext) =>
       return c.body(null, 204);
     })
     .get('/projects/:key/board', async (c) =>
-      c.json(await getBoard(ctx, requireScope(c.get('access')), c.req.param('key'))),
+      c.json(await getBoard(ctx, scope(c), c.req.param('key'))),
     )
     .get('/projects/:key/prompt', async (c) =>
       c.json(await projectPrompt(ctx, c.req.param('key'))),
