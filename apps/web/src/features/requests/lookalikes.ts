@@ -8,13 +8,14 @@ const LATIN = /\p{Script=Latin}/u;
 // pass for no Latin one; next to a Latin letter, a letter of any other script is marked.
 const WITH_LATIN =
   /[\p{Script=Latin}\p{Script=Common}\p{Script=Inherited}\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}\p{Script=Thai}\p{Script=Lao}\p{Script=Khmer}\p{Script=Myanmar}]/u;
-// The few letters of those scripts that pass for o (gဝဝgle); only these, so their words stay
-// readable.
+// The few letters of those scripts that pass for o, marked only among Latin letters (gဝဝgle), so
+// プロジェクト or 人口 beside Latin stays readable.
 const ROUND = new Set('ဝㅇロﾛ口');
 const OTHER_DIGIT = /(?![0-9])\p{Nd}/u;
-// A letter of no script, such as 𝚊 or ℝ, names another file than a; Latin-1's µ and ª stay.
+// Math and letterlike symbols (𝚊, ℝ) name another file than a; other letters of no script, such as
+// the long-vowel mark ー, are part of their words.
 const noScriptLetter = (char: string): boolean =>
-  char > 'ÿ' && /\p{L}/u.test(char) && /\p{Script=Common}/u.test(char);
+  /[\u{1D400}-\u{1D7FF}\u{2100}-\u{214F}]/u.test(char) && /\p{L}/u.test(char);
 // Letters that pass for Latin ones, so a word made only of them reads as Latin (аррӏе.com), and the
 // scripts that almost never name a file, whose every letter counts (ꓮꓑꓑꓡꓰ.com).
 const PASSES_FOR_LATIN = new Set('асеһіјӏорԁԛѕухԝүАВЕКМНОРСТУХЅІЈԚԜҮοαρνικυχΑΒΕΖΗΙΚΜΝΟΡΤΥΧօսհոՕՍ');
@@ -31,13 +32,23 @@ const passesForLatin = (word: string): boolean =>
     ([letter]) => PASSES_FOR_LATIN.has(letter) || RARE.test(letter),
   );
 
-const inLatinWord = (char: string): boolean =>
-  !WITH_LATIN.test(char) || OTHER_DIGIT.test(char) || noScriptLetter(char) || ROUND.has(char);
+const amongLatin = (word: string): boolean =>
+  [...word.matchAll(/\p{L}/gu)].every(
+    ([letter]) => LATIN.test(letter) || noScriptLetter(letter) || ROUND.has(letter),
+  );
+
+const inLatinWord =
+  (round: boolean) =>
+  (char: string): boolean =>
+    !WITH_LATIN.test(char) ||
+    OTHER_DIGIT.test(char) ||
+    noScriptLetter(char) ||
+    (round && ROUND.has(char));
 
 // A word in one script, a Russian or Khmer file name, has none: a person reads it as what it is,
 // unless its every letter passes for Latin and Latin letters stand beside it (`my-арр`).
 function markOf(word: string, latinToken: boolean): (char: string) => boolean {
-  if (LATIN.test(word)) return inLatinWord;
+  if (LATIN.test(word)) return inLatinWord(amongLatin(word));
   const reads = scriptCount(word) > 1 || (latinToken && passesForLatin(word));
   return reads ? inScripts : () => false;
 }
