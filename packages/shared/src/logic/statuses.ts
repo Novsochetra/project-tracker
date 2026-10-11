@@ -1,4 +1,9 @@
-import { isDoneCategory, type Status, type StatusCategory } from '../domain/status';
+import {
+  isDoneCategory,
+  STATUS_CATEGORIES,
+  type Status,
+  type StatusCategory,
+} from '../domain/status';
 
 export const sortStatuses = <T extends Pick<Status, 'position' | 'createdAt'>>(
   statuses: readonly T[],
@@ -41,3 +46,9 @@ export function findStatusByName<T extends Status>(
   const wanted = name.trim().toLowerCase();
   return statuses.find((status) => status.name.toLowerCase() === wanted);
 }
+
+const categoryRank = (category: StatusCategory): number => STATUS_CATEGORIES.indexOf(category);
+
+// Once a ticket is reviewed only a person moves it back, so a late report cannot undo a review.
+export const reportMayMove = (from: StatusCategory, to: StatusCategory): boolean =>
+  categoryRank(from) < categoryRank('reviewed') || categoryRank(to) >= categoryRank(from);
