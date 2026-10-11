@@ -206,7 +206,7 @@ test.describe('Claude waiting for the person', () => {
     const key = await box(row.getByText('TRACK-1', { exact: true }));
     const chip = await box(row.locator('[data-verdict="changes_requested"]'));
     const avatar = await box(row.getByRole('img', { name: 'Claude' }));
-    expect(Math.abs(icon.y + icon.height / 2 - (key.y + key.height / 2))).toBeLessThanOrEqual(1);
+    expect(Math.abs(shown.y + shown.height / 2 - (key.y + key.height / 2))).toBeLessThanOrEqual(1);
     expect(icon.x).toBeGreaterThanOrEqual(chip.x + chip.width);
     expect(icon.x + icon.width).toBeLessThanOrEqual(avatar.x);
     expect((await box(words)).y).toBeGreaterThanOrEqual(shown.y + shown.height);
