@@ -98,4 +98,16 @@ describe.each(DIALECTS)('changing the password too often (%s)', (dialect) => {
     expect(refused.headers.get('retry-after')).toBe('60');
     expect((await logIn(send, OWNER.email, OWNER.password)).status).toBe(200);
   });
+
+  it('counts each account apart, so another account at the same address still gets through', async () => {
+    const owner = await ownerCookie(api);
+    const person = await invitePerson(send, owner);
+    const change = (cookie: string, currentPassword: string) =>
+      send('POST', '/api/password', cookie, { currentPassword, newPassword: NEW_PASSWORD });
+    expect((await change(owner, 'guess one')).status).toBe(400);
+    expect((await change(owner, 'guess two')).status).toBe(400);
+    expect((await change(owner, OWNER.password)).status).toBe(429);
+    expect((await change(person.cookie, 'guess one')).status).toBe(400);
+    expect((await change(person.cookie, PERSON.password)).status).toBe(204);
+  });
 });

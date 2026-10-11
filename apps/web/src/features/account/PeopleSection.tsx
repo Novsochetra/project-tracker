@@ -21,7 +21,8 @@ export function PeopleSection() {
       </h2>
       <p className={styles.note}>
         A reset link lets one person set a new password, and signs them out everywhere. It works
-        once, for 24 hours.
+        once, for 24 hours. Their API tokens keep working, so ask them to check Connect for any they
+        don't recognize.
       </p>
       {make.data && (
         <CreatedLink

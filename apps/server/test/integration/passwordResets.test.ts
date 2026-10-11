@@ -144,6 +144,22 @@ describe.each(DIALECTS)('password reset links (%s)', (dialect) => {
     expect((await logIn(send, OWNER.email, OWNER.password)).status).toBe(200);
   });
 
+  it('keeps one open link for an account made twice at once', async () => {
+    const owner = await ownerCookie(api);
+    const person = await invitePerson(send, owner);
+    const path = `/api/users/${person.id}/reset-link`;
+    const answers = await Promise.all([send('POST', path, owner), send('POST', path, owner)]);
+    expect(answers.map((answer) => answer.status)).toContain(201);
+    expect(answers.every((answer) => [201, 409].includes(answer.status))).toBe(true);
+    const open = await api.db
+      .selectFrom('invites')
+      .select('id')
+      .where('kind', '=', 'reset')
+      .where('usedAt', 'is', null)
+      .execute();
+    expect(open).toHaveLength(1);
+  });
+
   it('sets the password once from one link used three times at once', async () => {
     const owner = await ownerCookie(api);
     const { secret } = await resetLink(owner, (await invitePerson(send, owner)).id);

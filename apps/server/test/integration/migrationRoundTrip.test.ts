@@ -197,7 +197,7 @@ describe.each(DIALECTS)('every migration up and down (%s)', (dialect) => {
     });
   });
 
-  it('keeps invites and drops reset links on rollback, so none works as an invite', async () => {
+  it('keeps one open reset link per account, and drops reset links on rollback', async () => {
     await withDatabase(dialect, async (db) => {
       await migrateToLatest(db);
       await sql`insert into users (id, email, password_hash, created_at, updated_at, role)
@@ -206,6 +206,13 @@ describe.each(DIALECTS)('every migration up and down (%s)', (dialect) => {
         values ('i', 'invite-hash', 'o', 1000, 2000)`.execute(db);
       await sql`insert into invites (id, token_hash, created_by, created_at, expires_at, kind,
         user_id) values ('r', 'reset-hash', 'o', 1000, 2000, 'reset', 'o')`.execute(db);
+      const second = sql`insert into invites (id, token_hash, created_by, created_at, expires_at,
+        kind, user_id) values ('r2', 'second-hash', 'o', 1000, 2000, 'reset', 'o')`.execute(db);
+      await expect(second).rejects.toThrow();
+      await sql`insert into invites (id, token_hash, created_by, created_at, expires_at, kind,
+        user_id, used_at) values ('r3', 'used-hash', 'o', 1000, 2000, 'reset', 'o', 1500)`.execute(
+        db,
+      );
 
       await expectRan(createMigrator(db).migrateTo('0011_user_projects'), ['0012_password_resets']);
       const kept = await sql<{ id: string }>`select id from invites`.execute(db);
@@ -338,7 +345,7 @@ const DATA_MODEL: SchemaShape = {
       "kind text not null default 'invite'",
       'user_id text',
     ],
-    indexes: ['unique (token_hash)'],
+    indexes: ['unique (token_hash)', 'unique (user_id)'],
     foreignKeys: [
       'created_by -> users.id on delete cascade',
       'used_by -> users.id on delete set null',

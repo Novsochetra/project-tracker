@@ -257,7 +257,6 @@ export class TrackerClient {
   acceptInvite = (input: AcceptInviteInput) =>
     this.http.request<SessionState>('POST', '/api/invites/accept', { body: input });
 
-  // Ends every other session of this account; this one and the API tokens stay.
   changePassword = (input: ChangePasswordInput) =>
     this.http.request<void>('POST', '/api/password', { body: input });
 

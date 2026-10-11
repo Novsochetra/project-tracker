@@ -42,6 +42,7 @@ describe('ResetScreen', () => {
       }),
     );
     expect(await screen.findByRole('heading', { name: 'Password set' })).toBeVisible();
+    expect(screen.getByText(/check Connect for API tokens/)).toBeVisible();
     await user.click(screen.getByRole('button', { name: 'Go to sign in' }));
     expect(screen.getByLabelText('Location')).toHaveTextContent(/^\/$/);
   });

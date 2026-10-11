@@ -17,6 +17,7 @@ function PasswordSet() {
       <h1 className={styles.title}>Password set</h1>
       <p role="status" className={styles.setup}>
         Sign in with your new password. Every phone and browser that was signed in is signed out.
+        Then check Connect for API tokens you don't recognize.
       </p>
       <GoToSignIn />
     </LinkLayout>

@@ -1,7 +1,8 @@
 import { RESET_LINK_FAILED, type CreatedResetLink, type ResetLinkCheck } from '@tracker/shared';
 import type { InviteRow, UserRow } from '../db/authTables';
 import type { Db } from '../db/schema';
-import { notFound } from '../errors';
+import { isUniqueViolation } from '../db/errors';
+import { conflict, notFound } from '../errors';
 import { deleteOpenResets } from '../repositories/invites';
 import { findUserById } from '../repositories/users';
 import { insertLink, requireUsableLink, type LinkMessages } from './links';
@@ -34,11 +35,17 @@ export async function createResetLink(
 ): Promise<CreatedResetLink> {
   await requireInvitedUser(db, userId);
   const link = { kind: 'reset' as const, createdBy: ownerId, userId, ttlMs: RESET_TTL_MS };
-  return db.transaction().execute(async (trx) => {
-    await deleteOpenResets(trx, userId);
-    const { row, secret } = await insertLink(trx, link, now);
-    return { expiresAt: row.expiresAt, secret };
-  });
+  try {
+    return await db.transaction().execute(async (trx) => {
+      await deleteOpenResets(trx, userId);
+      const { row, secret } = await insertLink(trx, link, now);
+      return { expiresAt: row.expiresAt, secret };
+    });
+  } catch (error) {
+    // Two creates at once on Postgres: the index of open links refuses the second.
+    if (isUniqueViolation(error)) throw conflict('A reset link for this account was just made.');
+    throw error;
+  }
 }
 
 export async function cancelResetLink(db: Db, userId: string): Promise<void> {

@@ -11,7 +11,6 @@ export interface InvitedUser {
   name: string;
   email: string;
   createdAt: number;
-  // When the open reset link for this account stops working, or null when there is none.
   resetExpiresAt: number | null;
 }
 
