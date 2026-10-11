@@ -17,6 +17,7 @@ export * from './domain/ticket';
 export * from './api/auth';
 export * from './api/chats';
 export * from './api/dto';
+export * from './api/invites';
 export * from './api/runs';
 export * from './api/runRequests';
 export * from './api/runSteps';

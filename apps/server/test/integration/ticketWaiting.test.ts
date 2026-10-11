@@ -77,7 +77,8 @@ describe.each(DIALECTS)('a ticket waiting for the person (%s)', (dialect) => {
 
   it('says so only to the person whose run asks', async () => {
     await asks();
-    expect(await waiting(other)).toEqual(nowhere);
+    expect((await other('GET', '/api/projects/MOB/board')).status).toBe(404);
+    expect((await other<TicketsAcrossProjects>('GET', '/api/tickets')).body.tickets).toEqual([]);
     expect(await waiting(helper)).toEqual(onMob1);
   });
 

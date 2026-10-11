@@ -1,7 +1,9 @@
 import type { Db } from '../db/schema';
+import { findOwner } from '../repositories/users';
 import type { FileStorage } from '../storage/fileStorage';
 import { copyFiles } from './copyFiles';
 import { textsNamingOldFiles, type MovedAttachment } from './movedAttachment';
+import { givenTo } from './owner';
 import { pendingUploadsLine, withoutPendingUploads } from './pendingUploads';
 import { targetProblems } from './plan';
 import { insertRows, readRows, rowCounts, type TableRows } from './rows';
@@ -82,7 +84,11 @@ async function apply({ rows, files }: Source, target: Mover): Promise<boolean> {
   };
   const moved = await copyFiles(files, storage, progress);
   reportFiles(say, rows, moved, false);
-  const movedRows = { ...rows, attachments: moved.map((file) => file.after) };
+  const owner = await findOwner(db);
+  const movedRows = givenTo(
+    { ...rows, attachments: moved.map((file) => file.after) },
+    owner?.id ?? null,
+  );
   await insertRows(db, movedRows, () => setPhase('committing'));
   setPhase('rows-written');
   say('Rows: written in one transaction.');

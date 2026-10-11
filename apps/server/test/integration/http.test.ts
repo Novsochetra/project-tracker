@@ -88,7 +88,8 @@ describe.each(DIALECTS)('http surface (%s)', (dialect) => {
         expect(await api.db.selectFrom(table).select('id').execute(), table).toEqual([]);
       }
       expect(api.storage.files.size).toBe(0);
-      expect(api.events).toEqual([{ type: 'changed', projectId: null, ticketId: null }]);
+      // Every user is gone with the rows, so no stream is left to tell.
+      expect(api.events).toEqual([]);
     });
   });
 

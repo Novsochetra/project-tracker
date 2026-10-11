@@ -15,7 +15,6 @@ import { compressImage } from '../images/compressImage';
 import { renamedFor } from '../images/imageFileName';
 import {
   deleteAttachmentRows,
-  findAttachmentById,
   finishAttachmentRow,
   insertAttachment,
   listPendingBefore,
@@ -23,8 +22,8 @@ import {
 } from '../repositories/attachments';
 import { findTicketById, updateTicketRow } from '../repositories/tickets';
 import { removeFiles, type ByteRange, type FileStorage } from '../storage/fileStorage';
-import { inTransaction, notify, type ServiceContext } from './context';
-import { requireTicket, type TicketRef } from './lookups';
+import { inTransaction, notify, type ServiceContext, type UserContext } from './context';
+import { findReachableAttachment, requireTicket, type TicketRef } from './lookups';
 import { toAttachment } from './mappers';
 import { measureUpload, readWhole, type MeasuredUpload } from './uploadStream';
 
@@ -118,7 +117,7 @@ async function contentOf(
   };
 }
 
-function pendingRow(ctx: ServiceContext, id: string, fileName: string, content: UploadContent) {
+function pendingRow(ctx: UserContext, id: string, fileName: string, content: UploadContent) {
   const { storageKey, mimeType, width, height } = content;
   return {
     id,
@@ -132,6 +131,7 @@ function pendingRow(ctx: ServiceContext, id: string, fileName: string, content: 
     activityId: null,
     position: 0,
     createdAt: ctx.now(),
+    userId: ctx.scope,
   } satisfies AttachmentRow;
 }
 
@@ -180,12 +180,9 @@ async function storeUpload(
 
 // Streamed rather than read whole first: reading a 95 MB video whole took the server from 76 MB
 // to 660 MB.
-export async function uploadAttachment(
-  ctx: ServiceContext,
-  input: UploadInput,
-): Promise<Attachment> {
+export async function uploadAttachment(ctx: UserContext, input: UploadInput): Promise<Attachment> {
   const check = checkUpload(input);
-  const ref = input.ticketKey ? await requireTicket(ctx.db, input.ticketKey) : null;
+  const ref = input.ticketKey ? await requireTicket(ctx.db, ctx.scope, input.ticketKey) : null;
   const id = randomUUID();
   const upload = measureUpload(input.body ?? new Blob([]).stream(), {
     maxBytes: ATTACHMENT_KINDS[check.kind].maxBytes,
@@ -202,8 +199,8 @@ export async function uploadAttachment(
   return toAttachment(row);
 }
 
-export async function requireAttachment(ctx: ServiceContext, id: string): Promise<AttachmentRow> {
-  const row = await findAttachmentById(ctx.db, id);
+export async function requireAttachment(ctx: UserContext, id: string): Promise<AttachmentRow> {
+  const row = await findReachableAttachment(ctx.db, ctx.scope, id);
   if (!row) throw notFound(NOT_FOUND_MESSAGE);
   return row;
 }
@@ -227,9 +224,9 @@ export async function requireAttachmentFile(
   if (!(await ctx.storage.stat(row.storageKey))) throw notFound(NOT_FOUND_MESSAGE);
 }
 
-export async function deleteAttachment(ctx: ServiceContext, id: string): Promise<void> {
+export async function deleteAttachment(ctx: UserContext, id: string): Promise<void> {
   const removed = await inTransaction(ctx, async (trx) => {
-    const found = await findAttachmentById(trx, id);
+    const found = await findReachableAttachment(trx, ctx.scope, id);
     if (!found) throw notFound(NOT_FOUND_MESSAGE);
     const owner = found.ticketId ? await findTicketById(trx, found.ticketId) : undefined;
     await deleteAttachmentRows(trx, [id]);

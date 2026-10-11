@@ -14,7 +14,7 @@ import type { Db, StatusRow } from '../db/schema';
 import { conflict } from '../errors';
 import { listStatusRows } from '../repositories/statuses';
 import { listTicketRows } from '../repositories/tickets';
-import { inTransaction, notify, type ServiceContext } from './context';
+import { inTransaction, notify, type UserContext } from './context';
 import { requireProject, requireTicketScope, ticketKeyOf, type TicketScope } from './lookups';
 import { toTicket } from './mappers';
 import type { PlannedChange } from './ticketChanges';
@@ -40,19 +40,19 @@ async function transition(
   };
 }
 
-async function finishDetail(ctx: ServiceContext, written: WrittenTicket): Promise<TicketDetail> {
+async function finishDetail(ctx: UserContext, written: WrittenTicket): Promise<TicketDetail> {
   notify(ctx, written.ticket.projectId, written.ticket.id);
-  return getTicketDetailById(ctx.db, written.ticket.id);
+  return getTicketDetailById(ctx.db, ctx.scope, written.ticket.id);
 }
 
 export async function markSent(
-  ctx: ServiceContext,
+  ctx: UserContext,
   actor: Actor,
   key: string,
   input: SentValues,
 ): Promise<Ticket> {
   const ticket = await inTransaction(ctx, async (trx) => {
-    const scope = await requireTicketScope(trx, key);
+    const scope = await requireTicketScope(trx, ctx.scope, key);
     const moves = input.moveToInProgress && scope.status.category === 'todo';
     const target = moves ? resolveStatus(scope.statuses, 'in_progress') : scope.status;
     const plan = await transition(trx, actor, scope, {
@@ -68,7 +68,7 @@ export async function markSent(
 
 async function claimInScope(
   trx: Db,
-  ctx: ServiceContext,
+  ctx: UserContext,
   actor: Actor,
   scope: TicketScope,
 ): Promise<WrittenTicket> {
@@ -89,23 +89,23 @@ async function claimInScope(
 }
 
 export async function claimTicket(
-  ctx: ServiceContext,
+  ctx: UserContext,
   actor: Actor,
   key: string,
 ): Promise<TicketDetail> {
   const written = await inTransaction(ctx, async (trx) =>
-    claimInScope(trx, ctx, actor, await requireTicketScope(trx, key)),
+    claimInScope(trx, ctx, actor, await requireTicketScope(trx, ctx.scope, key)),
   );
   return finishDetail(ctx, written);
 }
 
 export async function claimNext(
-  ctx: ServiceContext,
+  ctx: UserContext,
   actor: Actor,
   projectKey: string,
 ): Promise<TicketDetail | null> {
   const written = await inTransaction(ctx, async (trx) => {
-    const project = await requireProject(trx, projectKey);
+    const project = await requireProject(trx, ctx.scope, projectKey);
     const statuses = await listStatusRows(trx, project.id);
     const ticket = pickNextTicket(await listTicketRows(trx, project.id), statuses);
     const status = statuses.find((candidate) => candidate.id === ticket?.statusId);
@@ -125,13 +125,13 @@ export const submittedReport = (key: string, input: SubmitValues): string =>
   ].join('\n');
 
 export async function submitWork(
-  ctx: ServiceContext,
+  ctx: UserContext,
   actor: Actor,
   key: string,
   input: SubmitValues,
 ): Promise<TicketDetail> {
   const written = await inTransaction(ctx, async (trx) => {
-    const scope = await requireTicketScope(trx, key);
+    const scope = await requireTicketScope(trx, ctx.scope, key);
     const target = resolveStatus(scope.statuses, 'in_review');
     const plan = await transition(trx, actor, scope, { target, verb: 'submitted the work' });
     return writeTicket(trx, ctx.now, {
@@ -148,13 +148,13 @@ export async function submitWork(
 }
 
 export async function reviewTicket(
-  ctx: ServiceContext,
+  ctx: UserContext,
   actor: Actor,
   key: string,
   input: ReviewValues,
 ): Promise<TicketDetail> {
   const written = await inTransaction(ctx, async (trx) => {
-    const scope = await requireTicketScope(trx, key);
+    const scope = await requireTicketScope(trx, ctx.scope, key);
     if (scope.status.category !== 'in_review') {
       throw conflict(`${ticketKeyOf(scope)} is not waiting for review.`);
     }

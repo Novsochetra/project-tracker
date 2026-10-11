@@ -12,7 +12,7 @@ import type { ActivityRow, ProjectRow, TicketRow } from '../db/schema';
 import { listActivitiesOfTickets, listTicketActivities } from '../repositories/activities';
 import { listStatusRows } from '../repositories/statuses';
 import { listTicketRows } from '../repositories/tickets';
-import type { ServiceContext } from './context';
+import type { UserContext } from './context';
 import { requireProject, requireTicketScope } from './lookups';
 
 const promptProject = (project: ProjectRow): PromptProject => ({
@@ -49,15 +49,15 @@ export function promptTicket(
   };
 }
 
-export async function ticketPrompt(ctx: ServiceContext, key: string): Promise<PromptResult> {
-  const scope = await requireTicketScope(ctx.db, key);
+export async function ticketPrompt(ctx: UserContext, key: string): Promise<PromptResult> {
+  const scope = await requireTicketScope(ctx.db, ctx.scope, key);
   const activities = await listTicketActivities(ctx.db, scope.ticket.id);
   const ticket = promptTicket(scope.ticket, scope.project.key, scope.status.name, activities);
   return { text: buildTicketPrompt(promptProject(scope.project), ticket), ticketCount: 1 };
 }
 
-export async function projectPrompt(ctx: ServiceContext, key: string): Promise<PromptResult> {
-  const project = await requireProject(ctx.db, key);
+export async function projectPrompt(ctx: UserContext, key: string): Promise<PromptResult> {
+  const project = await requireProject(ctx.db, ctx.scope, key);
   const statuses = await listStatusRows(ctx.db, project.id);
   const tickets = workableTickets(await listTicketRows(ctx.db, project.id), statuses);
   if (tickets.length === 0) return { text: '', ticketCount: 0 };

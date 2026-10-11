@@ -1,4 +1,6 @@
-import type { AttachmentRow, Db } from '../db/schema';
+import type { ExpressionBuilder } from 'kysely';
+import type { UserScope } from '../auth/scope';
+import type { AttachmentRow, Database, Db } from '../db/schema';
 
 // A Postgres integer stops at 2^31 - 1 where SQLite's goes on, and a corrupt image can claim up to
 // 2^32 - 1 pixels (a 500 on Postgres only). No real image is that large, so it counts as unknown.
@@ -79,17 +81,23 @@ export async function nextTicketPosition(db: Db, ticketId: string): Promise<numb
 export async function linkAttachments(
   db: Db,
   ids: readonly string[],
-  target: { ticketId: string; activityId: string | null },
+  target: { ticketId: string; activityId: string | null; uploader: UserScope },
   firstPosition = 0,
 ): Promise<number> {
+  const { ticketId, activityId, uploader } = target;
+  const pendingOfUploader = (eb: ExpressionBuilder<Database, 'attachments'>) =>
+    eb.and([
+      eb('ticketId', 'is', null),
+      uploader === null ? eb('userId', 'is', null) : eb('userId', '=', uploader),
+    ]);
   let linked = 0;
   for (const [index, id] of ids.entries()) {
     const result = await db
       .updateTable('attachments')
-      .set({ ...target, position: firstPosition + index })
+      .set({ ticketId, activityId, position: firstPosition + index })
       .where('id', '=', id)
       .where('activityId', 'is', null)
-      .where((eb) => eb.or([eb('ticketId', 'is', null), eb('ticketId', '=', target.ticketId)]))
+      .where((eb) => eb.or([pendingOfUploader(eb), eb('ticketId', '=', ticketId)]))
       .executeTakeFirst();
     linked += Number(result.numUpdatedRows);
   }
@@ -142,6 +150,9 @@ export const listPendingBefore = (db: Db, before: number) =>
     .where('activityId', 'is', null)
     .where('createdAt', '<', before)
     .execute();
+
+export const assignOwnerlessUploads = (db: Db, userId: string) =>
+  db.updateTable('attachments').set({ userId }).where('userId', 'is', null).execute();
 
 export const allStorageKeys = async (db: Db) =>
   storageKeys(await db.selectFrom('attachments').select('storageKey').execute());

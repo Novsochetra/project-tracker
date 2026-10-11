@@ -3,6 +3,7 @@ import type { Attachment } from '../domain/attachment';
 import type { Project } from '../domain/project';
 import type { Status } from '../domain/status';
 import type { Ticket, TicketListItem } from '../domain/ticket';
+import type { UserRole } from './invites';
 
 export interface ProjectDetail {
   project: Project;
@@ -71,8 +72,10 @@ export interface ServerMeta {
 export interface SessionState {
   authRequired: boolean;
   authenticated: boolean;
-  // The owner's email, while signed in with the session cookie.
+  // The account's, while signed in with the session cookie.
   email?: string;
+  name?: string;
+  role?: UserRole;
   // Sign-in is required but nobody has set up the owner account yet (npm run owner:set).
   setupRequired?: boolean;
 }

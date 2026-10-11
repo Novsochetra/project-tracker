@@ -1,3 +1,4 @@
+import type { UserScope } from '../auth/scope';
 import type { Db } from '../db/schema';
 import { invalidInput } from '../errors';
 import {
@@ -7,9 +8,11 @@ import {
   nextTicketPosition,
 } from '../repositories/attachments';
 
-interface LinkTarget {
+// The uploader is whose files on no ticket yet may be attached.
+export interface LinkTarget {
   ticketId: string;
   activityId: string | null;
+  uploader: UserScope;
 }
 
 export async function attachUploads(
@@ -39,7 +42,7 @@ export interface LaterUploads {
 // would a create.
 export async function attachLaterUploads(
   db: Db,
-  ticketId: string,
+  { ticketId, uploader }: Pick<LinkTarget, 'ticketId' | 'uploader'>,
   ids: readonly string[],
 ): Promise<LaterUploads> {
   const own = await listTicketAttachments(db, ticketId);
@@ -49,7 +52,7 @@ export async function attachLaterUploads(
   const leftOut = named.filter((id) => !existing.has(id));
   const later = named.filter((id) => existing.has(id) && !attached.has(id));
   if (later.length === 0) return { attached: false, leftOut };
-  const target = { ticketId, activityId: null };
+  const target = { ticketId, activityId: null, uploader };
   await attachUploads(db, later, target, await nextTicketPosition(db, ticketId));
   return { attached: true, leftOut };
 }

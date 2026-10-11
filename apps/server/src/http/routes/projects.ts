@@ -1,6 +1,5 @@
 import { createProjectInput, updateProjectInput } from '@tracker/shared';
-import { Hono, type Context } from 'hono';
-import { requireScope } from '../../auth/scope';
+import { Hono } from 'hono';
 import type { ServiceContext } from '../../services/context';
 import {
   createProject,
@@ -12,27 +11,28 @@ import {
 import { projectPrompt } from '../../services/prompts';
 import { getBoard } from '../../services/ticketQueries';
 import type { AppEnv } from '../env';
+import { userContext } from '../userContext';
 import { jsonBody } from '../validation';
-
-const scope = (c: Context<AppEnv>) => requireScope(c.get('access'));
 
 export const projectRoutes = (ctx: ServiceContext) =>
   new Hono<AppEnv>()
-    .get('/projects', async (c) => c.json(await listProjectSummaries(ctx)))
+    .get('/projects', async (c) => c.json(await listProjectSummaries(userContext(ctx, c))))
     .post('/projects', jsonBody(createProjectInput), async (c) =>
-      c.json(await createProject(ctx, c.req.valid('json')), 201),
+      c.json(await createProject(userContext(ctx, c), c.req.valid('json')), 201),
     )
-    .get('/projects/:key', async (c) => c.json(await getProjectDetail(ctx, c.req.param('key'))))
+    .get('/projects/:key', async (c) =>
+      c.json(await getProjectDetail(userContext(ctx, c), c.req.param('key'))),
+    )
     .patch('/projects/:key', jsonBody(updateProjectInput), async (c) =>
-      c.json(await updateProject(ctx, c.req.param('key'), c.req.valid('json'))),
+      c.json(await updateProject(userContext(ctx, c), c.req.param('key'), c.req.valid('json'))),
     )
     .delete('/projects/:key', async (c) => {
-      await deleteProject(ctx, c.req.param('key'));
+      await deleteProject(userContext(ctx, c), c.req.param('key'));
       return c.body(null, 204);
     })
     .get('/projects/:key/board', async (c) =>
-      c.json(await getBoard(ctx, scope(c), c.req.param('key'))),
+      c.json(await getBoard(userContext(ctx, c), c.req.param('key'))),
     )
     .get('/projects/:key/prompt', async (c) =>
-      c.json(await projectPrompt(ctx, c.req.param('key'))),
+      c.json(await projectPrompt(userContext(ctx, c), c.req.param('key'))),
     );

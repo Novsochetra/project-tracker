@@ -58,7 +58,7 @@ export async function startRun(
   ticketKey: string,
   input: StartRunInput,
 ): Promise<Run> {
-  const ref = await requireTicket(ctx.db, ticketKey);
+  const ref = await requireTicket(ctx.db, scope, ticketKey);
   const runner = await requireRunnerFor(ctx, scope, input.runnerId, ref.project);
   await expireSilentRuns(ctx);
   const queued = { scope, runner, projectId: ref.project.id, now: ctx.now() };
@@ -82,7 +82,7 @@ export async function listTicketRuns(
   scope: UserScope,
   ticketKey: string,
 ): Promise<Run[]> {
-  const ref = await requireTicket(ctx.db, ticketKey);
+  const ref = await requireTicket(ctx.db, scope, ticketKey);
   await expireSilentRuns(ctx);
   const rows = await listTicketRunRows(ctx.db, scope, ref.ticket.id, TICKET_RUNS_SHOWN);
   return rows.map(toRun);

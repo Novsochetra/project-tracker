@@ -10,9 +10,10 @@ import {
   type ReportPreviewItem,
   type ReportResult,
 } from '@tracker/shared';
+import type { UserScope } from '../auth/scope';
 import type { Db, StatusRow } from '../db/schema';
 import { AppError } from '../errors';
-import { inTransaction, notify, type ServiceContext } from './context';
+import { inTransaction, notify, type UserContext } from './context';
 import {
   findTicketRef,
   loadTicketScope,
@@ -33,11 +34,12 @@ const movesTo = (from: StatusRow, to: StatusRow): boolean =>
 
 async function resolveBlock(
   db: Db,
+  user: UserScope,
   block: ParsedReportBlock,
   ticketKey: string | undefined,
 ): Promise<ResolvedBlock> {
   const key = block.key ?? ticketKey;
-  const ref = key ? await findTicketRef(db, key) : null;
+  const ref = key ? await findTicketRef(db, user, key) : null;
   if (!ref) return { block, scope: null, target: null };
   const scope = await loadTicketScope(db, ref);
   const next = block.category ? resolveStatus(scope.statuses, block.category) : null;
@@ -53,20 +55,17 @@ const previewItem = ({ block, scope, target }: ResolvedBlock): ReportPreviewItem
   toStatusName: target?.name ?? null,
 });
 
-export async function previewReport(
-  ctx: ServiceContext,
-  input: ReportInput,
-): Promise<ReportPreview> {
+export async function previewReport(ctx: UserContext, input: ReportInput): Promise<ReportPreview> {
   const items: ReportPreviewItem[] = [];
   for (const block of parseReport(input.text)) {
-    items.push(previewItem(await resolveBlock(ctx.db, block, input.ticketKey)));
+    items.push(previewItem(await resolveBlock(ctx.db, ctx.scope, block, input.ticketKey)));
   }
   return { items, matchedCount: items.filter((item) => item.matched).length };
 }
 
 async function applyBlock(
   trx: Db,
-  ctx: ServiceContext,
+  ctx: UserContext,
   actor: Actor,
   { block, scope, target }: ResolvedBlock & { scope: TicketScope },
 ): Promise<TicketRef> {
@@ -92,7 +91,7 @@ function noMatch(ticketKey: string | undefined): AppError {
 }
 
 export async function applyReport(
-  ctx: ServiceContext,
+  ctx: UserContext,
   actor: Actor,
   input: ReportInput,
 ): Promise<ReportResult> {
@@ -100,7 +99,7 @@ export async function applyReport(
     const refs: TicketRef[] = [];
     for (const block of parseReport(input.text)) {
       // Resolved one at a time so a ticket named twice sees its own earlier change.
-      const resolved = await resolveBlock(trx, block, input.ticketKey);
+      const resolved = await resolveBlock(trx, ctx.scope, block, input.ticketKey);
       if (resolved.scope)
         refs.push(await applyBlock(trx, ctx, actor, { ...resolved, scope: resolved.scope }));
     }

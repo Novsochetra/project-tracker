@@ -2,9 +2,12 @@ import { once } from 'node:events';
 import type { AddressInfo } from 'node:net';
 import { serve } from '@hono/node-server';
 import { LIVE_STALE_MS, type ChangeEvent } from '@tracker/shared';
+import { Hono } from 'hono';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createApp } from '../../src/app';
+import { OPEN_ACCESS } from '../../src/auth/access';
 import { createBroadcaster } from '../../src/events/broadcaster';
+import type { AppEnv } from '../../src/http/env';
 import { eventRoutes } from '../../src/http/routes/events';
 import { agent, imageUpload, statusOf } from '../helpers/fixtures';
 import { DIALECTS, useTestServer } from '../helpers/server';
@@ -228,13 +231,17 @@ describe('heartbeat', () => {
   it('pings at least twice before the web app gives up on a silent stream', async () => {
     vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval'] });
     const events = createBroadcaster();
-    const res = await eventRoutes(events).request('/events');
+    const open = new Hono<AppEnv>().use(async (c, next) => {
+      c.set('access', OPEN_ACCESS);
+      await next();
+    });
+    const res = await open.route('/', eventRoutes(events)).request('/events');
     const reader = res.body!.getReader();
     await readUntil(reader, /: connected\n\n/);
 
     vi.advanceTimersByTime(LIVE_STALE_MS - 1);
     // A change written after the pings ends the read even when a ping is missing.
-    events.publish({ type: 'changed', projectId: 'p-1', ticketId: null });
+    events.publish({ userId: null, event: { type: 'changed', projectId: 'p-1', ticketId: null } });
     const text = await readUntil(reader, /^data: \{.+\n\n/m);
 
     expect(text.match(/^event: ping$/gm)?.length ?? 0).toBeGreaterThanOrEqual(2);

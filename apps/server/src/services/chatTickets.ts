@@ -4,7 +4,7 @@ import type { UserScope } from '../auth/scope';
 import { notFound } from '../errors';
 import { findMessage, setMessageTicket } from '../repositories/chats';
 import { getChat, requireChat } from './chats';
-import type { ServiceContext } from './context';
+import { forUser, type ServiceContext } from './context';
 import { createTicket } from './ticketCommands';
 
 type CardValues = z.output<typeof cardTicketInput>;
@@ -29,7 +29,7 @@ export async function createCardTicket(
   const chat = await requireChat(ctx, scope, ref.chatId);
   const message = await findMessage(ctx.db, chat.id, ref.messageId);
   if (message?.role !== 'claude') throw notFound('That answer was not found.');
-  const ticket = await createTicket(ctx, actor, chat.projectKey, {
+  const ticket = await createTicket(forUser(ctx, scope), actor, chat.projectKey, {
     ...input,
     assignee: '',
     due: '',

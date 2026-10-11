@@ -7,7 +7,8 @@ import type { AuthDeps } from '../auth';
 import type { AppEnv } from '../env';
 import { jsonBody } from '../validation';
 
-// Only the owner, signed in, manages tokens: a token that leaks can't mint more of itself.
+// Only a person signed in with their password manages their tokens: a token that leaks can't mint
+// more of itself.
 function ownerId(c: Context<AppEnv>): string {
   const access = c.get('access');
   if (access?.kind === 'session') return access.userId;

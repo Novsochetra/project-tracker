@@ -12,6 +12,7 @@ import type { ServiceContext } from '../../services/context';
 import { parseByteRange } from '../byteRange';
 import type { AppEnv } from '../env';
 import { fileHeaders } from '../fileHeaders';
+import { userContext } from '../userContext';
 
 function decodeName(header: string | undefined): string {
   if (!header) return '';
@@ -40,7 +41,7 @@ function readUpload(c: Context<AppEnv>): UploadInput {
 }
 
 async function serveFile(c: Context<AppEnv>, ctx: ServiceContext): Promise<Response> {
-  const row = await requireAttachment(ctx, c.req.param('id') ?? '');
+  const row = await requireAttachment(userContext(ctx, c), c.req.param('id') ?? '');
   const headers = fileHeaders(row);
   // Hono answers HEAD with this handler, and RFC 9110 defines ranges for GET only.
   if (c.req.method === 'HEAD') {
@@ -62,9 +63,11 @@ async function serveFile(c: Context<AppEnv>, ctx: ServiceContext): Promise<Respo
 
 export const attachmentRoutes = (ctx: ServiceContext) =>
   new Hono<AppEnv>()
-    .post('/attachments', async (c) => c.json(await uploadAttachment(ctx, readUpload(c)), 201))
+    .post('/attachments', async (c) =>
+      c.json(await uploadAttachment(userContext(ctx, c), readUpload(c)), 201),
+    )
     .get('/attachments/:id/file', (c) => serveFile(c, ctx))
     .delete('/attachments/:id', async (c) => {
-      await deleteAttachment(ctx, c.req.param('id'));
+      await deleteAttachment(userContext(ctx, c), c.req.param('id'));
       return c.body(null, 204);
     });

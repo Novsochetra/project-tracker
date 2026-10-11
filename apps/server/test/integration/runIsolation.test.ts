@@ -10,8 +10,8 @@ interface Side {
   runner: string;
 }
 
-// Only one account signs in today, but runs are built for many: user B must never see, take,
-// start, end or take over anything of user A's, and the other way round.
+// User B must never see, take, start, end or take over anything of user A's, and the other way
+// round.
 describe.each(DIALECTS)("one user's runs stay theirs (%s)", (dialect) => {
   const api = useTestServer(dialect);
   let a: Side;
@@ -33,9 +33,9 @@ describe.each(DIALECTS)("one user's runs stay theirs (%s)", (dialect) => {
     await a.person('POST', '/api/projects', { name: 'Mobile', key: 'MOB' });
     await a.person('POST', '/api/projects/MOB/tickets', { title: 'Crash' });
     await a.person('POST', '/api/projects/MOB/tickets', { title: 'Login' });
-    // Both helpers serve the same project, the closest two users can come today.
+    await b.person('POST', '/api/projects', { name: 'Web', key: 'WEB' });
     await a.helper('PUT', `/api/runners/${a.runner}`, helperName('A Mac'));
-    await b.helper('PUT', `/api/runners/${b.runner}`, helperName('B Mac'));
+    await b.helper('PUT', `/api/runners/${b.runner}`, { name: 'B Mac', projectKeys: ['WEB'] });
     const started = await a.person<Run>('POST', '/api/tickets/MOB-1/runs', {
       runnerId: a.runner,
       prompt: 'Work on MOB-1',
@@ -44,7 +44,7 @@ describe.each(DIALECTS)("one user's runs stay theirs (%s)", (dialect) => {
     aRun = started.body;
   });
 
-  it("never hands A's run to B's helper, even for a project both serve", async () => {
+  it("never hands A's run to B's helper", async () => {
     expect((await b.helper('POST', `/api/runners/${b.runner}/next`)).status).toBe(204);
     expect((await a.helper('POST', `/api/runners/${a.runner}/next`)).status).toBe(200);
   });
@@ -71,22 +71,28 @@ describe.each(DIALECTS)("one user's runs stay theirs (%s)", (dialect) => {
   });
 
   it("lists only one's own runs and computers", async () => {
-    expect((await b.person<Run[]>('GET', '/api/tickets/MOB-1/runs')).body).toEqual([]);
+    expect((await b.person<Run[]>('GET', '/api/tickets/MOB-1/runs')).status).toBe(404);
     expect((await a.person<Run[]>('GET', '/api/tickets/MOB-1/runs')).body).toEqual([aRun]);
     expect((await b.person<Runner[]>('GET', '/api/runners')).body).toMatchObject([
       { id: b.runner, name: 'B Mac' },
     ]);
   });
 
-  it('runs one Claude per ticket, whoever started it, and tells B nothing more', async () => {
+  it("won't let B start a run on A's ticket, or tell B that A's run exists", async () => {
     const blocked = await b.person('POST', '/api/tickets/MOB-1/runs', {
       runnerId: b.runner,
       prompt: 'Work on MOB-1',
     });
     expect(blocked).toEqual({
-      status: 409,
-      body: { error: { code: 'conflict', message: 'Claude is already working on MOB-1.' } },
+      status: 404,
+      body: { error: { code: 'not_found', message: 'Ticket MOB-1 was not found.' } },
     });
+  });
+
+  it("won't let B's helper serve A's project", async () => {
+    const takeOn = await b.helper('PUT', `/api/runners/${b.runner}`, helperName('B Mac'));
+    expect(takeOn.status).toBe(404);
+    expect((await b.helper('POST', `/api/runners/${b.runner}/next`)).status).toBe(204);
   });
 
   it("won't let A start a run on B's computer", async () => {

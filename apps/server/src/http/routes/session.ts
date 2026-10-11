@@ -3,12 +3,15 @@ import { Hono, type Context } from 'hono';
 import type { Access } from '../../auth/access';
 import { clientAddress } from '../../auth/clientAddress';
 import { createLoginLimits, type LoginAttempt, type LoginLimits } from '../../auth/loginLimits';
-import { checkLogin, ownerExists } from '../../auth/owner';
-import { endAllSessions, endSession, startSession } from '../../auth/sessions';
+import { checkLogin } from '../../auth/login';
+import { ownerExists } from '../../auth/owner';
+import { endAllSessions, endSession } from '../../auth/sessions';
 import { AppError, forbidden } from '../../errors';
+import { findUserById } from '../../repositories/users';
 import type { AuthDeps } from '../auth';
 import type { AppEnv } from '../env';
-import { clearSessionCookie, readSessionCookie, setSessionCookie } from '../sessionCookie';
+import { clearSessionCookie, readSessionCookie } from '../sessionCookie';
+import { signedInState, signInAs } from '../signIn';
 import { jsonBodyAsSent } from '../validation';
 
 // The browser also drops its HTTP cache for the tracker, where attachment files are kept for a
@@ -17,8 +20,8 @@ const CLEAR_SITE_DATA = '"cache"';
 
 async function stateFor(deps: AuthDeps, access: Access | null): Promise<SessionState> {
   if (access?.kind === 'open') return { authRequired: false, authenticated: true };
-  if (access?.kind === 'session')
-    return { authRequired: true, authenticated: true, email: access.email };
+  const user = access?.kind === 'session' ? await findUserById(deps.db, access.userId) : undefined;
+  if (user) return signedInState(user);
   if (access) return { authRequired: true, authenticated: true };
   if (await ownerExists(deps.db)) return { authRequired: true, authenticated: false };
   return { authRequired: true, authenticated: false, setupRequired: true };
@@ -42,14 +45,11 @@ async function signIn(
   if (wait > 0) throw tooManyAttempts(c, wait);
   // Counted before the check, so attempts sent side by side can't all slip past the limit.
   limits.failed(input, at);
-  const owner = await checkLogin(deps.db, input.email, input.password);
-  if (!owner) throw new AppError('unauthorized', LOGIN_FAILED_MESSAGE);
+  const user = await checkLogin(deps.db, input.email, input.password);
+  if (!user) throw new AppError('unauthorized', LOGIN_FAILED_MESSAGE);
   limits.succeeded(input);
-  const previous = readSessionCookie(c);
-  if (previous) await endSession(deps.db, previous);
-  const session = await startSession(deps.db, owner.id, deps.now());
-  setSessionCookie(c, session.secret, session.expiresAt - at, deps.options);
-  return c.json<SessionState>({ authRequired: true, authenticated: true, email: owner.email });
+  await signInAs(c, deps, user.id);
+  return c.json(signedInState(user));
 }
 
 async function signOut(c: Context<AppEnv>, deps: AuthDeps) {

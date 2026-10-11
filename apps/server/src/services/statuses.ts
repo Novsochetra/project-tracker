@@ -11,18 +11,17 @@ import {
 } from '@tracker/shared';
 import type { z } from 'zod';
 import type { Db, StatusRow } from '../db/schema';
-import { conflict, invalidInput, notFound } from '../errors';
+import { conflict, invalidInput } from '../errors';
 import { updateProjectRow } from '../repositories/projects';
 import {
   deleteStatusRow,
-  findStatusById,
   insertStatuses,
   listStatusRows,
   updateStatusRow,
 } from '../repositories/statuses';
 import { changedFields, isEmpty } from '../util';
-import { inTransaction, notify, type ServiceContext } from './context';
-import { requireProject } from './lookups';
+import { inTransaction, notify, type ServiceContext, type UserContext } from './context';
+import { requireProject, requireStatus } from './lookups';
 import { toStatus } from './mappers';
 import { moveGroupToEnd } from './statusMoves';
 
@@ -42,23 +41,17 @@ function assertUniqueName(statuses: readonly StatusRow[], name: string, exceptId
   }
 }
 
-async function requireStatus(db: Db, id: string): Promise<StatusRow> {
-  const status = await findStatusById(db, id);
-  if (!status) throw notFound('Status was not found.');
-  return status;
-}
-
 async function touchProject(ctx: ServiceContext, trx: Db, projectId: string): Promise<void> {
   await updateProjectRow(trx, projectId, { updatedAt: ctx.now() });
 }
 
 export async function createStatus(
-  ctx: ServiceContext,
+  ctx: UserContext,
   projectKey: string,
   input: CreateStatusValues,
 ): Promise<Status> {
   const status = await inTransaction(ctx, async (trx) => {
-    const project = await requireProject(trx, projectKey);
+    const project = await requireProject(trx, ctx.scope, projectKey);
     const statuses = await listStatusRows(trx, project.id);
     assertUniqueName(statuses, input.name);
     const row: StatusRow = {
@@ -79,12 +72,12 @@ export async function createStatus(
 }
 
 export async function updateStatus(
-  ctx: ServiceContext,
+  ctx: UserContext,
   id: string,
   input: UpdateStatusValues,
 ): Promise<Status> {
   const outcome = await inTransaction(ctx, async (trx) => {
-    const current = await requireStatus(trx, id);
+    const current = await requireStatus(trx, ctx.scope, id);
     const changes = changedFields(current, input);
     if (isEmpty(changes)) return { status: current, changed: false };
     if (changes.name !== undefined) {
@@ -99,12 +92,12 @@ export async function updateStatus(
 }
 
 export async function reorderStatuses(
-  ctx: ServiceContext,
+  ctx: UserContext,
   projectKey: string,
   ids: readonly string[],
 ): Promise<Status[]> {
   const result = await inTransaction(ctx, async (trx) => {
-    const project = await requireProject(trx, projectKey);
+    const project = await requireProject(trx, ctx.scope, projectKey);
     const known = new Set((await listStatusRows(trx, project.id)).map((status) => status.id));
     const exact = ids.length === known.size && new Set(ids).size === ids.length;
     if (!exact || !ids.every((id) => known.has(id))) {
@@ -126,13 +119,13 @@ function moveTarget(statuses: readonly StatusRow[], deleted: StatusRow, moveTo?:
 }
 
 export async function deleteStatus(
-  ctx: ServiceContext,
+  ctx: UserContext,
   actor: Actor,
   id: string,
   moveTo?: string,
 ): Promise<void> {
   const status = await inTransaction(ctx, async (trx) => {
-    const current = await requireStatus(trx, id);
+    const current = await requireStatus(trx, ctx.scope, id);
     const statuses = await listStatusRows(trx, current.projectId);
     if (statuses.length <= 1) throw conflict('A project needs at least one status.');
     await moveGroupToEnd(trx, ctx.now, actor, {

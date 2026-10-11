@@ -1,7 +1,10 @@
 import { describe, expect, it, beforeAll, afterAll } from 'vitest';
 import { createApp } from '../../src/app';
 import { MIGRATIONS } from '../../src/db/migrations';
+import { migrateToLatest } from '../../src/db/migrator';
 import { createBroadcaster } from '../../src/events/broadcaster';
+import { findOwner } from '../../src/repositories/users';
+import { addOwner } from '../helpers/auth';
 import {
   moveData,
   openMoveTarget,
@@ -94,6 +97,7 @@ describe.each(DIALECTS.flatMap((dialect) => STORAGES.map((kind) => [dialect, kin
           storageKey: 'f-photo.webp',
           position: 2,
           createdAt: 1150,
+          userId: null,
         },
         expect.objectContaining({ id: 'f-notes', storageKey: 'f-notes.txt', activityId: 'a2' }),
         expect.objectContaining({ id: 'f-tiny', storageKey: 'f-tiny.png', ticketId: 't3' }),
@@ -169,6 +173,22 @@ describe.each(DIALECTS)('a dry run into %s', (dialect) => {
     expect(await target.db.introspection.getTables()).toEqual([]);
     expect(fake.calls).toEqual([]);
     expect(await sha256(source.file)).toBe(before);
+  });
+});
+
+describe.each(DIALECTS)('a target that has an owner (%s)', (dialect) => {
+  it("gives the moved projects and files to the target's owner, not to a local account", async () => {
+    const source = await writeMoveSource();
+    const target = await openTarget(dialect, 'disk');
+    await migrateToLatest(target.db);
+    await addOwner(target.db);
+    expect((await moveData(source, target)).ok).toBe(true);
+
+    const owner = await findOwner(target.db);
+    const projects = await target.db.selectFrom('projects').select('ownerId').execute();
+    expect(projects).toEqual([{ ownerId: owner!.id }]);
+    const files = await target.db.selectFrom('attachments').select('userId').execute();
+    expect(files.map((file) => file.userId)).toEqual([owner!.id, owner!.id, owner!.id]);
   });
 });
 

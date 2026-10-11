@@ -1,4 +1,10 @@
-import type { Db, ProjectRow } from '../db/schema';
+import type { ExpressionBuilder } from 'kysely';
+import type { UserScope } from '../auth/scope';
+import type { Database, Db, ProjectRow } from '../db/schema';
+
+// For any query that has projects in it, so lists across projects keep to the user's own.
+export const ownedBy = (scope: UserScope) => (eb: ExpressionBuilder<Database, 'projects'>) =>
+  scope === null ? eb('projects.ownerId', 'is', null) : eb('projects.ownerId', '=', scope);
 
 export const findProjectByKey = (db: Db, key: string) =>
   db.selectFrom('projects').selectAll().where('key', '=', key).executeTakeFirst();
@@ -6,8 +12,22 @@ export const findProjectByKey = (db: Db, key: string) =>
 export const findProjectById = (db: Db, id: string) =>
   db.selectFrom('projects').selectAll().where('id', '=', id).executeTakeFirst();
 
-export const listProjectRows = (db: Db) =>
-  db.selectFrom('projects').selectAll().orderBy('createdAt').orderBy('id').execute();
+export const listProjectRows = (db: Db, scope: UserScope) =>
+  db
+    .selectFrom('projects')
+    .selectAll()
+    .where(ownedBy(scope))
+    .orderBy('createdAt')
+    .orderBy('id')
+    .execute();
+
+// Keys are unique across the tracker, whoever owns the project.
+export async function listProjectKeys(db: Db): Promise<string[]> {
+  return (await db.selectFrom('projects').select('key').execute()).map((row) => row.key);
+}
+
+export const assignOwnerlessProjects = (db: Db, userId: string) =>
+  db.updateTable('projects').set({ ownerId: userId }).where('ownerId', 'is', null).execute();
 
 export async function insertProject(db: Db, row: ProjectRow): Promise<void> {
   await db.insertInto('projects').values(row).execute();
@@ -42,10 +62,15 @@ export interface ProjectTicketStats {
   lastUpdatedAt: number;
 }
 
-export async function ticketStatsByProject(db: Db): Promise<ProjectTicketStats[]> {
+export async function ticketStatsByProject(
+  db: Db,
+  scope: UserScope,
+): Promise<ProjectTicketStats[]> {
   const rows = await db
     .selectFrom('tickets')
     .innerJoin('statuses', 'statuses.id', 'tickets.statusId')
+    .innerJoin('projects', 'projects.id', 'tickets.projectId')
+    .where(ownedBy(scope))
     .select((eb) => [
       'tickets.projectId',
       eb.fn.countAll().as('total'),

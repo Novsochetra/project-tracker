@@ -4,6 +4,7 @@ import { Hono } from 'hono';
 import { listPeople, resetAllData } from '../../services/admin';
 import type { ServiceContext } from '../../services/context';
 import type { AppEnv } from '../env';
+import { userContext } from '../userContext';
 
 export interface MetaOptions {
   version: string;
@@ -30,7 +31,7 @@ export const miscRoutes = (ctx: ServiceContext, meta: MetaOptions) =>
   new Hono<AppEnv>()
     .get('/health', (c) => c.json({ ok: true }))
     .get('/meta', (c) => c.json(serverMeta(meta, c.req.url, c.get('access')?.kind !== 'open')))
-    .get('/people', async (c) => c.json(await listPeople(ctx)));
+    .get('/people', async (c) => c.json(await listPeople(userContext(ctx, c))));
 
 export const testResetRoutes = (ctx: ServiceContext) =>
   new Hono<AppEnv>().post('/test/reset', async (c) => {

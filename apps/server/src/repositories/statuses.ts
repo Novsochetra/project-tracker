@@ -1,5 +1,7 @@
 import { sortStatuses } from '@tracker/shared';
+import type { UserScope } from '../auth/scope';
 import type { Db, StatusRow } from '../db/schema';
+import { ownedBy } from './projects';
 
 export async function listStatusRows(db: Db, projectId: string): Promise<StatusRow[]> {
   const rows = await db
@@ -10,8 +12,13 @@ export async function listStatusRows(db: Db, projectId: string): Promise<StatusR
   return sortStatuses(rows);
 }
 
-export const listAllStatusRows = (db: Db): Promise<StatusRow[]> =>
-  db.selectFrom('statuses').selectAll().execute();
+export const listAllStatusRows = (db: Db, scope: UserScope): Promise<StatusRow[]> =>
+  db
+    .selectFrom('statuses')
+    .innerJoin('projects', 'projects.id', 'statuses.projectId')
+    .selectAll('statuses')
+    .where(ownedBy(scope))
+    .execute();
 
 export const findStatusById = (db: Db, id: string) =>
   db.selectFrom('statuses').selectAll().where('id', '=', id).executeTakeFirst();

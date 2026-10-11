@@ -48,6 +48,7 @@ const PHOTO: AttachmentRow = {
   storageKey: 'f1.jpg',
   position: 3,
   createdAt: 1000,
+  userId: null,
 };
 
 const NOTES: AttachmentRow = {

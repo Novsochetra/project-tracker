@@ -20,6 +20,8 @@ export interface ProjectRow {
   nextNum: number;
   createdAt: number;
   updatedAt: number;
+  // Null only on a tracker without an owner yet (services/lookups.ts).
+  ownerId: string | null;
 }
 
 export interface StatusRow {
@@ -74,6 +76,8 @@ export interface AttachmentRow {
   // Where it lists among its ticket's or comment's files (then by createdAt).
   position: number;
   createdAt: number;
+  // Who uploaded it: a file on no ticket yet is only theirs.
+  userId: string | null;
 }
 
 export interface Database extends AuthTables, ChatTables, RunTables {

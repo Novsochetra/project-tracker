@@ -250,7 +250,7 @@ describe.each(DIALECTS)('chats with Claude Code (%s)', (dialect) => {
     const other = await addUser(api.db, 'other@example.com', clock.now());
     const stranger = caller(() => api.app, other.person);
     expect((await stranger('GET', `/api/chats/${chatId}`)).status).toBe(404);
-    expect((await stranger<Chat[]>('GET', '/api/projects/MOB/chats')).body).toEqual([]);
+    expect((await stranger('GET', '/api/projects/MOB/chats')).status).toBe(404);
     expect(
       (await stranger('POST', `/api/chats/${chatId}/messages`, { runnerId: runner, text: 'Q' }))
         .status,

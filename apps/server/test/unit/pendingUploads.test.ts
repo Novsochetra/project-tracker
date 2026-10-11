@@ -15,6 +15,7 @@ const ON_TICKET: AttachmentRow = {
   storageKey: 'f1.webp',
   position: 0,
   createdAt: 1000,
+  userId: null,
 };
 
 const ON_COMMENT: AttachmentRow = { ...ON_TICKET, id: 'f2', activityId: 'a1' };

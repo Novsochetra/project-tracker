@@ -6,6 +6,7 @@ const TABLES_IN_DELETE_ORDER = [
   'runners',
   'apiTokens',
   'sessions',
+  'invites',
   'users',
   'attachments',
   'activities',
