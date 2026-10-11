@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { fakeClient } from '../../src/api/test/fakeClient';
 import { makeBoard, makeTicketDetail } from '../../src/api/test/fixtures';
 import { createTestQueryClient } from '../../src/api/test/render';
+import { ProjectScreen, TicketScreen } from '../../src/app/lazyParts';
 import { projectSummary } from '../../src/app/test/harness';
 import { TrackerApp } from '../../src/app/TrackerApp';
 import { mockPhone, skipAnimations, tap } from '../../src/overlays/testing';
@@ -34,10 +35,14 @@ vi.mock('../../src/features/ticket/TicketScreen', async (importOriginal) => {
   return importOriginal();
 });
 
-const arrive = async (gate: (typeof gates)['project']) => {
+// All of the code, not only the gate: under load it came after a find gave up (PT-176).
+const arrive = async (
+  gate: (typeof gates)['project'],
+  screenPart: { preload: () => Promise<unknown> },
+) => {
   await act(async () => {
     gate.open();
-    await gate.arrived;
+    await screenPart.preload();
   });
 };
 
@@ -74,7 +79,7 @@ describe('regression: a second tap while the screen’s code is on its way', () 
     const row = await within(main).findByRole('button', { name: /^Mobile app/ });
     await tap(user, row);
     await tap(user, row);
-    await arrive(gates.project);
+    await arrive(gates.project, ProjectScreen);
     expect(await screen.findByText('Ticket 1')).toBeInTheDocument();
     expect(window.location.pathname).toBe('/p/MOB');
 
@@ -83,13 +88,13 @@ describe('regression: a second tap while the screen’s code is on its way', () 
   });
 
   it('on a ticket row pushes nothing more, so one Back returns to the project', async () => {
-    await arrive(gates.project);
+    await arrive(gates.project, ProjectScreen);
     const user = userEvent.setup();
     renderApp('/p/MOB');
     const row = await screen.findByRole('button', { name: /^MOB-1\b/ });
     await tap(user, row);
     await tap(user, row);
-    await arrive(gates.ticket);
+    await arrive(gates.ticket, TicketScreen);
     // The bar is drawn again once the ticket is read, so its Back is taken after that.
     expect(await screen.findByRole('region', { name: 'Activity' })).toBeInTheDocument();
     expect(window.location.pathname).toBe('/p/MOB/1');

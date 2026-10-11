@@ -6,6 +6,7 @@ import { fakeClient } from '../api/test/fakeClient';
 import { makeBoard } from '../api/test/fixtures';
 import { createTestQueryClient } from '../api/test/render';
 import { skipAnimations } from '../overlays/testing';
+import { ProjectScreen } from './lazyParts';
 import { projectSummary } from './test/harness';
 import { TrackerApp } from './TrackerApp';
 
@@ -79,7 +80,8 @@ describe('opening a project', () => {
 
     await act(async () => {
       gate.open();
-      await gate.arrived;
+      // All of the code, not only the gate: under load it came after a find gave up (PT-176).
+      await ProjectScreen.preload();
     });
     expect(await screen.findByText('Ticket 1')).toBeInTheDocument();
     expect(getBoard).toHaveBeenCalledTimes(1);

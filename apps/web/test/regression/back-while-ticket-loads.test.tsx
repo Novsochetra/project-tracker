@@ -1,10 +1,11 @@
 import type { SessionState } from '@tracker/shared';
 import { act, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { fakeClient } from '../../src/api/test/fakeClient';
 import { makeBoard, makeTicketDetail } from '../../src/api/test/fixtures';
 import { createTestQueryClient } from '../../src/api/test/render';
+import { ProjectScreen, TicketScreen } from '../../src/app/lazyParts';
 import { projectSummary } from '../../src/app/test/harness';
 import { TrackerApp } from '../../src/app/TrackerApp';
 import { mockPhone, skipAnimations, tap } from '../../src/overlays/testing';
@@ -43,6 +44,9 @@ const ticketRow = () => screen.findByRole('button', { name: /^MOB-1\b/ });
 
 let restore: Array<() => void> = [];
 
+// Not what they test: under load the screen's code came after a find gave up (PT-176).
+beforeAll(() => ProjectScreen.preload());
+
 beforeEach(() => {
   restore = [skipAnimations(), mockPhone(true)];
 });
@@ -77,7 +81,8 @@ describe('regression: Back while a ticket’s code is on its way', () => {
 
     await act(async () => {
       gate.open();
-      await gate.arrived;
+      // All of the code, not only the gate: under load it came after a find gave up (PT-176).
+      await TicketScreen.preload();
     });
     expect(window.location.pathname).toBe('/');
     expect(await within(main).findByRole('button', { name: /^Mobile app/ })).toBeInTheDocument();

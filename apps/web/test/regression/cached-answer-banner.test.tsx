@@ -2,11 +2,12 @@ import { TrackerClient } from '@tracker/client';
 import type { SessionState } from '@tracker/shared';
 import { act, cleanup, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { NETWORK_ERROR_MESSAGE, queryKeys } from '../../src/api';
 import { makeBoard, otherProject } from '../../src/api/test/fixtures';
 import { createTestQueryClient } from '../../src/api/test/render';
 import { announce } from '../../src/app/announce';
+import { ProjectScreen } from '../../src/app/lazyParts';
 import { projectSummary } from '../../src/app/test/harness';
 import { TrackerApp } from '../../src/app/TrackerApp';
 import { QUEUE_STORAGE_KEY } from '../../src/features/capture/queueStore';
@@ -97,6 +98,9 @@ const captureRequests = (network: FakeNetwork) =>
   network.requests.filter((request) => request.includes('/api/projects/MOB/tickets'));
 
 let restore: Array<() => void> = [];
+
+// Not what they test: under load the screen's code came after a find gave up (PT-176).
+beforeAll(() => ProjectScreen.preload());
 
 beforeEach(() => {
   restore = [skipAnimations()];
