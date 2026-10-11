@@ -6,6 +6,7 @@ import { resetListView } from '../../src/features/project/listViewStore';
 import { renderProject } from '../../src/features/project/test/renderProject';
 import { mockPhone, skipAnimations, tap } from '../../src/overlays/testing';
 import { GAPS } from './doubleClick';
+import { advance, stillClock } from './stillClock';
 
 // A row's swipe actions open an action sheet from the bottom of the screen. Near the bottom bar a
 // double tap on the swipe's Delete deleted the ticket, and on its Status moved the ticket to Done
@@ -17,7 +18,6 @@ vi.mock('../../src/features/projects/ProjectOptionsButton', () => ({
   ProjectOptionsButton: () => null,
 }));
 
-const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 const pending = () => new Promise(() => undefined);
 
 let restore: Array<() => void> = [];
@@ -42,8 +42,9 @@ function swipeAction(key: string, label: string): HTMLElement {
 async function doubleTap(label: string, sheetName: string, row: string, gap: number) {
   const user = userEvent.setup();
   await screen.findByRole('region', { name: 'To do' });
+  restore.push(stillClock());
   await tap(user, swipeAction('MOB-1', label));
-  if (gap > 0) await wait(gap);
+  if (gap > 0) await advance(gap);
   const sheet = screen.getByRole('dialog', { name: sheetName });
   await tap(user, within(sheet).getByRole('button', { name: row }));
   return sheet;
@@ -54,7 +55,7 @@ describe('regression: a double tap on a row swipe action never presses the sheet
     const deleteTicket = vi.fn(pending);
     renderProject({ client: { deleteTicket } });
     const sheet = await doubleTap('Delete', 'Delete ticket', 'Delete ticket', gap);
-    await wait(50);
+    await advance(50);
     expect(deleteTicket).not.toHaveBeenCalled();
     expect(sheet).toHaveTextContent("Delete MOB-1? This can't be undone.");
     expect(screen.getByRole('button', { name: /^MOB-1\b/ })).toBeInTheDocument();
@@ -64,7 +65,7 @@ describe('regression: a double tap on a row swipe action never presses the sheet
     const updateTicket = vi.fn(pending);
     renderProject({ client: { updateTicket } });
     const sheet = await doubleTap('Status', 'Status', 'Done', gap);
-    await wait(50);
+    await advance(50);
     expect(updateTicket).not.toHaveBeenCalled();
     expect(sheet).toHaveTextContent('Move MOB-1 to');
     expect(screen.queryByText('MOB-1 moved to Done')).not.toBeInTheDocument();

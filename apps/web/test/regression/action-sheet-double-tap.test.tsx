@@ -9,16 +9,15 @@ import { ItemMenu } from '../../src/features/ticket/activity/ItemMenu';
 import { CLICK_SHIELD_MS } from '../../src/lib/clickShield';
 import { mockPhone, skipAnimations, tap } from '../../src/overlays/testing';
 import { GAPS, type User } from './doubleClick';
+import { advance, stillClock } from './stillClock';
 
 // On phones a double tap on Delete comment deleted the comment without a real confirm (WebKit,
 // iPhone 13 at 375×812): the action sheet turned into its confirm, whose Delete row took the place
 // of Delete comment, under the second tap 0–200 ms later. Delete report, Delete review and Delete
 // project did the same. jsdom has no layout, so each test taps the row the browser found there.
 
-const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-
 // A deleted comment, report or review leaves after the sheet's exit.
-const afterExit = () => wait(DURATION.sheetOut + 50);
+const afterExit = () => advance(DURATION.sheetOut);
 
 let restore: Array<() => void> = [];
 
@@ -32,7 +31,7 @@ afterEach(() => {
 
 async function doubleTap(user: User, first: string, second: string, gap: number) {
   await tap(user, screen.getByRole('button', { name: first }));
-  if (gap > 0) await wait(gap);
+  if (gap > 0) await advance(gap);
   await tap(user, screen.getByRole('button', { name: second }));
 }
 
@@ -40,11 +39,12 @@ async function openItemSheet(noun: string) {
   const onDelete = vi.fn();
   const onEdit = noun === 'comment' ? vi.fn() : undefined;
   renderWithApp(<ItemMenu noun={noun} onEdit={onEdit} onDelete={onDelete} />);
+  restore.push(stillClock());
   const user = userEvent.setup();
   const name = `${noun.charAt(0).toUpperCase()}${noun.slice(1)} options`;
   await user.click(screen.getByRole('button', { name }));
   // A person reads the sheet before tapping one of its rows.
-  await wait(CLICK_SHIELD_MS);
+  await advance(CLICK_SHIELD_MS);
   return { user, onDelete };
 }
 
@@ -70,9 +70,10 @@ describe('regression: a double tap on Delete in an action sheet never confirms t
       client: { deleteProject },
       projects: [projectSummary({ totalCount: 4 })],
     });
+    restore.push(stillClock());
     const user = userEvent.setup();
     await user.click(screen.getByRole('button', { name: 'Project options' }));
-    await wait(CLICK_SHIELD_MS);
+    await advance(CLICK_SHIELD_MS);
     await doubleTap(user, 'Delete project', 'Delete project', gap);
     expect(deleteProject).not.toHaveBeenCalled();
     expect(screen.getByRole('alert')).toHaveTextContent('and its 4 tickets?');
@@ -84,9 +85,10 @@ describe('regression: a double tap on Delete in an action sheet never confirms t
       path: '/p/MOB/ask/c-1',
       client: { deleteChat },
     });
+    restore.push(stillClock());
     const user = userEvent.setup();
     await user.click(screen.getByRole('button', { name: 'Chat options' }));
-    await wait(CLICK_SHIELD_MS);
+    await advance(CLICK_SHIELD_MS);
     await doubleTap(user, 'Delete chat', 'Delete chat', gap);
     expect(deleteChat).not.toHaveBeenCalled();
     expect(screen.getByRole('alert')).toHaveTextContent('Delete this chat?');
@@ -95,7 +97,7 @@ describe('regression: a double tap on Delete in an action sheet never confirms t
   it('deletes on a tap once the double tap is over', async () => {
     const { user, onDelete } = await openItemSheet('comment');
     await tap(user, screen.getByRole('button', { name: 'Delete comment' }));
-    await wait(CLICK_SHIELD_MS);
+    await advance(CLICK_SHIELD_MS);
     await tap(user, screen.getByRole('button', { name: 'Delete' }));
     await afterExit();
     expect(onDelete).toHaveBeenCalledTimes(1);
