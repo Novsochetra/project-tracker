@@ -22,3 +22,6 @@ export const personReadsRequests = refuseAgents('Only a person reads what Claude
 
 // Only the person decides what Claude may do; an agent could otherwise allow itself anything.
 export const personAnswers = refuseAgents('Only a person answers what Claude asks.');
+
+// A chat is the person's own conversation with Claude; an agent never removes one.
+export const personDeletesChats = refuseAgents('Only a person deletes a chat.');

@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query';
 import type { AskInput, CardTicketInput, Chat, ChatDetail, Run } from '@tracker/shared';
 import { useApi } from '../context';
+import { isNotFound } from '../errors';
 import { queryKeys } from '../queryKeys';
 import type { TrackerMutation, TrackerQuery } from '../types';
 import { isWorking, WORKING_RUN_REFRESH_MS } from '../workingRun';
@@ -125,11 +126,18 @@ export function useRunCardTicket(): TrackerMutation<Run, RunCardTicketVariables>
   });
 }
 
+// Deleted in another tab or on another device while this one missed the event: the person's
+// wish is done.
+function goneAlready(error: unknown): void {
+  if (!isNotFound(error)) throw error;
+}
+
 export function useDeleteChat(): TrackerMutation<void, DeleteChatVariables> {
   const client = useApi();
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ chatId }: DeleteChatVariables) => client.deleteChat(chatId),
+    mutationKey: queryKeys.deletingChat(),
+    mutationFn: ({ chatId }: DeleteChatVariables) => client.deleteChat(chatId).catch(goneAlready),
     // The chat's own query stays until it is unused: removing it under the open screen would
     // refetch it, and its 404 would navigate away a second time.
     onSuccess: (_result, { projectKey, chatId }) => {

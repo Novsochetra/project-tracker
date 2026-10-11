@@ -1,6 +1,7 @@
 import {
   LIVE_STALE_MS,
   type ChangeEvent,
+  type ChatDeletedEvent,
   type RunEvent,
   type RunRequestEvent,
   type RunStepEvent,
@@ -8,6 +9,7 @@ import {
 import { retryDelay } from './backoff';
 import {
   parseChangeEvent,
+  parseChatDeletedEvent,
   parseRunEvent,
   parseRunRequestEvent,
   parseRunStepEvent,
@@ -19,6 +21,7 @@ export interface LiveHandlers {
   onRun: (event: RunEvent) => void;
   onRunStep: (event: RunStepEvent) => void;
   onRunRequest: (event: RunRequestEvent) => void;
+  onChatDeleted: (event: ChatDeletedEvent) => void;
   onReconnect: () => void;
   // While true, reads can wait for onReconnect: it runs once the stream reports every later change.
   onRefreshPending: (pending: boolean) => void;
@@ -105,6 +108,7 @@ export function connectLiveUpdates(
   const onRun = relay(alive, parseRunEvent, handlers.onRun);
   const onRunStep = relay(alive, parseRunStepEvent, handlers.onRunStep);
   const onRunRequest = relay(alive, parseRunRequestEvent, handlers.onRunRequest);
+  const onChatDeleted = relay(alive, parseChatDeletedEvent, handlers.onChatDeleted);
   const onError = () => {
     if (source?.readyState === EventSource.CLOSED) {
       reopenLater();
@@ -124,6 +128,7 @@ export function connectLiveUpdates(
     source.addEventListener('run', onRun);
     source.addEventListener('run-step', onRunStep);
     source.addEventListener('run-request', onRunRequest);
+    source.addEventListener('chat-deleted', onChatDeleted);
     source.addEventListener('ping', alive);
     source.addEventListener('error', onError);
     alive();

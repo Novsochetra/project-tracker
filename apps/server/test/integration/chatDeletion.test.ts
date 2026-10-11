@@ -95,6 +95,16 @@ describe.each(DIALECTS)('deleting a chat (%s)', (dialect) => {
     expect((await next()).body).toBeNull();
   });
 
+  it("tells the user's other tabs and devices the chat is gone", async () => {
+    const chatId = await answered('Yes.');
+    const events = await helperEvents();
+    expect((await remove(chatId)).status).toBe(204);
+    await readUntil(
+      events,
+      new RegExp(`event: chat-deleted\ndata: \\{"type":"chat-deleted","chatId":"${chatId}"`),
+    );
+  });
+
   it('lets only the person who owns the chat delete it', async () => {
     const chatId = await answered('Yes.');
     const other = await addUser(api.db, 'other@example.com', clock.now());
@@ -106,7 +116,10 @@ describe.each(DIALECTS)('deleting a chat (%s)', (dialect) => {
         )
       ).status,
     ).toBe(404);
-    expect((await remove(chatId, helper)).status).toBe(403);
+    expect(await remove(chatId, helper)).toMatchObject({
+      status: 403,
+      body: { error: { message: 'Only a person deletes a chat.' } },
+    });
     expect((await person('GET', `/api/chats/${chatId}`)).status).toBe(200);
   });
 });
