@@ -1,4 +1,5 @@
 import { prefersReducedMotionNow } from '../../lib/media';
+import { visibleTop } from '../../navigation/visibleTop';
 import { scrollParent } from '../steps/followEnd';
 
 const GAP = 8;
@@ -23,12 +24,6 @@ const visibleBottom = (): number => {
   const viewport = window.visualViewport;
   return viewport ? viewport.offsetTop + viewport.height : window.innerHeight;
 };
-
-// The sticky nav bar covers the top of what scrolls under it.
-function visibleTop(scroller: HTMLElement): number {
-  const bar = scroller.querySelector('[data-navbar]');
-  return bar ? bar.getBoundingClientRect().bottom : scroller.getBoundingClientRect().top;
-}
 
 function reveal(target: HTMLElement): void {
   const scroller = scrollParent(target);

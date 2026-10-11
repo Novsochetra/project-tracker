@@ -1,6 +1,7 @@
 import { useEffect, useRef, type RefObject } from 'react';
 import { prefersReducedMotionNow } from '../lib/media';
 import { lastEditedField } from './useEditingText';
+import { visibleTop } from './visibleTop';
 
 export interface Edges {
   top: number;
@@ -25,12 +26,10 @@ export const scrollToClearBar: Plan = (box, view, barHeight) => {
 export const scrollAfterEditing: Plan = (box, view, barHeight) =>
   box.top >= view.bottom ? 0 : scrollToClearBar(box, view, barHeight);
 
-// The screen's nav bar sticks over the top of its scroller.
-function viewOf(scroller: HTMLElement): Edges {
-  const { top, bottom } = scroller.getBoundingClientRect();
-  const navBar = scroller.querySelector('[data-navbar]');
-  return { top: navBar ? navBar.getBoundingClientRect().bottom : top, bottom };
-}
+const viewOf = (scroller: HTMLElement): Edges => ({
+  top: visibleTop(scroller),
+  bottom: scroller.getBoundingClientRect().bottom,
+});
 
 // To a position, not by a distance: WebKit runs a smooth scroll on its own thread, so while the
 // page is busy the scroll moves on from where the page measured the box, and a distance added to
