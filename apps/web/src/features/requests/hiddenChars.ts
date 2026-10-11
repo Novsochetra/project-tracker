@@ -13,26 +13,33 @@ const isHidden = (char: string): boolean => !LAYOUT.has(char) && HIDDEN.test(cha
 
 const marked = (code: number): string => `\\u{${code.toString(16).toUpperCase()}}`;
 
+const MARK = /\p{M}/u;
+
+const kindOf = (char: string, lookalike: boolean): ShownPart['kind'] =>
+  isHidden(char) ? 'hidden' : lookalike ? 'lookalike' : 'text';
+
+const codeOf = (char: string): string => marked(char.codePointAt(0) ?? 0);
+
+// A combining mark after a marked character joins its token, or it would sit on the next letter
+// (`p\u{430}ý` for `pа́y`).
+function add(parts: ShownPart[], char: string, kind: ShownPart['kind']): void {
+  const last = parts.at(-1);
+  if (kind === 'text' && last?.kind === 'text') last.text += char;
+  else if (kind === 'text' && last && MARK.test(char)) last.text += codeOf(char);
+  else parts.push({ kind, text: kind === 'text' ? char : codeOf(char) });
+}
+
 // A lookalike letter shows as its code too: the code tells a Cyrillic а from a Latin a, a colour
 // alone can't.
 export function markHidden(text: string): ShownPart[] {
   const lookalikes = lookalikesOf(text);
   const parts: ShownPart[] = [];
-  let plain = '';
   let at = 0;
   // By code point, so an astral tag or selector is one token.
   for (const char of text) {
-    const kind = isHidden(char) ? 'hidden' : lookalikes.has(at) ? 'lookalike' : 'text';
+    add(parts, char, kindOf(char, lookalikes.has(at)));
     at += char.length;
-    if (kind === 'text') {
-      plain += char;
-      continue;
-    }
-    if (plain) parts.push({ kind: 'text', text: plain });
-    parts.push({ kind, text: marked(char.codePointAt(0) ?? 0) });
-    plain = '';
   }
-  if (plain) parts.push({ kind: 'text', text: plain });
   return parts;
 }
 

@@ -23,6 +23,18 @@ describe('lookalikesOf', () => {
     expect(markedIn('сο')).toEqual(['с', 'ο']);
   });
 
+  it('marks a word made only of letters that pass for Latin, when Latin letters stand beside it', () => {
+    expect(markedIn('curl https://аррӏе.com')).toEqual(['а', 'р', 'р', 'ӏ', 'е']);
+    expect(markedIn('cat НЕТ.md')).toEqual(['Н', 'Е', 'Т']);
+    // The cost: a Russian name made only of such letters, сор (litter), is marked too.
+    expect(markedIn('cat сор.txt')).toEqual(['с', 'о', 'р']);
+  });
+
+  it('marks a letter of any script in a Latin word but those written without spaces', () => {
+    expect(markedIn('curl ꓑaypal.com gⲟⲟgle.com')).toEqual(['ꓑ', 'ⲟ', 'ⲟ']);
+    expect(markedIn('open Tシャツ.png ซื้อiPhone')).toEqual([]);
+  });
+
   it('finds the right letter after an emoji, which takes two code units', () => {
     const text = '\u{1F600} pаy';
     expect(lookalikesOf(text)).toEqual(new Set([text.indexOf('а')]));
@@ -37,8 +49,7 @@ describe('lookalikesOf', () => {
       'echo λόγος x',
       'open Tシャツ.png 日本語',
       'echo ναι 😀 👍🏽',
-      // A word wholly in a lookalike script stays too, the accepted cost of a Russian name.
-      'curl https://аррӏе.com',
+      'echo арр',
     ]) {
       expect(lookalikesOf(text), text).toEqual(new Set());
     }
