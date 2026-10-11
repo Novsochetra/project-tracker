@@ -358,10 +358,9 @@ describe('refusedImageProblems', () => {
     expect(problems).toEqual([
       "1 image(s) can't go online as they are: their metadata (such as where a photo was " +
         'taken) can’t be removed. In the local tracker, remove each one listed with only a ticket ' +
-        'key from that ticket’s files. A file on a comment, report or review can’t be removed ' +
-        'alone: delete that comment, report or review instead (copy its text first if you want ' +
-        'to post it again as a comment, with a copy of the image saved again). Then run the move ' +
-        'again:',
+        'key from that ticket’s files. A file on a comment can’t be removed alone: delete that ' +
+        'comment instead (copy its text first if you want to post it again, with a copy of the ' +
+        'image saved again). Then run the move again:',
       '  - f-scan (PT-12, scan.jpg, 4 KB): Only images can be attached.',
     ]);
     expect(problems.join('\n')).not.toContain('Secret title');

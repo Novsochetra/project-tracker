@@ -44,7 +44,7 @@ describe('a move refusing an image on a comment or review', () => {
       lines.some((l) => l.startsWith('    - f-review-scan (a review on MOB-3, scan.jpg')),
     ).toBe(true);
     const refusal = lines.find((l) => l.includes("can't go online as they are")) ?? '';
-    expect(refusal).toMatch(/delete that comment, report or review/);
+    expect(refusal).toMatch(/delete that comment instead/);
     expect(refusal).not.toMatch(/delete each from the ticket or comment/);
   });
 });

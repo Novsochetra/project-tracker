@@ -12,8 +12,10 @@ export const isPostgresUrl = (url: string): boolean => /^postgres(ql)?:\/\//i.te
 // A URL, typo or not, wherever it starts (quotes, a space or its name in front): as a SQLite path,
 // postgresql:/user:pw@… (one slash) was printed and made folders named after the password. A scheme
 // is two or more letters before :/ (a Windows drive has one); with no slash only postgres: counts, so
-// a file name holding a colon (tracker-10:30.db) stays a path, as it was before PT-137.
-export const looksLikeUrl = (url: string): boolean => /:\/\/|[a-z]{2}:\/|postgres(ql)?:/i.test(url);
+// a file name holding a colon (tracker-10:30.db) stays a path, as it was before PT-137. A colon
+// with an @ after it is a user:password@ whatever the scheme, so a password is never printed.
+export const looksLikeUrl = (url: string): boolean =>
+  /:\/\/|[a-z]{2}:\/|postgres(ql)?:|:[^@]*@/i.test(url);
 
 export function createKysely(dialect: Dialect): Db {
   return new Kysely<Database>({ dialect, plugins: [new CamelCasePlugin(), new StripNulPlugin()] });
