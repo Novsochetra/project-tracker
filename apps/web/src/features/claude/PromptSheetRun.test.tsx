@@ -3,9 +3,10 @@ import userEvent from '@testing-library/user-event';
 import { ApiError } from '@tracker/client';
 import type { Run, Runner } from '@tracker/shared';
 import { useState } from 'react';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { listItem, makeTicketDetail, STATUS } from '../../api/test/fixtures';
 import { DARA, makeRun, makeRunner } from '../../api/test/runFixtures';
+import { ConnectSheet } from '../../app/lazyParts';
 import { useSheets } from '../../app/sheets/context';
 import { SheetsProvider } from '../../app/sheets/SheetsProvider';
 import { LAST_HELPER_STORAGE_KEY } from './lastHelper';
@@ -54,6 +55,9 @@ const comesBefore = (first: Element, second: Element) =>
   Boolean(first.compareDocumentPosition(second) & Node.DOCUMENT_POSITION_FOLLOWING);
 
 let restore: () => void;
+
+// Not what they test: under load the sheet's code came after a find gave up (PT-176).
+beforeAll(() => ConnectSheet.preload());
 
 beforeEach(() => {
   localStorage.clear();

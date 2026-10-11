@@ -1,10 +1,11 @@
 import type { SessionState } from '@tracker/shared';
 import { act, render, screen } from '@testing-library/react';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { fakeClient } from '../../src/api/test/fakeClient';
 import { defaultTickets, listItem, makeBoard, STATUS } from '../../src/api/test/fixtures';
 import { MockEventSource } from '../../src/api/test/mockEventSource';
 import { createTestQueryClient } from '../../src/api/test/render';
+import { ProjectScreen } from '../../src/app/lazyParts';
 import { projectSummary } from '../../src/app/test/harness';
 import { TrackerApp } from '../../src/app/TrackerApp';
 import { skipAnimations } from '../../src/overlays/testing';
@@ -50,6 +51,9 @@ const advance = (ms: number) => act(() => vi.advanceTimersByTimeAsync(ms));
 const banner = () => document.querySelector('.banner');
 
 let restore: Array<() => void> = [];
+
+// Not what they test: under load the screen's code came after a find gave up (PT-176).
+beforeAll(() => ProjectScreen.preload());
 
 beforeEach(() => {
   vi.useFakeTimers({ shouldAdvanceTime: true });

@@ -7,14 +7,13 @@ import { ItemMenu } from '../../src/features/ticket/activity/ItemMenu';
 import { CLICK_SHIELD_MS } from '../../src/lib/clickShield';
 import { mockPhone, skipAnimations } from '../../src/overlays/testing';
 import { GAPS } from './doubleClick';
+import { advance, stillClock } from './stillClock';
 
 // Double-clicking Delete comment or Delete report deleted it without a real confirm (Chromium and
 // WebKit, 1280×800). Near the bottom of the screen the menu opens above its button; the first click
 // turned it into the taller delete confirm, which was placed again to grow upward, and that put the
 // confirm's Delete button where Delete comment had been, under the second click 120–200 ms later.
 // jsdom has no layout, so each test clicks the confirm's button the browser found there.
-
-const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 let restore: Array<() => void> = [];
 
@@ -29,6 +28,7 @@ afterEach(() => {
 function renderCommentMenu() {
   const onDelete = vi.fn();
   renderWithApp(<ItemMenu noun="comment" onEdit={vi.fn()} onDelete={onDelete} />);
+  restore.push(stillClock());
   return { user: userEvent.setup(), onDelete };
 }
 
@@ -44,7 +44,7 @@ describe('regression: a double-click on Delete in a ••• menu never confirm
   it.each(GAPS)('Delete comment keeps its confirm (%i ms apart)', async (gap) => {
     const { user, onDelete } = renderCommentMenu();
     await openConfirm(user);
-    if (gap > 0) await wait(gap);
+    if (gap > 0) await advance(gap);
     await user.click(screen.getByRole('button', { name: 'Delete' }));
     expect(onDelete).not.toHaveBeenCalled();
     confirmShown();
@@ -54,7 +54,7 @@ describe('regression: a double-click on Delete in a ••• menu never confirm
   it('keeps the confirm when the second click lands on Cancel', async () => {
     const { user } = renderCommentMenu();
     await openConfirm(user);
-    await wait(120);
+    await advance(120);
     await user.click(screen.getByRole('button', { name: 'Cancel' }));
     confirmShown();
   });
@@ -62,7 +62,7 @@ describe('regression: a double-click on Delete in a ••• menu never confirm
   it('deletes on a click once the double-click is over', async () => {
     const { user, onDelete } = renderCommentMenu();
     await openConfirm(user);
-    await wait(CLICK_SHIELD_MS);
+    await advance(CLICK_SHIELD_MS);
     await user.click(screen.getByRole('button', { name: 'Delete' }));
     expect(onDelete).toHaveBeenCalledTimes(1);
   });
@@ -83,10 +83,11 @@ describe('regression: a double-click on Delete in a ••• menu never confirm
       client: { deleteProject },
       projects: [projectSummary({ totalCount: 4 })],
     });
+    restore.push(stillClock());
     const user = userEvent.setup();
     await user.click(screen.getByRole('button', { name: 'Project options' }));
     await user.click(screen.getByRole('button', { name: 'Delete project' }));
-    if (gap > 0) await wait(gap);
+    if (gap > 0) await advance(gap);
     await user.click(screen.getByRole('button', { name: 'Delete' }));
     expect(deleteProject).not.toHaveBeenCalled();
     expect(screen.getByRole('alert')).toHaveTextContent('Delete this project and its 4 tickets?');

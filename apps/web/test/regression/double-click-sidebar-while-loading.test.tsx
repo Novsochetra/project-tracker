@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { fakeClient } from '../../src/api/test/fakeClient';
 import { makeBoard } from '../../src/api/test/fixtures';
 import { createTestQueryClient } from '../../src/api/test/render';
+import { ProjectScreen } from '../../src/app/lazyParts';
 import { projectSummary } from '../../src/app/test/harness';
 import { TrackerApp } from '../../src/app/TrackerApp';
 import { skipAnimations } from '../../src/overlays/testing';
@@ -51,7 +52,8 @@ describe('regression: a double click on a sidebar project while its code is on i
     await user.dblClick(await within(sidebar).findByRole('button', { name: /^Mobile app/ }));
     await act(async () => {
       gate.open();
-      await gate.arrived;
+      // All of the code, not only the gate: under load it came after a find gave up (PT-176).
+      await ProjectScreen.preload();
     });
     expect(await screen.findByText('Ticket 1')).toBeInTheDocument();
     expect(window.location.pathname).toBe('/p/MOB');

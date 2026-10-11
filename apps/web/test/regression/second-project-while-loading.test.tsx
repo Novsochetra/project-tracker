@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { fakeClient } from '../../src/api/test/fakeClient';
 import { listItem, makeBoard, otherProject, STATUS, summaryOf } from '../../src/api/test/fixtures';
 import { createTestQueryClient } from '../../src/api/test/render';
+import { ProjectScreen } from '../../src/app/lazyParts';
 import { projectSummary } from '../../src/app/test/harness';
 import { TrackerApp } from '../../src/app/TrackerApp';
 import { mockPhone, skipAnimations, tap } from '../../src/overlays/testing';
@@ -58,7 +59,8 @@ describe('regression: a tap on a second project while the first one’s code is 
     await tap(user, within(main).getByRole('button', { name: /^Website/ }));
     await act(async () => {
       gate.open();
-      await gate.arrived;
+      // All of the code, not only the gate: under load it came after a find gave up (PT-176).
+      await ProjectScreen.preload();
     });
     expect(await screen.findByText('Home page')).toBeInTheDocument();
     expect(window.location.pathname).toBe('/p/WEB');

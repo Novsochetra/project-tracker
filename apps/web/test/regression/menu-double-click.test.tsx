@@ -1,4 +1,4 @@
-import { screen, waitFor } from '@testing-library/react';
+import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useState } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -6,8 +6,10 @@ import { SheetsProvider } from '../../src/app/sheets/SheetsProvider';
 import { projectSummary, renderWithApp } from '../../src/app/test/harness';
 import { ProjectOptionsButton } from '../../src/features/projects/ProjectOptionsButton';
 import { ItemMenu } from '../../src/features/ticket/activity/ItemMenu';
+import { CLICK_SHIELD_MS } from '../../src/lib/clickShield';
 import { mockPhone, skipAnimations } from '../../src/overlays/testing';
 import { doubleClick, GAPS, hitTest } from './doubleClick';
+import { advance, stillClock } from './stillClock';
 
 // Double-clicking Edit project in the ••• menu opened its sheet, and the second click went through
 // the closing menu to the sheet's backdrop and closed the sheet again (Chromium and WebKit,
@@ -39,13 +41,14 @@ describe('regression: the second click of a double-click stays on the ••• 
       </SheetsProvider>,
       { path: '/p/MOB', projects: [projectSummary()] },
     );
+    restore.push(stillClock());
     const user = userEvent.setup();
     const trigger = screen.getByRole('button', { name: 'Project options' });
     await user.click(trigger);
     const item = screen.getByRole('button', { name: 'Edit project' });
     await user.click(item);
     expect(editSheet()).toBeInTheDocument();
-    if (gap > 0) await new Promise((resolve) => setTimeout(resolve, gap));
+    if (gap > 0) await advance(gap);
     await user.click(hitTest(item, backdrop()));
     expect(editSheet()).toBeInTheDocument();
   });
@@ -75,6 +78,7 @@ describe('regression: the second click of a double-click stays on the ••• 
     const onEdit = vi.fn();
     const onOpen = vi.fn();
     renderWithApp(<Comment onEdit={onEdit} onOpen={onOpen} />);
+    restore.push(stillClock());
     const below = screen.getByRole('button', { name: 'Open MOB-4' });
     return { user: userEvent.setup(), onEdit, onOpen, below };
   }
@@ -92,7 +96,8 @@ describe('regression: the second click of a double-click stays on the ••• 
     await user.click(screen.getByRole('button', { name: 'Comment options' }));
     const item = screen.getByRole('button', { name: 'Edit comment' });
     await user.click(item);
-    await waitFor(() => expect(hitTest(item, below)).toBe(below));
+    await advance(CLICK_SHIELD_MS);
+    expect(hitTest(item, below)).toBe(below);
     await user.click(below);
     expect(onOpen).toHaveBeenCalledTimes(1);
   });

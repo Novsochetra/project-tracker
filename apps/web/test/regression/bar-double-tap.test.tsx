@@ -3,7 +3,9 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { comment, listItem, makeTicketDetail, STATUS } from '../../src/api/test/fixtures';
 import { renderTicket } from '../../src/features/ticket/test/renderTicket';
+import { PRIMARY_SETTLE_MS } from '../../src/features/ticket/TicketBottomBar';
 import { skipAnimations } from '../../src/overlays/testing';
+import { advance, stillClock } from './stillClock';
 
 // On a reviewed ticket the phone bar's primary is Move to Done, and Send to Claude takes its place
 // once the ticket moves. Two taps 120 ms apart moved the ticket, then the second tap landed on Send
@@ -37,11 +39,11 @@ function renderReviewedTicket() {
 
 const bar = () => document.querySelector<HTMLElement>('[data-bottom-bar]')!;
 const sheet = () => screen.getByRole('status', { name: 'Sheet' });
-const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 it('ignores a second tap that lands on Send to Claude right after Move to Done', async () => {
   const user = userEvent.setup();
   const { client } = renderReviewedTicket();
+  cleanups.push(stillClock());
   await user.click(within(bar()).getByRole('button', { name: 'Move to Done' }));
   expect(client.updateTicket).toHaveBeenCalledWith('MOB-3', { statusId: STATUS.done });
   const send = await waitFor(() => within(bar()).getByRole('button', { name: 'Send to Claude' }));
@@ -49,7 +51,7 @@ it('ignores a second tap that lands on Send to Claude right after Move to Done',
   await user.click(send);
   expect(sheet()).toBeEmptyDOMElement();
 
-  await wait(550);
+  await advance(PRIMARY_SETTLE_MS);
   await user.click(send);
   expect(sheet()).toHaveTextContent('"type":"prompt"');
 });
