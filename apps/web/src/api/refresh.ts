@@ -2,6 +2,7 @@ import type { QueryClient, QueryKey } from '@tanstack/react-query';
 import { isDeleted } from './deleted';
 import { markChanged } from './freshReads';
 import { busyKeys, targetsOf, type BusyKeys } from './pending';
+import { refreshProjectList } from './projectListRefresh';
 import { projectOfQuery, queryKeys, rootOf, scopeOf } from './queryKeys';
 
 export interface SettleOptions {
@@ -32,7 +33,7 @@ function refreshProject(
   busy: BusyKeys,
   options: SettleOptions,
 ): void {
-  void queryClient.invalidateQueries({ queryKey: queryKeys.projects(), exact: true });
+  refreshProjectList(queryClient);
   if (isRefreshable(queryClient, queryKeys.ready(), busy)) {
     void queryClient.invalidateQueries({ queryKey: queryKeys.ready(), exact: true });
   }

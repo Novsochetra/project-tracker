@@ -26,11 +26,11 @@ export function useRowPeek(cardRef: RefObject<HTMLElement | null>, content: stri
     window.addEventListener('resize', fit);
     // A caption that rewraps as the web font arrives moves the rows (PT-129). The rows rather than
     // the card: a capped card keeps its size as they grow, and the cap set here resizes the card.
-    const rows = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(fit);
-    for (const row of card.children) rows?.observe(row, { box: 'border-box' });
+    const observer = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(fit);
+    for (const row of card.children) observer?.observe(row, { box: 'border-box' });
     return () => {
       window.removeEventListener('resize', fit);
-      rows?.disconnect();
+      observer?.disconnect();
     };
   }, [cardRef, content]);
 }

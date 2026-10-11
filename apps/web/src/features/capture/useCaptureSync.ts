@@ -1,7 +1,7 @@
 import { MutationObserver, useQueryClient, type QueryClient } from '@tanstack/react-query';
 import type { TrackerClient } from '@tracker/client';
 import { useCallback, useEffect } from 'react';
-import { queryKeys, useApi } from '../../api';
+import { queryKeys, refreshProjectList, useApi } from '../../api';
 import type { Reachability } from '../../app/reachability';
 import { useToast, type ToastApi } from '../../components';
 import { addedToast, createInputOf, droppedToast, earlierTextToast } from './captureForm';
@@ -24,7 +24,7 @@ const sendWith = (queryClient: QueryClient, client: TrackerClient) => (capture: 
 function refreshAfter(queryClient: QueryClient, report: SyncReport): void {
   const settled = [...report.added, ...report.dropped];
   if (settled.length === 0) return;
-  void queryClient.invalidateQueries({ queryKey: queryKeys.projects(), exact: true });
+  refreshProjectList(queryClient);
   for (const projectKey of new Set(settled.map((capture) => capture.projectKey))) {
     void queryClient.invalidateQueries({ queryKey: queryKeys.project(projectKey) });
   }
