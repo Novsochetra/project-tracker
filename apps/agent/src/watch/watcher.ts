@@ -1,6 +1,6 @@
 import type { RunEvent } from '@tracker/shared';
 import { describeError } from '../errors';
-import { createProblemLog } from './problems';
+import { createProblemLog, type ProblemSource } from './problems';
 import { handBackReport } from './report/handBack';
 import { createLanes } from './lanes';
 import type { RunLoopDeps } from './runLoop';
@@ -28,7 +28,7 @@ export type WatcherDeps = Omit<
 export function createWatcher(deps: WatcherDeps, settings: WatcherSettings) {
   const describe = (error: unknown) => describeError(error, { trackerUrl: settings.trackerUrl });
   const noteProblem = createProblemLog(deps.log);
-  const onProblem = (source: string, error: unknown) =>
+  const onProblem = (source: ProblemSource, error: unknown) =>
     noteProblem(source, error === undefined ? undefined : describe(error));
   const runs = createLanes(
     {

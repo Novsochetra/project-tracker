@@ -17,6 +17,13 @@ describe('the problem log', () => {
     expect(lines).toEqual(['down']);
   });
 
+  it("says the new problem when a source's problem changes", () => {
+    const { lines, note } = logged();
+    note('ticket', 'down');
+    note('ticket', 'refused');
+    expect(lines).toEqual(['down', 'refused']);
+  });
+
   it('says the tracker is back only when every source is fine', () => {
     const { lines, note } = logged();
     note('ticket', 'down');

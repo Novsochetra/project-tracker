@@ -1,6 +1,7 @@
 import type { FinishRunInput, RunJob, RunKind } from '@tracker/shared';
 import { askOutcomeOf } from './ask/askOutcome';
 import type { OnSteps } from './claudeRunners';
+import type { ProblemSource } from './problems';
 import type { ClaudeExit } from './outcome';
 import { lastLines, ticketOutcomeOf } from './outcome';
 import { refusalOf } from './refusal';
@@ -15,7 +16,7 @@ export interface RunLoopDeps {
   runAsk: (job: RunJob, signal: AbortSignal, onSteps: OnSteps) => Promise<ClaudeExit>;
   log: (text: string) => void;
   describe: (error: unknown) => string;
-  onProblem: (source: string, error: unknown) => void;
+  onProblem: (source: ProblemSource, error: unknown) => void;
   handBack: (job: RunJob, texts: readonly string[]) => Promise<void>;
   signOfLife: (ticketKey: string) => () => void;
   stepsFor: (runId: string) => StepBatcher;
