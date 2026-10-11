@@ -11,13 +11,14 @@ let onItsWayUntil = 0;
 // (PT-108, PT-119). Timed rather than marked for good: the reload may never come, and pushes after
 // that must still go.
 export function reloadPage(reload: () => void): void {
-  onItsWayUntil = Date.now() + RELOAD_ON_ITS_WAY_MS;
+  onItsWayUntil = performance.now() + RELOAD_ON_ITS_WAY_MS;
   reload();
 }
 
-export const reloadTimeLeft = (): number => Math.max(0, onItsWayUntil - Date.now());
+export const reloadTimeLeft = (): number => Math.max(0, onItsWayUntil - performance.now());
 
-// Chromium cancels a reload for a Back or Forward that comes before the new page.
+// Chromium cancels a reload for a Back or Forward that comes before the new page. WebKit still
+// finishes it but runs this too, so a tap meanwhile shows its screen until the new page comes.
 export function forgetReload(): void {
   onItsWayUntil = 0;
 }

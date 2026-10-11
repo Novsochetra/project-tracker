@@ -29,6 +29,12 @@ describe('reloadPage', () => {
     reloadPage(vi.fn());
     expect(reloadTimeLeft()).toBe(RELOAD_ON_ITS_WAY_MS);
   });
+
+  it('keeps its time when the wall clock steps back', () => {
+    reloadPage(vi.fn());
+    vi.setSystemTime(Date.now() - 60_000);
+    expect(reloadTimeLeft()).toBe(RELOAD_ON_ITS_WAY_MS);
+  });
 });
 
 describe('forgetReload', () => {

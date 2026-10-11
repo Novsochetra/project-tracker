@@ -222,7 +222,7 @@ test.describe('a chunk reload the browser cancels', () => {
     const layer = page.locator('[data-stack-path="/p/MOB"]');
     await expect(layer.getByRole('status')).toBeVisible({ timeout: PUSH_WAIT_LIMIT_MS + 5_000 });
 
-    // A slow network: the reload's page takes 2 s, and Back comes 300 ms after the failure.
+    // Slow enough that Back lands while the reload's page is still on its way.
     await page.route('**/*', async (route) => {
       if (route.request().resourceType() !== 'document') return route.fallback();
       await new Promise((resolve) => setTimeout(resolve, 2_000));
@@ -265,7 +265,7 @@ test.describe('a tap while the page reloads', () => {
     const entries = await historyLength(page);
     await projectRow(page, 'Mobile app').click();
 
-    // A slow network: the reload's page takes 2 s, and the tap comes 500 ms after it is asked for.
+    // Slow enough that the tap lands while the reload's page is still on its way.
     await page.route('**/*', async (route) => {
       if (route.request().resourceType() !== 'document') return route.fallback();
       await new Promise((resolve) => setTimeout(resolve, 2_000));
