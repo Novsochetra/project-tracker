@@ -11,12 +11,15 @@ export interface LabelParts {
 }
 
 // The helper's labels start with what Claude asks to do (shared logic/runSteps/toolLabel.ts); a
-// command, a path or an address follows, and shows as code so the person reads it exactly.
+// command, a path or an address follows, and shows as code so the person reads it exactly. An MCP
+// call's name is one line, and its arguments follow one a line (shared runRequests/toolArguments.ts).
 const CODE_VERBS = ['Run', 'Read', 'Edit', 'Write', 'Fetch'];
 
 export function labelParts(label: string): LabelParts {
   const verb = CODE_VERBS.find((known) => label.startsWith(`${known} `));
-  return verb ? { verb, detail: label.slice(verb.length + 1) } : { verb: label, detail: '' };
+  if (verb) return { verb, detail: label.slice(verb.length + 1) };
+  const [head = '', ...rest] = label.split('\n');
+  return { verb: head, detail: rest.join('\n') };
 }
 
 // One line: a permission's command may run over many.

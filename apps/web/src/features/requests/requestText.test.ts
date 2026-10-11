@@ -29,6 +29,13 @@ describe('labelParts', () => {
     });
   });
 
+  it("splits an MCP call's arguments from its name, the first line", () => {
+    expect(labelParts('Use github: merge_pull_request\nowner: octo\npull_number: 42')).toEqual({
+      verb: 'Use github: merge_pull_request',
+      detail: 'owner: octo\npull_number: 42',
+    });
+  });
+
   it('keeps any other label whole', () => {
     expect(labelParts('Use tracker: move_ticket PT-12')).toEqual({
       verb: 'Use tracker: move_ticket PT-12',

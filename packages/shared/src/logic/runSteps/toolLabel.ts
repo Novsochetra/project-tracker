@@ -38,13 +38,17 @@ const ask: Label = (input) => {
   return said('Ask:', field(question, 'question'));
 };
 
+export function mcpHead(name: string): string {
+  const [, server = '', ...tool] = name.split('__');
+  return `Use ${server}: ${tool.join('__')}`;
+}
+
 // Only the tracker's keys, never a tool's free text such as a comment or a description.
 function mcpLabel(name: string, input: ToolInput): string {
-  const [, server = '', ...tool] = name.split('__');
   const ticket = field(input, 'ticket');
   const project = field(input, 'project');
   const key = parseTicketKey(ticket) ? ticket : PROJECT_KEY.test(project) ? project : '';
-  return said(`Use ${server}: ${tool.join('__')}`, key);
+  return said(mcpHead(name), key);
 }
 
 // What Claude asks to do, not what happened: a call can be denied, fail or wait for the person.

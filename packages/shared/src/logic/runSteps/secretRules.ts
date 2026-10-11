@@ -30,6 +30,8 @@ export interface SecretRule {
   name: string;
   pattern: RegExp;
   replace: Replace;
+  // For steps only: a permission masks only what can't run (permissionMask.ts).
+  stepsOnly?: boolean;
 }
 
 const rule = (name: string, pattern: string, flags: string, replace: Replace): SecretRule => ({
@@ -95,6 +97,32 @@ export const SECRET_RULES: readonly SecretRule[] = [
       return (head.endsWith('=') ? !reference(value) : looksSecret(value)) ? masked(head) : m;
     },
   ),
+  // YAML, TOML, INI and code put spaces around `:` or `=` (`password: hunter2xx`, `apiKey = '…'`),
+  // where a value that calls or indexes something (`get_password()`, `env["TOKEN"]`) is code.
+  rule(
+    'assignment',
+    String.raw`((?:^|[^\w-])(${NAME})["']?\s{0,4}[:=]\s{1,4})(${VALUE})`,
+    'gm',
+    (m, head = '', name = '', value = '') =>
+      secretName(name) && looksSecret(value) && !value.includes(MASK) && !/^[^"']*[([]/.test(value)
+        ? masked(head)
+        : m,
+  ),
+  rule('xml element', String.raw`(<(${NAME})>)[^<\n]+(?=<\/\2>)`, 'g', (m, head = '', name = '') =>
+    secretName(name) ? masked(head) : m,
+  ),
+  // A key's body is base64, so each such line after BEGIN is masked. Steps only: in a command such
+  // a line can be a path that runs (PT-171 third review); a permission masks only a whole key file
+  // (fileChanges.ts).
+  {
+    ...rule(
+      'private key',
+      String.raw`-----BEGIN [A-Z ]{0,40}PRIVATE KEY-----[\s\S]*?(?:-----END|$)`,
+      'g',
+      (m) => m.replace(/^((?:[+-] )?[ \t]*)[A-Za-z0-9+/]{16,}={0,2}(?=[ \t]*$)/gm, `$1${MASK}`),
+    ),
+    stepsOnly: true,
+  },
   // Only a name that holds a keyword matches at all, so one that doesn't
   // (--from-literal=password=x) never takes the next one as its value.
   rule(

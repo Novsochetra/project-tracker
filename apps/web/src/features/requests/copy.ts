@@ -8,6 +8,8 @@ export const OTHER_PLACEHOLDER = 'Something else…';
 export const LABEL_CUT_TEXT = 'It goes on past what is shown. Deny it if you are not sure.';
 export const HIDDEN_CHARS_TEXT =
   'It holds characters that hide or reorder text, shown marked. Deny it if you are not sure.';
+export const LOOKALIKE_TEXT =
+  'It holds letters from another script that look like others, shown marked. Deny it if you are not sure.';
 export const WAITING_TEXT = 'Claude is waiting for your answer.';
 export const WAITING_ROW_TEXT = 'Waiting for you';
 // A ticket's row could be read as waiting for a review, so screen readers hear who waits.
