@@ -11,6 +11,7 @@ import {
   type ShownSurface,
   type Surface,
 } from './attachmentSurfaces';
+import { advance, stillClock } from './stillClock';
 
 const NAMES = ['a.txt', 'b.txt', 'c.txt', 'd.txt'];
 
@@ -19,18 +20,16 @@ const picked = () => [
   new File(['<svg/>'], 'notes.svg', { type: 'image/svg+xml' }),
 ];
 
-const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-
 let shown: ShownSurface | undefined;
-let undoAnimations: () => void;
+let restore: Array<() => void> = [];
 
 beforeEach(() => {
-  undoAnimations = skipAnimations();
+  restore = [skipAnimations()];
 });
 
 afterEach(() => {
+  restore.reverse().forEach((undo) => undo());
   shown?.restore();
-  undoAnimations();
   localStorage.clear();
 });
 
@@ -45,6 +44,7 @@ async function pickWithRefusal(surface: Surface) {
   const user = userEvent.setup({ applyAccept: false });
   await user.upload(shown.input(), picked());
   await waitFor(() => expect(area().queryByRole('progressbar')).toBeNull());
+  restore.push(stillClock());
   return user;
 }
 
@@ -65,7 +65,7 @@ describe.each([NEW_TICKET, CAPTURE, TICKET_SCREEN])('a tap on Dismiss in $name',
 
     await tap(user, firstX());
     expect(removed()).toBeFalsy();
-    await wait(CLICK_SHIELD_MS);
+    await advance(CLICK_SHIELD_MS);
     await tap(user, firstX());
     expect(removed()).toBeTruthy();
   });

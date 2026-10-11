@@ -3,7 +3,9 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { comment, listItem, makeTicketDetail, STATUS } from '../../src/api/test/fixtures';
 import { renderTicket } from '../../src/features/ticket/test/renderTicket';
+import { CLICK_SHIELD_MS } from '../../src/lib/clickShield';
 import { skipAnimations } from '../../src/overlays/testing';
+import { advance, stillClock } from './stillClock';
 
 // The Latest review card left as soon as its Move to Done was tapped, so the second tap of a
 // double tap, 150 ms later, landed on what moved up into its place: Add images, which opened the
@@ -25,7 +27,7 @@ beforeEach(() => {
   cleanups = [skipAnimations()];
 });
 
-afterEach(() => cleanups.forEach((undo) => undo()));
+afterEach(() => cleanups.reverse().forEach((undo) => undo()));
 
 function renderReviewedTicket(
   updateTicket = vi.fn().mockReturnValue(new Promise(() => undefined)),
@@ -38,22 +40,22 @@ function renderReviewedTicket(
 
 const latest = () => screen.queryByRole('region', { name: 'Latest review' });
 const cardButton = () => within(latest()!).getByRole('button', { name: 'Move to Done' });
-const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 it('keeps the card in place, taking no taps, while the second tap of a double tap can land', async () => {
   const user = userEvent.setup();
   const { client } = renderReviewedTicket();
-  await user.click(cardButton());
-  // Checked within the double tap's window from the tap, not after the toast, which a loaded
-  // machine can show later than the hold lasts.
-  await wait(150);
+  const button = cardButton();
+  cleanups.push(stillClock());
+  await user.click(button);
+  await advance(150);
   expect(latest()).toBeInTheDocument();
   expect(latest()).toHaveAttribute('inert');
   expect(client.updateTicket).toHaveBeenCalledExactlyOnceWith('MOB-3', { statusId: STATUS.done });
   expect(await screen.findByText('MOB-3 moved to Done')).toBeInTheDocument();
   expect(screen.getByRole('button', { name: /^Status/ })).toHaveTextContent('Done');
 
-  await waitFor(() => expect(latest()).not.toBeInTheDocument());
+  await advance(CLICK_SHIELD_MS);
+  expect(latest()).not.toBeInTheDocument();
 });
 
 it('takes taps again when the move fails', async () => {

@@ -13,6 +13,7 @@ import {
   type Surface,
 } from './attachmentSurfaces';
 import { GAPS, hitTest } from './doubleClick';
+import { advance, stillClock } from './stillClock';
 
 const NAMES = ['a.txt', 'b.txt', 'c.txt', 'd.txt'];
 
@@ -21,18 +22,16 @@ const picked = () => [
   new File(['<svg/>'], 'notes.svg', { type: 'image/svg+xml' }),
 ];
 
-const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-
 let shown: ShownSurface | undefined;
-let undoAnimations: () => void;
+let restore: Array<() => void> = [];
 
 beforeEach(() => {
-  undoAnimations = skipAnimations();
+  restore = [skipAnimations()];
 });
 
 afterEach(() => {
+  restore.reverse().forEach((undo) => undo());
   shown?.restore();
-  undoAnimations();
   localStorage.clear();
 });
 
@@ -52,6 +51,7 @@ async function pickWithRefusal(surface: Surface) {
   await user.upload(shown.input(), picked());
   await waitFor(() => expect(area().queryByRole('progressbar')).toBeNull());
   expect(area().getByRole('alert')).toHaveTextContent("notes.svg can't be attached.");
+  restore.push(stillClock());
   return user;
 }
 
@@ -77,10 +77,10 @@ describe.each([NEW_TICKET, CAPTURE, TICKET_SCREEN, COMMENT_BOX])('the note in $n
     const under = UNDER.get(surface)!();
     const spot = dismiss();
     await tap(user, spot);
-    if (gap > 0) await wait(gap);
+    if (gap > 0) await advance(gap);
     await tap(user, hitTest(spot, under));
 
-    await wait(CLICK_SHIELD_MS);
+    await advance(CLICK_SHIELD_MS);
     expect(area().queryByRole('alert')).not.toBeInTheDocument();
     expect(area().getAllByTitle(/^[a-d]\.txt$/)).toHaveLength(4);
     expect(screen.queryByRole('dialog', { name: /^Remove/ })).not.toBeInTheDocument();
@@ -100,7 +100,7 @@ describe.each([NEW_TICKET, CAPTURE, TICKET_SCREEN, COMMENT_BOX])('the note in $n
     await user.click(dismiss());
     const zip = new File(['zip'], 'logs.zip', { type: 'application/zip' });
     fireEvent.change(shown!.input(), { target: { files: [zip] } });
-    await wait(CLICK_SHIELD_MS);
+    await advance(CLICK_SHIELD_MS);
     expect(area().getByRole('alert')).toHaveTextContent("logs.zip can't be attached.");
   });
 });

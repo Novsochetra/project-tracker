@@ -4,7 +4,9 @@ import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { listItem, makeTicketDetail, STATUS } from '../../src/api/test/fixtures';
 import { DARA, makeRun, makeRunner } from '../../src/api/test/runFixtures';
 import { renderTicket } from '../../src/features/ticket/test/renderTicket';
+import { CLICK_SHIELD_MS } from '../../src/lib/clickShield';
 import { skipAnimations, tap } from '../../src/overlays/testing';
+import { advance, stillClock } from './stillClock';
 
 // Run in Claude Code closes its sheet as soon as the run starts, and a closing sheet takes no taps,
 // so the second tap of a double tap, 150 ms later, landed on the ticket screen under it: the comment
@@ -19,7 +21,7 @@ beforeEach(() => {
   cleanups = [skipAnimations()];
 });
 
-afterEach(() => cleanups.forEach((undo) => undo()));
+afterEach(() => cleanups.reverse().forEach((undo) => undo()));
 
 function renderWithHelper(phone: boolean) {
   const detail = makeTicketDetail(listItem(1, STATUS.progress, 0));
@@ -38,12 +40,13 @@ function renderWithHelper(phone: boolean) {
 }
 
 const sheetRequest = () => screen.getByRole('status', { name: 'Sheet' });
-const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 async function runFromSheet(open: () => Promise<void>, press: (run: Element) => Promise<void>) {
   await open();
   const dialog = await screen.findByRole('dialog', { name: 'Send to Claude Code' });
-  await press(await within(dialog).findByRole('button', { name: 'Run in Claude Code' }));
+  const run = await within(dialog).findByRole('button', { name: 'Run in Claude Code' });
+  cleanups.push(stillClock());
+  await press(run);
   expect(await screen.findByText(`Sent to Claude on ${DARA}`)).toBeInTheDocument();
   expect(sheetRequest()).toBeEmptyDOMElement();
 }
@@ -66,7 +69,7 @@ it("drops a phone's second tap on the screen the closing sheet uncovers", async 
   expect(screen.getByLabelText('Description')).not.toHaveFocus();
   expect(client.startRun).toHaveBeenCalledTimes(1);
 
-  await wait(550);
+  await advance(CLICK_SHIELD_MS);
   await tap(user, send());
   expect(sheetRequest()).toHaveTextContent('"type":"prompt"');
 });
@@ -82,6 +85,6 @@ it("drops a double-click's second click on desktop", async () => {
 
   expect(fireEvent.mouseDown(screen.getByLabelText('Description'), { detail: 2 })).toBe(false);
   fireEvent.click(send(), { detail: 2 });
-  await wait(50);
+  await advance(50);
   expect(sheetRequest()).toBeEmptyDOMElement();
 });

@@ -3,6 +3,8 @@ import { followPresses } from './pressPointer';
 
 const PRESSES = ['mousedown', 'click'] as const;
 
+const holds = new Set<() => void>();
+
 // The screen or sheet the element is in: the page's root, or an overlay's on the body.
 function layerOf(element: Element): Element {
   let layer = element;
@@ -98,11 +100,21 @@ export function holdPresses(within: Element): void {
     event.preventDefault();
     event.stopPropagation();
   };
-  document.addEventListener('pointerdown', see, true);
-  PRESSES.forEach((type) => document.addEventListener(type, drop, true));
-  setTimeout(() => {
+  const end = () => {
+    clearTimeout(timer);
+    holds.delete(end);
     presses.stop();
     document.removeEventListener('pointerdown', see, true);
     PRESSES.forEach((type) => document.removeEventListener(type, drop, true));
-  }, CLICK_SHIELD_MS);
+  };
+  document.addEventListener('pointerdown', see, true);
+  PRESSES.forEach((type) => document.addEventListener(type, drop, true));
+  const timer = setTimeout(end, CLICK_SHIELD_MS);
+  holds.add(end);
+}
+
+// Tests end every hold with the test: one whose time ran out after the test file's page had gone
+// threw there (PT-167).
+export function endHolds(): void {
+  holds.forEach((end) => end());
 }

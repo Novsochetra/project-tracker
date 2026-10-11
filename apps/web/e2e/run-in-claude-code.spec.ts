@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto';
 import type { Locator, Page } from '@playwright/test';
 import type { RunStepInput } from '@tracker/shared';
 import { expect, isPhone, test } from './fixtures';
-import { seedProject, settledScreenshot, toast } from './helpers';
+import { resting, seedProject, settledScreenshot, toast } from './helpers';
 
 const HELPER = "Dara's MacBook";
 const LONG = 'Steps to reproduce, what happened and what should happen instead. '.repeat(10);
@@ -18,7 +18,10 @@ const viewports = (projectName: string) =>
       ]
     : [{ width: 1280, height: 800 }];
 
+// The sheet slides up in script, and Run is visible from the start of the rise. Read on the way
+// up, both taps went where Run had been and started nothing, 1 run in 3 (PT-157).
 async function doubleTap(page: Page, target: Locator, touch: boolean): Promise<void> {
+  await resting(async () => (await target.boundingBox())?.y ?? Number.NaN);
   const box = await target.boundingBox();
   if (!box) throw new Error('Nothing to tap.');
   const [x, y] = [box.x + box.width / 2, box.y + box.height / 2];
