@@ -11,7 +11,7 @@ import { promptSheet, reportSheet } from './ticketSheets';
 import type { MoveToDone } from './useMoveToDone';
 
 // Longer than a double tap, whose second tap lands within about 300 ms.
-const PRIMARY_SETTLE_MS = 500;
+export const PRIMARY_SETTLE_MS = 500;
 
 export interface TicketBottomBarProps {
   ticketKey: string;

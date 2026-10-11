@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { comment, listItem, makeTicketDetail, STATUS } from '../../src/api/test/fixtures';
 import { renderTicket } from '../../src/features/ticket/test/renderTicket';
-import { CLICK_SHIELD_MS } from '../../src/lib/clickShield';
+import { PRIMARY_SETTLE_MS } from '../../src/features/ticket/TicketBottomBar';
 import { skipAnimations } from '../../src/overlays/testing';
 import { advance, stillClock } from './stillClock';
 
@@ -51,7 +51,7 @@ it('ignores a second tap that lands on Send to Claude right after Move to Done',
   await user.click(send);
   expect(sheet()).toBeEmptyDOMElement();
 
-  await advance(CLICK_SHIELD_MS);
+  await advance(PRIMARY_SETTLE_MS);
   await user.click(send);
   expect(sheet()).toHaveTextContent('"type":"prompt"');
 });
