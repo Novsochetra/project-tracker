@@ -1,6 +1,7 @@
 import type { CreatedInvite, Invite, ProjectSummary, SessionState } from '@tracker/shared';
 import { describe, expect, it } from 'vitest';
 import { INVITE_TTL_MS } from '../../src/auth/invites';
+import { DEFAULT_LOGIN_LIMITS } from '../../src/auth/loginLimits';
 import { addOwner, cookieOf, JSON_HEADERS, signIn, testClock } from '../helpers/auth';
 import { addUser } from '../helpers/runs';
 import { DIALECTS, useTestServer } from '../helpers/server';
@@ -9,7 +10,9 @@ const NEWCOMER = { name: 'Sam', email: 'Sam@Example.com ', password: 'a long new
 
 describe.each(DIALECTS)('invites (%s)', (dialect) => {
   const clock = testClock();
-  const api = useTestServer(dialect, { now: clock.now });
+  // Far above what these tests send from their one address; the limit has its own test below.
+  const roomy = { ...DEFAULT_LOGIN_LIMITS, perAddress: { max: 1_000, windowMs: 60_000 } };
+  const api = useTestServer(dialect, { now: clock.now, auth: { loginLimits: roomy } });
 
   const send = (method: string, path: string, cookie?: string, body?: unknown) =>
     api.app.request(path, {
@@ -29,7 +32,7 @@ describe.each(DIALECTS)('invites (%s)', (dialect) => {
     return signIn(api.app);
   }
 
-  const accept = (secret: string, person = NEWCOMER) =>
+  const accept = async (secret: string, person = NEWCOMER) =>
     send('POST', '/api/invites/accept', undefined, { secret, ...person });
 
   const errorOf = async (response: Response) =>
@@ -124,5 +127,58 @@ describe.each(DIALECTS)('invites (%s)', (dialect) => {
 
   it('makes no invites on a tracker without an owner', async () => {
     expect((await send('POST', '/api/invites')).status).toBe(403);
+  });
+
+  it('makes one account from one invite accepted three times at once', async () => {
+    const { secret } = await invite(await ownerCookie());
+    const answers = await Promise.all(
+      ['one', 'two', 'three'].map((who) =>
+        accept(secret, { ...NEWCOMER, email: `${who}@example.com` }),
+      ),
+    );
+    expect(answers.map((answer) => answer.status).sort()).toEqual([201, 404, 404]);
+    expect(await api.db.selectFrom('users').select('id').execute()).toHaveLength(2);
+  });
+
+  it('makes one account from two invites accepted at once with one email', async () => {
+    const owner = await ownerCookie();
+    const [first, second] = [await invite(owner), await invite(owner)];
+    const answers = await Promise.all([accept(first.secret), accept(second.secret)]);
+    expect(answers.map((answer) => answer.status).sort()).toEqual([201, 409]);
+    expect(await api.db.selectFrom('users').select('id').execute()).toHaveLength(2);
+  });
+
+  it('keeps no control characters in the name, and refuses a name of nothing else', async () => {
+    const { secret } = await invite(await ownerCookie());
+    const empty = await accept(secret, { ...NEWCOMER, name: '\u0000\u0007' });
+    expect(empty.status).toBe(400);
+    expect(await errorOf(empty)).toBe('Enter your name.');
+    const accepted = await accept(secret, { ...NEWCOMER, name: 'Sam\u0000\tLee' });
+    expect(((await accepted.json()) as SessionState).name).toBe('Sam Lee');
+  });
+});
+
+describe.each(DIALECTS)('invite links tried too often (%s)', (dialect) => {
+  const strict = { ...DEFAULT_LOGIN_LIMITS, perAddress: { max: 2, windowMs: 60_000 } };
+  const api = useTestServer(dialect, { auth: { loginLimits: strict } });
+
+  it('get 429 from one address, as sign-in does', async () => {
+    const check = () =>
+      api.app.request('/api/invites/check', {
+        method: 'POST',
+        headers: JSON_HEADERS,
+        body: JSON.stringify({ secret: 'guess' }),
+      });
+    expect((await check()).status).toBe(404);
+    expect((await check()).status).toBe(404);
+    const refused = await check();
+    expect(refused.status).toBe(429);
+    expect(refused.headers.get('retry-after')).toBe('60');
+    const accept = await api.app.request('/api/invites/accept', {
+      method: 'POST',
+      headers: JSON_HEADERS,
+      body: JSON.stringify({ secret: 'guess', ...NEWCOMER }),
+    });
+    expect(accept.status).toBe(429);
   });
 });

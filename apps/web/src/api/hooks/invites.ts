@@ -45,6 +45,8 @@ export function useCheckInvite(secret: string): TrackerQuery<{ expiresAt: number
     queryFn: () => client.checkInvite({ secret }),
     enabled: secret !== '',
     retry: false,
+    // Each check counts toward the server's limit on invite tries; one per page is enough.
+    staleTime: Infinity,
   });
 }
 

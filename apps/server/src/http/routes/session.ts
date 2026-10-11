@@ -12,6 +12,7 @@ import type { AuthDeps } from '../auth';
 import type { AppEnv } from '../env';
 import { clearSessionCookie, readSessionCookie } from '../sessionCookie';
 import { signedInState, signInAs } from '../signIn';
+import { tooManyTries } from '../tooManyTries';
 import { jsonBodyAsSent } from '../validation';
 
 // The browser also drops its HTTP cache for the tracker, where attachment files are kept for a
@@ -27,13 +28,6 @@ async function stateFor(deps: AuthDeps, access: Access | null): Promise<SessionS
   return { authRequired: true, authenticated: false, setupRequired: true };
 }
 
-function tooManyAttempts(c: Context, waitMs: number): AppError {
-  const minutes = Math.ceil(waitMs / 60_000);
-  c.header('Retry-After', String(Math.ceil(waitMs / 1000)));
-  const when = minutes === 1 ? 'a minute' : `${minutes} minutes`;
-  return new AppError('rate_limited', `Too many sign-in attempts. Try again in ${when}.`);
-}
-
 async function signIn(
   c: Context<AppEnv>,
   deps: AuthDeps,
@@ -42,7 +36,7 @@ async function signIn(
 ) {
   const at = deps.now();
   const wait = limits.waitFor(input, at);
-  if (wait > 0) throw tooManyAttempts(c, wait);
+  if (wait > 0) throw tooManyTries(c, wait, 'sign-in attempts');
   // Counted before the check, so attempts sent side by side can't all slip past the limit.
   limits.failed(input, at);
   const user = await checkLogin(deps.db, input.email, input.password);

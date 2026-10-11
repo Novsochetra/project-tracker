@@ -11,6 +11,7 @@ import { forbidden } from '../../errors';
 import { findUserById } from '../../repositories/users';
 import type { AuthDeps } from '../auth';
 import type { AppEnv } from '../env';
+import { limitInviteTries } from '../inviteLimits';
 import { signedInState, signInAs } from '../signIn';
 import { jsonBodyAsSent } from '../validation';
 
@@ -25,17 +26,19 @@ async function ownerId(c: Context<AppEnv>, deps: AuthDeps): Promise<string> {
 }
 
 // Anyone with the link may ask about it and accept it; the secret is what lets them in.
-const linkRoutes = (deps: AuthDeps) =>
-  new Hono<AppEnv>()
-    .post('/invites/check', jsonBodyAsSent(checkInviteInput), async (c) => {
+const linkRoutes = (deps: AuthDeps) => {
+  const limited = limitInviteTries(deps);
+  return new Hono<AppEnv>()
+    .post('/invites/check', limited, jsonBodyAsSent(checkInviteInput), async (c) => {
       const invite = await requireUsableInvite(deps.db, c.req.valid('json').secret, deps.now());
       return c.json({ expiresAt: invite.expiresAt });
     })
-    .post('/invites/accept', jsonBodyAsSent(acceptInviteInput), async (c) => {
+    .post('/invites/accept', limited, jsonBodyAsSent(acceptInviteInput), async (c) => {
       const user = await acceptInvite(deps.db, c.req.valid('json'), deps.now());
       await signInAs(c, deps, user.id);
       return c.json(signedInState(user), 201);
     });
+};
 
 const ownerRoutes = (deps: AuthDeps) =>
   new Hono<AppEnv>()
