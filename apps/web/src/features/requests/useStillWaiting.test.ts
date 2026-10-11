@@ -41,4 +41,14 @@ describe('useStillWaiting', () => {
     });
     expect(result.current).toBe(false);
   });
+
+  it('stops waiting when its timer fires, even on a clock set back meanwhile', () => {
+    const until = Date.now() + 5_000;
+    const { result } = renderHook(() => useStillWaiting(until));
+    vi.setSystemTime(Date.now() - 60_000);
+    act(() => {
+      vi.advanceTimersByTime(5_000);
+    });
+    expect(result.current).toBe(false);
+  });
 });

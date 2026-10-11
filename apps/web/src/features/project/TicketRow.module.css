@@ -246,8 +246,6 @@
 
   /* Claude's question can't wait the way a due date can, so while it waits its mark takes the due
      date's place on the row's second line, and the date comes back once the person answers. */
-  /* Claude's question can't wait the way a due date can, so while it waits its mark takes the due
-     date's place on the row's second line, and the date comes back once the person answers. */
   .main .waiting {
     grid-area: due;
   }
