@@ -333,7 +333,7 @@ describe('refusedImageProblems', () => {
   const rows = {
     projects: [{ id: 'p1', key: 'PT' }],
     tickets: [{ id: 't1', projectId: 'p1', num: 12, title: 'Secret title' }],
-    activities: [{ id: 'a1', type: 'report' }],
+    activities: [{ id: 'a1', type: 'comment' }],
   } as unknown as TableRows;
   const place = placeOf(rows);
   const refused = (before: AttachmentRow, refusal: string): MovedAttachment => ({
@@ -344,7 +344,7 @@ describe('refusedImageProblems', () => {
   });
 
   it('says where each file is by its ticket key, never its text', () => {
-    expect(place(PHOTO)).toBe('a report on PT-12');
+    expect(place(PHOTO)).toBe('a comment on PT-12');
     expect(place({ ...PHOTO, activityId: null })).toBe('PT-12');
     expect(place({ ...PHOTO, ticketId: null, activityId: null })).toBe('not on a ticket yet');
   });

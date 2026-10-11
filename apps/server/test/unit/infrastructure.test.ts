@@ -104,6 +104,11 @@ describe('looksLikeUrl', () => {
     'DATABASE_URL=postgres:postgres:pw@h/db',
     'postgre:admin:pw@h:5432/db',
     'admin:pw@h:5432/db',
+    encodeURIComponent('postgresql://postgres:pw@h:5432/db'),
+    'admin:pw%40h/db',
+    'pgsql:admin:pw%40h:5432/db',
+    'admin%3Apw@h/db',
+    'admin%3apw%40h/db',
   ])('takes %s for a URL', (value) => {
     expect(looksLikeUrl(value)).toBe(true);
   });

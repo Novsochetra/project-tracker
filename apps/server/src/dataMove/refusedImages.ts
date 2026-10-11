@@ -12,12 +12,11 @@ export function placeOf(rows: TableRows): (row: AttachmentRow) => string {
       formatTicketKey(keys.get(ticket.projectId) ?? '?', ticket.num),
     ]),
   );
-  const activityTypes = new Map(rows.activities.map((activity) => [activity.id, activity.type]));
   return (row) => {
     const key = row.ticketId ? tickets.get(row.ticketId) : undefined;
     if (!key) return 'not on a ticket yet';
     if (!row.activityId) return key;
-    return `a ${activityTypes.get(row.activityId) ?? 'comment'} on ${key}`;
+    return `a comment on ${key}`;
   };
 }
 
