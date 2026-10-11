@@ -110,8 +110,6 @@ describe.each(DIALECTS)('reports (%s)', (dialect) => {
 
   it('maps report words to categories and never to Done', async () => {
     const client = api.client();
-    await client.applyReport({ text: 'TICKET: MA-1\nSTATUS: approved' });
-    expect((await client.getTicket('MA-1')).status.name).toBe('Reviewed');
     await client.applyReport({ text: 'TICKET: MA-1\nSTATUS: blocked on API' });
     expect((await client.getTicket('MA-1')).status.name).toBe('In progress');
     await client.applyReport({ text: 'TICKET: MA-1\nSTATUS: not started' });
@@ -120,6 +118,8 @@ describe.each(DIALECTS)('reports (%s)', (dialect) => {
     expect((await client.getTicket('MA-1')).status.name).toBe('Need review');
     await client.applyReport({ text: 'TICKET: MA-1\nSTATUS: who knows' });
     expect((await client.getTicket('MA-1')).status.name).toBe('Need review');
+    await client.applyReport({ text: 'TICKET: MA-1\nSTATUS: approved' });
+    expect((await client.getTicket('MA-1')).status.name).toBe('Reviewed');
   });
 
   it('applies a keyless block to the ticket it was opened from', async () => {

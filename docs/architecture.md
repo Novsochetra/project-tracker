@@ -46,7 +46,7 @@ To do ──claim──▶ In progress ──submit──▶ Need review ──r
 - Prompts are built on the server (`GET /api/tickets/:key/prompt`, `GET /api/projects/:key/prompt`) with the shared builders. Status labels use the status names. The ticket block also shows the last review (`Last review: Changes requested · 2/5` + summary).
 - "Open tickets" for the project prompt means categories `todo` and `in_progress`, ordered in-progress first, then priority, then number.
 - The switch reads "Move MOB-3 to {in_progress status name}" and shows for tickets in a `todo` status.
-- Report STATUS words map to categories (`normalizeReportStatus`): reviewed/approved/verified → `reviewed`; done/complete/fixed/finished/resolved and review words → `in_review`; not started → `todo`; progress/partial/blocked/wip/started/ongoing → `in_progress`; to do → `todo`. A report never sets Done.
+- Report STATUS words map to categories (`normalizeReportStatus`): reviewed/approved/verified → `reviewed`; done/complete/fixed/finished/resolved and review words → `in_review`; not started → `todo`; progress/partial/blocked/wip/started/ongoing → `in_progress`; to do → `todo`. A report never sets Done, and never moves a ticket in a `reviewed` or `done` status to a status that is not in a later category in `STATUS_CATEGORIES` order (`reportMayMove`, PT-173): a reviewer's own "STATUS: done" report used to send an approved ticket back to Need review, and "STATUS: approved" moved a ticket in a custom reviewed status ("QA passed") back to Reviewed. The ticket stays in its status, the report is still added to the activity, and the Paste report preview shows "Add report" for it.
 
 ### 1.4 Attachments
 

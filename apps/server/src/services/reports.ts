@@ -1,6 +1,7 @@
 import {
   parseReport,
   parseTicketKey,
+  reportMayMove,
   resolveStatus,
   type Actor,
   type ParsedReportBlock,
@@ -27,6 +28,9 @@ interface ResolvedBlock {
   target: StatusRow | null;
 }
 
+const movesTo = (from: StatusRow, to: StatusRow): boolean =>
+  to.id !== from.id && reportMayMove(from.category, to.category);
+
 async function resolveBlock(
   db: Db,
   block: ParsedReportBlock,
@@ -37,7 +41,7 @@ async function resolveBlock(
   if (!ref) return { block, scope: null, target: null };
   const scope = await loadTicketScope(db, ref);
   const next = block.category ? resolveStatus(scope.statuses, block.category) : null;
-  return { block, scope, target: next && next.id !== scope.status.id ? next : null };
+  return { block, scope, target: next && movesTo(scope.status, next) ? next : null };
 }
 
 const previewItem = ({ block, scope, target }: ResolvedBlock): ReportPreviewItem => ({
