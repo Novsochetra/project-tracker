@@ -1,4 +1,4 @@
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useState } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -7,8 +7,10 @@ import { makeBoard } from '../../src/api/test/fixtures';
 import { setupApi } from '../../src/api/test/render';
 import { CALENDAR_QUERY, DateRow, SelectRow, ToastProvider } from '../../src/components';
 import { NewTicketSheet } from '../../src/features/project/NewTicketSheet';
+import { CLICK_SHIELD_MS } from '../../src/lib/clickShield';
 import { skipAnimations } from '../../src/overlays/testing';
 import { doubleClick, GAPS, hitTest } from './doubleClick';
+import { advance, stillClock } from './stillClock';
 
 // Double-clicking a day, a quick pick or a Status or Priority option picked it, and the second
 // click went through the closing popover to what lay under it (Chromium and WebKit, 1280×800):
@@ -41,9 +43,9 @@ function mockDesktopCalendar(): () => void {
 let cleanups: Array<() => void> = [];
 
 beforeEach(() => {
-  vi.useFakeTimers({ toFake: ['Date'] });
+  vi.useFakeTimers({ toFake: ['Date', 'performance', 'setTimeout', 'clearTimeout'] });
   vi.setSystemTime(new Date(2026, 9, 8, 12));
-  cleanups = [skipAnimations(), mockDesktopCalendar()];
+  cleanups = [stillClock(), skipAnimations(), mockDesktopCalendar()];
 });
 
 afterEach(() => {
@@ -164,11 +166,13 @@ describe('regression: the second click of a double-click stays on the popover', 
     await user.click(dueRow());
     const spot = day('Thursday, October 22, 2026');
     await user.click(spot);
-    await waitFor(() => expect(hitTest(spot, below)).toBe(below));
+    await advance(CLICK_SHIELD_MS);
+    expect(hitTest(spot, below)).toBe(below);
     await user.click(priorityRow());
     const high = option('High');
     await user.click(high);
-    await waitFor(() => expect(hitTest(high, below)).toBe(below));
+    await advance(CLICK_SHIELD_MS);
+    expect(hitTest(high, below)).toBe(below);
     await user.click(below);
     expect(onDelete).toHaveBeenCalledTimes(1);
   });

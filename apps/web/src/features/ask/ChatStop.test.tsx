@@ -7,12 +7,12 @@ import { makeAskRun, makeChatDetail } from '../../api/test/chatFixtures';
 import { DARA, makeRunner } from '../../api/test/runFixtures';
 import { CLICK_SHIELD_MS } from '../../lib/clickShield';
 import { tap } from '../../overlays/testing';
+import { advance, stillClock } from '../../../test/regression/stillClock';
 import { STOPPED_PART_WAY_TEXT, STOPPED_TEXT } from './copy';
 import { renderAsk } from './test/renderAsk';
 
 const question = () => screen.findByRole('textbox', { name: 'Question for Claude' });
 const button = (name: string) => screen.findByRole('button', { name });
-const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const running = (mode: AskMode = 'ask') =>
   makeAskRun({
@@ -22,10 +22,10 @@ const running = (mode: AskMode = 'ask') =>
   });
 const cancelledOf = (run: Run): Run => ({ ...run, status: 'cancelled', endedAt: Date.now() });
 
-let restore: () => void;
+let restore: Array<() => void> = [];
 
 beforeEach(() => localStorage.clear());
-afterEach(() => restore());
+afterEach(() => restore.reverse().forEach((undo) => undo()));
 
 function setup(details: ChatDetail[], client: Record<string, unknown> = {}) {
   const getChat = vi.fn();
@@ -34,7 +34,7 @@ function setup(details: ChatDetail[], client: Record<string, unknown> = {}) {
   const rendered = renderAsk({
     client: { getChat, listRunners: vi.fn().mockResolvedValue([makeRunner()]), ...client },
   });
-  restore = rendered.restore;
+  restore = [rendered.restore];
   return rendered;
 }
 
@@ -77,12 +77,13 @@ describe('Ask: Stop', () => {
     const { client } = stoppable(running(), { ask });
     const user = userEvent.setup();
     await user.type(await question(), 'Try another way');
+    restore.push(stillClock());
     await tap(user, await button('Stop'));
     await tap(user, await button('Send'));
     expect(ask).not.toHaveBeenCalled();
     expect(client.cancelRun).toHaveBeenCalledTimes(1);
 
-    await wait(CLICK_SHIELD_MS + 50);
+    await advance(CLICK_SHIELD_MS);
     await tap(user, await button('Send'));
     expect(ask).toHaveBeenCalledTimes(1);
   });
@@ -93,6 +94,7 @@ describe('Ask: Stop', () => {
     setup([makeChatDetail(), asked], { ask: vi.fn().mockResolvedValue(asked), cancelRun });
     const user = userEvent.setup();
     await user.type(await question(), 'And offline?');
+    restore.push(stillClock());
     await tap(user, await button('Send'));
     await tap(user, await button('Stop'));
     expect(cancelRun).not.toHaveBeenCalled();

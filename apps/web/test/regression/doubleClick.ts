@@ -1,5 +1,6 @@
 import { screen } from '@testing-library/react';
 import type userEvent from '@testing-library/user-event';
+import { advance } from './stillClock';
 
 // jsdom has no layout, so this stands in for the browser's hit test at the spot of the first
 // click: the popover's topmost element there that still takes clicks, else a click-catching
@@ -11,13 +12,12 @@ export function hitTest(spot: Element, under: Element): Element {
   return screen.queryByRole('button', { name: /^Close (menu|calendar)$/, hidden: true }) ?? under;
 }
 
-const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-
 export type User = ReturnType<typeof userEvent.setup>;
 
+// With the clock stopped (stillClock), so a busy machine can't stretch the gap past the shield.
 export async function doubleClick(user: User, spot: Element, under: Element, gap: number) {
   await user.click(spot);
-  if (gap > 0) await wait(gap);
+  if (gap > 0) await advance(gap);
   await user.click(hitTest(spot, under));
 }
 
