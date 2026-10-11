@@ -23,6 +23,17 @@ function withExtraBytes(jpeg: Buffer, marker: number, extra: Buffer): Buffer {
   return stuffed;
 }
 
+// Seven free bytes in each header's fields: repeated, they spell out anything.
+function withRepeatedHeaders(jpeg: Buffer, marker: number, name: string, tail: number[]): Buffer {
+  const at = jpeg.indexOf(Buffer.from([0xff, marker]));
+  const end = at + 2 + jpeg.readUInt16BE(at + 2);
+  const repeats = ['GPS 11.', '55N 104', '.92E   '].map((part) => {
+    const data = Buffer.concat([Buffer.from(name + part, 'latin1'), Buffer.from(tail)]);
+    return Buffer.concat([Buffer.from([0xff, marker, 0, data.length + 2]), data]);
+  });
+  return Buffer.concat([jpeg.subarray(0, end), ...repeats, jpeg.subarray(end)]);
+}
+
 const jfifJpeg = () => jpegFixture('pillow.jpg');
 const adobeJpeg = () =>
   rawImage(noisyPixels(32, 24), 32, 24).toColourspace('cmyk').jpeg().toBuffer();
@@ -63,6 +74,16 @@ describe('extra bytes in a JPEG’s JFIF and Adobe segments', () => {
     const original = await adobeJpeg();
     const scans = Buffer.from('03001003020306' + '00'.repeat(12), 'hex');
     expect(Buffer.from(stripJpeg(withExtraBytes(original, ADOBE, scans), 1)!)).toEqual(original);
+  });
+
+  it('keeps only the first JFIF header', () => {
+    const repeated = withRepeatedHeaders(jfifJpeg(), JFIF, 'JFIF\0', [0, 0]);
+    expectStrippedBackTo(repeated, jfifJpeg());
+  });
+
+  it('keeps only the first Adobe header', async () => {
+    const original = await adobeJpeg();
+    expectStrippedBackTo(withRepeatedHeaders(original, ADOBE, 'Adobe', []), original);
   });
 
   it('drops an APP14 that isn’t Adobe’s', async () => {

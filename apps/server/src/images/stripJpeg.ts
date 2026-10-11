@@ -43,15 +43,21 @@ function keep(pieces: Piece[], { start, end }: JpegSegment) {
   else pieces.push({ start, end });
 }
 
-// What follows the end marker can carry metadata of its own, so only the segments are kept.
+// What follows the end marker can carry metadata of its own, so only the segments are kept. A
+// file needs one JFIF and one Adobe header; more of them would carry seven free bytes each.
 function walk(bytes: Buffer): Walk {
   const pieces: Piece[] = [];
+  const headers = new Set<number>();
   let scanned = false;
   for (const segment of jpegSegments(bytes)) {
     scanned ||= segment.marker === SOS;
     const header = appHeader(bytes, segment);
-    if (header) pieces.push(header);
-    else if (isNeeded(bytes, segment)) keep(pieces, segment);
+    if (!header) {
+      if (isNeeded(bytes, segment)) keep(pieces, segment);
+    } else if (!headers.has(segment.marker)) {
+      headers.add(segment.marker);
+      pieces.push(header);
+    }
   }
   return { pieces, scanned };
 }
