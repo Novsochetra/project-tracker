@@ -63,3 +63,34 @@ describe.each(DIALECTS)('regression: an agent named like the person (%s)', (dial
     expect(answer.status).toBe(201);
   });
 });
+
+// The local tracker without an owner takes the actor header as sent, so the name is checked there too.
+describe.each(DIALECTS)('regression: an agent named like the person, no owner (%s)', (dialect) => {
+  const api = useTestServer(dialect, { auth: { openWithoutOwner: 'local' } });
+
+  beforeEach(async () => {
+    await api.post('/api/projects', { name: 'Mobile', key: 'MOB' });
+    await api.post('/api/projects/MOB/tickets', { title: 'Crash' });
+  });
+
+  const comment = (kind: 'agent' | 'human', name: string) =>
+    api.post<ErrorBody>(
+      '/api/tickets/MOB-1/comments',
+      { text: 'Looks done to me' },
+      { actor: { kind, name } },
+    );
+
+  it.each(['User', 'you', 'ＵＳＥＲ', 'User​'])(
+    'refuses an agent header naming %j',
+    async (name) => {
+      const answer = await comment('agent', name);
+      expect(answer.status).toBe(400);
+      expect(answer.body.error.code).toBe('invalid_input');
+    },
+  );
+
+  it('lets the person be User, and other agents in', async () => {
+    expect((await comment('human', 'User')).status).toBe(201);
+    expect((await comment('agent', 'Claude')).status).toBe(201);
+  });
+});

@@ -16,4 +16,12 @@ export const actorLabel = (actor: Actor): string =>
 // name would read as the person.
 const PERSON_WORDS = new Set(['you', 'user']);
 
-export const isPersonWord = (name: string): boolean => PERSON_WORDS.has(name.trim().toLowerCase());
+// Full-width letters and invisible characters would show the same word without matching it.
+const comparable = (name: string): string =>
+  name
+    .normalize('NFKC')
+    .replace(/\p{Cf}/gu, '')
+    .trim()
+    .toLowerCase();
+
+export const isPersonWord = (name: string): boolean => PERSON_WORDS.has(comparable(name));
