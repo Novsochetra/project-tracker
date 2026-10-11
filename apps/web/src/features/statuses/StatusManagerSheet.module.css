@@ -35,8 +35,11 @@
   box-shadow: var(--shadow-lifted);
 }
 
+/* On the item, not its row button: the item stays hovered while the pointer is on the drag
+   handle beside the button (PT-149). Not while dragged: the pointer rides along on the handle,
+   and a lifted item stays Surface like the design's lifted row. */
 @media (hover: hover) {
-  .item:has(.row:hover) {
+  .item:hover:not([data-dragging]) {
     background: var(--fill);
   }
 }

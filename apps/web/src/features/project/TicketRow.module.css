@@ -96,8 +96,11 @@
   background: var(--fill);
 }
 
+/* On the row, not the button: the drag handle is drawn over the button, and the row stays
+   hovered while the pointer is on it (PT-149). Not while dragged: the pointer stays on the handle
+   through a drag, and the dimmed row keeps its resting background. */
 @media (hover: hover) {
-  .main:hover {
+  .row:hover .main:not([data-dragged]) {
     background: var(--fill);
   }
 }
