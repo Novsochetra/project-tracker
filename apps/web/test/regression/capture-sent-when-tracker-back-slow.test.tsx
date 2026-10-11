@@ -89,7 +89,6 @@ it('sends a capture saved during an outage once the tracker answers again, thoug
   const { result } = renderShell(net);
   await wait(10_000);
   expect(result.current).toBe(true);
-  // The sheet's create got no answer, so it queued the capture.
   act(() => {
     updateQueue((queue) =>
       addCapture(queue, {

@@ -3,6 +3,7 @@ import type { ChangeEvent } from '@tracker/shared';
 import { markChanged } from '../freshReads';
 import { busyKeys } from '../pending';
 import { rootOf, scopeOf } from '../queryKeys';
+import { refreshProjectList } from '../projectListRefresh';
 import { isRefreshable } from '../refresh';
 import { changeScope, EVERYTHING, isAffected, type CachedEntry } from './changeScope';
 
@@ -12,6 +13,8 @@ function readFresh(queryClient: QueryClient, refreshed: readonly QueryKey[]): vo
   const tickets = new Set(refreshed.filter((key) => rootOf(key) === 'ticket').map(scopeOf));
   for (const ticketKey of tickets) if (ticketKey) markChanged(queryClient, ticketKey);
 }
+
+const isProjectList = (queryKey: QueryKey): boolean => rootOf(queryKey) === 'projects';
 
 export const cachedEntries = (queryClient: QueryClient): CachedEntry[] =>
   queryClient
@@ -30,6 +33,10 @@ export function refreshForChange(
   const busy = busyKeys(queryClient, settling);
   const refreshed = (queryKey: QueryKey) =>
     isAffected(queryKey, scope) && isRefreshable(queryClient, queryKey, busy);
-  readFresh(queryClient, entries.map(({ queryKey }) => queryKey).filter(refreshed));
-  void queryClient.invalidateQueries({ predicate: ({ queryKey }) => refreshed(queryKey) });
+  const keys = entries.map(({ queryKey }) => queryKey).filter(refreshed);
+  readFresh(queryClient, keys);
+  if (keys.some(isProjectList)) refreshProjectList(queryClient);
+  void queryClient.invalidateQueries({
+    predicate: ({ queryKey }) => !isProjectList(queryKey) && refreshed(queryKey),
+  });
 }

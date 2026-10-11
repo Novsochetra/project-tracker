@@ -1,6 +1,7 @@
 export { ApiProvider, type ApiProviderProps } from './ApiProvider';
 export { useApi } from './context';
 export { createQueryClient } from './queryClient';
+export { refreshProjectList } from './projectListRefresh';
 export { projectOfQuery, projectOfTicket, queryKeys } from './queryKeys';
 export {
   errorMessage,

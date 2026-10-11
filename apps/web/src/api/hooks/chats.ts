@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query';
 import type { AskInput, CardTicketInput, Chat, ChatDetail, Run } from '@tracker/shared';
 import { useApi } from '../context';
+import { refreshProjectList } from '../projectListRefresh';
 import { queryKeys } from '../queryKeys';
 import type { TrackerMutation, TrackerQuery } from '../types';
 import { isWorking, WORKING_RUN_REFRESH_MS } from '../workingRun';
@@ -101,7 +102,7 @@ export function useCreateCardTicket(): TrackerMutation<ChatDetail, CardTicketVar
     onSuccess: (detail) => {
       showChat(queryClient, detail);
       void queryClient.invalidateQueries({ queryKey: queryKeys.board(detail.chat.projectKey) });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.projects() });
+      refreshProjectList(queryClient);
     },
   });
 }

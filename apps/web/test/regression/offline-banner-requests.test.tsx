@@ -1,7 +1,7 @@
 import type { SessionState } from '@tracker/shared';
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { NETWORK_ERROR_MESSAGE } from '../../src/api';
 import { fakeClient } from '../../src/api/test/fakeClient';
 import { makeBoard, otherProject } from '../../src/api/test/fixtures';
@@ -9,6 +9,7 @@ import { createTestQueryClient } from '../../src/api/test/render';
 import { announce } from '../../src/app/announce';
 import { LiveRegion } from '../../src/app/LiveRegion';
 import { OfflineBanner } from '../../src/app/OfflineBanner';
+import { ProjectScreen } from '../../src/app/lazyParts';
 import { projectSummary } from '../../src/app/test/harness';
 import { TrackerApp } from '../../src/app/TrackerApp';
 import { skipAnimations } from '../../src/overlays/testing';
@@ -55,6 +56,10 @@ const breadcrumb = () => screen.getByRole('navigation', { name: 'Breadcrumb' });
 const MOVE_MOB_1 = 'Move MOB-1. Drag, or use the arrow keys.';
 
 let restore: Array<() => void> = [];
+
+// Loaded late on a busy machine, the screen mounted after the list read failed and read it again,
+// which broke the read count (PT-174).
+beforeAll(() => ProjectScreen.preload());
 
 beforeEach(() => {
   restore = [skipAnimations()];

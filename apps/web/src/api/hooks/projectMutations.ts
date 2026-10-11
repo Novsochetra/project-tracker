@@ -16,6 +16,7 @@ import {
 import { useApi } from '../context';
 import { forgetDeleted, markDeleted } from '../deleted';
 import { cacheChange, patchCaches } from '../optimistic';
+import { refreshProjectList } from '../projectListRefresh';
 import { belongsToProject, queryKeys } from '../queryKeys';
 import { settleMutation } from '../refresh';
 import type { TrackerMutation } from '../types';
@@ -28,10 +29,6 @@ export interface UpdateProjectVariables {
 export interface DeleteProjectVariables {
   projectKey: string;
 }
-
-const refreshProjectList = (queryClient: QueryClient): void => {
-  void queryClient.invalidateQueries({ queryKey: queryKeys.projects(), exact: true });
-};
 
 // A deleted project's key can be reused, so drop anything cached under it before seeding.
 function seedProject(queryClient: QueryClient, detail: ProjectDetail): Promise<void> {

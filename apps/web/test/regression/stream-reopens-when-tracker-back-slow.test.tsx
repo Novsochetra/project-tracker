@@ -58,7 +58,7 @@ function renderApp(path: string) {
 const advance = (ms: number) => act(() => vi.advanceTimersByTimeAsync(ms));
 const banner = () => document.querySelector('.banner');
 
-// Every stream the app opens meanwhile gets the proxy's bare 502, which the browser gives up on.
+// The browser gives up on a stream the proxy answers with a bare 502, so it never tries it again.
 async function streamRefusedFor(ms: number) {
   const refused = new Set<MockEventSource>();
   for (let waited = 0; waited < ms; waited += STEP_MS) {
