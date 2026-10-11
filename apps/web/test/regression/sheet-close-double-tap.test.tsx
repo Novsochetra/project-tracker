@@ -11,7 +11,7 @@ import { advance, stillClock } from './stillClock';
 // a primary action that closes it landed on the screen under it: the nav bar's Back, or a text
 // field, which opened the keyboard. PT-141 held the screen for Run only.
 
-function Screen({ onBehind }: { onBehind: () => void }) {
+function Screen({ onBehind, onInside }: { onBehind: () => void; onInside: () => void }) {
   const [open, setOpen] = useState(true);
   const [text, setText] = useState('');
   return (
@@ -33,6 +33,9 @@ function Screen({ onBehind }: { onBehind: () => void }) {
           value={text}
           onChange={(event) => setText(event.currentTarget.value)}
         />
+        <button type="button" onClick={onInside}>
+          Inside
+        </button>
       </Sheet>
     </>
   );
@@ -49,9 +52,10 @@ afterEach(() => cleanups.reverse().forEach((undo) => undo()));
 function renderScreen(phone: boolean) {
   cleanups.push(mockPhone(phone));
   const onBehind = vi.fn();
-  render(<Screen onBehind={onBehind} />);
+  const onInside = vi.fn();
+  render(<Screen onBehind={onBehind} onInside={onInside} />);
   cleanups.push(stillClock());
-  return { onBehind, user: userEvent.setup() };
+  return { onBehind, onInside, user: userEvent.setup() };
 }
 
 const sheet = () => screen.queryByRole('dialog', { name: 'Send to Claude Code' });
@@ -91,6 +95,17 @@ it('drops the second tap after Discard changes closes the sheet', async () => {
   await tap(user, screen.getByRole('button', { name: 'Discard changes' }));
   await tap(user, behind());
   expect(onBehind).not.toHaveBeenCalled();
+});
+
+// The sheet under it stays open, so what lies under Keep editing is the sheet's, as the person left it.
+it('lets the next tap in the sheet through after Keep editing', async () => {
+  const { onInside, user } = renderScreen(true);
+  await user.type(screen.getByRole('textbox', { name: 'Prompt' }), 'Half a prompt');
+  await tap(user, scrim());
+  await advance(CLICK_SHIELD_MS);
+  await tap(user, screen.getByRole('button', { name: 'Keep editing' }));
+  await tap(user, within(sheet()!).getByRole('button', { name: 'Inside' }));
+  expect(onInside).toHaveBeenCalledTimes(1);
 });
 
 it("drops a double-click's second click on desktop and lets a single click through", async () => {
