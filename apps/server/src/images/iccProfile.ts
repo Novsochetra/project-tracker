@@ -2,6 +2,10 @@ const HEADER_BYTES = 128;
 const TAG_ENTRY_BYTES = 12;
 const ACSP = Buffer.from('acsp', 'latin1');
 
+// Real profiles have about 20 tags (17 at most among macOS's). Without a bound, a 15 MB profile of
+// empty tags took 400 ms and 120 MB on the main thread to check (PT-175 review).
+export const MAX_ICC_TAGS = 1024;
+
 interface Span {
   start: number;
   end: number;
@@ -9,8 +13,9 @@ interface Span {
 
 function tagSpans(profile: Buffer): Span[] | null {
   if (profile.length < HEADER_BYTES + 4) return null;
-  const tableEnd = HEADER_BYTES + 4 + profile.readUInt32BE(HEADER_BYTES) * TAG_ENTRY_BYTES;
-  if (tableEnd > profile.length) return null;
+  const count = profile.readUInt32BE(HEADER_BYTES);
+  const tableEnd = HEADER_BYTES + 4 + count * TAG_ENTRY_BYTES;
+  if (count > MAX_ICC_TAGS || tableEnd > profile.length) return null;
   const spans: Span[] = [{ start: 0, end: tableEnd }];
   for (let at = HEADER_BYTES + 4; at < tableEnd; at += TAG_ENTRY_BYTES) {
     const start = profile.readUInt32BE(at + 4);
