@@ -51,12 +51,12 @@ const edges = (): [number, number][] => [
 // A screen's bars and the parts of the page beside it, such as its nav bar and bottom bar or the
 // desktop header and sidebar, with where they are now. A sheet has none: one that fits its
 // content shrinks with the note, so its header moves too, and the scrim it uncovers would close
-// it. A page without layout (jsdom) can't tell.
+// it. Nor has the whole page, held as a sheet closes: the sheet covered its bars, and by then it
+// may take no part in what is on top (inert). A page without layout (jsdom) can't tell.
 function stillBars(note: Element, layer: Element): Map<Element, DOMRect> {
   const bars = new Map<Element, DOMRect>();
-  if (typeof document.elementFromPoint !== 'function' || note.closest('[role="dialog"]')) {
-    return bars;
-  }
+  const covered = note === note.ownerDocument.body || note.closest('[role="dialog"]');
+  if (typeof document.elementFromPoint !== 'function' || covered) return bars;
   const scroller = scrollerOf(note, layer);
   for (const [x, y] of edges()) {
     const bar = stillPartAt(x, y, scroller);

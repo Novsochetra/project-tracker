@@ -16,6 +16,7 @@ import { DiscardChangesSheet } from './DiscardChangesSheet';
 import styles from './Sheet.module.css';
 import { SheetCancelContext } from './sheetCancel';
 import type { SheetProps } from './sheetTypes';
+import { useCloseHold } from './useCloseHold';
 import { useDialogPresence, useDialogValues } from './useDialogPresence';
 import { useDiscardGuard } from './useDiscardGuard';
 import { useDismissDrag } from './useDismissDrag';
@@ -125,6 +126,7 @@ export function SheetPanel(props: SheetPanelProps) {
   });
   // iOS asks before Cancel throws changes away; a desktop Cancel button is a deliberate click.
   const cancel = isPhone ? guard.requestClose : onClose;
+  const closeHold = useCloseHold(open);
 
   const content = <SheetContent {...props} handleRef={handleRef} bodyRef={bodyRef} />;
   return (
@@ -134,6 +136,7 @@ export function SheetPanel(props: SheetPanelProps) {
         style={keyboardVars}
         inert={!open}
         data-sheet=""
+        {...closeHold}
       >
         <motion.button
           type="button"
@@ -162,12 +165,13 @@ export function SheetPanel(props: SheetPanelProps) {
             content
           )}
         </motion.div>
+        {/* Inside, though it opens on the body, so a press on Discard changes counts as the sheet's. */}
+        <DiscardChangesSheet
+          open={guard.asking}
+          onKeep={guard.keepEditing}
+          onDiscard={guard.discard}
+        />
       </div>
-      <DiscardChangesSheet
-        open={guard.asking}
-        onKeep={guard.keepEditing}
-        onDiscard={guard.discard}
-      />
     </SheetCancelContext.Provider>
   );
 }
