@@ -1,3 +1,4 @@
+import { DEFAULT_ASK_OPTIONS } from '@tracker/shared';
 import { describe, expect, it, vi } from 'vitest';
 import type { ClaudeExit } from '../../src/watch/outcome';
 import { createWatcher } from '../../src/watch/watcher';
@@ -32,7 +33,9 @@ describe('the watcher with a chat question', () => {
 
   // PT-162: the chat's Stop cancels the run, and the helper must end Claude in either lane.
   it.each(['ask', 'edit'] as const)('stops Claude answering a %s question', async (mode) => {
-    const tracker = fakeTracker([askJob('r-1', 'c0ffee00-chat', null, { model: 'default', mode })]);
+    const tracker = fakeTracker([
+      askJob('r-1', 'c0ffee00-chat', null, { ...DEFAULT_ASK_OPTIONS, mode }),
+    ]);
     const runAsk = vi.fn(
       (_job: unknown, signal: AbortSignal) =>
         new Promise<ClaudeExit>((resolve) =>

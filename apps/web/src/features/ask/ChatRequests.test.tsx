@@ -13,7 +13,7 @@ import { renderAsk } from './test/renderAsk';
 const working = makeAskRun({
   status: 'running',
   startedAt: Date.now(),
-  askOptions: { model: 'default', mode: 'edit' },
+  askOptions: { model: 'default', mode: 'edit', effort: 'default' },
 });
 const question = makeMessage({ text: 'Rename the sync queue' });
 

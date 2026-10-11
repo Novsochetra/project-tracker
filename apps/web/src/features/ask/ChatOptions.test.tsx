@@ -10,6 +10,7 @@ import { renderAsk } from './test/renderAsk';
 const dara = makeRunner();
 const question = () => screen.findByRole('textbox', { name: 'Question for Claude' });
 const modelChip = () => screen.findByRole('button', { name: /^Model/ });
+const effortChip = () => screen.queryByRole('button', { name: /^Effort/ });
 const mode = (name: string) => screen.getByRole('button', { name });
 
 let restore: () => void;
@@ -36,18 +37,24 @@ async function sendQuestion(text: string) {
   await user.click(screen.getByRole('button', { name: 'Send' }));
 }
 
-describe('Ask: the model and mode pickers', () => {
+describe('Ask: the model, effort and mode pickers', () => {
   it('start a new chat on Default and Ask, with no hint', async () => {
     setup(null);
     expect(await modelChip()).toHaveTextContent('Default');
+    expect(effortChip()).toHaveTextContent('Default');
     expect(screen.getByRole('group', { name: 'Mode' })).toBeInTheDocument();
     expect(mode('Ask')).toHaveAttribute('aria-pressed', 'true');
     expect(screen.queryByText(EDIT_HINT)).not.toBeInTheDocument();
   });
 
   it("start an existing chat from the chat's last choice", async () => {
-    setup(makeChatDetail({ chat: makeChat({ options: { model: 'opus', mode: 'edit' } }) }));
+    setup(
+      makeChatDetail({
+        chat: makeChat({ options: { model: 'opus', mode: 'edit', effort: 'xhigh' } }),
+      }),
+    );
     expect(await modelChip()).toHaveTextContent('Opus');
+    expect(effortChip()).toHaveTextContent('X-high');
     expect(mode('Edit')).toHaveAttribute('aria-pressed', 'true');
     expect(screen.getByText(EDIT_HINT)).toBeVisible();
   });
@@ -58,16 +65,35 @@ describe('Ask: the model and mode pickers', () => {
     const { client } = setup(detail, { ask });
     const user = userEvent.setup();
     await user.click(await modelChip());
-    await user.click(screen.getByRole('option', { name: 'Haiku' }));
+    await user.click(screen.getByRole('option', { name: 'Sonnet' }));
+    await user.click(effortChip()!);
+    await user.click(screen.getByRole('option', { name: 'Max' }));
     await user.click(mode('Plan'));
     await sendQuestion('Plan offline mode');
 
     expect(client.ask).toHaveBeenCalledWith('c-1', {
       runnerId: dara.id,
       text: 'Plan offline mode',
-      model: 'haiku',
+      model: 'sonnet',
       mode: 'plan',
+      effort: 'max',
     });
+  });
+
+  it('hide the effort for Haiku and bring the choice back for another model', async () => {
+    setup(
+      makeChatDetail({
+        chat: makeChat({ options: { model: 'opus', mode: 'ask', effort: 'high' } }),
+      }),
+    );
+    const user = userEvent.setup();
+    await user.click(await modelChip());
+    await user.click(screen.getByRole('option', { name: 'Haiku' }));
+    expect(effortChip()).not.toBeInTheDocument();
+
+    await user.click(await modelChip());
+    await user.click(screen.getByRole('option', { name: 'Sonnet' }));
+    expect(effortChip()).toHaveTextContent('High');
   });
 
   it('send the choice with the first question of a new chat', async () => {
@@ -82,6 +108,7 @@ describe('Ask: the model and mode pickers', () => {
       text: 'Fix the typo',
       model: 'default',
       mode: 'edit',
+      effort: 'default',
     });
   });
 });

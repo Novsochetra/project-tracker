@@ -1,4 +1,4 @@
-import type { AskMode, AskModel, ChatRole } from '@tracker/shared';
+import type { AskEffort, AskMode, AskModel, ChatRole } from '@tracker/shared';
 
 export interface ChatRow {
   id: string;
@@ -10,6 +10,7 @@ export interface ChatRow {
   sessionRunnerId: string | null;
   askModel: AskModel;
   askMode: AskMode;
+  askEffort: AskEffort;
   createdAt: number;
   updatedAt: number;
 }

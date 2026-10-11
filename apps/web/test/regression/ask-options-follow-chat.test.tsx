@@ -1,6 +1,6 @@
 import { act, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import type { AskOptions, ChatDetail } from '@tracker/shared';
+import { DEFAULT_ASK_OPTIONS, type AskOptions, type ChatDetail } from '@tracker/shared';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { makeChat, makeChatDetail } from '../../src/api/test/chatFixtures';
 import { makeRunner } from '../../src/api/test/runFixtures';
@@ -14,8 +14,8 @@ afterEach(() => restore());
 
 const modelChip = () => screen.findByRole('button', { name: /^Model/ });
 const mode = (name: string) => screen.getByRole('button', { name });
-const savedAs = (options: AskOptions): ChatDetail =>
-  makeChatDetail({ chat: makeChat({ options }) });
+const savedAs = (options: Partial<AskOptions>): ChatDetail =>
+  makeChatDetail({ chat: makeChat({ options: { ...DEFAULT_ASK_OPTIONS, ...options } }) });
 
 // PT-160 review: the composer read the chat's saved options once, so a choice saved on another
 // device did not show until the screen was opened again.
@@ -32,7 +32,7 @@ describe('regression: the options row and the chat’s saved choice', () => {
       },
     });
     restore = rendered.restore;
-    const save = (options: AskOptions) =>
+    const save = (options: Partial<AskOptions>) =>
       act(() => rendered.queryClient.setQueryData(queryKeys.chat('c-1'), savedAs(options)));
     return save;
   }

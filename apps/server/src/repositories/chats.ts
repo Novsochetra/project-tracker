@@ -105,7 +105,10 @@ export async function updateChatRow(
   db: Db,
   id: string,
   changes: Partial<
-    Pick<ChatRow, 'sessionId' | 'sessionRunnerId' | 'updatedAt' | 'askModel' | 'askMode'>
+    Pick<
+      ChatRow,
+      'sessionId' | 'sessionRunnerId' | 'updatedAt' | 'askModel' | 'askMode' | 'askEffort'
+    >
   >,
 ): Promise<void> {
   await db.updateTable('chats').set(changes).where('id', '=', id).execute();

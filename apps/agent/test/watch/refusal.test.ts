@@ -1,4 +1,4 @@
-import type { AskMode, Run, RunJob } from '@tracker/shared';
+import { DEFAULT_ASK_OPTIONS, type AskMode, type Run, type RunJob } from '@tracker/shared';
 import { describe, expect, it } from 'vitest';
 import { refusalOf } from '../../src/watch/refusal';
 
@@ -27,7 +27,7 @@ const job = (run: Partial<Run>): RunJob => ({
 const ticketLane = { projectKey: 'MOB', kind: 'ticket' as const };
 const askLane = { projectKey: 'MOB', kind: 'ask' as const };
 const question = { kind: 'ask' as const, ticketKey: null, chatId: 'c-1' };
-const asked = (mode: AskMode) => ({ ...question, askOptions: { model: 'default' as const, mode } });
+const asked = (mode: AskMode) => ({ ...question, askOptions: { ...DEFAULT_ASK_OPTIONS, mode } });
 
 describe('refusalOf', () => {
   it("refuses a ticket outside this helper's project, even one whose key starts the same", () => {

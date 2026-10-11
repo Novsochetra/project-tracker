@@ -65,7 +65,7 @@ describe.each(DIALECTS)('chats with Claude Code (%s)', (dialect) => {
       id: expect.any(String),
       projectKey: 'MOB',
       title: 'Where are runs queued?',
-      options: { model: 'default', mode: 'ask' },
+      options: { model: 'default', mode: 'ask', effort: 'default' },
       waiting: false,
       createdAt: 1_000_000,
       updatedAt: 1_000_000,
@@ -77,7 +77,7 @@ describe.each(DIALECTS)('chats with Claude Code (%s)', (dialect) => {
       kind: 'ask',
       ticketKey: null,
       chatId: made.id,
-      askOptions: { model: 'default', mode: 'ask' },
+      askOptions: { model: 'default', mode: 'ask', effort: 'default' },
       status: 'queued',
     });
 

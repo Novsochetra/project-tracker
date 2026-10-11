@@ -3,6 +3,7 @@ export const ASK_INTRO =
 export const ASK_PLACEHOLDER = 'Ask Claude about this project…';
 export const MODEL_LABEL = 'Model';
 export const MODE_LABEL = 'Mode';
+export const EFFORT_LABEL = 'Effort';
 export const EDIT_HINT =
   'Claude can change files and tickets. It waits for any ticket run on this computer.';
 export const SEND_LABEL = 'Send';

@@ -38,6 +38,7 @@ export async function queueAsk(trx: Db, request: AskRequest) {
     resumeSessionId,
     askModel: options.model,
     askMode: options.mode,
+    askEffort: options.effort,
   });
   await insertQueuedRun(trx, run, CHAT_BUSY);
   await insertMessage(trx, {
@@ -54,6 +55,7 @@ export async function queueAsk(trx: Db, request: AskRequest) {
     updatedAt: queued.now,
     askModel: options.model,
     askMode: options.mode,
+    askEffort: options.effort,
   });
   return run;
 }

@@ -176,7 +176,7 @@ describe('Ask: what Claude is doing', () => {
       status: 'cancelled',
       startedAt: Date.now(),
       endedAt: Date.now(),
-      askOptions: { model: 'default', mode: 'edit' },
+      askOptions: { model: 'default', mode: 'edit', effort: 'default' },
       stepCount: 4,
     });
     const listRunSteps = vi.fn().mockResolvedValue(makeSteps(4));

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { ASK_MODELS, ASK_MODES } from '../domain/askOptions';
+import { ASK_EFFORTS, ASK_MODELS, ASK_MODES } from '../domain/askOptions';
 import { CHAT_QUESTION_MAX } from '../domain/chat';
 import { PRIORITIES } from '../domain/priority';
 import { TICKET_DESCRIPTION_MAX, TICKET_TITLE_MAX } from '../domain/ticket';
@@ -16,6 +16,7 @@ export const askInput = z.object({
   // keeps the chat's saved choice (chosenAskOptions).
   model: z.enum(ASK_MODELS).optional(),
   mode: z.enum(ASK_MODES).optional(),
+  effort: z.enum(ASK_EFFORTS).optional(),
 });
 export type AskInput = z.input<typeof askInput>;
 

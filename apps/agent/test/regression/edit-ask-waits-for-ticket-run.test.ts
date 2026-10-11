@@ -1,3 +1,4 @@
+import { DEFAULT_ASK_OPTIONS } from '@tracker/shared';
 import { describe, expect, it, vi } from 'vitest';
 import type { ClaudeExit } from '../../src/watch/outcome';
 import { createWatcher } from '../../src/watch/watcher';
@@ -9,7 +10,7 @@ const SESSION = '11111111-2222-4333-8444-555555555555';
 // a ticket run (PT-160).
 describe('regression: an Edit question while a ticket run works', () => {
   it('waits for the ticket run, then hands its answer back to the chat', async () => {
-    const editAsk = askJob('r-2', 'c0ffee00-chat', null, { model: 'default', mode: 'edit' });
+    const editAsk = askJob('r-2', 'c0ffee00-chat', null, { ...DEFAULT_ASK_OPTIONS, mode: 'edit' });
     const tracker = fakeTracker([job('r-1', 'MOB-1'), editAsk]);
     let finishTicket = () => undefined as void;
     const ticketRun = new Promise<ClaudeExit>((resolve) => {
