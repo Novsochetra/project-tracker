@@ -5,11 +5,13 @@ import { afterEach, beforeEach, describe, expect, it, vi, type MockInstance } fr
 import { fakeClient } from '../../src/api/test/fakeClient';
 import { makeBoard, otherProject } from '../../src/api/test/fixtures';
 import { createTestQueryClient } from '../../src/api/test/render';
+import { ProjectScreen } from '../../src/app/lazyParts';
 import { projectSummary } from '../../src/app/test/harness';
 import { TrackerApp } from '../../src/app/TrackerApp';
 import { RELOAD_ON_ITS_WAY_MS } from '../../src/lib/pageReload';
 import { mockPhone, skipAnimations, tap } from '../../src/overlays/testing';
 import { reloadOnPreloadError } from '../../src/pwa/reloadOnPreloadError';
+import { stillClock } from './stillClock';
 
 // PT-119: once a screen's chunk failed and the page asked for a reload, the push that waited for
 // it was dropped (PT-108) and its row let go. On a slow network the new page takes a while, and a
@@ -85,10 +87,14 @@ describe('regression: a tap while the page reloads', () => {
     const mobile = await within(main).findByRole('button', { name: /^Mobile app/ });
     const website = within(main).getByRole('button', { name: /^Website/ });
     const entries = window.history.length;
+    restore.push(stillClock());
     await tap(user, mobile);
+    // The failed import reaches the screen's code through the test runner's modules, which on a
+    // busy machine came after the test's next steps.
     await act(async () => {
       chunk.fail();
       await chunk.loaded.catch(() => undefined);
+      await ProjectScreen.preload().catch(() => undefined);
     });
     expect(reload).toHaveBeenCalledTimes(1);
 

@@ -12,12 +12,11 @@ import {
   type Surface,
 } from './attachmentSurfaces';
 import { GAPS } from './doubleClick';
+import { advance, stillClock } from './stillClock';
 
 const NAMES = ['a.txt', 'b.txt', 'c.txt'];
 
 const picked = () => NAMES.map((name) => new File([name], name, { type: 'text/plain' }));
-
-const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 let shown: ShownSurface | undefined;
 let restore: Array<() => void> = [];
@@ -55,6 +54,7 @@ async function pickThree(surface: Surface, phone = true) {
   await user.upload(shown.input(), picked());
   await waitFor(() => expect(within(shown!.area()).queryByRole('progressbar')).toBeNull());
   expect(tileNames()).toEqual(NAMES);
+  restore.push(stillClock());
   return user;
 }
 
@@ -65,7 +65,7 @@ describe.each([NEW_TICKET, CAPTURE, COMMENT_BOX])('the x of a file in $name', (s
   it.each(GAPS)('removes one file on a double tap (%i ms apart)', async (gap) => {
     const user = await pickThree(surface);
     await user.click(removeButton('a.txt'));
-    if (gap > 0) await wait(gap);
+    if (gap > 0) await advance(gap);
     await user.click(removeButton('b.txt'));
     expect(tileNames()).toEqual(['b.txt', 'c.txt']);
   });
@@ -73,7 +73,7 @@ describe.each([NEW_TICKET, CAPTURE, COMMENT_BOX])('the x of a file in $name', (s
   it('removes the next file on a tap once the double tap is over', async () => {
     const user = await pickThree(surface);
     await user.click(removeButton('a.txt'));
-    await wait(CLICK_SHIELD_MS);
+    await advance(CLICK_SHIELD_MS);
     await user.click(removeButton('b.txt'));
     expect(tileNames()).toEqual(['c.txt']);
   });
@@ -93,7 +93,7 @@ describe.each([NEW_TICKET, CAPTURE, COMMENT_BOX])('the x of a file in $name', (s
     async (gap) => {
       const user = await pickThree(surface, false);
       await user.click(removeButton('a.txt'));
-      if (gap > 0) await wait(gap);
+      if (gap > 0) await advance(gap);
       await user.click(removeButton('b.txt'));
       expect(tileNames()).toEqual(['b.txt', 'c.txt']);
     },
@@ -103,9 +103,9 @@ describe.each([NEW_TICKET, CAPTURE, COMMENT_BOX])('the x of a file in $name', (s
 it('keeps removing on a phone after the shield, as often as the person taps', async () => {
   const user = await pickThree(NEW_TICKET);
   await user.click(removeButton('a.txt'));
-  await wait(CLICK_SHIELD_MS);
+  await advance(CLICK_SHIELD_MS);
   await user.click(removeButton('b.txt'));
-  await wait(CLICK_SHIELD_MS);
+  await advance(CLICK_SHIELD_MS);
   await user.click(removeButton('c.txt'));
   expect(tileNames()).toEqual([]);
   expect(screen.queryByRole('button', { name: /^Remove / })).not.toBeInTheDocument();

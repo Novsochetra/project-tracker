@@ -1,7 +1,7 @@
 import { ApiError } from '@tracker/client';
 import type { SessionState } from '@tracker/shared';
 import { act, render, screen } from '@testing-library/react';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { HIDDEN_GRACE_MS } from '../../src/api/live/pauseWhileHidden';
 import { fakeClient } from '../../src/api/test/fakeClient';
 import { defaultTickets, listItem, makeBoard, STATUS } from '../../src/api/test/fixtures';
@@ -10,6 +10,7 @@ import { createTestQueryClient } from '../../src/api/test/render';
 import { projectSummary } from '../../src/app/test/harness';
 import { TrackerApp } from '../../src/app/TrackerApp';
 import { skipAnimations } from '../../src/overlays/testing';
+import { loadScreens } from './countedReads';
 
 // The live-update stream stayed open while the page was hidden, so a phone in a pocket woke its
 // radio for a ping every 15 s. And when the server came back needing a new token, the stream got a
@@ -60,6 +61,10 @@ function setVisibility(state: DocumentVisibilityState) {
 }
 
 let restore: Array<() => void> = [];
+
+// On a busy machine the Project screen's code took longer than a wait for the screen (PT-167), so
+// it loads first, with room for a slow load.
+beforeAll(loadScreens, 30_000);
 
 beforeEach(() => {
   vi.useFakeTimers({ shouldAdvanceTime: true });
