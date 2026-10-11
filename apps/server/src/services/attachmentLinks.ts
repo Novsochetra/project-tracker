@@ -2,7 +2,7 @@ import type { UserScope } from '../auth/scope';
 import type { Db } from '../db/schema';
 import { invalidInput } from '../errors';
 import {
-  existingAttachmentIds,
+  reachableAttachmentIds,
   linkAttachments,
   listTicketAttachments,
   nextTicketPosition,
@@ -48,7 +48,7 @@ export async function attachLaterUploads(
   const own = await listTicketAttachments(db, ticketId);
   const attached = new Set(own.filter((row) => row.activityId === null).map((row) => row.id));
   const named = [...new Set(ids)];
-  const existing = await existingAttachmentIds(db, named);
+  const existing = await reachableAttachmentIds(db, named, uploader);
   const leftOut = named.filter((id) => !existing.has(id));
   const later = named.filter((id) => existing.has(id) && !attached.has(id));
   if (later.length === 0) return { attached: false, leftOut };

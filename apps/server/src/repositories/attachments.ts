@@ -56,12 +56,33 @@ export const listActivityAttachments = (db: Db, activityId: string) =>
     .orderBy('id')
     .execute();
 
-export async function existingAttachmentIds(db: Db, ids: readonly string[]): Promise<Set<string>> {
+const pendingOf = (uploader: UserScope) => (eb: ExpressionBuilder<Database, 'attachments'>) =>
+  eb.and([
+    eb('ticketId', 'is', null),
+    uploader === null ? eb('userId', 'is', null) : eb('userId', '=', uploader),
+  ]);
+
+// Another user's file counts as missing, so the answer never tells that its id exists.
+export async function reachableAttachmentIds(
+  db: Db,
+  ids: readonly string[],
+  scope: UserScope,
+): Promise<Set<string>> {
   if (ids.length === 0) return new Set();
   const rows = await db
     .selectFrom('attachments')
-    .select('id')
-    .where('id', 'in', [...ids])
+    .leftJoin('tickets', 'tickets.id', 'attachments.ticketId')
+    .leftJoin('projects', 'projects.id', 'tickets.projectId')
+    .select('attachments.id')
+    .where('attachments.id', 'in', [...ids])
+    .where((eb) => {
+      const mine = (column: 'attachments.userId' | 'projects.ownerId') =>
+        scope === null ? eb(column, 'is', null) : eb(column, '=', scope);
+      return eb.or([
+        eb.and([eb('attachments.ticketId', 'is', null), mine('attachments.userId')]),
+        eb.and([eb('attachments.ticketId', 'is not', null), mine('projects.ownerId')]),
+      ]);
+    })
     .execute();
   return new Set(rows.map((row) => row.id));
 }
@@ -85,11 +106,6 @@ export async function linkAttachments(
   firstPosition = 0,
 ): Promise<number> {
   const { ticketId, activityId, uploader } = target;
-  const pendingOfUploader = (eb: ExpressionBuilder<Database, 'attachments'>) =>
-    eb.and([
-      eb('ticketId', 'is', null),
-      uploader === null ? eb('userId', 'is', null) : eb('userId', '=', uploader),
-    ]);
   let linked = 0;
   for (const [index, id] of ids.entries()) {
     const result = await db
@@ -97,7 +113,7 @@ export async function linkAttachments(
       .set({ ticketId, activityId, position: firstPosition + index })
       .where('id', '=', id)
       .where('activityId', 'is', null)
-      .where((eb) => eb.or([pendingOfUploader(eb), eb('ticketId', '=', ticketId)]))
+      .where((eb) => eb.or([pendingOf(uploader)(eb), eb('ticketId', '=', ticketId)]))
       .executeTakeFirst();
     linked += Number(result.numUpdatedRows);
   }
