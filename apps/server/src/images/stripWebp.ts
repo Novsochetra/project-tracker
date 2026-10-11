@@ -1,3 +1,5 @@
+import { asBuffer } from './asBuffer';
+
 const EXIF_FLAG = 0x08;
 const XMP_FLAG = 0x04;
 
@@ -15,7 +17,7 @@ function withoutMetadataFlags(chunk: Buffer): Buffer {
 
 // Null when the bytes aren't a WebP, or have no image data. Keeps every frame of an animation.
 export function stripWebp(bytes: Uint8Array): Uint8Array | null {
-  const buffer = Buffer.from(bytes);
+  const buffer = asBuffer(bytes);
   const riff = buffer.toString('latin1', 0, 4) === 'RIFF';
   if (!riff || buffer.toString('latin1', 8, 12) !== 'WEBP') return null;
   const kept: Buffer[] = [];
