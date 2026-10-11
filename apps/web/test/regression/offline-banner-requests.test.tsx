@@ -57,9 +57,8 @@ const MOVE_MOB_1 = 'Move MOB-1. Drag, or use the arrow keys.';
 
 let restore: Array<() => void> = [];
 
-// The app loads the project screen's code when first needed. On a loaded machine that took longer
-// than a wait for the board, and a screen mounted after the project list failed read it again: the
-// count below is of the reads of a mounted page, so the code is in before the first render (PT-174).
+// Loaded late on a busy machine, the screen mounted after the list read failed and read it again,
+// which broke the read count (PT-174).
 beforeAll(() => ProjectScreen.preload());
 
 beforeEach(() => {

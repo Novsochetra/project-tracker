@@ -23,7 +23,13 @@ function watchedList() {
       expect(queryClient.getQueryData(queryKeys.projects())).toEqual([`read ${index}`]),
     );
   };
-  return { queryClient, read, answer, stop };
+  const fail = async (index: number) => {
+    answers[index]?.reject(new TypeError('Failed to fetch'));
+    await vi.waitFor(() =>
+      expect(queryClient.getQueryState(queryKeys.projects())?.errorUpdateCount).toBe(1),
+    );
+  };
+  return { queryClient, read, answer, fail, stop };
 }
 
 let stops: Array<() => void> = [];
@@ -54,6 +60,18 @@ describe('refreshing the project list', () => {
     expect(list.read).toHaveBeenCalledTimes(1);
 
     await list.answer(0);
+    await vi.waitFor(() => expect(list.read).toHaveBeenCalledTimes(2));
+    await list.answer(1);
+
+    expect(list.read).toHaveBeenCalledTimes(2);
+  });
+
+  it('reads once more when the read on its way fails', async () => {
+    const list = watchedList();
+    stops.push(list.stop);
+
+    refreshProjectList(list.queryClient);
+    await list.fail(0);
     await vi.waitFor(() => expect(list.read).toHaveBeenCalledTimes(2));
     await list.answer(1);
 
