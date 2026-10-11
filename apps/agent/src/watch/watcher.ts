@@ -28,8 +28,8 @@ export type WatcherDeps = Omit<
 export function createWatcher(deps: WatcherDeps, settings: WatcherSettings) {
   const describe = (error: unknown) => describeError(error, { trackerUrl: settings.trackerUrl });
   const noteProblem = createProblemLog(deps.log);
-  const onProblem = (error: unknown) =>
-    noteProblem(error === undefined ? undefined : describe(error));
+  const onProblem = (source: string, error: unknown) =>
+    noteProblem(source, error === undefined ? undefined : describe(error));
   const runs = createLanes(
     {
       ...deps,
@@ -68,9 +68,9 @@ export function createWatcher(deps: WatcherDeps, settings: WatcherSettings) {
         projectKeys: [settings.projectKey],
       });
       await stopIfCancelled();
-      onProblem(undefined);
+      onProblem('check-in', undefined);
     } catch (error) {
-      onProblem(error);
+      onProblem('check-in', error);
     }
     void runs.lookForWork();
   }

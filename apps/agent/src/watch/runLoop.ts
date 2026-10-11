@@ -15,7 +15,7 @@ export interface RunLoopDeps {
   runAsk: (job: RunJob, signal: AbortSignal, onSteps: OnSteps) => Promise<ClaudeExit>;
   log: (text: string) => void;
   describe: (error: unknown) => string;
-  onProblem: (error: unknown) => void;
+  onProblem: (source: string, error: unknown) => void;
   handBack: (job: RunJob, texts: readonly string[]) => Promise<void>;
   signOfLife: (ticketKey: string) => () => void;
   stepsFor: (runId: string) => StepBatcher;
@@ -137,9 +137,9 @@ export function createRunLoop(deps: RunLoopDeps, settings: RunLoopSettings) {
         if (!job) break;
         await work(job);
       }
-      deps.onProblem(undefined);
+      deps.onProblem(settings.kind, undefined);
     } catch (error) {
-      deps.onProblem(error);
+      deps.onProblem(settings.kind, error);
     }
   }
 
