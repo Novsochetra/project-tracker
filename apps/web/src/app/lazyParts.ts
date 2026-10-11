@@ -35,6 +35,10 @@ export const ConnectSheet = lazyWithPreload(() =>
 export const AccountSheet = lazyWithPreload(() =>
   import('../features/account/AccountSheet').then((module) => module.AccountSheet),
 );
+// Opened once per person, so it stays out of the first load.
+export const InviteScreen = lazyWithPreload(() =>
+  import('./InviteScreen').then((module) => module.InviteScreen),
+);
 
 interface Part {
   preload: () => Promise<unknown>;

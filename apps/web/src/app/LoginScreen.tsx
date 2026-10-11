@@ -1,7 +1,8 @@
-import { useEffect, type ComponentProps } from 'react';
+import { useEffect } from 'react';
 import { errorMessage } from '../api';
 import { Button, LogoGlyph } from '../components';
 import { useIsPhone } from '../lib/media';
+import { AuthField as Field } from './AuthField';
 import styles from './LoginScreen.module.css';
 import { useLoginForm } from './useLoginForm';
 
@@ -9,24 +10,6 @@ export const SETUP_COMMAND = 'npm run owner:set -- --email you@example.com';
 
 export interface LoginScreenProps {
   setupRequired: boolean;
-}
-
-interface FieldProps extends Omit<ComponentProps<'input'>, 'onChange'> {
-  label: string;
-  onChange: (value: string) => void;
-}
-
-function Field({ label, onChange, ...input }: FieldProps) {
-  return (
-    <label className={styles.field}>
-      <span className={styles.label}>{label}</span>
-      <input
-        className={styles.input}
-        onChange={(event) => onChange(event.currentTarget.value)}
-        {...input}
-      />
-    </label>
-  );
 }
 
 // The page keeps its address while signed out, so after signing in the app opens right there.

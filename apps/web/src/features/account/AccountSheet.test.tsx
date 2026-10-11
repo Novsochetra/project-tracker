@@ -5,16 +5,26 @@ import { queryKeys } from '../../api';
 import { renderWithApi, sheetTestSetup } from '../claude/test/renderWithApi';
 import { AccountSheet } from './AccountSheet';
 
-const OWNER = { authRequired: true, authenticated: true, email: 'me@example.com' };
+const OWNER = { authRequired: true, authenticated: true, email: 'me@example.com', role: 'owner' };
+const USER = { ...OWNER, email: 'sam@example.com', role: 'user' };
+const MADE = new Date(2026, 9, 11, 12).getTime();
+const INVITE = { id: 'i-1', createdAt: MADE, expiresAt: MADE + 7 * 24 * 60 * 60 * 1000 };
 const SIGNED_OUT = { authRequired: true, authenticated: false };
 
 const sheet = () => screen.getByRole('dialog', { name: 'Account' });
 
 // The app's session gate has loaded the session by the time the sheet can open.
-function renderSheet(onClose: () => void, overrides: Parameters<typeof renderWithApi>[1]) {
-  const view = renderWithApi(<AccountSheet open onClose={onClose} />, overrides);
+function renderSheet(
+  onClose: () => void,
+  overrides: Parameters<typeof renderWithApi>[1],
+  session: object = OWNER,
+) {
+  const view = renderWithApi(<AccountSheet open onClose={onClose} />, {
+    listInvites: vi.fn().mockResolvedValue([]),
+    ...overrides,
+  });
   act(() => {
-    view.queryClient.setQueryData(queryKeys.session(), OWNER);
+    view.queryClient.setQueryData(queryKeys.session(), session);
   });
   return view;
 }
@@ -61,5 +71,34 @@ describe('AccountSheet', () => {
     expect(within(sheet()).queryByRole('alert')).not.toBeInTheDocument();
     expect(signOutEverywhere).not.toHaveBeenCalled();
     expect(within(sheet()).getByText(/keep working with their API tokens/)).toBeInTheDocument();
+  });
+
+  it('lets the owner make an invite link, shown once, and cancel an open one', async () => {
+    const user = userEvent.setup();
+    const createInvite = vi.fn().mockResolvedValue({ invite: INVITE, secret: 's3cr3t' });
+    const revokeInvite = vi.fn().mockResolvedValue(undefined);
+    renderSheet(() => undefined, {
+      listInvites: vi.fn().mockResolvedValue([INVITE]),
+      createInvite,
+      revokeInvite,
+    });
+    await user.click(await within(sheet()).findByRole('button', { name: 'Make an invite link' }));
+    const card = await within(sheet()).findByRole('group', { name: 'New invite link' });
+    expect(card).toHaveTextContent(`${window.location.origin}/invite#s3cr3t`);
+    await user.click(within(card).getByRole('button', { name: 'Done' }));
+    expect(within(sheet()).queryByText(/s3cr3t/)).not.toBeInTheDocument();
+
+    const open = within(sheet()).getByRole('list', { name: 'Open invite links' });
+    expect(open).toHaveTextContent('Works until Oct 18, 2026');
+    await user.click(within(open).getByRole('button', { name: /^Cancel invite link/ }));
+    await waitFor(() => expect(revokeInvite).toHaveBeenCalledWith('i-1'));
+  });
+
+  it('shows no invites to an account that is not the owner', async () => {
+    const listInvites = vi.fn();
+    renderSheet(() => undefined, { listInvites }, USER);
+    expect(await within(sheet()).findByText('sam@example.com')).toBeInTheDocument();
+    expect(within(sheet()).queryByText('Invite someone')).not.toBeInTheDocument();
+    expect(listInvites).not.toHaveBeenCalled();
   });
 });

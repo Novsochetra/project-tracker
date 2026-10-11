@@ -3,7 +3,7 @@ import type { Attachment } from '../domain/attachment';
 import type { Project } from '../domain/project';
 import type { Status } from '../domain/status';
 import type { Ticket, TicketListItem } from '../domain/ticket';
-import type { UserRole } from './invites';
+import type { UserRole } from '../domain/invite';
 
 export interface ProjectDetail {
   project: Project;
