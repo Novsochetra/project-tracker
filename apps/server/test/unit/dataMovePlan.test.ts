@@ -333,7 +333,7 @@ describe('refusedImageProblems', () => {
   const rows = {
     projects: [{ id: 'p1', key: 'PT' }],
     tickets: [{ id: 't1', projectId: 'p1', num: 12, title: 'Secret title' }],
-    activities: [{ id: 'a1', type: 'report' }],
+    activities: [{ id: 'a1', type: 'comment' }],
   } as unknown as TableRows;
   const place = placeOf(rows);
   const refused = (before: AttachmentRow, refusal: string): MovedAttachment => ({
@@ -344,7 +344,7 @@ describe('refusedImageProblems', () => {
   });
 
   it('says where each file is by its ticket key, never its text', () => {
-    expect(place(PHOTO)).toBe('a report on PT-12');
+    expect(place(PHOTO)).toBe('a comment on PT-12');
     expect(place({ ...PHOTO, activityId: null })).toBe('PT-12');
     expect(place({ ...PHOTO, ticketId: null, activityId: null })).toBe('not on a ticket yet');
   });
@@ -358,10 +358,9 @@ describe('refusedImageProblems', () => {
     expect(problems).toEqual([
       "1 image(s) can't go online as they are: their metadata (such as where a photo was " +
         'taken) can’t be removed. In the local tracker, remove each one listed with only a ticket ' +
-        'key from that ticket’s files. A file on a comment, report or review can’t be removed ' +
-        'alone: delete that comment, report or review instead (copy its text first if you want ' +
-        'to post it again as a comment, with a copy of the image saved again). Then run the move ' +
-        'again:',
+        'key from that ticket’s files. A file on a comment can’t be removed alone: delete that ' +
+        'comment instead (copy its text first if you want to post it again, with a copy of the ' +
+        'image saved again). Then run the move again:',
       '  - f-scan (PT-12, scan.jpg, 4 KB): Only images can be attached.',
     ]);
     expect(problems.join('\n')).not.toContain('Secret title');

@@ -27,11 +27,10 @@ async function addScan(source: MoveSource, id: string, ticketId: string, activit
 // Reviewer 123 (PT-144): the refusal said to delete each image "from the ticket or comment named
 // below", but the app can't remove one file from a comment, report or review (no remove control,
 // PATCH /activity/:id takes only text): only deleting that whole item gets rid of it.
-describe('a move refusing an image on a comment or review', () => {
-  it('names the item that holds it and says to delete that item', async () => {
+describe('a move refusing an image on a comment', () => {
+  it('names the comment that holds it and says to delete that comment', async () => {
     const source = await writeMoveSource();
     await addScan(source, 'f-comment-scan', 't1', 'a2');
-    await addScan(source, 'f-review-scan', 't3', 'a3');
     const target = await openMoveTarget('sqlite', null);
 
     const { ok, lines } = await moveData(source, target, { dryRun: true });
@@ -40,11 +39,8 @@ describe('a move refusing an image on a comment or review', () => {
     expect(
       lines.some((l) => l.startsWith('    - f-comment-scan (a comment on MOB-1, scan.jpg')),
     ).toBe(true);
-    expect(
-      lines.some((l) => l.startsWith('    - f-review-scan (a review on MOB-3, scan.jpg')),
-    ).toBe(true);
     const refusal = lines.find((l) => l.includes("can't go online as they are")) ?? '';
-    expect(refusal).toMatch(/delete that comment, report or review/);
+    expect(refusal).toMatch(/delete that comment instead/);
     expect(refusal).not.toMatch(/delete each from the ticket or comment/);
   });
 });

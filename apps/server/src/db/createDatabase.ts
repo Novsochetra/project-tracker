@@ -12,8 +12,11 @@ export const isPostgresUrl = (url: string): boolean => /^postgres(ql)?:\/\//i.te
 // A URL, typo or not, wherever it starts (quotes, a space or its name in front): as a SQLite path,
 // postgresql:/user:pw@… (one slash) was printed and made folders named after the password. A scheme
 // is two or more letters before :/ (a Windows drive has one); with no slash only postgres: counts, so
-// a file name holding a colon (tracker-10:30.db) stays a path, as it was before PT-137.
-export const looksLikeUrl = (url: string): boolean => /:\/\/|[a-z]{2}:\/|postgres(ql)?:/i.test(url);
+// a file name holding a colon (tracker-10:30.db) stays a path, as it was before PT-137. A colon
+// with an @ after it is a user:password@ whatever the scheme, so a password is never printed, also
+// percent-encoded as copied from a query string or a log.
+export const looksLikeUrl = (url: string): boolean =>
+  /:\/\/|[a-z]{2}:\/|postgres(ql)?:|:[^@]*@/i.test(url.replace(/%3a/gi, ':').replace(/%40/g, '@'));
 
 export function createKysely(dialect: Dialect): Db {
   return new Kysely<Database>({ dialect, plugins: [new CamelCasePlugin(), new StripNulPlugin()] });
@@ -36,7 +39,7 @@ export function createDatabase(url: string, env: NodeJS.ProcessEnv = process.env
   // at a path holding the password.
   if (!isPostgresUrl(url) && looksLikeUrl(url)) {
     throw new Error(
-      'DATABASE_URL is neither a postgres:// URL nor a file path (its value is not shown): it should start with postgres:// or postgresql://, without quotes or a name in front.',
+      'DATABASE_URL is neither a postgres:// URL nor a file path (its value is not shown): it should start with postgres:// or postgresql://, without quotes or a name in front. A file path can’t hold a colon followed by an @.',
     );
   }
   return createKysely(
