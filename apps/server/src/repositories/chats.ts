@@ -105,7 +105,10 @@ export async function updateChatRow(
   db: Db,
   id: string,
   changes: Partial<
-    Pick<ChatRow, 'sessionId' | 'sessionRunnerId' | 'updatedAt' | 'askModel' | 'askMode'>
+    Pick<
+      ChatRow,
+      'sessionId' | 'sessionRunnerId' | 'updatedAt' | 'askModel' | 'askMode' | 'askEffort'
+    >
   >,
 ): Promise<void> {
   await db.updateTable('chats').set(changes).where('id', '=', id).execute();
@@ -117,3 +120,7 @@ export async function setMessageTicket(db: Db, id: string, ticketId: string): Pr
 
 export const assignOwnerlessChats = (db: Db, userId: string) =>
   db.updateTable('chats').set({ userId }).where('userId', 'is', null).execute();
+
+export async function deleteChatRow(db: Db, id: string): Promise<void> {
+  await db.deleteFrom('chats').where('id', '=', id).execute();
+}

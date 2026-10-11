@@ -18,7 +18,7 @@ const running = (mode: AskMode = 'ask') =>
   makeAskRun({
     status: 'running',
     startedAt: Date.now(),
-    askOptions: { model: 'default', mode },
+    askOptions: { model: 'default', mode, effort: 'default' },
   });
 const cancelledOf = (run: Run): Run => ({ ...run, status: 'cancelled', endedAt: Date.now() });
 

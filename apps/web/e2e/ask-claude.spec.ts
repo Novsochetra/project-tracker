@@ -2,8 +2,8 @@ import { randomUUID } from 'node:crypto';
 import type { TrackerClient } from '@tracker/client';
 import type { RunStepInput } from '@tracker/shared';
 import type { Page } from '@playwright/test';
-import { expect, test } from './fixtures';
-import { seedProject, settledScreenshot, toast } from './helpers';
+import { expect, test, usesPhoneLayout } from './fixtures';
+import { readActionSheet, readMenuConfirm, seedProject, settledScreenshot, toast } from './helpers';
 
 const HELPER = "Dara's MacBook";
 
@@ -168,7 +168,7 @@ test('says an Edit question Claude had started stopped part way, and keeps its s
   await expect(stopped.getByRole('button', { name: '2 steps' })).toBeVisible();
 });
 
-test('picks the model and mode on one row above the box, and sends them', async ({
+test('picks the model, effort and mode on one row above the box, and sends them', async ({
   page,
   api,
 }, info) => {
@@ -179,22 +179,34 @@ test('picks the model and mode on one row above the box, and sends them', async 
   await page.goto('/p/MOB/ask/new');
 
   const model = page.getByRole('button', { name: /^Model/ });
+  const effort = page.getByRole('button', { name: /^Effort/ });
   const modes = page.getByRole('group', { name: 'Mode' });
   const box = page.getByRole('textbox', { name: 'Question for Claude' });
   await expect(model).toHaveText(/Default/);
-  const [chip, group, field] = await Promise.all([
+  await model.click();
+  await page.getByRole('option', { name: 'Sonnet' }).click();
+  await effort.click();
+  await page.getByRole('option', { name: 'X-high' }).click();
+  await modes.getByRole('button', { name: 'Edit' }).click();
+  const [chip, gauge, group, field] = await Promise.all([
     model.boundingBox(),
+    effort.boundingBox(),
     modes.boundingBox(),
     box.boundingBox(),
   ]);
   const width = page.viewportSize()!.width;
-  expect(Math.abs(chip!.y + chip!.height / 2 - (group!.y + group!.height / 2))).toBeLessThan(1);
+  const middle = (box: typeof chip) => box!.y + box!.height / 2;
+  expect(Math.abs(middle(chip) - middle(group))).toBeLessThan(1);
+  expect(Math.abs(middle(gauge) - middle(group))).toBeLessThan(1);
+  expect(gauge!.x + gauge!.width).toBeLessThanOrEqual(group!.x);
+  expect(
+    await modes
+      .getByRole('button', { name: 'Plan' })
+      .evaluate((el) => el.scrollWidth <= el.clientWidth),
+  ).toBe(true);
   expect(group!.x + group!.width).toBeLessThanOrEqual(width);
   expect(group!.y + group!.height).toBeLessThanOrEqual(field!.y);
 
-  await model.click();
-  await page.getByRole('option', { name: 'Sonnet' }).click();
-  await modes.getByRole('button', { name: 'Edit' }).click();
   await expect(page.getByText(/Claude can change files and tickets/)).toBeVisible();
   await expect(page.getByRole('listbox')).toBeHidden();
   await expect(modes.getByRole('button', { name: 'Edit' })).toHaveAttribute('aria-pressed', 'true');
@@ -205,7 +217,7 @@ test('picks the model and mode on one row above the box, and sends them', async 
   await expect(model).toHaveText(/Sonnet/);
   await expect(modes.getByRole('button', { name: 'Edit' })).toHaveAttribute('aria-pressed', 'true');
   const job = await api.takeNextRun(helperId, 'ticket');
-  expect(job?.run.askOptions).toEqual({ model: 'sonnet', mode: 'edit' });
+  expect(job?.run.askOptions).toEqual({ model: 'sonnet', mode: 'edit', effort: 'xhigh' });
 });
 
 test('shows what Claude does while it answers, then folds the steps above the answer', async ({
@@ -492,4 +504,34 @@ test('folds the longest text step the helper sends as calmly, step by step', asy
   const folds = watchFolds(page, 'Read apps/web/src/sync5.ts');
   for (const each of reads(5)) await send([each]);
   expect(await folds).toBeLessThan(40);
+});
+
+test('deletes a chat from its ••• after asking, and stops the answer Claude is working on', async ({
+  page,
+  api,
+}, info) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await seedProject(api, 'Mobile app', 'MOB');
+  const helperId = randomUUID();
+  await api.registerRunner(helperId, { name: HELPER, projectKeys: ['MOB'] });
+  await page.goto('/p/MOB/ask/new');
+  await ask(page, 'How does capture sync work?');
+  await answer(api, helperId, 'Captures wait in a queue.');
+  await ask(page, 'And on 3G?');
+  const working = await api.takeNextRun(helperId, 'ask');
+
+  await page.getByRole('button', { name: 'Chat options' }).click();
+  await readActionSheet(page);
+  await page.getByRole('button', { name: 'Delete chat' }).click();
+  await expect(page.getByRole('alert')).toContainText('Delete this chat?');
+  await settledScreenshot(page, info.outputPath(`delete-chat-${info.project.name}.png`));
+  await readMenuConfirm(page);
+  const confirm = (await usesPhoneLayout(page)) ? 'Delete chat' : 'Delete';
+  await page.getByRole('button', { name: confirm, exact: true }).click();
+
+  await expect(toast(page, 'Chat deleted')).toBeVisible();
+  await expect(page).toHaveURL(/\/p\/MOB\/ask$/);
+  await expect(page.getByText('How does capture sync work?')).toHaveCount(0);
+  expect(await api.listChats('MOB')).toEqual([]);
+  await expect(api.getRun(working!.run.id)).rejects.toMatchObject({ status: 404 });
 });

@@ -1,6 +1,6 @@
 import { realpathSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import type { AskMode } from '@tracker/shared';
+import { DEFAULT_ASK_OPTIONS, type AskMode } from '@tracker/shared';
 import { afterAll, describe, expect, it, vi } from 'vitest';
 import { askOutcomeOf } from '../../src/watch/ask/askOutcome';
 import { claudeRunners } from '../../src/watch/claudeRunners';
@@ -32,7 +32,7 @@ const PROMPT_TOOL_ARGS = [
 const noSteps = () => undefined;
 
 const ask = async (prompt: string, resume: string | null = null, mode: AskMode = 'ask') => {
-  const job = { ...askJob('r-1', 'c-1', resume, { model: 'default', mode }), prompt };
+  const job = { ...askJob('r-1', 'c-1', resume, { ...DEFAULT_ASK_OPTIONS, mode }), prompt };
   return askOutcomeOf(await claude.runAsk(job, new AbortController().signal, noSteps), false);
 };
 
@@ -123,7 +123,7 @@ describe('regression: an ask runs Claude read-only', () => {
       prompts: { command: ['node', 'promptTool.js'], ask: askPerson },
     });
     const editJob = {
-      ...askJob('r-1', 'c-1', null, { model: 'default', mode: 'edit' }),
+      ...askJob('r-1', 'c-1', null, { ...DEFAULT_ASK_OPTIONS, mode: 'edit' }),
       prompt: 'X',
     };
     const edit = askOutcomeOf(
@@ -137,7 +137,10 @@ describe('regression: an ask runs Claude read-only', () => {
       ...PROMPT_TOOL_ARGS,
     ]);
     for (const mode of ['ask', 'plan'] as const) {
-      const readOnly = { ...askJob('r-1', 'c-1', null, { model: 'default', mode }), prompt: 'X' };
+      const readOnly = {
+        ...askJob('r-1', 'c-1', null, { ...DEFAULT_ASK_OPTIONS, mode }),
+        prompt: 'X',
+      };
       const outcome = askOutcomeOf(
         await noMode.runAsk(readOnly, new AbortController().signal, noSteps),
         false,

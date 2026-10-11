@@ -1,5 +1,6 @@
-import type { AskOptions, RunJob } from '@tracker/shared';
+import { modelTakesEffort, type AskOptions, type RunJob } from '@tracker/shared';
 import { STREAM_JSON } from '../claude';
+import { askEffortArgs } from './askEffortArgs';
 import { askModeArgs } from './askModeArgs';
 import { askModelArgs } from './askModelArgs';
 
@@ -23,6 +24,7 @@ export function askArgs(
     ...STREAM_JSON,
     ...askModeArgs(options?.mode, permissionMode),
     ...askModelArgs(options?.model),
+    ...(modelTakesEffort(options?.model) ? askEffortArgs(options?.effort) : []),
     ...resumeArgs(resumeSessionId),
   ];
 }

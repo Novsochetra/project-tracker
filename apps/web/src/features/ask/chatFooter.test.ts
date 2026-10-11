@@ -81,7 +81,7 @@ describe('chatFooter', () => {
 });
 
 describe('cancelledText', () => {
-  const edit = { model: 'default', mode: 'edit' } as const;
+  const edit = { model: 'default', mode: 'edit', effort: 'default' } as const;
 
   it('warns that an Edit question Claude had started may have changed files or tickets', () => {
     expect(cancelledText({ askOptions: edit, startedAt: 2 })).toBe(STOPPED_PART_WAY_TEXT);
@@ -89,9 +89,9 @@ describe('cancelledText', () => {
 
   it('says only that it stopped for Ask, Plan, or an Edit question still waiting', () => {
     for (const mode of ['ask', 'plan'] as const) {
-      expect(cancelledText({ askOptions: { model: 'opus', mode }, startedAt: 2 })).toBe(
-        STOPPED_TEXT,
-      );
+      expect(
+        cancelledText({ askOptions: { model: 'opus', mode, effort: 'default' }, startedAt: 2 }),
+      ).toBe(STOPPED_TEXT);
     }
     expect(cancelledText({ askOptions: edit, startedAt: null })).toBe(STOPPED_TEXT);
     expect(cancelledText({ askOptions: null, startedAt: 2 })).toBe(STOPPED_TEXT);

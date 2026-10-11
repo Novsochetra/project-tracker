@@ -1,4 +1,5 @@
 import type {
+  AskEffort,
   AskMode,
   AskModel,
   RunKind,
@@ -40,6 +41,7 @@ export interface RunRow {
   // The question's choice; null on ticket runs and on asks queued before options.
   askModel: AskModel | null;
   askMode: AskMode | null;
+  askEffort: AskEffort | null;
   stepCount: number;
 }
 

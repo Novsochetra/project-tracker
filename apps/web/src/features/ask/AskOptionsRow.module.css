@@ -39,6 +39,7 @@
   min-width: 0;
 }
 
+.icon,
 .chevron {
   flex: none;
   color: var(--subtle);

@@ -16,7 +16,7 @@ function untilRunNotice(ctx: ServiceContext, runId: string, ms: number, signal: 
   const woken = new Promise<void>((resolve) => {
     const timer = setTimeout(() => stop(), ms);
     const unsubscribe = ctx.runEvents.subscribe(({ event }) => {
-      if (event.runId === runId && ENDS_WAIT.has(event.type)) stop();
+      if (ENDS_WAIT.has(event.type) && 'runId' in event && event.runId === runId) stop();
     });
     stop = () => {
       clearTimeout(timer);

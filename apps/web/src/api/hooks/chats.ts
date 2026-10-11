@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query';
 import type { AskInput, CardTicketInput, Chat, ChatDetail, Run } from '@tracker/shared';
 import { useApi } from '../context';
+import { isNotFound } from '../errors';
 import { refreshProjectList } from '../projectListRefresh';
 import { queryKeys } from '../queryKeys';
 import type { TrackerMutation, TrackerQuery } from '../types';
@@ -21,6 +22,11 @@ export interface CardTicketVariables {
   chatId: string;
   messageId: string;
   input: CardTicketInput;
+}
+
+export interface DeleteChatVariables {
+  projectKey: string;
+  chatId: string;
 }
 
 export interface RunCardTicketVariables {
@@ -118,5 +124,29 @@ export function useRunCardTicket(): TrackerMutation<Run, RunCardTicketVariables>
     },
     onSuccess: (run) => showRun(queryClient, run),
     onSettled: (_run, _error, { ticketKey }) => invalidateRuns(queryClient, ticketKey),
+  });
+}
+
+// Deleted in another tab or on another device while this one missed the event: the person's
+// wish is done.
+function goneAlready(error: unknown): void {
+  if (!isNotFound(error)) throw error;
+}
+
+export function useDeleteChat(): TrackerMutation<void, DeleteChatVariables> {
+  const client = useApi();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationKey: queryKeys.deletingChat(),
+    mutationFn: ({ chatId }: DeleteChatVariables) => client.deleteChat(chatId).catch(goneAlready),
+    // The chat's own query stays until it is unused: removing it under the open screen would
+    // refetch it, and its 404 would navigate away a second time.
+    onSuccess: (_result, { projectKey, chatId }) => {
+      queryClient.setQueryData<Chat[]>(queryKeys.chats(projectKey), (chats) =>
+        chats?.filter((chat) => chat.id !== chatId),
+      );
+    },
+    onSettled: (_result, _error, { projectKey }) =>
+      void queryClient.invalidateQueries({ queryKey: queryKeys.chats(projectKey) }),
   });
 }

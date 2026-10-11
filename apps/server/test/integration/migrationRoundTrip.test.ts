@@ -115,6 +115,28 @@ describe.each(DIALECTS)('every migration up and down (%s)', (dialect) => {
       expect(file.rows).toEqual([{ id: 'f', position: 0 }]);
     });
   });
+
+  it('gives a chat made before efforts the default, and keeps its other choices on rollback', async () => {
+    await withDatabase(dialect, async (db) => {
+      const migrator = createMigrator(db);
+      await expectRan(
+        migrator.migrateTo('0009_run_requests'),
+        NAMES.filter((name) => name <= '0009_run_requests'),
+      );
+      await sql`insert into projects (id, name, key, description, repo, color, next_num, created_at,
+        updated_at) values ('p', 'Mobile', 'MOB', '', '', '#5B5BD6', 1, 1000, 1000)`.execute(db);
+      await sql`insert into chats (id, project_id, title, created_at, updated_at, ask_model,
+        ask_mode) values ('c', 'p', 'Q', 1000, 1000, 'opus', 'plan')`.execute(db);
+
+      await migrateToLatest(db);
+      const after = await sql<{ askEffort: string }>`select ask_effort from chats`.execute(db);
+      expect(after.rows).toEqual([{ askEffort: 'default' }]);
+
+      await expectRan(migrator.migrateTo('0009_run_requests'), ['0010_ask_effort']);
+      const back = await sql<{ askModel: string }>`select ask_model from chats`.execute(db);
+      expect(back.rows).toEqual([{ askModel: 'opus' }]);
+    });
+  });
 });
 
 // The data model of docs/architecture.md §2, as both databases report it. Every table: matching
@@ -277,6 +299,7 @@ const DATA_MODEL: SchemaShape = {
       'ask_model text',
       'ask_mode text',
       'step_count integer not null default 0',
+      'ask_effort text',
     ],
     indexes: [
       'index (chat_id, created_at)',
@@ -336,6 +359,7 @@ const DATA_MODEL: SchemaShape = {
       'updated_at bigint not null',
       "ask_model text not null default 'default'",
       "ask_mode text not null default 'ask'",
+      "ask_effort text not null default 'default'",
     ],
     indexes: ['index (project_id, updated_at)'],
     foreignKeys: [

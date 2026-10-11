@@ -21,6 +21,7 @@ function connect() {
     onRun: vi.fn(),
     onRunStep: vi.fn(),
     onRunRequest: vi.fn(),
+    onChatDeleted: vi.fn(),
     onReconnect: vi.fn(),
     onRefreshPending: vi.fn(),
     onRefused: vi.fn(),

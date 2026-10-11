@@ -72,8 +72,32 @@ describe('askArgs', () => {
     },
   );
 
+  it.each(['low', 'xhigh', 'max'])('passes the %s effort after the model', (effort) => {
+    expect(argsFor({ model: 'opus', mode: 'ask', effort })).toEqual([
+      ...JSON_OUT,
+      ...READ_ONLY,
+      '--model',
+      'opus',
+      '--effort',
+      effort,
+    ]);
+  });
+
+  it.each([
+    ['default', { model: 'opus', mode: 'ask', effort: 'default' }],
+    ['an older server that sends no effort', { model: 'opus', mode: 'ask' }],
+    ['an unknown effort', { model: 'opus', mode: 'ask', effort: 'ultra' }],
+    [
+      'a flag as the effort',
+      { model: 'opus', mode: 'ask', effort: '--dangerously-skip-permissions' },
+    ],
+    ['Haiku, which has no effort', { model: 'haiku', mode: 'ask', effort: 'high' }],
+  ])('sends no effort for %s', (_name, options) => {
+    expect(argsFor(options)).not.toContain('--effort');
+  });
+
   it('resumes the chat session last', () => {
-    const args = argsFor({ model: 'haiku', mode: 'plan' }, SESSION);
+    const args = argsFor({ model: 'sonnet', mode: 'plan', effort: 'high' }, SESSION);
     expect(args.slice(-2)).toEqual(['--resume', SESSION]);
   });
 

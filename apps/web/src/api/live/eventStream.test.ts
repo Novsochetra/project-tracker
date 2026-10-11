@@ -16,6 +16,7 @@ function connect(tracker?: TrackerReachability) {
     onRun: vi.fn(),
     onRunStep: vi.fn(),
     onRunRequest: vi.fn(),
+    onChatDeleted: vi.fn(),
     onReconnect: vi.fn(),
     onRefreshPending: vi.fn(),
     onRefused: vi.fn(),
@@ -141,6 +142,18 @@ describe('connectLiveUpdates', () => {
     expect(onRunRequest).toHaveBeenCalledTimes(1);
     expect(onRunRequest).toHaveBeenCalledWith(request);
     expect(onRunStep).not.toHaveBeenCalled();
+    expect(onRun).not.toHaveBeenCalled();
+    expect(onChange).not.toHaveBeenCalled();
+  });
+
+  it('passes a named chat-deleted event apart from runs and changes', () => {
+    const { source, onChange, onRun, onChatDeleted } = connect();
+    const deleted = { type: 'chat-deleted', chatId: 'c-1', projectId: 'p-mob' };
+    source.emit(deleted, 'chat-deleted');
+    source.emit(deleted);
+    source.emit(deleted, 'run');
+    expect(onChatDeleted).toHaveBeenCalledTimes(1);
+    expect(onChatDeleted).toHaveBeenCalledWith(deleted);
     expect(onRun).not.toHaveBeenCalled();
     expect(onChange).not.toHaveBeenCalled();
   });
@@ -515,6 +528,7 @@ describe('connectLiveUpdates', () => {
       onRun: vi.fn(),
       onRunStep: vi.fn(),
       onRunRequest: vi.fn(),
+      onChatDeleted: vi.fn(),
       onReconnect: vi.fn(),
       onRefreshPending: vi.fn(),
       onRefused: vi.fn(),

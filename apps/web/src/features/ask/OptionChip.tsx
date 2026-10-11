@@ -1,20 +1,27 @@
-import type { AskModel } from '@tracker/shared';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, type LucideIcon } from 'lucide-react';
 import { useRef, useState } from 'react';
-import { Dropdown, Icon } from '../../components';
+import { Dropdown, Icon, type DropdownOption } from '../../components';
 import styles from './AskOptionsRow.module.css';
-import { MODEL_OPTIONS } from './askOptions';
-import { MODEL_LABEL } from './copy';
 
-export interface ModelChipProps {
-  value: AskModel;
-  onChange: (value: AskModel) => void;
+export interface OptionChipProps<T extends string> {
+  label: string;
+  options: readonly DropdownOption<T>[];
+  value: T;
+  onChange: (value: T) => void;
+  // Tells two chips apart when both show Default.
+  icon?: LucideIcon;
 }
 
-export function ModelChip({ value, onChange }: ModelChipProps) {
+export function OptionChip<T extends string>({
+  label,
+  options,
+  value,
+  onChange,
+  icon,
+}: OptionChipProps<T>) {
   const [open, setOpen] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
-  const current = MODEL_OPTIONS.find((option) => option.value === value);
+  const current = options.find((option) => option.value === value);
   return (
     <>
       <button
@@ -25,15 +32,16 @@ export function ModelChip({ value, onChange }: ModelChipProps) {
         aria-expanded={open}
         onClick={() => setOpen((isOpen) => !isOpen)}
       >
-        <span className="visually-hidden">{MODEL_LABEL}</span>{' '}
+        {icon && <Icon icon={icon} size={14} className={styles.icon} />}
+        <span className="visually-hidden">{label}</span>{' '}
         <span className={styles.value}>{current?.label}</span>
         <Icon icon={ChevronDown} size={14} className={styles.chevron} />
       </button>
       <Dropdown
         open={open}
         anchorRef={triggerRef}
-        label={MODEL_LABEL}
-        options={MODEL_OPTIONS}
+        label={label}
+        options={options}
         value={value}
         onSelect={onChange}
         onClose={() => setOpen(false)}

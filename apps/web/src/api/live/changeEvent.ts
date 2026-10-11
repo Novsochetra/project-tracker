@@ -2,6 +2,7 @@ import {
   RUN_REQUEST_STATUSES,
   RUN_STATUSES,
   type ChangeEvent,
+  type ChatDeletedEvent,
   type RunEvent,
   type RunRequestEvent,
   type RunStepEvent,
@@ -67,4 +68,12 @@ export function parseRunRequestEvent(data: unknown): RunRequestEvent | null {
   const ticketId = idOrNull(value.ticketId);
   const chatId = idOrNull(value.chatId);
   return { type: 'run-request', runId, requestId, projectId, ticketId, chatId, status };
+}
+
+export function parseChatDeletedEvent(data: unknown): ChatDeletedEvent | null {
+  const value = readJson(data);
+  const chatId = idOrNull(value?.chatId);
+  const projectId = idOrNull(value?.projectId);
+  if (value?.type !== 'chat-deleted' || !chatId || !projectId) return null;
+  return { type: 'chat-deleted', chatId, projectId };
 }

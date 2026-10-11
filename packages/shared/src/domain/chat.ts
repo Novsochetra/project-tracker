@@ -46,3 +46,10 @@ export interface ChatDetail {
   // message, so this is how what Claude did keeps its place in the thread.
   stoppedRuns: Run[];
 }
+
+// Tells the person's other tabs and devices to leave a chat deleted elsewhere (PT-159).
+export interface ChatDeletedEvent {
+  type: 'chat-deleted';
+  chatId: string;
+  projectId: string;
+}

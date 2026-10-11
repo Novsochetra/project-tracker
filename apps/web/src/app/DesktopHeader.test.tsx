@@ -2,6 +2,7 @@ import { screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { listItem, otherProject, STATUS, statuses } from '../api/test/fixtures';
+import { readMenuConfirm } from '../components/Popover/testing';
 import { skipAnimations } from '../overlays/testing';
 import { DesktopHeader } from './DesktopHeader';
 import { Sidebar } from './Sidebar';
@@ -34,6 +35,19 @@ describe('DesktopHeader', () => {
     expect(sheets.open).toHaveBeenCalledWith({ type: 'newTicket', projectKey: 'MOB' });
     await user.click(screen.getByRole('button', { name: 'Project options' }));
     expect(screen.getByRole('group', { name: 'Project options' })).toBeInTheDocument();
+  });
+
+  it('deletes the open chat from its options, after asking', async () => {
+    const user = userEvent.setup();
+    const deleteChat = vi.fn().mockResolvedValue(undefined);
+    renderWithApp(<DesktopHeader />, { path: '/p/MOB/ask/c-1', projects, client: { deleteChat } });
+    await user.click(screen.getByRole('button', { name: 'Chat options' }));
+    await user.click(screen.getByRole('button', { name: 'Delete chat' }));
+    expect(screen.getByRole('alert')).toHaveTextContent('Delete this chat?');
+    await readMenuConfirm();
+    await user.click(screen.getByRole('button', { name: 'Delete' }));
+    expect(deleteChat).toHaveBeenCalledWith('c-1');
+    await vi.waitFor(() => expect(currentPath()).toBe('/p/MOB/ask'));
   });
 
   it('has no actions on a ticket, and Projects is a link up two levels', async () => {

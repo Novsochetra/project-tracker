@@ -15,7 +15,14 @@ export interface QueuedRun {
 
 type RunTarget = Pick<
   RunRow,
-  'kind' | 'ticketId' | 'chatId' | 'resumeSessionId' | 'prompt' | 'askModel' | 'askMode'
+  | 'kind'
+  | 'ticketId'
+  | 'chatId'
+  | 'resumeSessionId'
+  | 'prompt'
+  | 'askModel'
+  | 'askMode'
+  | 'askEffort'
 >;
 
 export const queuedRunRow = (run: QueuedRun, target: RunTarget): RunRow => ({

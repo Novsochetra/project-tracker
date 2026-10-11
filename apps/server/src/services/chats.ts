@@ -85,7 +85,8 @@ async function askIn(
   const queued = { scope, runner, projectId: project.id, now: ctx.now() };
   const run = await inTransaction(ctx, async (trx) => {
     if (isNew) await insertChat(trx, chat);
-    const options = chosenAskOptions(input, { model: chat.askModel, mode: chat.askMode });
+    const saved = { model: chat.askModel, mode: chat.askMode, effort: chat.askEffort };
+    const options = chosenAskOptions(input, saved);
     return queueAsk(trx, { queued, project, chat, history, question: input.text, options });
   });
   notifyRun(ctx, scope, run);
@@ -110,6 +111,7 @@ export async function startChat(
     sessionRunnerId: null,
     askModel: options.model,
     askMode: options.mode,
+    askEffort: options.effort,
     createdAt: at,
     updatedAt: at,
   };

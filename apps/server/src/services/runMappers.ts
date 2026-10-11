@@ -10,8 +10,9 @@ import type { RunnerRow, RunRow } from '../db/runTables';
 import type { RunWithKey } from '../repositories/runs';
 import type { ServiceContext } from './context';
 
-const askOptionsOf = ({ askModel, askMode }: RunRow): AskOptions | null =>
-  askModel && askMode ? { model: askModel, mode: askMode } : null;
+// A question queued before there was an effort has none, so it ran on Claude's own.
+const askOptionsOf = ({ askModel, askMode, askEffort }: RunRow): AskOptions | null =>
+  askModel && askMode ? { model: askModel, mode: askMode, effort: askEffort ?? 'default' } : null;
 
 export const toRun = (row: RunWithKey): Run => ({
   id: row.id,
