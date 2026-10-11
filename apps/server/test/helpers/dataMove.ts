@@ -119,8 +119,9 @@ const tempDir = async (prefix: string) => {
 export async function openMoveTarget(
   dialect: TestDialect,
   fake: FakeS3 | null,
+  pgliteDataDir?: Blob,
 ): Promise<MoveTarget> {
-  const db = openEmptyDatabase(dialect);
+  const db = openEmptyDatabase(dialect, pgliteDataDir);
   onTestFinished(() => db.destroy());
   if (fake) {
     fake.reset();

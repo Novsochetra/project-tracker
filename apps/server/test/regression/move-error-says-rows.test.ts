@@ -9,14 +9,17 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { FileStorage } from '../../src/storage/fileStorage';
 import { moveData, openMoveTarget, tableCounts, writeMoveSource } from '../helpers/dataMove';
 import { startFakeS3, type FakeS3 } from '../helpers/fakeS3';
-import { DIALECTS } from '../helpers/server';
+import { DIALECTS, emptyPgliteDataDir } from '../helpers/server';
 
 const NO_ROWS = 'No rows were written to the target, so running the same command again is safe.';
 
 let fake: FakeS3;
+// A new PGlite per test ran initdb, which on a busy machine took most of the test's 20 s (PT-167).
+let pgliteDataDir: Blob;
 
 beforeAll(async () => {
   fake = await startFakeS3();
+  pgliteDataDir = await emptyPgliteDataDir();
 });
 
 afterAll(async () => {
@@ -53,7 +56,7 @@ const failingStat = (storage: FileStorage): FileStorage => ({
 describe.each(DIALECTS)('a move that stops on an error (%s)', (dialect) => {
   it('says no rows were written when copying a file fails', async () => {
     const source = await writeMoveSource();
-    const target = await openMoveTarget(dialect, fake);
+    const target = await openMoveTarget(dialect, fake, pgliteDataDir);
 
     const run = moveData(source, { db: target.db, storage: refusingWrites(target.storage) });
 
@@ -62,7 +65,7 @@ describe.each(DIALECTS)('a move that stops on an error (%s)', (dialect) => {
 
   it('says no rows were written when writing them fails', async () => {
     const source = await writeMoveSource();
-    const target = await openMoveTarget(dialect, fake);
+    const target = await openMoveTarget(dialect, fake, pgliteDataDir);
     const db = target.db.withPlugin(failingInsertInto('activities'));
 
     await expect(moveData(source, { ...target, db })).rejects.toThrow(
@@ -73,7 +76,7 @@ describe.each(DIALECTS)('a move that stops on an error (%s)', (dialect) => {
 
   it('says the rows were written when only the check after them fails', async () => {
     const source = await writeMoveSource();
-    const target = await openMoveTarget(dialect, fake);
+    const target = await openMoveTarget(dialect, fake, pgliteDataDir);
 
     const run = moveData(source, { db: target.db, storage: failingStat(target.storage) });
 

@@ -9,8 +9,13 @@ import { startFakeS3, type FakeS3 } from '../helpers/fakeS3';
 const SERVER_ROOT = fileURLToPath(new URL('../..', import.meta.url));
 const TWO_HOURS_MS = 2 * 60 * 60 * 1000;
 
+// A server's start loads all of its code, which on a busy machine took longer than the 15 s this
+// waited and the test's 20 s (PT-167). A real process has no clock a test can stop.
+const START_LIMIT_MS = 60_000;
+const SLOW_START = { timeout: 2 * START_LIMIT_MS };
+
 async function until(condition: () => boolean, what: string): Promise<void> {
-  const deadline = Date.now() + 15_000;
+  const deadline = Date.now() + START_LIMIT_MS;
   while (!condition()) {
     if (Date.now() > deadline) throw new Error(`Timed out waiting for ${what}`);
     await new Promise((resolve) => setTimeout(resolve, 20));
@@ -37,7 +42,7 @@ describe('a server started on a bucket another database uses', () => {
     rmSync(dataDir, { recursive: true, force: true });
   });
 
-  it('leaves the files of attachments its database never had', async () => {
+  it('leaves the files of attachments its database never had', SLOW_START, async () => {
     for (const id of [
       '11111111-1111-4111-8111-111111111111',
       '22222222-2222-4222-8222-222222222222',

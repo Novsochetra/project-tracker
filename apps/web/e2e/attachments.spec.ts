@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { APIRequestContext, Dialog, Locator, Page, Response } from '@playwright/test';
+import type { TrackerClient } from '@tracker/client';
 import { FILE_NAME_HEADER } from '@tracker/shared';
 import { CLICK_SHIELD_MS } from '../src/lib/clickShield';
 import { expect, isPhone, isTablet, test } from './fixtures';
@@ -229,6 +230,30 @@ async function doubleTapDismiss(
   await page.touchscreen.tap(spot.x, spot.y);
   await page.waitForTimeout(700);
   return { spot, held: await secondInTime(page) };
+}
+
+async function openTicketWithNote(page: Page, api: TrackerClient): Promise<void> {
+  await seedProject(api, 'Mobile app', 'MOB', [{ title: 'Existing ticket' }]);
+  await page.goto('/p/MOB/1');
+  await page.getByLabel('Add files to ticket').setInputFiles([...images(8), SVG]);
+  await expect(page.getByRole('progressbar')).toHaveCount(0);
+}
+
+// `held`: the control's tap came while the screen held others, by the page's clock
+// (heldInThreeTries).
+async function tapJustAfterDismiss(page: Page, control: Locator): Promise<DoubleTap> {
+  const dismiss = page.getByRole('alert').getByRole('button', { name: 'Dismiss' });
+  await dismiss.evaluate((button) => button.scrollIntoView({ block: 'center' }));
+  await page.waitForTimeout(400);
+  const spot = await spotOf(dismiss);
+  const target = await spotOf(control);
+  await clearClicks(page);
+
+  await page.touchscreen.tap(spot.x, spot.y);
+  await page.waitForTimeout(150);
+  await page.touchscreen.tap(target.x, target.y);
+  await expect.poll(async () => (await clickTimes(page)).length).toBe(2);
+  return { spot: target, held: await secondInTime(page) };
 }
 
 async function swipeDown(page: Page): Promise<void> {
@@ -617,29 +642,18 @@ test.describe('attachments', () => {
     test(`phone: a tap on ${bar} just after Dismiss on the ticket screen acts`, async ({
       page,
       api,
+      request,
     }, info) => {
       test.skip(!isPhone(info.project.name), 'A tap on a phone.');
       await page.addInitScript(recordClicks);
-      await seedProject(api, 'Mobile app', 'MOB', [{ title: 'Existing ticket' }]);
-      await page.goto('/p/MOB/1');
-      await page.getByLabel('Add files to ticket').setInputFiles([...images(8), SVG]);
-      await expect(page.getByRole('progressbar')).toHaveCount(0);
-      const dismiss = page.getByRole('alert').getByRole('button', { name: 'Dismiss' });
-      await dismiss.evaluate((button) => button.scrollIntoView({ block: 'center' }));
-      await page.waitForTimeout(400);
-      const spot = await spotOf(dismiss);
-      const target = await spotOf(page.getByRole('button', { name: bar }));
-      await clearClicks(page);
+      const setUp = () => openTicketWithNote(page, api);
+      await setUp();
 
-      await page.touchscreen.tap(spot.x, spot.y);
-      await page.waitForTimeout(150);
-      await page.touchscreen.tap(target.x, target.y);
-
-      await done(page);
-      const [first, second] = await clickTimes(page);
-      expect(second! - first!, 'the tap came while the screen held others').toBeLessThan(
-        CLICK_SHIELD_MS,
+      await heldInThreeTries(
+        () => tapJustAfterDismiss(page, page.getByRole('button', { name: bar })),
+        () => startAfresh(page, request, setUp),
       );
+      await done(page);
     });
   }
 
@@ -662,30 +676,19 @@ test.describe('attachments', () => {
     test(`touch tablet: a tap on ${part} just after Dismiss on the ticket screen acts @tablet`, async ({
       page,
       api,
+      request,
     }, info) => {
       test.skip(!info.project.use.hasTouch, 'A tap on a touch screen; a click goes through.');
       if (isPhone(info.project.name)) await page.setViewportSize(TABLET);
       await page.addInitScript(recordClicks);
-      await seedProject(api, 'Mobile app', 'MOB', [{ title: 'Existing ticket' }]);
-      await page.goto('/p/MOB/1');
-      await page.getByLabel('Add files to ticket').setInputFiles([...images(8), SVG]);
-      await expect(page.getByRole('progressbar')).toHaveCount(0);
-      const dismiss = page.getByRole('alert').getByRole('button', { name: 'Dismiss' });
-      await dismiss.evaluate((button) => button.scrollIntoView({ block: 'center' }));
-      await page.waitForTimeout(400);
-      const spot = await spotOf(dismiss);
-      const target = await spotOf(control(page));
-      await clearClicks(page);
+      const setUp = () => openTicketWithNote(page, api);
+      await setUp();
 
-      await page.touchscreen.tap(spot.x, spot.y);
-      await page.waitForTimeout(150);
-      await page.touchscreen.tap(target.x, target.y);
-
-      await expect(page).toHaveURL(/\/p\/MOB$/);
-      const [first, second] = await clickTimes(page);
-      expect(second! - first!, 'the tap came while the screen held others').toBeLessThan(
-        CLICK_SHIELD_MS,
+      await heldInThreeTries(
+        () => tapJustAfterDismiss(page, control(page)),
+        () => startAfresh(page, request, setUp),
       );
+      await expect(page).toHaveURL(/\/p\/MOB$/);
     });
   }
 

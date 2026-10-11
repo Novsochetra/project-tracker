@@ -6,6 +6,7 @@ import { clearHandleFocus } from '../src/features/project/dnd/handleFocus';
 import { clearSends } from '../src/features/ticket/activity/sentComments';
 import { clearRefusedDrafts } from '../src/features/ticket/drafts/syncDrafts';
 import { clearSaves } from '../src/features/ticket/fields/fieldSaves';
+import { endHolds } from '../src/lib/holdPresses';
 import { clearStoredDrafts } from '../src/lib/storedDrafts';
 
 // Tests wait for what they need to see, however long a loaded machine takes to render it (booting
@@ -24,6 +25,8 @@ afterEach(() => {
   // a write would have the next test's pages read that ticket fresh.
   clearSaves();
   clearSends();
+  // A hold whose time ran out after the file's page had gone threw there (PT-167).
+  endHolds();
   clearRefusedDrafts();
   clearStoredDrafts();
   window.localStorage.removeItem(FRESH_READS_STORAGE_KEY);

@@ -1,7 +1,7 @@
 import type { CDPSession, Locator, Page } from '@playwright/test';
 import type { StatusCategory } from '@tracker/shared';
 import { expect, test, usesPhoneLayout } from './fixtures';
-import { readActionSheet, seedProject, settled, ticketRow, toast } from './helpers';
+import { readActionSheet, resting, seedProject, settled, ticketRow, toast } from './helpers';
 
 // PT-112: a phone turned sideways keeps the phone layout (PT-84) on a short screen: 390px on an
 // iPhone 13, about 296px on an iPhone 17 Pro under Safari's address and tab bars. An action sheet
@@ -27,23 +27,7 @@ const cardOf = (sheet: Locator) => sheet.locator('[role="presentation"]');
 const topOf = (sheet: Locator): Promise<number> =>
   sheet.evaluate((element) => element.getBoundingClientRect().top);
 
-// The sheet slides up on a spring that runs in script, which settled() can't see; it has come
-// to rest when two reads 100 ms apart agree.
-async function restingTop(sheet: Locator): Promise<number> {
-  let last = Number.NaN;
-  await expect
-    .poll(
-      async () => {
-        const top = await topOf(sheet);
-        const still = top === last;
-        last = top;
-        return still;
-      },
-      { intervals: [100] },
-    )
-    .toBe(true);
-  return last;
-}
+const restingTop = (sheet: Locator): Promise<number> => resting(() => topOf(sheet));
 
 async function openProjectSheet(page: Page): Promise<Locator> {
   await page.getByRole('button', { name: 'Project options' }).first().click();
@@ -274,7 +258,10 @@ test.describe('action sheets on a short phone screen', () => {
     await expect.poll(scrolled).toBeGreaterThan(40);
     expect(await topOf(sheet)).toBe(rest);
 
-    const before = await scrolled();
+    // The rows scroll as the browser works through the drag's moves. Read while a busy machine
+    // was still catching up, they went on past the read, and a pull of 30 px left them further
+    // down than that (PT-150).
+    const before = await resting(scrolled);
     await touchDrag(cdp, { x, y: top }, { x, y: top + 30 });
     await expect.poll(scrolled).toBeLessThan(before);
     await expect(sheet).toBeVisible();

@@ -8,25 +8,24 @@ import { StatusManagerSheet } from '../../src/features/statuses/StatusManagerShe
 import { CLICK_SHIELD_MS } from '../../src/lib/clickShield';
 import { tap } from '../../src/overlays/testing';
 import { GAPS } from './doubleClick';
+import { advance, stillClock } from './stillClock';
 
 // PT-97: on a phone, Delete status turns the status editor into its shorter delete confirm, and
 // Add status below moves up under the finger. A double tap's second tap pressed it, and an empty
 // new-status editor replaced the confirm (WebKit, iPhone 13 at 375×812). jsdom has no layout, so
 // each test taps what the browser found there: Add status, or the confirm's own Delete.
 
-const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-
 const sheet = () => screen.getByRole('dialog', { name: 'Statuses' });
 const button = (name: string) => within(sheet()).getByRole('button', { name });
 
-let restore: () => void;
+let restore: Array<() => void> = [];
 
 beforeEach(() => {
-  restore = sheetTestSetup(true);
+  restore = [sheetTestSetup(true)];
 });
 
 afterEach(() => {
-  restore();
+  restore.reverse().forEach((undo) => undo());
 });
 
 async function openEditor() {
@@ -37,8 +36,10 @@ async function openEditor() {
   };
   renderWithApi(<StatusManagerSheet open onClose={vi.fn()} projectKey="MOB" />, server);
   const user = userEvent.setup();
-  await tap(user, await within(sheet()).findByRole('button', { name: /^Need review/ }));
-  await wait(CLICK_SHIELD_MS);
+  const status = await within(sheet()).findByRole('button', { name: /^Need review/ });
+  restore.push(stillClock());
+  await tap(user, status);
+  await advance(CLICK_SHIELD_MS);
   return { user, server };
 }
 
@@ -47,7 +48,7 @@ describe('regression: a double tap on Delete status keeps its confirm', () => {
     const { user } = await openEditor();
 
     await tap(user, button('Delete status'));
-    if (gap > 0) await wait(gap);
+    if (gap > 0) await advance(gap);
     await tap(user, button('Add status'));
 
     expect(within(sheet()).getByText("Delete “Need review”? This can't be undone.")).toBeVisible();
@@ -60,7 +61,7 @@ describe('regression: a double tap on Delete status keeps its confirm', () => {
       const { user, server } = await openEditor();
 
       await tap(user, button('Delete status'));
-      if (gap > 0) await wait(gap);
+      if (gap > 0) await advance(gap);
       await tap(user, button('Delete'));
 
       expect(server.deleteStatus).not.toHaveBeenCalled();
@@ -74,7 +75,7 @@ describe('regression: a double tap on Delete status keeps its confirm', () => {
     const { user, server } = await openEditor();
 
     await tap(user, button('Delete status'));
-    await wait(CLICK_SHIELD_MS);
+    await advance(CLICK_SHIELD_MS);
     await tap(user, button('Delete'));
 
     expect(server.deleteStatus).toHaveBeenCalledTimes(1);
