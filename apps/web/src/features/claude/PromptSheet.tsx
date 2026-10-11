@@ -3,7 +3,6 @@ import { useProject, useTicket } from '../../api';
 import { useProjectPrompt, useTicketPrompt } from '../../api/hooks/prompts';
 import type { PromptScope, SheetProps } from '../../app/sheets/types';
 import { useToast } from '../../components';
-import { holdPresses } from '../../lib/holdPresses';
 import { PromptView } from './PromptView';
 import { sentText } from './runs';
 import {
@@ -39,10 +38,7 @@ function TicketPromptSheet({ open, onClose, ticketKey }: SheetProps & { ticketKe
     ticketKey,
     projectKey: ticket.data?.project.key,
     open,
-    // A closing sheet takes no taps, so the second tap of a double tap on Run would land on the
-    // screen under it. Held while the sheet still covers the screen's bars, those are held too.
     onStarted: (helper) => {
-      holdPresses(document.body);
       toast.show(sentText(helper));
       onClose();
     },

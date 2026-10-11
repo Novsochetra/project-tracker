@@ -142,6 +142,19 @@ describe("holdPresses on a screen's bars", () => {
     expect(tapOn(bottomBar.control).defaultPrevented).toBe(true);
   });
 
+  it('holds the bars when the whole page is held: a closing sheet covered them', () => {
+    const navBar = bar('sticky', 0);
+    const bottomBar = bar('fixed', 760);
+    screen.append(navBar.element, note, bottomBar.element);
+    showing(navBar.control, bottomBar.control);
+
+    holdPresses(document.body);
+
+    expect(tapOn(navBar.control).defaultPrevented).toBe(true);
+    expect(tapOn(bottomBar.control).defaultPrevented).toBe(true);
+    expect(pressed).not.toHaveBeenCalled();
+  });
+
   it('holds all of a sheet: its header moves as it shrinks, and its scrim closes it', () => {
     const scrim = bar('fixed', 0);
     const sheet = document.createElement('div');

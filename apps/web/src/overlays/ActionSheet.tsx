@@ -6,6 +6,7 @@ import { useTapShield } from '../lib/clickShield';
 import styles from './ActionSheet.module.css';
 import { actionSheetContent } from './actionSheetContent';
 import { useActionSheetMotion } from './useActionSheetMotion';
+import { useCloseHold } from './useCloseHold';
 import { useOverlayBehavior } from './useOverlayBehavior';
 import { usePresence } from './usePresence';
 import { useRowPeek } from './useRowPeek';
@@ -24,6 +25,7 @@ export interface ActionSheetProps {
   caption?: ReactNode;
   actions: ActionSheetAction[];
   cancelLabel?: string;
+  holdOnClose?: boolean;
 }
 
 function ActionSheetPanel(props: ActionSheetProps & { onExited: () => void }) {
@@ -38,9 +40,10 @@ function ActionSheetPanel(props: ActionSheetProps & { onExited: () => void }) {
   // row can take the tapped row's place (a delete confirm), so a double tap's second tap would
   // press the row that just arrived. Cancel stays where it was and keeps taking taps.
   const shield = useTapShield(open && content);
+  const closeHold = useCloseHold(open, props.holdOnClose);
 
   return (
-    <div className={styles.overlay} inert={!open} data-action-sheet="">
+    <div className={styles.overlay} inert={!open} data-action-sheet="" {...closeHold}>
       <motion.button
         type="button"
         tabIndex={-1}
