@@ -68,10 +68,11 @@ export function NavigationProvider({ children, prepare = READY }: NavigationProv
       };
       const send = () => {
         if (!stillOpening()) return;
-        // A reload on its way, as when its screen's code failed, would fill the new entry with the
+        // A reload on its way, as when its screen's code failed, would fill a pushed entry with the
         // screen on show (PT-108, PT-119). The row stays pressed until the new page replaces it,
         // rather than letting go and inviting a second tap, and lets go if that page never comes.
-        const reloading = reloadTimeLeft();
+        // A replace adds no entry, and holding it would drop it for good if the reload never came.
+        const reloading = replace ? 0 : reloadTimeLeft();
         if (reloading > 0) window.setTimeout(letGo, reloading);
         else void navigate(path, { replace });
       };
