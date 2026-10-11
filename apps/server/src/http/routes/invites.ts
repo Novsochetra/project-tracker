@@ -29,11 +29,11 @@ async function ownerId(c: Context<AppEnv>, deps: AuthDeps): Promise<string> {
 const linkRoutes = (deps: AuthDeps) => {
   const limited = limitInviteTries(deps);
   return new Hono<AppEnv>()
-    .post('/invites/check', limited, jsonBodyAsSent(checkInviteInput), async (c) => {
+    .post('/invites/check', jsonBodyAsSent(checkInviteInput), limited, async (c) => {
       const invite = await requireUsableInvite(deps.db, c.req.valid('json').secret, deps.now());
       return c.json({ expiresAt: invite.expiresAt });
     })
-    .post('/invites/accept', limited, jsonBodyAsSent(acceptInviteInput), async (c) => {
+    .post('/invites/accept', jsonBodyAsSent(acceptInviteInput), limited, async (c) => {
       const user = await acceptInvite(deps.db, c.req.valid('json'), deps.now());
       await signInAs(c, deps, user.id);
       return c.json(signedInState(user), 201);

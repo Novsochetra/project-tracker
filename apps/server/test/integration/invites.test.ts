@@ -162,7 +162,15 @@ describe.each(DIALECTS)('invite links tried too often (%s)', (dialect) => {
   const strict = { ...DEFAULT_LOGIN_LIMITS, perAddress: { max: 2, windowMs: 60_000 } };
   const api = useTestServer(dialect, { auth: { loginLimits: strict } });
 
-  it('get 429 from one address, as sign-in does', async () => {
+  it('get 429 from one address, as sign-in does, and a mistyped form is no try', async () => {
+    for (const mistake of [{ password: 'short' }, { name: '' }, { email: 'not an email' }]) {
+      const typo = await api.app.request('/api/invites/accept', {
+        method: 'POST',
+        headers: JSON_HEADERS,
+        body: JSON.stringify({ secret: 'guess', ...NEWCOMER, ...mistake }),
+      });
+      expect(typo.status).toBe(400);
+    }
     const check = () =>
       api.app.request('/api/invites/check', {
         method: 'POST',
