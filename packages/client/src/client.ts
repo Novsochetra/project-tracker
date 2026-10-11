@@ -1,4 +1,5 @@
 import type {
+  AcceptInviteInput,
   Activity,
   AddRunRequestInput,
   AddRunStepsInput,
@@ -8,10 +9,12 @@ import type {
   AskInput,
   Attachment,
   CardTicketInput,
+  CheckInviteInput,
   Chat,
   ChatDetail,
   CreateApiTokenInput,
   CreatedApiToken,
+  CreatedInvite,
   CreateCommentInput,
   CreateProjectInput,
   CreateStatusInput,
@@ -20,6 +23,7 @@ import type {
   ExpectedComment,
   ExpectedFields,
   FinishRunInput,
+  Invite,
   ListTicketsQuery,
   LoginInput,
   MarkSentInput,
@@ -234,6 +238,18 @@ export class TrackerClient {
     this.http.request<CreatedApiToken>('POST', '/api/tokens', { body: input });
 
   revokeApiToken = (id: string) => this.http.request<void>('DELETE', `/api/tokens/${segment(id)}`);
+
+  listInvites = () => this.http.request<Invite[]>('GET', '/api/invites');
+
+  createInvite = () => this.http.request<CreatedInvite>('POST', '/api/invites');
+
+  revokeInvite = (id: string) => this.http.request<void>('DELETE', `/api/invites/${segment(id)}`);
+
+  checkInvite = (input: CheckInviteInput) =>
+    this.http.request<{ expiresAt: number }>('POST', '/api/invites/check', { body: input });
+
+  acceptInvite = (input: AcceptInviteInput) =>
+    this.http.request<SessionState>('POST', '/api/invites/accept', { body: input });
 
   startRun = (ticketKey: string, input: StartRunInput) =>
     this.http.request<Run>('POST', `/api/tickets/${segment(ticketKey)}/runs`, { body: input });
