@@ -16,6 +16,11 @@
   font-weight: var(--weight-medium);
 }
 
+/* Where the words don't fit beside a phone row's key and chip (a sent-back TRACK-123 at 320px),
+   they wrap out of sight whole, rather than end in half a word, and the icon stays. */
 .caption {
+  flex-wrap: wrap;
+  height: 1lh;
+  overflow: hidden;
   font: var(--text-caption);
 }
