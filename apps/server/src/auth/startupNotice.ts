@@ -8,7 +8,9 @@ function withoutOwner(config: AuthConfig): string {
   if (config.openWithoutOwner !== false) {
     return (
       'No owner account: open to requests from this machine only (localhost); other devices, ' +
-      `the dev server's LAN address included, must sign in. Set one with ${SETUP_COMMAND}`
+      "the dev server's LAN address included, must sign in. A proxy or tunnel on this machine " +
+      '(ssh -R, socat, nginx) makes the requests it passes on look local, so set an owner before ' +
+      `using one: ${SETUP_COMMAND}`
     );
   }
   const why = config.legacyToken

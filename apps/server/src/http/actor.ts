@@ -1,5 +1,6 @@
-import type { Actor } from '@tracker/shared';
+import { isPersonWord, type Actor } from '@tracker/shared';
 import { createMiddleware } from 'hono/factory';
+import { invalidInput } from '../errors';
 import { withoutNul } from '../withoutNul';
 import type { AppEnv } from './env';
 
@@ -22,6 +23,14 @@ export function parseActor(kind: string | undefined, rawName: string | undefined
 }
 
 export const asAgent = ({ name }: Actor): Actor => ({ kind: 'agent', name: name || 'Agent' });
+
+export function refusePersonName(actor: Actor): void {
+  if (actor.kind !== 'agent' || !isPersonWord(actor.name)) return;
+  throw invalidInput(
+    `An agent can't be called “${actor.name}”: that is the name for the person. ` +
+      'Give it another name (TRACKER_AGENT_NAME or --as).',
+  );
+}
 
 export const actorMiddleware = createMiddleware<AppEnv>(async (c, next) => {
   c.set('actor', parseActor(c.req.header('x-actor-kind'), c.req.header('x-actor-name')));

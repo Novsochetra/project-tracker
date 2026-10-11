@@ -1,4 +1,4 @@
-import type { ServerMeta } from '@tracker/shared';
+import { isLoopbackHost, type ServerMeta } from '@tracker/shared';
 import type { Route } from '../../navigation';
 
 export type ConnectInfo = Pick<ServerMeta, 'serverUrl' | 'mcpEntry' | 'cliEntry'>;
@@ -12,7 +12,6 @@ export const COMMAND_COPY_BLOCKED =
   'Copying was blocked here. Select the command and copy it yourself.';
 
 const SHELL_SAFE = /^[\w@%+=:,./-]+$/;
-const LOOPBACK_HOSTS = new Set(['localhost', '127.0.0.1', '[::1]']);
 
 // Paths with spaces or quotes must survive being pasted into a shell as one argument.
 export const shellQuote = (value: string): string =>
@@ -36,10 +35,8 @@ export function trackerAddress(serverUrl: string, pageOrigin: string): string {
 
 // Only a tracker on this computer runs from a checkout here, so only then are its paths the paths
 // on this computer. Elsewhere (Railway) the commands run in the person's own checkout.
-export const isLocalTracker = (serverUrl: string): boolean => {
-  const hostname = hostOf(serverUrl)?.hostname ?? '';
-  return LOOPBACK_HOSTS.has(hostname) || hostname.endsWith('.localhost');
-};
+export const isLocalTracker = (serverUrl: string): boolean =>
+  isLoopbackHost(hostOf(serverUrl)?.hostname ?? '');
 
 const mcpEntry = ({ serverUrl, mcpEntry: path }: ConnectInfo): string =>
   isLocalTracker(serverUrl) ? shellQuote(path) : '"$(pwd)/apps/agent/dist/mcp.js"';

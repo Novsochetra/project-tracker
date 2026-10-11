@@ -1,3 +1,4 @@
+import { isLoopbackHost } from '@tracker/shared';
 import type { OpenWithoutOwner } from './http/authOptions';
 
 export interface AuthConfig {
@@ -8,10 +9,6 @@ export interface AuthConfig {
   // closed, as the token did, and main.ts says so at start.
   legacyToken: boolean;
 }
-
-const LOOPBACK = /^(localhost|127(?:\.\d{1,3}){3}|::1|\[::1\])$/i;
-
-export const isLoopbackHost = (host: string): boolean => LOOPBACK.test(host.trim());
 
 // TRUST_PROXY is how many proxies in front add to X-Forwarded-For: 1 on Railway. "true" means 1.
 export function parseTrustProxy(value: string | undefined): number {

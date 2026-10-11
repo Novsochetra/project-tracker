@@ -88,8 +88,8 @@ describe('isLocalTracker', () => {
     expect(isLocalTracker('http://localhost:4100')).toBe(true);
     expect(isLocalTracker('http://127.0.0.1:4100')).toBe(true);
     expect(isLocalTracker('http://[::1]:4100')).toBe(true);
-    expect(isLocalTracker('http://tracker.localhost')).toBe(true);
     expect(isLocalTracker(RAILWAY)).toBe(false);
+    expect(isLocalTracker('http://tracker.localhost')).toBe(false);
     expect(isLocalTracker('http://192.168.1.4:4100')).toBe(false);
     expect(isLocalTracker('not a url')).toBe(false);
   });

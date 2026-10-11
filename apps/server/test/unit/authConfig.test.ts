@@ -1,17 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { isLoopbackHost, loadAuthConfig, parseTrustProxy } from '../../src/authConfig';
+import { loadAuthConfig, parseTrustProxy } from '../../src/authConfig';
 import { loadConfig } from '../../src/config';
 
 describe('auth config', () => {
-  it('knows loopback hosts', () => {
-    for (const host of ['127.0.0.1', 'localhost', '::1', '[::1]', '127.0.1.1', 'LOCALHOST']) {
-      expect(isLoopbackHost(host), host).toBe(true);
-    }
-    for (const host of ['0.0.0.0', '::', '192.168.1.10', 'tracker.example.com', '']) {
-      expect(isLoopbackHost(host), host).toBe(false);
-    }
-  });
-
   it('reads TRUST_PROXY as a number of proxies', () => {
     expect(parseTrustProxy(undefined)).toBe(0);
     expect(parseTrustProxy('')).toBe(0);

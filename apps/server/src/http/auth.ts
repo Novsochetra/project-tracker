@@ -8,7 +8,7 @@ import { resumeSession } from '../auth/sessions';
 import type { Clock } from '../clock';
 import type { Db } from '../db/schema';
 import { AppError, forbidden } from '../errors';
-import { asAgent } from './actor';
+import { asAgent, refusePersonName } from './actor';
 import type { AuthOptions } from './authOptions';
 import type { AppEnv } from './env';
 import { isLocalRequest } from './localRequest';
@@ -90,6 +90,7 @@ export function authMiddleware(deps: AuthDeps) {
     // Only the owner's own session acts as the person; a token is an agent whatever it says, so it
     // can never move a ticket to Done.
     if (access?.kind === 'token') c.set('actor', asAgent(c.get('actor')));
+    refusePersonName(c.get('actor'));
     await next();
   });
 }

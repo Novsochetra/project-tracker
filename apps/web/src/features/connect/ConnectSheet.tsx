@@ -6,9 +6,9 @@ import { Button, GroupedCard, Spinner } from '../../components';
 import { useOptionalNavigation } from '../../navigation/useNavigation';
 import { Sheet, SheetTextButton } from '../../overlays';
 import { CommandRow } from './CommandRow';
+import { addressNote, agentAddress } from './agentAddress';
 import {
   cliHelpCommand,
-  isLocalTracker,
   projectKeyNote,
   routeProjectKey,
   slashCommand,
@@ -50,14 +50,10 @@ export function ConnectSheet({ open, onClose }: SheetProps) {
   );
 }
 
-const connectInfo = (meta: ServerMeta): ConnectInfo => ({
-  ...meta,
-  serverUrl: trackerAddress(meta.serverUrl, window.location.origin),
-});
-
 function Setup({ meta, projectKey }: { meta: ServerMeta; projectKey: string | null }) {
   const { copy, blocked } = useCopyCommand();
-  const info = connectInfo(meta);
+  const address = trackerAddress(meta.serverUrl, window.location.origin);
+  const info: ConnectInfo = { ...meta, serverUrl: agentAddress(address) };
   return (
     <>
       <Section title="This tracker">
@@ -65,11 +61,7 @@ function Setup({ meta, projectKey }: { meta: ServerMeta; projectKey: string | nu
           <ul className={styles.rows}>
             <CommandRow
               command={info.serverUrl}
-              description={
-                isLocalTracker(info.serverUrl)
-                  ? 'Agents on this computer reach the tracker here.'
-                  : 'Agents reach the tracker here, from any computer.'
-              }
+              description={addressNote(address, info.serverUrl)}
               copyLabel="Copy address"
               onCopy={(address) => copy(address, ADDRESS_COPY)}
             />

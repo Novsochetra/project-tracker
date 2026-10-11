@@ -44,7 +44,7 @@ The server listens on `127.0.0.1` by default. To reach it from your phone:
    HOST=0.0.0.0 npm start
    ```
 
-2. Open `http://<your-computer's-LAN-IP>:4100` on the phone and sign in.
+2. Open `http://<your-computer's-LAN-IP>:4100` on the phone and sign in. Over plain http, Connect Claude Code gives the agent commands for `http://localhost:4100`, to run on this computer: agents send their token over http only to their own computer.
 3. Add it to the home screen (Safari: Share → Add to Home Screen). It opens full screen like an app.
 
 ## Sign-in
@@ -57,7 +57,7 @@ npm run owner:set -- --email you@example.com   # asks for the password twice, hi
 
 The password is typed (or piped in as the first line of standard input), never put in env vars or arguments; the database keeps only a scrypt hash. It uses the server's database: the local SQLite file, or `DATABASE_URL` (a Postgres database must be migrated first). In a built deploy the same command is `node apps/server/dist/owner-set.js --email you@example.com`. Running it again signs out every device; API tokens keep working.
 
-Without an owner, a server on `127.0.0.1` (not behind a proxy, and without `TRACKER_TOKEN` set) answers requests made on this machine only, as local use always did; other devices, including a phone using `npm run dev` over the LAN, must sign in. Anywhere else it refuses every request until the owner is set. Claude Code agents use API tokens the owner creates in the app (`Authorization: Bearer trk_…`, saved with `tracker login` or set as `TRACKER_API_TOKEN`; see Connect Claude Code below). Details: `docs/architecture.md` §3.1.
+Without an owner, a server on `127.0.0.1` (not behind a proxy, and without `TRACKER_TOKEN` set) answers requests made on this machine only, as local use always did; other devices, including a phone using `npm run dev` over the LAN, must sign in. Anywhere else it refuses every request until the owner is set. A proxy or tunnel on this machine (`ssh -R`, `socat`, a bare nginx) makes the requests it passes on look local, so set the owner before using one. Claude Code agents use API tokens the owner creates in the app (`Authorization: Bearer trk_…`, saved with `tracker login` or set as `TRACKER_API_TOKEN`; see Connect Claude Code below). Details: `docs/architecture.md` §3.1.
 
 For HTTPS (needed for offline support and the clipboard API), the easiest route is [Tailscale](https://tailscale.com): `tailscale serve --bg 4100`, then open the `https://…ts.net` address on your phone. Start the server with `PUBLIC_URL=https://<your-machine>.ts.net` so Connect Claude Code shows that address.
 
@@ -96,6 +96,8 @@ On this computer, with the tracker open (no owner yet), build the agent tools an
 npm run build -w @tracker/agent
 claude mcp add tracker -s user --env TRACKER_URL=http://localhost:4100 --env TRACKER_AGENT_NAME=Claude -- node "$(pwd)/apps/agent/dist/mcp.js"
 ```
+
+`TRACKER_AGENT_NAME` (or the CLI's `--as`) is the name the activity shows. "You" and "User" are refused: they are the person's.
 
 To an online tracker (Railway), or any tracker with an owner, agents need an API token:
 

@@ -1,5 +1,5 @@
+import { isLoopbackHost } from '@tracker/shared';
 import type { Context } from 'hono';
-import { isLoopbackHost } from '../authConfig';
 
 const hostnameOf = (host: string): string =>
   URL.canParse(`http://${host}`) ? new URL(`http://${host}`).hostname : '';
