@@ -150,6 +150,10 @@ describe.each(DIALECTS)('every migration up and down (%s)', (dialect) => {
       await migrator.migrateTo('0010_ask_effort');
       const keys = await sql<{ key: string }>`select key from projects order by key`.execute(db);
       expect(keys.rows).toEqual([{ key: 'AWP' }, { key: 'PT' }]);
+
+      await migrateToLatest(db);
+      const again = await sql<{ ownerId: string }>`select owner_id from projects`.execute(db);
+      expect(again.rows).toEqual([{ ownerId: 'u' }, { ownerId: 'u' }]);
     });
   });
 

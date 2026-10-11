@@ -37,8 +37,8 @@ async function createInvites(db: SchemaDb): Promise<void> {
 
 // Until now the one account owned everything: its projects and its uploads stay its own.
 async function giveEverythingToTheOwner(db: SchemaDb): Promise<void> {
-  await sql`update users set role = 'owner'`.execute(db);
   const owner = sql`(select id from users order by created_at, id limit 1)`;
+  await sql`update users set role = 'owner' where id = ${owner}`.execute(db);
   await sql`update projects set owner_id = ${owner}`.execute(db);
   await sql`update attachments set user_id = ${owner}`.execute(db);
 }
@@ -49,7 +49,22 @@ export async function up(db: SchemaDb): Promise<void> {
   await giveEverythingToTheOwner(db);
 }
 
+// Without roles and owners every invited account would see and change the owner's projects, and
+// running this again would give the owner theirs; their data has to go first.
+async function refuseInvitedAccounts(db: SchemaDb): Promise<void> {
+  const invited = await sql<{
+    id: string;
+  }>`select id from users where role = 'user' limit 1`.execute(db);
+  if (invited.rows.length > 0) {
+    throw new Error(
+      "Can't undo 0011_user_projects while invited accounts exist: their projects would become " +
+        "the owner's. Restore the backup taken before the release instead.",
+    );
+  }
+}
+
 export async function down(db: SchemaDb): Promise<void> {
+  await refuseInvitedAccounts(db);
   await db.schema.dropTable('invites').execute();
   await db.schema.alterTable('attachments').dropColumn('user_id').execute();
   await db.schema.dropIndex('projects_owner_idx').execute();
