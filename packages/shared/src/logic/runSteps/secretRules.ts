@@ -30,6 +30,9 @@ export interface SecretRule {
   name: string;
   pattern: RegExp;
   replace: Replace;
+  // Puts *** only for runs that are each one literal word, anywhere in its match, so a permission
+  // can keep all of them (permissionMask.ts).
+  eachWord?: boolean;
 }
 
 const rule = (name: string, pattern: string, flags: string, replace: Replace): SecretRule => ({
@@ -95,6 +98,31 @@ export const SECRET_RULES: readonly SecretRule[] = [
       return (head.endsWith('=') ? !reference(value) : looksSecret(value)) ? masked(head) : m;
     },
   ),
+  // YAML, TOML, INI and code put spaces around `:` or `=` (`password: hunter2xx`, `apiKey = '…'`),
+  // where a value that calls or indexes something (`get_password()`, `env["TOKEN"]`) is code.
+  rule(
+    'assignment',
+    String.raw`((?:^|[^\w-])(${NAME})["']?\s{0,4}[:=]\s{1,4})(${VALUE})`,
+    'gm',
+    (m, head = '', name = '', value = '') =>
+      secretName(name) && looksSecret(value) && !value.includes(MASK) && !/^[^"']*[([]/.test(value)
+        ? masked(head)
+        : m,
+  ),
+  rule('xml element', String.raw`(<(${NAME})>)[^<\n]+(?=<\/\2>)`, 'g', (m, head = '', name = '') =>
+    secretName(name) ? masked(head) : m,
+  ),
+  // A key's body is base64, one literal word a line, so each line is masked and the rest of the
+  // text between BEGIN and END stays.
+  {
+    ...rule(
+      'private key',
+      String.raw`-----BEGIN [A-Z ]{0,40}PRIVATE KEY-----[\s\S]*?(?:-----END|$)`,
+      'g',
+      (m) => m.replace(/^((?:[+-] )?[ \t]*)[A-Za-z0-9+/]{16,}={0,2}(?=[ \t]*$)/gm, `$1${MASK}`),
+    ),
+    eachWord: true,
+  },
   // Only a name that holds a keyword matches at all, so one that doesn't
   // (--from-literal=password=x) never takes the next one as its value.
   rule(

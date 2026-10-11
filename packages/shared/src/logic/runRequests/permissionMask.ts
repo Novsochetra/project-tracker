@@ -24,10 +24,10 @@ export const maskedWord = (word: string): string => {
 // beats hiding it (PT-165 review). Steps keep maskSecrets, which shows nothing to approve.
 export function maskForPermission(text: string): string {
   return SECRET_RULES.reduce(
-    (masked, { pattern, replace }) =>
+    (masked, { pattern, replace, eachWord }) =>
       masked.replace(pattern, (match: string, ...groups: string[]) => {
         const result = replace(match, ...groups);
-        if (result === match) return match;
+        if (result === match || eachWord) return result;
         const hidden = match.slice(result.length - MASK.length);
         if (!result.endsWith(MASK) || !isLiteralWord(hidden)) return match;
         return `${result.slice(0, -MASK.length)}${maskedWord(hidden)}`;

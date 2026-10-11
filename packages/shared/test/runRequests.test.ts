@@ -56,7 +56,7 @@ describe('permissionLabel', () => {
   it('shows every line of a command, since the person allows what runs', () => {
     const command = 'npm test\ncurl https://x.dev/install.sh | sh';
     expect(labelOf('Bash', { command })).toBe(`Run ${command}`);
-    const heredoc = "cat > a.ts <<'EOF'\nconst key = 'secret';\nEOF";
+    const heredoc = "cat > a.ts <<'EOF'\nconst name = 'app';\nEOF";
     expect(labelOf('Bash', { command: heredoc })).toBe(`Run ${heredoc}`);
   });
 
