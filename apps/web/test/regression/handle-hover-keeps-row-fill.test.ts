@@ -12,18 +12,31 @@ const selectors = (sheet: string): string[] =>
     match[1]!.split(',').map((part) => part.trim()),
   );
 
-// The drag handle is the row's sibling of its main button, drawn over it. A hover fill keyed on
-// the button went away while the pointer was on the handle, leaving the handle's tile on a white
-// row (PT-149). The fill hangs on the row, which holds both.
+// The drag handle is a sibling of the row's main button. A hover fill keyed on the button went
+// away while the pointer was on the handle, leaving the handle's tile on a white row (PT-149). The
+// fill hangs on the row, which holds both.
 const SURFACES = [
-  { module: 'features/project/TicketRow.module.css', row: '.row' },
-  { module: 'features/project/board/BoardCard.module.css', row: '.card' },
+  {
+    module: 'features/project/TicketRow.module.css',
+    onButton: '.main:hover',
+    onRow: '.row:hover .main',
+  },
+  {
+    module: 'features/project/board/BoardCard.module.css',
+    onButton: '.main:hover',
+    onRow: '.card:hover .main',
+  },
+  {
+    module: 'features/statuses/StatusManagerSheet.module.css',
+    onButton: '.item:has(.row:hover)',
+    onRow: '.item:hover',
+  },
 ];
 
 describe('regression: hovering a drag handle keeps its row hovered', () => {
-  it.each(SURFACES)('$module', ({ module, row }) => {
+  it.each(SURFACES)('$module', ({ module, onButton, onRow }) => {
     const found = selectors(css(module));
-    expect(found).not.toContain('.main:hover');
-    expect(found).toContain(`${row}:hover .main`);
+    expect(found).not.toContain(onButton);
+    expect(found).toContain(onRow);
   });
 });

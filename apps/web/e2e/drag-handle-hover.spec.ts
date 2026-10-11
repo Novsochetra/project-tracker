@@ -1,6 +1,13 @@
 import type { Locator, Page } from '@playwright/test';
 import { expect, isPhone, test } from './fixtures';
-import { group, seedProject, settled, settledScreenshot, ticketRow } from './helpers';
+import {
+  group,
+  readActionSheet,
+  seedProject,
+  settled,
+  settledScreenshot,
+  ticketRow,
+} from './helpers';
 
 const NO_FILL = 'rgba(0, 0, 0, 0)';
 
@@ -19,19 +26,45 @@ async function showBoard(page: Page): Promise<void> {
 const background = (locator: Locator): Promise<string> =>
   locator.evaluate((element) => getComputedStyle(element).backgroundColor);
 
+interface HoverParts {
+  row: Locator;
+  handle: Locator;
+  filled: Locator;
+}
+
 // The handle sits on its row, so pointing at it still points at the row: the row keeps its hover
 // fill and the handle's tile shows on it, not on a white row (PT-149).
-async function expectRowKeepsHover(page: Page, key: string): Promise<void> {
-  const row = ticketRow(page, key);
-  await row.hover({ position: { x: 200, y: 10 } });
-  await settled(row);
-  const hovered = await background(row);
+async function expectHandleKeepsFill({ row, handle, filled }: HoverParts): Promise<void> {
+  await row.hover();
+  await settled(filled);
+  const hovered = await background(filled);
   expect(hovered).not.toBe(NO_FILL);
-  await handle(page, key).hover();
-  await expect(handle(page, key)).toHaveCSS('opacity', '1');
+  await handle.hover();
+  await expect(handle).toHaveCSS('opacity', '1');
   // Read once the row's fill has finished fading: it starts from the hovered colour either way.
-  await settled(row);
-  expect(await background(row)).toBe(hovered);
+  await settled(filled);
+  expect(await background(filled)).toBe(hovered);
+}
+
+const ticketParts = (page: Page, key: string): HoverParts => ({
+  row: ticketRow(page, key),
+  handle: handle(page, key),
+  filled: ticketRow(page, key),
+});
+
+async function openStatuses(page: Page): Promise<Locator> {
+  await page.getByRole('button', { name: 'Project options' }).first().click();
+  await readActionSheet(page);
+  await page.getByRole('button', { name: 'Manage statuses' }).click();
+  const sheet = page.getByRole('dialog', { name: 'Statuses' });
+  await expect(sheet).toBeVisible();
+  return sheet;
+}
+
+function statusParts(sheet: Locator, name: string): HoverParts {
+  const handle = sheet.getByRole('button', { name: `Reorder ${name}` });
+  const filled = handle.locator('xpath=ancestor::li[1]');
+  return { row: filled.getByRole('button', { name: new RegExp(`^${name}`) }), handle, filled };
 }
 
 test.describe('drag handle hover', () => {
@@ -45,12 +78,19 @@ test.describe('drag handle hover', () => {
     page,
   }, info) => {
     test.skip(isPhone(info.project.name), 'Hover is for a mouse');
-    await expectRowKeepsHover(page, 'MOB-1');
+    await expectHandleKeepsFill(ticketParts(page, 'MOB-1'));
     await settled(group(page, 'To do'));
     await group(page, 'To do').screenshot({ path: info.outputPath('handle-hover-list.png') });
     await showBoard(page);
-    await expectRowKeepsHover(page, 'MOB-1');
+    await expectHandleKeepsFill(ticketParts(page, 'MOB-1'));
     await settledScreenshot(page, info.outputPath('handle-hover-board.png'));
+  });
+
+  test('a hovered handle keeps its status row hovered', async ({ page }, info) => {
+    test.skip(isPhone(info.project.name), 'Hover is for a mouse');
+    const sheet = await openStatuses(page);
+    await expectHandleKeepsFill(statusParts(sheet, 'Need review'));
+    await settledScreenshot(page, info.outputPath('handle-hover-statuses.png'));
   });
 
   test('phones show every handle on a resting row', async ({ page }, info) => {
