@@ -144,6 +144,8 @@ describe('an MCP permission label shows every argument', () => {
       ...[...';&|<>(){},$*?[#`"\' \\'].map((symbol) => `ab${symbol}cd`),
       { password: 'abc123def456', other: 'kept' },
       ['Bearer abc123def456', 'kept'],
+      ['hunter2'],
+      ['abc', 'two words', ['x$(y)', 'def'], { token: 'abc' }],
     ];
     for (const key of ['api_key', 'token', 'headers', 'body']) {
       for (const secret of secrets) {

@@ -93,12 +93,19 @@
   overflow-wrap: anywhere;
 }
 
-/* A wrapped line goes on indented, so a line at the box's edge always starts a new line of the
-   command or a new argument, never the rest of a long value (PT-171). */
+/* A wrapped line goes on indented, and only a new line of the command or a new argument has a
+   divider above it: a real line that starts with spaces begins where a wrapped one goes on, and no
+   text can draw the divider (PT-171 review). */
 .codeLine {
   display: block;
   padding-left: 2ch;
   text-indent: -2ch;
+}
+
+.codeLine + .codeLine {
+  margin-top: 2px;
+  padding-top: 2px;
+  border-top: 1px solid var(--line);
 }
 
 /* A blank line of a heredoc is part of what runs, so it keeps its height. */

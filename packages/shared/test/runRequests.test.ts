@@ -37,10 +37,10 @@ describe('permissionLabel', () => {
     expect(labelOf('Bash', { command: 'npm run verify', description: 'Verify' })).toBe(
       'Run npm run verify',
     );
-    expect(labelOf('Edit', { file_path: `${FOLDER}/src/a.ts`, old_string: 'secret' })).toBe(
-      'Edit src/a.ts',
+    expect(labelOf('Edit', { file_path: `${FOLDER}/src/a.ts` })).toBe('Edit src/a.ts\n- \n+ ');
+    expect(labelOf('Write', { file_path: '/etc/hosts', content: 'x' })).toBe(
+      'Write /etc/hosts\n+ x',
     );
-    expect(labelOf('Write', { file_path: '/etc/hosts', content: 'x' })).toBe('Write /etc/hosts');
     expect(labelOf('Read', { file_path: '/Users/dara/.ssh/id_rsa' })).toBe(
       'Read /Users/dara/.ssh/id_rsa',
     );
@@ -58,13 +58,6 @@ describe('permissionLabel', () => {
     expect(labelOf('Bash', { command })).toBe(`Run ${command}`);
     const heredoc = "cat > a.ts <<'EOF'\nconst key = 'secret';\nEOF";
     expect(labelOf('Bash', { command: heredoc })).toBe(`Run ${heredoc}`);
-  });
-
-  it("never shows a file's contents for Write or Edit, only its path", () => {
-    expect(labelOf('Write', { file_path: `${FOLDER}/a.ts`, content: 'secret' })).toBe('Write a.ts');
-    expect(
-      labelOf('Edit', { file_path: `${FOLDER}/a.ts`, old_string: 'a', new_string: 'secret' }),
-    ).toBe('Edit a.ts');
   });
 
   it('shows an address with its query and masks secrets in a command', () => {
