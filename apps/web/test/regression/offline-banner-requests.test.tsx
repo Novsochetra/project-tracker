@@ -1,7 +1,7 @@
 import type { SessionState } from '@tracker/shared';
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { NETWORK_ERROR_MESSAGE } from '../../src/api';
 import { fakeClient } from '../../src/api/test/fakeClient';
 import { makeBoard, otherProject } from '../../src/api/test/fixtures';
@@ -9,6 +9,7 @@ import { createTestQueryClient } from '../../src/api/test/render';
 import { announce } from '../../src/app/announce';
 import { LiveRegion } from '../../src/app/LiveRegion';
 import { OfflineBanner } from '../../src/app/OfflineBanner';
+import { ProjectScreen } from '../../src/app/lazyParts';
 import { projectSummary } from '../../src/app/test/harness';
 import { TrackerApp } from '../../src/app/TrackerApp';
 import { skipAnimations } from '../../src/overlays/testing';
@@ -55,6 +56,11 @@ const breadcrumb = () => screen.getByRole('navigation', { name: 'Breadcrumb' });
 const MOVE_MOB_1 = 'Move MOB-1. Drag, or use the arrow keys.';
 
 let restore: Array<() => void> = [];
+
+// The app loads the project screen's code when first needed. On a loaded machine that took longer
+// than a wait for the board, and a screen mounted after the project list failed read it again: the
+// count below is of the reads of a mounted page, so the code is in before the first render (PT-174).
+beforeAll(() => ProjectScreen.preload());
 
 beforeEach(() => {
   restore = [skipAnimations()];
