@@ -41,9 +41,10 @@
 }
 
 /* On the card, not the button: the drag handle is drawn over the button, and the card stays
-   hovered while the pointer is on it (PT-149). */
+   hovered while the pointer is on it (PT-149). Not while dragged: the pointer stays on the handle
+   through a drag, and the dimmed card keeps its resting background. */
 @media (hover: hover) {
-  .card:hover .main {
+  .card:hover .main:not([data-dragged]) {
     background: var(--row-hover);
   }
 }
