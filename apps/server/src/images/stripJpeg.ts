@@ -1,6 +1,7 @@
 import { asBuffer } from './asBuffer';
 import { hasOrientation, orientationExif } from './exifOrientation';
 import { APP0, appHeader } from './jpegAppHeaders';
+import { isIccChunk, isWholeIccProfile } from './jpegIcc';
 import { EOI, SOS, jpegSegments, type JpegSegment } from './jpegSegments';
 
 const SOI = 0xd8;
@@ -10,17 +11,14 @@ const DAC = 0xcc;
 const DQT = 0xdb;
 const DNL = 0xdc;
 const DRI = 0xdd;
-const APP2 = 0xe2;
-const ICC_PROFILE = Buffer.from('ICC_PROFILE\0', 'latin1');
 
 // Anything libjpeg doesn't draw the picture from can carry any bytes (EXIF with GPS and camera,
 // XMP, IPTC, comments, unknown markers), so it goes wherever it is, between scans too (PT-146).
 const KEPT = new Set([...SOF, DHT, DAC, DQT, DNL, DRI, SOS, EOI]);
 
-function isNeeded(bytes: Buffer, { marker, start }: JpegSegment): boolean {
-  if (marker === APP2) return bytes.subarray(start + 4, start + 16).equals(ICC_PROFILE);
-  return KEPT.has(marker);
-}
+// A chunk's count is one byte, so past 255 chunks no profile is whole and more are dropped unseen,
+// rather than held as a view each.
+const MAX_ICC_CHUNKS = 255;
 
 function orientationSegment(orientation: number): Buffer {
   const exif = Buffer.concat([Buffer.from('Exif\0\0', 'latin1'), orientationExif(orientation)]);
@@ -33,6 +31,8 @@ type Piece = Buffer | { start: number; end: number };
 
 interface Walk {
   pieces: Piece[];
+  iccChunks: Buffer[];
+  headers: Set<number>;
   scanned: boolean;
 }
 
@@ -43,23 +43,34 @@ function keep(pieces: Piece[], { start, end }: JpegSegment) {
   else pieces.push({ start, end });
 }
 
-// What follows the end marker can carry metadata of its own, so only the segments are kept. A
-// file needs one JFIF and one Adobe header; more of them would carry seven free bytes each.
-function walk(bytes: Buffer): Walk {
-  const pieces: Piece[] = [];
-  const headers = new Set<number>();
-  let scanned = false;
-  for (const segment of jpegSegments(bytes)) {
-    scanned ||= segment.marker === SOS;
-    const header = appHeader(bytes, segment);
-    if (!header) {
-      if (isNeeded(bytes, segment)) keep(pieces, segment);
-    } else if (!headers.has(segment.marker)) {
-      headers.add(segment.marker);
-      pieces.push(header);
-    }
+// A file needs one JFIF and one Adobe header; more of them would carry seven free bytes each. ICC
+// chunks stay pieces of their own, to be dropped once all are seen if they make no whole profile.
+function place(bytes: Buffer, segment: JpegSegment, found: Walk) {
+  const header = appHeader(bytes, segment);
+  if (header) {
+    if (found.headers.has(segment.marker)) return;
+    found.headers.add(segment.marker);
+    found.pieces.push(header);
+  } else if (isIccChunk(bytes, segment)) {
+    if (found.iccChunks.length > MAX_ICC_CHUNKS) return;
+    const chunk = bytes.subarray(segment.start, segment.end);
+    found.iccChunks.push(chunk);
+    found.pieces.push(chunk);
+  } else if (KEPT.has(segment.marker)) {
+    keep(found.pieces, segment);
   }
-  return { pieces, scanned };
+}
+
+// What follows the end marker can carry metadata of its own, so only the segments are kept.
+function walk(bytes: Buffer): Walk {
+  const found: Walk = { pieces: [], iccChunks: [], headers: new Set(), scanned: false };
+  for (const segment of jpegSegments(bytes)) {
+    found.scanned ||= segment.marker === SOS;
+    place(bytes, segment, found);
+  }
+  if (found.iccChunks.length === 0 || isWholeIccProfile(found.iccChunks)) return found;
+  const icc = new Set<Piece>(found.iccChunks);
+  return { ...found, pieces: found.pieces.filter((piece) => !icc.has(piece)) };
 }
 
 // JFIF wants to come first; the EXIF that says which way is up goes right after it.
