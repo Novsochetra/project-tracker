@@ -17,13 +17,14 @@ const callbacks: RowCallbacks = {
   confirmDelete: vi.fn(),
 };
 
-function renderRow(category: StatusCategory, lastReview: Review | null) {
+function renderRow(category: StatusCategory, lastReview: Review | null, waiting = false) {
   const status = statuses.find((candidate) => candidate.category === category)!;
   const ticket = listItem(3, status.id, 0, {
     title: 'Dark mode colors',
     due: '2026-10-09',
     assignee: 'Claude',
     lastReview,
+    waitingUntil: waiting ? Date.now() + 60_000 : null,
   });
   render(
     <TicketRowContent ticket={ticket} status={status} dragged={false} callbacks={callbacks} />,
@@ -59,5 +60,26 @@ describe('TicketRowContent', () => {
 
   it('shows no chip on a ticket nobody reviewed', () => {
     expect(renderRow('in_progress', null).querySelector('[data-verdict]')).toBeNull();
+  });
+
+  it('says Claude waits for the person after the title, and opens the ticket on a tap', () => {
+    const row = renderRow('in_progress', null, true);
+    expect(row).toHaveAccessibleName(
+      'MOB-3 Dark mode colors Claude is waiting for you Oct 9 Claude',
+    );
+    expect(within(row).getByText('Waiting for you')).toBeVisible();
+    row.click();
+    expect(callbacks.open).toHaveBeenCalledWith(expect.objectContaining({ key: 'MOB-3' }));
+  });
+
+  it('keeps the mark beside a Changes requested chip, before it', () => {
+    const row = renderRow('in_progress', SENT_BACK, true);
+    expect(row).toHaveAccessibleName(
+      'MOB-3 Dark mode colors Claude is waiting for you Changes requested Oct 9 Claude',
+    );
+  });
+
+  it('shows no mark while Claude waits for nobody', () => {
+    expect(renderRow('in_progress', null)).not.toHaveTextContent('Waiting for you');
   });
 });

@@ -17,6 +17,7 @@ import { TimeAgo } from '../activity/TimeAgo';
 import { promptSheet } from '../ticketSheets';
 import styles from './LatestReview.module.css';
 import { RunStepsLine } from './RunStepsLine';
+import { useRevealWaiting } from './useRevealWaiting';
 
 export interface LatestRunProps {
   ticketKey: string;
@@ -28,6 +29,7 @@ export function LatestRun({ ticketKey, onCancelled }: LatestRunProps) {
   const now = useNow();
   const shown = shownRun(runs.data, now);
   const requests = useRequests(shown?.run.id ?? null);
+  const cardsRef = useRevealWaiting(requests);
   if (!shown) return null;
   return (
     <section aria-label="Claude Code run" className={styles.latest}>
@@ -40,7 +42,7 @@ export function LatestRun({ ticketKey, onCancelled }: LatestRunProps) {
           <p className={cardStyles.body}>{requests.waiting ? WAITING_TEXT : shown.text}</p>
         </PhoneFold>
         <RunStepsLine run={shown.run} ticketKey={ticketKey} />
-        <RequestCards requests={requests.shown} now={requests.now} />
+        <RequestCards ref={cardsRef} requests={requests.shown} now={requests.now} />
         {shown.state === 'working' ? (
           <CancelButton run={shown.run} onCancelled={onCancelled} />
         ) : (

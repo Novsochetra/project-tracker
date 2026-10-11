@@ -60,6 +60,7 @@ export const ticket = (overrides: Partial<TicketListItem> = {}): TicketListItem 
   commentCount: 0,
   attachmentCount: 0,
   lastReview: null,
+  waitingUntil: null,
   ...overrides,
 });
 

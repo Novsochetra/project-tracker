@@ -60,6 +60,7 @@ export const toTicketListItem = (row: TicketItemRow, projectKey: string): Ticket
   commentCount: row.commentCount,
   attachmentCount: row.attachmentCount,
   lastReview: toReview(row.lastReviewVerdict, row.lastReviewRating),
+  waitingUntil: row.waitingUntil,
 });
 
 export const toAttachment = (row: AttachmentRow): Attachment => ({

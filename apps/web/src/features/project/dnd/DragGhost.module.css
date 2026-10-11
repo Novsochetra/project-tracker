@@ -120,6 +120,14 @@
     grid-area: chip;
   }
 
+  .row .waiting {
+    grid-area: due;
+  }
+
+  .row:has(.waiting) .due {
+    display: none;
+  }
+
   .assignee {
     grid-area: assignee;
   }

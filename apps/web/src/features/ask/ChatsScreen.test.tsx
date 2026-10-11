@@ -44,10 +44,10 @@ describe('Ask: the chat list', () => {
     ]);
     const list = await screen.findByRole('region', { name: 'Chats' });
     const rows = within(list).getAllByRole('button');
-    expect(rows.map((row) => row.textContent)).toEqual([
-      'Rename the queue Waiting for you',
-      expect.stringMatching(/^How does sync work\? 1m ago/),
-    ]);
+    expect(rows[0]).toHaveAccessibleName('Rename the queue Claude is waiting for you');
+    expect(within(rows[0]!).getByText('Waiting for you')).toBeVisible();
+    expect(rows[0]).not.toHaveTextContent(/ago/);
+    expect(rows[1]).toHaveTextContent(/^How does sync work\? 1m ago/);
   });
 
   it('starts a new chat from the empty list', async () => {

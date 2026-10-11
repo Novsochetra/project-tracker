@@ -1,10 +1,10 @@
 import { formatRelative, type Chat } from '@tracker/shared';
-import { ChevronRight, MessageCircleQuestion } from 'lucide-react';
+import { ChevronRight } from 'lucide-react';
 import { Icon, ListCard, ListRow } from '../../components';
 import { useNow } from '../../lib/useNow';
 import { useIsOpening, useNavigation } from '../../navigation';
 import { riseDelay } from '../projects/projectRows';
-import { WAITING_ROW_TEXT } from '../requests/copy';
+import { WaitingMark } from '../requests/WaitingMark';
 import styles from './ChatsScreen.module.css';
 
 interface ChatRowProps {
@@ -27,10 +27,7 @@ function ChatRow({ chat, projectKey, index, now }: ChatRowProps) {
     >
       <span className={styles.chatTitle}>{chat.title}</span>{' '}
       {chat.waiting ? (
-        <span className={styles.waiting}>
-          <Icon icon={MessageCircleQuestion} size={14} />
-          {WAITING_ROW_TEXT}
-        </span>
+        <WaitingMark />
       ) : (
         <span className={styles.time}>{formatRelative(chat.updatedAt, now)}</span>
       )}

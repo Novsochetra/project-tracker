@@ -29,6 +29,7 @@ export function fakeTracker() {
       commentCount: _c,
       attachmentCount: _a,
       lastReview: _r,
+      waitingUntil: _w,
       ...ticket
     } = listItem(num, STATUS.todo, 0, {
       key: `${projectKey}-${num}`,

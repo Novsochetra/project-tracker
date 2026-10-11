@@ -4,6 +4,8 @@ import { GripVertical } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { Avatar, Icon, PriorityBars, StatusGlyph, VerdictChip } from '../../../components';
+import { useStillWaiting } from '../../requests/useStillWaiting';
+import { WaitingMark } from '../../requests/WaitingMark';
 import { DueLabel } from '../TicketRowContent';
 import styles from './DragGhost.module.css';
 import type { DragState, GhostRef } from './useTicketDrag';
@@ -20,6 +22,7 @@ export function Lifted({ className, children }: { className?: string; children: 
 
 function RowFace({ drag: { ticket, status } }: { drag: DragState }) {
   const isDone = isDoneCategory(status.category);
+  const waiting = useStillWaiting(ticket.waitingUntil);
   return (
     <Lifted className={styles.row}>
       <span className={styles.grip}>
@@ -34,6 +37,7 @@ function RowFace({ drag: { ticket, status } }: { drag: DragState }) {
         className={styles.status}
       />
       <span className={styles.title}>{ticket.title || 'Untitled'}</span>
+      {waiting && <WaitingMark size="caption" className={styles.waiting} />}
       {isSentBack(ticket.lastReview, status.category) && (
         <VerdictChip verdict="changes_requested" compact className={styles.sentBack} />
       )}

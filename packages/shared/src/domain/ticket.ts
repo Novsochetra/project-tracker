@@ -28,6 +28,8 @@ export interface TicketListItem extends Ticket {
   commentCount: number;
   attachmentCount: number;
   lastReview: Review | null;
+  // A time, not a flag: a helper that is gone sends no event when its request runs out.
+  waitingUntil: number | null;
 }
 
 // The answer to a create. A repeat of an earlier create's client id names the files it left out
