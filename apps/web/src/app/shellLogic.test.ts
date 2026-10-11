@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { breadcrumbFor, projectKeyOf } from './crumbs';
-import { gateFor } from './sessionGate';
+import { gateFor, linkPageOf } from './sessionGate';
 
 describe('gateFor', () => {
   it('waits for the first session answer', () => {
@@ -18,11 +18,19 @@ describe('gateFor', () => {
 
   it('shows the invite page whether signed in or not, once the session is known', () => {
     const signedOut = { authRequired: true, authenticated: false };
-    expect(gateFor({ data: signedOut, fetchStatus: 'idle' }, true)).toBe('invite');
+    expect(gateFor({ data: signedOut, fetchStatus: 'idle' }, 'invite')).toBe('invite');
     expect(
-      gateFor({ data: { ...signedOut, authenticated: true }, fetchStatus: 'idle' }, true),
+      gateFor({ data: { ...signedOut, authenticated: true }, fetchStatus: 'idle' }, 'invite'),
     ).toBe('invite');
-    expect(gateFor({ data: undefined, fetchStatus: 'fetching' }, true)).toBe('loading');
+    expect(gateFor({ data: undefined, fetchStatus: 'fetching' }, 'invite')).toBe('loading');
+  });
+
+  it('shows the reset page signed in or not, and knows each link page by its address', () => {
+    const signedOut = { authRequired: true, authenticated: false };
+    expect(gateFor({ data: signedOut, fetchStatus: 'idle' }, 'reset')).toBe('reset');
+    expect(linkPageOf('/reset-password')).toBe('reset');
+    expect(linkPageOf('/invite')).toBe('invite');
+    expect(linkPageOf('/p/MOB')).toBeUndefined();
   });
 
   it('opens the app when the session request is paused or failed offline', () => {

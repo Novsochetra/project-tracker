@@ -16,6 +16,8 @@ import { activityRoutes } from './http/routes/activity';
 import { attachmentRoutes } from './http/routes/attachments';
 import { eventRoutes } from './http/routes/events';
 import { inviteRoutes } from './http/routes/invites';
+import { passwordRoutes } from './http/routes/password';
+import { passwordResetRoutes } from './http/routes/passwordResets';
 import { miscRoutes, testResetRoutes } from './http/routes/misc';
 import { projectRoutes } from './http/routes/projects';
 import { reportRoutes } from './http/routes/reports';
@@ -60,6 +62,8 @@ function createApi(ctx: ServiceContext, deps: AppDeps): Hono<AppEnv> {
     .route('/', sessionRoutes(auth))
     .route('/', tokenRoutes(auth))
     .route('/', inviteRoutes(auth))
+    .route('/', passwordResetRoutes(auth))
+    .route('/', passwordRoutes(auth))
     .route(
       '/',
       miscRoutes(ctx, {

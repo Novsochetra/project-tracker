@@ -1,6 +1,5 @@
 import type { QueryClient } from '@tanstack/react-query';
 import type { TrackerClient } from '@tracker/client';
-import { INVITE_PATH } from '@tracker/shared';
 import { Suspense } from 'react';
 import { BrowserRouter, useLocation } from 'react-router';
 import { ApiProvider, useSession } from '../api';
@@ -8,9 +7,9 @@ import { ToastProvider } from '../components';
 import { useFileDropGuard } from '../features/attachments';
 import { useTicketDrafts } from '../features/ticket/drafts/useTicketDrafts';
 import { NavigationProvider } from '../navigation';
-import { InviteScreen, screensOnTheirWay } from './lazyParts';
+import { InviteScreen, ResetScreen, screensOnTheirWay } from './lazyParts';
 import { LoginScreen } from './LoginScreen';
-import { gateFor } from './sessionGate';
+import { gateFor, linkPageOf } from './sessionGate';
 import { SheetsProvider } from './sheets/SheetsProvider';
 import { Shell } from './Shell';
 
@@ -38,7 +37,7 @@ export function TrackerApp({ client, queryClient }: TrackerAppProps) {
 
 function SessionGate() {
   const { data, fetchStatus } = useSession();
-  const gate = gateFor({ data, fetchStatus }, useLocation().pathname === INVITE_PATH);
+  const gate = gateFor({ data, fetchStatus }, linkPageOf(useLocation().pathname));
   useTicketDrafts(gate === 'app');
   switch (gate) {
     case 'loading':
@@ -49,6 +48,12 @@ function SessionGate() {
       return (
         <Suspense fallback={null}>
           <InviteScreen />
+        </Suspense>
+      );
+    case 'reset':
+      return (
+        <Suspense fallback={null}>
+          <ResetScreen />
         </Suspense>
       );
     case 'app':

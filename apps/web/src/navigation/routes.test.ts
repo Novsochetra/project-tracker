@@ -129,6 +129,7 @@ describe('canonicalPath', () => {
 
   it('keeps the invite page, which stands outside the screens', () => {
     expect(canonicalPath('/invite')).toBeNull();
+    expect(canonicalPath('/reset-password')).toBeNull();
   });
 
   it('replaces paths that are not a route with the screen they show', () => {

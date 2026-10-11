@@ -1,45 +1,23 @@
 import { formatFullDate, INVITE_LINK_FAILED, PASSWORD_MIN } from '@tracker/shared';
-import type { ReactNode } from 'react';
-import { useLocation, useNavigate } from 'react-router';
+import { useLocation } from 'react-router';
 import { errorMessage, useKnownSession, useLogout } from '../api';
 import { useCheckInvite } from '../api/hooks/invites';
 import { Button, LogoGlyph, Spinner } from '../components';
 import { AuthField } from './AuthField';
-import { inviteSecretOf } from './inviteSecret';
+import { linkSecretOf } from './linkSecret';
+import { LinkLayout, LinkProblem } from './LinkLayout';
 import styles from './LoginScreen.module.css';
 import { useInviteForm } from './useInviteForm';
 
-function InviteLayout({ label, children }: { label: string; children: ReactNode }) {
-  return (
-    <main className={styles.screen}>
-      <div className={styles.form} role="group" aria-label={label}>
-        <LogoGlyph className={styles.logo} />
-        {children}
-      </div>
-    </main>
-  );
-}
-
-function InviteProblem({ message }: { message: string }) {
-  const navigate = useNavigate();
-  return (
-    <InviteLayout label="Invite">
-      <h1 className={styles.title}>Join Tracker</h1>
-      <p role="alert" className={styles.setup}>
-        {message}
-      </p>
-      <Button size="lg" fullWidth onClick={() => void navigate('/', { replace: true })}>
-        Go to sign in
-      </Button>
-    </InviteLayout>
-  );
-}
+const InviteProblem = ({ message }: { message: string }) => (
+  <LinkProblem label="Invite" title="Join Tracker" message={message} />
+);
 
 // A new account here would leave the signed-in person's data in this browser's offline copy.
 function SignOutFirst({ email }: { email: string | undefined }) {
   const logout = useLogout();
   return (
-    <InviteLayout label="Invite">
+    <LinkLayout label="Invite">
       <h1 className={styles.title}>Join Tracker</h1>
       <p className={styles.setup}>
         You are signed in{email ? ` as ${email}` : ''}. Sign out to make a new account with this
@@ -53,7 +31,7 @@ function SignOutFirst({ email }: { email: string | undefined }) {
           {errorMessage(logout.error)}
         </p>
       )}
-    </InviteLayout>
+    </LinkLayout>
   );
 }
 
@@ -122,7 +100,7 @@ function InviteForm({ secret, expiresAt }: { secret: string; expiresAt: number }
 }
 
 export function InviteScreen() {
-  const secret = inviteSecretOf(useLocation().hash);
+  const secret = linkSecretOf(useLocation().hash);
   const session = useKnownSession();
   const check = useCheckInvite(secret);
   if (session?.authRequired && session.authenticated) return <SignOutFirst email={session.email} />;
@@ -130,9 +108,9 @@ export function InviteScreen() {
   if (check.isError) return <InviteProblem message={errorMessage(check.error)} />;
   if (!check.data) {
     return (
-      <InviteLayout label="Invite">
+      <LinkLayout label="Invite">
         <Spinner label="Checking the invite" />
-      </InviteLayout>
+      </LinkLayout>
     );
   }
   return <InviteForm secret={secret} expiresAt={check.data.expiresAt} />;

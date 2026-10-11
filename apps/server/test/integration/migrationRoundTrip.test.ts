@@ -196,6 +196,26 @@ describe.each(DIALECTS)('every migration up and down (%s)', (dialect) => {
       expect(back.rows).toEqual([{ askModel: 'opus' }]);
     });
   });
+
+  it('keeps invites and drops reset links on rollback, so none works as an invite', async () => {
+    await withDatabase(dialect, async (db) => {
+      await migrateToLatest(db);
+      await sql`insert into users (id, email, password_hash, created_at, updated_at, role)
+        values ('o', 'owner@example.com', 'hash', 1000, 1000, 'owner')`.execute(db);
+      await sql`insert into invites (id, token_hash, created_by, created_at, expires_at)
+        values ('i', 'invite-hash', 'o', 1000, 2000)`.execute(db);
+      await sql`insert into invites (id, token_hash, created_by, created_at, expires_at, kind,
+        user_id) values ('r', 'reset-hash', 'o', 1000, 2000, 'reset', 'o')`.execute(db);
+
+      await expectRan(createMigrator(db).migrateTo('0011_user_projects'), ['0012_password_resets']);
+      const kept = await sql<{ id: string }>`select id from invites`.execute(db);
+      expect(kept.rows).toEqual([{ id: 'i' }]);
+
+      await migrateToLatest(db);
+      const kinds = await sql<{ kind: string }>`select kind from invites`.execute(db);
+      expect(kinds.rows).toEqual([{ kind: 'invite' }]);
+    });
+  });
 });
 
 // The data model of docs/architecture.md §2, as both databases report it. Every table: matching
@@ -315,6 +335,8 @@ const DATA_MODEL: SchemaShape = {
       'expires_at bigint not null',
       'used_at bigint',
       'used_by text',
+      "kind text not null default 'invite'",
+      'user_id text',
     ],
     indexes: ['unique (token_hash)'],
     foreignKeys: [

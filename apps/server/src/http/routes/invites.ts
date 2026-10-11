@@ -7,27 +7,19 @@ import {
   requireUsableInvite,
   revokeInvite,
 } from '../../auth/invites';
-import { forbidden } from '../../errors';
-import { findUserById } from '../../repositories/users';
 import type { AuthDeps } from '../auth';
 import type { AppEnv } from '../env';
-import { limitInviteTries } from '../inviteLimits';
+import { requireOwner } from '../ownerAccess';
 import { signedInState, signInAs } from '../signIn';
+import { limitTries } from '../tryLimits';
 import { jsonBodyAsSent } from '../validation';
 
-const OWNER_ONLY = 'Only the owner of this tracker invites people.';
-
-// Only the owner, signed in with the password: a token that leaks can't let anyone in.
-async function ownerId(c: Context<AppEnv>, deps: AuthDeps): Promise<string> {
-  const access = c.get('access');
-  const user = access?.kind === 'session' ? await findUserById(deps.db, access.userId) : undefined;
-  if (user?.role !== 'owner') throw forbidden(OWNER_ONLY);
-  return user.id;
-}
+const ownerId = (c: Context<AppEnv>, deps: AuthDeps) =>
+  requireOwner(c, deps, 'Only the owner of this tracker invites people.');
 
 // Anyone with the link may ask about it and accept it; the secret is what lets them in.
 const linkRoutes = (deps: AuthDeps) => {
-  const limited = limitInviteTries(deps);
+  const limited = limitTries(deps, 'tries with invite links');
   return new Hono<AppEnv>()
     .post('/invites/check', jsonBodyAsSent(checkInviteInput), limited, async (c) => {
       const invite = await requireUsableInvite(deps.db, c.req.valid('json').secret, deps.now());

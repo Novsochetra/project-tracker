@@ -5,7 +5,7 @@ import type { UserRow } from '../db/authTables';
 import { isUniqueViolation } from '../db/errors';
 import type { Db } from '../db/schema';
 import { conflict, notFound } from '../errors';
-import { useInviteRow } from '../repositories/invites';
+import { useLinkRow } from '../repositories/invites';
 import { findUserByEmail, insertUser } from '../repositories/users';
 import { INVITE_USED, requireUsableInvite } from './invites';
 import type { SignedInUser } from './login';
@@ -19,7 +19,7 @@ async function addInvitedUser(trx: Db, row: UserRow, inviteId: string): Promise<
   if (await findUserByEmail(trx, row.email)) throw conflict(EMAIL_TAKEN);
   await insertUser(trx, row);
   // Another accept may have used it since it was checked; then this one keeps nothing.
-  const used = await useInviteRow(trx, inviteId, { usedBy: row.id, usedAt: row.createdAt });
+  const used = await useLinkRow(trx, inviteId, { usedBy: row.id, usedAt: row.createdAt });
   if (!used) throw notFound(INVITE_USED);
 }
 

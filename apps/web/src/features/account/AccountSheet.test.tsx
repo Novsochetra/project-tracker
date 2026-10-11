@@ -21,6 +21,7 @@ function renderSheet(
 ) {
   const view = renderWithApi(<AccountSheet open onClose={onClose} />, {
     listInvites: vi.fn().mockResolvedValue([]),
+    listInvitedUsers: vi.fn().mockResolvedValue([]),
     ...overrides,
   });
   act(() => {
@@ -94,11 +95,14 @@ describe('AccountSheet', () => {
     await waitFor(() => expect(revokeInvite).toHaveBeenCalledWith('i-1'));
   });
 
-  it('shows no invites to an account that is not the owner', async () => {
+  it('shows no invites or people to an account that is not the owner, only its password', async () => {
     const listInvites = vi.fn();
-    renderSheet(() => undefined, { listInvites }, USER);
+    const listInvitedUsers = vi.fn();
+    renderSheet(() => undefined, { listInvites, listInvitedUsers }, USER);
     expect(await within(sheet()).findByText('sam@example.com')).toBeInTheDocument();
+    expect(within(sheet()).getByRole('button', { name: 'Change password' })).toBeInTheDocument();
     expect(within(sheet()).queryByText('Invite someone')).not.toBeInTheDocument();
     expect(listInvites).not.toHaveBeenCalled();
+    expect(listInvitedUsers).not.toHaveBeenCalled();
   });
 });

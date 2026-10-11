@@ -39,6 +39,9 @@ export const AccountSheet = lazyWithPreload(() =>
 export const InviteScreen = lazyWithPreload(() =>
   import('./InviteScreen').then((module) => module.InviteScreen),
 );
+export const ResetScreen = lazyWithPreload(() =>
+  import('./ResetScreen').then((module) => module.ResetScreen),
+);
 
 interface Part {
   preload: () => Promise<unknown>;

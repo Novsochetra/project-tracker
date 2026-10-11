@@ -10,6 +10,7 @@ import * as runSteps from './0008_run_steps';
 import * as runRequests from './0009_run_requests';
 import * as askEffort from './0010_ask_effort';
 import * as userProjects from './0011_user_projects';
+import * as passwordResets from './0012_password_resets';
 
 // Keyed by file name; they run in name order, so the four-digit number decides. The bundled server
 // can't list a folder, so a new file is added here too (test/unit/migrationFiles checks it is).
@@ -25,4 +26,5 @@ export const MIGRATIONS: Record<string, Migration> = {
   '0009_run_requests': runRequests,
   '0010_ask_effort': askEffort,
   '0011_user_projects': userProjects,
+  '0012_password_resets': passwordResets,
 };

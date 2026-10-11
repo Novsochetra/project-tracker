@@ -2,9 +2,9 @@ import { useId } from 'react';
 import { errorMessage } from '../../api';
 import { useCreateInvite, useInvites } from '../../api/hooks/invites';
 import { Button, GroupedCard } from '../../components';
-import { CreatedInvite } from './CreatedInvite';
+import { CreatedLink } from './CreatedLink';
 import { InviteRow } from './InviteRow';
-import { inviteLinkFor } from './inviteText';
+import { INVITE_COPY, inviteLinkFor } from './inviteText';
 import styles from './Invites.module.css';
 
 function OpenInvites() {
@@ -34,8 +34,12 @@ export function InviteSection() {
         only the projects they make.
       </p>
       {create.data ? (
-        <CreatedInvite
+        <CreatedLink
+          label="New invite link"
+          title="The invite link is ready"
+          warning="Copy it now and send it to one person."
           link={inviteLinkFor(create.data.secret, window.location.origin)}
+          copied={INVITE_COPY}
           onDone={() => create.reset()}
         />
       ) : (

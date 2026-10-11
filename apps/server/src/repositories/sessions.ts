@@ -41,3 +41,7 @@ export async function deleteUserSessions(db: Db, userId: string): Promise<number
 export async function deleteExpiredSessions(db: Db, now: number): Promise<void> {
   await db.deleteFrom('sessions').where('expiresAt', '<=', now).execute();
 }
+
+export async function deleteOtherSessions(db: Db, userId: string, keepId: string): Promise<void> {
+  await db.deleteFrom('sessions').where('userId', '=', userId).where('id', '!=', keepId).execute();
+}

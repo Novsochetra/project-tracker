@@ -30,9 +30,14 @@ export interface ApiTokenRow {
   lastUsedAt: number | null;
 }
 
+// An invite makes an account; a reset link sets a new password for the account in userId.
+export type LinkKind = 'invite' | 'reset';
+
 // The id is random; the link holds a secret whose SHA-256 is kept, as for tokens.
 export interface InviteRow {
   id: string;
+  kind: LinkKind;
+  userId: string | null;
   tokenHash: string;
   createdBy: string;
   createdAt: number;

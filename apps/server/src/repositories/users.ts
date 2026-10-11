@@ -1,3 +1,4 @@
+import type { UserRole } from '@tracker/shared';
 import type { UserRow } from '../db/authTables';
 import type { Db } from '../db/schema';
 
@@ -30,3 +31,12 @@ export async function updateUserRow(
 ): Promise<void> {
   await db.updateTable('users').set(changes).where('id', '=', id).execute();
 }
+
+export const listUsersWithRole = (db: Db, role: UserRole) =>
+  db
+    .selectFrom('users')
+    .selectAll()
+    .where('role', '=', role)
+    .orderBy('createdAt')
+    .orderBy('id')
+    .execute();

@@ -54,12 +54,14 @@
   color: var(--ink);
   font-size: var(--size-body);
   font-weight: var(--weight-medium);
+  overflow-wrap: anywhere;
 }
 
 .rowDescription {
   color: var(--muted);
   font-size: var(--size-caption);
   line-height: 1.45;
+  overflow-wrap: anywhere;
 }
 
 .created {
@@ -78,6 +80,7 @@
   margin: 0;
   color: var(--ink);
   font: var(--text-headline);
+  overflow-wrap: anywhere;
 }
 
 .link {

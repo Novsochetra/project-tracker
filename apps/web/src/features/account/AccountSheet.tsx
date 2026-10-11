@@ -4,7 +4,9 @@ import type { SheetProps } from '../../app/sheets/types';
 import { Button, ConfirmCard } from '../../components';
 import { Sheet, SheetTextButton } from '../../overlays';
 import styles from './AccountSheet.module.css';
+import { ChangePassword } from './ChangePassword';
 import { InviteSection } from './InviteSection';
+import { PeopleSection } from './PeopleSection';
 
 export function AccountSheet({ open, onClose }: SheetProps) {
   const session = useKnownSession();
@@ -27,6 +29,7 @@ export function AccountSheet({ open, onClose }: SheetProps) {
         <p className={styles.signedIn}>
           Signed in as <span className={styles.email}>{session?.email ?? 'the owner'}</span>
         </p>
+        <ChangePassword />
         <section className={styles.section}>
           <Button size="lg" fullWidth disabled={pending} onClick={() => signOut(logout)}>
             Sign out
@@ -57,7 +60,12 @@ export function AccountSheet({ open, onClose }: SheetProps) {
             For a lost phone. Claude Code agents keep working with their API tokens.
           </p>
         </section>
-        {session?.role === 'owner' && <InviteSection />}
+        {session?.role === 'owner' && (
+          <>
+            <InviteSection />
+            <PeopleSection />
+          </>
+        )}
         {error && (
           <p role="alert" className={`${styles.error} fade-in`}>
             {errorMessage(error)}

@@ -5,16 +5,19 @@ import type {
   AddRunStepsInput,
   AnswerRunRequestInput,
   CancelRunRequestInput,
+  ChangePasswordInput,
   ApiToken,
   AskInput,
   Attachment,
   CardTicketInput,
   CheckInviteInput,
+  CheckResetLinkInput,
   Chat,
   ChatDetail,
   CreateApiTokenInput,
   CreatedApiToken,
   CreatedInvite,
+  CreatedResetLink,
   CreateCommentInput,
   CreateProjectInput,
   CreateStatusInput,
@@ -24,6 +27,7 @@ import type {
   ExpectedFields,
   FinishRunInput,
   Invite,
+  InvitedUser,
   ListTicketsQuery,
   LoginInput,
   MarkSentInput,
@@ -37,6 +41,8 @@ import type {
   ReportInput,
   ReportPreview,
   ReportResult,
+  ResetLinkCheck,
+  ResetPasswordInput,
   ReviewInput,
   Run,
   RunJob,
@@ -250,6 +256,24 @@ export class TrackerClient {
 
   acceptInvite = (input: AcceptInviteInput) =>
     this.http.request<SessionState>('POST', '/api/invites/accept', { body: input });
+
+  // Ends every other session of this account; this one and the API tokens stay.
+  changePassword = (input: ChangePasswordInput) =>
+    this.http.request<void>('POST', '/api/password', { body: input });
+
+  listInvitedUsers = () => this.http.request<InvitedUser[]>('GET', '/api/users');
+
+  makeResetLink = (userId: string) =>
+    this.http.request<CreatedResetLink>('POST', `/api/users/${segment(userId)}/reset-link`);
+
+  cancelResetLink = (userId: string) =>
+    this.http.request<void>('DELETE', `/api/users/${segment(userId)}/reset-link`);
+
+  checkResetLink = (input: CheckResetLinkInput) =>
+    this.http.request<ResetLinkCheck>('POST', '/api/password-resets/check', { body: input });
+
+  resetPassword = (input: ResetPasswordInput) =>
+    this.http.request<void>('POST', '/api/password-resets/use', { body: input });
 
   startRun = (ticketKey: string, input: StartRunInput) =>
     this.http.request<Run>('POST', `/api/tickets/${segment(ticketKey)}/runs`, { body: input });
