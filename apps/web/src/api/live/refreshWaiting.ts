@@ -10,8 +10,8 @@ import { cachedEntries } from './refreshForChange';
 export const endsRun = (status: RunStatus): boolean =>
   !ACTIVE_RUN_STATUSES.some((active) => active === status);
 
-// The board's tickets say whether Claude waits for the person on one of them. A move or edit in
-// flight keeps the board as the person left it, and the last one to settle reads it again.
+// A move or edit in flight keeps the board as the person left it, and the last one to settle
+// reads it again.
 export function refreshWaiting(queryClient: QueryClient, projectId: string, ticketId: string) {
   const { projectKeys } = changeScope({ projectId, ticketId }, cachedEntries(queryClient));
   const busy = busyKeys(queryClient);
