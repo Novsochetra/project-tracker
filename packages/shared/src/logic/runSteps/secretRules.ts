@@ -30,9 +30,8 @@ export interface SecretRule {
   name: string;
   pattern: RegExp;
   replace: Replace;
-  // Puts *** only for runs that are each one literal word, anywhere in its match, so a permission
-  // can keep all of them (permissionMask.ts).
-  eachWord?: boolean;
+  // For steps only: a permission masks only what can't run (permissionMask.ts).
+  stepsOnly?: boolean;
 }
 
 const rule = (name: string, pattern: string, flags: string, replace: Replace): SecretRule => ({
@@ -112,8 +111,9 @@ export const SECRET_RULES: readonly SecretRule[] = [
   rule('xml element', String.raw`(<(${NAME})>)[^<\n]+(?=<\/\2>)`, 'g', (m, head = '', name = '') =>
     secretName(name) ? masked(head) : m,
   ),
-  // A key's body is base64, one literal word a line, so each line is masked and the rest of the
-  // text between BEGIN and END stays.
+  // A key's body is base64, so each such line after BEGIN is masked. Steps only: in a command such
+  // a line can be a path that runs (PT-171 third review); a permission masks only a whole key file
+  // (fileChanges.ts).
   {
     ...rule(
       'private key',
@@ -121,7 +121,7 @@ export const SECRET_RULES: readonly SecretRule[] = [
       'g',
       (m) => m.replace(/^((?:[+-] )?[ \t]*)[A-Za-z0-9+/]{16,}={0,2}(?=[ \t]*$)/gm, `$1${MASK}`),
     ),
-    eachWord: true,
+    stepsOnly: true,
   },
   // Only a name that holds a keyword matches at all, so one that doesn't
   // (--from-literal=password=x) never takes the next one as its value.
