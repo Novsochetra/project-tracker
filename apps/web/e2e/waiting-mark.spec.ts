@@ -1,9 +1,10 @@
 import { randomUUID } from 'node:crypto';
 import type { Locator, Page } from '@playwright/test';
-import type { TrackerClient } from '@tracker/client';
+import { TrackerClient } from '@tracker/client';
 import { formatShortDay, toYmd, type AddRunRequestInput, type RunQuestion } from '@tracker/shared';
 import { expect, isPhone, test } from './fixtures';
 import { group, seedProject, settled, settledScreenshot, ticketRow } from './helpers';
+import { API_URL } from './ports';
 
 const HELPER = "Dara's MacBook";
 const TITLE = 'Crash when rotating the profile screen twice on a small phone in dark mode';
@@ -22,6 +23,11 @@ const QUESTION: RunQuestion = {
   multiSelect: false,
 };
 
+const reviewer = new TrackerClient({
+  baseUrl: API_URL,
+  actor: { kind: 'agent', name: 'Reviewer' },
+});
+
 const mark = (scope: Locator) => scope.getByText('Waiting for you', { exact: true });
 
 async function box(locator: Locator) {
@@ -36,10 +42,10 @@ async function showView(page: Page, view: 'List' | 'Board'): Promise<void> {
   await expect(views.getByRole('button', { name: view })).toHaveAttribute('aria-pressed', 'true');
 }
 
-async function startWaitingRun(api: TrackerClient) {
+async function startWaitingRun(api: TrackerClient, projectKey = 'MOB') {
   const runnerId = randomUUID();
-  await api.registerRunner(runnerId, { name: HELPER, projectKeys: ['MOB'] });
-  await api.startRun('MOB-1', { runnerId, prompt: 'Fix MOB-1, please.' });
+  await api.registerRunner(runnerId, { name: HELPER, projectKeys: [projectKey] });
+  await api.startRun(`${projectKey}-1`, { runnerId, prompt: `Fix ${projectKey}-1, please.` });
   const job = await api.takeNextRun(runnerId, 'ticket');
   const runId = job!.run.id;
   const question: AddRunRequestInput = {
@@ -165,5 +171,49 @@ test.describe('Claude waiting for the person', () => {
     await expect(mark(ticketRow(page, 'MOB-1'))).toBeVisible();
     await api.finishRun(runId, { status: 'failed', error: 'Claude exited with code 1.' });
     await expect(mark(ticketRow(page, 'MOB-1'))).toHaveCount(0);
+  });
+
+  test('keeps only its icon beside the key and chip of a sent-back row at 320px', async ({
+    page,
+    api,
+    agent,
+  }, info) => {
+    test.skip(!isPhone(info.project.name), 'Only a phone row puts the mark beside the key.');
+    await seedProject(api, 'Tracker', 'TRACK', [
+      { title: 'Crash on rotate', assignee: 'Claude', due: DUE },
+      { title: 'Fresh idea', assignee: 'Dara', due: DUE },
+    ]);
+    await agent.claimTicket('TRACK-1');
+    await agent.submitForReview('TRACK-1', { summary: 'Rotation keeps the layout.' });
+    await reviewer.reviewTicket('TRACK-1', {
+      verdict: 'changes_requested',
+      rating: 2,
+      summary: 'Still crashes.',
+    });
+    const { ask } = await startWaitingRun(api, 'TRACK');
+    await ask();
+    await page.setViewportSize({ width: 320, height: 568 });
+    await page.goto('/p/TRACK');
+    const row = ticketRow(page, 'TRACK-1');
+    await expect(row).toHaveAccessibleName(
+      /^TRACK-1 Crash on rotate Claude is waiting for you Changes requested/,
+    );
+    await settled(row);
+
+    const words = mark(row);
+    const shown = await box(words.locator('..'));
+    const icon = await box(words.locator('..').locator('svg'));
+    const key = await box(row.getByText('TRACK-1', { exact: true }));
+    const chip = await box(row.locator('[data-verdict="changes_requested"]'));
+    const avatar = await box(row.getByRole('img', { name: 'Claude' }));
+    expect(Math.abs(icon.y + icon.height / 2 - (key.y + key.height / 2))).toBeLessThanOrEqual(1);
+    expect(icon.x).toBeGreaterThanOrEqual(chip.x + chip.width);
+    expect(icon.x + icon.width).toBeLessThanOrEqual(avatar.x);
+    expect((await box(words)).y).toBeGreaterThanOrEqual(shown.y + shown.height);
+    await expect(row.getByText(formatShortDay(DUE))).toBeHidden();
+    const plain = await box(ticketRow(page, 'TRACK-2'));
+    expect((await box(row)).height).toBeCloseTo(plain.height, 1);
+    expect(await row.evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(true);
+    await settledScreenshot(page, info.outputPath('waiting-sent-back-320.png'));
   });
 });
