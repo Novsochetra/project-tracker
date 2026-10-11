@@ -40,8 +40,10 @@
   background: var(--fill);
 }
 
+/* On the card, not the button: the drag handle is drawn over the button, and the card stays
+   hovered while the pointer is on it (PT-149). */
 @media (hover: hover) {
-  .main:hover {
+  .card:hover .main {
     background: var(--row-hover);
   }
 }

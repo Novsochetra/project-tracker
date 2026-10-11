@@ -96,8 +96,10 @@
   background: var(--fill);
 }
 
+/* On the row, not the button: the drag handle is drawn over the button, and the row stays
+   hovered while the pointer is on it (PT-149). */
 @media (hover: hover) {
-  .main:hover {
+  .row:hover .main {
     background: var(--fill);
   }
 }
