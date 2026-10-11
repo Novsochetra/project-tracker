@@ -89,6 +89,24 @@ export const readMenuConfirm = (page: Page): Promise<void> => page.waitForTimeou
 // so a test reads them first, like a person. Desktop menus take clicks at once; the wait is harmless.
 export const readActionSheet = (page: Page): Promise<void> => page.waitForTimeout(500);
 
+// What moves in script, which settled() can't see, has come to rest when two reads 100 ms apart
+// agree.
+export async function resting(read: () => Promise<number>): Promise<number> {
+  let last = Number.NaN;
+  await expect
+    .poll(
+      async () => {
+        const value = await read();
+        const still = value === last;
+        last = value;
+        return still;
+      },
+      { intervals: [100] },
+    )
+    .toBe(true);
+  return last;
+}
+
 const SETTLE_MS = 3_000;
 
 // A box read while it rises, slides or grows in is not where it comes to rest, and it moves with
