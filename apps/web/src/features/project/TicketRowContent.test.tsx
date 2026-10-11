@@ -24,7 +24,7 @@ function renderRow(category: StatusCategory, lastReview: Review | null, waiting 
     due: '2026-10-09',
     assignee: 'Claude',
     lastReview,
-    waiting,
+    waitingUntil: waiting ? Date.now() + 60_000 : null,
   });
   render(
     <TicketRowContent ticket={ticket} status={status} dragged={false} callbacks={callbacks} />,

@@ -13,7 +13,7 @@ import { addUser, caller, helperName, type Caller } from '../helpers/runs';
 import { DIALECTS, useTestServer } from '../helpers/server';
 
 const waitingKeys = (tickets: TicketListItem[]) =>
-  tickets.filter((ticket) => ticket.waiting).map((ticket) => ticket.key);
+  tickets.filter((ticket) => ticket.waitingUntil !== null).map((ticket) => ticket.key);
 
 describe.each(DIALECTS)('a ticket waiting for the person (%s)', (dialect) => {
   const clock = testClock();
@@ -63,6 +63,16 @@ describe.each(DIALECTS)('a ticket waiting for the person (%s)', (dialect) => {
     expect(await waiting()).toEqual(onMob1);
     await person('POST', `/api/requests/${request.id}/answer`, { decision: 'deny' });
     expect(await waiting()).toEqual(nowhere);
+  });
+
+  it('says until the last open request runs out', async () => {
+    const first = await asks();
+    clock.advance(1_000);
+    const second = await asks();
+    const board = await person<ProjectBoard>('GET', '/api/projects/MOB/board');
+    const until = Object.fromEntries(board.body.tickets.map((t) => [t.key, t.waitingUntil]));
+    expect(until).toEqual({ 'MOB-1': second.expiresAt, 'MOB-2': null });
+    expect(second.expiresAt).toBeGreaterThan(first.expiresAt);
   });
 
   it('says so only to the person whose run asks', async () => {

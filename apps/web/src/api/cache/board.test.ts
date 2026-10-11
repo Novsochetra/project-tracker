@@ -91,7 +91,7 @@ describe('upsertBoardTicket', () => {
       commentCount: _c,
       attachmentCount: _a,
       lastReview: _r,
-      waiting: _w,
+      waitingUntil: _w,
       ...ticket
     } = listItem(5, STATUS.todo, -1000);
     const board = upsertBoardTicket(makeBoard(), ticket, { attachmentCount: 2 });
@@ -101,21 +101,21 @@ describe('upsertBoardTicket', () => {
       commentCount: 0,
       attachmentCount: 2,
       lastReview: null,
-      waiting: false,
+      waitingUntil: null,
     });
     expect(board.project.nextNum).toBe(6);
   });
 
-  it('replaces an existing ticket and keeps its counts, last review and waiting', () => {
+  it('replaces an existing ticket and keeps its counts, last review and wait', () => {
     const lastReview = { verdict: 'approved', rating: 4 } as const;
     const original = makeBoard([
-      listItem(1, STATUS.todo, 0, { commentCount: 3, lastReview, waiting: true }),
+      listItem(1, STATUS.todo, 0, { commentCount: 3, lastReview, waitingUntil: 9_000 }),
     ]);
     const {
       commentCount: _c,
       attachmentCount: _a,
       lastReview: _r,
-      waiting: _w,
+      waitingUntil: _w,
       ...ticket
     } = listItem(1, STATUS.progress, -1000);
     const board = upsertBoardTicket(original, ticket);
@@ -123,7 +123,7 @@ describe('upsertBoardTicket', () => {
       statusId: STATUS.progress,
       commentCount: 3,
       lastReview,
-      waiting: true,
+      waitingUntil: 9_000,
     });
     expect(board.tickets).toHaveLength(1);
     expect(board.project.nextNum).toBe(5);

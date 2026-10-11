@@ -12,7 +12,7 @@ export interface TicketItemRow extends TicketRow {
   attachmentCount: number;
   lastReviewVerdict: ReviewVerdict | null;
   lastReviewRating: number | null;
-  waiting: boolean;
+  waitingUntil: number | null;
 }
 
 export const findTicketByNum = (db: Db, projectId: string, num: number) =>
@@ -47,31 +47,29 @@ const latestReview = (eb: ExpressionBuilder<Database, 'tickets'>) =>
     .limit(1);
 
 // Requests are ended lazily (settleRequests), so one past its deadline or of an ended run may
-// still say open: only a live one counts. Another user's run never asks this one anything.
+// still say open: only a live one counts. Another user's run never asks this one anything. The
+// last deadline goes with it because a helper that is gone sends no event when it passes.
 const waitingFor =
   (userId: UserScope, now: number) => (eb: ExpressionBuilder<Database, 'tickets'>) =>
     eb
-      .exists(
-        eb
-          .selectFrom('runs')
-          .innerJoin('runRequests', 'runRequests.runId', 'runs.id')
-          .select('runRequests.id')
-          .whereRef('runs.ticketId', '=', 'tickets.id')
-          .where('runs.status', '=', 'running')
-          .where((sub) =>
-            userId === null ? sub('runs.userId', 'is', null) : sub('runs.userId', '=', userId),
-          )
-          .where('runRequests.status', '=', 'open')
-          .where('runRequests.expiresAt', '>', now),
+      .selectFrom('runs')
+      .innerJoin('runRequests', 'runRequests.runId', 'runs.id')
+      .select((sub) => sub.fn.max('runRequests.expiresAt').as('until'))
+      .whereRef('runs.ticketId', '=', 'tickets.id')
+      .where('runs.status', '=', 'running')
+      .where((sub) =>
+        userId === null ? sub('runs.userId', 'is', null) : sub('runs.userId', '=', userId),
       )
-      .as('waiting');
+      .where('runRequests.status', '=', 'open')
+      .where('runRequests.expiresAt', '>', now)
+      .as('waitingUntil');
 
 export interface ItemReader {
   userId: UserScope;
   now: number;
 }
 
-// Counts, the latest review and whether Claude waits come from correlated subqueries, so a list
+// Counts, the latest review and until when Claude waits come from correlated subqueries, so a list
 // is one query.
 const selectTicketItems = (db: Db, { userId, now }: ItemReader) =>
   db
@@ -102,8 +100,7 @@ const toItemRow = (row: SelectedItemRow): TicketItemRow => ({
   attachmentCount: Number(row.attachmentCount ?? 0),
   lastReviewVerdict: row.lastReviewVerdict ?? null,
   lastReviewRating: row.lastReviewRating === null ? null : Number(row.lastReviewRating),
-  // SQLite answers exists() with 0 or 1, Postgres with a boolean.
-  waiting: Boolean(row.waiting),
+  waitingUntil: row.waitingUntil === null ? null : Number(row.waitingUntil),
 });
 
 export async function listTicketItemRows(

@@ -84,7 +84,7 @@ export function upsertBoardTicket(
     commentCount: counts.commentCount ?? 0,
     attachmentCount: counts.attachmentCount ?? 0,
     lastReview: null,
-    waiting: false,
+    waitingUntil: null,
   };
   const others = board.tickets.filter((item) => item.id !== ticket.id);
   return withTickets(withNextNum(board, ticket.num), [...others, { ...base, ...ticket }]);

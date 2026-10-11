@@ -13,7 +13,13 @@ function renderCard(
   { due = '2026-10-09', waiting = false } = {},
 ) {
   const status = statuses.find((candidate) => candidate.category === category)!;
-  const ticket = listItem(3, status.id, 0, { title: 'Dark mode colors', due, lastReview, waiting });
+  const waitingUntil = waiting ? Date.now() + 60_000 : null;
+  const ticket = listItem(3, status.id, 0, {
+    title: 'Dark mode colors',
+    due,
+    lastReview,
+    waitingUntil,
+  });
   render(
     <button type="button">
       <BoardCardFace ticket={ticket} status={status} />

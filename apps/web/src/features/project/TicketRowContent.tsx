@@ -9,6 +9,7 @@ import {
 import clsx from 'clsx';
 import { Calendar } from 'lucide-react';
 import { Avatar, Icon, PriorityBars, StatusGlyph, VerdictChip } from '../../components';
+import { useStillWaiting } from '../requests/useStillWaiting';
 import { WaitingMark } from '../requests/WaitingMark';
 import { DragHandle } from './DragHandle';
 import type { RowCallbacks } from './rowTypes';
@@ -45,6 +46,7 @@ export function DueLabel({ due, overdue, className }: DueLabelProps) {
 export function TicketRowContent({ ticket, status, dragged, callbacks }: TicketRowContentProps) {
   const isDone = isDoneCategory(status.category);
   const opening = useIsOpeningTicket(ticket);
+  const waiting = useStillWaiting(ticket.waitingUntil);
   return (
     <div className={styles.inner}>
       <DragHandle
@@ -67,7 +69,7 @@ export function TicketRowContent({ ticket, status, dragged, callbacks }: TicketR
         <span className={styles.title} data-done={isDone || undefined}>
           {ticket.title || 'Untitled'}
         </span>{' '}
-        {ticket.waiting && <WaitingMark size="caption" className={styles.waiting} />}{' '}
+        {waiting && <WaitingMark size="caption" className={styles.waiting} />}{' '}
         {isSentBack(ticket.lastReview, status.category) && (
           <VerdictChip verdict="changes_requested" compact className={styles.sentBack} />
         )}{' '}
