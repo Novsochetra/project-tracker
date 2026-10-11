@@ -22,11 +22,13 @@ export const COPIED_TABLE_NAMES: readonly CopiedTableName[] = COPIED_TABLES.map(
 );
 
 // Sign-in belongs to each tracker: the online owner is set there with owner-set (a local tracker
-// often has none), and nothing in the copied tables points at these.
+// often has none). The copied projects and files name an owner, which the move sets to the
+// target's (owner.ts).
 export const SKIPPED_TABLES: Readonly<Record<string, string>> = {
   users: 'the online owner is set with owner-set',
   sessions: "this computer's sign-ins",
   api_tokens: "this computer's agent tokens; make new ones online",
+  invites: "this computer's invites; the online owner invites people there",
   runners: "this computer's helpers; start them again against the online tracker",
   runs: 'Claude Code runs started from this tracker',
   run_steps: 'what Claude Code did in those runs',

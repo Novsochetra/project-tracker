@@ -16,7 +16,7 @@ import { listTicketAttachments } from '../repositories/attachments';
 import { listProjectRows } from '../repositories/projects';
 import { listAllStatusRows, listStatusRows } from '../repositories/statuses';
 import { listTicketItemRows, listTicketItemRowsInStatuses } from '../repositories/tickets';
-import type { ServiceContext } from './context';
+import type { UserContext } from './context';
 import {
   loadTicketScope,
   requireProject,
@@ -57,11 +57,11 @@ export async function loadTicketDetail(db: Db, ref: TicketRef): Promise<TicketDe
   };
 }
 
-export const getTicketDetail = async (ctx: ServiceContext, key: string) =>
-  loadTicketDetail(ctx.db, await requireTicket(ctx.db, key));
+export const getTicketDetail = async (ctx: UserContext, key: string) =>
+  loadTicketDetail(ctx.db, await requireTicket(ctx.db, ctx.scope, key));
 
-export const getTicketDetailById = async (db: Db, id: string) =>
-  loadTicketDetail(db, await requireTicketById(db, id));
+export const getTicketDetailById = async (db: Db, scope: UserScope, id: string) =>
+  loadTicketDetail(db, await requireTicketById(db, scope, id));
 
 export function sortForBoard<T extends TicketRow>(
   tickets: readonly T[],
@@ -72,16 +72,12 @@ export function sortForBoard<T extends TicketRow>(
   return [...tickets].sort((a, b) => position(a) - position(b) || byRank(a, b));
 }
 
-const readerOf = (ctx: ServiceContext, userId: UserScope) => ({ userId, now: ctx.now() });
+const readerOf = (ctx: UserContext) => ({ userId: ctx.scope, now: ctx.now() });
 
-export async function getBoard(
-  ctx: ServiceContext,
-  userId: UserScope,
-  projectKey: string,
-): Promise<ProjectBoard> {
-  const project = await requireProject(ctx.db, projectKey);
+export async function getBoard(ctx: UserContext, projectKey: string): Promise<ProjectBoard> {
+  const project = await requireProject(ctx.db, ctx.scope, projectKey);
   const statuses = await listStatusRows(ctx.db, project.id);
-  const tickets = await listTicketItemRows(ctx.db, readerOf(ctx, userId), project.id);
+  const tickets = await listTicketItemRows(ctx.db, readerOf(ctx), project.id);
   return {
     project: toProject(project),
     statuses: statuses.map(toStatus),
@@ -101,27 +97,27 @@ function allowedStatusIds(statuses: readonly StatusFields[], query: ListTicketsQ
 }
 
 export async function listTickets(
-  ctx: ServiceContext,
-  userId: UserScope,
+  ctx: UserContext,
   projectKey: string,
   query: ListTicketsQuery,
 ): Promise<TicketListItem[]> {
-  const board = await getBoard(ctx, userId, projectKey);
+  const board = await getBoard(ctx, projectKey);
   const allowed = new Set(allowedStatusIds(board.statuses, query));
   return board.tickets.filter(
     (ticket) => allowed.has(ticket.statusId) && matchesSearch(ticket, query.q ?? ''),
   );
 }
 
+// The statuses are the user's own projects', so their tickets are too.
 export async function listAllTickets(
-  ctx: ServiceContext,
-  userId: UserScope,
+  ctx: UserContext,
   query: ListTicketsQuery,
 ): Promise<TicketsAcrossProjects> {
-  const projectKeys = new Map((await listProjectRows(ctx.db)).map((row) => [row.id, row.key]));
-  const statuses = await listAllStatusRows(ctx.db);
+  const projects = await listProjectRows(ctx.db, ctx.scope);
+  const projectKeys = new Map(projects.map((row) => [row.id, row.key]));
+  const statuses = await listAllStatusRows(ctx.db, ctx.scope);
   const statusIds = allowedStatusIds(statuses, query);
-  const rows = await listTicketItemRowsInStatuses(ctx.db, readerOf(ctx, userId), statusIds);
+  const rows = await listTicketItemRowsInStatuses(ctx.db, readerOf(ctx), statusIds);
   const tickets = rows
     .map((row) => toTicketListItem(row, projectKeys.get(row.projectId) ?? ''))
     .filter((ticket) => matchesSearch(ticket, query.q ?? ''));

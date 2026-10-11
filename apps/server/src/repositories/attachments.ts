@@ -1,4 +1,6 @@
-import type { AttachmentRow, Db } from '../db/schema';
+import type { ExpressionBuilder } from 'kysely';
+import type { UserScope } from '../auth/scope';
+import type { AttachmentRow, Database, Db } from '../db/schema';
 
 // A Postgres integer stops at 2^31 - 1 where SQLite's goes on, and a corrupt image can claim up to
 // 2^32 - 1 pixels (a 500 on Postgres only). No real image is that large, so it counts as unknown.
@@ -54,12 +56,33 @@ export const listActivityAttachments = (db: Db, activityId: string) =>
     .orderBy('id')
     .execute();
 
-export async function existingAttachmentIds(db: Db, ids: readonly string[]): Promise<Set<string>> {
+const pendingOf = (uploader: UserScope) => (eb: ExpressionBuilder<Database, 'attachments'>) =>
+  eb.and([
+    eb('ticketId', 'is', null),
+    uploader === null ? eb('userId', 'is', null) : eb('userId', '=', uploader),
+  ]);
+
+// Another user's file counts as missing, so the answer never tells that its id exists.
+export async function reachableAttachmentIds(
+  db: Db,
+  ids: readonly string[],
+  scope: UserScope,
+): Promise<Set<string>> {
   if (ids.length === 0) return new Set();
   const rows = await db
     .selectFrom('attachments')
-    .select('id')
-    .where('id', 'in', [...ids])
+    .leftJoin('tickets', 'tickets.id', 'attachments.ticketId')
+    .leftJoin('projects', 'projects.id', 'tickets.projectId')
+    .select('attachments.id')
+    .where('attachments.id', 'in', [...ids])
+    .where((eb) => {
+      const mine = (column: 'attachments.userId' | 'projects.ownerId') =>
+        scope === null ? eb(column, 'is', null) : eb(column, '=', scope);
+      return eb.or([
+        eb.and([eb('attachments.ticketId', 'is', null), mine('attachments.userId')]),
+        eb.and([eb('attachments.ticketId', 'is not', null), mine('projects.ownerId')]),
+      ]);
+    })
     .execute();
   return new Set(rows.map((row) => row.id));
 }
@@ -79,17 +102,18 @@ export async function nextTicketPosition(db: Db, ticketId: string): Promise<numb
 export async function linkAttachments(
   db: Db,
   ids: readonly string[],
-  target: { ticketId: string; activityId: string | null },
+  target: { ticketId: string; activityId: string | null; uploader: UserScope },
   firstPosition = 0,
 ): Promise<number> {
+  const { ticketId, activityId, uploader } = target;
   let linked = 0;
   for (const [index, id] of ids.entries()) {
     const result = await db
       .updateTable('attachments')
-      .set({ ...target, position: firstPosition + index })
+      .set({ ticketId, activityId, position: firstPosition + index })
       .where('id', '=', id)
       .where('activityId', 'is', null)
-      .where((eb) => eb.or([eb('ticketId', 'is', null), eb('ticketId', '=', target.ticketId)]))
+      .where((eb) => eb.or([pendingOf(uploader)(eb), eb('ticketId', '=', ticketId)]))
       .executeTakeFirst();
     linked += Number(result.numUpdatedRows);
   }
@@ -142,6 +166,9 @@ export const listPendingBefore = (db: Db, before: number) =>
     .where('activityId', 'is', null)
     .where('createdAt', '<', before)
     .execute();
+
+export const assignOwnerlessUploads = (db: Db, userId: string) =>
+  db.updateTable('attachments').set({ userId }).where('userId', 'is', null).execute();
 
 export const allStorageKeys = async (db: Db) =>
   storageKeys(await db.selectFrom('attachments').select('storageKey').execute());

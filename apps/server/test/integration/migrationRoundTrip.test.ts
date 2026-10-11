@@ -116,6 +116,62 @@ describe.each(DIALECTS)('every migration up and down (%s)', (dialect) => {
     });
   });
 
+  it('gives the one account every project and file as their owner, and keeps them on rollback', async () => {
+    await withDatabase(dialect, async (db) => {
+      const migrator = createMigrator(db);
+      await expectRan(
+        migrator.migrateTo('0010_ask_effort'),
+        NAMES.filter((name) => name <= '0010_ask_effort'),
+      );
+      await sql`insert into users (id, email, password_hash, created_at, updated_at)
+        values ('u', 'owner@example.com', 'hash', 1000, 1000)`.execute(db);
+      for (const [id, key] of [
+        ['pt', 'PT'],
+        ['awp', 'AWP'],
+      ]) {
+        await sql`insert into projects (id, name, key, description, repo, color, next_num,
+          created_at, updated_at) values (${id}, ${key}, ${key}, '', '', '#5B5BD6', 1, 1000, 1000)`.execute(
+          db,
+        );
+      }
+      await sql`insert into attachments (id, file_name, mime_type, size, storage_key, created_at,
+        position) values ('f', 'a.txt', 'text/plain', 5, 'f.txt', 1000, 0)`.execute(db);
+
+      await migrateToLatest(db);
+      const users = await sql<{ role: string; name: string }>`select role, name from users`.execute(
+        db,
+      );
+      expect(users.rows).toEqual([{ role: 'owner', name: '' }]);
+      const owners = await sql<{ ownerId: string }>`select owner_id from projects`.execute(db);
+      expect(owners.rows).toEqual([{ ownerId: 'u' }, { ownerId: 'u' }]);
+      const files = await sql<{ userId: string }>`select user_id from attachments`.execute(db);
+      expect(files.rows).toEqual([{ userId: 'u' }]);
+
+      await migrator.migrateTo('0010_ask_effort');
+      const keys = await sql<{ key: string }>`select key from projects order by key`.execute(db);
+      expect(keys.rows).toEqual([{ key: 'AWP' }, { key: 'PT' }]);
+
+      await migrateToLatest(db);
+      const again = await sql<{ ownerId: string }>`select owner_id from projects`.execute(db);
+      expect(again.rows).toEqual([{ ownerId: 'u' }, { ownerId: 'u' }]);
+    });
+  });
+
+  it('leaves projects to nobody on a tracker without an account, for owner-set to give out', async () => {
+    await withDatabase(dialect, async (db) => {
+      await createMigrator(db).migrateTo('0010_ask_effort');
+      await sql`insert into projects (id, name, key, description, repo, color, next_num,
+        created_at, updated_at) values ('p', 'Mobile', 'MOB', '', '', '#5B5BD6', 1, 1000, 1000)`.execute(
+        db,
+      );
+      await migrateToLatest(db);
+      const owners = await sql<{ ownerId: string | null }>`select owner_id from projects`.execute(
+        db,
+      );
+      expect(owners.rows).toEqual([{ ownerId: null }]);
+    });
+  });
+
   it('gives a chat made before efforts the default, and keeps its other choices on rollback', async () => {
     await withDatabase(dialect, async (db) => {
       const migrator = createMigrator(db);
@@ -132,7 +188,10 @@ describe.each(DIALECTS)('every migration up and down (%s)', (dialect) => {
       const after = await sql<{ askEffort: string }>`select ask_effort from chats`.execute(db);
       expect(after.rows).toEqual([{ askEffort: 'default' }]);
 
-      await expectRan(migrator.migrateTo('0009_run_requests'), ['0010_ask_effort']);
+      await expectRan(
+        migrator.migrateTo('0009_run_requests'),
+        NAMES.filter((name) => name > '0009_run_requests').reverse(),
+      );
       const back = await sql<{ askModel: string }>`select ask_model from chats`.execute(db);
       expect(back.rows).toEqual([{ askModel: 'opus' }]);
     });
@@ -153,8 +212,9 @@ const DATA_MODEL: SchemaShape = {
       'next_num integer not null',
       'created_at bigint not null',
       'updated_at bigint not null',
+      'owner_id text',
     ],
-    indexes: ['unique (key)'],
+    indexes: ['index (owner_id)', 'unique (key)'],
     foreignKeys: [],
   },
   statuses: {
@@ -225,6 +285,7 @@ const DATA_MODEL: SchemaShape = {
       'storage_key text not null',
       'created_at bigint not null',
       'position integer not null default 0',
+      'user_id text',
     ],
     indexes: ['index (activity_id)', 'index (ticket_id)'],
     foreignKeys: [
@@ -239,9 +300,27 @@ const DATA_MODEL: SchemaShape = {
       'password_hash text not null',
       'created_at bigint not null',
       'updated_at bigint not null',
+      "name text not null default ''",
+      "role text not null default 'user'",
     ],
     indexes: ['unique (email)'],
     foreignKeys: [],
+  },
+  invites: {
+    columns: [
+      'id text primary key',
+      'token_hash text not null',
+      'created_by text not null',
+      'created_at bigint not null',
+      'expires_at bigint not null',
+      'used_at bigint',
+      'used_by text',
+    ],
+    indexes: ['unique (token_hash)'],
+    foreignKeys: [
+      'created_by -> users.id on delete cascade',
+      'used_by -> users.id on delete set null',
+    ],
   },
   sessions: {
     columns: [

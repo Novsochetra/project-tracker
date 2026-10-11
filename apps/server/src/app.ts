@@ -15,6 +15,7 @@ import { securityHeaders, unbufferedStreams } from './http/responseHeaders';
 import { activityRoutes } from './http/routes/activity';
 import { attachmentRoutes } from './http/routes/attachments';
 import { eventRoutes } from './http/routes/events';
+import { inviteRoutes } from './http/routes/invites';
 import { miscRoutes, testResetRoutes } from './http/routes/misc';
 import { projectRoutes } from './http/routes/projects';
 import { reportRoutes } from './http/routes/reports';
@@ -58,6 +59,7 @@ function createApi(ctx: ServiceContext, deps: AppDeps): Hono<AppEnv> {
     .use(limitBodies)
     .route('/', sessionRoutes(auth))
     .route('/', tokenRoutes(auth))
+    .route('/', inviteRoutes(auth))
     .route(
       '/',
       miscRoutes(ctx, {

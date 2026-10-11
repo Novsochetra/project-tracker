@@ -1,17 +1,16 @@
 import { randomUUID } from 'node:crypto';
-import { EMAIL_MAX, PASSWORD_MAX, normalizeEmail } from '@tracker/shared';
+import { EMAIL_MAX, PASSWORD_MAX, PASSWORD_MIN, normalizeEmail } from '@tracker/shared';
 import { z } from 'zod';
 import type { Db } from '../db/schema';
-import { invalidInput } from '../errors';
+import { conflict, invalidInput } from '../errors';
 import { assignOwnerlessChats } from '../repositories/chats';
 import { assignOwnerlessRunners } from '../repositories/runners';
 import { assignOwnerlessRuns } from '../repositories/runs';
 import { deleteUserSessions } from '../repositories/sessions';
-import { findOwner, insertUser, updateUserRow } from '../repositories/users';
-import { hashPassword, verifyPassword, type ScryptParams } from './passwords';
-import { newSecret, safeEqual } from './secrets';
-
-export const PASSWORD_MIN = 12;
+import { assignOwnerlessProjects } from '../repositories/projects';
+import { assignOwnerlessUploads } from '../repositories/attachments';
+import { findOwner, findUserByEmail, insertUser, updateUserRow } from '../repositories/users';
+import { hashPassword, type ScryptParams } from './passwords';
 
 const ownerInput = z.object({
   email: z.email('Use a real email address.').max(EMAIL_MAX),
@@ -26,11 +25,6 @@ export interface OwnerInput {
   password: string;
 }
 
-export interface Owner {
-  id: string;
-  email: string;
-}
-
 export interface SetOwnerResult {
   email: string;
   created: boolean;
@@ -39,24 +33,28 @@ export interface SetOwnerResult {
 
 export const ownerExists = async (db: Db): Promise<boolean> => (await findOwner(db)) !== undefined;
 
-let dummyHash: Promise<string> | undefined;
-
-// Without an owner a sign-in still pays for one hash, so its answer takes as long as a wrong one.
-const hashToCheck = (stored: string | undefined): Promise<string> =>
-  stored !== undefined ? Promise.resolve(stored) : (dummyHash ??= hashPassword(newSecret()));
-
-export async function checkLogin(db: Db, email: string, password: string): Promise<Owner | null> {
-  const owner = await findOwner(db);
-  // Both checks always run, so the time taken doesn't tell a wrong email from a wrong password.
-  const passwordOk = await verifyPassword(password, await hashToCheck(owner?.passwordHash));
-  const emailOk = owner !== undefined && safeEqual(normalizeEmail(email), owner.email);
-  return owner && passwordOk && emailOk ? { id: owner.id, email: owner.email } : null;
-}
-
 function parseOwner(input: OwnerInput): OwnerInput {
   const result = ownerInput.safeParse({ ...input, email: normalizeEmail(input.email) });
   if (!result.success) throw invalidInput(result.error.issues[0]?.message ?? 'Invalid input.');
   return result.data;
+}
+
+async function refuseEmailOfAnother(db: Db, email: string, ownerId: string | undefined) {
+  const user = await findUserByEmail(db, email);
+  if (user && user.id !== ownerId) throw conflict('Another account already uses that email.');
+}
+
+async function createOwner(db: Db, owner: { email: string; passwordHash: string; now: number }) {
+  const { email, passwordHash, now } = owner;
+  const id = randomUUID();
+  const row = { id, email, passwordHash, name: '', role: 'owner' as const };
+  await insertUser(db, { ...row, createdAt: now, updatedAt: now });
+  // Until now everyone on this computer was the one person, and that person is the owner.
+  await assignOwnerlessProjects(db, id);
+  await assignOwnerlessUploads(db, id);
+  await assignOwnerlessRuns(db, id);
+  await assignOwnerlessRunners(db, id);
+  await assignOwnerlessChats(db, id);
 }
 
 // A new password signs every device out: whoever knew the old one may hold a session.
@@ -70,13 +68,9 @@ export async function setOwner(
   const passwordHash = await hashPassword(password, params);
   return db.transaction().execute(async (trx) => {
     const owner = await findOwner(trx);
+    await refuseEmailOfAnother(trx, email, owner?.id);
     if (!owner) {
-      const id = randomUUID();
-      await insertUser(trx, { id, email, passwordHash, createdAt: now, updatedAt: now });
-      // Until now everyone on this computer was the one person, and that person is the owner.
-      await assignOwnerlessRuns(trx, id);
-      await assignOwnerlessRunners(trx, id);
-      await assignOwnerlessChats(trx, id);
+      await createOwner(trx, { email, passwordHash, now });
       return { email, created: true, signedOut: 0 };
     }
     await updateUserRow(trx, owner.id, { email, passwordHash, updatedAt: now });

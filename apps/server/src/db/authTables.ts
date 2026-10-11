@@ -1,3 +1,5 @@
+import type { UserRole } from '@tracker/shared';
+
 export interface UserRow {
   id: string;
   // Kept lower-case (normalizeEmail), so sign-in ignores case.
@@ -5,6 +7,9 @@ export interface UserRow {
   passwordHash: string;
   createdAt: number;
   updatedAt: number;
+  name: string;
+  // The owner is the account owner:set made; only the owner invites others.
+  role: UserRole;
 }
 
 export interface SessionRow {
@@ -25,8 +30,20 @@ export interface ApiTokenRow {
   lastUsedAt: number | null;
 }
 
+// The id is random; the link holds a secret whose SHA-256 is kept, as for tokens.
+export interface InviteRow {
+  id: string;
+  tokenHash: string;
+  createdBy: string;
+  createdAt: number;
+  expiresAt: number;
+  usedAt: number | null;
+  usedBy: string | null;
+}
+
 export interface AuthTables {
   users: UserRow;
   sessions: SessionRow;
   apiTokens: ApiTokenRow;
+  invites: InviteRow;
 }

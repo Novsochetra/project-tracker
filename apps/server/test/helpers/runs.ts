@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto';
+import type { UserRole } from '@tracker/shared';
 import type { Hono } from 'hono';
 import { createApiToken } from '../../src/auth/apiTokens';
 import { startSession } from '../../src/auth/sessions';
@@ -23,10 +24,16 @@ export interface Answer<T = unknown> {
   body: T;
 }
 
-// Only one account can sign in with a password today, so sessions are made in the database.
-export async function addUser(db: Db, email: string, now: number): Promise<UserAuth> {
+// Sessions are made in the database, so tests need no password hashing.
+export async function addUser(
+  db: Db,
+  email: string,
+  now: number,
+  role: UserRole = 'user',
+): Promise<UserAuth> {
   const id = randomUUID();
-  await insertUser(db, { id, email, passwordHash: 'unused', createdAt: now, updatedAt: now });
+  const row = { id, email, passwordHash: 'unused', name: '', role };
+  await insertUser(db, { ...row, createdAt: now, updatedAt: now });
   const { secret } = await startSession(db, id, now);
   const token = await createApiToken(db, id, `${email} laptop`, now);
   return { id, person: { cookie: `${SESSION_COOKIE}=${secret}` }, helper: { token: token.secret } };

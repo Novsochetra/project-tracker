@@ -15,6 +15,7 @@ import type { ProjectRow, StatusRow } from '../db/schema';
 import {
   deleteProjectRow,
   insertProject,
+  listProjectKeys,
   listProjectRows,
   ticketStatsByProject,
   updateProjectRow,
@@ -25,7 +26,7 @@ import { insertStatuses, listStatusRows } from '../repositories/statuses';
 import { deleteProjectTickets } from '../repositories/tickets';
 import { removeFiles } from '../storage/fileStorage';
 import { changedFields, isEmpty } from '../util';
-import { inTransaction, notify, type ServiceContext } from './context';
+import { inTransaction, notify, type UserContext } from './context';
 import { requireProject } from './lookups';
 import { toProject, toStatus } from './mappers';
 
@@ -44,10 +45,11 @@ function summarize(project: ProjectRow, stats: ProjectTicketStats | undefined): 
   };
 }
 
-export async function listProjectSummaries(ctx: ServiceContext): Promise<ProjectSummary[]> {
-  const projects = await listProjectRows(ctx.db);
-  const stats = new Map((await ticketStatsByProject(ctx.db)).map((row) => [row.projectId, row]));
-  return projects.map((project) => summarize(project, stats.get(project.id)));
+export async function listProjectSummaries(ctx: UserContext): Promise<ProjectSummary[]> {
+  const projects = await listProjectRows(ctx.db, ctx.scope);
+  const stats = await ticketStatsByProject(ctx.db, ctx.scope);
+  const statsOf = new Map(stats.map((row) => [row.projectId, row]));
+  return projects.map((project) => summarize(project, statsOf.get(project.id)));
 }
 
 function defaultStatuses(projectId: string, at: number): StatusRow[] {
@@ -61,12 +63,12 @@ function defaultStatuses(projectId: string, at: number): StatusRow[] {
 }
 
 export async function createProject(
-  ctx: ServiceContext,
+  ctx: UserContext,
   input: CreateProjectValues,
 ): Promise<ProjectDetail> {
   const detail = await inTransaction(ctx, async (trx) => {
-    const existing = await listProjectRows(trx);
-    const taken = new Set(existing.map((project) => project.key));
+    const existing = await listProjectRows(trx, ctx.scope);
+    const taken = new Set(await listProjectKeys(trx));
     const at = ctx.now();
     const project: ProjectRow = {
       id: randomUUID(),
@@ -78,6 +80,7 @@ export async function createProject(
       nextNum: 1,
       createdAt: at,
       updatedAt: at,
+      ownerId: ctx.scope,
     };
     const statuses = defaultStatuses(project.id, at);
     await insertProject(trx, project);
@@ -88,19 +91,19 @@ export async function createProject(
   return detail;
 }
 
-export async function getProjectDetail(ctx: ServiceContext, key: string): Promise<ProjectDetail> {
-  const project = await requireProject(ctx.db, key);
+export async function getProjectDetail(ctx: UserContext, key: string): Promise<ProjectDetail> {
+  const project = await requireProject(ctx.db, ctx.scope, key);
   const statuses = await listStatusRows(ctx.db, project.id);
   return { project: toProject(project), statuses: statuses.map(toStatus) };
 }
 
 export async function updateProject(
-  ctx: ServiceContext,
+  ctx: UserContext,
   key: string,
   input: UpdateProjectValues,
 ): Promise<Project> {
   const outcome = await inTransaction(ctx, async (trx) => {
-    const project = await requireProject(trx, key);
+    const project = await requireProject(trx, ctx.scope, key);
     const edits = changedFields(project, input);
     if (isEmpty(edits)) return { project, changed: false };
     const changes = { ...edits, updatedAt: ctx.now() };
@@ -111,9 +114,9 @@ export async function updateProject(
   return toProject(outcome.project);
 }
 
-export async function deleteProject(ctx: ServiceContext, key: string): Promise<void> {
+export async function deleteProject(ctx: UserContext, key: string): Promise<void> {
   const removed = await inTransaction(ctx, async (trx) => {
-    const project = await requireProject(trx, key);
+    const project = await requireProject(trx, ctx.scope, key);
     const files = await storageKeysOfProject(trx, project.id);
     // Tickets go first: their status foreign key restricts deleting statuses that are in use.
     await deleteProjectTickets(trx, project.id);

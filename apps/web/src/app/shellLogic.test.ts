@@ -16,6 +16,15 @@ describe('gateFor', () => {
     ).toBe('app');
   });
 
+  it('shows the invite page whether signed in or not, once the session is known', () => {
+    const signedOut = { authRequired: true, authenticated: false };
+    expect(gateFor({ data: signedOut, fetchStatus: 'idle' }, true)).toBe('invite');
+    expect(
+      gateFor({ data: { ...signedOut, authenticated: true }, fetchStatus: 'idle' }, true),
+    ).toBe('invite');
+    expect(gateFor({ data: undefined, fetchStatus: 'fetching' }, true)).toBe('loading');
+  });
+
   it('opens the app when the session request is paused or failed offline', () => {
     expect(gateFor({ data: undefined, fetchStatus: 'paused' })).toBe('app');
     expect(gateFor({ data: undefined, fetchStatus: 'idle' })).toBe('app');

@@ -3,12 +3,16 @@ import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { promisify } from 'node:util';
+import { FILE_NAME_HEADER } from '@tracker/shared';
 import { afterAll, describe, expect, it } from 'vitest';
-import { checkLogin, setOwner } from '../../src/auth/owner';
+import { checkLogin } from '../../src/auth/login';
+import { setOwner } from '../../src/auth/owner';
 import { verifyPassword } from '../../src/auth/passwords';
 import { createDatabase } from '../../src/db/createDatabase';
 import { REPO_ROOT } from '../../src/config';
+import { findOwner } from '../../src/repositories/users';
 import { addOwner, CHEAP_SCRYPT, JSON_HEADERS, OWNER, signIn } from '../helpers/auth';
+import { addUser } from '../helpers/runs';
 import { DIALECTS, useTestServer } from '../helpers/server';
 
 describe.each(DIALECTS)('owner setup (%s)', (dialect) => {
@@ -30,10 +34,35 @@ describe.each(DIALECTS)('owner setup (%s)', (dialect) => {
         passwordHash: expect.stringMatching(/^scrypt\$/),
         createdAt: 5,
         updatedAt: 5,
+        name: '',
+        role: 'owner',
       },
     ]);
     expect(rows[0]!.passwordHash).not.toContain(OWNER.password);
     expect(await verifyPassword(OWNER.password, rows[0]!.passwordHash)).toBe(true);
+  });
+
+  it('gives the projects and files made before it to the new owner', async () => {
+    await api.post('/api/projects', { name: 'Mobile', key: 'MOB' });
+    await api.app.request('/api/attachments', {
+      method: 'POST',
+      headers: { 'content-type': 'text/plain', [FILE_NAME_HEADER]: 'a.txt' },
+      body: 'notes',
+    });
+    await addOwner(api.db);
+    const owner = await findOwner(api.db);
+    const projects = await api.db.selectFrom('projects').select('ownerId').execute();
+    expect(projects).toEqual([{ ownerId: owner!.id }]);
+    const files = await api.db.selectFrom('attachments').select('userId').execute();
+    expect(files).toEqual([{ userId: owner!.id }]);
+  });
+
+  it('refuses an email another account already uses', async () => {
+    await addOwner(api.db);
+    await addUser(api.db, 'user@example.com', 2_000);
+    await expect(
+      setOwner(api.db, { email: 'user@example.com', password: OWNER.password }, 3, CHEAP_SCRYPT),
+    ).rejects.toMatchObject({ code: 'conflict' });
   });
 
   it('replaces the email and password, signs out every device, and keeps API tokens', async () => {

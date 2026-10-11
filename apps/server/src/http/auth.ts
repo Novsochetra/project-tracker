@@ -16,8 +16,14 @@ import { clearSessionCookie, readSessionCookie, setSessionCookie } from './sessi
 
 export const HEALTH_PATH = '/api/health';
 
-// Signing in and out, and asking whether one is signed in, work without a session.
-const PUBLIC_ROUTES = new Set(['GET /api/session', 'POST /api/session', 'DELETE /api/session']);
+// Signing in and out, asking whether one is signed in, and using an invite work without a session.
+const PUBLIC_ROUTES = new Set([
+  'GET /api/session',
+  'POST /api/session',
+  'DELETE /api/session',
+  'POST /api/invites/check',
+  'POST /api/invites/accept',
+]);
 
 const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
 

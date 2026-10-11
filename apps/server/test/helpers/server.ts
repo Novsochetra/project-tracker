@@ -96,7 +96,7 @@ export function useTestServer(dialect: TestDialect, deps: TestDeps = {}) {
   const storage = createMemoryStorage();
   const broadcaster = createBroadcaster();
   const events: ChangeEvent[] = [];
-  broadcaster.subscribe((event) => events.push(event));
+  broadcaster.subscribe((notice) => events.push(notice.event));
   let state: { db: Db; app: Hono<AppEnv> } | undefined;
 
   const current = () => {

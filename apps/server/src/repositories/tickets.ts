@@ -2,6 +2,7 @@ import type { Rankable, ReviewVerdict } from '@tracker/shared';
 import type { ExpressionBuilder, InferResult } from 'kysely';
 import type { UserScope } from '../auth/scope';
 import type { Database, Db, TicketRow } from '../db/schema';
+import { ownedBy } from './projects';
 
 export type TicketChanges = Partial<
   Omit<TicketRow, 'id' | 'projectId' | 'num' | 'createdAt' | 'clientId'>
@@ -178,12 +179,14 @@ export async function deleteProjectTickets(db: Db, projectId: string): Promise<v
   await db.deleteFrom('tickets').where('projectId', '=', projectId).execute();
 }
 
-export async function listAssignees(db: Db): Promise<string[]> {
+export async function listAssignees(db: Db, scope: UserScope): Promise<string[]> {
   const rows = await db
     .selectFrom('tickets')
-    .select('assignee')
+    .innerJoin('projects', 'projects.id', 'tickets.projectId')
+    .select('tickets.assignee')
     .distinct()
-    .where('assignee', '<>', '')
+    .where('tickets.assignee', '<>', '')
+    .where(ownedBy(scope))
     .execute();
   return rows.map((row) => row.assignee);
 }

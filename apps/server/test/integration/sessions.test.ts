@@ -34,6 +34,8 @@ describe.each(DIALECTS)('sessions (%s)', (dialect) => {
       authRequired: true,
       authenticated: true,
       email: OWNER.email,
+      name: '',
+      role: 'owner',
     });
     const header = res.headers.get('set-cookie') ?? '';
     expect(header).toMatch(/^tracker_session=[\w-]{43};/);
@@ -48,6 +50,8 @@ describe.each(DIALECTS)('sessions (%s)', (dialect) => {
       authRequired: true,
       authenticated: true,
       email: OWNER.email,
+      name: '',
+      role: 'owner',
     });
   });
 

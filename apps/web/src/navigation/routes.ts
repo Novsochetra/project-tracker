@@ -1,3 +1,5 @@
+import { INVITE_PATH } from '@tracker/shared';
+
 export type Route =
   | { name: 'projects' }
   | { name: 'project'; key: string }
@@ -66,6 +68,8 @@ export function routePath(route: Route): string {
 
 // The one spelling of the screen a path shows, or null when the path is already it.
 export function canonicalPath(pathname: string): string | null {
+  // The invite page stands outside the screens, so its address stays as it is.
+  if (pathname === INVITE_PATH) return null;
   const canonical = routePath(parseRoute(pathname));
   return canonical === pathname ? null : canonical;
 }

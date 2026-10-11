@@ -41,7 +41,7 @@ export async function listChats(
   scope: UserScope,
   projectKey: string,
 ): Promise<Chat[]> {
-  const project = await requireProject(ctx.db, projectKey);
+  const project = await requireProject(ctx.db, scope, projectKey);
   const rows = await listProjectChatRows(ctx.db, scope, project.id, {
     limit: CHATS_SHOWN,
     now: ctx.now(),
@@ -99,7 +99,7 @@ export async function startChat(
   projectKey: string,
   input: AskValues,
 ): Promise<ChatDetail> {
-  const project = await requireProject(ctx.db, projectKey);
+  const project = await requireProject(ctx.db, scope, projectKey);
   const at = ctx.now();
   const options = chosenAskOptions(input);
   const chat: ChatRow = {
@@ -125,6 +125,6 @@ export async function askInChat(
   input: AskValues,
 ): Promise<ChatDetail> {
   const chat = await requireChat(ctx, scope, chatId);
-  const project = await requireProject(ctx.db, chat.projectKey);
+  const project = await requireProject(ctx.db, scope, chat.projectKey);
   return askIn(ctx, scope, { project, chat, isNew: false }, input);
 }

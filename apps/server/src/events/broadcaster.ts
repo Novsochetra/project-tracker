@@ -1,14 +1,14 @@
-import type { ChangeEvent } from '@tracker/shared';
+import type { ChangeNotice } from './changeNotice';
 
 export type Listener<T> = (event: T) => void;
 
-export interface Broadcaster<T = ChangeEvent> {
+export interface Broadcaster<T = ChangeNotice> {
   publish(event: T): void;
   subscribe(listener: Listener<T>): () => void;
   listenerCount(): number;
 }
 
-export function createBroadcaster<T = ChangeEvent>(): Broadcaster<T> {
+export function createBroadcaster<T = ChangeNotice>(): Broadcaster<T> {
   const listeners = new Set<Listener<T>>();
   return {
     publish(event) {

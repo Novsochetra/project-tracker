@@ -156,7 +156,10 @@ describe('createBroadcaster', () => {
       throw new Error('boom');
     });
     const unsubscribe = broadcaster.subscribe((event) => received.push(event));
-    const event = { type: 'changed', projectId: 'p', ticketId: null } as const;
+    const event = {
+      userId: null,
+      event: { type: 'changed', projectId: 'p', ticketId: null },
+    } as const;
     broadcaster.publish(event);
     expect(received).toEqual([event]);
     expect(error).toHaveBeenCalledOnce();
