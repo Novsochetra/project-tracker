@@ -30,5 +30,17 @@ describe.each(DIALECTS)(
         expect(eventTexts(detail).some((t) => t.includes('Claude Code report'))).toBe(false);
       },
     );
+
+    it('keeps a custom reviewed status when a report says approved', async () => {
+      await api.post<ProjectDetail>('/api/projects', { name: 'Mobile app' });
+      const qa = await api.client().createStatus('MA', { name: 'QA passed', category: 'reviewed' });
+      await api.client().createTicket('MA', { title: 'Crash', statusId: qa.id });
+      const text = 'TICKET: MA-1\nSTATUS: approved';
+
+      const preview = await api.post<ReportPreview>('/api/reports/preview', { text });
+      expect(preview.body.items[0]?.toStatusName).toBeNull();
+      expect((await api.post('/api/reports/apply', { text })).status).toBe(200);
+      expect((await api.client().getTicket('MA-1')).status.name).toBe('QA passed');
+    });
   },
 );

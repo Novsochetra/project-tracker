@@ -183,8 +183,12 @@ describe('reportMayMove', () => {
     expect(reportMayMove('done', 'reviewed')).toBe(false);
   });
 
+  it('keeps a Reviewed ticket in its own status', () => {
+    expect(reportMayMove('reviewed', 'reviewed')).toBe(false);
+    expect(reportMayMove('done', 'done')).toBe(false);
+  });
+
   it('keeps a Reviewed ticket free to move forward', () => {
-    expect(reportMayMove('reviewed', 'reviewed')).toBe(true);
     expect(reportMayMove('reviewed', 'done')).toBe(true);
   });
 });

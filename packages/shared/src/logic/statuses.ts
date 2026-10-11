@@ -49,6 +49,6 @@ export function findStatusByName<T extends Status>(
 
 const categoryRank = (category: StatusCategory): number => STATUS_CATEGORIES.indexOf(category);
 
-// Once a ticket is reviewed only a person moves it back, so a late report cannot undo a review.
+// Once a ticket is reviewed only a person moves it back, so a late report cannot undo an approval.
 export const reportMayMove = (from: StatusCategory, to: StatusCategory): boolean =>
-  categoryRank(from) < categoryRank('reviewed') || categoryRank(to) >= categoryRank(from);
+  categoryRank(from) < categoryRank('reviewed') || categoryRank(to) > categoryRank(from);
