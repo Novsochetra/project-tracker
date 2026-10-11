@@ -7,20 +7,6 @@ const { setInterval: realInterval, clearInterval: realClearInterval } = globalTh
 // An advance leaves the clock mid-tick between its timers, and a tick from the interval would cut in.
 let advancing = false;
 
-interface TickMode {
-  mode: 'manual' | 'nextAsync' | 'interval';
-  delta?: number;
-}
-
-// vi has no getter for the tick mode; the fake clock hangs on the setTimeout it installed.
-const tickModeOfFakeClock = (): TickMode =>
-  (setTimeout as unknown as { clock: { tickMode: TickMode } }).clock.tickMode;
-
-function setTickMode({ mode, delta }: TickMode): void {
-  if (mode === 'interval') vi.setTimerTickMode('interval', delta);
-  else vi.setTimerTickMode(mode === 'nextAsync' ? 'nextTimerAsync' : 'manual');
-}
-
 // On a busy machine a test's own steps can take longer than the times it tests (PT-167): the second
 // tap of a "200 ms" double tap came after the 500 ms shield had ended. From here performance.now
 // and the timers, and the rest of the clock when the test already fakes it, move only when the test
@@ -29,7 +15,6 @@ function setTickMode({ mode, delta }: TickMode): void {
 // wait for.
 export function stillClock(): () => void {
   const installed = !vi.isFakeTimers();
-  const previous = installed ? null : tickModeOfFakeClock();
   if (installed) {
     const now = Math.ceil(performance.now());
     vi.useFakeTimers({ toFake: ['performance', 'setTimeout', 'clearTimeout'] });
@@ -43,8 +28,7 @@ export function stillClock(): () => void {
   }, 1);
   return () => {
     realClearInterval(due);
-    if (previous) setTickMode(previous);
-    else vi.useRealTimers();
+    if (installed) vi.useRealTimers();
   };
 }
 
