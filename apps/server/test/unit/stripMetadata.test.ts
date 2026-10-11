@@ -128,6 +128,15 @@ describe('stripWebp', () => {
     expect(meta.exif).toBeUndefined();
   });
 
+  // A guard, not a bug found: the strip reads the upload in place (PT-152), so clearing the EXIF
+  // and XMP flags must go to a copy of that chunk, or the caller's bytes change under it.
+  it('reads the upload without changing it', async () => {
+    const animated = await animatedWebp(true);
+    const upload = Buffer.from(animated);
+    stripWebp(animated);
+    expect(Buffer.from(animated).equals(upload)).toBe(true);
+  });
+
   it('leaves bytes that are not a WebP to the caller', () => {
     expect(stripWebp(new TextEncoder().encode('RIFF....AVI '))).toBeNull();
   });

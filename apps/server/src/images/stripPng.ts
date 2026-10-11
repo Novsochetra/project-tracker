@@ -1,4 +1,5 @@
 import { crc32 } from 'node:zlib';
+import { asBuffer } from './asBuffer';
 import { hasOrientation, orientationExif } from './exifOrientation';
 
 const SIGNATURE = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
@@ -60,7 +61,7 @@ function walk(buffer: Buffer): Walk {
 // Removes metadata without decoding, keeping which way is up as a one-entry eXIf after IHDR. Null
 // when the bytes aren't a PNG, or have no image data: there is nothing whole to keep.
 export function stripPng(bytes: Uint8Array, orientation: number): Uint8Array | null {
-  const buffer = Buffer.from(bytes);
+  const buffer = asBuffer(bytes);
   if (!buffer.subarray(0, 8).equals(SIGNATURE)) return null;
   const { chunks, types } = walk(buffer);
   if (!types.has('IHDR') || !types.has('IDAT')) return null;

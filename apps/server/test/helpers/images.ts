@@ -21,6 +21,20 @@ export const TINY_HEIC = new Uint8Array(
   readFileSync(new URL('../fixtures/tiny.heic', import.meta.url)),
 );
 
+// One small picture saved by each program, so a strip is checked against what real writers put in
+// a file, not only against what sharp writes.
+export const JPEG_WRITERS = [
+  { writer: 'macOS Preview (sips)', file: 'preview.jpg', metadata: true },
+  { writer: 'ImageMagick', file: 'imagemagick.jpg', metadata: false },
+  { writer: 'ImageMagick in CMYK', file: 'imagemagick-cmyk.jpg', metadata: false },
+  { writer: 'Pillow', file: 'pillow.jpg', metadata: false },
+  { writer: 'Pillow in CMYK', file: 'pillow-cmyk.jpg', metadata: false },
+  { writer: 'libjpeg’s cjpeg -rgb', file: 'libjpeg-rgb.jpg', metadata: false },
+];
+
+export const jpegFixture = (name: string) =>
+  readFileSync(new URL(`../fixtures/jpeg-writers/${name}`, import.meta.url));
+
 // Left half red, right half blue, so a turn shows in where the colors end up.
 export function twoColorPixels(width: number, height: number): Buffer {
   const pixels = Buffer.alloc(width * height * 3);

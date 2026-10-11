@@ -1,3 +1,5 @@
+import { asBuffer } from './asBuffer';
+
 export const SOS = 0xda;
 export const EOI = 0xd9;
 
@@ -33,8 +35,7 @@ const hasNoLength = (marker: number) =>
 
 // libjpeg reads a length field below 2 as an empty segment and shows the picture, so it must not
 // cut the length bytes off a segment that is kept (PT-146).
-export const headerEnd = (bytes: Buffer, at: number) =>
-  at + 2 + Math.max(2, bytes.readUInt16BE(at + 2));
+const headerEnd = (bytes: Buffer, at: number) => at + 2 + Math.max(2, bytes.readUInt16BE(at + 2));
 
 // libjpeg stops at the end marker: what follows (an iPhone's depth or HDR images, an app's
 // trailer) is no part of the picture.
@@ -61,7 +62,7 @@ export function* jpegSegments(bytes: Buffer): Generator<JpegSegment> {
 
 export function countJpegScans(bytes: Uint8Array): number {
   let scans = 0;
-  const buffer = Buffer.from(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  const buffer = asBuffer(bytes);
   for (const { marker } of jpegSegments(buffer)) if (marker === SOS) scans += 1;
   return scans;
 }
