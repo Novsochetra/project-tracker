@@ -4,6 +4,7 @@ import { ASK_LABEL, NEW_CHAT_LABEL } from '../../app/crumbs';
 import { NavBar, NavBarSpacer } from '../../navigation';
 import { savedAskOptions } from './askOptions';
 import { ChatFooterArea } from './ChatFooterArea';
+import { ChatOptionsSheet } from './ChatOptionsSheet';
 import styles from './ChatScreen.module.css';
 import { ASK_INTRO } from './copy';
 import { stoppedRunsOf } from './thread';
@@ -32,7 +33,17 @@ export function ChatView({ projectKey, chatId, detail }: ChatViewProps) {
       <NavBar
         title={detail?.chat.title ?? NEW_CHAT_LABEL}
         backLabel={ASK_LABEL}
-        right={<NavBarSpacer />}
+        right={
+          detail ? (
+            <ChatOptionsSheet
+              projectKey={projectKey}
+              chatId={detail.chat.id}
+              title={detail.chat.title}
+            />
+          ) : (
+            <NavBarSpacer />
+          )
+        }
       />
       <div ref={threadRef} className={styles.thread}>
         {messages.length === 0 ? (

@@ -321,6 +321,9 @@ export class TrackerClient {
   getChat = (chatId: string) =>
     this.http.request<ChatDetail>('GET', `/api/chats/${segment(chatId)}`);
 
+  deleteChat = (chatId: string) =>
+    this.http.request<void>('DELETE', `/api/chats/${segment(chatId)}`);
+
   ask = (chatId: string, input: AskInput) =>
     this.http.request<ChatDetail>('POST', `/api/chats/${segment(chatId)}/messages`, {
       body: input,

@@ -120,3 +120,7 @@ export async function setMessageTicket(db: Db, id: string, ticketId: string): Pr
 
 export const assignOwnerlessChats = (db: Db, userId: string) =>
   db.updateTable('chats').set({ userId }).where('userId', 'is', null).execute();
+
+export async function deleteChatRow(db: Db, id: string): Promise<void> {
+  await db.deleteFrom('chats').where('id', '=', id).execute();
+}

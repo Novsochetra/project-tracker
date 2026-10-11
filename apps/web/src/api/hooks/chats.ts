@@ -22,6 +22,11 @@ export interface CardTicketVariables {
   input: CardTicketInput;
 }
 
+export interface DeleteChatVariables {
+  projectKey: string;
+  chatId: string;
+}
+
 export interface RunCardTicketVariables {
   ticketKey: string;
   runnerId: string;
@@ -117,5 +122,22 @@ export function useRunCardTicket(): TrackerMutation<Run, RunCardTicketVariables>
     },
     onSuccess: (run) => showRun(queryClient, run),
     onSettled: (_run, _error, { ticketKey }) => invalidateRuns(queryClient, ticketKey),
+  });
+}
+
+export function useDeleteChat(): TrackerMutation<void, DeleteChatVariables> {
+  const client = useApi();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ chatId }: DeleteChatVariables) => client.deleteChat(chatId),
+    // The chat's own query stays until it is unused: removing it under the open screen would
+    // refetch it, and its 404 would navigate away a second time.
+    onSuccess: (_result, { projectKey, chatId }) => {
+      queryClient.setQueryData<Chat[]>(queryKeys.chats(projectKey), (chats) =>
+        chats?.filter((chat) => chat.id !== chatId),
+      );
+    },
+    onSettled: (_result, _error, { projectKey }) =>
+      void queryClient.invalidateQueries({ queryKey: queryKeys.chats(projectKey) }),
   });
 }

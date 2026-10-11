@@ -3,6 +3,7 @@ import type { ChatDetail } from '@tracker/shared';
 import { Plus, SquarePen } from 'lucide-react';
 import { queryKeys } from '../api';
 import { Button } from '../components';
+import { ChatOptionsMenu } from '../features/ask/ChatOptionsMenu';
 import { ProjectOptionsButton } from '../features/projects/ProjectOptionsButton';
 import { useProjectSummary } from '../features/projects/useProjectSummary';
 import { useNavigation, type Route } from '../navigation';
@@ -54,8 +55,9 @@ function HeaderActions({ route, projectKey }: { route: Route; projectKey: string
           {NEW_CHAT_LABEL}
         </Button>
       );
-    case 'ticket':
     case 'chat':
+      return route.chatId && <ChatOptionsMenu projectKey={projectKey} chatId={route.chatId} />;
+    case 'ticket':
       return null;
   }
 }

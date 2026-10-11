@@ -220,3 +220,11 @@
     font-size: var(--size-input);
   }
 }
+
+/* The delete question reads like the project's (ProjectOptionsSheet). */
+.confirm {
+  display: block;
+  margin: 2px 0 var(--space-1);
+  color: var(--muted-2);
+  font-size: var(--size-body);
+}

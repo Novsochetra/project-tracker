@@ -2,8 +2,8 @@ import { randomUUID } from 'node:crypto';
 import type { TrackerClient } from '@tracker/client';
 import type { RunStepInput } from '@tracker/shared';
 import type { Page } from '@playwright/test';
-import { expect, test } from './fixtures';
-import { seedProject, settledScreenshot, toast } from './helpers';
+import { expect, test, usesPhoneLayout } from './fixtures';
+import { readActionSheet, readMenuConfirm, seedProject, settledScreenshot, toast } from './helpers';
 
 const HELPER = "Dara's MacBook";
 
@@ -504,4 +504,34 @@ test('folds the longest text step the helper sends as calmly, step by step', asy
   const folds = watchFolds(page, 'Read apps/web/src/sync5.ts');
   for (const each of reads(5)) await send([each]);
   expect(await folds).toBeLessThan(40);
+});
+
+test('deletes a chat from its ••• after asking, and stops the answer Claude is working on', async ({
+  page,
+  api,
+}, info) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await seedProject(api, 'Mobile app', 'MOB');
+  const helperId = randomUUID();
+  await api.registerRunner(helperId, { name: HELPER, projectKeys: ['MOB'] });
+  await page.goto('/p/MOB/ask/new');
+  await ask(page, 'How does capture sync work?');
+  await answer(api, helperId, 'Captures wait in a queue.');
+  await ask(page, 'And on 3G?');
+  const working = await api.takeNextRun(helperId, 'ask');
+
+  await page.getByRole('button', { name: 'Chat options' }).click();
+  await readActionSheet(page);
+  await page.getByRole('button', { name: 'Delete chat' }).click();
+  await expect(page.getByRole('alert')).toContainText('Delete this chat?');
+  await settledScreenshot(page, info.outputPath(`delete-chat-${info.project.name}.png`));
+  await readMenuConfirm(page);
+  const confirm = (await usesPhoneLayout(page)) ? 'Delete chat' : 'Delete';
+  await page.getByRole('button', { name: confirm, exact: true }).click();
+
+  await expect(toast(page, 'Chat deleted')).toBeVisible();
+  await expect(page).toHaveURL(/\/p\/MOB\/ask$/);
+  await expect(page.getByText('How does capture sync work?')).toHaveCount(0);
+  expect(await api.listChats('MOB')).toEqual([]);
+  await expect(api.getRun(working!.run.id)).rejects.toMatchObject({ status: 404 });
 });
