@@ -59,13 +59,15 @@ describe('useTicketDrafts', () => {
     );
   });
 
-  it('waits while the device is offline and saves when it comes back online', async () => {
-    const onLine = vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(false);
+  it('keeps the text while the device is offline and saves when it comes back online', async () => {
     keepTitle('Fix the login');
-    const { client } = setup({});
-    await act(() => new Promise((resolve) => setTimeout(resolve, 0)));
-    expect(client.getTicket).not.toHaveBeenCalled();
-    onLine.mockReturnValue(true);
+    const getTicket = vi
+      .fn()
+      .mockRejectedValueOnce(new TypeError('Failed to fetch'))
+      .mockResolvedValue(makeTicketDetail());
+    setup({ getTicket });
+    await waitFor(() => expect(getTicket).toHaveBeenCalledTimes(1));
+    expect(kept()).toEqual(['title:MOB-1']);
     act(() => {
       window.dispatchEvent(new Event('online'));
     });

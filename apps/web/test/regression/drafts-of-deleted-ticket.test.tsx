@@ -111,8 +111,6 @@ it('removes the comment box text of a ticket deleted while the app is online, af
 it('removes the drafts of a deleted ticket when it is opened', async () => {
   keepComment();
   keepUnsentEdit();
-  // Offline, so only the ticket screen can find out.
-  vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(false);
   const rendered = renderTicket({
     detail: makeTicketDetail(listItem(8, STATUS.todo, 0)),
     seed: false,

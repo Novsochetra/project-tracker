@@ -22,12 +22,12 @@ export const isStaleEdit = (error: unknown): boolean =>
 export const isClientError = (error: unknown): boolean =>
   isApiError(error) && error.status >= 400 && error.status < 500;
 
-const isOffline = (): boolean => typeof navigator !== 'undefined' && navigator.onLine === false;
-
+// fetch rejects with a TypeError when the request gets no answer. navigator.onLine says nothing
+// here: WebKit has kept it false for 20 minutes while every request was answered (PT-179).
 export const isNetworkError = (error: unknown): boolean =>
   isApiError(error)
     ? error.code === 'http_error' && PROXY_FAILURE_STATUSES.has(error.status)
-    : error instanceof TypeError || isOffline();
+    : error instanceof TypeError;
 
 export function errorMessage(error: unknown): string {
   if (isNetworkError(error)) return NETWORK_ERROR_MESSAGE;

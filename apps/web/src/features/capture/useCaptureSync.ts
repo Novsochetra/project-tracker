@@ -43,7 +43,6 @@ function useSyncCaptures(): () => Promise<void> {
   const queryClient = useQueryClient();
   const { show } = useToast();
   return useCallback(async () => {
-    if (navigator.onLine === false) return;
     await runCaptureSync(async () => {
       const report = await syncCaptures({
         queue: queueStore,

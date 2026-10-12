@@ -106,6 +106,19 @@ describe('recheckWhileUnreachable', () => {
     expect(asked).toEqual([30_000, 31_000]);
   });
 
+  it('asks at once when the browser says it is online again', async () => {
+    watch();
+    reachability.setUnreachable(true);
+    await wait(20_000);
+    const before = asked.length;
+
+    window.dispatchEvent(new Event('online'));
+    await wait(0);
+
+    expect(asked).toHaveLength(before + 1);
+    expect(asked.at(-1)).toBe(20_000);
+  });
+
   it('stops asking when the page is hidden', async () => {
     watch();
     reachability.setUnreachable(true);
@@ -137,6 +150,7 @@ describe('recheckWhileUnreachable', () => {
     stop();
     answer.resolve();
     setVisibility('visible');
+    window.dispatchEvent(new Event('online'));
     await wait(30_000);
 
     expect(ask).toHaveBeenCalledTimes(1);

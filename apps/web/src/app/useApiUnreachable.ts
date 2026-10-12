@@ -4,7 +4,6 @@ import { useApi } from '../api';
 import { lastAnswerWasSaved, subscribeSavedAnswers, watchSavedAnswers } from '../pwa/savedAnswers';
 import { createReachability, watchApiTraffic, type Reachability } from './reachability';
 import { trackerCheckOf } from './trackerCheck';
-import { useOnline } from './useOnline';
 
 // Called once for the app, so the banner, capture sync and the live stream follow the same stores.
 export function useReachability(): Reachability {
@@ -21,10 +20,8 @@ export function useReachability(): Reachability {
 }
 
 export function useApiUnreachable(reachability: Reachability): boolean {
-  const online = useOnline();
   const { banner } = reachability;
-  const unreachable = useSyncExternalStore(banner.subscribe, banner.isUnreachable);
-  return !online || unreachable;
+  return useSyncExternalStore(banner.subscribe, banner.isUnreachable);
 }
 
 // For the banner, which is up only while the tracker can't be reached. Once it said saved data is

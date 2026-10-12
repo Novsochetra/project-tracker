@@ -76,7 +76,6 @@ export function useDraftCheck(
     async (id: string, typedOver?: string) => {
       const draft = storedDraft(id);
       if (!draft) return null;
-      if (navigator.onLine === false) return 'unreachable';
       try {
         return checkWith(id, draft, serverText(await read(), draft), typedOver);
       } catch (error) {

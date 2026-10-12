@@ -2,6 +2,7 @@ import { hashKey, type QueryClient } from '@tanstack/react-query';
 import { queryKeys } from '../api';
 import { lastAnswerWasSaved } from '../pwa/savedAnswers';
 import { signalOf, type ApiSignal } from './offline';
+import { onOfflineHint } from './offlineHint';
 import { recheckWhileUnreachable } from './recheck';
 import type { TrackerCheck } from './trackerCheck';
 import { ANSWERING, nextState, showsBanner } from './trackerState';
@@ -53,7 +54,8 @@ type Source = 'request' | 'projects' | 'check';
 
 export interface TrafficOptions {
   // Only the banner's watcher asks the tracker again while it can't be reached (app/recheck): a
-  // schedule in each watcher would send twice the checks.
+  // schedule in each watcher would send twice the checks. It alone takes the browser's offline as
+  // a hint, since only its rechecks would find out that the tracker answers.
   recheck?: boolean;
 }
 
@@ -99,6 +101,9 @@ export function watchApiTraffic(
   const stopRechecks = options.recheck
     ? recheckWhileUnreachable(reachability.banner, recheck)
     : () => undefined;
+  const stopHint = options.recheck
+    ? onOfflineHint(window, () => settle('unreachable', 'request'))
+    : () => undefined;
   const stopQueries = queryClient.getQueryCache().subscribe((event) => {
     if (event.type !== 'updated') return;
     const signal = signalOf(event.action, lastAnswerWasSaved());
@@ -113,5 +118,6 @@ export function watchApiTraffic(
     stopQueries();
     stopMutations();
     stopRechecks();
+    stopHint();
   };
 }

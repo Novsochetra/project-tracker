@@ -45,7 +45,6 @@ function useDraftSync(): (takeScope: () => SyncScope) => void {
   return useCallback(
     (takeScope) => {
       runDraftSync(async () => {
-        if (navigator.onLine === false) return;
         const changed = firstNewChange(await syncDrafts(deps.current, takeScope()));
         if (!changed) return;
         show(`Your edit to ${changed.ticketKey} isn't saved: it changed elsewhere.`, {

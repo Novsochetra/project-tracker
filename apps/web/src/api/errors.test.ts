@@ -32,12 +32,6 @@ describe('errorMessage', () => {
     );
   });
 
-  it('explains failures while the browser is offline', () => {
-    vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(false);
-    expect(errorMessage(new Error('aborted'))).toBe(NETWORK_ERROR_MESSAGE);
-    expect(errorMessage(new ApiError(409, 'conflict', 'Name taken.'))).toBe('Name taken.');
-  });
-
   it('falls back for anything else', () => {
     expect(errorMessage(new SyntaxError('Unexpected token'))).toBe(FALLBACK_ERROR_MESSAGE);
     expect(errorMessage('boom')).toBe(FALLBACK_ERROR_MESSAGE);
@@ -64,12 +58,6 @@ describe('isNetworkError', () => {
     expect(isNetworkError(new TypeError('Failed to fetch'))).toBe(true);
     expect(isNetworkError(new ApiError(502, 'http_error', 'Bad Gateway'))).toBe(true);
     expect(isNetworkError(new ApiError(504, 'http_error', 'Gateway Timeout'))).toBe(true);
-  });
-
-  it('counts any other failure while the browser is offline', () => {
-    vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(false);
-    expect(isNetworkError(new Error('aborted'))).toBe(true);
-    expect(isNetworkError(new ApiError(409, 'conflict', 'Name taken.'))).toBe(false);
   });
 
   it('leaves out answers from the server and other errors', () => {

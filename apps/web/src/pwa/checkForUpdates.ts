@@ -6,9 +6,9 @@ interface Updatable {
 
 // Browsers look for a new sw.js only on page loads, which an app left open never makes.
 export function checkForUpdates(registration: Updatable): () => void {
+  // Not skipped while navigator.onLine is false: WebKit has kept it false for 20 minutes while every
+  // request was answered (PT-179). A failed check is harmless and the next one retries.
   const check = () => {
-    if (!navigator.onLine) return;
-    // The server can still be unreachable; a failed check is harmless and the next one retries.
     registration.update().catch(() => undefined);
   };
   const checkWhenVisible = () => {

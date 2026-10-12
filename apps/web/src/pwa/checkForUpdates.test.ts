@@ -43,18 +43,6 @@ describe('checkForUpdates', () => {
     expect(update).toHaveBeenCalledTimes(1);
   });
 
-  it('skips checks while offline and checks again once online', () => {
-    const onLine = vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(false);
-    const update = start();
-    setVisibility('visible');
-    vi.advanceTimersByTime(UPDATE_CHECK_MS);
-    expect(update).not.toHaveBeenCalled();
-
-    onLine.mockReturnValue(true);
-    setVisibility('visible');
-    expect(update).toHaveBeenCalledTimes(1);
-  });
-
   it('ignores a failed check and keeps checking', async () => {
     let checks = 0;
     // A plain function, because vi.fn handles the rejection itself and would hide a missing catch.

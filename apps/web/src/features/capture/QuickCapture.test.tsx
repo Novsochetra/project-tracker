@@ -123,13 +123,17 @@ describe('QuickCapture sync', () => {
   });
 
   it('tries again when the device comes back online', async () => {
-    const offline = vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(false);
     storeQueue([queued('a', 10)]);
-    const { createTicket } = renderQuickCapture();
-    await act(() => Promise.resolve());
-    expect(createTicket).not.toHaveBeenCalled();
+    const createTicket = vi
+      .fn()
+      .mockRejectedValueOnce(NETWORK_DOWN)
+      .mockImplementation((projectKey: string, input: { title: string }) =>
+        Promise.resolve(ticketFor(projectKey, input)),
+      );
+    renderQuickCapture({ createTicket });
+    await waitFor(() => expect(createTicket).toHaveBeenCalledTimes(1));
+    expect(readQueue().items).toHaveLength(1);
 
-    offline.mockReturnValue(true);
     act(() => {
       window.dispatchEvent(new Event('online'));
     });
