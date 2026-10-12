@@ -1,12 +1,16 @@
-import { describe, expect, it, vi } from 'vitest';
-import { RESTING_Y, watchStatusBarTap } from './statusBarTap';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { RESTING_Y, SETTLE_MS, watchStatusBarTap } from './statusBarTap';
 
 class FakeWindow extends EventTarget {
   scrollY = 0;
   pinned = false;
+  maxScroll = RESTING_Y;
+  rests = 0;
+  visualViewport = new EventTarget();
 
   scrollTo(_x: number, y: number): void {
-    if (!this.pinned) this.scrollY = y;
+    this.rests += 1;
+    if (!this.pinned) this.scrollY = Math.min(y, this.maxScroll);
   }
 
   moveTo(y: number): void {
@@ -27,6 +31,14 @@ function watch(win = new FakeWindow()) {
   });
   return { win, onTap, stop };
 }
+
+beforeEach(() => {
+  vi.useFakeTimers();
+});
+
+afterEach(() => {
+  vi.useRealTimers();
+});
 
 describe('watchStatusBarTap', () => {
   it('rests the window 1px down', () => {
@@ -90,5 +102,43 @@ describe('watchStatusBarTap', () => {
     stop();
     win.moveTo(0);
     expect(onTap).not.toHaveBeenCalled();
+  });
+
+  it('ignores a scroll to 0 that comes with a viewport resize, then counts the tap again', () => {
+    const { win, onTap } = watch();
+    win.dispatchEvent(new Event('resize'));
+    win.moveTo(0);
+    expect(onTap).not.toHaveBeenCalled();
+    expect(win.scrollY).toBe(RESTING_Y);
+    vi.advanceTimersByTime(SETTLE_MS);
+    win.moveTo(0);
+    expect(onTap).toHaveBeenCalledTimes(1);
+  });
+
+  it('ignores a scroll to 0 as the keyboard closes and the visual viewport grows', () => {
+    const { win, onTap } = watch();
+    win.visualViewport.dispatchEvent(new Event('resize'));
+    win.moveTo(0);
+    expect(onTap).not.toHaveBeenCalled();
+  });
+
+  it('ignores a scroll to 0 just after a finger lifts, as Safari settles its toolbar', () => {
+    const { win, onTap } = watch();
+    win.touch('touchstart', 1);
+    win.touch('touchend', 0);
+    win.moveTo(0);
+    expect(onTap).not.toHaveBeenCalled();
+  });
+
+  it('stops trying to rest a window that has no room to scroll until something changes', () => {
+    const win = new FakeWindow();
+    win.maxScroll = 0;
+    watch(win);
+    win.moveTo(0);
+    win.moveTo(0);
+    expect(win.rests).toBe(1);
+    win.dispatchEvent(new Event('resize'));
+    win.moveTo(0);
+    expect(win.rests).toBe(2);
   });
 });

@@ -40,6 +40,11 @@ test.describe('the iOS status-bar tap', () => {
     expect(
       await page.evaluate(() => document.getElementById('root')!.getBoundingClientRect().top),
     ).toBe(0);
+    // With a scroll range iOS rubber-bands the whole app on a drag outside a screen's scroller
+    // (PT-178 review). Playwright's WebKit doesn't bounce, so the test checks what stops it.
+    expect(
+      await page.evaluate(() => getComputedStyle(document.documentElement).overscrollBehaviorY),
+    ).toBe('none');
 
     await scrollScreen(page, '/p/MOB', 600);
     await tapStatusBar(page);
