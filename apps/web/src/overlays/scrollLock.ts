@@ -34,3 +34,5 @@ export function lockBodyScroll(): () => void {
     if (locks === 0) unpinBody();
   };
 }
+
+export const isBodyScrollLocked = (): boolean => locks > 0;

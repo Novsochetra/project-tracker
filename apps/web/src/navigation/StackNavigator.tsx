@@ -21,6 +21,7 @@ import type { Platform } from './stackMotion';
 import styles from './StackNavigator.module.css';
 import './tokens.css';
 import { useStackAnimation } from './useStackAnimation';
+import { useStatusBarTap } from './useStatusBarTap';
 import { useSwipeBack } from './useSwipeBack';
 
 export interface StackNavigatorProps {
@@ -79,6 +80,7 @@ function StackView({
     [setModel],
   );
   useStackAnimation({ id: model.id, animation: model.animation, platform, progress, onSettled });
+  useStatusBarTap(rootRef);
   const swipeEnabled = platform === 'phone' && !browser.ownsEdgeSwipe;
   useSwipeBack({
     rootRef,

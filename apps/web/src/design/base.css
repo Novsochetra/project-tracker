@@ -20,6 +20,21 @@ body {
   overscroll-behavior-y: none;
 }
 
+/* iOS: 1px of page scroll for the status-bar tap to undo (navigation/useStatusBarTap). The app
+   sticks to the top, so the window resting 1px down moves nothing on screen. */
+html[data-status-bar-tap] {
+  height: 100%;
+}
+
+html[data-status-bar-tap] body {
+  min-height: calc(100% + 1px);
+}
+
+html[data-status-bar-tap] #root {
+  position: sticky;
+  top: 0;
+}
+
 button,
 input,
 select,
