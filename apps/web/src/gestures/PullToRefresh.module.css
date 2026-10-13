@@ -2,9 +2,8 @@
   position: relative;
   display: flex;
   flex-direction: column;
-  /* Down to the screen's bottom edge under its nav bar, so an empty state can centre in it.
-     The nav bar is its 1px line taller than --sticky-top; without it the screen scrolls by 1px. */
-  min-height: calc(100% - var(--sticky-top) - 1px);
+  /* Down to the screen's bottom edge under its nav bar, so an empty state can centre in it. */
+  min-height: calc(100% - var(--nav-bar-height));
 }
 
 .indicator {

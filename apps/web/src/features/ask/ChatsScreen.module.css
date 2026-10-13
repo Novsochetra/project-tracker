@@ -1,9 +1,8 @@
 .page {
   display: flex;
   flex-direction: column;
-  /* Down to the screen's bottom edge under its nav bar, so the empty state can centre in it.
-     The nav bar is its 1px line taller than --sticky-top; without it the screen scrolls by 1px. */
-  min-height: calc(100% - var(--sticky-top) - 1px);
+  /* Down to the screen's bottom edge under its nav bar, so the empty state can centre in it. */
+  min-height: calc(100% - var(--nav-bar-height));
   padding: 24px var(--space-8) 48px;
 }
 

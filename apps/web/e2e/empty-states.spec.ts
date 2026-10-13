@@ -21,7 +21,7 @@ async function boxOf(locator: Locator): Promise<Box> {
 
 const layer = (page: Page, path: string) => page.locator(`[data-stack-path="${path}"]`);
 
-// The tile to the last line of text, without the padding around them.
+// The padding grows with the free area, so where the state sits is where its tile and text are.
 async function emptyContent(page: Page, title: string): Promise<Box> {
   const empty = page.getByText(title, { exact: true }).locator('..');
   await expect(empty.getByRole('button')).toHaveCount(0);
