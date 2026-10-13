@@ -33,6 +33,7 @@ import type {
   ProjectBoard,
   ProjectDetail,
   ProjectSummary,
+  ProjectUsage,
   PromptResult,
   PushKey,
   PushSubscriptionInput,
@@ -96,6 +97,9 @@ export class TrackerClient extends AskingClient {
 
   getProjectPrompt = (key: string) =>
     this.http.request<PromptResult>('GET', `/api/projects/${segment(key)}/prompt`);
+
+  getProjectUsage = (key: string) =>
+    this.http.request<ProjectUsage>('GET', `/api/projects/${segment(key)}/usage`);
 
   createStatus = (projectKey: string, input: CreateStatusInput) =>
     this.http.request<Status>('POST', `/api/projects/${segment(projectKey)}/statuses`, {

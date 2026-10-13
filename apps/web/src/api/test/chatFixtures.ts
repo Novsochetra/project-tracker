@@ -21,6 +21,7 @@ export const makeMessage = (overrides: Partial<ChatMessage> = {}): ChatMessage =
   cardTickets: [],
   runId: null,
   stepCount: 0,
+  usage: null,
   createdAt: Date.now() - 60_000,
   ...overrides,
 });

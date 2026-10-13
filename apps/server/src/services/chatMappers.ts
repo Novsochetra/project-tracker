@@ -9,6 +9,7 @@ import {
 } from '@tracker/shared';
 import type { CardTicketRow } from '../repositories/chatCardTickets';
 import type { ChatWithKey, MessageWithSteps } from '../repositories/chats';
+import { usageOfRow } from './runUsage';
 
 // A chat's ticket is one of its own project's, so the project's key makes the ticket's.
 const chatTicket = (row: ChatWithKey): ChatTicket | null =>
@@ -54,6 +55,7 @@ export const toMessage = (row: MessageWithSteps, cards: readonly CardTicketRow[]
   cardTickets: cards.filter((card) => card.messageId === row.id).map(toCardTicket),
   runId: row.runId,
   stepCount: shownStepCount(row),
+  usage: usageOfRow(row),
   createdAt: row.createdAt,
 });
 

@@ -25,6 +25,7 @@ const message = (
     cardTickets,
     runId: null,
     stepCount: 0,
+    usage: null,
     createdAt: next,
   };
 };

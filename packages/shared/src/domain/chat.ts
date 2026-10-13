@@ -1,5 +1,6 @@
 import type { AskOptions } from './askOptions';
 import type { Run } from './run';
+import type { RunUsage } from './runUsage';
 
 export const CHAT_ROLES = ['person', 'claude'] as const;
 export type ChatRole = (typeof CHAT_ROLES)[number];
@@ -46,6 +47,8 @@ export interface ChatMessage {
   // The steps its open list shows, so an older answer can say "23 steps" before they are read:
   // the run's, less Claude's last words when they are the answer itself. 0 on the person's.
   stepCount: number;
+  // What the answer's run took; null on the person's and on answers from older helpers.
+  usage: RunUsage | null;
   createdAt: number;
 }
 

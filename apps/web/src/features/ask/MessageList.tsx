@@ -1,5 +1,6 @@
 import type { ChatMessage, Run, Runner } from '@tracker/shared';
 import { useMemo, type ReactNode } from 'react';
+import { UsageLine } from '../claude/UsageLine';
 import { AnswerSteps } from './AnswerSteps';
 import { CardThread } from './CardThread';
 import { messageCards, type MessageCards } from './cards';
@@ -38,6 +39,7 @@ function ClaudeMessage({ chatId, message, cards, helper }: ClaudeMessageProps) {
       ) : (
         <Markdown className={styles.text} text={message.text} />
       )}
+      <UsageLine usage={message.usage} />
     </article>
   );
 }

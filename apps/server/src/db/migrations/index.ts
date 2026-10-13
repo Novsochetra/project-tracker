@@ -16,6 +16,7 @@ import * as chatTicket from './0014_chat_ticket';
 import * as questions from './0015_questions';
 import * as pushSubscriptions from './0016_push_subscriptions';
 import * as projectInstructions from './0017_project_instructions';
+import * as runUsage from './0018_run_usage';
 import * as autoReview from './0019_auto_review';
 import * as runnerTools from './0020_runner_tools';
 import * as cardTickets from './0021_card_tickets';
@@ -40,6 +41,7 @@ export const MIGRATIONS: Record<string, Migration> = {
   '0015_questions': questions,
   '0016_push_subscriptions': pushSubscriptions,
   '0017_project_instructions': projectInstructions,
+  '0018_run_usage': runUsage,
   '0019_auto_review': autoReview,
   '0020_runner_tools': runnerTools,
   '0021_card_tickets': cardTickets,

@@ -1,6 +1,7 @@
 import { ApiError } from '@tracker/client';
 import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import type { ProjectUsage } from '@tracker/shared';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { currentPath, projectSummary, renderWithApp } from '../../app/test/harness';
 import { readMenuConfirm } from '../../components/Popover/testing';
@@ -17,13 +18,25 @@ afterEach(() => {
   restore.forEach((undo) => undo());
 });
 
+const NO_RUNS: ProjectUsage = {
+  days: 30,
+  runs: 0,
+  costMicros: null,
+  turns: null,
+  durationMs: null,
+};
+const USED = { days: 30, runs: 12, costMicros: 18_400_000, turns: 420, durationMs: 7_800_000 };
+const USAGE_TEXT = 'Claude Code, last 30 days: 12 runs · 2 h 10 min · 420 turns · about $18.40';
+
 function renderOptions(
   placement: 'header' | 'navbar',
   deleteProject = vi.fn(() => Promise.resolve()),
+  usage = NO_RUNS,
 ) {
+  const getProjectUsage = vi.fn(() => Promise.resolve(usage));
   const view = renderWithApp(<ProjectOptionsButton projectKey="MOB" placement={placement} />, {
     path: '/p/MOB',
-    client: { deleteProject },
+    client: { deleteProject, getProjectUsage },
     projects: [projectSummary({ totalCount: 4 })],
   });
   return { ...view, deleteProject };
@@ -47,6 +60,15 @@ describe('Project options in the desktop header', () => {
       'Delete project',
     ]);
     expect(within(menu).getByRole('button', { name: 'Delete project' })).toHaveClass('danger');
+  });
+
+  it("says under the actions what Claude Code's runs took in the last 30 days", async () => {
+    const user = userEvent.setup();
+    const { client } = renderOptions('header', undefined, USED);
+    expect(client.getProjectUsage).not.toHaveBeenCalled();
+    await user.click(screen.getByRole('button', { name: 'Project options' }));
+    const menu = screen.getByRole('group', { name: 'Project options' });
+    await waitFor(() => expect(menu).toHaveTextContent(USAGE_TEXT));
   });
 
   it.each([
@@ -132,6 +154,16 @@ describe('Project options in the phone nav bar', () => {
       'Delete project',
       'Cancel',
     ]);
+  });
+
+  it("says under the name what Claude Code's runs took in the last 30 days", async () => {
+    const user = userEvent.setup();
+    const { client } = renderOptions('navbar', undefined, USED);
+    expect(client.getProjectUsage).not.toHaveBeenCalled();
+    await user.click(screen.getByRole('button', { name: 'Project options' }));
+    await waitFor(() => expect(client.getProjectUsage).toHaveBeenCalledWith('MOB'));
+    const sheet = screen.getByRole('dialog', { name: 'Project options' });
+    await waitFor(() => expect(sheet).toHaveTextContent(USAGE_TEXT));
   });
 
   it('closes the action sheet before opening the edit sheet', async () => {

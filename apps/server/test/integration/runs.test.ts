@@ -61,6 +61,7 @@ describe.each(DIALECTS)('Claude Code runs (%s)', (dialect) => {
       startedAt: null,
       endedAt: null,
       stepCount: 0,
+      usage: null,
       chainStop: null,
     });
 

@@ -18,6 +18,7 @@ export interface ClaudeSetup {
   command: string;
   cwd: string;
   permissionMode?: string | undefined;
+  maxTurns?: string | undefined;
   write: (text: string) => void;
   readSteps?: ((folder: string) => StepReader) | undefined;
   prompts?: PromptTool | undefined;
@@ -40,6 +41,8 @@ function stepsOf(read: StepReader, onSteps: OnSteps) {
 // question always gets the read-only flags.
 export function claudeRunners(setup: ClaudeSetup) {
   const { command, cwd, permissionMode, write, readSteps = createStepReader, prompts } = setup;
+  // Every run, questions too: a cap on what any one run can take.
+  const limit = setup.maxTurns ? ['--max-turns', setup.maxTurns] : [];
   // A reader a run: it remembers that run's open tool calls.
   const onEvent = (onSteps: OnSteps) => stepsOf(readSteps(cwd), onSteps);
   // Only runs of the ticket lane, the ones that may change the folder, may ask the person: ticket
@@ -56,7 +59,7 @@ export function claudeRunners(setup: ClaudeSetup) {
     runClaude: (job: RunJob, stop: AbortSignal, onSteps: OnSteps) =>
       asking(job.run, (laneArgs) =>
         runClaude(
-          { command, cwd, args: [...claudeArgs(permissionMode), ...laneArgs] },
+          { command, cwd, args: [...claudeArgs(permissionMode), ...limit, ...laneArgs] },
           job.prompt,
           stop,
           { onOutput: write, onEvent: onEvent(onSteps) },
@@ -66,7 +69,7 @@ export function claudeRunners(setup: ClaudeSetup) {
     runAsk: (job: RunJob, stop: AbortSignal, onSteps: OnSteps) =>
       asking(job.run, (laneArgs) =>
         runClaude(
-          { command, cwd, args: [...askArgs(job, permissionMode), ...laneArgs] },
+          { command, cwd, args: [...askArgs(job, permissionMode), ...limit, ...laneArgs] },
           job.prompt,
           stop,
           { onOutput: () => undefined, onEvent: onEvent(onSteps) },

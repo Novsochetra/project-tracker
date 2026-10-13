@@ -1,7 +1,9 @@
 import { CircleDot, Ellipsis, PenLine, Plug, Trash2 } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { IconButton, MenuConfirm, MenuItem, Popover } from '../../components';
+import styles from './ProjectOptionsMenu.module.css';
 import { deleteMenuMessage } from './projectOptions';
+import { ProjectUsageNote } from './ProjectUsageNote';
 import { useProjectOptions } from './useProjectOptions';
 
 export function ProjectOptionsMenu({ projectKey }: { projectKey: string }) {
@@ -60,6 +62,7 @@ export function ProjectOptionsMenu({ projectKey }: { projectKey: string }) {
           <MenuItem icon={Trash2} tone="danger" onClick={() => setConfirming(true)}>
             Delete project
           </MenuItem>
+          <ProjectUsageNote projectKey={projectKey} className={styles.usage} />
         </>
       )}
     </Popover>
