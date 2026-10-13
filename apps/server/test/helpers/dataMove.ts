@@ -73,6 +73,13 @@ async function laterColumns(db: Db, migration: string) {
   if (migration >= '0003') {
     await sql`update attachments set position = 2 where id = 'f-photo'`.execute(raw);
   }
+  if (migration >= '0024') {
+    await sql`insert into labels (id, project_id, name, color, template, instructions, position,
+      created_at) values ('l-bug', 'p1', 'Bug', '#B42318', '## Steps', 'Reproduce it first.', 0,
+      1000)`.execute(raw);
+    await sql`insert into ticket_labels (id, ticket_id, label_id, created_at)
+      values ('tl1', 't1', 'l-bug', 1100)`.execute(raw);
+  }
 }
 
 // A local tracker as it is on disk: a SQLite file at `migration` (the user's runs on

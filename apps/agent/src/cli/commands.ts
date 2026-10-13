@@ -35,6 +35,12 @@ export interface Command {
 const toNumber = (value: string | undefined): number | undefined =>
   value === undefined ? undefined : Number(value);
 
+function withLabels({ label, ...options }: CommandValues): Record<string, unknown> {
+  if (label === undefined) return options;
+  const labels = label.split(',').map((name) => name.trim());
+  return { ...options, labels: labels.filter((name) => name !== '') };
+}
+
 export const COMMANDS: readonly Command[] = [
   {
     name: 'projects',
@@ -54,10 +60,10 @@ export const COMMANDS: readonly Command[] = [
   },
   {
     name: 'tickets',
-    usage: 'tickets <PROJECT> [--status NAME] [--category CAT] [--query Q]',
+    usage: 'tickets <PROJECT> [--status NAME] [--category CAT] [--label NAME] [--query Q]',
     summary: "List a project's tickets, optionally filtered.",
     args: ['PROJECT'],
-    options: ['status', 'category', 'query'],
+    options: ['status', 'category', 'label', 'query'],
     plan: ([project], options) => ({ tool: listTickets, input: { project, ...options } }),
   },
   {
@@ -71,21 +77,27 @@ export const COMMANDS: readonly Command[] = [
   {
     name: 'create',
     usage:
-      'create <PROJECT> --title T [--description D] [--priority high|medium|low] [--status NAME]',
+      'create <PROJECT> --title T [--description D] [--priority high|medium|low] [--status NAME] [--label "A, B"]',
     summary: 'Create a ticket.',
     args: ['PROJECT'],
-    options: ['title', 'description', 'priority', 'status'],
+    options: ['title', 'description', 'priority', 'status', 'label'],
     required: ['title'],
-    plan: ([project], options) => ({ tool: createTicket, input: { project, ...options } }),
+    plan: ([project], options) => ({
+      tool: createTicket,
+      input: { project, ...withLabels(options) },
+    }),
   },
   {
     name: 'update',
     usage:
-      'update <KEY> [--title T] [--description D] [--priority P] [--assignee NAME] [--due YYYY-MM-DD]',
-    summary: 'Edit ticket fields. An empty --assignee or --due clears it.',
+      'update <KEY> [--title T] [--description D] [--priority P] [--assignee NAME] [--due YYYY-MM-DD] [--label "A, B"]',
+    summary: 'Edit ticket fields. An empty --assignee, --due or --label clears it.',
     args: ['KEY'],
-    options: ['title', 'description', 'priority', 'assignee', 'due'],
-    plan: ([ticket], options) => ({ tool: updateTicket, input: { ticket, ...options } }),
+    options: ['title', 'description', 'priority', 'assignee', 'due', 'label'],
+    plan: ([ticket], options) => ({
+      tool: updateTicket,
+      input: { ticket, ...withLabels(options) },
+    }),
   },
   {
     name: 'move',

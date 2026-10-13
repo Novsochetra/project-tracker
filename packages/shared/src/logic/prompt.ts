@@ -1,7 +1,12 @@
 import { VERDICT_LABELS, type ReviewVerdict } from '../domain/activity';
 import { PRIORITY_LABELS, type Priority } from '../domain/priority';
 import { formatShortDay } from './format';
-import { instructionsBlock, type PromptInstructions } from './instructions';
+import {
+  distinctLabels,
+  instructionsBlock,
+  type PromptInstructions,
+  type PromptLabel,
+} from './instructions';
 
 export interface PromptProject extends PromptInstructions {
   name: string;
@@ -26,6 +31,7 @@ export interface PromptTicket {
   notes: readonly string[];
   lastReport: string | null;
   lastReview: PromptReview | null;
+  labels?: readonly PromptLabel[];
 }
 
 function replyFormat(key: string): string {
@@ -45,6 +51,8 @@ function metaLine(ticket: PromptTicket, now: Date): string {
   const meta = [`Priority: ${PRIORITY_LABELS[ticket.priority]}`, `Status: ${ticket.statusName}`];
   if (ticket.due) meta.push(`Due: ${formatShortDay(ticket.due, now)}`);
   if (ticket.assignee) meta.push(`Assignee: ${ticket.assignee}`);
+  if (ticket.labels?.length)
+    meta.push(`Labels: ${ticket.labels.map((label) => label.name).join(', ')}`);
   return meta.join(' · ');
 }
 
@@ -74,8 +82,8 @@ export function repoLine(project: PromptProject): string[] {
   return project.repo ? [`Repository / folder: ${project.repo}`] : [];
 }
 
-const instructionLines = (project: PromptProject): string[] => {
-  const block = instructionsBlock(project, '##');
+const instructionLines = (project: PromptProject, labels?: readonly PromptLabel[]): string[] => {
+  const block = instructionsBlock(project, '##', labels);
   return block.length > 0 ? ['', ...block] : [];
 };
 
@@ -87,7 +95,7 @@ export function buildTicketPrompt(
   return [
     `Please work on ticket ${ticket.key} from my "${project.name}" project.`,
     ...repoLine(project),
-    ...instructionLines(project),
+    ...instructionLines(project, ticket.labels),
     '',
     ticketBlock(ticket, '##', now),
     '',
@@ -108,7 +116,7 @@ export function buildProjectPrompt(
   const lines = [
     `Here are the open tickets for my "${project.name}" project. Work through them in order, highest priority first, and check with me before large or risky changes.`,
     ...repoLine(project),
-    ...instructionLines(project),
+    ...instructionLines(project, distinctLabels(tickets)),
   ];
   for (const ticket of tickets) lines.push('', '---', '', ticketBlock(ticket, '###', now));
   lines.push(

@@ -189,7 +189,9 @@ describe('NewTicketSheet', () => {
       'MOB',
       expect.objectContaining({ statusId: STATUS.todo }),
     );
-    await waitFor(() => expect(getListView('MOB')).toEqual({ filter: 'all', query: '' }));
+    await waitFor(() =>
+      expect(getListView('MOB')).toEqual({ filter: 'all', query: '', label: null }),
+    );
   });
 
   it('clears an active search so the new ticket shows', async () => {
@@ -197,7 +199,9 @@ describe('NewTicketSheet', () => {
     setListQuery('MOB', 'login');
     const { user } = renderSheet();
     await user.type(titleField(), 'New idea{Enter}');
-    await waitFor(() => expect(getListView('MOB')).toEqual({ filter: 'all', query: '' }));
+    await waitFor(() =>
+      expect(getListView('MOB')).toEqual({ filter: 'all', query: '', label: null }),
+    );
   });
 
   it("keeps the tab of the new ticket's status", async () => {

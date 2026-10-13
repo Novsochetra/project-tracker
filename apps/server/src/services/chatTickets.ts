@@ -34,6 +34,7 @@ export async function createCardTicket(
     assignee: '',
     due: '',
     attachmentIds: [],
+    labelIds: [],
     clientId: message.id,
   });
   await setMessageTicket(ctx.db, message.id, ticket.id);

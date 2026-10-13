@@ -149,6 +149,22 @@ describe('prepareCommand', () => {
     });
   });
 
+  it('--label names labels, comma-separated, and an empty one clears them on update', () => {
+    expect(prepare('create', 'MOB', '--title', 'Crash', '--label', 'Bug, UI').input).toEqual({
+      project: 'MOB',
+      title: 'Crash',
+      labels: ['Bug', 'UI'],
+    });
+    expect(prepare('update', 'MOB-3', '--label', '').input).toEqual({
+      ticket: 'MOB-3',
+      labels: [],
+    });
+    expect(prepare('tickets', 'MOB', '--label', 'bug').input).toEqual({
+      project: 'MOB',
+      label: 'bug',
+    });
+  });
+
   it('move <KEY> <STATUS NAME…> joins the words of the status', () => {
     expect(prepare('move', 'MOB-3', 'Need', 'review')).toEqual({
       tool: moveTicket,
@@ -243,5 +259,5 @@ describe('usage errors', () => {
 });
 
 function createUsage(): string {
-  return 'create <PROJECT> --title T [--description D] [--priority high|medium|low] [--status NAME]';
+  return 'create <PROJECT> --title T [--description D] [--priority high|medium|low] [--status NAME] [--label "A, B"]';
 }

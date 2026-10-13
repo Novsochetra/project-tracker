@@ -13,6 +13,7 @@ export type SheetRequest =
   | { type: 'prompt'; scope: PromptScope }
   | { type: 'report'; scope: ReportScope }
   | { type: 'statuses'; projectKey: string }
+  | { type: 'labels'; projectKey: string }
   | { type: 'runSteps'; runId: string; ticketKey: string }
   | { type: 'connect' }
   | { type: 'account' };

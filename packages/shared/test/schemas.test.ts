@@ -18,6 +18,7 @@ describe('createTicketInput', () => {
       assignee: '',
       due: '',
       attachmentIds: [],
+      labelIds: [],
     });
   });
 

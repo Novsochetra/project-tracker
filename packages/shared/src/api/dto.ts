@@ -1,5 +1,6 @@
 import type { Activity } from '../domain/activity';
 import type { Attachment } from '../domain/attachment';
+import type { Label } from '../domain/label';
 import type { Project } from '../domain/project';
 import type { RunRole } from '../domain/run';
 import type { Status } from '../domain/status';
@@ -9,6 +10,8 @@ import type { UserRole } from '../domain/invite';
 export interface ProjectDetail {
   project: Project;
   statuses: Status[];
+  // Optional, like Ticket.labelIds: trackers from before PT-190 don't send them.
+  labels?: Label[];
 }
 
 export interface ProjectBoard extends ProjectDetail {
@@ -19,6 +22,7 @@ export interface ProjectBoard extends ProjectDetail {
 export interface TicketsAcrossProjects {
   tickets: TicketListItem[];
   statuses: Status[];
+  labels?: Label[];
 }
 
 export interface TicketDetail {
@@ -26,6 +30,8 @@ export interface TicketDetail {
   project: Project;
   status: Status;
   statuses: Status[];
+  // The project's labels; the ticket's own are ticket.labelIds.
+  labels?: Label[];
   activity: Activity[];
   attachments: Attachment[];
 }

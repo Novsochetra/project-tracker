@@ -22,6 +22,8 @@ export interface Ticket {
   due: string;
   createdAt: number;
   updatedAt: number;
+  // Optional: trackers from before PT-190 don't send it, and agents can be newer than their tracker.
+  labelIds?: string[];
 }
 
 export interface TicketListItem extends Ticket {

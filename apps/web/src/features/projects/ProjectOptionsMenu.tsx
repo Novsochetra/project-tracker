@@ -1,4 +1,4 @@
-import { CircleDot, Ellipsis, PenLine, Plug, Trash2 } from 'lucide-react';
+import { CircleDot, Ellipsis, PenLine, Plug, Tag, Trash2 } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { IconButton, MenuConfirm, MenuItem, Popover } from '../../components';
 import { deleteMenuMessage } from './projectOptions';
@@ -53,6 +53,9 @@ export function ProjectOptionsMenu({ projectKey }: { projectKey: string }) {
           </MenuItem>
           <MenuItem icon={CircleDot} onClick={() => run(options.manageStatuses)}>
             Manage statuses
+          </MenuItem>
+          <MenuItem icon={Tag} onClick={() => run(options.manageLabels)}>
+            Manage labels
           </MenuItem>
           <MenuItem icon={Plug} onClick={() => run(options.connect)}>
             Connect Claude Code

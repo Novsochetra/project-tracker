@@ -120,3 +120,60 @@ describe('project instructions in the API schemas', () => {
     expect(updateProjectInput.safeParse({ instructions: text }).success).toBe(false);
   });
 });
+
+describe('label instructions', () => {
+  const bugLabel = { name: 'Bug', instructions: ' Write a failing test first.\n' };
+  const plainLabel = { name: 'Small', instructions: '  ' };
+  const labelled: PromptTicket = { ...ticket, labels: [bugLabel, plainLabel] };
+
+  it('follow the project instructions, one block per label that has some', () => {
+    expect(instructionsBlock(instructed, '##', [bugLabel, plainLabel])).toEqual([
+      '## Project instructions',
+      INSTRUCTIONS,
+      '',
+      '## Instructions for "Bug" tickets',
+      'Write a failing test first.',
+    ]);
+    expect(instructionsBlock(project, '##', [bugLabel])).toEqual([
+      '## Instructions for "Bug" tickets',
+      'Write a failing test first.',
+    ]);
+  });
+
+  it('go into the ticket prompt before the ticket, which names its labels', () => {
+    const lines = buildTicketPrompt(instructed, labelled, NOW).split('\n');
+    const at = (text: string) => lines.indexOf(text);
+    expect(at('## Project instructions')).toBeLessThan(at('## Instructions for "Bug" tickets'));
+    expect(at('## Instructions for "Bug" tickets')).toBeLessThan(
+      at('## BLOG-2: Post about spring bulbs'),
+    );
+    expect(lines).toContain('Priority: Medium · Status: To do · Labels: Bug, Small');
+    expect(lines.join('\n')).not.toContain('"Small" tickets');
+  });
+
+  it('go into a project prompt once, whichever tickets share them', () => {
+    const prompt = buildProjectPrompt(
+      project,
+      [labelled, { ...ticket, key: 'BLOG-3', labels: [bugLabel] }],
+      NOW,
+    );
+    expect(prompt.split('## Instructions for "Bug" tickets')).toHaveLength(2);
+  });
+
+  it('go into a question about a labelled ticket', () => {
+    const prompt = buildAskPrompt({
+      project: { key: 'BLOG', name: 'Garden blog' },
+      mode: 'ask',
+      question: 'Why?',
+      history: [],
+      ticket: labelled,
+    });
+    expect(prompt).toContain('## Instructions for "Bug" tickets\nWrite a failing test first.');
+  });
+
+  it('leave a ticket without labels as it was', () => {
+    expect(buildTicketPrompt(project, { ...ticket, labels: [] }, NOW)).toBe(
+      buildTicketPrompt(project, ticket, NOW),
+    );
+  });
+});

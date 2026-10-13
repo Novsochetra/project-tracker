@@ -9,6 +9,7 @@ export interface DetailFields {
   setStatus: (statusId: string) => void;
   setPriority: (priority: Priority) => void;
   setDue: (due: string) => void;
+  setLabels: (labelIds: string[]) => void;
 }
 
 // Status, Priority, Assignee and Due date, for the desktop Details card and the phone chips.
@@ -30,5 +31,6 @@ export function useDetailFields(detail: TicketDetail): DetailFields {
     setDue: (due) => {
       if (due !== ticket.due) void update({ due });
     },
+    setLabels: (labelIds) => void update({ labelIds }),
   };
 }

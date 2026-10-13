@@ -29,7 +29,7 @@ export function useCreateTicketFlow({
       { projectKey, input },
       {
         onSuccess: (ticket) => {
-          if (hidesNewTicket(getListView(projectKey), statuses, ticket.statusId)) {
+          if (hidesNewTicket(getListView(projectKey), statuses, ticket)) {
             resetListView(projectKey);
           }
           flashRows([ticket.key]);

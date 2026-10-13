@@ -1,6 +1,8 @@
 import {
   attachmentKind,
   instructionsBlock,
+  labelNames,
+  labelsOf,
   PRIORITY_LABELS,
   type TicketDetail,
 } from '@tracker/shared';
@@ -14,13 +16,19 @@ import {
 } from './attachments';
 import { SEP } from './text';
 
-function fieldsLine({ ticket, status }: TicketDetail): string {
-  return [
+const ticketLabels = ({ ticket, labels }: TicketDetail) => labelsOf(labels ?? [], ticket.labelIds);
+
+function fieldsLine(detail: TicketDetail): string {
+  const { ticket, status } = detail;
+  const fields = [
     `Status: ${status.name} (${status.category})`,
     `Priority: ${PRIORITY_LABELS[ticket.priority]}`,
     `Assignee: ${ticket.assignee || 'Unassigned'}`,
     `Due: ${ticket.due || 'None'}`,
-  ].join(SEP);
+  ];
+  const names = labelNames(ticketLabels(detail));
+  if (names) fields.push(`Labels: ${names}`);
+  return fields.join(SEP);
 }
 
 function projectLine({ project }: TicketDetail): string {
@@ -40,7 +48,7 @@ export function formatTicket(detail: TicketDetail, view: FileView = NO_FILE_CONT
   const files = detail.attachments.filter((file) => file.activityId === null);
   const sections = [
     [`# ${ticket.key}: ${ticket.title || 'Untitled'}`, fieldsLine(detail), projectLine(detail)],
-    instructionsBlock(detail.project, '##'),
+    instructionsBlock(detail.project, '##', ticketLabels(detail)),
     ['## Description', ticket.description.trim() || '(No description.)'],
   ].filter((lines) => lines.length > 0);
   if (files.length > 0) sections.push(['## Attachments', ...formatAttachments(files, view)]);

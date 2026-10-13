@@ -9,7 +9,15 @@ const LABELS: Record<CopiedTableName, readonly [string, string]> = {
   tickets: ['ticket', 'tickets'],
   activities: ['activity entry', 'activity entries'],
   attachments: ['attachment', 'attachments'],
+  labels: ['label', 'labels'],
+  ticketLabels: ['ticket label', 'ticket labels'],
 };
+
+// The table's own name, as the database and the list of tables not copied spell it.
+const tableName = (name: CopiedTableName): string =>
+  name.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`);
+
+const NAME_WIDTH = Math.max(...COPIED_TABLE_NAMES.map((name) => tableName(name).length));
 
 const counted = (count: number, [one, many]: readonly [string, string]): string =>
   `${count} ${count === 1 ? one : many}`;
@@ -30,10 +38,10 @@ export function planLines(counts: TableCounts, files: FileTotals): string[] {
   const numbers = [...COPIED_TABLE_NAMES.map((name) => counts[name]), files.count].map(String);
   const width = Math.max(...numbers.map((number) => number.length));
   const row = (name: string, count: number) =>
-    `  ${name.padEnd('attachments'.length)}  ${String(count).padStart(width)}`;
+    `  ${name.padEnd(NAME_WIDTH)}  ${String(count).padStart(width)}`;
   return [
     'To copy:',
-    ...COPIED_TABLE_NAMES.map((name) => row(name, counts[name])),
+    ...COPIED_TABLE_NAMES.map((name) => row(tableName(name), counts[name])),
     `${row('files', files.count)} (${formatBytes(files.bytes)})`,
     `Not copied: ${Object.keys(SKIPPED_TABLES).join(', ')} (sign-in, helpers, chats and ` +
       'notifications stay with each tracker: set the online owner with owner-set, make new API ' +

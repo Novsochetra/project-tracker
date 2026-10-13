@@ -28,3 +28,7 @@ export const personDeletesChats = refuseAgents('Only a person deletes a chat.');
 
 // Notifications are for a person's own phone; an agent's token has no device to send them to.
 export const personPushes = refuseAgents('Only a person turns on notifications.');
+
+// A label's instructions go into the prompts of its tickets, so an agent could rewrite what later
+// runs are told. Agents still put labels on tickets.
+export const personEditsLabels = refuseAgents('Only a person changes labels.');

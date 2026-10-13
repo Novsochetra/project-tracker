@@ -8,9 +8,12 @@ import {
 } from '@tracker/shared';
 import clsx from 'clsx';
 import { Calendar } from 'lucide-react';
+import type { ReactNode } from 'react';
 import { Avatar, Icon, PriorityBars, StatusGlyph, VerdictChip } from '../../components';
 import { useStillWaiting } from '../requests/useStillWaiting';
 import { WaitingMark } from '../requests/WaitingMark';
+import { LabelChips, LabelDots } from '../labels/LabelChips';
+import { useTicketLabels } from '../labels/projectLabels';
 import { DragHandle } from './DragHandle';
 import type { RowCallbacks } from './rowTypes';
 import styles from './TicketRow.module.css';
@@ -27,18 +30,22 @@ export interface DueLabelProps {
   due: string;
   overdue: boolean;
   className?: string | undefined;
+  // What shares the date's place, if there is room after it: a phone row's label dots.
+  children?: ReactNode;
 }
 
-export function DueLabel({ due, overdue, className }: DueLabelProps) {
-  const label = formatShortDay(due);
+export function DueLabel({ due, overdue, className, children }: DueLabelProps) {
+  const label = due ? formatShortDay(due) : '';
   return (
     <span
       className={clsx(styles.due, className)}
       data-overdue={overdue || undefined}
       data-year={/\d{4}/.test(label) || undefined}
+      data-no-date={due ? undefined : ''}
     >
-      <Icon icon={Calendar} size={14} />
+      {due && <Icon icon={Calendar} size={14} />}
       {label}
+      {children}
     </span>
   );
 }
@@ -47,6 +54,7 @@ export function TicketRowContent({ ticket, status, dragged, callbacks }: TicketR
   const isDone = isDoneCategory(status.category);
   const opening = useIsOpeningTicket(ticket);
   const waiting = useStillWaiting(ticket.waitingUntil);
+  const labels = useTicketLabels(ticket);
   return (
     <div className={styles.inner}>
       <DragHandle
@@ -73,7 +81,12 @@ export function TicketRowContent({ ticket, status, dragged, callbacks }: TicketR
         {isSentBack(ticket.lastReview, status.category) && (
           <VerdictChip verdict="changes_requested" compact className={styles.sentBack} />
         )}{' '}
-        {ticket.due && <DueLabel due={ticket.due} overdue={isOverdue(ticket.due, isDone)} />}{' '}
+        <LabelChips labels={labels} className={styles.labels} />{' '}
+        {(ticket.due || labels.length > 0) && (
+          <DueLabel due={ticket.due} overdue={isOverdue(ticket.due, isDone)}>
+            <LabelDots labels={labels} className={styles.dots} />
+          </DueLabel>
+        )}{' '}
         <Avatar name={ticket.assignee} className={styles.assignee} />
       </button>
     </div>

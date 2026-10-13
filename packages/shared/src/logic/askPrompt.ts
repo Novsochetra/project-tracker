@@ -67,7 +67,7 @@ export function buildAskPrompt({
   ticket,
 }: AskPromptInput): string {
   const parts = [rules(project, mode)];
-  const instructions = instructionsBlock(project, '##');
+  const instructions = instructionsBlock(project, '##', ticket?.labels);
   if (instructions.length > 0) parts.push(instructions.join('\n'));
   if (ticket) parts.push(`This chat is about this ticket:\n\n${ticketBlock(ticket, '##')}`);
   if (history.length > 0) parts.push(`Earlier in this chat:\n\n${transcript(history)}`);

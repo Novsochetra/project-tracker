@@ -16,6 +16,7 @@ export const COMMAND_OPTIONS = {
   status: { type: 'string' },
   category: { type: 'string' },
   query: { type: 'string' },
+  label: { type: 'string' },
   assignee: { type: 'string' },
   due: { type: 'string' },
   summary: { type: 'string' },

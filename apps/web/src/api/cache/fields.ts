@@ -1,6 +1,14 @@
 import type { Ticket, UpdateTicketInput } from '@tracker/shared';
 
-const TICKET_FIELDS = ['title', 'description', 'statusId', 'priority', 'assignee', 'due'] as const;
+const TICKET_FIELDS = [
+  'title',
+  'description',
+  'statusId',
+  'priority',
+  'assignee',
+  'due',
+  'labelIds',
+] as const;
 
 export function ticketFields(input: UpdateTicketInput): Partial<Ticket> {
   const fields: Partial<Ticket> = {};

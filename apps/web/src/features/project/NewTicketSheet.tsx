@@ -1,4 +1,4 @@
-import type { Project, Status } from '@tracker/shared';
+import type { Label, Project, Status } from '@tracker/shared';
 import { useRef, useState } from 'react';
 import { useBoard } from '../../api';
 import type { SheetProps } from '../../app/sheets/types';
@@ -7,6 +7,7 @@ import { AttachmentPicker, DropOverlay, useFileDrop } from '../attachments';
 import { forgetKeptForm, keptForm, useKeepForm } from './keptForm';
 import { pickedStatus, useListView } from './listViewStore';
 import { NewTicketFields } from './NewTicketFields';
+import { withoutGoneLabels } from './newTicketLabels';
 import styles from './NewTicketSheet.module.css';
 import {
   chosenStatusId,
@@ -26,6 +27,7 @@ export interface NewTicketSheetProps extends SheetProps {
 }
 
 const NO_STATUSES: readonly Status[] = [];
+const NO_LABELS: readonly Label[] = [];
 
 function ProjectSubtitle({ project }: { project: Project }) {
   return (
@@ -45,7 +47,9 @@ export function NewTicketSheet({ open, onClose, projectKey, statusId }: NewTicke
   const titleRef = useRef<HTMLTextAreaElement>(null);
   const [form, setForm] = useState(() => keptForm(projectKey));
   const [error, setError] = useState('');
-  const known = board ? withoutGoneStatus(form, board.statuses) : form;
+  const known = board
+    ? withoutGoneLabels(withoutGoneStatus(form, board.statuses), board.labels ?? [])
+    : form;
   if (known !== form) setForm(known);
   const files = useNewTicketFiles(setForm, projectKey, open, form.attachments.length);
   const drop = useFileDrop(files.add);
@@ -96,6 +100,7 @@ export function NewTicketSheet({ open, onClose, projectKey, statusId }: NewTicke
         <NewTicketFields
           form={form}
           statuses={statuses}
+          labels={board?.labels ?? NO_LABELS}
           statusId={status}
           error={error}
           titleRef={titleRef}

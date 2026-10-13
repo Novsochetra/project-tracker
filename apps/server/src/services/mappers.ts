@@ -2,6 +2,7 @@ import {
   formatTicketKey,
   type Activity,
   type Attachment,
+  type Label,
   type Project,
   type Review,
   type ReviewVerdict,
@@ -9,6 +10,7 @@ import {
   type Ticket,
   type TicketListItem,
 } from '@tracker/shared';
+import type { LabelRow } from '../db/labelTables';
 import type { ActivityRow, AttachmentRow, ProjectRow, StatusRow, TicketRow } from '../db/schema';
 import type { TicketItemRow } from '../repositories/tickets';
 
@@ -37,7 +39,18 @@ export const toStatus = (row: StatusRow): Status => ({
   createdAt: row.createdAt,
 });
 
-export const toTicket = (row: TicketRow, projectKey: string): Ticket => ({
+export const toLabel = (row: LabelRow): Label => ({
+  id: row.id,
+  projectId: row.projectId,
+  name: row.name,
+  color: row.color,
+  template: row.template,
+  instructions: row.instructions,
+  position: row.position,
+  createdAt: row.createdAt,
+});
+
+export const toTicket = (row: TicketRow, projectKey: string, labelIds: string[]): Ticket => ({
   id: row.id,
   projectId: row.projectId,
   num: row.num,
@@ -51,13 +64,18 @@ export const toTicket = (row: TicketRow, projectKey: string): Ticket => ({
   due: row.due,
   createdAt: row.createdAt,
   updatedAt: row.updatedAt,
+  labelIds,
 });
 
 const toReview = (verdict: ReviewVerdict | null, rating: number | null): Review | null =>
   verdict ? { verdict, rating: rating ?? 0 } : null;
 
-export const toTicketListItem = (row: TicketItemRow, projectKey: string): TicketListItem => ({
-  ...toTicket(row, projectKey),
+export const toTicketListItem = (
+  row: TicketItemRow,
+  projectKey: string,
+  labelIds: string[],
+): TicketListItem => ({
+  ...toTicket(row, projectKey, labelIds),
   commentCount: row.commentCount,
   attachmentCount: row.attachmentCount,
   lastReview: toReview(row.lastReviewVerdict, row.lastReviewRating),

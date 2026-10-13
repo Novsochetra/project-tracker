@@ -43,6 +43,7 @@ describe('Project options in the desktop header', () => {
     expect(items).toEqual([
       'Edit project',
       'Manage statuses',
+      'Manage labels',
       'Connect Claude Code',
       'Delete project',
     ]);
@@ -52,6 +53,7 @@ describe('Project options in the desktop header', () => {
   it.each([
     ['Edit project', { type: 'editProject', projectKey: 'MOB' }],
     ['Manage statuses', { type: 'statuses', projectKey: 'MOB' }],
+    ['Manage labels', { type: 'labels', projectKey: 'MOB' }],
     ['Connect Claude Code', { type: 'connect' }],
   ])('%s opens its sheet and hands focus back to the ••• button', async (item, request) => {
     const user = userEvent.setup();
@@ -128,6 +130,7 @@ describe('Project options in the phone nav bar', () => {
     expect(actions).toEqual([
       'Edit project',
       'Manage statuses',
+      'Manage labels',
       'Connect Claude Code',
       'Delete project',
       'Cancel',

@@ -125,6 +125,7 @@ describe.each(DIALECTS)('ticket lists (%s)', (dialect) => {
       expect(await client.listAllTickets({ q: 'nothing like it' })).toEqual({
         tickets: [],
         statuses: [],
+        labels: [],
       });
     });
   });

@@ -1,10 +1,11 @@
-import type { ProjectBoard } from '@tracker/shared';
+import type { Label, ProjectBoard } from '@tracker/shared';
 import { CircleAlert } from 'lucide-react';
 import { useEffect, useLayoutEffect } from 'react';
 import { errorMessage, isNotFound, useBoard } from '../../api';
 import { Button, EmptyState } from '../../components';
 import { PullToRefresh } from '../../gestures';
 import { useNavigation, useScreen } from '../../navigation';
+import { ProjectLabelsContext } from '../labels/projectLabels';
 import { TicketBoard } from './board/TicketBoard';
 import { FilterRow } from './FilterRow';
 import { resetListView } from './listViewStore';
@@ -13,6 +14,8 @@ import { ProjectLoadingBar } from './ProjectLoadingBar';
 import styles from './ProjectScreen.module.css';
 import { TicketList } from './TicketList';
 import { useViewMode } from './viewModeStore';
+
+const NO_LABELS: readonly Label[] = [];
 
 interface ProjectViewProps {
   board: ProjectBoard;
@@ -24,7 +27,7 @@ function ProjectView({ board, onRefresh }: ProjectViewProps) {
   const { project } = board;
   const viewMode = useViewMode(project.key);
   return (
-    <>
+    <ProjectLabelsContext value={board.labels ?? NO_LABELS}>
       <ProjectNavBar project={project} />
       <PullToRefresh onRefresh={onRefresh} scrollRef={scrollRef}>
         <div className={styles.page} data-view={viewMode}>
@@ -34,7 +37,7 @@ function ProjectView({ board, onRefresh }: ProjectViewProps) {
         </div>
       </PullToRefresh>
       <ProjectBottomBar projectKey={project.key} />
-    </>
+    </ProjectLabelsContext>
   );
 }
 
