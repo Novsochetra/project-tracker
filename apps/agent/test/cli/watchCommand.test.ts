@@ -67,13 +67,15 @@ describe('tracker watch', () => {
     );
   });
 
-  it('refuses --approvals with a mode that never asks, and for --check and --uninstall', async () => {
-    expect(await cli(['watch', '--approvals', '--permission-mode', 'bypassPermissions'])).toEqual({
-      code: EXIT_USAGE,
-      stderr: expect.stringContaining(
-        '--approvals asks on the phone, but --permission-mode bypassPermissions never asks. Use acceptEdits.',
-      ),
-    });
+  it('refuses --approvals with a mode that does not ask, and for --check and --uninstall', async () => {
+    for (const mode of ['auto', 'bypassPermissions']) {
+      expect(await cli(['watch', '--approvals', '--permission-mode', mode])).toEqual({
+        code: EXIT_USAGE,
+        stderr: expect.stringContaining(
+          `--approvals asks on the phone before each step, but --permission-mode ${mode} doesn't. Use acceptEdits.`,
+        ),
+      });
+    }
     expect((await cli(['watch', '--check', '--approvals'])).stderr).toContain(
       '--check takes no project or other options',
     );

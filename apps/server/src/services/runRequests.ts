@@ -19,6 +19,7 @@ import {
 import { findRunInScope } from '../repositories/runs';
 import type { ServiceContext } from './context';
 import { notifyRunRequest, toRunRequest } from './runRequestMappers';
+import { pushRunRequest } from './runRequestPush';
 import { settleRequests } from './runRequestSweep';
 import { requireRun } from './runs';
 
@@ -64,6 +65,7 @@ export async function addRunRequest(
   };
   await insertRunRequest(ctx.db, row);
   notifyRunRequest(ctx, scope, run, row);
+  pushRunRequest(ctx, scope, run, row);
   return toRunRequest(row);
 }
 

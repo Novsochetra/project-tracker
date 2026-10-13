@@ -14,10 +14,10 @@ describe('--approvals', () => {
     expect(runPermissionMode({ permissionMode: 'auto' })).toBe('auto');
   });
 
-  it('refuses a mode that never asks', () => {
-    for (const permissionMode of ['bypassPermissions', 'dontAsk']) {
+  it('refuses a mode that does not ask before each step', () => {
+    for (const permissionMode of ['auto', 'bypassPermissions', 'dontAsk']) {
       expect(approvalsProblem({ approvals: true, permissionMode })).toBe(
-        `--approvals asks on the phone, but --permission-mode ${permissionMode} never asks. Use acceptEdits.`,
+        `--approvals asks on the phone before each step, but --permission-mode ${permissionMode} doesn't. Use acceptEdits.`,
       );
       expect(approvalsProblem({ permissionMode })).toBeUndefined();
     }

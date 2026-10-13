@@ -18,6 +18,7 @@ import {
 import { inTransaction, type ServiceContext, type UserContext } from './context';
 import { requireTicket } from './lookups';
 import { notifyQuestion, toQuestion } from './questionMappers';
+import { pushQuestion } from './questionPush';
 import { settleQuestions } from './questionSweep';
 import { eventEntry, writeTicket } from './ticketWrites';
 
@@ -65,6 +66,7 @@ export async function askQuestion(
     return { ref, row };
   });
   notifyQuestion(ctx, ctx.scope, ref.project.id, ref.ticket.id);
+  pushQuestion(ctx, actor, ref, row);
   return toQuestion(row);
 }
 
