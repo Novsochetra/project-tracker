@@ -24,26 +24,19 @@ function useLeaveMissingProject(error: Error | null, projectKey: string): void {
   }, [missing, isTop, replace, projectKey]);
 }
 
-function ChatsBody({ projectKey, onNewChat }: { projectKey: string; onNewChat: () => void }) {
+function ChatsBody({ projectKey }: { projectKey: string }) {
   const chats = useChats(projectKey);
   useLeaveMissingProject(chats.error, projectKey);
   if (chats.data && chats.data.length > 0) {
-    return <ChatList chats={chats.data} projectKey={projectKey} />;
-  }
-  if (chats.data) {
     return (
-      <EmptyState
-        icon={MessageCircle}
-        title="No chats yet"
-        text={ASK_INTRO}
-        bordered
-        action={
-          <Button variant="primary" icon={SquarePen} onClick={onNewChat}>
-            {NEW_CHAT_LABEL}
-          </Button>
-        }
-      />
+      <div className={styles.content}>
+        <ChatList chats={chats.data} projectKey={projectKey} />
+      </div>
     );
+  }
+  // No New chat of its own: it is already in the header on desktop and the bottom bar on phones.
+  if (chats.data) {
+    return <EmptyState fill icon={MessageCircle} title="No chats yet" text={ASK_INTRO} />;
   }
   if (chats.error && !isNotFound(chats.error)) {
     return (
@@ -73,9 +66,7 @@ export function ChatsScreen({ projectKey }: { projectKey: string }) {
         right={<NavBarSpacer />}
       />
       <div className={styles.page}>
-        <div className={styles.content}>
-          <ChatsBody projectKey={projectKey} onNewChat={newChat} />
-        </div>
+        <ChatsBody projectKey={projectKey} />
       </div>
       <BottomBar>
         <Button variant="primary" size="bar" icon={SquarePen} fullWidth onClick={newChat}>

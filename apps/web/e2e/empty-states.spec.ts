@@ -2,9 +2,10 @@ import type { Locator, Page, TestInfo } from '@playwright/test';
 import { expect, isPhone, test, usesPhoneLayout } from './fixtures';
 import { seedProject, settled, settledScreenshot } from './helpers';
 
-// PT-215: an empty project sat near the top with a New ticket button that repeated the header's
-// (the nav bar's on phones). It now sits in the middle of the free area, between the bars, with no
-// button of its own.
+// PT-215 and PT-216: an empty project and an empty chat list sat near the top (the chats in a
+// card stuck to the left on desktop) with a button that repeated the header's (the nav bar's or
+// the bottom bar's on phones). They now sit in the middle of the free area, between the bars,
+// with no button of their own.
 
 interface Box {
   top: number;
@@ -76,6 +77,19 @@ async function openEmptyProject(page: Page): Promise<Box> {
   return content;
 }
 
+async function openEmptyChats(page: Page): Promise<Box> {
+  await page.goto('/p/WEB/ask');
+  const content = await emptyContent(page, 'No chats yet');
+  await expect(page.getByRole('button', { name: 'New chat', exact: true })).toHaveCount(1);
+  return content;
+}
+
+async function chatsFreeArea(page: Page): Promise<Box> {
+  const path = '/p/WEB/ask';
+  const phone = await usesPhoneLayout(page);
+  return freeArea(page, path, phone ? layer(page, path).locator('[data-navbar]') : undefined);
+}
+
 const shot = (page: Page, info: TestInfo, name: string) =>
   settledScreenshot(page, info.outputPath(`${name}-${info.project.name}.png`));
 
@@ -90,6 +104,15 @@ test('an empty project sits in the middle under the filters, with no New ticket 
   expectCentred(content, await freeArea(page, '/p/WEB', filterRow(page)));
   await expectNoScroll(page, '/p/WEB');
   await shot(page, info, 'empty-project');
+});
+
+test('an empty chat list sits in the middle, with no New chat of its own', async ({
+  page,
+}, info) => {
+  const content = await openEmptyChats(page);
+  expectCentred(content, await chatsFreeArea(page));
+  await expectNoScroll(page, '/p/WEB/ask');
+  await shot(page, info, 'empty-chats');
 });
 
 test('an empty status tab and a search with no match still read under the filters', async ({
@@ -122,13 +145,17 @@ for (const size of [
   test.describe(`a phone at ${size.name}`, () => {
     test.use({ viewport: size.viewport, contextOptions: { screen: size.screen } });
 
-    test('keeps an empty project between the nav bar and the bottom bar', async ({
+    test('keeps both empty states between the nav bar and the bottom bar', async ({
       page,
     }, info) => {
       test.skip(!isPhone(info.project.name), 'A phone');
       const project = await openEmptyProject(page);
       expectBetweenBars(project, await freeArea(page, '/p/WEB', filterRow(page)));
       await shot(page, info, `empty-project-${size.name}`);
+
+      const chats = await openEmptyChats(page);
+      expectBetweenBars(chats, await chatsFreeArea(page));
+      await shot(page, info, `empty-chats-${size.name}`);
     });
   });
 }

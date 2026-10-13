@@ -52,11 +52,21 @@ describe('Ask: the chat list', () => {
     expect(rows[1]).toHaveTextContent(/^How does sync work\? 1m ago/);
   });
 
-  it('starts a new chat from the empty list', async () => {
+  it('says the list is empty without a New chat of its own', async () => {
     setup([]);
+    const title = await screen.findByText('No chats yet');
+    expect(within(title.parentElement!).queryByRole('button')).toBeNull();
+    expect(screen.queryByRole('button', { name: 'New chat' })).toBeNull();
+  });
+
+  it('starts the first chat from the bottom bar on phones', async () => {
+    setup([], true);
     const user = userEvent.setup();
-    expect(await screen.findByText('No chats yet')).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'New chat' }));
+    await screen.findByText('No chats yet');
+    const [newChat, ...others] = screen.getAllByRole('button', { name: 'New chat' });
+    expect(others).toEqual([]);
+    expect(newChat!.closest('[data-bottom-bar]')).not.toBeNull();
+    await user.click(newChat!);
     await waitFor(() => expect(currentPath()).toBe('/p/MOB/ask/new'));
   });
 
