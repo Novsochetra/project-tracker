@@ -1,0 +1,9 @@
+/* Not an item: what Claude Code's runs took here, under a line like a menu's footer. */
+.usage {
+  margin: 4px 0 0;
+  padding: 8px 10px 6px;
+  border-top: 1px solid var(--line);
+  color: var(--placeholder);
+  font-size: var(--size-caption);
+  font-variant-numeric: tabular-nums;
+}

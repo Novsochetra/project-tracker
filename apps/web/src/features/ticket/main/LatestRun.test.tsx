@@ -108,6 +108,25 @@ describe('Claude Code run on the ticket screen', () => {
     expect(await screen.findByRole('dialog', { name: 'Send to Claude Code' })).toBeInTheDocument();
   });
 
+  it('says what a finished run took, with no button', async () => {
+    const usage = { costMicros: 840_000, turns: 23, durationMs: 361_000 };
+    setup([makeRun({ status: 'done', endedAt: Date.now() - 60_000, usage })]);
+    const card = await runCard();
+
+    expect(card).toHaveTextContent(`Claude finished on ${DARA}.`);
+    expect(card).toHaveTextContent('6 min · 23 turns · about $0.84');
+    expect(within(card).queryByRole('button', { name: /Try again|Cancel/ })).toBeNull();
+  });
+
+  it('says what a stopped run took under why it stopped', async () => {
+    const usage = { costMicros: 3_147, turns: 3, durationMs: 3_564 };
+    setup([makeRun({ status: 'failed', error: LOST, endedAt: Date.now(), usage })]);
+    const card = await runCard();
+
+    expect(card).toHaveTextContent('4 s · 3 turns · under $0.01');
+    expect(within(card).getByRole('button', { name: 'Try again' })).toBeInTheDocument();
+  });
+
   it('shows nothing for a done or cancelled run, or a failure from over a day ago', async () => {
     const old = Date.now() - STOPPED_SHOWN_MS - 1;
     for (const runs of [

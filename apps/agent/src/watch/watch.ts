@@ -41,6 +41,7 @@ async function keepWatching(setup: Setup, args: WatchArgs, io: WatchIo, signal: 
     command: CLAUDE,
     cwd: folder,
     permissionMode: args.permissionMode,
+    maxTurns: args.maxTurns,
     write: io.write,
     prompts: promptTool(setup, io),
   });

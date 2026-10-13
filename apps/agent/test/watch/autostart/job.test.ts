@@ -23,7 +23,7 @@ describe('the job tracker watch installs', () => {
     const job = jobFor(
       input({
         config: { ...config, agentName: 'Claude (home)' },
-        args: { name: 'Mac', permissionMode: 'acceptEdits', keepAwake: false },
+        args: { name: 'Mac', permissionMode: 'acceptEdits', maxTurns: '40', keepAwake: false },
       }),
       CLI,
     );
@@ -34,6 +34,7 @@ describe('the job tracker watch installs', () => {
       '--as=Claude (home)',
       '--name=Mac',
       '--permission-mode=acceptEdits',
+      '--max-turns=40',
       '--no-keep-awake',
       'MOB',
     ]);

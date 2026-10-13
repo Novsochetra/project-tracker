@@ -40,6 +40,7 @@ export const runOf = (id: string, ticketKey: string): Run => ({
   startedAt: 2,
   endedAt: null,
   stepCount: 0,
+  usage: null,
 });
 
 export const job = (id: string, ticketKey: string, prompt = `Work on ${ticketKey}`): RunJob => ({

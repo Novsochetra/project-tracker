@@ -46,6 +46,8 @@ export const USAGE = [
   '      is passed to claude for ticket runs and Edit questions. Without it, your own Claude',
   '      Code settings decide for a ticket run, and an Edit question asks on the phone before',
   '      each step (default). Ask and Plan questions are always read-only.',
+  '      --max-turns N passes the same to claude for every run and question, so none goes on',
+  '      past N turns; one that reaches it stops, and the app says so.',
   '      It keeps the Mac from idle sleep while it runs (--no-keep-awake turns that off).',
   '      --install makes it start by itself when you log in (macOS), --uninstall stops',
   '      that, and --check says whether it is installed, running and online.',

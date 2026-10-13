@@ -8,6 +8,7 @@ import {
   RUNNER_NAME_MAX,
   RUNNER_PROJECTS_MAX,
 } from '../domain/run';
+import { runUsageInput } from './runUsage';
 
 // A helper picks its own id once and keeps it, so runs queued while it restarts still find it.
 export const runnerId = z.uuid('Use a UUID for the runner id.');
@@ -45,5 +46,6 @@ export const finishRunInput = z.object({
   // An ask run's answer and the Claude Code session that gave it.
   answer: z.string().trim().max(CHAT_ANSWER_MAX).optional(),
   sessionId: z.uuid().optional(),
+  usage: runUsageInput.optional(),
 });
 export type FinishRunInput = z.input<typeof finishRunInput>;

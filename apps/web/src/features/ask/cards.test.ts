@@ -13,6 +13,7 @@ const message = (role: ChatMessage['role'], text: string, ticketKey: string | nu
     ticketKey,
     runId: null,
     stepCount: 0,
+    usage: null,
     createdAt: next,
   };
 };

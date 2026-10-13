@@ -2,6 +2,7 @@ import { spawn } from 'node:child_process';
 import type { ClaudeExit } from './outcome';
 import { resultOf, type ClaudeResult } from './stream/claudeResult';
 import { createJsonLines } from './stream/jsonLines';
+import { createReadTokenCount } from './stream/readTokens';
 
 const KEPT_OUTPUT = 20_000;
 
@@ -31,6 +32,7 @@ export const claudeArgs = (permissionMode?: string): string[] => [
 function collect({ onOutput, onEvent }: ClaudeListeners) {
   let output = '';
   const results: ClaudeResult[] = [];
+  const tokens = createReadTokenCount();
   const say = (text: string) => {
     output = (output + text).slice(-KEPT_OUTPUT);
     onOutput(text);
@@ -39,6 +41,7 @@ function collect({ onOutput, onEvent }: ClaudeListeners) {
     onText: (line) => say(`${line}\n`),
     onEvent: (event) => {
       onEvent(event);
+      tokens.add(event);
       const found = resultOf(event);
       if (!found) return;
       results.push(found);
@@ -53,7 +56,7 @@ function collect({ onOutput, onEvent }: ClaudeListeners) {
     },
     exit: (code: number | null, signal: NodeJS.Signals | null): ClaudeExit => {
       lines.end();
-      return { code, signal, output, results };
+      return { code, signal, output, results, readTokens: tokens.total() };
     },
   };
 }

@@ -1,4 +1,5 @@
 import type { AskOptions } from './askOptions';
+import type { RunUsage } from './runUsage';
 
 export const RUN_STATUSES = ['queued', 'running', 'done', 'failed', 'cancelled'] as const;
 export type RunStatus = (typeof RUN_STATUSES)[number];
@@ -58,6 +59,7 @@ export interface Run {
   endedAt: number | null;
   // How many steps the helper has sent, the oldest dropped included (the latest step's seq).
   stepCount: number;
+  usage: RunUsage | null;
 }
 
 export interface RunJob {

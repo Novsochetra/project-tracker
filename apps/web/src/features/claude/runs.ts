@@ -18,7 +18,7 @@ export interface RunFooterInput {
 }
 
 export interface ShownRun {
-  state: 'working' | 'stopped';
+  state: 'working' | 'stopped' | 'finished';
   run: Run;
   text: string;
 }
@@ -28,6 +28,9 @@ export const workingText = (run: Pick<Run, 'runnerName'>): string =>
 
 export const stoppedText = (run: Pick<Run, 'error'>): string =>
   run.error ? `Claude stopped: ${run.error}` : 'Claude stopped.';
+
+export const finishedText = (run: Pick<Run, 'runnerName'>): string =>
+  `Claude finished on ${run.runnerName}.`;
 
 export const sentText = (helper: Pick<Runner, 'name'>): string =>
   `Sent to Claude on ${helper.name}`;
@@ -59,6 +62,12 @@ export function shownRun(runs: readonly Run[] | undefined, now: number): ShownRu
   const latest = runs?.[0];
   if (!latest) return null;
   if (isWorking(latest)) return { state: 'working', run: latest, text: workingText(latest) };
-  if (latest.status !== 'failed' || now - runTime(latest) >= STOPPED_SHOWN_MS) return null;
-  return { state: 'stopped', run: latest, text: stoppedText(latest) };
+  if (now - runTime(latest) >= STOPPED_SHOWN_MS) return null;
+  if (latest.status === 'failed')
+    return { state: 'stopped', run: latest, text: stoppedText(latest) };
+  // A finished run shows only to say what it took, which helpers from before PT-195 don't send.
+  if (latest.status === 'done' && latest.usage) {
+    return { state: 'finished', run: latest, text: finishedText(latest) };
+  }
+  return null;
 }

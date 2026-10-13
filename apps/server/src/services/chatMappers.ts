@@ -6,6 +6,7 @@ import {
   type ChatMessage,
 } from '@tracker/shared';
 import type { ChatWithKey, MessageWithKey } from '../repositories/chats';
+import { usageOfRow } from './runUsage';
 
 export const toChat = (row: ChatWithKey): Chat => ({
   id: row.id,
@@ -42,6 +43,7 @@ export const toMessage = (row: MessageWithKey): ChatMessage => ({
       : formatTicketKey(row.projectKey, row.ticketNum),
   runId: row.runId,
   stepCount: shownStepCount(row),
+  usage: usageOfRow(row),
   createdAt: row.createdAt,
 });
 

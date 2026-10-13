@@ -25,6 +25,7 @@ export const COMMAND_OPTIONS = {
   rating: { type: 'string' },
   name: { type: 'string' },
   'permission-mode': { type: 'string' },
+  'max-turns': { type: 'string' },
 } as const satisfies NonNullable<ParseArgsConfig['options']>;
 
 export const WATCH_FLAGS = {

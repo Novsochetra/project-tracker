@@ -43,6 +43,9 @@ export interface RunRow {
   askMode: AskMode | null;
   askEffort: AskEffort | null;
   stepCount: number;
+  costMicros: number | null;
+  turns: number | null;
+  durationMs: number | null;
 }
 
 export interface RunStepRow {

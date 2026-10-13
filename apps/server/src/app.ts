@@ -25,6 +25,7 @@ import { reportRoutes } from './http/routes/reports';
 import { runRoutes } from './http/routes/runs';
 import { runRequestRoutes } from './http/routes/runRequests';
 import { runStepRoutes } from './http/routes/runSteps';
+import { runUsageRoutes } from './http/routes/runUsage';
 import { chatRoutes } from './http/routes/chats';
 import { sessionRoutes } from './http/routes/session';
 import { statusRoutes } from './http/routes/statuses';
@@ -84,6 +85,7 @@ function createApi(ctx: ServiceContext, deps: AppDeps): Hono<AppEnv> {
     .route('/', reportRoutes(ctx))
     .route('/', runRoutes(ctx))
     .route('/', runStepRoutes(ctx))
+    .route('/', runUsageRoutes(ctx))
     .route('/', runRequestRoutes(ctx))
     .route('/', chatRoutes(ctx))
     .route(

@@ -84,6 +84,19 @@ describe('useLiveUpdates', () => {
     expect(isInvalidated(queryClient, queryKeys.board('MOB'))).toBe(false);
   });
 
+  it("refreshes the projects' last 30 days when a run ends, not when it starts", () => {
+    const { queryClient, wrapper } = setupApi();
+    seed(queryClient);
+    queryClient.setQueryData(queryKeys.projectUsage('MOB'), null);
+    renderHook(() => useLiveUpdates(), { wrapper });
+
+    const run = { type: 'run', runId: 'r-1', runnerId: 'h-1', projectId: 'p-mob', ticketId: 't-1' };
+    act(() => MockEventSource.latest().emit({ ...run, status: 'running' }, 'run'));
+    expect(isInvalidated(queryClient, queryKeys.projectUsage('MOB'))).toBe(false);
+    act(() => MockEventSource.latest().emit({ ...run, status: 'done' }, 'run'));
+    expect(isInvalidated(queryClient, queryKeys.projectUsage('MOB'))).toBe(true);
+  });
+
   it('refreshes every shown ticket run for a ticket it has not cached, as one made from a chat', () => {
     const { queryClient, wrapper } = setupApi();
     seed(queryClient);

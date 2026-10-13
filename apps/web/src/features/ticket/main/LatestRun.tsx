@@ -7,6 +7,7 @@ import { AgentAvatar, Button, useToast } from '../../../components';
 import { holdPresses } from '../../../lib/holdPresses';
 import { useNow } from '../../../lib/useNow';
 import { runTime, shownRun } from '../../claude/runs';
+import { UsageLine } from '../../claude/UsageLine';
 import { WAITING_TEXT } from '../../requests/copy';
 import { RequestCards } from '../../requests/RequestCards';
 import { useRequests } from '../../requests/useRequests';
@@ -41,13 +42,11 @@ export function LatestRun({ ticketKey, onCancelled }: LatestRunProps) {
         <PhoneFold>
           <p className={cardStyles.body}>{requests.waiting ? WAITING_TEXT : shown.text}</p>
         </PhoneFold>
+        <UsageLine usage={shown.run.usage} />
         <RunStepsLine run={shown.run} ticketKey={ticketKey} />
         <RequestCards ref={cardsRef} requests={requests.shown} now={requests.now} />
-        {shown.state === 'working' ? (
-          <CancelButton run={shown.run} onCancelled={onCancelled} />
-        ) : (
-          <TryAgainButton ticketKey={ticketKey} />
-        )}
+        {shown.state === 'working' && <CancelButton run={shown.run} onCancelled={onCancelled} />}
+        {shown.state === 'stopped' && <TryAgainButton ticketKey={ticketKey} />}
       </ActivityCard>
     </section>
   );

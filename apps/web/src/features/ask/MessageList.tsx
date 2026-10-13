@@ -1,5 +1,6 @@
 import type { ChatMessage, Run, Runner } from '@tracker/shared';
 import { useMemo, type ReactNode } from 'react';
+import { UsageLine } from '../claude/UsageLine';
 import { LinkedText } from '../ticket/activity/LinkedText';
 import { AnswerSteps } from './AnswerSteps';
 import { messageCards, type MessageCard } from './cards';
@@ -57,6 +58,7 @@ function ClaudeMessage({ chatId, message, card, helper }: ClaudeMessageProps) {
       ) : (
         <Text text={message.text} />
       )}
+      <UsageLine usage={message.usage} />
     </article>
   );
 }

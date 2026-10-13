@@ -16,6 +16,9 @@ export interface MessageWithKey extends ChatMessageRow {
   lastStepKind: RunStepKind | null;
   lastStepLabel: string | null;
   lastStepSubAgent: number | null;
+  costMicros: number | null;
+  turns: number | null;
+  durationMs: number | null;
 }
 
 // '=' never matches a null user, so the open tracker's rows need 'is'.
@@ -80,6 +83,7 @@ export const listMessageRows = (db: Db, chatId: string) =>
       'lastStep.label as lastStepLabel',
       'lastStep.subAgent as lastStepSubAgent',
     ])
+    .select(['runs.costMicros', 'runs.turns', 'runs.durationMs'])
     .where('chatMessages.chatId', '=', chatId)
     .orderBy('chatMessages.createdAt')
     .orderBy('chatMessages.id')

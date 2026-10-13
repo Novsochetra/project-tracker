@@ -9,6 +9,7 @@ import type { UserScope } from '../auth/scope';
 import type { RunnerRow, RunRow } from '../db/runTables';
 import type { RunWithKey } from '../repositories/runs';
 import type { ServiceContext } from './context';
+import { usageOfRow } from './runUsage';
 
 // A question queued before there was an effort has none, so it ran on Claude's own.
 const askOptionsOf = ({ askModel, askMode, askEffort }: RunRow): AskOptions | null =>
@@ -29,6 +30,7 @@ export const toRun = (row: RunWithKey): Run => ({
   startedAt: row.startedAt,
   endedAt: row.endedAt,
   stepCount: row.stepCount,
+  usage: usageOfRow(row),
 });
 
 export function parseProjectIds(row: RunnerRow): string[] {

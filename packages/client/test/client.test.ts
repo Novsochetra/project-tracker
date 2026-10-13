@@ -78,6 +78,12 @@ const routes: Route[] = [
     call: (c) => c.getProjectPrompt('MOB'),
   },
   {
+    name: 'getProjectUsage',
+    method: 'GET',
+    path: '/api/projects/MOB/usage',
+    call: (c) => c.getProjectUsage('MOB'),
+  },
+  {
     name: 'createStatus',
     method: 'POST',
     path: '/api/projects/MOB/statuses',

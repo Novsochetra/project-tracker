@@ -27,6 +27,7 @@ describe('regression: stopping while a run is being taken', () => {
         startedAt: 2,
         endedAt: null,
         stepCount: 0,
+        usage: null,
       },
     };
     const finishRun = vi.fn(() => Promise.resolve({} as Run));

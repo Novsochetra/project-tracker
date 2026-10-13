@@ -1,4 +1,4 @@
-import type { FinishRunInput, RunJob, RunKind } from '@tracker/shared';
+import type { FinishRunInput, RunJob, RunKind, RunUsageInput } from '@tracker/shared';
 import { askOutcomeOf } from './ask/askOutcome';
 import type { OnSteps } from './claudeRunners';
 import type { ProblemSource } from './problems';
@@ -20,6 +20,7 @@ export interface RunLoopDeps {
   handBack: (job: RunJob, texts: readonly string[]) => Promise<void>;
   signOfLife: (ticketKey: string) => () => void;
   stepsFor: (runId: string) => StepBatcher;
+  usageOf: (job: RunJob, exit: ClaudeExit) => RunUsageInput | undefined;
   retryDelay?: ((attempt: number) => number) | undefined;
 }
 
@@ -46,16 +47,21 @@ type Runner = (
   onSteps: OnSteps,
 ) => Promise<FinishRunInput>;
 
+const withUsage = (outcome: FinishRunInput, usage: RunUsageInput | undefined): FinishRunInput =>
+  usage ? { ...outcome, usage } : outcome;
+
 const runTicket: Runner = async (deps, job, stop, onSteps) => {
   const exit = await deps.runClaude(job, stop, onSteps);
   const outcome = ticketOutcomeOf(exit, stop.aborted);
   // A cancelled run was stopped part way, so whatever it printed is not a report of the work.
   if (outcome.status !== 'cancelled') await deps.handBack(job, reportTexts(exit));
-  return outcome;
+  return withUsage(outcome, deps.usageOf(job, exit));
 };
 
-const runAsk: Runner = async (deps, job, stop, onSteps) =>
-  askOutcomeOf(await deps.runAsk(job, stop, onSteps), stop.aborted);
+const runAsk: Runner = async (deps, job, stop, onSteps) => {
+  const exit = await deps.runAsk(job, stop, onSteps);
+  return withUsage(askOutcomeOf(exit, stop.aborted), deps.usageOf(job, exit));
+};
 
 // Claude never ran, as when the prompt tool's socket can't open, so the run ends with why rather
 // than leave it running on the tracker and this lane stuck on it. The window says why too, since

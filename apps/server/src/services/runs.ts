@@ -21,6 +21,7 @@ import { requireTicket, ticketKeyOf } from './lookups';
 import { endingOf } from './runEnding';
 import { notifyRun, toRun } from './runMappers';
 import { requireRunnerFor } from './runners';
+import { usageOfFinish } from './runUsage';
 import { insertQueuedRun, queuedRunRow } from './runRows';
 
 const TICKET_RUNS_SHOWN = 20;
@@ -105,7 +106,8 @@ export async function endRun(
   const { status, error, answer } = endingOf(before, input);
   const endedAt = ctx.now();
   const ended = await inTransaction(ctx, async (trx) => {
-    const marked = await markRunEnded(trx, scope, before.id, { status, error, endedAt });
+    const changes = { status, error, endedAt, ...usageOfFinish(input) };
+    const marked = await markRunEnded(trx, scope, before.id, changes);
     if (marked && answer) await saveAnswer(trx, before, { ...answer, at: endedAt });
     return marked;
   });
