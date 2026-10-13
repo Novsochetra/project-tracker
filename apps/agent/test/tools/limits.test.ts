@@ -40,6 +40,7 @@ const FIELDS: Array<[Tool, string, z.ZodObject, number]> = [
   [addComment, 'text', createCommentInput, COMMENT_TEXT_MAX],
   [submitForReview, 'summary', submitWorkInput, REPORT_TEXT_MAX],
   [submitForReview, 'files', submitWorkInput, REPORT_TEXT_MAX],
+  [submitForReview, 'output', submitWorkInput, REPORT_TEXT_MAX],
   [submitForReview, 'next', submitWorkInput, REPORT_TEXT_MAX],
   [reviewTicket, 'summary', reviewInput, REPORT_TEXT_MAX],
 ];
