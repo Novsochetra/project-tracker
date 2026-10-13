@@ -3,6 +3,7 @@ import { errorMessage, useKnownSession, useLogout, useSignOutEverywhere } from '
 import type { SheetProps } from '../../app/sheets/types';
 import { Button, ConfirmCard } from '../../components';
 import { Sheet, SheetTextButton } from '../../overlays';
+import { VersionNote } from '../version/VersionNote';
 import styles from './AccountSheet.module.css';
 import { ChangePassword } from './ChangePassword';
 import { InviteSection } from './InviteSection';
@@ -71,6 +72,7 @@ export function AccountSheet({ open, onClose }: SheetProps) {
             {errorMessage(error)}
           </p>
         )}
+        <VersionNote />
       </div>
     </Sheet>
   );

@@ -8,6 +8,7 @@ import { ConnectSheet } from '../../src/features/connect/ConnectSheet';
 // the sheet showed login and MCP commands for that address, which the CLI refuses since PT-132.
 const meta: ServerMeta = {
   version: '1.0.0',
+  commit: null,
   serverUrl: 'http://192.168.1.20:4100',
   repoRoot: '/repo',
   mcpEntry: '/repo/apps/agent/dist/mcp.js',

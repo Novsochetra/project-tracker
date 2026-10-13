@@ -1,5 +1,6 @@
 import type { Server } from 'node:http';
 import { serve } from '@hono/node-server';
+import { versionLabel } from '@tracker/shared';
 import { createApp } from './app';
 import { authNotice } from './auth/startupNotice';
 import { loadConfig } from './config';
@@ -13,6 +14,7 @@ import { stopOnSignals } from './shutdown';
 import { describeStorage, openFileStorage } from './storage/openFileStorage';
 
 const config = loadConfig();
+console.log(`Tracker ${versionLabel(config.version, config.commit)}`);
 const db = createDatabase(config.databaseUrl);
 for (const name of await prepareDatabase(db, config.databaseUrl)) console.log(`Migrated ${name}`);
 
@@ -32,6 +34,7 @@ const app = createApp({
   testReset: config.testReset,
   repoRoot: config.repoRoot,
   version: config.version,
+  commit: config.commit,
   publicUrl: config.publicUrl,
 });
 

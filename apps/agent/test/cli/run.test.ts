@@ -1,3 +1,4 @@
+import { APP_VERSION } from '@tracker/shared';
 import { describe, expect, it, vi } from 'vitest';
 import type { TrackerApi } from '../../src/client';
 import { EXIT_ERROR, EXIT_OK, EXIT_USAGE, runCli } from '../../src/cli/run';
@@ -36,6 +37,12 @@ describe('tracker help', () => {
     },
   );
 
+  it('--version prints the app version', async () => {
+    const result = await cli(['--version']);
+    expect(result).toMatchObject({ code: EXIT_OK, stdout: APP_VERSION, stderr: '' });
+    expect(result.configs).toEqual([]);
+  });
+
   it('documents every command and the global flags', () => {
     for (const command of ['projects', 'statuses', 'tickets', 'show', 'create', 'update', 'move']) {
       expect(USAGE).toContain(`\n  ${command}`);
@@ -43,7 +50,7 @@ describe('tracker help', () => {
     for (const command of ['comment', 'claim', 'submit', 'review', 'help']) {
       expect(USAGE).toContain(`\n  ${command}`);
     }
-    for (const flag of ['--url URL', '--as NAME', '--token TOKEN', '--json']) {
+    for (const flag of ['--url URL', '--as NAME', '--token TOKEN', '--json', '--version']) {
       expect(USAGE).toContain(flag);
     }
     expect(USAGE).toContain('\n  login [--url URL]\n');

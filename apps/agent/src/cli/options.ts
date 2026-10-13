@@ -6,6 +6,7 @@ export const GLOBAL_OPTIONS = {
   token: { type: 'string' },
   json: { type: 'boolean' },
   help: { type: 'boolean', short: 'h' },
+  version: { type: 'boolean' },
 } as const satisfies NonNullable<ParseArgsConfig['options']>;
 
 export const COMMAND_OPTIONS = {
@@ -47,4 +48,5 @@ export interface GlobalValues {
   token?: string;
   json: boolean;
   help: boolean;
+  version?: boolean;
 }

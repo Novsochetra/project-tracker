@@ -8,6 +8,7 @@ import { userContext } from '../userContext';
 
 export interface MetaOptions {
   version: string;
+  commit: string | null;
   repoRoot: string;
   publicUrl: string | null;
 }
@@ -15,11 +16,12 @@ export interface MetaOptions {
 // The page's origin is no use to agents: under `npm run dev` it is Vite's. Vite's proxy sends
 // API requests here with this server's host, so the request's own origin is the API's address.
 export const serverMeta = (
-  { version, repoRoot, publicUrl }: MetaOptions,
+  { version, commit, repoRoot, publicUrl }: MetaOptions,
   requestUrl: string,
   authRequired: boolean,
 ): ServerMeta => ({
   version,
+  commit,
   serverUrl: publicUrl ?? new URL(requestUrl).origin,
   repoRoot,
   mcpEntry: join(repoRoot, 'apps', 'agent', 'dist', 'mcp.js'),

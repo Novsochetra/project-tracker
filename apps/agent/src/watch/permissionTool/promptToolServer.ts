@@ -1,4 +1,5 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { APP_VERSION } from '@tracker/shared';
 import { z } from 'zod';
 import { askHelper } from './askHelper';
 import { keepCallAlive } from './keepCallAlive';
@@ -7,7 +8,7 @@ export const PROMPT_SERVER = 'tracker-watch';
 export const PROMPT_TOOL = 'ask_person';
 
 export function createPromptToolServer(socketPath: string): McpServer {
-  const server = new McpServer({ name: PROMPT_SERVER, version: '0.0.0' });
+  const server = new McpServer({ name: PROMPT_SERVER, version: APP_VERSION });
   server.registerTool(
     PROMPT_TOOL,
     {

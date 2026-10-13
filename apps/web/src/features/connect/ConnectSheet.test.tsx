@@ -9,6 +9,7 @@ import { ConnectSheet } from './ConnectSheet';
 
 const meta: ServerMeta = {
   version: '1.0.0',
+  commit: null,
   serverUrl: 'http://localhost:4100',
   repoRoot: '/Users/dara/code/project-tracker',
   mcpEntry: '/Users/dara/code/project-tracker/apps/agent/dist/mcp.js',
@@ -51,6 +52,7 @@ describe('ConnectSheet', () => {
     expect(within(sheet()).getByText('/mcp__tracker__review <PROJECT KEY>')).toBeInTheDocument();
     expect(within(sheet()).getByText(`node ${meta.cliEntry} help`)).toBeInTheDocument();
     expect(within(sheet()).queryByText(/TRACKER_TOKEN/)).not.toBeInTheDocument();
+    expect(within(sheet()).getByText('Tracker v1.0.0')).toBeInTheDocument();
   });
 
   it('says an open tracker needs no token and leaves out the login step', async () => {

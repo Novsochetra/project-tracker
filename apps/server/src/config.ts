@@ -1,6 +1,6 @@
-import { readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { APP_VERSION, shortCommit } from '@tracker/shared';
 import { loadAuthConfig, type AuthConfig } from './authConfig';
 import { withRailwayDefaults } from './railway';
 import { loadS3Config, type S3Config } from './storage/s3Config';
@@ -16,6 +16,7 @@ export interface Config {
   testReset: boolean;
   repoRoot: string;
   version: string;
+  commit: string | null;
   publicUrl: string | null;
 }
 
@@ -26,17 +27,6 @@ const SERVER_ROOT = fileURLToPath(new URL('..', import.meta.url));
 export const REPO_ROOT = resolve(SERVER_ROOT, '../..');
 
 export const DEFAULT_PORT = 4100;
-
-function readVersion(): string {
-  try {
-    const pkg = JSON.parse(readFileSync(join(SERVER_ROOT, 'package.json'), 'utf8')) as {
-      version?: unknown;
-    };
-    return typeof pkg.version === 'string' ? pkg.version : '0.0.0';
-  } catch {
-    return '0.0.0';
-  }
-}
 
 function parsePort(value: string | undefined): number {
   const port = Number(value);
@@ -66,7 +56,9 @@ export function loadConfig(given: NodeJS.ProcessEnv = process.env): Config {
     webDist: env.WEB_DIST || join(REPO_ROOT, 'apps', 'web', 'dist'),
     testReset: env.TRACKER_TEST_RESET === '1',
     repoRoot: REPO_ROOT,
-    version: readVersion(),
+    version: APP_VERSION,
+    // Railway sets it for a deploy from git; elsewhere the build has no commit to show.
+    commit: shortCommit(env.RAILWAY_GIT_COMMIT_SHA),
     publicUrl: parsePublicUrl(env.PUBLIC_URL),
     auth: loadAuthConfig(env, host),
   };

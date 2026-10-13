@@ -62,6 +62,7 @@ export const UNKNOWN_ROUTE_MESSAGE = 'Nothing was found at this address.';
 
 export interface ServerMeta {
   version: string;
+  commit: string | null;
   serverUrl: string;
   repoRoot: string;
   mcpEntry: string;

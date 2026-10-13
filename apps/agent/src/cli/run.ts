@@ -1,3 +1,4 @@
+import { APP_VERSION } from '@tracker/shared';
 import { createTrackerClient, type TrackerApi } from '../client';
 import { loadConfig, type Config, type Env } from '../config';
 import type { ConfigStore } from '../configFile';
@@ -83,6 +84,10 @@ export async function runCli(argv: readonly string[], io: CliIo): Promise<number
     parsed = parseCliArgs(argv);
     if (parsed.global.help || parsed.command === 'help') {
       io.stdout(USAGE);
+      return EXIT_OK;
+    }
+    if (parsed.global.version) {
+      io.stdout(APP_VERSION);
       return EXIT_OK;
     }
     if (SETUP_COMMANDS.has(parsed.command ?? '')) checkSetupArgs(parsed);

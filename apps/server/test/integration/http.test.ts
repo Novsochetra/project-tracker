@@ -9,7 +9,7 @@ import { imageUpload } from '../helpers/fixtures';
 import { DIALECTS, useTestServer, type TestDeps } from '../helpers/server';
 
 describe.each(DIALECTS)('http surface (%s)', (dialect) => {
-  const api = useTestServer(dialect, { repoRoot: '/repo', version: '1.2.3' });
+  const api = useTestServer(dialect, { repoRoot: '/repo', version: '1.2.3', commit: 'a1b2c3d' });
 
   const appWith = (deps: TestDeps) =>
     createApp({
@@ -47,6 +47,7 @@ describe.each(DIALECTS)('http surface (%s)', (dialect) => {
     const res = await api.get<ServerMeta>('/api/meta');
     expect(res.body).toEqual({
       version: '1.2.3',
+      commit: 'a1b2c3d',
       serverUrl: 'http://localhost',
       repoRoot: '/repo',
       mcpEntry: '/repo/apps/agent/dist/mcp.js',

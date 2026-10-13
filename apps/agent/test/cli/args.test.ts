@@ -41,7 +41,14 @@ describe('parseCliArgs', () => {
     expect(parseCliArgs(argv)).toEqual({
       command: 'tickets',
       args: ['MOB'],
-      global: { url: 'http://x:1', as: 'Bot', token: undefined, json: true, help: false },
+      global: {
+        url: 'http://x:1',
+        as: 'Bot',
+        token: undefined,
+        json: true,
+        help: false,
+        version: false,
+      },
       options: { status: 'To do' },
       flags: {},
     });

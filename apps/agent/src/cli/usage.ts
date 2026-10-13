@@ -14,6 +14,7 @@ const GLOBAL_HELP: readonly (readonly [string, string])[] = [
   ['--token TOKEN', 'API token (env TRACKER_API_TOKEN, else the one saved by login)'],
   ['--json', 'Print the raw JSON response instead of text'],
   ['-h, --help', 'Show this help'],
+  ['--version', 'Print the version of this CLI'],
 ];
 
 const SETUP_HELP: readonly (readonly [string, string])[] = [

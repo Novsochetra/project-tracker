@@ -1,0 +1,7 @@
+.version {
+  margin: 0;
+  color: var(--subtle);
+  font-size: var(--size-caption);
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}

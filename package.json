@@ -1,5 +1,6 @@
 {
   "name": "project-tracker",
+  "version": "1.0.0",
   "private": true,
   "type": "module",
   "workspaces": [
@@ -30,7 +31,8 @@
     "db:rollback": "tsx apps/server/src/db/cli.ts rollback",
     "db:status": "tsx apps/server/src/db/cli.ts status",
     "data:move": "tsx apps/server/src/cli/moveData.ts",
-    "test:e2e:clean": "bash scripts/e2e-clean.sh"
+    "test:e2e:clean": "bash scripts/e2e-clean.sh",
+    "release": "tsx scripts/release.ts"
   },
   "lint-staged": {
     "*.{ts,tsx,js,mjs,cjs}": [

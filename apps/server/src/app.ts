@@ -1,4 +1,5 @@
 import { existsSync } from 'node:fs';
+import { APP_VERSION } from '@tracker/shared';
 import { Hono } from 'hono';
 import { createClock, type Clock } from './clock';
 import { REPO_ROOT } from './config';
@@ -45,6 +46,7 @@ export interface AppDeps {
   testReset?: boolean;
   repoRoot?: string;
   version?: string;
+  commit?: string | null;
   publicUrl?: string | null;
   heartbeatMs?: number;
 }
@@ -67,7 +69,8 @@ function createApi(ctx: ServiceContext, deps: AppDeps): Hono<AppEnv> {
     .route(
       '/',
       miscRoutes(ctx, {
-        version: deps.version ?? '0.0.0',
+        version: deps.version ?? APP_VERSION,
+        commit: deps.commit ?? null,
         repoRoot: deps.repoRoot ?? REPO_ROOT,
         publicUrl: deps.publicUrl ?? null,
       }),
