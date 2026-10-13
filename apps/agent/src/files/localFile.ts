@@ -20,18 +20,27 @@ const changedError = (path: string): Error =>
 
 const CHANGED_CODES = new Set(['ELOOP', 'ENOENT']);
 
+async function isSameFile(handle: FileHandle, realPath: string): Promise<boolean> {
+  const [opened, now, real] = await Promise.all([
+    handle.stat(),
+    stat(realPath).catch(() => null),
+    realpath(realPath).catch(() => null),
+  ]);
+  return real === realPath && now !== null && opened.dev === now.dev && opened.ino === now.ino;
+}
+
 // The file is read later through this handle, after earlier files are uploaded, so it must be
 // the very file that was checked: a folder on its path could have been swapped meanwhile.
 async function openChecked(path: string, realPath: string): Promise<FileHandle> {
   const handle = await open(realPath, OPEN_FLAGS).catch((error: NodeJS.ErrnoException) => {
     throw CHANGED_CODES.has(error.code ?? '') ? changedError(path) : error;
   });
-  const [opened, now, real] = await Promise.all([
-    handle.stat(),
-    stat(realPath).catch(() => null),
-    realpath(realPath).catch(() => null),
-  ]);
-  if (real === realPath && now && opened.dev === now.dev && opened.ino === now.ino) return handle;
+  try {
+    if (await isSameFile(handle, realPath)) return handle;
+  } catch (error) {
+    await handle.close();
+    throw error;
+  }
   await handle.close();
   throw changedError(path);
 }
