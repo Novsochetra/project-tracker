@@ -7,10 +7,10 @@ export interface TrackerState {
 
 export const ANSWERING: TrackerState = { answers: true, savedReads: false };
 
-// /api/health, which the service worker leaves to the network, can answer while reads get saved
-// copies, as when the worker still gave a read 3 s. A check's answer that ended saved reads took
-// the banner down and read the project list again, whose saved answer put it back, every 4 s
-// (PT-126), so only a read's or a write's answer ends them.
+// /api/health, which the service worker leaves to the network, answers at once while reads wait
+// longer than the worker gives them. A check's answer that ended saved reads took the banner down
+// and read the project list again, whose saved answer put it back, every 4 s (PT-126), so only a
+// read's or a write's answer ends them.
 export function nextState(
   state: TrackerState,
   signal: Exclude<ApiSignal, 'unsure'>,

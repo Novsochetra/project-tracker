@@ -9,7 +9,8 @@ export type TrackerCheck = () => Promise<ApiSignal | null>;
 
 // The tracker answers this read at once. A check left waiting, as on a proxy that holds the
 // connection to a stuck API, kept the tracker reachable and every later bare 5xx unchecked
-// (PT-109).
+// (PT-109). 3 s is what the service worker gives a read before it answers from its saved copy, so
+// a check waits no longer than a read does.
 export const CHECK_TIMEOUT_MS = 3_000;
 
 // The check goes around the query and mutation caches, so its answer is final: a bare 5xx to it

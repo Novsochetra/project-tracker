@@ -10,7 +10,7 @@ export const FRESH_READ_MARK_MS = 24 * 60 * 60 * 1000;
 
 // After a write, or a change a live update reports, the ticket is read from the tracker itself
 // until such a read lands. The copy the service worker saved before the change would otherwise
-// show the old text whenever the network drops a read.
+// show the old text whenever a read takes longer than its timeout.
 const changesSinceRead = new WeakMap<QueryClient, Map<string, number>>();
 
 // The stored mark each ticket had when this page's fresh read of it started.

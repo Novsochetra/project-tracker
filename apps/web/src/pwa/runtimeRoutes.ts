@@ -3,7 +3,7 @@ import { ExpirationPlugin } from 'workbox-expiration';
 import { registerRoute } from 'workbox-routing';
 import { CacheFirst } from 'workbox-strategies';
 import { isSavedApiRead } from './apiReadRoute';
-import { apiReadStrategy } from './apiReadStrategy';
+import { apiReadHandler } from './apiReadStrategy';
 import { attachmentCachePlugin, isCachedAttachmentFile } from './attachmentFileRoute';
 import { ATTACHMENT_CACHE } from './cacheNames';
 
@@ -27,5 +27,5 @@ export function registerRuntimeRoutes(): void {
     }),
     'GET',
   );
-  registerRoute(isSavedApiRead, apiReadStrategy(), 'GET');
+  registerRoute(isSavedApiRead, apiReadHandler(), 'GET');
 }

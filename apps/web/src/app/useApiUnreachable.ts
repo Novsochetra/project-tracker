@@ -1,6 +1,7 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { useEffect, useLayoutEffect, useState, useSyncExternalStore } from 'react';
 import { useApi } from '../api';
+import { tagLiveReads } from '../api/live/liveReads';
 import { lastAnswerWasSaved, subscribeSavedAnswers, watchSavedAnswers } from '../pwa/savedAnswers';
 import { createReachability, watchApiTraffic, type Reachability } from './reachability';
 import { trackerCheckOf } from './trackerCheck';
@@ -12,6 +13,7 @@ export function useReachability(): Reachability {
   const [reachability] = useState(createReachability);
   // A layout effect, so it is in place before the screens' first requests start in their effects.
   useLayoutEffect(() => watchSavedAnswers(window), []);
+  useLayoutEffect(() => tagLiveReads(window), []);
   useEffect(
     () => watchApiTraffic(queryClient, reachability, trackerCheckOf(client), { recheck: true }),
     [client, queryClient, reachability],

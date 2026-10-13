@@ -44,8 +44,7 @@ export function applySignIn(
 ) {
   queryClient.setQueryData(queryKeys.session(), session);
   // Read through the service worker so its saved answer, which still says signed out, is replaced
-  // for offline starts. The answer itself is ignored: when the network drops the read, it can be
-  // that saved copy.
+  // for offline starts. The answer itself is ignored: on a slow network it can be that saved copy.
   void client.getSession().catch(() => undefined);
   void queryClient.invalidateQueries({
     predicate: ({ queryKey }) => rootOf(queryKey) !== 'session',
