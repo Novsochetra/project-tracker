@@ -45,10 +45,14 @@
   color: var(--subtle);
 }
 
+/* One line whatever the width, so a mode with a longer hint never moves the box (PT-202). */
 .hint {
   margin: 0;
+  overflow: hidden;
   color: var(--muted);
   font-size: var(--size-secondary);
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 @media (width < 768px),

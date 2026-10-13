@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 import type { TrackerClient } from '@tracker/client';
 import type { RunStepInput } from '@tracker/shared';
 import type { Page } from '@playwright/test';
+import { ASK_HINT, EDIT_HINT, PLAN_HINT } from '../src/features/ask/copy';
 import { expect, test, usesPhoneLayout } from './fixtures';
 import { readActionSheet, readMenuConfirm, seedProject, settledScreenshot, toast } from './helpers';
 
@@ -207,7 +208,7 @@ test('picks the model, effort and mode on one row above the box, and sends them'
   expect(group!.x + group!.width).toBeLessThanOrEqual(width);
   expect(group!.y + group!.height).toBeLessThanOrEqual(field!.y);
 
-  await expect(page.getByText(/Claude can change files and tickets/)).toBeVisible();
+  await expect(page.getByText(EDIT_HINT)).toBeVisible();
   await expect(page.getByRole('listbox')).toBeHidden();
   await expect(modes.getByRole('button', { name: 'Edit' })).toHaveAttribute('aria-pressed', 'true');
   await settledScreenshot(page, info.outputPath(`ask-options-${info.project.name}.png`));
@@ -218,6 +219,39 @@ test('picks the model, effort and mode on one row above the box, and sends them'
   await expect(modes.getByRole('button', { name: 'Edit' })).toHaveAttribute('aria-pressed', 'true');
   const job = await api.takeNextRun(helperId, 'ticket');
   expect(job?.run.askOptions).toEqual({ model: 'sonnet', mode: 'edit', effort: 'xhigh' });
+});
+
+// PT-202: Edit's hint took two lines on a phone, so switching modes moved the box and Send.
+test('keeps the box still and each mode hint on one line when the mode changes', async ({
+  page,
+  api,
+}, info) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await seedProject(api, 'Mobile app', 'MOB');
+  await api.registerRunner(randomUUID(), { name: HELPER, projectKeys: ['MOB'] });
+  await page.goto('/p/MOB/ask/new');
+  const modes = page.getByRole('group', { name: 'Mode' });
+  const box = page.getByRole('textbox', { name: 'Question for Claude' });
+  const own = page.viewportSize()!;
+  const widths = (await usesPhoneLayout(page)) ? [320, own.width] : [own.width];
+  for (const width of widths) {
+    await page.setViewportSize({ width, height: own.height });
+    const boxes: unknown[] = [];
+    for (const [mode, hint] of [
+      ['Ask', ASK_HINT],
+      ['Plan', PLAN_HINT],
+      ['Edit', EDIT_HINT],
+    ] as const) {
+      await modes.getByRole('button', { name: mode }).click();
+      const line = page.getByText(hint);
+      await expect(line).toBeVisible();
+      expect(await line.evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(true);
+      boxes.push(await box.boundingBox());
+    }
+    expect(boxes[1]).toEqual(boxes[0]);
+    expect(boxes[2]).toEqual(boxes[0]);
+    await settledScreenshot(page, info.outputPath(`ask-mode-hint-${width}.png`));
+  }
 });
 
 test('shows what Claude does while it answers, then folds the steps above the answer', async ({
