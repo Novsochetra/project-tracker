@@ -85,11 +85,12 @@ describe('inputs', () => {
     expect(createProjectInput(form({ name: 'Mobile app' })).key).toBe('MA');
   });
 
-  it('never sends a prefix on edit', () => {
-    expect(updateProjectInput(values)).toEqual({
+  it('never sends a prefix on edit, and sends the automatic review setting', () => {
+    expect(updateProjectInput({ ...values, autoReview: true })).toEqual({
       name: 'Mobile app',
       description: 'iOS and Android',
       repo: '~/code/mobile',
+      autoReview: true,
     });
   });
 
@@ -99,7 +100,10 @@ describe('inputs', () => {
       description: 'Docs',
       repo: '~/web',
       prefix: '',
+      autoReview: false,
     });
+    const on = { name: 'Website', description: '', repo: '', autoReview: true };
+    expect(formValuesOf(on).autoReview).toBe(true);
   });
 });
 
@@ -125,6 +129,7 @@ describe('projectFormChanged', () => {
     expect(changed({ name: 'website' })).toBe(true);
     expect(changed({ description: '' })).toBe(true);
     expect(changed({ repo: '~/code/site' })).toBe(true);
+    expect(changed({ autoReview: true })).toBe(true);
   });
 });
 

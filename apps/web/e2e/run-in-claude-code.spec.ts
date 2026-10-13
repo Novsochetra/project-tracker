@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { permissionLabel, type RunStepInput } from '@tracker/shared';
 import { doubleTap, doubleTapViewports } from './doubleTap';
 import { expect, isPhone, test } from './fixtures';
-import { seedProject, settledScreenshot, toast } from './helpers';
+import { readActionSheet, seedProject, settledScreenshot, toast } from './helpers';
 
 const HELPER = "Dara's MacBook";
 const LONG = 'Steps to reproduce, what happened and what should happen instead. '.repeat(10);
@@ -67,6 +67,55 @@ test('sends a ticket in review to a reviewer run in two taps', async ({ page, ap
   await api.finishRun(job!.run.id, { status: 'done' });
   await expect(page.getByRole('region', { name: 'Claude Code run' })).toHaveCount(0);
   await expect(page.getByRole('button', { name: /^Status/ })).toContainText('Reviewed');
+});
+
+test("reviews Claude's work automatically when the project says so, up to 2 rounds", async ({
+  page,
+  api,
+  agent,
+}, info) => {
+  await seedProject(api, 'Mobile app', 'MOB', [{ title: 'Crash when rotating' }]);
+  const helperId = randomUUID();
+  await api.registerRunner(helperId, { name: HELPER, projectKeys: ['MOB'] });
+  await page.goto('/p/MOB');
+  await page.getByRole('button', { name: 'Project options' }).first().click();
+  await readActionSheet(page);
+  await page.getByRole('button', { name: 'Edit project' }).click();
+  const edit = page.getByRole('dialog', { name: 'Edit project' });
+  const toggle = edit.getByRole('switch', { name: 'Review automatically' });
+  await expect(toggle).not.toBeChecked();
+  await toggle.click();
+  await expect(toggle).toBeChecked();
+  await settledScreenshot(page, info.outputPath(`auto-review-setting-${info.project.name}.png`));
+  await edit.getByRole('button', { name: 'Save' }).click();
+  await expect(toast(page, 'Project updated')).toBeVisible();
+
+  await page.goto('/p/MOB/1');
+  await page.getByRole('button', { name: sendButton(info.project.name), exact: true }).click();
+  await page.getByRole('button', { name: 'Run in Claude Code' }).click();
+  const card = page.getByRole('region', { name: 'Claude Code run' });
+  let job = await api.takeNextRun(helperId, 'ticket');
+  for (let round = 1; round <= 2; round += 1) {
+    expect(job?.run.role).toBe('work');
+    await agent.submitForReview('MOB-1', { summary: `Round ${round}.` });
+    await api.finishRun(job!.run.id, { status: 'done' });
+    const review = await api.takeNextRun(helperId, 'ticket');
+    expect(review?.run.role).toBe('review');
+    await expect(card).toContainText(`Claude is working on ${HELPER}…`);
+    await agent.reviewTicket('MOB-1', {
+      verdict: 'changes_requested',
+      rating: 2,
+      summary: 'Add a test.',
+    });
+    await api.finishRun(review!.run.id, { status: 'done' });
+    job = await api.takeNextRun(helperId, 'ticket');
+  }
+  expect(job).toBeNull();
+  await expect(card).toContainText(
+    'Automatic review stopped after 2 rounds. The review still asks for changes.',
+  );
+  await expect(card.getByRole('button', { name: 'Try again' })).toBeVisible();
+  await settledScreenshot(page, info.outputPath(`auto-review-stopped-${info.project.name}.png`));
 });
 
 // Long descriptions put the bottom bar's Send to Claude under Run, short ones the comment box or

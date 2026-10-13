@@ -1,4 +1,5 @@
 import {
+  AUTO_REVIEW_ROUNDS,
   derivePrefix,
   resolvePrefix,
   type CreateProjectInput,
@@ -13,6 +14,7 @@ export interface ProjectFormValues {
   description: string;
   repo: string;
   prefix: string;
+  autoReview: boolean;
 }
 
 export const EMPTY_PROJECT_FORM: ProjectFormValues = {
@@ -20,28 +22,36 @@ export const EMPTY_PROJECT_FORM: ProjectFormValues = {
   description: '',
   repo: '',
   prefix: '',
+  autoReview: false,
 };
 
 export const NAME_REQUIRED = 'Add a name to create the project.';
 
 const REPO_HINT = 'The repository is added to every Claude Code prompt.';
 
-export const formValuesOf = (project: Pick<Project, 'name' | 'description' | 'repo'>) => ({
+export const AUTO_REVIEW_HINT = `When Claude finishes a ticket, Claude reviews it on the same computer. Changes it asks for go back to Claude, up to ${AUTO_REVIEW_ROUNDS} rounds.`;
+
+type FormProject = Pick<Project, 'name' | 'description' | 'repo' | 'autoReview'>;
+
+export const formValuesOf = (project: FormProject): ProjectFormValues => ({
   ...EMPTY_PROJECT_FORM,
   name: project.name,
   description: project.description,
   repo: project.repo,
+  autoReview: project.autoReview ?? false,
 });
 
 export const hasName = (values: ProjectFormValues): boolean => values.name.trim() !== '';
 
-const FORM_FIELDS: readonly (keyof ProjectFormValues)[] = ['name', 'description', 'repo', 'prefix'];
+const TEXT_FIELDS = ['name', 'description', 'repo', 'prefix'] as const;
 
 // Trimmed like Create and Save send them, so a stray space doesn't make the sheet ask.
 export const projectFormChanged = (
   values: ProjectFormValues,
   baseline: ProjectFormValues,
-): boolean => FORM_FIELDS.some((field) => values[field].trim() !== baseline[field].trim());
+): boolean =>
+  values.autoReview !== baseline.autoReview ||
+  TEXT_FIELDS.some((field) => values[field].trim() !== baseline[field].trim());
 
 export const prefixPlaceholder = (values: ProjectFormValues): string => derivePrefix(values.name);
 
@@ -66,6 +76,7 @@ export const updateProjectInput = (values: ProjectFormValues): UpdateProjectInpu
   name: values.name.trim(),
   description: values.description.trim(),
   repo: values.repo.trim(),
+  autoReview: values.autoReview,
 });
 
 export const createdToast = (name: string): string => `“${name}” created`;

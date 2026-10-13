@@ -108,6 +108,22 @@ describe('Claude Code run on the ticket screen', () => {
     expect(await screen.findByRole('dialog', { name: 'Send to Claude Code' })).toBeInTheDocument();
   });
 
+  it('says why the automatic review stopped after a run that ended well', async () => {
+    const reviewed = makeRun({
+      role: 'review',
+      status: 'done',
+      endedAt: Date.now() - 60_000,
+      chainStop: 'rounds',
+    });
+    setup([reviewed]);
+    const card = await runCard();
+
+    expect(card).toHaveTextContent(
+      'Automatic review stopped after 2 rounds. The review still asks for changes.',
+    );
+    expect(within(card).getByRole('button', { name: 'Try again' })).toBeInTheDocument();
+  });
+
   it('shows nothing for a done or cancelled run, or a failure from over a day ago', async () => {
     const old = Date.now() - STOPPED_SHOWN_MS - 1;
     for (const runs of [

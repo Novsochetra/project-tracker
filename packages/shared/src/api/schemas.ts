@@ -40,6 +40,7 @@ export const updateProjectInput = z.object({
   name: z.string().trim().min(1).max(120).optional(),
   description: z.string().max(5000).optional(),
   repo: z.string().trim().max(500).optional(),
+  autoReview: z.boolean().optional(),
 });
 export type UpdateProjectInput = z.input<typeof updateProjectInput>;
 

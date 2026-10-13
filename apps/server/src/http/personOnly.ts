@@ -1,11 +1,16 @@
+import type { Actor } from '@tracker/shared';
 import { createMiddleware } from 'hono/factory';
 import { forbidden } from '../errors';
 import type { AppEnv } from './env';
 
+export function refuseAgent(actor: Actor, message: string): void {
+  if (actor.kind !== 'human') throw forbidden(message);
+}
+
 // Checked before the body, like the other refusals.
 const refuseAgents = (message: string) =>
   createMiddleware<AppEnv>(async (c, next) => {
-    if (c.get('actor').kind !== 'human') throw forbidden(message);
+    refuseAgent(c.get('actor'), message);
     await next();
   });
 
@@ -25,3 +30,6 @@ export const personAnswers = refuseAgents('Only a person answers what Claude ask
 
 // A chat is the person's own conversation with Claude; an agent never removes one.
 export const personDeletesChats = refuseAgents('Only a person deletes a chat.');
+
+// The setting starts runs without a tap, so like a run it is a person's to turn on.
+export const AUTO_REVIEW_PERSON_ONLY = 'Only a person turns automatic review on or off.';

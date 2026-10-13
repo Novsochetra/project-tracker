@@ -24,6 +24,7 @@ export const toProject = (row: ProjectRow): Project => ({
   nextNum: row.nextNum,
   createdAt: row.createdAt,
   updatedAt: row.updatedAt,
+  autoReview: row.autoReview === 1,
 });
 
 export const toStatus = (row: StatusRow): Status => ({

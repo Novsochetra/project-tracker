@@ -11,6 +11,7 @@ import {
 import { projectPrompt } from '../../services/prompts';
 import { getBoard } from '../../services/ticketQueries';
 import type { AppEnv } from '../env';
+import { AUTO_REVIEW_PERSON_ONLY, refuseAgent } from '../personOnly';
 import { userContext } from '../userContext';
 import { jsonBody } from '../validation';
 
@@ -23,9 +24,11 @@ export const projectRoutes = (ctx: ServiceContext) =>
     .get('/projects/:key', async (c) =>
       c.json(await getProjectDetail(userContext(ctx, c), c.req.param('key'))),
     )
-    .patch('/projects/:key', jsonBody(updateProjectInput), async (c) =>
-      c.json(await updateProject(userContext(ctx, c), c.req.param('key'), c.req.valid('json'))),
-    )
+    .patch('/projects/:key', jsonBody(updateProjectInput), async (c) => {
+      const input = c.req.valid('json');
+      if (input.autoReview !== undefined) refuseAgent(c.get('actor'), AUTO_REVIEW_PERSON_ONLY);
+      return c.json(await updateProject(userContext(ctx, c), c.req.param('key'), input));
+    })
     .delete('/projects/:key', async (c) => {
       await deleteProject(userContext(ctx, c), c.req.param('key'));
       return c.body(null, 204);

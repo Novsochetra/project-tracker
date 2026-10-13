@@ -2,6 +2,7 @@ import type {
   AskEffort,
   AskMode,
   AskModel,
+  ChainStop,
   RunKind,
   RunRequestDecision,
   RunRequestKind,
@@ -46,6 +47,9 @@ export interface RunRow {
   stepCount: number;
   // Null on runs queued before there were roles, which were all work runs.
   role: RunRole | null;
+  // The chain's work round (logic/reviewChain); null on a run a person started.
+  round: number | null;
+  chainStop: ChainStop | null;
 }
 
 export interface RunStepRow {

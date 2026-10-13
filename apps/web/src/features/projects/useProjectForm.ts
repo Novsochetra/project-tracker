@@ -5,7 +5,7 @@ export interface ProjectForm {
   values: ProjectFormValues;
   changed: boolean;
   error: string | null;
-  setField: (field: keyof ProjectFormValues, value: string) => void;
+  setField: <K extends keyof ProjectFormValues>(field: K, value: ProjectFormValues[K]) => void;
   setError: (error: string | null) => void;
 }
 
@@ -19,7 +19,7 @@ export function useProjectForm(initial: ProjectFormValues | undefined): ProjectF
     setStart(initial);
     setValues(initial);
   }
-  const setField = (field: keyof ProjectFormValues, value: string) => {
+  const setField = <K extends keyof ProjectFormValues>(field: K, value: ProjectFormValues[K]) => {
     setValues((current) => ({ ...current, [field]: value }));
     setError(null);
   };

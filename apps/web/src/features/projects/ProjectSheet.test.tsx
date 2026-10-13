@@ -150,8 +150,27 @@ describe('Edit project sheet', () => {
       name: 'Marketing site',
       description: 'Docs',
       repo: '~/code/web',
+      autoReview: false,
     });
     expect(await screen.findByText('Project updated')).toBeInTheDocument();
     await waitFor(() => expect(onClose).toHaveBeenCalled());
+  });
+
+  it('turns automatic review on with a switch that Save sends', async () => {
+    const user = userEvent.setup();
+    const { dialog } = renderEditSheet();
+    const save = within(dialog).getByRole('button', { name: 'Save' });
+    const toggle = within(dialog).getByRole('switch', { name: 'Review automatically' });
+    expect(toggle).toHaveAttribute('aria-checked', 'false');
+    expect(toggle).toHaveAccessibleDescription(
+      'When Claude finishes a ticket, Claude reviews it on the same computer. Changes it asks for go back to Claude, up to 2 rounds.',
+    );
+    await user.click(toggle);
+    expect(toggle).toHaveAttribute('aria-checked', 'true');
+    await user.click(save);
+    expect(updateProject).toHaveBeenLastCalledWith(
+      'WEB',
+      expect.objectContaining({ autoReview: true }),
+    );
   });
 });
