@@ -21,6 +21,7 @@ import { inTransaction, type ServiceContext } from './context';
 import { loadTicketScope, requireTicket, ticketKeyOf, type TicketRef } from './lookups';
 import { continueChain } from './reviewChain/continueChain';
 import { endingOf } from './runEnding';
+import { pushRunEnd } from './runEndPush';
 import { notifyRun, toRun } from './runMappers';
 import { requireRunnerFor } from './runners';
 import { insertQueuedRun, queuedRunRow } from './runRows';
@@ -128,6 +129,7 @@ export async function endRun(
   }
   if (ended) {
     notifyRun(ctx, scope, after);
+    pushRunEnd(ctx, scope, after, { answer });
     await continueChain(ctx, after);
   }
   return toRun(after);

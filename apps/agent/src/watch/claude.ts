@@ -1,4 +1,5 @@
 import { spawn } from 'node:child_process';
+import { claudeEnv } from './claudeEnv';
 import type { ClaudeExit } from './outcome';
 import { resultOf, type ClaudeResult } from './stream/claudeResult';
 import { createJsonLines } from './stream/jsonLines';
@@ -72,7 +73,12 @@ export function runClaude(
       if (!ended) resolve(seen.exit(code, exitSignal));
       ended = true;
     };
-    const child = spawn(command, [...args], { cwd, signal, stdio: 'pipe' });
+    const child = spawn(command, [...args], {
+      cwd,
+      signal,
+      stdio: 'pipe',
+      env: claudeEnv(process.env),
+    });
     child.stdout.setEncoding('utf8');
     child.stdout.on('data', seen.push);
     child.stderr.setEncoding('utf8');

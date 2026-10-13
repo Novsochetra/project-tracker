@@ -18,6 +18,7 @@ export interface ChatFooterAreaProps {
   helper: AskHelper;
   waiting: boolean;
   savedOptions: AskOptions;
+  placeholder: string;
 }
 
 function Thinking({ run, waiting }: { run: Run; waiting: boolean }) {
@@ -56,7 +57,7 @@ function RunOn({ helper }: { helper: AskHelper }) {
 }
 
 export function ChatFooterArea(props: ChatFooterAreaProps) {
-  const { projectKey, chatId, helper, waiting, savedOptions } = props;
+  const { projectKey, chatId, helper, waiting, savedOptions, placeholder } = props;
   const { footer } = helper;
   const isPhone = useIsPhone();
   const isTop = useOptionalScreen()?.isTop ?? true;
@@ -77,6 +78,7 @@ export function ChatFooterArea(props: ChatFooterAreaProps) {
           stoppableRun={stoppableRunOf(footer)}
           offersSend={footer.kind !== 'setup'}
           savedOptions={savedOptions}
+          placeholder={placeholder}
         />
       </div>
     </div>

@@ -10,10 +10,17 @@ export const CHAT_ANSWER_MAX = 100_000;
 export const CHAT_TITLE_MAX = 80;
 export const CHAT_NO_ANSWER = 'Claude Code gave no answer.';
 
+export interface ChatTicket {
+  key: string;
+  title: string;
+}
+
 export interface Chat {
   id: string;
   projectKey: string;
   title: string;
+  // The ticket the chat is about (PT-184), in the chat's project; null once it is deleted.
+  ticket: ChatTicket | null;
   // The last question's choice, so the next one starts with it.
   options: AskOptions;
   // So the chat list can say Claude waits for the person there (PT-165).

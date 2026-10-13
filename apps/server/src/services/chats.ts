@@ -1,5 +1,11 @@
 import { randomUUID } from 'node:crypto';
-import { chosenAskOptions, type askInput, type Chat, type ChatDetail } from '@tracker/shared';
+import {
+  chosenAskOptions,
+  type askInput,
+  type Chat,
+  type ChatDetail,
+  type startChatInput,
+} from '@tracker/shared';
 import type { z } from 'zod';
 import type { UserScope } from '../auth/scope';
 import type { ChatRow } from '../db/chatTables';
@@ -15,6 +21,7 @@ import {
 import { latestChatRunRow, listStoppedChatRunRows } from '../repositories/runs';
 import { queueAsk } from './askRuns';
 import { chatTitle, toChat, toMessage } from './chatMappers';
+import { chatPromptTicket, requireChatTicket } from './chatTicket';
 import { inTransaction, type ServiceContext } from './context';
 import { requireProject } from './lookups';
 import { notifyRun, toRun } from './runMappers';
@@ -22,6 +29,7 @@ import { requireRunnerFor } from './runners';
 import { expireSilentRuns } from './runs';
 
 type AskValues = z.output<typeof askInput>;
+type StartValues = z.output<typeof startChatInput>;
 
 const CHATS_SHOWN = 50;
 
@@ -82,12 +90,14 @@ async function askIn(
   const runner = await requireRunnerFor(ctx, scope, input.runnerId, project);
   await expireSilentRuns(ctx);
   const history = isNew ? [] : await listMessageRows(ctx.db, chat.id);
+  const ticket = await chatPromptTicket(ctx.db, chat, project.key);
   const queued = { scope, runner, projectId: project.id, now: ctx.now() };
   const run = await inTransaction(ctx, async (trx) => {
     if (isNew) await insertChat(trx, chat);
     const saved = { model: chat.askModel, mode: chat.askMode, effort: chat.askEffort };
     const options = chosenAskOptions(input, saved);
-    return queueAsk(trx, { queued, project, chat, history, question: input.text, options });
+    const question = input.text;
+    return queueAsk(trx, { queued, project, chat, history, ticket, question, options });
   });
   notifyRun(ctx, scope, run);
   return getChat(ctx, scope, chat.id);
@@ -97,9 +107,10 @@ export async function startChat(
   ctx: ServiceContext,
   scope: UserScope,
   projectKey: string,
-  input: AskValues,
+  input: StartValues,
 ): Promise<ChatDetail> {
   const project = await requireProject(ctx.db, scope, projectKey);
+  const ticket = input.ticketKey ? await requireChatTicket(ctx.db, project, input.ticketKey) : null;
   const at = ctx.now();
   const options = chosenAskOptions(input);
   const chat: ChatRow = {
@@ -112,6 +123,7 @@ export async function startChat(
     askModel: options.model,
     askMode: options.mode,
     askEffort: options.effort,
+    ticketId: ticket?.id ?? null,
     createdAt: at,
     updatedAt: at,
   };

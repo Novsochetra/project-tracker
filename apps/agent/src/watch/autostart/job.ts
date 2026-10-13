@@ -2,8 +2,7 @@ import { realpathSync } from 'node:fs';
 import { DEFAULT_AGENT_NAME, type Config } from '../../config';
 import type { WatchArgs } from '../watchIo';
 import { AutostartError } from './errors';
-import { labelFor, logPathOf } from './names';
-import type { LaunchAgent } from './plist';
+import { labelFor } from './names';
 
 const SAFE_PROJECT_KEY = /^[A-Z0-9]{1,20}$/;
 
@@ -33,6 +32,7 @@ export const watchArgsFor = ({ config, projectKey, args }: JobInput): string[] =
   ...option('name', args.name),
   ...option('permission-mode', args.permissionMode),
   ...(args.keepAwake === false ? ['--no-keep-awake'] : []),
+  ...(args.approvals ? ['--approvals'] : []),
   projectKeyOf(projectKey),
 ];
 
@@ -44,13 +44,18 @@ export const thisCli = (): string[] => [
   realpathSync(process.argv[1] ?? ''),
 ];
 
-export function jobFor(input: JobInput, cli: readonly string[] = thisCli()): LaunchAgent {
-  const label = labelFor(input.folder);
+export interface HelperJob {
+  label: string;
+  program: readonly string[];
+  folder: string;
+  environment: Readonly<Record<string, string>>;
+}
+
+export function jobFor(input: JobInput, cli: readonly string[] = thisCli()): HelperJob {
   return {
-    label,
+    label: labelFor(input.folder),
     program: [...cli, ...watchArgsFor(input)],
     folder: input.folder,
-    logPath: logPathOf(label),
     environment: { PATH: input.env.PATH ?? '', TRACKER_CONFIG: input.configPath },
   };
 }

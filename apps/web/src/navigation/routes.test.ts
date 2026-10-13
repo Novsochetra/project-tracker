@@ -18,6 +18,8 @@ const web: Route = { name: 'project', key: 'WEB' };
 const ask: Route = { name: 'chats', key: 'MOB' };
 const chat: Route = { name: 'chat', key: 'MOB', chatId: 'c-1' };
 const newChat: Route = { name: 'chat', key: 'MOB', chatId: null };
+const ticketChat: Route = { name: 'chat', key: 'MOB', chatId: 'c-1', ticketNum: 3 };
+const newTicketChat: Route = { name: 'chat', key: 'MOB', chatId: null, ticketNum: 3 };
 
 describe('parseRoute', () => {
   it.each([
@@ -32,6 +34,9 @@ describe('parseRoute', () => {
     ['/p/MOB/ask/', ask],
     ['/p/MOB/ask/c-1', chat],
     ['/p/MOB/ask/new', newChat],
+    ['/p/MOB/3/ask/c-1', ticketChat],
+    ['/p/MOB/3/ask/new/', newTicketChat],
+    ['/p/MOB/3/ask', mob3],
   ])('parses %s', (path, route) => {
     expect(parseRoute(path)).toEqual(route);
   });
@@ -47,17 +52,23 @@ describe('parseRoute', () => {
     },
   );
 
-  it.each(['/x', '/p', '/p/MOB/3/extra', '/p/%E0%A4%A', '/projects/MOB', '/p/MOB/ask/c-1/x'])(
-    'falls back to Projects for %s',
-    (path) => {
-      expect(parseRoute(path)).toEqual(projects);
-    },
-  );
+  it.each([
+    '/x',
+    '/p',
+    '/p/MOB/3/extra',
+    '/p/%E0%A4%A',
+    '/projects/MOB',
+    '/p/MOB/ask/c-1/x',
+    '/p/MOB/0/ask/c-1',
+    '/p/MOB/3/ask/c-1/x',
+  ])('falls back to Projects for %s', (path) => {
+    expect(parseRoute(path)).toEqual(projects);
+  });
 });
 
 describe('routePath', () => {
   it('builds paths that parse back to the same route', () => {
-    for (const route of [projects, mob, mob3, ask, chat, newChat]) {
+    for (const route of [projects, mob, mob3, ask, chat, newChat, ticketChat, newTicketChat]) {
       expect(parseRoute(routePath(route))).toEqual(route);
     }
     for (const route of [{ name: 'project', key: 'A B' } as Route]) {
@@ -72,6 +83,8 @@ describe('routePath', () => {
     expect(routePath(ask)).toBe('/p/MOB/ask');
     expect(routePath(chat)).toBe('/p/MOB/ask/c-1');
     expect(routePath(newChat)).toBe('/p/MOB/ask/new');
+    expect(routePath(ticketChat)).toBe('/p/MOB/3/ask/c-1');
+    expect(routePath(newTicketChat)).toBe('/p/MOB/3/ask/new');
   });
 });
 
@@ -86,6 +99,7 @@ describe('stack helpers', () => {
     expect(routeStack(projects)).toEqual([projects]);
     expect(routeStack(mob3)).toEqual([projects, mob, mob3]);
     expect(routeStack(chat)).toEqual([projects, mob, ask, chat]);
+    expect(routeStack(ticketChat)).toEqual([projects, mob, mob3, ticketChat]);
   });
 
   it('measures depth', () => {

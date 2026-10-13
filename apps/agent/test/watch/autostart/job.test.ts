@@ -23,7 +23,7 @@ describe('the job tracker watch installs', () => {
     const job = jobFor(
       input({
         config: { ...config, agentName: 'Claude (home)' },
-        args: { name: 'Mac', permissionMode: 'acceptEdits', keepAwake: false },
+        args: { name: 'Mac', permissionMode: 'acceptEdits', keepAwake: false, approvals: true },
       }),
       CLI,
     );
@@ -35,6 +35,7 @@ describe('the job tracker watch installs', () => {
       '--name=Mac',
       '--permission-mode=acceptEdits',
       '--no-keep-awake',
+      '--approvals',
       'MOB',
     ]);
     expect(job.environment).toEqual({
@@ -42,7 +43,7 @@ describe('the job tracker watch installs', () => {
       TRACKER_CONFIG: '/Users/dara/.config/project-tracker/config.json',
     });
     expect(JSON.stringify(job)).not.toContain('trk_secret');
-    expect(job.logPath).toContain(`${job.label}.log`);
+    expect(job.label).toMatch(/^com\.project-tracker\.watch\.[0-9a-f]{12}$/);
   });
 
   it('refuses a project key shaped like a flag, which could come from the tracker', () => {

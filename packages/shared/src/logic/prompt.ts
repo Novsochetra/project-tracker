@@ -1,8 +1,9 @@
 import { VERDICT_LABELS, type ReviewVerdict } from '../domain/activity';
 import { PRIORITY_LABELS, type Priority } from '../domain/priority';
 import { formatShortDay } from './format';
+import { instructionsBlock, type PromptInstructions } from './instructions';
 
-export interface PromptProject {
+export interface PromptProject extends PromptInstructions {
   name: string;
   key: string;
   repo: string;
@@ -34,6 +35,7 @@ function replyFormat(key: string): string {
     'STATUS: done | in progress | blocked',
     'SUMMARY: what you changed, in 1-3 sentences',
     'FILES: files you created or edited',
+    'OUTPUT: results that aren\'t code (a draft, a CSV, an image), attached with attach_file, or "none"',
     'NEXT: anything I still need to do, or "none"',
     '```',
   ].join('\n');
@@ -64,9 +66,18 @@ export function ticketBlock(ticket: PromptTicket, heading: string, now: Date = n
   return out.join('\n');
 }
 
+// Under claude -p nobody answers in the chat, so a run asks on the phone through the tracker.
+export const ASK_PERSON_LINE =
+  "If a decision only I can make blocks the work, ask me with the tracker's ask_person tool instead of guessing.";
+
 export function repoLine(project: PromptProject): string[] {
   return project.repo ? [`Repository / folder: ${project.repo}`] : [];
 }
+
+const instructionLines = (project: PromptProject): string[] => {
+  const block = instructionsBlock(project, '##');
+  return block.length > 0 ? ['', ...block] : [];
+};
 
 export function buildTicketPrompt(
   project: PromptProject,
@@ -76,8 +87,11 @@ export function buildTicketPrompt(
   return [
     `Please work on ticket ${ticket.key} from my "${project.name}" project.`,
     ...repoLine(project),
+    ...instructionLines(project),
     '',
     ticketBlock(ticket, '##', now),
+    '',
+    ASK_PERSON_LINE,
     '',
     '## When you finish',
     'End your reply with this block, filled in, so I can paste it back into my tracker:',
@@ -94,6 +108,7 @@ export function buildProjectPrompt(
   const lines = [
     `Here are the open tickets for my "${project.name}" project. Work through them in order, highest priority first, and check with me before large or risky changes.`,
     ...repoLine(project),
+    ...instructionLines(project),
   ];
   for (const ticket of tickets) lines.push('', '---', '', ticketBlock(ticket, '###', now));
   lines.push(

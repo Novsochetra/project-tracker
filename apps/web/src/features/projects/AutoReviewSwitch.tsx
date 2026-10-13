@@ -8,7 +8,7 @@ import type { ProjectForm } from './useProjectForm';
 
 export const AUTO_REVIEW_HINT = `When Claude finishes a ticket, Claude reviews it on the same computer. Changes it asks for go back to Claude, up to ${AUTO_REVIEW_ROUNDS} rounds.`;
 
-export function AutoReviewSwitch({ form: { values, setField } }: { form: ProjectForm }) {
+export function AutoReviewSwitch({ form: { values, setAutoReview } }: { form: ProjectForm }) {
   const hintId = useId();
   return (
     <>
@@ -17,7 +17,7 @@ export function AutoReviewSwitch({ form: { values, setField } }: { form: Project
           <span className={styles.switchLabel}>Review automatically</span>
           <Switch
             checked={values.autoReview}
-            onChange={(checked) => setField('autoReview', checked)}
+            onChange={setAutoReview}
             aria-label="Review automatically"
             aria-describedby={hintId}
           />

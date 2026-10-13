@@ -5,7 +5,7 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { otherProject, project, statuses } from '../../api/test/fixtures';
 import { currentPath, projectSummary, renderWithApp } from '../../app/test/harness';
-import { mockPhone, skipAnimations } from '../../overlays/testing';
+import { mockPhone, readActionSheet, skipAnimations } from '../../overlays/testing';
 import { EditProjectSheet } from './EditProjectSheet';
 import { ProjectSheet } from './ProjectSheet';
 
@@ -80,10 +80,42 @@ describe('New project sheet', () => {
       key: 'MA',
       description: 'Phone app',
       repo: '~/code/mobile',
+      instructions: '',
+      template: 'software',
     });
     expect(await screen.findByText('“Mobile app” created')).toBeInTheDocument();
     expect(onClose).toHaveBeenCalled();
     await waitFor(() => expect(currentPath()).toBe('/p/MA'));
+  });
+
+  it('sends the instructions for Claude', async () => {
+    const user = userEvent.setup();
+    const { dialog, create } = renderNewSheet();
+    await user.type(within(dialog).getByLabelText('Project name'), 'Garden blog');
+    await user.type(
+      within(dialog).getByLabelText('Instructions for Claude'),
+      ' Plain voice.{Enter}Cite two sources. ',
+    );
+    expect(
+      within(dialog).getByText('Claude gets these with every ticket and question in this project.'),
+    ).toBeInTheDocument();
+    await user.click(within(dialog).getByRole('button', { name: 'Create' }));
+    expect(create).toHaveBeenCalledWith(
+      expect.objectContaining({ instructions: 'Plain voice.\nCite two sources.' }),
+    );
+  });
+
+  it('asks before discarding typed instructions on a phone', async () => {
+    restore.push(mockPhone(true));
+    const user = userEvent.setup();
+    const { dialog, onClose } = renderNewSheet();
+    await user.type(within(dialog).getByLabelText('Instructions for Claude'), 'Plain voice.');
+    await user.click(within(dialog).getByRole('button', { name: 'Cancel' }));
+    const ask = screen.getByRole('dialog', { name: 'Discard changes?' });
+    await readActionSheet();
+    await user.click(within(ask).getByRole('button', { name: 'Keep editing' }));
+    expect(onClose).not.toHaveBeenCalled();
+    expect(within(dialog).getByLabelText('Instructions for Claude')).toHaveValue('Plain voice.');
   });
 
   it('shows the server error and stays open', async () => {
@@ -112,7 +144,12 @@ describe('New project sheet', () => {
 });
 
 describe('Edit project sheet', () => {
-  const website = projectSummary({ ...otherProject, description: 'Docs', repo: '~/code/web' });
+  const website = projectSummary({
+    ...otherProject,
+    description: 'Docs',
+    repo: '~/code/web',
+    instructions: 'Plain voice.',
+  });
   const updateProject = vi.fn((key: string, input: UpdateProjectInput) =>
     Promise.resolve<Project>({ ...otherProject, ...input, key }),
   );
@@ -131,7 +168,9 @@ describe('Edit project sheet', () => {
     expect(within(dialog).getByLabelText('Project name')).toHaveValue('Website');
     expect(within(dialog).getByLabelText('Description')).toHaveValue('Docs');
     expect(within(dialog).getByLabelText('Repository or folder')).toHaveValue('~/code/web');
+    expect(within(dialog).getByLabelText('Instructions for Claude')).toHaveValue('Plain voice.');
     expect(within(dialog).queryByLabelText('Ticket prefix')).not.toBeInTheDocument();
+    expect(within(dialog).queryByRole('button', { name: /^Template/ })).not.toBeInTheDocument();
     expect(
       within(dialog).getByText(
         'The repository is added to every Claude Code prompt for this project.',
@@ -151,6 +190,7 @@ describe('Edit project sheet', () => {
       name: 'Marketing site',
       description: 'Docs',
       repo: '~/code/web',
+      instructions: 'Plain voice.',
       autoReview: false,
     });
     expect(await screen.findByText('Project updated')).toBeInTheDocument();
@@ -172,6 +212,19 @@ describe('Edit project sheet', () => {
     expect(updateProject).toHaveBeenLastCalledWith(
       'WEB',
       expect.objectContaining({ autoReview: true }),
+    );
+  });
+
+  it('saves changed instructions', async () => {
+    const user = userEvent.setup();
+    const { dialog } = renderEditSheet();
+    const field = within(dialog).getByLabelText('Instructions for Claude');
+    await user.clear(field);
+    await user.type(field, 'Cite two sources.');
+    await user.click(within(dialog).getByRole('button', { name: 'Save' }));
+    expect(updateProject).toHaveBeenLastCalledWith(
+      'WEB',
+      expect.objectContaining({ instructions: 'Cite two sources.' }),
     );
   });
 });

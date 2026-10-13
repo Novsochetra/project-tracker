@@ -1,5 +1,12 @@
 import { useMutation, useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query';
-import type { AskInput, CardTicketInput, Chat, ChatDetail, Run } from '@tracker/shared';
+import type {
+  AskInput,
+  CardTicketInput,
+  Chat,
+  ChatDetail,
+  Run,
+  StartChatInput,
+} from '@tracker/shared';
 import { useApi } from '../context';
 import { isNotFound } from '../errors';
 import { refreshProjectList } from '../projectListRefresh';
@@ -10,7 +17,7 @@ import { invalidateRuns, showRun } from './runs';
 
 export interface StartChatVariables {
   projectKey: string;
-  input: AskInput;
+  input: StartChatInput;
 }
 
 export interface AskVariables {

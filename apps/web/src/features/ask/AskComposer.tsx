@@ -8,7 +8,6 @@ import { useDraftMark } from '../../lib/useDraftMark';
 import { isSubmitShortcut } from '../ticket/activity/commentRules';
 import { AskOptionsRow } from './AskOptionsRow';
 import styles from './ChatScreen.module.css';
-import { ASK_PLACEHOLDER } from './copy';
 import { SendButton } from './SendButton';
 import { useAskOptions } from './useAskOptions';
 import { useChatSend } from './useChatSend';
@@ -21,6 +20,7 @@ export interface AskComposerProps {
   stoppableRun: Run | null;
   offersSend: boolean;
   savedOptions: AskOptions;
+  placeholder: string;
 }
 
 export function AskComposer({
@@ -30,6 +30,7 @@ export function AskComposer({
   stoppableRun,
   offersSend,
   savedOptions,
+  placeholder,
 }: AskComposerProps) {
   const [text, setText] = useState('');
   const { options, pick, forget } = useAskOptions(savedOptions);
@@ -65,7 +66,7 @@ export function AskComposer({
       <div className={styles.box}>
         <AutoTextarea
           aria-label="Question for Claude"
-          placeholder={ASK_PLACEHOLDER}
+          placeholder={placeholder}
           rows={1}
           className={styles.input}
           maxLength={CHAT_QUESTION_MAX}

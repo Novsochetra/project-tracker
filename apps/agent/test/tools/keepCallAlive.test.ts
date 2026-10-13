@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { keepCallAlive, PROGRESS_MS } from '../../../src/watch/permissionTool/keepCallAlive';
+import { keepCallAlive, PROGRESS_MS } from '../../src/tools/keepCallAlive';
 
 afterEach(() => {
   vi.useRealTimers();

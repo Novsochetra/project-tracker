@@ -214,10 +214,8 @@ describe.each(DIALECTS)('every migration up and down (%s)', (dialect) => {
         db,
       );
 
-      await expectRan(
-        createMigrator(db).migrateTo('0011_user_projects'),
-        NAMES.filter((name) => name > '0011_user_projects').reverse(),
-      );
+      const later = NAMES.filter((name) => name > '0011_user_projects').reverse();
+      await expectRan(createMigrator(db).migrateTo('0011_user_projects'), later);
       const kept = await sql<{ id: string }>`select id from invites`.execute(db);
       expect(kept.rows).toEqual([{ id: 'i' }]);
 
@@ -243,6 +241,7 @@ const DATA_MODEL: SchemaShape = {
       'created_at bigint not null',
       'updated_at bigint not null',
       'owner_id text',
+      "instructions text not null default ''",
       'auto_review integer',
     ],
     indexes: ['index (owner_id)', 'unique (key)'],
@@ -462,6 +461,27 @@ const DATA_MODEL: SchemaShape = {
     indexes: ['index (run_id, created_at)', 'index (status, expires_at)'],
     foreignKeys: ['run_id -> runs.id on delete cascade'],
   },
+  questions: {
+    columns: [
+      'id text primary key',
+      'user_id text',
+      'ticket_id text not null',
+      'run_id text',
+      'text text not null',
+      'choices text not null',
+      'status text not null',
+      'answer text',
+      'created_at bigint not null',
+      'expires_at bigint not null',
+      'ended_at bigint',
+    ],
+    indexes: ['index (status, expires_at)', 'index (ticket_id, created_at)'],
+    foreignKeys: [
+      'run_id -> runs.id on delete set null',
+      'ticket_id -> tickets.id on delete cascade',
+      'user_id -> users.id on delete cascade',
+    ],
+  },
   chats: {
     columns: [
       'id text primary key',
@@ -475,10 +495,12 @@ const DATA_MODEL: SchemaShape = {
       "ask_model text not null default 'default'",
       "ask_mode text not null default 'ask'",
       "ask_effort text not null default 'default'",
+      'ticket_id text',
     ],
-    indexes: ['index (project_id, updated_at)'],
+    indexes: ['index (project_id, updated_at)', 'index (ticket_id)'],
     foreignKeys: [
       'project_id -> projects.id on delete cascade',
+      'ticket_id -> tickets.id on delete set null',
       'user_id -> users.id on delete cascade',
     ],
   },
@@ -497,6 +519,32 @@ const DATA_MODEL: SchemaShape = {
       'chat_id -> chats.id on delete cascade',
       'ticket_id -> tickets.id on delete set null',
     ],
+  },
+  push_subscriptions: {
+    columns: [
+      'id text primary key',
+      'user_id text',
+      'session_id text',
+      'endpoint text not null',
+      'p256dh text not null',
+      'auth text not null',
+      'created_at bigint not null',
+    ],
+    indexes: ['index (user_id)', 'unique (endpoint)'],
+    foreignKeys: [
+      'session_id -> sessions.id on delete cascade',
+      'user_id -> users.id on delete cascade',
+    ],
+  },
+  push_keys: {
+    columns: [
+      'id text primary key',
+      'public_key text not null',
+      'private_key text not null',
+      'created_at bigint not null',
+    ],
+    indexes: [],
+    foreignKeys: [],
   },
 };
 

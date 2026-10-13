@@ -20,11 +20,12 @@ export const workPrompt: PromptDefinition = {
       '2. Read the ticket fully: title, description, attachments, every comment and the last review. If a review requested changes, address every point in it.',
       '3. Do the work in the current repository. Keep the change focused on the ticket.',
       '4. Use add_comment to record important decisions, assumptions and blockers as you go.',
-      '5. Verify before you submit: run the relevant tests, type checks and build, and check that the change really works.',
+      "5. Verify before you submit. When the work is code, run the relevant tests, type checks and build, and check that the change really works. Otherwise check the result against the ticket and the project's instructions.",
       '6. Call submit_for_review with a clear summary of what you changed and how you verified it, the files you created or edited, and next steps (or "none"). Then tell me what you did.',
       '',
       'Rules:',
       '- Never move a ticket to Done. Only a person does that, after review.',
+      '- If a decision only I can make blocks the work, ask me with ask_person instead of guessing. If nobody answers, go on with your best judgment and note the assumption with add_comment.',
       '- If you are blocked, use add_comment to explain why and what you need, leave the ticket In progress, and tell me.',
       '- Work on one ticket. Continue with the next ticket (back to step 1) only if I asked for more than one.',
     ].join('\n');

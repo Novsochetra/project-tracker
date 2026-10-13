@@ -21,6 +21,7 @@ export const COMMAND_OPTIONS = {
   summary: { type: 'string' },
   files: { type: 'string' },
   next: { type: 'string' },
+  comment: { type: 'string' },
   verdict: { type: 'string' },
   rating: { type: 'string' },
   name: { type: 'string' },
@@ -32,6 +33,7 @@ export const WATCH_FLAGS = {
   uninstall: { type: 'boolean' },
   check: { type: 'boolean' },
   'no-keep-awake': { type: 'boolean' },
+  approvals: { type: 'boolean' },
 } as const satisfies NonNullable<ParseArgsConfig['options']>;
 
 export type WatchFlag = keyof typeof WATCH_FLAGS;

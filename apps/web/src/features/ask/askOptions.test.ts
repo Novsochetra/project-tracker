@@ -1,7 +1,7 @@
 import { DEFAULT_ASK_OPTIONS } from '@tracker/shared';
 import { describe, expect, it } from 'vitest';
 import { askInputOf, askOptionsHint, savedAskOptions } from './askOptions';
-import { EDIT_HINT } from './copy';
+import { ASK_HINT, EDIT_HINT, PLAN_HINT } from './copy';
 
 describe('savedAskOptions', () => {
   it('starts a new chat from the defaults', () => {
@@ -40,9 +40,9 @@ describe('askInputOf', () => {
 });
 
 describe('askOptionsHint', () => {
-  it('warns only when Edit is picked', () => {
+  it('says what each mode lets Claude do', () => {
+    expect(askOptionsHint(DEFAULT_ASK_OPTIONS)).toBe(ASK_HINT);
+    expect(askOptionsHint({ model: 'opus', mode: 'plan', effort: 'low' })).toBe(PLAN_HINT);
     expect(askOptionsHint({ ...DEFAULT_ASK_OPTIONS, mode: 'edit' })).toBe(EDIT_HINT);
-    expect(askOptionsHint(DEFAULT_ASK_OPTIONS)).toBeNull();
-    expect(askOptionsHint({ model: 'opus', mode: 'plan', effort: 'low' })).toBeNull();
   });
 });

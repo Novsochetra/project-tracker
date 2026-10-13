@@ -2,6 +2,8 @@ import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { APP_VERSION, shortCommit } from '@tracker/shared';
 import { loadAuthConfig, type AuthConfig } from './authConfig';
+import { loadPushSettings } from './push/pushConfig';
+import type { SenderSettings } from './push/senderKeys';
 import { withRailwayDefaults } from './railway';
 import { loadS3Config, type S3Config } from './storage/s3Config';
 
@@ -18,6 +20,7 @@ export interface Config {
   version: string;
   commit: string | null;
   publicUrl: string | null;
+  push: SenderSettings;
 }
 
 // This file runs as src/config.ts (tsx, vitest) and bundled as dist/main.js:
@@ -47,6 +50,7 @@ export const databaseUrlOf = (env: NodeJS.ProcessEnv): string =>
 export function loadConfig(given: NodeJS.ProcessEnv = process.env): Config {
   const env = withRailwayDefaults(given);
   const host = env.HOST || '127.0.0.1';
+  const publicUrl = parsePublicUrl(env.PUBLIC_URL);
   return {
     port: parsePort(env.PORT),
     host,
@@ -59,7 +63,8 @@ export function loadConfig(given: NodeJS.ProcessEnv = process.env): Config {
     version: APP_VERSION,
     // Railway sets it for a deploy from git; elsewhere the build has no commit to show.
     commit: shortCommit(env.RAILWAY_GIT_COMMIT_SHA),
-    publicUrl: parsePublicUrl(env.PUBLIC_URL),
+    publicUrl,
+    push: loadPushSettings(env, publicUrl),
     auth: loadAuthConfig(env, host),
   };
 }

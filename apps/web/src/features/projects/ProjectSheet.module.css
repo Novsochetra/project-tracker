@@ -47,6 +47,30 @@
   text-transform: uppercase;
 }
 
+.instructions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: 10px var(--row-pad, 14px) 12px;
+}
+
+.instructionsLabel {
+  display: flex;
+  align-items: center;
+  gap: var(--row-gap, 12px);
+  color: var(--ink);
+  font-size: var(--size-body);
+  line-height: 1.5;
+}
+
+.instructionsInput {
+  max-height: 40vh;
+  overflow-y: auto;
+  color: var(--ink);
+  font-size: var(--size-body);
+  line-height: 1.5;
+}
+
 .hint {
   margin: 0 var(--space-1);
   color: var(--muted);
@@ -77,7 +101,9 @@
 @media (width < 768px),
   (pointer: coarse) and (device-width < 600px),
   (pointer: coarse) and (device-height < 600px) {
-  .fields .description {
+  .fields .description,
+  .instructionsInput,
+  .instructionsLabel {
     font-size: var(--size-input);
   }
 

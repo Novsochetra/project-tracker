@@ -20,6 +20,7 @@ export const toProject = (row: ProjectRow): Project => ({
   key: row.key,
   description: row.description,
   repo: row.repo,
+  instructions: row.instructions,
   color: row.color,
   nextNum: row.nextNum,
   createdAt: row.createdAt,

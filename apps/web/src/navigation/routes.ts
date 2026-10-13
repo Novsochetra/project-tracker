@@ -5,8 +5,9 @@ export type Route =
   | { name: 'project'; key: string }
   | { name: 'ticket'; key: string; num: number }
   | { name: 'chats'; key: string }
-  // A new chat has no id until its first question is sent.
-  | { name: 'chat'; key: string; chatId: string | null };
+  // A new chat has no id until its first question is sent. One opened from a ticket screen keeps
+  // the ticket's number, so Back returns to that ticket (PT-184).
+  | { name: 'chat'; key: string; chatId: string | null; ticketNum?: number };
 
 export type NavigationKind = 'POP' | 'PUSH' | 'REPLACE';
 
@@ -32,23 +33,37 @@ function parseTicketNumber(segment: string): number | null {
 const ASK = 'ask';
 const NEW_CHAT = 'new';
 
-function parseAskRoute(key: string, chatSegment: string | undefined): Route {
-  if (chatSegment === undefined) return { name: 'chats', key };
-  const chatId = decodeSegment(chatSegment);
-  if (chatId === null) return { name: 'chats', key };
-  return { name: 'chat', key, chatId: chatId === NEW_CHAT ? null : chatId };
+function parseAskRoute(key: string, chatSegment: string | undefined, ticketNum: number | null) {
+  const above: Route =
+    ticketNum === null ? { name: 'chats', key } : { name: 'ticket', key, num: ticketNum };
+  const decoded = chatSegment === undefined ? null : decodeSegment(chatSegment);
+  if (decoded === null) return above;
+  const chatId = decoded === NEW_CHAT ? null : decoded;
+  const chat: Route = { name: 'chat', key, chatId };
+  return ticketNum === null ? chat : { ...chat, ticketNum };
+}
+
+function parseTicketPath(key: string, segments: string[]): Route {
+  const num = parseTicketNumber(segments[2] ?? '');
+  if (segments.length === 3)
+    return num === null ? { name: 'project', key } : { name: 'ticket', key, num };
+  return num !== null && segments[3] === ASK ? parseAskRoute(key, segments[4], num) : PROJECTS;
 }
 
 export function parseRoute(pathname: string): Route {
   const segments = pathname.split('/').filter((segment) => segment !== '');
-  if (segments[0] !== 'p' || segments.length < 2 || segments.length > 4) return PROJECTS;
+  if (segments[0] !== 'p' || segments.length < 2 || segments.length > 5) return PROJECTS;
   const key = decodeSegment(segments[1] ?? '');
   if (key === null) return PROJECTS;
   if (segments.length === 2) return { name: 'project', key };
-  if (segments[2] === ASK) return parseAskRoute(key, segments[3]);
-  if (segments.length > 3) return PROJECTS;
-  const num = parseTicketNumber(segments[2] ?? '');
-  return num === null ? { name: 'project', key } : { name: 'ticket', key, num };
+  if (segments[2] !== ASK) return parseTicketPath(key, segments);
+  return segments.length > 4 ? PROJECTS : parseAskRoute(key, segments[3], null);
+}
+
+function chatPath(route: Extract<Route, { name: 'chat' }>): string {
+  const above = route.ticketNum === undefined ? '' : `/${route.ticketNum}`;
+  const chat = encodeURIComponent(route.chatId ?? NEW_CHAT);
+  return `/p/${encodeURIComponent(route.key)}${above}/${ASK}/${chat}`;
 }
 
 export function routePath(route: Route): string {
@@ -62,7 +77,7 @@ export function routePath(route: Route): string {
     case 'chats':
       return `/p/${encodeURIComponent(route.key)}/${ASK}`;
     case 'chat':
-      return `/p/${encodeURIComponent(route.key)}/${ASK}/${encodeURIComponent(route.chatId ?? NEW_CHAT)}`;
+      return chatPath(route);
   }
 }
 
@@ -84,7 +99,9 @@ export function parentRoute(route: Route): Route | null {
     case 'chats':
       return { name: 'project', key: route.key };
     case 'chat':
-      return { name: 'chats', key: route.key };
+      return route.ticketNum === undefined
+        ? { name: 'chats', key: route.key }
+        : { name: 'ticket', key: route.key, num: route.ticketNum };
   }
 }
 

@@ -6,6 +6,7 @@ export interface WatchArgs {
   name?: string | undefined;
   permissionMode?: string | undefined;
   keepAwake?: boolean | undefined;
+  approvals?: boolean | undefined;
 }
 
 export interface WatchIo {

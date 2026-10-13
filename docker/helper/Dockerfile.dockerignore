@@ -1,0 +1,13 @@
+**/node_modules
+**/dist
+**/dev-dist
+**/coverage
+.git
+.railway
+data
+*.db
+*.db-*
+.env
+.env.*
+playwright-report
+test-results

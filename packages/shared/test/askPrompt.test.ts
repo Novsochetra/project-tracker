@@ -1,7 +1,21 @@
 import { describe, expect, it } from 'vitest';
 import { buildAskPrompt } from '../src/logic/askPrompt';
+import type { PromptTicket } from '../src/logic/prompt';
 
 const project = { key: 'PT', name: 'Project Tracker' };
+
+const ticket: PromptTicket = {
+  key: 'PT-12',
+  title: 'Sync drops edits',
+  description: 'Edits made offline vanish.',
+  priority: 'high',
+  statusName: 'Need review',
+  due: '',
+  assignee: 'Claude',
+  notes: ['Seen on iOS only'],
+  lastReport: 'TICKET: PT-12\nSTATUS: done',
+  lastReview: { verdict: 'changes_requested', rating: 3, text: 'Add a test.' },
+};
 
 describe('buildAskPrompt', () => {
   it('names the project, says it is read-only and ends with the question', () => {
@@ -51,5 +65,32 @@ describe('buildAskPrompt', () => {
     expect(edit).not.toContain("can't create tickets");
     expect(edit).toContain('submit it for review');
     expect(edit).toContain('Never move a ticket to Done');
+  });
+
+  it('shows the chat ticket, its notes, report and review before the chat and the question', () => {
+    const prompt = buildAskPrompt({
+      project,
+      mode: 'ask',
+      question: 'Why does it drop them?',
+      history: [{ role: 'person', text: 'Hi' }],
+      ticket,
+    });
+    expect(prompt).toContain('This chat is about this ticket:\n\n## PT-12: Sync drops edits');
+    expect(prompt).toContain('Edits made offline vanish.');
+    expect(prompt).toContain('- Seen on iOS only');
+    expect(prompt).toContain('Your last report on this ticket:\nTICKET: PT-12');
+    expect(prompt).toContain('Last review: Changes requested · 3/5\nAdd a test.');
+    expect(prompt.indexOf('## PT-12')).toBeLessThan(prompt.indexOf('Earlier in this chat'));
+  });
+
+  it('leaves the ticket out of a chat about none', () => {
+    const prompt = buildAskPrompt({
+      project,
+      mode: 'ask',
+      question: 'q',
+      history: [],
+      ticket: null,
+    });
+    expect(prompt).not.toContain('This chat is about');
   });
 });

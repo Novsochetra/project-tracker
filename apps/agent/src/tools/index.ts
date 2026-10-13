@@ -1,4 +1,6 @@
 import { addComment } from './addComment';
+import { askPerson } from './askPerson';
+import { attachFile } from './attachFile';
 import { claimNextTicket } from './claimNextTicket';
 import { claimTicket } from './claimTicket';
 import { createTicket } from './createTicket';
@@ -21,8 +23,10 @@ export const TOOLS: readonly Tool[] = [
   updateTicket,
   moveTicket,
   addComment,
+  attachFile,
   claimNextTicket,
   claimTicket,
   submitForReview,
   reviewTicket,
+  askPerson,
 ];

@@ -4,6 +4,7 @@ import type { KeyboardEvent } from 'react';
 import { useIsPhone } from '../../../lib/media';
 import { DropOverlay, pasteFiles, useAttachmentUploads, useFileDrop } from '../../attachments';
 import { ticketFiles } from '../../attachments/readableFiles';
+import { TicketQuestions } from '../../questions/TicketQuestions';
 import { DetailChips } from '../details/DetailChips';
 import { AutosaveTextarea } from '../fields/AutosaveTextarea';
 import { TITLE_MAX_LENGTH } from '../fields/limits';
@@ -50,6 +51,7 @@ export function TicketMain({ detail, done, onRunCancelled, className }: TicketMa
         {isPhone && <DetailChips detail={detail} />}
         {/* Above the description, which often runs long enough to push them below a phone's fold. */}
         <LatestRun ticketKey={ticket.key} onCancelled={onRunCancelled} />
+        <TicketQuestions ticketKey={ticket.key} />
         <LatestReview detail={detail} done={done} />
         <DescriptionField
           ticketKey={ticket.key}

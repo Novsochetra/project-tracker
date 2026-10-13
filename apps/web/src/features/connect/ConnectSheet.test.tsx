@@ -186,6 +186,11 @@ describe('ConnectSheet: Run Claude Code from your phone', () => {
         "Your Mac has to be on, awake and logged in; after a restart with FileVault it waits for your password. If it is off, asleep or offline, a run waits 30 minutes, then stops with “Your computer didn't take the run.”",
       ),
     ).toBeInTheDocument();
+    expect(
+      within(section).getByText(
+        'To run it while your Mac is off, put it on a Linux server or in Docker: see docs/always-on-helper.md in the tracker’s repo.',
+      ),
+    ).toBeInTheDocument();
     const computers = await within(section).findByRole('list', { name: 'Your computers' });
     expect(
       within(computers)

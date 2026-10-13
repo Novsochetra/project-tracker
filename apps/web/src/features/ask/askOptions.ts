@@ -7,7 +7,7 @@ import {
   type AskOptions,
   type Chat,
 } from '@tracker/shared';
-import { EDIT_HINT } from './copy';
+import { ASK_HINT, EDIT_HINT, PLAN_HINT } from './copy';
 
 export const MODEL_OPTIONS: readonly { value: AskModel; label: string }[] = [
   { value: 'default', label: 'Default' },
@@ -45,5 +45,7 @@ export const askInputOf = (runnerId: string, text: string, options: AskOptions):
   effort: options.effort,
 });
 
-export const askOptionsHint = ({ mode }: AskOptions): string | null =>
-  mode === 'edit' ? EDIT_HINT : null;
+// Every mode has a one-line hint, so switching modes never moves the options row (PT-202).
+const MODE_HINTS: Record<AskMode, string> = { ask: ASK_HINT, plan: PLAN_HINT, edit: EDIT_HINT };
+
+export const askOptionsHint = ({ mode }: AskOptions): string => MODE_HINTS[mode];

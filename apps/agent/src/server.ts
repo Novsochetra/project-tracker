@@ -7,6 +7,7 @@ import type { PromptDefinition } from './prompts/prompt';
 import { TOOLS } from './tools';
 import { callTool } from './tools/call';
 import type { Tool } from './tools/tool';
+import { keepCallAlive } from './tools/keepCallAlive';
 
 export const SERVER_NAME = 'tracker';
 
@@ -24,7 +25,15 @@ function registerTool(server: McpServer, tool: Tool, client: TrackerApi): void {
       inputSchema: tool.input,
       annotations: { readOnlyHint: tool.readOnly },
     },
-    (input) => callTool(tool, client, input),
+    async (input, extra) => {
+      // ask_person waits for the person far longer than Claude Code's idle timeout.
+      const stop = keepCallAlive(extra._meta?.progressToken, extra.sendNotification);
+      try {
+        return await callTool(tool, client, input, { signal: extra.signal });
+      } finally {
+        stop();
+      }
+    },
   );
 }
 

@@ -1,8 +1,10 @@
 import {
+  DEFAULT_PROJECT_TEMPLATE,
   derivePrefix,
   resolvePrefix,
   type CreateProjectInput,
   type Project,
+  type ProjectTemplateName,
   type UpdateProjectInput,
 } from '@tracker/shared';
 
@@ -13,6 +15,8 @@ export interface ProjectFormValues {
   description: string;
   repo: string;
   prefix: string;
+  instructions: string;
+  template: ProjectTemplateName;
   autoReview: boolean;
 }
 
@@ -21,6 +25,8 @@ export const EMPTY_PROJECT_FORM: ProjectFormValues = {
   description: '',
   repo: '',
   prefix: '',
+  instructions: '',
+  template: DEFAULT_PROJECT_TEMPLATE,
   autoReview: false,
 };
 
@@ -28,19 +34,20 @@ export const NAME_REQUIRED = 'Add a name to create the project.';
 
 const REPO_HINT = 'The repository is added to every Claude Code prompt.';
 
-type FormProject = Pick<Project, 'name' | 'description' | 'repo' | 'autoReview'>;
-
-export const formValuesOf = (project: FormProject): ProjectFormValues => ({
+export const formValuesOf = (
+  project: Pick<Project, 'name' | 'description' | 'repo' | 'instructions' | 'autoReview'>,
+): ProjectFormValues => ({
   ...EMPTY_PROJECT_FORM,
   name: project.name,
   description: project.description,
   repo: project.repo,
+  instructions: project.instructions ?? '',
   autoReview: project.autoReview ?? false,
 });
 
 export const hasName = (values: ProjectFormValues): boolean => values.name.trim() !== '';
 
-const TEXT_FIELDS = ['name', 'description', 'repo', 'prefix'] as const;
+const TEXT_FIELDS = ['name', 'description', 'repo', 'prefix', 'instructions', 'template'] as const;
 
 // Trimmed like Create and Save send them, so a stray space doesn't make the sheet ask.
 export const projectFormChanged = (
@@ -67,14 +74,20 @@ export const createProjectInput = (values: ProjectFormValues): CreateProjectInpu
   key: resolvePrefix(values.prefix, values.name),
   description: values.description.trim(),
   repo: values.repo.trim(),
+  instructions: values.instructions.trim(),
+  template: values.template,
 });
 
 export const updateProjectInput = (values: ProjectFormValues): UpdateProjectInput => ({
   name: values.name.trim(),
   description: values.description.trim(),
   repo: values.repo.trim(),
+  instructions: values.instructions.trim(),
   autoReview: values.autoReview,
 });
+
+export const INSTRUCTIONS_HINT =
+  'Claude gets these with every ticket and question in this project.';
 
 export const createdToast = (name: string): string => `“${name}” created`;
 

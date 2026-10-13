@@ -2,6 +2,7 @@ import { trackerUrl } from '../config';
 import { describeError } from '../errors';
 import { check } from '../watch/autostart/check';
 import { install, uninstall } from '../watch/autostart/install';
+import { approvalsProblem } from '../watch/approvals';
 import { watch } from '../watch/watch';
 import type { WatchArgs, WatchIo } from '../watch/watchIo';
 import { UsageError, type ParsedArgs } from './args';
@@ -10,7 +11,7 @@ import { EXIT_ERROR, EXIT_OK } from './exitCodes';
 import type { CliIo } from './run';
 
 export const WATCH_USAGE =
-  'watch [PROJECT] [--name NAME] [--permission-mode MODE] [--no-keep-awake] [--install | --uninstall | --check]';
+  'watch [PROJECT] [--name NAME] [--permission-mode MODE] [--approvals] [--no-keep-awake] [--install | --uninstall | --check]';
 
 const WATCH_OPTIONS = new Set(['name', 'permission-mode']);
 
@@ -33,12 +34,18 @@ export function checkWatchArgs(parsed: ParsedArgs): void {
     throw new UsageError('Use one of --install, --uninstall and --check.', WATCH_USAGE);
   }
   const choices = parsed.args.length + Object.keys(parsed.options).length;
-  if ((removing || checking) && (choices > 0 || parsed.flags['no-keep-awake'])) {
+  const { 'no-keep-awake': noKeepAwake, approvals } = parsed.flags;
+  if ((removing || checking) && (choices > 0 || noKeepAwake || approvals)) {
     throw new UsageError(
       `--${removing ? 'uninstall' : 'check'} takes no project or other options: run it in the folder.`,
       WATCH_USAGE,
     );
   }
+  const problem = approvalsProblem({
+    approvals,
+    permissionMode: parsed.options['permission-mode'],
+  });
+  if (problem) throw new UsageError(problem, WATCH_USAGE);
 }
 
 function run(parsed: ParsedArgs, args: WatchArgs, io: WatchIo): Promise<void> {
@@ -75,6 +82,7 @@ export async function watchCommand(parsed: ParsedArgs, io: CliIo): Promise<numbe
     name: parsed.options.name,
     permissionMode: parsed.options['permission-mode'],
     keepAwake: !parsed.flags['no-keep-awake'],
+    approvals: parsed.flags.approvals,
   };
   try {
     await run(parsed, args, watchIo);

@@ -1,12 +1,16 @@
 import type { AskMode } from '../domain/askOptions';
 import type { ChatRole } from '../domain/chat';
+import { instructionsBlock, type PromptInstructions } from './instructions';
+import { ticketBlock, type PromptTicket } from './prompt';
 
 export interface AskPromptInput {
-  project: { key: string; name: string };
+  project: { key: string; name: string } & PromptInstructions;
   mode: AskMode;
   question: string;
   // Earlier messages, for a helper that can't resume the chat's Claude Code session.
   history: readonly { role: ChatRole; text: string }[];
+  // The ticket the chat is about, read again for each question so it is never stale.
+  ticket?: PromptTicket | null;
 }
 
 const CARD_EXAMPLE = [
@@ -55,8 +59,17 @@ const SPEAKERS: Record<ChatRole, string> = { person: 'Person', claude: 'You' };
 const transcript = (history: AskPromptInput['history']) =>
   history.map((message) => `${SPEAKERS[message.role]}:\n${message.text}`).join('\n\n');
 
-export function buildAskPrompt({ project, mode, question, history }: AskPromptInput): string {
+export function buildAskPrompt({
+  project,
+  mode,
+  question,
+  history,
+  ticket,
+}: AskPromptInput): string {
   const parts = [rules(project, mode)];
+  const instructions = instructionsBlock(project, '##');
+  if (instructions.length > 0) parts.push(instructions.join('\n'));
+  if (ticket) parts.push(`This chat is about this ticket:\n\n${ticketBlock(ticket, '##')}`);
   if (history.length > 0) parts.push(`Earlier in this chat:\n\n${transcript(history)}`);
   parts.push(`Question:\n${question}`);
   return parts.join('\n\n---\n\n');

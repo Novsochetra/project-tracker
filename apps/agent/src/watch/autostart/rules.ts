@@ -4,12 +4,6 @@ import type { Config } from '../../config';
 import { FolderBusyError, lockFolder } from '../folderLock';
 import { AutostartError } from './errors';
 
-export function requireMac(): void {
-  if (process.platform !== 'darwin') {
-    throw new AutostartError('Starting by itself works on macOS only so far.');
-  }
-}
-
 // The job doesn't get this shell's variables, so a token from one is missing at login, and while
 // the variable is set it wins over the saved token.
 export function refuseTokenFromEnv(config: Config): void {

@@ -10,7 +10,7 @@ describe('work prompt', () => {
     expect(text).toContain('1. Call claim_next_ticket with project "MOB".');
     expect(text).toContain('every comment and the last review');
     expect(text).toContain('Use add_comment to record important decisions');
-    expect(text).toContain('Verify before you submit: run the relevant tests');
+    expect(text).toContain('Verify before you submit.');
     expect(text).toContain('Call submit_for_review with a clear summary');
   });
 
@@ -18,6 +18,13 @@ describe('work prompt', () => {
     expect(text).toContain('Never move a ticket to Done.');
     expect(text).toContain('leave the ticket In progress');
     expect(text).toContain('only if I asked for more than one');
+  });
+
+  it('verifies code with tests and build, and other work against the instructions', () => {
+    expect(text).toContain('When the work is code, run the relevant tests, type checks and build');
+    expect(text).toContain(
+      "Otherwise check the result against the ticket and the project's instructions.",
+    );
   });
 
   it('finds the project first when none is given', () => {
@@ -34,7 +41,15 @@ describe('review prompt', () => {
     expect(text).toContain('Call list_tickets with project "MOB" and category "in_review"');
     expect(text).toContain('Call get_ticket');
     expect(text).toContain('not just against the report');
-    expect(text).toContain('read the diff and the changed files, run the tests');
+  });
+
+  it('verifies code with the diff, tests and build, and other work against the instructions', () => {
+    expect(text).toContain(
+      'When the work is code, read the diff and the changed files, run the tests',
+    );
+    expect(text).toContain(
+      "Otherwise check the result against the ticket and the project's instructions.",
+    );
   });
 
   it('includes the rating rubric and the approval rule', () => {

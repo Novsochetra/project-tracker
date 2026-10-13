@@ -15,6 +15,7 @@ import {
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 import { addComment } from '../../src/tools/addComment';
+import { attachFile } from '../../src/tools/attachFile';
 import { createTicket } from '../../src/tools/createTicket';
 import { listTickets } from '../../src/tools/listTickets';
 import { reviewTicket } from '../../src/tools/reviewTicket';
@@ -54,6 +55,11 @@ describe('MCP tool text limits', () => {
   it('list_tickets takes as long a query as the API, the shared limit', () => {
     expect(maxLength(listTickets.input.shape.query)).toBe(TICKET_SEARCH_MAX);
     expect(maxLength(listTicketsQuery.shape.q)).toBe(TICKET_SEARCH_MAX);
+  });
+
+  it("attach_file takes as long a comment as the API takes a comment's text", () => {
+    expect(maxLength(attachFile.input.shape.comment)).toBe(COMMENT_TEXT_MAX);
+    expect(maxLength(createCommentInput.shape.text)).toBe(COMMENT_TEXT_MAX);
   });
 
   it('refuses a comment one character past the shared limit, like the API', () => {

@@ -47,7 +47,7 @@ describe('tracker help', () => {
     for (const command of ['projects', 'statuses', 'tickets', 'show', 'create', 'update', 'move']) {
       expect(USAGE).toContain(`\n  ${command}`);
     }
-    for (const command of ['comment', 'claim', 'submit', 'review', 'help']) {
+    for (const command of ['comment', 'attach', 'claim', 'submit', 'review', 'help']) {
       expect(USAGE).toContain(`\n  ${command}`);
     }
     for (const flag of ['--url URL', '--as NAME', '--token TOKEN', '--json', '--version']) {

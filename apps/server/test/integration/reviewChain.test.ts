@@ -72,7 +72,6 @@ describe.each(DIALECTS)('review automatically (%s)', (dialect) => {
   it('lets only a person turn it on or off', async () => {
     expect((await setAutoReview(true, helper)).status).toBe(403);
     expect((await setAutoReview(true)).body).toMatchObject({ autoReview: true });
-    expect((await helper('PATCH', '/api/projects/MOB', { name: 'Mobile app' })).status).toBe(200);
     expect((await setAutoReview(false)).body).toMatchObject({ autoReview: false });
   });
 

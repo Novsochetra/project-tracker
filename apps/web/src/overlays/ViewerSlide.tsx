@@ -1,4 +1,4 @@
-import { motion, type MotionStyle } from 'motion/react';
+import { m, type MotionStyle } from 'motion/react';
 import { memo, type SyntheticEvent } from 'react';
 import type { Size } from '../gestures/zoomMath';
 import styles from './ImageViewer.module.css';
@@ -31,7 +31,7 @@ function ViewerSlideImpl(props: ViewerSlideProps) {
   return (
     <div className={styles.slide} style={{ left, width }} aria-hidden={current ? undefined : true}>
       {near && (
-        <motion.img
+        <m.img
           src={image.url}
           alt={image.alt}
           draggable={false}
