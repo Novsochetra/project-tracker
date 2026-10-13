@@ -12,6 +12,7 @@ export interface ProjectOptions {
   error: string | null;
   edit: () => void;
   manageStatuses: () => void;
+  manageLabels: () => void;
   connect: () => void;
   deleteProject: (onDeleted: () => void) => void;
   resetDelete: () => void;
@@ -50,6 +51,7 @@ export function useProjectOptions(projectKey: string): ProjectOptions {
     error: remove.error ? errorMessage(remove.error) : null,
     edit: () => sheets.open({ type: 'editProject', projectKey: key }),
     manageStatuses: () => sheets.open({ type: 'statuses', projectKey: key }),
+    manageLabels: () => sheets.open({ type: 'labels', projectKey: key }),
     connect: () => sheets.open({ type: 'connect' }),
     deleteProject,
     resetDelete: remove.reset,

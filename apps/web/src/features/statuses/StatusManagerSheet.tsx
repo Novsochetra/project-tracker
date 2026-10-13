@@ -1,16 +1,17 @@
 import { sortStatuses, type ProjectBoard, type Status } from '@tracker/shared';
 import { Plus } from 'lucide-react';
-import { useInstantLayoutTransition } from 'motion/react';
 import { useState } from 'react';
 import { flushSync } from 'react-dom';
-import { errorMessage, useBoard, type TrackerQuery } from '../../api';
+import { errorMessage, useBoard } from '../../api';
 import type { SheetProps } from '../../app/sheets/types';
-import { Button, Spinner } from '../../components';
+import { Button, StatusGlyph } from '../../components';
 import { Sheet, SheetCancelButton } from '../../overlays';
+import { BoardState } from './BoardState';
 import { StatusEditor } from './StatusEditor';
-import { StatusList } from './StatusList';
+import { OrderedList } from './OrderedList';
 import styles from './StatusManagerSheet.module.css';
-import { ticketCounts } from './statusForm';
+import { categoryHint, ticketCounts } from './statusForm';
+import { useInPlace } from './useInPlace';
 import { useRowFocus } from './useRowFocus';
 import { useStatusOrder } from './useStatusOrder';
 
@@ -41,7 +42,7 @@ export function StatusManagerSheet({ open, onClose, projectKey }: StatusManagerS
             onDirtyChange={setUnsavedEdit}
           />
         ) : (
-          <BoardState query={board} />
+          <BoardState query={board} loading="Loading statuses" />
         )}
       </div>
     </Sheet>
@@ -69,7 +70,7 @@ function StatusManagerBody({ projectKey, board, onDirtyChange }: StatusManagerBo
   const adding = editing?.kind === 'new';
   // Rows animate layout changes so reorders slide. An editor opening or closing isn't one, so
   // the rows around it move at once instead of sliding over it.
-  const inPlace = useInstantLayoutTransition();
+  const inPlace = useInPlace();
 
   // The editor replaces the row (or the Add button), so focus goes back once it is gone.
   const close = (update: () => void, focusId?: string) => {
@@ -96,18 +97,22 @@ function StatusManagerBody({ projectKey, board, onDirtyChange }: StatusManagerBo
   );
   return (
     <>
-      <StatusList
+      <OrderedList
         order={order}
-        statuses={byId}
+        items={byId}
         counts={counts}
         editingId={editingId}
         dragDisabled={editing !== null}
+        leading={(status) => (
+          <StatusGlyph category={status.category} color={status.color} animated={false} />
+        )}
+        hint={categoryHint}
         onEdit={(id) => open({ kind: 'edit', id })}
         renderEditor={editor}
         rowRef={rowRef}
       >
         {adding && editor(null)}
-      </StatusList>
+      </OrderedList>
       {order.error && (
         <p role="alert" className={styles.error}>
           {errorMessage(order.error)}
@@ -123,26 +128,6 @@ function StatusManagerBody({ projectKey, board, onDirtyChange }: StatusManagerBo
           Add status
         </Button>
       )}
-    </>
-  );
-}
-
-function BoardState({ query }: { query: TrackerQuery<ProjectBoard> }) {
-  if (!query.isError) {
-    return (
-      <div className={styles.loading}>
-        <Spinner label="Loading statuses" />
-      </div>
-    );
-  }
-  return (
-    <>
-      <p role="alert" className={styles.error}>
-        {errorMessage(query.error)}
-      </p>
-      <Button size="sm" className={styles.retry} onClick={() => void query.refetch()}>
-        Try again
-      </Button>
     </>
   );
 }

@@ -31,6 +31,7 @@ export const watchArgsFor = ({ config, projectKey, args }: JobInput): string[] =
   ...option('as', config.agentName === DEFAULT_AGENT_NAME ? undefined : config.agentName),
   ...option('name', args.name),
   ...option('permission-mode', args.permissionMode),
+  ...option('max-turns', args.maxTurns),
   ...(args.keepAwake === false ? ['--no-keep-awake'] : []),
   ...(args.approvals ? ['--approvals'] : []),
   projectKeyOf(projectKey),

@@ -8,7 +8,7 @@ import { listEnvironment } from './dnd/listEnvironment';
 import { useKeyboardMove } from './dnd/useKeyboardMove';
 import { useTicketDrag } from './dnd/useTicketDrag';
 import { NoMatches, NoTickets } from './ListEmptyStates';
-import { isSearching, pickedStatus, useListView } from './listViewStore';
+import { isSearching, pickedLabel, pickedStatus, useListView } from './listViewStore';
 import styles from './ProjectScreen.module.css';
 import { RowActionSheets } from './RowActionSheets';
 import { TicketGroup } from './TicketGroup';
@@ -39,7 +39,8 @@ export function TicketList({ board }: { board: ProjectBoard }) {
   });
   const addTicket = (statusId?: string) =>
     sheets.open({ type: 'newTicket', projectKey: project.key, statusId });
-  const groups = buildGroups({ ...view, statuses, tickets, dragging: drag !== null });
+  const label = pickedLabel(view, board.labels)?.id;
+  const groups = buildGroups({ ...view, label, statuses, tickets, dragging: drag !== null });
   const rise = useRisePhase(resolveFilter(statuses, view.filter));
 
   const renderGroups = () => (

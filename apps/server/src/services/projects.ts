@@ -24,13 +24,14 @@ import {
 } from '../repositories/projects';
 import { storageKeysOfProject } from '../repositories/attachments';
 import { storageKeysOfChats } from '../repositories/chatAttachments';
+import { listLabelRows } from '../repositories/labels';
 import { insertStatuses, listStatusRows } from '../repositories/statuses';
 import { deleteProjectTickets } from '../repositories/tickets';
 import { removeFiles } from '../storage/fileStorage';
 import { changedFields, isEmpty } from '../util';
 import { inTransaction, notify, type UserContext } from './context';
 import { requireProject } from './lookups';
-import { toProject, toStatus } from './mappers';
+import { toLabel, toProject, toStatus } from './mappers';
 
 type CreateProjectValues = z.output<typeof createProjectInput>;
 type UpdateProjectValues = z.output<typeof updateProjectInput>;
@@ -100,7 +101,7 @@ export async function createProject(
     const statuses = statusRows(template.statuses, project.id, at);
     await insertProject(trx, project);
     await insertStatuses(trx, statuses);
-    return { project: toProject(project), statuses: statuses.map(toStatus) };
+    return { project: toProject(project), statuses: statuses.map(toStatus), labels: [] };
   });
   notify(ctx, detail.project.id);
   return detail;
@@ -109,7 +110,12 @@ export async function createProject(
 export async function getProjectDetail(ctx: UserContext, key: string): Promise<ProjectDetail> {
   const project = await requireProject(ctx.db, ctx.scope, key);
   const statuses = await listStatusRows(ctx.db, project.id);
-  return { project: toProject(project), statuses: statuses.map(toStatus) };
+  const labels = await listLabelRows(ctx.db, project.id);
+  return {
+    project: toProject(project),
+    statuses: statuses.map(toStatus),
+    labels: labels.map(toLabel),
+  };
 }
 
 export async function updateProject(

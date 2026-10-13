@@ -6,7 +6,7 @@ import { useScreen } from '../../../navigation';
 import { buildColumns } from '../buildGroups';
 import { DragGhost } from '../dnd/DragGhost';
 import { useTicketDrag } from '../dnd/useTicketDrag';
-import { isSearching, useListView } from '../listViewStore';
+import { isSearching, pickedLabel, useListView } from '../listViewStore';
 import type { CardCallbacks } from '../rowTypes';
 import { useOpenTicket } from '../useRowCallbacks';
 import { useTicketMove } from '../useTicketMove';
@@ -40,7 +40,12 @@ export function TicketBoard({ board }: { board: ProjectBoard }) {
     () => ({ open, startDrag, handleKeyDown }),
     [open, startDrag, handleKeyDown],
   );
-  const columns = buildColumns({ ...view, statuses, tickets });
+  const columns = buildColumns({
+    ...view,
+    label: pickedLabel(view, board.labels)?.id,
+    statuses,
+    tickets,
+  });
   const page = useBoardPage(boardRef, isPhone, columns.length);
   useFillHeight(frameRef, scrollRef);
   useRevealFocusedCard(boardRef);

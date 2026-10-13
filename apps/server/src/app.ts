@@ -17,6 +17,7 @@ import { activityRoutes } from './http/routes/activity';
 import { attachmentRoutes } from './http/routes/attachments';
 import { eventRoutes } from './http/routes/events';
 import { inviteRoutes } from './http/routes/invites';
+import { labelRoutes } from './http/routes/labels';
 import { passwordRoutes } from './http/routes/password';
 import { passwordResetRoutes } from './http/routes/passwordResets';
 import { miscRoutes, testResetRoutes } from './http/routes/misc';
@@ -27,6 +28,7 @@ import { reportRoutes } from './http/routes/reports';
 import { runRoutes } from './http/routes/runs';
 import { runRequestRoutes } from './http/routes/runRequests';
 import { runStepRoutes } from './http/routes/runSteps';
+import { runUsageRoutes } from './http/routes/runUsage';
 import { chatRoutes } from './http/routes/chats';
 import { sessionRoutes } from './http/routes/session';
 import { statusRoutes } from './http/routes/statuses';
@@ -81,6 +83,7 @@ function createApi(ctx: ServiceContext, deps: AppDeps): Hono<AppEnv> {
     )
     .route('/', projectRoutes(ctx))
     .route('/', statusRoutes(ctx))
+    .route('/', labelRoutes(ctx))
     .route('/', ticketRoutes(ctx))
     .route('/', workflowRoutes(ctx))
     .route('/', activityRoutes(ctx))
@@ -88,6 +91,7 @@ function createApi(ctx: ServiceContext, deps: AppDeps): Hono<AppEnv> {
     .route('/', reportRoutes(ctx))
     .route('/', runRoutes(ctx))
     .route('/', runStepRoutes(ctx))
+    .route('/', runUsageRoutes(ctx))
     .route('/', runRequestRoutes(ctx))
     .route('/', questionRoutes(ctx))
     .route('/', chatRoutes(ctx))

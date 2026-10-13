@@ -11,9 +11,12 @@ import { EXIT_ERROR, EXIT_OK } from './exitCodes';
 import type { CliIo } from './run';
 
 export const WATCH_USAGE =
-  'watch [PROJECT] [--name NAME] [--permission-mode MODE] [--approvals] [--no-keep-awake] [--install | --uninstall | --check]';
+  'watch [PROJECT] [--name NAME] [--permission-mode MODE] [--max-turns N] [--approvals] [--no-keep-awake] [--install | --uninstall | --check]';
 
-const WATCH_OPTIONS = new Set(['name', 'permission-mode']);
+const WATCH_OPTIONS = new Set(['name', 'permission-mode', 'max-turns']);
+
+// Digits only, so the value can't be read as another flag.
+const TURNS = /^[1-9]\d{0,5}$/;
 
 function connectionOf(parsed: ParsedArgs, io: CliIo) {
   try {
@@ -29,6 +32,10 @@ export function checkWatchArgs(parsed: ParsedArgs): void {
   }
   const unknown = Object.keys(parsed.options).find((name) => !WATCH_OPTIONS.has(name));
   if (unknown) throw new UsageError(`"watch" has no --${unknown} option.`, WATCH_USAGE);
+  const turns = parsed.options['max-turns'];
+  if (turns !== undefined && !TURNS.test(turns)) {
+    throw new UsageError('Use a whole number of turns for --max-turns, like 50.', WATCH_USAGE);
+  }
   const { install: installing, uninstall: removing, check: checking } = parsed.flags;
   if ([installing, removing, checking].filter(Boolean).length > 1) {
     throw new UsageError('Use one of --install, --uninstall and --check.', WATCH_USAGE);
@@ -81,6 +88,7 @@ export async function watchCommand(parsed: ParsedArgs, io: CliIo): Promise<numbe
     project: parsed.args[0],
     name: parsed.options.name,
     permissionMode: parsed.options['permission-mode'],
+    maxTurns: parsed.options['max-turns'],
     keepAwake: !parsed.flags['no-keep-awake'],
     approvals: parsed.flags.approvals,
   };

@@ -23,8 +23,17 @@ function refreshTicketRuns(queryClient: QueryClient, ticketId: string, projectId
   }
 }
 
+// A first read (no data yet) on its way is joined rather than started again, and it may have
+// started before the change, so one more follows it (test/regression/request-event-during-first-read).
+async function readRunRequests(queryClient: QueryClient, runId: string): Promise<void> {
+  const queryKey = queryKeys.runRequests(runId);
+  const wasReading = queryClient.getQueryState(queryKey)?.fetchStatus === 'fetching';
+  await queryClient.invalidateQueries({ queryKey, exact: true }, { cancelRefetch: false });
+  if (wasReading) await queryClient.invalidateQueries({ queryKey, exact: true });
+}
+
 export const refreshRunRequests = (queryClient: QueryClient, runId: string): void =>
-  void queryClient.invalidateQueries({ queryKey: queryKeys.runRequests(runId), exact: true });
+  void readRunRequests(queryClient, runId);
 
 // A chat's row, and a ticket's row and card, say whether Claude waits for the person there.
 export function refreshForRunRequest(queryClient: QueryClient, event: RunRequestEvent): void {

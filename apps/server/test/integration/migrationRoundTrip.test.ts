@@ -459,12 +459,16 @@ const DATA_MODEL: SchemaShape = {
       'step_count integer not null default 0',
       'ask_effort text',
       'role text',
+      'cost_micros bigint',
+      'turns integer',
+      'duration_ms bigint',
       'round integer',
       'chain_stop text',
       'question_id text',
     ],
     indexes: [
       'index (chat_id, created_at)',
+      'index (project_id, ended_at)',
       'index (runner_id, status)',
       'index (status, created_at)',
       'unique (chat_id)',
@@ -605,6 +609,33 @@ const DATA_MODEL: SchemaShape = {
     ],
     indexes: [],
     foreignKeys: [],
+  },
+  labels: {
+    columns: [
+      'id text primary key',
+      'project_id text not null',
+      'name text not null',
+      'color text not null',
+      "template text not null default ''",
+      "instructions text not null default ''",
+      'position integer not null',
+      'created_at bigint not null',
+    ],
+    indexes: ['index (project_id)'],
+    foreignKeys: ['project_id -> projects.id on delete cascade'],
+  },
+  ticket_labels: {
+    columns: [
+      'id text primary key',
+      'ticket_id text not null',
+      'label_id text not null',
+      'created_at bigint not null',
+    ],
+    indexes: ['index (label_id)', 'unique (ticket_id, label_id)'],
+    foreignKeys: [
+      'label_id -> labels.id on delete cascade',
+      'ticket_id -> tickets.id on delete cascade',
+    ],
   },
 };
 

@@ -11,6 +11,7 @@ import type { AttachmentRow } from '../db/schema';
 import type { CardTicketRow } from '../repositories/chatCardTickets';
 import type { ChatWithKey, MessageWithSteps } from '../repositories/chats';
 import { toAttachment } from './mappers';
+import { usageOfRow } from './runUsage';
 
 // A chat's ticket is one of its own project's, so the project's key makes the ticket's.
 const chatTicket = (row: ChatWithKey): ChatTicket | null =>
@@ -61,6 +62,7 @@ export const toMessage = (
   runId: row.runId,
   stepCount: shownStepCount(row),
   attachments: files.map(toAttachment),
+  usage: usageOfRow(row),
   createdAt: row.createdAt,
 });
 

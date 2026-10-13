@@ -6,6 +6,7 @@ import { afterAll, describe, expect, it, vi } from 'vitest';
 import { ASK_FOLDER_PREFIX } from '../../src/watch/ask/askFiles';
 import { askOutcomeOf } from '../../src/watch/ask/askOutcome';
 import { claudeRunners } from '../../src/watch/claudeRunners';
+import type { ClaudeExit } from '../../src/watch/outcome';
 import { askJob, job } from './fakeTracker';
 import { installFakeClaude } from './fakeClaude';
 
@@ -29,6 +30,27 @@ describe('claudeRunners', () => {
       ),
     ]);
     expect(JSON.stringify(steps)).not.toContain('SECRET');
+  });
+
+  it('passes --max-turns to every run, questions too', async () => {
+    const claude = claudeRunners({
+      command: fake.command,
+      cwd,
+      write: () => undefined,
+      maxTurns: '40',
+    });
+    const stop = new AbortController().signal;
+    const argsOf = (exit: ClaudeExit) =>
+      JSON.parse(/ARGS (.*)$/m.exec(exit.results.at(-1)?.text ?? '')?.[1] ?? '[]') as string[];
+    const limit = expect.arrayContaining(['--max-turns', '40']);
+    expect(argsOf(await claude.runClaude(job('r-1', 'MOB-1'), stop, () => undefined))).toEqual(
+      limit,
+    );
+    expect(argsOf(await claude.runAsk(ask(), stop, () => undefined))).toEqual(limit);
+    const unlimited = claudeRunners({ command: fake.command, cwd, write: () => undefined });
+    expect(argsOf(await unlimited.runAsk(ask(), stop, () => undefined))).not.toContain(
+      '--max-turns',
+    );
   });
 
   it('drops an event it cannot read and still answers', async () => {

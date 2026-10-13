@@ -10,6 +10,8 @@ const TABLES_IN_DELETE_ORDER = [
   'invites',
   'users',
   'attachments',
+  'ticketLabels',
+  'labels',
   'activities',
   'tickets',
   'statuses',

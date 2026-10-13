@@ -18,7 +18,7 @@ export interface RunFooterInput {
 }
 
 export interface ShownRun {
-  state: 'working' | 'stopped';
+  state: 'working' | 'stopped' | 'finished';
   run: Run;
   text: string;
 }
@@ -29,13 +29,19 @@ export const workingText = (run: Pick<Run, 'runnerName'>): string =>
 export const stoppedText = (run: Pick<Run, 'error'>): string =>
   run.error ? `Claude stopped: ${run.error}` : 'Claude stopped.';
 
-// A run that failed says why; one that ended well says so only when the automatic review stopped.
-function endedText(run: Run): string | null {
-  if (run.status === 'failed') return stoppedText(run);
-  if (run.status === 'done' && run.chainStop) {
-    return `${AUTO_REVIEW_STOPPED}. ${chainStopReason(run.chainStop, run.runnerName)}`;
+export const finishedText = (run: Pick<Run, 'runnerName'>): string =>
+  `Claude finished on ${run.runnerName}.`;
+
+// A run that failed says why. One that ended well says so when the automatic review stopped, or
+// to say what it took, which helpers from before PT-195 don't send.
+function endedRun(run: Run): ShownRun | null {
+  if (run.status === 'failed') return { state: 'stopped', run, text: stoppedText(run) };
+  if (run.status !== 'done') return null;
+  if (run.chainStop) {
+    const text = `${AUTO_REVIEW_STOPPED}. ${chainStopReason(run.chainStop, run.runnerName)}`;
+    return { state: 'stopped', run, text };
   }
-  return null;
+  return run.usage ? { state: 'finished', run, text: finishedText(run) } : null;
 }
 
 export const sentText = (helper: Pick<Runner, 'name'>): string =>
@@ -68,7 +74,6 @@ export function shownRun(runs: readonly Run[] | undefined, now: number): ShownRu
   const latest = runs?.[0];
   if (!latest) return null;
   if (isWorking(latest)) return { state: 'working', run: latest, text: workingText(latest) };
-  const text = endedText(latest);
-  if (!text || now - runTime(latest) >= STOPPED_SHOWN_MS) return null;
-  return { state: 'stopped', run: latest, text };
+  if (now - runTime(latest) >= STOPPED_SHOWN_MS) return null;
+  return endedRun(latest);
 }

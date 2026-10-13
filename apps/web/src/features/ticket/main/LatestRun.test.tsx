@@ -108,6 +108,43 @@ describe('Claude Code run on the ticket screen', () => {
     expect(await screen.findByRole('dialog', { name: 'Send to Claude Code' })).toBeInTheDocument();
   });
 
+  it('says what a finished run took, with no button', async () => {
+    const usage = { costMicros: 840_000, turns: 23, durationMs: 361_000 };
+    setup([makeRun({ status: 'done', endedAt: Date.now() - 60_000, usage })]);
+    const card = await runCard();
+
+    expect(card).toHaveTextContent(`Claude finished on ${DARA}.`);
+    expect(card).toHaveTextContent('6 min · 23 turns · about $0.84');
+    expect(within(card).queryByRole('button', { name: /Try again|Cancel/ })).toBeNull();
+  });
+
+  it('says what a stopped run took under why it stopped', async () => {
+    const usage = { costMicros: 3_147, turns: 3, durationMs: 3_564 };
+    setup([makeRun({ status: 'failed', error: LOST, endedAt: Date.now(), usage })]);
+    const card = await runCard();
+
+    expect(card).toHaveTextContent('4 s · 3 turns · under $0.01');
+    expect(within(card).getByRole('button', { name: 'Try again' })).toBeInTheDocument();
+  });
+
+  it('says what a run took under why the automatic review stopped after it', async () => {
+    const usage = { costMicros: 840_000, turns: 23, durationMs: 361_000 };
+    const reviewed = makeRun({
+      role: 'review',
+      status: 'done',
+      endedAt: Date.now() - 60_000,
+      chainStop: 'rounds',
+      usage,
+    });
+    setup([reviewed]);
+    const card = await runCard();
+
+    expect(card).toHaveTextContent('Automatic review stopped.');
+    expect(card).not.toHaveTextContent('Claude finished');
+    expect(card).toHaveTextContent('6 min · 23 turns · about $0.84');
+    expect(within(card).getByRole('button', { name: 'Try again' })).toBeInTheDocument();
+  });
+
   it('says why the automatic review stopped after a run that ended well', async () => {
     const reviewed = makeRun({
       role: 'review',

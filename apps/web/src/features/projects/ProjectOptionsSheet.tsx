@@ -4,6 +4,7 @@ import { Icon } from '../../components';
 import { NavBarButton } from '../../navigation';
 import { ActionSheet, type ActionSheetAction } from '../../overlays';
 import { deleteSheetCaption } from './projectOptions';
+import { ProjectUsageNote } from './ProjectUsageNote';
 import styles from './ProjectOptionsSheet.module.css';
 import { useProjectOptions, type ProjectOptions } from './useProjectOptions';
 
@@ -25,6 +26,7 @@ function menuActions(options: ProjectOptions, { close, confirm }: SheetActions) 
   const actions: ActionSheetAction[] = [
     { label: 'Edit project', onSelect: afterClose(close, options.edit) },
     { label: 'Manage statuses', onSelect: afterClose(close, options.manageStatuses) },
+    { label: 'Manage labels', onSelect: afterClose(close, options.manageLabels) },
     { label: 'Connect Claude Code', onSelect: afterClose(close, options.connect) },
     { label: 'Delete project', tone: 'danger', onSelect: confirm },
   ];
@@ -52,7 +54,10 @@ export function ProjectOptionsSheet({ projectKey }: { projectKey: string }) {
       {options.error ?? deleteSheetCaption(options.name, options.ticketCount)}
     </span>
   ) : (
-    options.name
+    <>
+      {options.name}
+      <ProjectUsageNote projectKey={projectKey} className={styles.usage} />
+    </>
   );
   return (
     <>

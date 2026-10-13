@@ -1,6 +1,7 @@
 import {
   byRank,
   GROUP_LIMIT,
+  hasLabel,
   matchesSearch,
   sortStatuses,
   visibleStatuses,
@@ -19,6 +20,8 @@ export interface ColumnsInput {
   tickets: readonly TicketListItem[];
   filter: TicketFilter;
   query: string;
+  // Resolved with pickedLabel first, so a deleted label's id never empties the list.
+  label?: string | null | undefined;
 }
 
 export interface GroupsInput extends ColumnsInput {
@@ -30,8 +33,11 @@ export function buildColumns({
   tickets,
   filter,
   query,
+  label,
 }: ColumnsInput): TicketGroupData[] {
-  const matching = tickets.filter((ticket) => matchesSearch(ticket, query));
+  const matching = tickets.filter(
+    (ticket) => matchesSearch(ticket, query) && (!label || hasLabel(ticket, label)),
+  );
   return visibleStatuses(statuses, filter).map((status) => ({
     status,
     tickets: matching.filter((ticket) => ticket.statusId === status.id).sort(byRank),

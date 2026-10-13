@@ -5,3 +5,11 @@
   color: var(--muted-2);
   font-size: var(--size-body);
 }
+
+.usage {
+  display: block;
+  margin-top: 2px;
+  color: var(--placeholder);
+  font-size: var(--size-caption);
+  font-variant-numeric: tabular-nums;
+}

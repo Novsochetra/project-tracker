@@ -5,6 +5,7 @@ import {
   tooManyFilesMessage,
   type AttachmentOwner,
 } from '../domain/attachment';
+import { LABEL_INSTRUCTIONS_MAX, LABEL_NAME_MAX, LABEL_TEMPLATE_MAX } from '../domain/label';
 import { PRIORITIES } from '../domain/priority';
 import { PROJECT_INSTRUCTIONS_MAX } from '../domain/project';
 import { DEFAULT_PROJECT_TEMPLATE, PROJECT_TEMPLATE_NAMES } from '../domain/projectTemplates';
@@ -75,6 +76,37 @@ export type UpdateStatusInput = z.input<typeof updateStatusInput>;
 export const reorderStatusesInput = z.object({ ids: z.array(id).min(1) });
 export type ReorderStatusesInput = z.input<typeof reorderStatusesInput>;
 
+const labelName = z.string().trim().min(1).max(LABEL_NAME_MAX);
+const labelTemplate = z
+  .string()
+  .max(LABEL_TEMPLATE_MAX, 'A template can be up to 20,000 characters.');
+const labelInstructions = z
+  .string()
+  .trim()
+  .max(LABEL_INSTRUCTIONS_MAX, 'Instructions can be up to 20,000 characters.');
+
+export const createLabelInput = z.object({
+  name: labelName,
+  color: hexColor.optional(),
+  template: labelTemplate.default(''),
+  instructions: labelInstructions.default(''),
+});
+export type CreateLabelInput = z.input<typeof createLabelInput>;
+
+export const updateLabelInput = z.object({
+  name: labelName.optional(),
+  color: hexColor.optional(),
+  template: labelTemplate.optional(),
+  instructions: labelInstructions.optional(),
+});
+export type UpdateLabelInput = z.input<typeof updateLabelInput>;
+
+export const reorderLabelsInput = z.object({ ids: z.array(id).min(1) });
+export type ReorderLabelsInput = z.input<typeof reorderLabelsInput>;
+
+// A ticket's whole set of labels, which replaces the one it had.
+const labelIds = z.array(id).max(50);
+
 export const createTicketInput = z.object({
   title: z.string().trim().min(1, 'Add a title to create the ticket.').max(TICKET_TITLE_MAX),
   description: z.string().max(TICKET_DESCRIPTION_MAX).default(''),
@@ -83,6 +115,7 @@ export const createTicketInput = z.object({
   assignee: z.string().trim().max(TICKET_ASSIGNEE_MAX).default(''),
   due: dueDate.default(''),
   attachmentIds: attachmentIds('ticket').default([]),
+  labelIds: labelIds.default([]),
   // From a client that may send the same create again: a repeat gets the ticket the first one made.
   clientId: id.optional(),
 });
@@ -95,6 +128,7 @@ export const updateTicketInput = z.object({
   priority: z.enum(PRIORITIES).optional(),
   assignee: z.string().trim().max(TICKET_ASSIGNEE_MAX).optional(),
   due: dueDate.optional(),
+  labelIds: labelIds.optional(),
 });
 export type UpdateTicketInput = z.input<typeof updateTicketInput>;
 
@@ -173,5 +207,6 @@ export const listTicketsQuery = z.object({
   status: z.string().max(40).optional(),
   category: z.enum(STATUS_CATEGORIES).optional(),
   q: z.string().max(TICKET_SEARCH_MAX).optional(),
+  label: z.string().max(LABEL_NAME_MAX).optional(),
 });
 export type ListTicketsQuery = z.input<typeof listTicketsQuery>;

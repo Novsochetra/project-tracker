@@ -29,6 +29,9 @@ export const EditProjectSheet = lazyWithPreload(() =>
 export const StatusManagerSheet = lazyWithPreload(() =>
   import('../features/statuses/StatusManagerSheet').then((module) => module.StatusManagerSheet),
 );
+export const LabelManagerSheet = lazyWithPreload(() =>
+  import('../features/labels/LabelManagerSheet').then((module) => module.LabelManagerSheet),
+);
 export const RunStepsSheet = lazyWithPreload(() =>
   import('../features/ticket/ticketParts').then((module) => module.RunStepsSheet),
 );
@@ -64,6 +67,7 @@ const SHEETS: Part[] = [
   ReportSheet,
   EditProjectSheet,
   StatusManagerSheet,
+  LabelManagerSheet,
   RunStepsSheet,
   ConnectSheet,
   AccountSheet,

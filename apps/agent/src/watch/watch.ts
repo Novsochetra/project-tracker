@@ -46,6 +46,7 @@ async function keepWatching(setup: Setup, args: WatchArgs, io: WatchIo, signal: 
     command: CLAUDE,
     cwd: folder,
     permissionMode: runPermissionMode(args),
+    maxTurns: args.maxTurns,
     write: io.write,
     prompts: promptTool(setup, io),
     fetchFile: (attachmentId, options) => api.fetchAttachment(attachmentId, options),

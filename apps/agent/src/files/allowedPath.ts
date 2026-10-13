@@ -26,6 +26,13 @@ const inDotFolder = (folder: string, file: string): boolean =>
     .slice(0, -1)
     .some((part) => part.startsWith('.'));
 
+// Run from ~/.claude or ~/.aws, every file there is a key or a setting, whatever its name.
+const inHomeDotFolder = (folder: string, home: string): boolean =>
+  isInside(home, folder) && relative(home, folder).startsWith('.');
+
+const unsafe = (folder: string, home: string): boolean =>
+  holdsHome(folder, home) || inHomeDotFolder(folder, home);
+
 const outsideError = (path: string, folders: readonly string[]): Error =>
   new Error(
     `Can't attach ${path}: only files in this folder or a temp folder can be attached ` +
@@ -44,6 +51,16 @@ const dotFolderError = (path: string): Error =>
       'settings are kept.',
   );
 
+const homeDotFolderError = (path: string, folder: string): Error =>
+  new Error(
+    `Can't attach ${path}: Claude Code runs in ${folder}, a dot-folder of your home folder where ` +
+      'keys and settings are kept, so only files in a temp folder can be attached. Start it in a ' +
+      'project folder instead.',
+  );
+
+const unsafeError = (path: string, folder: string, home: string): Error =>
+  holdsHome(folder, home) ? homeError(path, folder) : homeDotFolderError(path, folder);
+
 async function realFolders(folders: readonly string[]): Promise<string[]> {
   const reals = await Promise.all(folders.map(realOrNull));
   return reals.filter((folder): folder is string => folder !== null);
@@ -60,8 +77,8 @@ export async function allowedRealPath(
   const holding = (await realFolders(folders)).filter((folder) => isInside(folder, real));
   if (holding.length === 0) throw outsideError(path, folders);
   const realHome = (await realOrNull(home)) ?? resolve(home);
-  const safe = holding.filter((folder) => !holdsHome(folder, realHome));
-  if (safe.length === 0) throw homeError(path, holding[0] ?? '');
+  const safe = holding.filter((folder) => !unsafe(folder, realHome));
+  if (safe.length === 0) throw unsafeError(path, holding[0] ?? '', realHome);
   if (safe.some((folder) => !inDotFolder(folder, real))) return real;
   throw dotFolderError(path);
 }

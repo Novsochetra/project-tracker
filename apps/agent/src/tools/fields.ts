@@ -29,6 +29,16 @@ export const statusName = z
   .min(1, 'Pass a status name like "In progress".')
   .describe('Status name, case-insensitive, e.g. "In progress". list_statuses shows every name.');
 
+export const labelName = z
+  .string()
+  .trim()
+  .min(1, 'Pass a label name like "Bug".')
+  .describe('Label name, case-insensitive, e.g. "Bug". get_ticket and list_tickets show them.');
+
+export const labelNames = z
+  .array(labelName)
+  .describe('Label names, case-insensitive, e.g. ["Bug"]. They must be the project\'s own labels.');
+
 export const category = z
   .enum(STATUS_CATEGORIES)
   .describe('Status category: todo, in_progress, in_review, reviewed or done.');

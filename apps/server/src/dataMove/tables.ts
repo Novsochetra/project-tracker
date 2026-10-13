@@ -17,6 +17,8 @@ export const COPIED_TABLES = [
   { name: 'activities', references: ['tickets'] },
   // Files sent in chats stay with their chats (pendingUploads.ts).
   { name: 'attachments', references: ['tickets', 'activities'], leftBehind: ['chat_messages'] },
+  { name: 'labels', references: ['projects'] },
+  { name: 'ticketLabels', references: ['tickets', 'labels'] },
 ] as const satisfies readonly CopiedTable[];
 
 export type CopiedTableName = (typeof COPIED_TABLES)[number]['name'];

@@ -5,6 +5,7 @@ import { PRIORITY_OPTIONS, statusOptions } from '../side/detailOptions';
 import { AssigneeChip } from './AssigneeChip';
 import styles from './DetailChips.module.css';
 import { DueChip } from './DueChip';
+import { LabelsChip } from './LabelsChip';
 import { SelectChip } from './SelectChip';
 import { useDetailFields } from './useDetailFields';
 
@@ -14,6 +15,7 @@ export function DetailChips({ detail }: { detail: TicketDetail }) {
   const { ticket } = detail;
   const fields = useDetailFields(detail);
   const { assignee } = fields;
+  const labels = detail.labels ?? [];
   const noteId = useId();
   return (
     <>
@@ -32,6 +34,9 @@ export function DetailChips({ detail }: { detail: TicketDetail }) {
         />
         <AssigneeChip draft={assignee} describedBy={assignee.failed ? noteId : undefined} />
         <DueChip value={ticket.due} overdue={fields.overdue} onChange={fields.setDue} />
+        {labels.length > 0 && (
+          <LabelsChip labels={labels} value={ticket.labelIds ?? []} onChange={fields.setLabels} />
+        )}
       </div>
       <FieldNote draft={assignee} subject="Assignee" id={noteId} />
     </>

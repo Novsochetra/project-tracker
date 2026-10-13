@@ -4,6 +4,7 @@ import {
   type Activity,
   type Attachment,
   type ChatDetail,
+  type Label,
   type ProjectDetail,
   type ProjectSummary,
   type Run,
@@ -29,6 +30,7 @@ async function readUntil(reader: Reader, pattern: RegExp): Promise<string> {
 interface AWorld {
   projectId: string;
   statusIds: string[];
+  labelId: string;
   commentId: string;
   ticketFile: string;
   commentFile: string;
@@ -68,6 +70,10 @@ const writesOf = (a: AWorld): [string, string, unknown?][] => [
   ['PUT', '/api/projects/MOB/statuses/order', { ids: a.statusIds }],
   ['POST', '/api/projects/MOB/claim'],
   ['PATCH', `/api/statuses/${a.statusIds[0]}`, { name: 'Mine' }],
+  ['POST', '/api/projects/MOB/labels', { name: 'Mine' }],
+  ['PUT', '/api/projects/MOB/labels/order', { ids: [a.labelId] }],
+  ['PATCH', `/api/labels/${a.labelId}`, { name: 'Mine' }],
+  ['DELETE', `/api/labels/${a.labelId}`],
   ['PATCH', '/api/tickets/MOB-1', { title: 'Mine now' }],
   ['POST', '/api/tickets/MOB-1/move', { statusId: a.statusIds[1] }],
   ['POST', '/api/tickets/MOB-1/sent', { moveToInProgress: true }],
@@ -86,11 +92,19 @@ const writesOf = (a: AWorld): [string, string, unknown?][] => [
 ];
 
 // Refused to every agent token before any lookup, so a 403 says nothing about A's project.
-const PERSON_ONLY = new Set(['PATCH /api/projects/MOB', 'DELETE /api/projects/MOB']);
-const personOnly = (method: string, path: string): boolean =>
-  PERSON_ONLY.has(`${method} ${path}`) || (method !== 'GET' && path.includes('/statuses'));
-const writeStatus = (auth: Auth, method: string, path: string): number =>
-  auth.token && personOnly(method, path) ? 403 : 404;
+const personOnlyPaths = (a: AWorld) =>
+  new Set([
+    'PATCH /api/projects/MOB',
+    'DELETE /api/projects/MOB',
+    'POST /api/projects/MOB/labels',
+    'PUT /api/projects/MOB/labels/order',
+    `PATCH /api/labels/${a.labelId}`,
+    `DELETE /api/labels/${a.labelId}`,
+  ]);
+const personOnly = (a: AWorld, method: string, path: string): boolean =>
+  personOnlyPaths(a).has(`${method} ${path}`) || (method !== 'GET' && path.includes('/statuses'));
+const writeStatus = (a: AWorld, auth: Auth, method: string, path: string): number =>
+  auth.token && personOnly(a, method, path) ? 403 : 404;
 
 describe.each(DIALECTS)("one user's projects stay theirs (%s)", (dialect) => {
   const api = useTestServer(dialect);
@@ -135,6 +149,7 @@ describe.each(DIALECTS)("one user's projects stay theirs (%s)", (dialect) => {
       name: 'Mobile',
       key: 'MOB',
     });
+    const label = await a.person<Label>('POST', '/api/projects/MOB/labels', { name: 'Bug' });
     await a.person('POST', '/api/projects/MOB/tickets', { title: 'Crash', assignee: 'Dara' });
     const ticketFile = await uploaded(a.auth, 'MOB-1');
     const commentFile = await uploaded(a.auth);
@@ -154,6 +169,7 @@ describe.each(DIALECTS)("one user's projects stay theirs (%s)", (dialect) => {
     return {
       projectId: project.body.project.id,
       statusIds: project.body.statuses.map((status) => status.id),
+      labelId: label.body.id,
       commentId: comment.body.id,
       ticketFile,
       commentFile,
@@ -192,7 +208,7 @@ describe.each(DIALECTS)("one user's projects stay theirs (%s)", (dialect) => {
     for (const auth of b.auths) {
       for (const [method, path, body] of writesOf(world)) {
         const response = await request(auth, method, path, body);
-        expect(response.status, `${method} ${path}`).toBe(writeStatus(auth, method, path));
+        expect(response.status, `${method} ${path}`).toBe(writeStatus(world, auth, method, path));
       }
     }
     const ticket = await a.person<{ ticket: { title: string } }>('GET', '/api/tickets/MOB-1');
@@ -207,7 +223,7 @@ describe.each(DIALECTS)("one user's projects stay theirs (%s)", (dialect) => {
     for (const as of [b.person, b.helper]) {
       expect((await as<ProjectSummary[]>('GET', '/api/projects')).body).toEqual([]);
       const all = await as<TicketsAcrossProjects>('GET', '/api/tickets?q=Crash');
-      expect(all.body).toEqual({ tickets: [], statuses: [] });
+      expect(all.body).toEqual({ tickets: [], statuses: [], labels: [] });
       const ready = await as<TicketsAcrossProjects>('GET', '/api/tickets?category=todo');
       expect(ready.body.tickets).toEqual([]);
       expect((await as<string[]>('GET', '/api/people')).body).toEqual([]);

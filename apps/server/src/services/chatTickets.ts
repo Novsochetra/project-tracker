@@ -40,6 +40,7 @@ export async function createCardTicket(
     assignee: '',
     due: '',
     attachmentIds: [],
+    labelIds: [],
     clientId: cardClientId(message.id, index),
   });
   await linkCardTicket(ctx.db, { messageId: message.id, cardIndex: index, ticketId: ticket.id });

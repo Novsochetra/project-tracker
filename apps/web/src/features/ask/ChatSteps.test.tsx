@@ -171,6 +171,18 @@ describe('Ask: what Claude is doing', () => {
     expect(screen.queryByRole('button', { name: /step/ })).not.toBeInTheDocument();
   });
 
+  it('says under each answer what its run took, and nothing for one that sent none', async () => {
+    const usage = { costMicros: 8_719, turns: 3, durationMs: 9_146 };
+    const answers = [
+      makeMessage({ id: 'm-2', role: 'claude', text: 'Measured.', runId: 'r-2', usage }),
+      makeMessage({ id: 'm-3', role: 'claude', text: 'Older helper.', runId: 'r-3' }),
+    ];
+    setup(makeChatDetail({ messages: [question, ...answers] }), vi.fn());
+    const [measured, older] = await screen.findAllByRole('article', { name: 'Claude' });
+    expect(measured).toHaveTextContent('9 s · 3 turns · about $0.01');
+    expect(older).not.toHaveTextContent(/turns/);
+  });
+
   it('folds what Claude did before a question stopped, where the working message was', async () => {
     const stopped = makeAskRun({
       status: 'cancelled',

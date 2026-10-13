@@ -98,7 +98,17 @@ describe('shownRun', () => {
     expect(shownRun([failed(NOW - STOPPED_SHOWN_MS)], NOW)).toBeNull();
   });
 
-  it('shows nothing once the latest run is done or cancelled', () => {
+  it('shows a finished run for a day when its helper said what it took', () => {
+    const usage = { costMicros: 840_000, turns: 23, durationMs: 361_000 };
+    const done = (endedAt: number) => makeRun({ status: 'done', endedAt, usage });
+    expect(shownRun([done(NOW - STOPPED_SHOWN_MS + 1)], NOW)).toMatchObject({
+      state: 'finished',
+      text: `Claude finished on ${DARA}.`,
+    });
+    expect(shownRun([done(NOW - STOPPED_SHOWN_MS)], NOW)).toBeNull();
+  });
+
+  it('shows nothing once the latest run is done without usage or cancelled', () => {
     expect(shownRun([makeRun({ status: 'done', endedAt: NOW }), failed(NOW)], NOW)).toBeNull();
     expect(shownRun([makeRun({ status: 'cancelled', endedAt: NOW })], NOW)).toBeNull();
     expect(shownRun([], NOW)).toBeNull();

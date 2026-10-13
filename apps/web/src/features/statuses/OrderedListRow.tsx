@@ -1,15 +1,20 @@
-import type { Status } from '@tracker/shared';
 import clsx from 'clsx';
 import { ChevronRight, GripVertical } from 'lucide-react';
 import { Reorder, useDragControls, type Transition } from 'motion/react';
 import { useState, type KeyboardEvent, type PointerEvent, type ReactNode } from 'react';
-import { Icon, StatusGlyph } from '../../components';
+import { Icon } from '../../components';
 import styles from './StatusManagerSheet.module.css';
-import { categoryHint } from './statusForm';
 import { useOwnTouch } from './useOwnTouch';
 
-export interface StatusListRowProps {
-  status: Status;
+export interface OrderedItem {
+  id: string;
+  name: string;
+}
+
+export interface OrderedListRowProps {
+  item: OrderedItem;
+  leading: ReactNode;
+  hint: string | null;
   count: number;
   editor: ReactNode;
   dragDisabled: boolean;
@@ -23,14 +28,14 @@ export interface StatusListRowProps {
 
 const KEY_DELTAS: Partial<Record<string, number>> = { ArrowUp: -1, ArrowDown: 1 };
 
-export function StatusListRow(props: StatusListRowProps) {
-  const { status, editor, transition, onDragEnd } = props;
+export function OrderedListRow(props: OrderedListRowProps) {
+  const { item, editor, transition, onDragEnd } = props;
   const controls = useDragControls();
   const [dragging, setDragging] = useState(false);
   return (
     <Reorder.Item
       as="li"
-      value={status.id}
+      value={item.id}
       layout="position"
       transition={transition}
       dragListener={false}
@@ -48,12 +53,14 @@ export function StatusListRow(props: StatusListRowProps) {
   );
 }
 
-interface RowContentProps extends StatusListRowProps {
+interface RowContentProps extends OrderedListRowProps {
   startDrag: (event: PointerEvent) => void;
 }
 
 function RowContent({
-  status,
+  item,
+  leading,
+  hint,
   count,
   dragDisabled,
   hintId,
@@ -63,7 +70,6 @@ function RowContent({
   startDrag,
 }: RowContentProps) {
   const handleRef = useOwnTouch<HTMLButtonElement>();
-  const hint = categoryHint(status);
   const moveByKey = (event: KeyboardEvent) => {
     const delta = KEY_DELTAS[event.key];
     if (!delta) return;
@@ -76,7 +82,7 @@ function RowContent({
         ref={handleRef}
         type="button"
         className={styles.handle}
-        aria-label={`Reorder ${status.name}`}
+        aria-label={`Reorder ${item.name}`}
         aria-describedby={hintId}
         data-no-swipe=""
         disabled={dragDisabled}
@@ -93,8 +99,8 @@ function RowContent({
         className={clsx('ring-inside', styles.row)}
         onClick={onEdit}
       >
-        <StatusGlyph category={status.category} color={status.color} animated={false} />
-        <span className={styles.name}>{status.name}</span>
+        {leading}
+        <span className={styles.name}>{item.name}</span>
         {hint && <span className={styles.category}>{hint}</span>}
         <span className={styles.count}>
           {count}

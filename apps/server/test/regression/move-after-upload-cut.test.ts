@@ -85,7 +85,7 @@ describe.each(DIALECTS)(
       const target = await openMoveTarget(dialect, null);
       const { ok, lines } = await moveData(source, target);
       expect(ok).toBe(true);
-      expect(lines).toContain('  attachments  3');
+      expect(lines).toContain('  attachments    3');
       expect(lines).toContain(LEFT_OUT);
       expect(await tableCounts(target.db)).toEqual(SOURCE_COUNTS);
       expect([...(await target.stored()).keys()].filter((key) => key.startsWith(id))).toEqual([]);

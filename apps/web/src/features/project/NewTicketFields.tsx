@@ -1,4 +1,4 @@
-import { isDoneCategory, isOverdue, type Status } from '@tracker/shared';
+import { isDoneCategory, isOverdue, type Label, type Status } from '@tracker/shared';
 import type { ClipboardEvent, ReactNode, RefObject } from 'react';
 import { usePeople } from '../../api';
 import {
@@ -11,13 +11,16 @@ import {
   TitleField,
 } from '../../components';
 import { pasteFiles } from '../attachments';
+import { LabelsRow } from '../labels/LabelsRow';
 import { PRIORITY_OPTIONS, statusOptions } from './fieldOptions';
 import styles from './NewTicketSheet.module.css';
 import { TITLE_MAX_LENGTH, type NewTicketForm } from './newTicketForm';
+import { withLabels } from './newTicketLabels';
 
 export interface NewTicketFieldsProps {
   form: NewTicketForm;
   statuses: readonly Status[];
+  labels: readonly Label[];
   statusId: string | undefined;
   error: string;
   titleRef: RefObject<HTMLTextAreaElement | null>;
@@ -85,6 +88,13 @@ export function NewTicketFields(props: NewTicketFieldsProps) {
             overdue={isOverdue(form.due, isDone)}
             mutedIcon
           />
+          {props.labels.length > 0 && (
+            <LabelsRow
+              labels={props.labels}
+              value={form.labelIds}
+              onChange={(ids) => onChange(withLabels(form, ids, props.labels))}
+            />
+          )}
         </GroupedCard>
         {error && (
           <p role="alert" className={styles.error}>

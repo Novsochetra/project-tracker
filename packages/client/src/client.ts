@@ -33,6 +33,7 @@ import type {
   ProjectBoard,
   ProjectDetail,
   ProjectSummary,
+  ProjectUsage,
   PromptResult,
   PushKey,
   PushSubscriptionInput,
@@ -63,7 +64,8 @@ import type {
   UpdateStatusInput,
   UpdateTicketInput,
 } from '@tracker/shared';
-import { AskingClient, segment } from './asking';
+import { segment } from './asking';
+import { LabelingClient } from './labeling';
 import type { ReadOptions } from './http';
 import type { UploadOptions } from './upload';
 
@@ -74,9 +76,10 @@ const listQuery = (query: ListTicketsQuery) => ({
   status: query.status,
   category: query.category,
   q: query.q,
+  label: query.label,
 });
 
-export class TrackerClient extends AskingClient {
+export class TrackerClient extends LabelingClient {
   listProjects = () => this.http.request<ProjectSummary[]>('GET', '/api/projects');
 
   createProject = (input: CreateProjectInput) =>
@@ -96,6 +99,9 @@ export class TrackerClient extends AskingClient {
 
   getProjectPrompt = (key: string) =>
     this.http.request<PromptResult>('GET', `/api/projects/${segment(key)}/prompt`);
+
+  getProjectUsage = (key: string) =>
+    this.http.request<ProjectUsage>('GET', `/api/projects/${segment(key)}/usage`);
 
   createStatus = (projectKey: string, input: CreateStatusInput) =>
     this.http.request<Status>('POST', `/api/projects/${segment(projectKey)}/statuses`, {

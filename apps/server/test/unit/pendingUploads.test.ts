@@ -31,6 +31,8 @@ const rowsWith = (attachments: AttachmentRow[]): TableRows => ({
   tickets: [],
   activities: [],
   attachments,
+  labels: [],
+  ticketLabels: [],
 });
 
 describe('withoutPendingUploads', () => {

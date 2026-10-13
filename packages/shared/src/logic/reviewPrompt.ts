@@ -52,7 +52,7 @@ export function buildReviewPrompt(
   return [
     `Please review the work on ticket ${key} from my "${project.name}" project, using the tracker MCP tools.`,
     ...repoLine(project),
-    ...instructionLines(project),
+    ...instructionLines(project, ticket.labels),
     '',
     ticketBlock({ ...ticket, lastReport: null, lastReview: null }, '##', now),
     ...workToReview(ticket),

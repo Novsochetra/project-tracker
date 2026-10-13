@@ -1,0 +1,53 @@
+/* As tall as the status tabs' track beside it, so the filter row keeps its height. */
+.trigger {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 34px;
+  max-width: 200px;
+  margin: 0;
+  padding: 0 10px;
+  border: 0;
+  border-radius: var(--radius-container);
+  background: var(--fill-2);
+  color: var(--muted);
+  font-family: var(--font-sans);
+  font-size: var(--size-secondary);
+  font-weight: var(--weight-medium);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: color var(--duration-fast) ease-out;
+}
+
+.trigger[data-picked] {
+  color: var(--ink);
+}
+
+@media (hover: hover) {
+  .trigger:hover {
+    color: var(--ink);
+  }
+}
+
+.name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.chevron {
+  flex: none;
+  color: var(--faint);
+}
+
+@media (width < 768px),
+  (pointer: coarse) and (device-width < 600px),
+  (pointer: coarse) and (device-height < 600px) {
+  .trigger {
+    min-height: 44px;
+    max-width: 140px;
+    font-size: var(--size-body);
+  }
+}

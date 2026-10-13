@@ -23,6 +23,7 @@ npm run dev
 - Web app: http://localhost:5173
 - API: http://localhost:4100
 - Sample data (optional, while `npm run dev` runs): `npm run seed`
+  - It works against a local tracker with no owner yet. Once there is an owner, `TRACKER_TOKEN` doesn't help: a token acts as an agent and only a person can create projects, so the seed gets 403.
 
 Production-style single process (serves the built web app and the API on one port):
 

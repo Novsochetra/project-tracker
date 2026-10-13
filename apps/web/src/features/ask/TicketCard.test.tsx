@@ -128,6 +128,18 @@ describe('Ask: ticket cards', () => {
     await waitFor(() => expect(made).not.toHaveTextContent(/Claude is working/));
   });
 
+  it('says what a finished run of the made ticket took, and offers Run again', async () => {
+    const usage = { costMicros: 840_000, turns: 23, durationMs: 361_000 };
+    const done = makeRun({ ticketKey: 'MOB-7', status: 'done', endedAt: Date.now(), usage });
+    const listTicketRuns = vi.fn().mockResolvedValue([done]);
+    setup(created(withCards(ticketCardText('Sync faster')), 'm-1'), { listTicketRuns });
+    const made = await screen.findByRole('region', { name: 'Ticket MOB-7' });
+
+    await waitFor(() => expect(made).toHaveTextContent(`Claude finished on ${DARA}.`));
+    expect(made).toHaveTextContent('6 min · 23 turns · about $0.84');
+    expect(within(made).getByRole('button', { name: 'Run MOB-7 in Claude Code' })).toBeVisible();
+  });
+
   it('shows an older card that never became a ticket as replaced, without Create', async () => {
     setup(withCards(ticketCardText('First try'), ticketCardText('Second try', 'low')));
     const replaced = await screen.findByRole('region', { name: 'Replaced ticket card' });

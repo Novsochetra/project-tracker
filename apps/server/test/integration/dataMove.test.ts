@@ -158,12 +158,14 @@ describe.each(DIALECTS)('a dry run into %s', (dialect) => {
     expect(lines).toEqual(
       expect.arrayContaining([
         'To copy:',
-        '  projects     1',
-        '  statuses     2',
-        '  tickets      2',
-        '  activities   3',
-        '  attachments  3',
-        expect.stringMatching(/^ {2}files {8}3 \(\d+ KB\)$/),
+        '  projects       1',
+        '  statuses       2',
+        '  tickets        2',
+        '  activities     3',
+        '  attachments    3',
+        '  labels         0',
+        '  ticket_labels  0',
+        expect.stringMatching(/^ {2}files {10}3 \(\d+ KB\)$/),
         `Would migrate the empty target first: ${Object.keys(MIGRATIONS).join(', ')}.`,
         expect.stringMatching(
           /^Would compress or strip 1 of 2 images, as new uploads are \(\d+ K?B → \d+ K?B\)\.$/,

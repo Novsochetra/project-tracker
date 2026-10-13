@@ -26,6 +26,7 @@ const message = (
     runId: null,
     attachments: [],
     stepCount: 0,
+    usage: null,
     createdAt: next,
   };
 };
