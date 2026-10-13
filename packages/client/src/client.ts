@@ -52,6 +52,7 @@ import type {
   RunStep,
   ServerMeta,
   SessionState,
+  StartChatInput,
   StartRunInput,
   Status,
   SubmitWorkInput,
@@ -352,7 +353,7 @@ export class TrackerClient {
   listChats = (projectKey: string) =>
     this.http.request<Chat[]>('GET', `/api/projects/${segment(projectKey)}/chats`);
 
-  startChat = (projectKey: string, input: AskInput) =>
+  startChat = (projectKey: string, input: StartChatInput) =>
     this.http.request<ChatDetail>('POST', `/api/projects/${segment(projectKey)}/chats`, {
       body: input,
     });

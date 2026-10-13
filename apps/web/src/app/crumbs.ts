@@ -20,6 +20,14 @@ const PROJECTS: Route = { name: 'projects' };
 
 type ProjectRoute = Exclude<Route, { name: 'projects' }>;
 
+// A chat opened from a ticket sits under that ticket, as on phones.
+function chatParentCrumb(route: Extract<Route, { name: 'chat' }>, key: string): Crumb {
+  const num = route.ticketNum;
+  if (num === undefined)
+    return { level: 'chats', label: ASK_LABEL, target: { name: 'chats', key } };
+  return { level: 'ticket', label: `${key}-${num}`, target: { name: 'ticket', key, num } };
+}
+
 function leafCrumbs(route: ProjectRoute, key: string, chatTitle: string | undefined): Crumb[] {
   switch (route.name) {
     case 'project':
@@ -30,7 +38,7 @@ function leafCrumbs(route: ProjectRoute, key: string, chatTitle: string | undefi
       return [{ level: 'chats', label: ASK_LABEL, target: null }];
     case 'chat':
       return [
-        { level: 'chats', label: ASK_LABEL, target: { name: 'chats', key } },
+        chatParentCrumb(route, key),
         { level: 'chat', label: chatTitle ?? NEW_CHAT_LABEL, target: null },
       ];
   }

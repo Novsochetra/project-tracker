@@ -1,5 +1,7 @@
 export const ASK_INTRO =
   'Ask Claude Code on your computer about this project: how something works, where something is, or to shape a ticket.';
+export const ASK_TICKET_INTRO =
+  'Ask Claude Code on your computer about this ticket. Claude sees its description, notes, last report and review.';
 export const ASK_PLACEHOLDER = 'Ask Claude about this project…';
 export const MODEL_LABEL = 'Model';
 export const MODE_LABEL = 'Mode';

@@ -11,6 +11,8 @@ export interface ChatRow {
   askModel: AskModel;
   askMode: AskMode;
   askEffort: AskEffort;
+  // The ticket it was started from; null once that ticket is deleted.
+  ticketId: string | null;
   createdAt: number;
   updatedAt: number;
 }

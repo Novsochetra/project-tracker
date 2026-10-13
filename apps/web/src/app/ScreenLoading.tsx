@@ -25,7 +25,9 @@ function LoadingBar({ route }: { route: Route }) {
     case 'chats':
       return <ChatsLoadingBar projectKey={route.key} />;
     case 'chat':
-      return <ChatLoadingBar chatId={route.chatId} />;
+      return (
+        <ChatLoadingBar projectKey={route.key} chatId={route.chatId} ticketNum={route.ticketNum} />
+      );
   }
 }
 

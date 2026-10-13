@@ -7,6 +7,8 @@ import type { Database, Db } from '../db/schema';
 export interface ChatWithKey extends ChatRow {
   projectKey: string;
   waiting: number | boolean;
+  ticketNum: number | null;
+  ticketTitle: string | null;
 }
 
 export interface MessageWithKey extends ChatMessageRow {
@@ -42,8 +44,10 @@ const chatsOf = (db: Db, userId: UserScope, now: number) =>
   db
     .selectFrom('chats')
     .innerJoin('projects', 'projects.id', 'chats.projectId')
+    .leftJoin('tickets as chatTicket', 'chatTicket.id', 'chats.ticketId')
     .selectAll('chats')
     .select('projects.key as projectKey')
+    .select(['chatTicket.num as ticketNum', 'chatTicket.title as ticketTitle'])
     .select(waitingAt(now))
     .where(ownedBy(userId));
 
