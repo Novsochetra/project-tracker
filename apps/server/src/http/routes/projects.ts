@@ -11,6 +11,7 @@ import {
 import { projectPrompt } from '../../services/prompts';
 import { getBoard } from '../../services/ticketQueries';
 import type { AppEnv } from '../env';
+import { personEditsProjects } from '../personOnly';
 import { userContext } from '../userContext';
 import { jsonBody } from '../validation';
 
@@ -23,10 +24,10 @@ export const projectRoutes = (ctx: ServiceContext) =>
     .get('/projects/:key', async (c) =>
       c.json(await getProjectDetail(userContext(ctx, c), c.req.param('key'))),
     )
-    .patch('/projects/:key', jsonBody(updateProjectInput), async (c) =>
+    .patch('/projects/:key', personEditsProjects, jsonBody(updateProjectInput), async (c) =>
       c.json(await updateProject(userContext(ctx, c), c.req.param('key'), c.req.valid('json'))),
     )
-    .delete('/projects/:key', async (c) => {
+    .delete('/projects/:key', personEditsProjects, async (c) => {
       await deleteProject(userContext(ctx, c), c.req.param('key'));
       return c.body(null, 204);
     })
