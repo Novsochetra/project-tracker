@@ -106,6 +106,7 @@ export function fakeTracker(jobs: RunJob[]) {
     addRunRequest: vi.fn(() => Promise.reject(new Error('No requests here.'))),
     waitForRunRequest: vi.fn(() => Promise.reject(new Error('No requests here.'))),
     cancelRunRequest: vi.fn(() => Promise.reject(new Error('No requests here.'))),
+    fetchAttachment: vi.fn(() => Promise.reject(new Error('No files here.'))),
   };
   return { api, ended, statuses, reports, activity, steps, ticket };
 }

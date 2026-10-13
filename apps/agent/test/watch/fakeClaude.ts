@@ -86,6 +86,14 @@ process.stdin.on('end', () => {
     send({ id: 0, method: 'initialize', params: { protocolVersion: '2025-06-18', capabilities: {}, clientInfo } });
     return;
   }
+  // Says what the folder given with --add-dir holds while Claude runs.
+  if (prompt.includes('SHOW FILES')) {
+    const { readdirSync, readFileSync } = require('node:fs');
+    const dir = process.argv[process.argv.indexOf('--add-dir') + 1];
+    const files = readdirSync(dir).map((name) => name + '=' + readFileSync(join(dir, name), 'utf8'));
+    say('FILES ' + files.join(',') + '\\nARGS ' + JSON.stringify(process.argv.slice(2)) + '\\nPROMPT ' + prompt);
+    process.exit(0);
+  }
   if (prompt.includes('ASK FAIL')) { say('Credit balance is too low', true); process.exit(1); }
   // Waits for the test's go file, so a test can look at the steps while Claude still works.
   if (prompt.includes('SLOW STEPS')) {

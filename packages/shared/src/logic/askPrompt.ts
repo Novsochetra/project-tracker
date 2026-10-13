@@ -7,8 +7,11 @@ export interface AskPromptInput {
   project: { key: string; name: string } & PromptInstructions;
   mode: AskMode;
   question: string;
-  // Earlier messages, for a helper that can't resume the chat's Claude Code session.
-  history: readonly { role: ChatRole; text: string }[];
+  // Names of the files sent with the question; the helper adds where it put them (withSentFiles).
+  files?: readonly string[];
+  // Earlier messages, for a helper that can't resume the chat's Claude Code session, with the
+  // names of the files sent with each (those files are not on the helper any more).
+  history: readonly { role: ChatRole; text: string; files?: readonly string[] }[];
   // The ticket the chat is about, read again for each question so it is never stale.
   ticket?: PromptTicket | null;
 }
@@ -56,13 +59,21 @@ const rules = (project: AskPromptInput['project'], mode: AskMode) =>
 
 const SPEAKERS: Record<ChatRole, string> = { person: 'Person', claude: 'You' };
 
+const sentWith = (files: readonly string[] = []) =>
+  files.length > 0 ? `\n(Sent with it: ${files.join(', ')})` : '';
+
 const transcript = (history: AskPromptInput['history']) =>
-  history.map((message) => `${SPEAKERS[message.role]}:\n${message.text}`).join('\n\n');
+  history
+    .map((message) => `${SPEAKERS[message.role]}:\n${message.text}${sentWith(message.files)}`)
+    .join('\n\n');
+
+const PART = '\n\n---\n\n';
 
 export function buildAskPrompt({
   project,
   mode,
   question,
+  files,
   history,
   ticket,
 }: AskPromptInput): string {
@@ -71,6 +82,17 @@ export function buildAskPrompt({
   if (instructions.length > 0) parts.push(instructions.join('\n'));
   if (ticket) parts.push(`This chat is about this ticket:\n\n${ticketBlock(ticket, '##')}`);
   if (history.length > 0) parts.push(`Earlier in this chat:\n\n${transcript(history)}`);
-  parts.push(`Question:\n${question}`);
-  return parts.join('\n\n---\n\n');
+  parts.push(`Question:\n${question}${sentWith(files)}`);
+  return parts.join(PART);
+}
+
+// Only the helper knows where it put the question's files, so it adds their paths to the prompt
+// the tracker made (PT-187).
+export function withSentFiles(prompt: string, paths: readonly string[]): string {
+  if (paths.length === 0) return prompt;
+  const list = paths.map((path) => `- ${path}`).join('\n');
+  return [
+    prompt,
+    `They sent these files with the question. Read them before you answer; the Read tool opens images and PDFs too. They are copies that are removed after this answer.\n${list}`,
+  ].join(PART);
 }

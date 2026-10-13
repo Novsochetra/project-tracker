@@ -5,13 +5,17 @@ import { errorMessage } from '../../api';
 import { AutoTextarea } from '../../components';
 import { holdPresses } from '../../lib/holdPresses';
 import { useDraftMark } from '../../lib/useDraftMark';
+import { pasteFiles } from '../attachments/useFileDrop';
 import { isSubmitShortcut } from '../ticket/activity/commentRules';
 import { AskOptionsRow } from './AskOptionsRow';
+import { AttachButton } from './AttachButton';
 import styles from './ChatScreen.module.css';
 import { ASK_PLACEHOLDER } from './copy';
+import { QuestionFilesArea } from './QuestionFilesArea';
 import { SendButton } from './SendButton';
 import { useAskOptions } from './useAskOptions';
 import { useChatSend } from './useChatSend';
+import { useQuestionFiles } from './useQuestionFiles';
 
 export interface AskComposerProps {
   projectKey: string;
@@ -33,13 +37,16 @@ export function AskComposer({
 }: AskComposerProps) {
   const [text, setText] = useState('');
   const { options, pick, forget } = useAskOptions(savedOptions);
+  const question = useQuestionFiles();
   const chat = useChatSend(projectKey, chatId, helper);
-  useDraftMark(`ask:${chatId ?? `new:${projectKey}`}`, text.trim() !== '');
-  const canSend = helper !== null && text.trim() !== '' && !chat.sending;
+  useDraftMark(`ask:${chatId ?? `new:${projectKey}`}`, text.trim() !== '' || question.count > 0);
+  const canSend = helper !== null && text.trim() !== '' && !chat.sending && !question.uploading;
   const send = () => {
     if (!canSend) return;
-    chat.send(text.trim(), options, () => {
+    const attachmentIds = question.attachments.map((attachment) => attachment.id);
+    chat.send({ text: text.trim(), attachmentIds }, options, () => {
       setText('');
+      question.clear();
       forget();
     });
   };
@@ -51,10 +58,12 @@ export function AskComposer({
   return (
     <form
       className={styles.composer}
+      data-dropping={question.drop.active || undefined}
       onSubmit={(event) => {
         event.preventDefault();
         send();
       }}
+      {...question.drop.handlers}
     >
       {chat.error && (
         <p role="alert" className={clsx(styles.error, 'fade-in')}>
@@ -62,7 +71,9 @@ export function AskComposer({
         </p>
       )}
       {offersSend && <AskOptionsRow options={options} onChange={pick} />}
+      <QuestionFilesArea question={question} />
       <div className={styles.box}>
+        <AttachButton onFiles={question.files.add} />
         <AutoTextarea
           aria-label="Question for Claude"
           placeholder={ASK_PLACEHOLDER}
@@ -71,6 +82,7 @@ export function AskComposer({
           maxLength={CHAT_QUESTION_MAX}
           value={text}
           onChange={(event) => setText(event.currentTarget.value)}
+          onPaste={(event) => pasteFiles(event, question.files.add)}
           onKeyDown={(event) => {
             if (!isSubmitShortcut(event)) return;
             event.preventDefault();

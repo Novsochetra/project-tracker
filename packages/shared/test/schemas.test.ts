@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { askInput } from '../src/api/chats';
 import {
   createCommentInput,
   createStatusInput,
@@ -95,6 +96,25 @@ describe('createCommentInput', () => {
     expect(messages(createCommentInput.safeParse({}))).toEqual(['Write a comment or add a file.']);
     expect(messages(createCommentInput.safeParse({ text: '  \n ', attachmentIds: [] }))).toEqual([
       'Write a comment or add a file.',
+    ]);
+  });
+});
+
+describe('askInput', () => {
+  const question = {
+    runnerId: '0b6c1d52-3c1f-4a55-9a1e-2f4c8c7d9e10',
+    text: 'Turn this into tickets',
+  };
+
+  it('takes the files sent with a question, and none by default', () => {
+    expect(askInput.parse(question).attachmentIds).toEqual([]);
+    expect(askInput.parse({ ...question, attachmentIds: ['a1'] }).attachmentIds).toEqual(['a1']);
+  });
+
+  it('takes up to 20 files', () => {
+    const attachmentIds = Array.from({ length: 21 }, (_, index) => `a${index}`);
+    expect(messages(askInput.safeParse({ ...question, attachmentIds }))).toEqual([
+      'A question can have up to 20 files.',
     ]);
   });
 });

@@ -75,6 +75,7 @@ describe('Ask: the model, effort and mode pickers', () => {
     expect(client.ask).toHaveBeenCalledWith('c-1', {
       runnerId: dara.id,
       text: 'Plan offline mode',
+      attachmentIds: [],
       model: 'sonnet',
       mode: 'plan',
       effort: 'max',
@@ -107,6 +108,7 @@ describe('Ask: the model, effort and mode pickers', () => {
     expect(client.startChat).toHaveBeenCalledWith('MOB', {
       runnerId: dara.id,
       text: 'Fix the typo',
+      attachmentIds: [],
       model: 'default',
       mode: 'edit',
       effort: 'default',

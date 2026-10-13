@@ -9,6 +9,7 @@ import { SheetsContext } from '../../../app/sheets/context';
 import { ToastProvider } from '../../../components';
 import { routePath, StackNavigator, type Route } from '../../../navigation';
 import { mockPhone, skipAnimations } from '../../../overlays/testing';
+import { AttachmentViewerProvider } from '../../attachments/AttachmentViewerProvider';
 import { LocationProbe } from '../../project/test/LocationProbe';
 import { ChatScreen } from '../ChatScreen';
 import { ChatsScreen } from '../ChatsScreen';
@@ -46,7 +47,9 @@ export function renderAsk({
       <ApiWrapper>
         <ToastProvider>
           <SheetsContext.Provider value={sheets}>
-            <StackNavigator renderScreen={screenFor} />
+            <AttachmentViewerProvider>
+              <StackNavigator renderScreen={screenFor} />
+            </AttachmentViewerProvider>
             <LocationProbe />
           </SheetsContext.Provider>
         </ToastProvider>

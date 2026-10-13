@@ -20,6 +20,7 @@ import {
 } from '../repositories/chats';
 import { latestChatRunRow, listStoppedChatRunRows } from '../repositories/runs';
 import { queueAsk } from './askRuns';
+import { chatFilesByMessage, chatHistory } from './chatFiles';
 import { chatTitle, toChat, toMessage } from './chatMappers';
 import { chatPromptTicket, requireChatTicket } from './chatTicket';
 import { inTransaction, type ServiceContext } from './context';
@@ -65,11 +66,12 @@ export async function getChat(
   await expireSilentRuns(ctx);
   const chat = await requireChat(ctx, scope, id);
   const messages = await listMessageRows(ctx.db, chat.id);
+  const files = await chatFilesByMessage(ctx.db, chat.id);
   const run = await latestChatRunRow(ctx.db, scope, chat.id);
   const stopped = await listStoppedChatRunRows(ctx.db, scope, chat.id);
   return {
     chat: toChat(chat),
-    messages: messages.map(toMessage),
+    messages: messages.map((message) => toMessage(message, files.get(message.id) ?? [])),
     run: run ? toRun(run) : null,
     stoppedRuns: stopped.map(toRun),
   };
@@ -89,15 +91,16 @@ async function askIn(
 ): Promise<ChatDetail> {
   const runner = await requireRunnerFor(ctx, scope, input.runnerId, project);
   await expireSilentRuns(ctx);
-  const history = isNew ? [] : await listMessageRows(ctx.db, chat.id);
+  const history = isNew ? [] : await chatHistory(ctx.db, chat.id);
   const ticket = await chatPromptTicket(ctx.db, chat, project.key);
   const queued = { scope, runner, projectId: project.id, now: ctx.now() };
   const run = await inTransaction(ctx, async (trx) => {
     if (isNew) await insertChat(trx, chat);
     const saved = { model: chat.askModel, mode: chat.askMode, effort: chat.askEffort };
     const options = chosenAskOptions(input, saved);
-    const question = input.text;
-    return queueAsk(trx, { queued, project, chat, history, ticket, question, options });
+    const { text: question, attachmentIds } = input;
+    const request = { queued, project, chat, history, ticket, question, attachmentIds, options };
+    return queueAsk(trx, request);
   });
   notifyRun(ctx, scope, run);
   return getChat(ctx, scope, chat.id);

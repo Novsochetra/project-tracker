@@ -6,7 +6,9 @@ import {
   type ChatMessage,
   type ChatTicket,
 } from '@tracker/shared';
+import type { AttachmentRow } from '../db/schema';
 import type { ChatWithKey, MessageWithKey } from '../repositories/chats';
+import { toAttachment } from './mappers';
 
 // A chat's ticket is one of its own project's, so the project's key makes the ticket's.
 const chatTicket = (row: ChatWithKey): ChatTicket | null =>
@@ -39,7 +41,7 @@ function shownStepCount(row: MessageWithKey): number {
   return isAnswerStep(last, row.text) ? count - 1 : count;
 }
 
-export const toMessage = (row: MessageWithKey): ChatMessage => ({
+export const toMessage = (row: MessageWithKey, files: readonly AttachmentRow[]): ChatMessage => ({
   id: row.id,
   chatId: row.chatId,
   role: row.role,
@@ -50,6 +52,7 @@ export const toMessage = (row: MessageWithKey): ChatMessage => ({
       : formatTicketKey(row.projectKey, row.ticketNum),
   runId: row.runId,
   stepCount: shownStepCount(row),
+  attachments: files.map(toAttachment),
   createdAt: row.createdAt,
 });
 

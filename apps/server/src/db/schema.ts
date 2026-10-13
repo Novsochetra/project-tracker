@@ -81,6 +81,8 @@ export interface AttachmentRow {
   createdAt: number;
   // Who uploaded it: a file on no ticket yet is only theirs.
   userId: string | null;
+  // The person's chat message it was sent with (PT-187); such a file is on no ticket.
+  chatMessageId: string | null;
 }
 
 export interface Database extends AuthTables, ChatTables, PushTables, QuestionTables, RunTables {

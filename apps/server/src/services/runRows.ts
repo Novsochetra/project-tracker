@@ -24,6 +24,7 @@ type RunTarget = Pick<
   | 'askMode'
   | 'askEffort'
   | 'role'
+  | 'questionId'
 >;
 
 export const queuedRunRow = (run: QueuedRun, target: RunTarget): RunRow => ({

@@ -49,6 +49,7 @@ const PHOTO: AttachmentRow = {
   position: 3,
   createdAt: 1000,
   userId: null,
+  chatMessageId: null,
 };
 
 const NOTES: AttachmentRow = {

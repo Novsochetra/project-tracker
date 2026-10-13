@@ -21,6 +21,7 @@ export const makeMessage = (overrides: Partial<ChatMessage> = {}): ChatMessage =
   ticketKey: null,
   runId: null,
   stepCount: 0,
+  attachments: [],
   createdAt: Date.now() - 60_000,
   ...overrides,
 });

@@ -47,6 +47,7 @@ async function keepWatching(setup: Setup, args: WatchArgs, io: WatchIo, signal: 
     permissionMode: runPermissionMode(args),
     write: io.write,
     prompts: promptTool(setup, io),
+    fetchFile: (attachmentId) => api.fetchAttachment(attachmentId),
   });
   const watcher = createWatcher({ api, log: io.stdout, ...claude }, settings);
   io.stdout(

@@ -16,6 +16,7 @@ import * as chatTicket from './0014_chat_ticket';
 import * as questions from './0015_questions';
 import * as pushSubscriptions from './0016_push_subscriptions';
 import * as projectInstructions from './0017_project_instructions';
+import * as chatAttachments from './0022_chat_attachments';
 
 // Keyed by file name; they run in name order, so the four-digit number decides. The bundled server
 // can't list a folder, so a new file is added here too (test/unit/migrationFiles checks it is).
@@ -37,4 +38,5 @@ export const MIGRATIONS: Record<string, Migration> = {
   '0015_questions': questions,
   '0016_push_subscriptions': pushSubscriptions,
   '0017_project_instructions': projectInstructions,
+  '0022_chat_attachments': chatAttachments,
 };

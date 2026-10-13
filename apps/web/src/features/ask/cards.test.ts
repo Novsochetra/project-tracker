@@ -12,6 +12,7 @@ const message = (role: ChatMessage['role'], text: string, ticketKey: string | nu
     text,
     ticketKey,
     runId: null,
+    attachments: [],
     stepCount: 0,
     createdAt: next,
   };

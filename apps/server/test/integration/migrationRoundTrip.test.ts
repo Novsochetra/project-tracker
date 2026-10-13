@@ -315,10 +315,12 @@ const DATA_MODEL: SchemaShape = {
       'created_at bigint not null',
       'position integer not null default 0',
       'user_id text',
+      'chat_message_id text',
     ],
-    indexes: ['index (activity_id)', 'index (ticket_id)'],
+    indexes: ['index (activity_id)', 'index (chat_message_id)', 'index (ticket_id)'],
     foreignKeys: [
       'activity_id -> activities.id on delete cascade',
+      'chat_message_id -> chat_messages.id on delete cascade',
       'ticket_id -> tickets.id on delete cascade',
     ],
   },
@@ -411,6 +413,7 @@ const DATA_MODEL: SchemaShape = {
       'step_count integer not null default 0',
       'ask_effort text',
       'role text',
+      'question_id text',
     ],
     indexes: [
       'index (chat_id, created_at)',

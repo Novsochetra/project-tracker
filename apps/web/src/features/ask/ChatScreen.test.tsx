@@ -66,6 +66,7 @@ describe('Ask: the chat screen', () => {
     expect(client.ask).toHaveBeenCalledWith('c-1', {
       runnerId: dara.id,
       text: 'And offline?',
+      attachmentIds: [],
       ...DEFAULT_ASK_OPTIONS,
     });
     expect(await question()).toHaveValue('');
@@ -114,6 +115,7 @@ describe('Ask: the chat screen', () => {
     expect(client.ask).toHaveBeenCalledWith('c-1', {
       runnerId: studio.id,
       text: 'Hi',
+      attachmentIds: [],
       ...DEFAULT_ASK_OPTIONS,
     });
   });
@@ -130,6 +132,7 @@ describe('Ask: the chat screen', () => {
     expect(client.startChat).toHaveBeenCalledWith('MOB', {
       runnerId: dara.id,
       text: 'How does sync work?',
+      attachmentIds: [],
       ...DEFAULT_ASK_OPTIONS,
     });
     await waitFor(() => expect(currentPath()).toBe('/p/MOB/ask/c-1'));

@@ -46,6 +46,8 @@ export interface RunRow {
   stepCount: number;
   // Null on runs queued before there were roles, which were all work runs.
   role: RunRole | null;
+  // The person's message an ask answers, whose files the helper is given; null on ticket runs.
+  questionId: string | null;
 }
 
 export interface RunStepRow {
