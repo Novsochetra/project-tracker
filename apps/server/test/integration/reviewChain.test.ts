@@ -1,6 +1,12 @@
 import { randomUUID } from 'node:crypto';
 import {
+  LABEL_INSTRUCTIONS_MAX,
+  PROJECT_INSTRUCTIONS_MAX,
+  RUN_PROMPT_MAX,
   RUNNER_ONLINE_MS,
+  TICKET_DESCRIPTION_MAX,
+  TICKET_LABELS_MAX,
+  type Label,
   type Project,
   type ProjectDetail,
   type Run,
@@ -143,6 +149,32 @@ describe.each(DIALECTS)('review automatically (%s)', (dialect) => {
     await finish(job?.run.id ?? '');
 
     expect((await runs()).map((run) => [run.role, run.chainStop])).toEqual([['work', 'offline']]);
+  });
+
+  // Run in Claude Code refuses such a prompt, so the chain doesn't queue one either (PT-220).
+  it('stops when the next prompt is longer than a run takes', async () => {
+    await setAutoReview(true);
+    await person('PATCH', '/api/projects/MOB', {
+      instructions: 'p'.repeat(PROJECT_INSTRUCTIONS_MAX),
+    });
+    const labelIds: string[] = [];
+    for (let index = 0; index < TICKET_LABELS_MAX; index += 1) {
+      const instructions = 'l'.repeat(LABEL_INSTRUCTIONS_MAX);
+      const label = await person<Label>('POST', '/api/projects/MOB/labels', {
+        name: `Label ${index}`,
+        instructions,
+      });
+      labelIds.push(label.body.id);
+    }
+    const description = 'd'.repeat(TICKET_DESCRIPTION_MAX);
+    await person('PATCH', '/api/tickets/MOB-1', { description, labelIds });
+    const prompt = await person<{ text: string }>('GET', '/api/tickets/MOB-1/prompt');
+    expect(prompt.body.text.length).toBeGreaterThan(RUN_PROMPT_MAX);
+    await start();
+    await workRound();
+
+    expect(await take()).toBeNull();
+    expect((await runs()).map((run) => [run.role, run.chainStop])).toEqual([['work', 'too_long']]);
   });
 
   it('goes no further after a run that failed', async () => {

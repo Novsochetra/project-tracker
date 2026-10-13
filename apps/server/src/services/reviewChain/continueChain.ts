@@ -32,6 +32,7 @@ interface ChainEnd {
 
 interface ChainLink extends ChainEnd {
   runner: RunnerRow;
+  prompt: string;
 }
 
 async function chainTicket(ctx: ServiceContext, run: RunWithKey): Promise<TicketScope | null> {
@@ -47,18 +48,16 @@ async function stopChain(ctx: ServiceContext, { run, ticket }: ChainEnd, reason:
   pushToUser(ctx, run.userId, chainStoppedPush(pushed, chainStopReason(reason, run.runnerName)));
 }
 
-// The next run gets the prompt the sheet would show now, so a rework reads the review.
 async function queueChainRun(
   ctx: ServiceContext,
   link: ChainLink,
   next: ChainNext,
 ): Promise<boolean> {
-  const { run, ticket, runner } = link;
-  const prompt = await ticketPrompt(forUser(ctx, run.userId), ticketKeyOf(ticket));
+  const { run, ticket, runner, prompt } = link;
   const queued = { scope: run.userId, runner, projectId: run.projectId, now: ctx.now() };
   const row = {
     ...queuedRunRow(queued, {
-      prompt: prompt.text,
+      prompt,
       kind: 'ticket',
       ticketId: ticket.ticket.id,
       chatId: null,
@@ -86,6 +85,8 @@ async function chainStep(ctx: ServiceContext, run: RunWithKey): Promise<boolean>
   if (!ticket) return false;
   const runner = run.runnerId ? await findRunnerRow(ctx.db, run.runnerId) : undefined;
   const role = run.role ?? 'work';
+  // The next run gets the prompt the sheet would show now, so a rework reads the review.
+  const { text: prompt } = await ticketPrompt(forUser(ctx, run.userId), ticketKeyOf(ticket));
   const step = nextChainStep({
     run: { role, round: chainRound(role, run.round) },
     category: ticket.status.category,
@@ -94,9 +95,12 @@ async function chainStep(ctx: ServiceContext, run: RunWithKey): Promise<boolean>
       run.createdAt,
     ),
     helperOnline: runner !== undefined && helperCanTake(runner, ticket.project.id, ctx.now()),
+    promptLength: prompt.length,
   });
   if (step.kind === 'stop') await stopChain(ctx, { run, ticket }, step.reason);
-  if (step.kind === 'queue' && runner) return queueChainRun(ctx, { run, ticket, runner }, step);
+  if (step.kind === 'queue' && runner) {
+    return queueChainRun(ctx, { run, ticket, runner, prompt }, step);
+  }
   return step.kind === 'stop';
 }
 
