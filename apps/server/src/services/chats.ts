@@ -11,6 +11,7 @@ import type { UserScope } from '../auth/scope';
 import type { ChatRow } from '../db/chatTables';
 import type { ProjectRow } from '../db/schema';
 import { notFound } from '../errors';
+import { listCardTicketRows } from '../repositories/chatCardTickets';
 import {
   findChatInScope,
   insertChat,
@@ -65,11 +66,12 @@ export async function getChat(
   await expireSilentRuns(ctx);
   const chat = await requireChat(ctx, scope, id);
   const messages = await listMessageRows(ctx.db, chat.id);
+  const cards = await listCardTicketRows(ctx.db, chat.id);
   const run = await latestChatRunRow(ctx.db, scope, chat.id);
   const stopped = await listStoppedChatRunRows(ctx.db, scope, chat.id);
   return {
     chat: toChat(chat),
-    messages: messages.map(toMessage),
+    messages: messages.map((message) => toMessage(message, cards)),
     run: run ? toRun(run) : null,
     stoppedRuns: stopped.map(toRun),
   };

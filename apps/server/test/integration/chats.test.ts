@@ -72,7 +72,7 @@ describe.each(DIALECTS)('chats with Claude Code (%s)', (dialect) => {
       updatedAt: 1_000_000,
     });
     expect(messages).toEqual([
-      expect.objectContaining({ role: 'person', text: 'Where are runs queued?', ticketKey: null }),
+      expect.objectContaining({ role: 'person', text: 'Where are runs queued?', cardTickets: [] }),
     ]);
     expect(run).toMatchObject({
       kind: 'ask',
@@ -216,8 +216,9 @@ describe.each(DIALECTS)('chats with Claude Code (%s)', (dialect) => {
       });
     const first = await create();
     expect(first.status).toBe(200);
-    expect(first.body.messages[1]?.ticketKey).toBe('MOB-1');
-    expect((await create()).body.messages[1]?.ticketKey).toBe('MOB-1');
+    const linked = [{ index: 0, ticketKey: 'MOB-1' }];
+    expect(first.body.messages[1]?.cardTickets).toEqual(linked);
+    expect((await create()).body.messages[1]?.cardTickets).toEqual(linked);
     const ticket = await person<TicketDetail>('GET', '/api/tickets/MOB-1');
     expect(ticket.body.ticket).toMatchObject({ title: 'Add a chat (edited)', priority: 'high' });
     expect(ticket.body.activity[0]?.actor.kind).toBe('human');

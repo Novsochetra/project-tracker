@@ -22,6 +22,10 @@ const CARD_EXAMPLE = [
   '````',
 ].join('\n');
 
+// The phone reads every card in an answer, in order, and offers Create all (PT-186).
+const SPLIT_RULE =
+  'When they ask to split or plan work into tickets, end with one such card per ticket instead, in the order to do them. To change a drafted ticket, send only its new card.';
+
 const READ_ONLY =
   "You are in the project's folder in read-only mode: read and search the code, never change files, never run commands that change things.";
 const NO_WORK = "You can't create tickets or start work. They tap Create and then Run on the card.";
@@ -51,6 +55,7 @@ const rules = (project: AskPromptInput['project'], mode: AskMode) =>
     MODE_RULES[mode].folder,
     'Answer plainly and briefly. They read it on a phone.',
     `Only when they ask for a ticket, or to change the ticket you drafted, end your answer with one ticket card exactly like this (four backticks):\n\n${CARD_EXAMPLE}`,
+    SPLIT_RULE,
     ...MODE_RULES[mode].last,
   ].join('\n');
 

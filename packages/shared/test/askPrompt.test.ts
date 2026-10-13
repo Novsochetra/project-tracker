@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { buildAskPrompt } from '../src/logic/askPrompt';
+import { ticketCards } from '../src/logic/ticketCard';
 import type { PromptTicket } from '../src/logic/prompt';
 
 const project = { key: 'PT', name: 'Project Tracker' };
@@ -35,6 +36,25 @@ describe('buildAskPrompt', () => {
     expect(buildAskPrompt({ project, mode: 'ask', question: 'q', history: [] })).toContain(
       '````ticket\ntitle: <short title>\npriority: high | medium | low\n---',
     );
+  });
+
+  it('asks for one card per ticket only when the work is split, and the parser reads them', () => {
+    const prompt = buildAskPrompt({ project, mode: 'plan', question: 'q', history: [] });
+    expect(prompt).toContain('end your answer with one ticket card');
+    expect(prompt).toContain('split or plan work into tickets, end with one such card per ticket');
+    const example = /````ticket[\s\S]*?\n````/.exec(prompt)?.[0] ?? '';
+    const filled = (title: string) =>
+      example
+        .replace('<short title>', title)
+        .replace('high | medium | low', 'low')
+        .replace(/<description[^>]*>/, '## Why\nIt helps.');
+    const answer = ['Two tickets:', filled('First'), filled('Second'), 'Tap Create all.'].join(
+      '\n',
+    );
+    expect(ticketCards(answer)).toEqual([
+      { title: 'First', priority: 'low', description: '## Why\nIt helps.' },
+      { title: 'Second', priority: 'low', description: '## Why\nIt helps.' },
+    ]);
   });
 
   it('puts earlier messages before the question when the session can not be resumed', () => {
