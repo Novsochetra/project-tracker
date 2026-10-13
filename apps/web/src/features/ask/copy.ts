@@ -3,6 +3,7 @@ export const ASK_INTRO =
 export const ASK_TICKET_INTRO =
   'Ask Claude Code on your computer about this ticket. Claude sees its description, notes, last report and review.';
 export const ASK_PLACEHOLDER = 'Ask about this project…';
+export const ASK_TICKET_PLACEHOLDER = 'Ask about this ticket…';
 export const MODEL_LABEL = 'Model';
 export const MODE_LABEL = 'Mode';
 export const EFFORT_LABEL = 'Effort';

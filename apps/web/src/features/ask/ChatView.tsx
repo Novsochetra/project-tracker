@@ -3,6 +3,7 @@ import type { ChatDetail } from '@tracker/shared';
 import { NEW_CHAT_LABEL } from '../../app/crumbs';
 import { NavBar, NavBarSpacer } from '../../navigation';
 import { savedAskOptions } from './askOptions';
+import { askPlaceholder } from './askPlaceholder';
 import { ChatFooterArea } from './ChatFooterArea';
 import { ChatOptionsSheet } from './ChatOptionsSheet';
 import styles from './ChatScreen.module.css';
@@ -73,6 +74,7 @@ export function ChatView({ projectKey, chatId, detail, ticketNum }: ChatViewProp
         helper={helper}
         waiting={requests.waiting}
         savedOptions={savedAskOptions(detail?.chat)}
+        placeholder={askPlaceholder(detail, ticketNum)}
       />
     </div>
   );
