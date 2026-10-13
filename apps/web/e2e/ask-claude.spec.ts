@@ -221,8 +221,8 @@ test('picks the model, effort and mode on one row above the box, and sends them'
   expect(job?.run.askOptions).toEqual({ model: 'sonnet', mode: 'edit', effort: 'xhigh' });
 });
 
-// PT-202: Edit's hint took two lines on a phone, so switching modes moved the box and Send.
-test('keeps the box still and each mode hint on one line when the mode changes', async ({
+// PT-202: Edit's hint took two lines on a phone, so switching modes moved the options row.
+test('keeps the options row still and each mode hint on one line when the mode changes', async ({
   page,
   api,
 }, info) => {
@@ -234,22 +234,22 @@ test('keeps the box still and each mode hint on one line when the mode changes',
   const box = page.getByRole('textbox', { name: 'Question for Claude' });
   const own = page.viewportSize()!;
   const widths = (await usesPhoneLayout(page)) ? [320, own.width] : [own.width];
+  const hints = { Ask: ASK_HINT, Plan: PLAN_HINT, Edit: EDIT_HINT };
   for (const width of widths) {
     await page.setViewportSize({ width, height: own.height });
-    const boxes: unknown[] = [];
-    for (const [mode, hint] of [
-      ['Ask', ASK_HINT],
-      ['Plan', PLAN_HINT],
-      ['Edit', EDIT_HINT],
-    ] as const) {
+    const places: unknown[] = [];
+    for (const mode of Object.keys(hints)) {
+      await modes.getByRole('button', { name: mode }).click();
+      places.push([await modes.boundingBox(), await box.boundingBox()]);
+    }
+    expect(places[1], `Plan at ${width}px`).toEqual(places[0]);
+    expect(places[2], `Edit at ${width}px`).toEqual(places[0]);
+    for (const [mode, hint] of Object.entries(hints)) {
       await modes.getByRole('button', { name: mode }).click();
       const line = page.getByText(hint);
       await expect(line).toBeVisible();
       expect(await line.evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(true);
-      boxes.push(await box.boundingBox());
     }
-    expect(boxes[1]).toEqual(boxes[0]);
-    expect(boxes[2]).toEqual(boxes[0]);
     await settledScreenshot(page, info.outputPath(`ask-mode-hint-${width}.png`));
   }
 });

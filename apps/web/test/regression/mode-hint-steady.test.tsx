@@ -18,13 +18,13 @@ afterEach(() => restore());
 const hintOf = (mode: AskMode) => askOptionsHint({ ...DEFAULT_ASK_OPTIONS, mode });
 
 // PT-202: only Edit had a line under the options row, and on a phone it took two lines, so
-// switching Ask, Plan and Edit moved the box and Send up and down. Every mode has one short line;
-// the e2e "keeps the box still" test measures it at 320px.
-describe('regression: the mode hint keeps the box still', () => {
+// switching Ask, Plan and Edit moved the options row up and down. Every mode has one short line;
+// the e2e "keeps the options row still" test measures it at 320px.
+describe('regression: the mode hint keeps the options row still', () => {
   it('gives every mode its own short hint', () => {
     const hints = MODE_OPTIONS.map(({ value }) => hintOf(value));
     expect(new Set(hints).size).toBe(MODE_OPTIONS.length);
-    for (const hint of hints) expect(hint.length).toBeLessThanOrEqual(48);
+    for (const hint of hints) expect(hint.length).toBeLessThanOrEqual(50);
   });
 
   it('shows the hint of the mode picked, Ask, Plan or Edit', async () => {

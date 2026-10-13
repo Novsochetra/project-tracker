@@ -45,7 +45,7 @@ export const askInputOf = (runnerId: string, text: string, options: AskOptions):
   effort: options.effort,
 });
 
-// Every mode has a one-line hint, so switching modes never moves the box (PT-202).
+// Every mode has a one-line hint, so switching modes never moves the options row (PT-202).
 const MODE_HINTS: Record<AskMode, string> = { ask: ASK_HINT, plan: PLAN_HINT, edit: EDIT_HINT };
 
 export const askOptionsHint = ({ mode }: AskOptions): string => MODE_HINTS[mode];

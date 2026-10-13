@@ -45,7 +45,7 @@
   color: var(--subtle);
 }
 
-/* One line whatever the width, so a mode with a longer hint never moves the box (PT-202). */
+/* One line whatever the width, so a mode with a longer hint never moves the options row (PT-202). */
 .hint {
   margin: 0;
   overflow: hidden;
