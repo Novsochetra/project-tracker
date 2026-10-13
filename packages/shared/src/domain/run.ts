@@ -1,4 +1,5 @@
 import type { AskOptions } from './askOptions';
+import type { StatusCategory } from './status';
 
 export const RUN_STATUSES = ['queued', 'running', 'done', 'failed', 'cancelled'] as const;
 export type RunStatus = (typeof RUN_STATUSES)[number];
@@ -6,6 +7,14 @@ export type RunStatus = (typeof RUN_STATUSES)[number];
 // A ticket run works on a ticket; an ask run answers a chat question.
 export const RUN_KINDS = ['ticket', 'ask'] as const;
 export type RunKind = (typeof RUN_KINDS)[number];
+
+// A work run does the ticket; a review run checks the work on a ticket in review and records a
+// review. Ask runs are work runs.
+export const RUN_ROLES = ['work', 'review'] as const;
+export type RunRole = (typeof RUN_ROLES)[number];
+
+export const roleForCategory = (category: StatusCategory): RunRole =>
+  category === 'in_review' ? 'review' : 'work';
 
 export const ACTIVE_RUN_STATUSES = ['queued', 'running'] as const satisfies readonly RunStatus[];
 export const ENDED_RUN_STATUSES = [
@@ -25,6 +34,7 @@ export const RUN_NOT_TAKEN = "Your computer didn't take the run.";
 export const RUN_LOST = 'Your computer stopped answering.';
 export const RUN_RESTARTED = 'The helper restarted before it finished.';
 export const RUNNER_REMOVED = 'That computer was removed.';
+export const REVIEW_NOT_RECORDED = "Claude didn't record a review.";
 
 export const RUNNER_NAME_MAX = 60;
 export const RUNNER_PROJECTS_MAX = 50;
@@ -44,6 +54,7 @@ export interface Runner {
 export interface Run {
   id: string;
   kind: RunKind;
+  role: RunRole;
   projectKey: string;
   ticketKey: string | null;
   chatId: string | null;

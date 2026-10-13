@@ -1,6 +1,7 @@
 import type { Activity } from '../domain/activity';
 import type { Attachment } from '../domain/attachment';
 import type { Project } from '../domain/project';
+import type { RunRole } from '../domain/run';
 import type { Status } from '../domain/status';
 import type { Ticket, TicketListItem } from '../domain/ticket';
 import type { UserRole } from '../domain/invite';
@@ -32,6 +33,7 @@ export interface TicketDetail {
 export interface PromptResult {
   text: string;
   ticketCount: number;
+  role: RunRole;
 }
 
 export interface ReportPreviewItem {

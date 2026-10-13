@@ -17,6 +17,7 @@ const askOptionsOf = ({ askModel, askMode, askEffort }: RunRow): AskOptions | nu
 export const toRun = (row: RunWithKey): Run => ({
   id: row.id,
   kind: row.kind,
+  role: row.role ?? 'work',
   projectKey: row.projectKey,
   ticketKey: row.ticketNum === null ? null : formatTicketKey(row.projectKey, row.ticketNum),
   chatId: row.chatId,

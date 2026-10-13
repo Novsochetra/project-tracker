@@ -75,6 +75,7 @@ describe.each(DIALECTS)('chats with Claude Code (%s)', (dialect) => {
     ]);
     expect(run).toMatchObject({
       kind: 'ask',
+      role: 'work',
       ticketKey: null,
       chatId: made.id,
       askOptions: { model: 'default', mode: 'ask', effort: 'default' },

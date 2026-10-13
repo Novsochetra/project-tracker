@@ -214,7 +214,10 @@ describe.each(DIALECTS)('every migration up and down (%s)', (dialect) => {
         db,
       );
 
-      await expectRan(createMigrator(db).migrateTo('0011_user_projects'), ['0012_password_resets']);
+      await expectRan(
+        createMigrator(db).migrateTo('0011_user_projects'),
+        NAMES.filter((name) => name > '0011_user_projects').reverse(),
+      );
       const kept = await sql<{ id: string }>`select id from invites`.execute(db);
       expect(kept.rows).toEqual([{ id: 'i' }]);
 
@@ -408,6 +411,7 @@ const DATA_MODEL: SchemaShape = {
       'ask_mode text',
       'step_count integer not null default 0',
       'ask_effort text',
+      'role text',
     ],
     indexes: [
       'index (chat_id, created_at)',

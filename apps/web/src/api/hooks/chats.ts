@@ -119,8 +119,8 @@ export function useRunCardTicket(): TrackerMutation<Run, RunCardTicketVariables>
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({ ticketKey, runnerId }: RunCardTicketVariables) => {
-      const { text } = await client.getTicketPrompt(ticketKey);
-      return client.startRun(ticketKey, { runnerId, prompt: text });
+      const { text, role } = await client.getTicketPrompt(ticketKey);
+      return client.startRun(ticketKey, { runnerId, prompt: text, role });
     },
     onSuccess: (run) => showRun(queryClient, run),
     onSettled: (_run, _error, { ticketKey }) => invalidateRuns(queryClient, ticketKey),

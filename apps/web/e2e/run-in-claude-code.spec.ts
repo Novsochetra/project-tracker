@@ -43,6 +43,32 @@ test('runs a ticket on a helper and follows the run on the ticket', async ({ pag
   await expect(card).toHaveCount(0);
 });
 
+test('sends a ticket in review to a reviewer run in two taps', async ({ page, api }, info) => {
+  await seedProject(api, 'Mobile app', 'MOB', [
+    { title: 'Crash when rotating', description: 'Rotate twice.', status: 'Need review' },
+  ]);
+  const helperId = randomUUID();
+  await api.registerRunner(helperId, { name: HELPER, projectKeys: ['MOB'] });
+  await page.goto('/p/MOB/1');
+  await page.getByRole('button', { name: sendButton(info.project.name), exact: true }).click();
+  const dialog = page.getByRole('dialog', { name: 'Review with Claude' });
+  await expect(dialog.getByRole('textbox', { name: 'Prompt for Claude Code' })).toHaveValue(
+    /^Please review the work on ticket MOB-1/,
+  );
+  await expect(dialog.getByRole('switch')).toHaveCount(0);
+  await settledScreenshot(page, info.outputPath(`review-sheet-${info.project.name}.png`));
+  await dialog.getByRole('button', { name: 'Run in Claude Code' }).click();
+  await expect(toast(page, `Sent to Claude on ${HELPER}`)).toBeVisible();
+
+  const job = await api.takeNextRun(helperId, 'ticket');
+  expect(job?.run.role).toBe('review');
+  expect(job?.prompt).toContain('Call review_ticket for MOB-1');
+  await api.reviewTicket('MOB-1', { verdict: 'approved', rating: 5, summary: 'Works.' });
+  await api.finishRun(job!.run.id, { status: 'done' });
+  await expect(page.getByRole('region', { name: 'Claude Code run' })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: /^Status/ })).toContainText('Reviewed');
+});
+
 // Long descriptions put the bottom bar's Send to Claude under Run, short ones the comment box or
 // the description.
 test('a double tap on Run starts one run and leaves the screen alone', async ({

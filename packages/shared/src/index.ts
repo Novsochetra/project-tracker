@@ -35,6 +35,7 @@ export * from './logic/loopback';
 export * from './logic/prefix';
 export * from './logic/projectCounts';
 export * from './logic/prompt';
+export * from './logic/reviewPrompt';
 export * from './logic/rank';
 export * from './logic/runRequests';
 export * from './logic/runSteps';

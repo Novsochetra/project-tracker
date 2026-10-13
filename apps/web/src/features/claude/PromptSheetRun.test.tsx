@@ -11,7 +11,7 @@ import { useSheets } from '../../app/sheets/context';
 import { SheetsProvider } from '../../app/sheets/SheetsProvider';
 import { LAST_HELPER_STORAGE_KEY } from './lastHelper';
 import { PromptSheet } from './PromptSheet';
-import { PROMPT_HELP, RUN_PROMPT_HELP } from './sendPrompt';
+import { PROMPT_HELP, RUN_PROMPT_HELP, RUN_REVIEW_HELP } from './sendPrompt';
 import { renderWithApi, setClipboard, sheetTestSetup } from './test/renderWithApi';
 
 const PROMPT = 'Please work on ticket MOB-1 from my "Mobile app" project.';
@@ -33,10 +33,11 @@ function Opener() {
   );
 }
 
-function client(runners: Runner[], runs: Run[] = []) {
-  const detail = makeTicketDetail(listItem(1, STATUS.todo, 0));
+function client(runners: Runner[], runs: Run[] = [], statusId: string = STATUS.todo) {
+  const detail = makeTicketDetail(listItem(1, statusId, 0));
+  const role = statusId === STATUS.review ? 'review' : 'work';
   return {
-    getTicketPrompt: vi.fn().mockResolvedValue({ text: PROMPT, ticketCount: 1 }),
+    getTicketPrompt: vi.fn().mockResolvedValue({ text: PROMPT, ticketCount: 1, role }),
     getTicket: vi.fn().mockResolvedValue(detail),
     markSent: vi.fn().mockResolvedValue(detail.ticket),
     listRunners: vi.fn().mockResolvedValue(runners),
@@ -85,6 +86,7 @@ describe('PromptSheet with a helper online', () => {
     expect(api.startRun).toHaveBeenCalledWith('MOB-1', {
       runnerId: dara.id,
       prompt: `${PROMPT} Thanks!`,
+      role: 'work',
     });
     expect(await screen.findByText(`Sent to Claude on ${DARA}`)).toBeInTheDocument();
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
@@ -131,6 +133,26 @@ describe('PromptSheet with a helper online', () => {
   });
 });
 
+describe('PromptSheet for a ticket in review', () => {
+  it('says Review with Claude and starts a review run', async () => {
+    const api = client([dara], [], STATUS.review);
+    renderWithApi(<Harness />, api);
+    const user = userEvent.setup();
+    expect(await screen.findByRole('dialog', { name: 'Review with Claude' })).toBeInTheDocument();
+    await promptBox();
+    expect(screen.getByText(RUN_REVIEW_HELP)).toBeInTheDocument();
+    expect(sendSwitch()).not.toBeInTheDocument();
+    await user.click(await runButton());
+
+    expect(api.startRun).toHaveBeenCalledWith('MOB-1', {
+      runnerId: dara.id,
+      prompt: PROMPT,
+      role: 'review',
+    });
+    expect(await screen.findByText(`Sent to Claude on ${DARA}`)).toBeInTheDocument();
+  });
+});
+
 describe('PromptSheet with several helpers online', () => {
   it('starts on the helper used last and runs on the one picked', async () => {
     localStorage.setItem(LAST_HELPER_STORAGE_KEY, studio.id);
@@ -147,7 +169,11 @@ describe('PromptSheet with several helpers online', () => {
     await user.click(options[0]!);
     await user.click(await runButton());
 
-    expect(api.startRun).toHaveBeenCalledWith('MOB-1', { runnerId: dara.id, prompt: PROMPT });
+    expect(api.startRun).toHaveBeenCalledWith('MOB-1', {
+      runnerId: dara.id,
+      prompt: PROMPT,
+      role: 'work',
+    });
     await waitFor(() => expect(localStorage.getItem(LAST_HELPER_STORAGE_KEY)).toBe(dara.id));
   });
 

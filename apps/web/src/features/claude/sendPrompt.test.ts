@@ -9,8 +9,12 @@ import {
   openTicketsLabel,
   PROMPT_HELP,
   promptHelp,
+  promptRole,
+  REVIEW_PROMPT_HELP,
   RUN_PROMPT_HELP,
+  RUN_REVIEW_HELP,
   sendTarget,
+  sheetTitle,
   sharePromptFlow,
   showsSwitch,
   switchLabel,
@@ -26,9 +30,29 @@ const inProgress = statuses.find((status) => status.id === STATUS.progress)!;
 
 describe('promptHelp', () => {
   it('speaks of both buttons only when Run is offered', () => {
-    expect(promptHelp(true, false)).toBe(PROMPT_HELP);
-    expect(promptHelp(true, true)).toBe(RUN_PROMPT_HELP);
-    expect(promptHelp(false, false)).toBe(NO_OPEN_TICKETS);
+    expect(promptHelp(true, false, 'work')).toBe(PROMPT_HELP);
+    expect(promptHelp(true, true, 'work')).toBe(RUN_PROMPT_HELP);
+    expect(promptHelp(false, false, 'work')).toBe(NO_OPEN_TICKETS);
+  });
+
+  it('speaks of a review for a review prompt', () => {
+    expect(promptHelp(true, false, 'review')).toBe(REVIEW_PROMPT_HELP);
+    expect(promptHelp(true, true, 'review')).toBe(RUN_REVIEW_HELP);
+  });
+});
+
+describe('a review prompt', () => {
+  it('titles the sheet Review with Claude', () => {
+    expect(sheetTitle('review')).toBe('Review with Claude');
+    expect(sheetTitle('work')).toBe('Send to Claude Code');
+  });
+
+  it('takes the role from the prompt, and from the ticket’s status until it loads', () => {
+    const review = inStatus(STATUS.review);
+    expect(promptRole(null, review)).toBe('review');
+    expect(promptRole(null, inStatus(STATUS.todo))).toBe('work');
+    expect(promptRole(null, undefined)).toBe('work');
+    expect(promptRole({ text: 'Go', ticketCount: 1, role: 'work' }, review)).toBe('work');
   });
 });
 

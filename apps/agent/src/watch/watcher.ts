@@ -2,6 +2,7 @@ import type { RunEvent } from '@tracker/shared';
 import { describeError } from '../errors';
 import { createProblemLog, type ProblemSource } from './problems';
 import { handBackReport } from './report/handBack';
+import { reviewOutcome } from './report/reviewCheck';
 import { createLanes } from './lanes';
 import type { RunLoopDeps } from './runLoop';
 import { createStepBatcher } from './steps/stepBatcher';
@@ -19,7 +20,7 @@ const STEP_SEND_TIMEOUT_MS = 10_000;
 
 export type WatcherDeps = Omit<
   RunLoopDeps,
-  'describe' | 'onProblem' | 'handBack' | 'signOfLife' | 'stepsFor'
+  'describe' | 'onProblem' | 'handBack' | 'checkReview' | 'signOfLife' | 'stepsFor'
 > & {
   aliveEvery?: number | undefined;
   stepEvery?: number | undefined;
@@ -37,6 +38,8 @@ export function createWatcher(deps: WatcherDeps, settings: WatcherSettings) {
       onProblem,
       handBack: (job, texts) =>
         handBackReport({ api: deps.api, log: deps.log, describe }, job, texts),
+      checkReview: (job, outcome) =>
+        reviewOutcome({ api: deps.api, log: deps.log, describe }, job, outcome),
       signOfLife: (ticketKey) =>
         showStillWorking(ticketKey, { log: deps.log, every: deps.aliveEvery }),
       stepsFor: (runId) =>
