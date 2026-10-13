@@ -112,7 +112,9 @@ describe('shownRun', () => {
       text: 'Automatic review stopped after 2 rounds. The review still asks for changes.',
     });
     expect(stopped('moved')?.text).toBe('Automatic review stopped: you moved the ticket.');
-    expect(stopped('offline')?.text).toBe(`Automatic review stopped: ${DARA} is offline.`);
+    expect(stopped('offline')?.text).toBe(
+      `Automatic review stopped: ${DARA} can't take the next run.`,
+    );
     expect(stopped('moved', NOW - STOPPED_SHOWN_MS)).toBeNull();
     expect(stopped(null)).toBeNull();
   });

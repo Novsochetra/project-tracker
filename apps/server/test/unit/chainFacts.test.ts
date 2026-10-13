@@ -3,6 +3,12 @@ import { describe, expect, it } from 'vitest';
 import type { RunnerRow } from '../../src/db/runTables';
 import type { ActivityRow } from '../../src/db/schema';
 import { helperCanTake, personMovedSince } from '../../src/services/reviewChain/chainFacts';
+import {
+  reportMoveText,
+  statusChangedText,
+  WORKFLOW_VERBS,
+  workflowMoveText,
+} from '../../src/services/statusEvents';
 
 const entry = (changes: Partial<ActivityRow>): ActivityRow => ({
   id: 'a-1',
@@ -10,7 +16,7 @@ const entry = (changes: Partial<ActivityRow>): ActivityRow => ({
   type: 'event',
   actorKind: 'human',
   actorName: '',
-  text: 'changed status to Done',
+  text: statusChangedText('Done'),
   reviewVerdict: null,
   reviewRating: null,
   createdAt: 2_000,
@@ -19,11 +25,13 @@ const entry = (changes: Partial<ActivityRow>): ActivityRow => ({
 });
 
 describe('personMovedSince', () => {
-  it("sees a person's status change or workflow move since the run was queued", () => {
-    expect(personMovedSince([entry({})], 2_000)).toBe(true);
-    expect(
-      personMovedSince([entry({ text: 'claimed it and moved it to In progress' })], 1_000),
-    ).toBe(true);
+  it("sees every event a person's move writes, since the run was queued", () => {
+    const moves = [
+      statusChangedText('Done'),
+      reportMoveText('Need review'),
+      ...Object.values(WORKFLOW_VERBS).map((verb) => workflowMoveText(verb, 'In progress')),
+    ];
+    for (const text of moves) expect(personMovedSince([entry({ text })], 2_000)).toBe(true);
   });
 
   it("ignores Claude's moves, older moves and other changes", () => {
@@ -31,7 +39,9 @@ describe('personMovedSince', () => {
       entry({ actorKind: 'agent', actorName: 'Claude' }),
       entry({ createdAt: 1_999 }),
       entry({ text: 'set priority to High' }),
-      entry({ type: 'comment', text: 'changed status to Done, please' }),
+      entry({ text: 'assigned the ticket to Sam and moved it to Done' }),
+      entry({ text: WORKFLOW_VERBS.claim }),
+      entry({ type: 'comment', text: statusChangedText('Done') }),
     ];
     expect(personMovedSince(ignored, 2_000)).toBe(false);
   });

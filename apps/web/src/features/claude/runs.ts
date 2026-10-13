@@ -33,7 +33,7 @@ const CHAIN_STOP_TEXT: Record<ChainStop, (run: Pick<Run, 'runnerName'>) => strin
   rounds: () =>
     `Automatic review stopped after ${AUTO_REVIEW_ROUNDS} rounds. The review still asks for changes.`,
   moved: () => 'Automatic review stopped: you moved the ticket.',
-  offline: (run) => `Automatic review stopped: ${run.runnerName} is offline.`,
+  offline: (run) => `Automatic review stopped: ${run.runnerName} can't take the next run.`,
 };
 
 // A run that failed says why; one that ended well says so only when the automatic review stopped.

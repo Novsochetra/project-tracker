@@ -17,6 +17,7 @@ import { listTicketRows } from '../repositories/tickets';
 import { inTransaction, notify, type UserContext } from './context';
 import { requireProject, requireTicketScope, ticketKeyOf, type TicketScope } from './lookups';
 import { toTicket } from './mappers';
+import { WORKFLOW_VERBS, workflowMoveText, type WorkflowVerb } from './statusEvents';
 import type { PlannedChange } from './ticketChanges';
 import { getTicketDetailById } from './ticketQueries';
 import { enterStatus, eventEntry, writeTicket, type WrittenTicket } from './ticketWrites';
@@ -31,12 +32,12 @@ async function transition(
   trx: Db,
   actor: Actor,
   scope: TicketScope,
-  move: { target: StatusRow; verb: string },
+  move: { target: StatusRow; verb: WorkflowVerb },
 ): Promise<PlannedChange> {
   if (move.target.id === scope.status.id) return { changes: {}, entries: [eventEntry(move.verb)] };
   return {
     changes: await enterStatus(trx, actor, move.target),
-    entries: [eventEntry(`${move.verb} and moved it to ${move.target.name}`)],
+    entries: [eventEntry(workflowMoveText(move.verb, move.target.name))],
   };
 }
 
@@ -57,7 +58,7 @@ export async function markSent(
     const target = moves ? resolveStatus(scope.statuses, 'in_progress') : scope.status;
     const plan = await transition(trx, actor, scope, {
       target,
-      verb: 'sent the ticket to Claude Code',
+      verb: WORKFLOW_VERBS.send,
     });
     const written = await writeTicket(trx, ctx.now, { ticket: scope.ticket, actor, ...plan });
     return toTicket(written.ticket, scope.project.key);
@@ -77,7 +78,7 @@ async function claimInScope(
   }
   const target =
     scope.status.category === 'todo' ? resolveStatus(scope.statuses, 'in_progress') : scope.status;
-  const plan = await transition(trx, actor, scope, { target, verb: 'picked up the ticket' });
+  const plan = await transition(trx, actor, scope, { target, verb: WORKFLOW_VERBS.claim });
   const takesOver = actor.kind === 'agent' && !scope.ticket.assignee;
   return writeTicket(trx, ctx.now, {
     ticket: scope.ticket,
@@ -133,7 +134,7 @@ export async function submitWork(
   const written = await inTransaction(ctx, async (trx) => {
     const scope = await requireTicketScope(trx, ctx.scope, key);
     const target = resolveStatus(scope.statuses, 'in_review');
-    const plan = await transition(trx, actor, scope, { target, verb: 'submitted the work' });
+    const plan = await transition(trx, actor, scope, { target, verb: WORKFLOW_VERBS.submit });
     return writeTicket(trx, ctx.now, {
       ticket: scope.ticket,
       actor,
@@ -161,7 +162,7 @@ export async function reviewTicket(
     const approved = input.verdict === 'approved';
     const plan = await transition(trx, actor, scope, {
       target: resolveStatus(scope.statuses, approved ? 'reviewed' : 'todo'),
-      verb: approved ? 'approved the work' : 'requested changes',
+      verb: approved ? WORKFLOW_VERBS.approve : WORKFLOW_VERBS.requestChanges,
     });
     const review = { verdict: input.verdict, rating: input.rating };
     return writeTicket(trx, ctx.now, {

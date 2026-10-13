@@ -63,8 +63,7 @@ async function queueChainRun(ctx: ServiceContext, link: ChainLink, next: ChainNe
   notifyRun(ctx, run.userId, row);
 }
 
-// Only a setting a person turned on starts these runs, so agents still can't start one (§1.11).
-export async function continueChain(ctx: ServiceContext, run: RunWithKey): Promise<void> {
+async function chainStep(ctx: ServiceContext, run: RunWithKey): Promise<void> {
   const ticket = await chainTicket(ctx, run);
   if (!ticket) return;
   const runner = run.runnerId ? await findRunnerRow(ctx.db, run.runnerId) : undefined;
@@ -80,4 +79,15 @@ export async function continueChain(ctx: ServiceContext, run: RunWithKey): Promi
   });
   if (step.kind === 'stop') await stopChain(ctx, run, step.reason);
   if (step.kind === 'queue' && runner) await queueChainRun(ctx, { run, ticket, runner }, step);
+}
+
+// Only a setting a person turned on starts these runs, so agents still can't start one (§1.11).
+// The run has ended either way, so a step that fails is logged and the helper's report still lands.
+export async function continueChain(ctx: ServiceContext, run: RunWithKey): Promise<void> {
+  try {
+    await chainStep(ctx, run);
+  } catch (error) {
+    const why = error instanceof Error ? error.message : String(error);
+    console.warn(`The automatic review went no further after run ${run.id}: ${why}`);
+  }
 }
