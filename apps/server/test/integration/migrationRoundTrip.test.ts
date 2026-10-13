@@ -242,6 +242,7 @@ const DATA_MODEL: SchemaShape = {
       'updated_at bigint not null',
       'owner_id text',
       "instructions text not null default ''",
+      'auto_review integer',
     ],
     indexes: ['index (owner_id)', 'unique (key)'],
     foreignKeys: [],
@@ -411,6 +412,8 @@ const DATA_MODEL: SchemaShape = {
       'step_count integer not null default 0',
       'ask_effort text',
       'role text',
+      'round integer',
+      'chain_stop text',
     ],
     indexes: [
       'index (chat_id, created_at)',

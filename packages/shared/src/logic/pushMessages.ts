@@ -1,5 +1,6 @@
 import { PUSH_ACTION_MAX, PUSH_BODY_MAX, PUSH_TITLE_MAX, type PushMessage } from '../domain/push';
 import { permissionSubject } from './permissionSubject';
+import { AUTO_REVIEW_STOPPED } from './reviewChain';
 import { formatTicketKey } from './ticketKey';
 
 // By code point, so a cut never leaves half an emoji.
@@ -41,6 +42,11 @@ export function runEndedPush(ticket: PushTicket, error: string | null): PushMess
   const key = formatTicketKey(ticket.projectKey, ticket.num);
   const title = error === null ? `${key}: Claude finished` : `${key}: Claude stopped: ${error}`;
   return message(title, ticket.title, ticketPath(ticket.projectKey, ticket.num), ticketTag(ticket));
+}
+
+export function chainStoppedPush(ticket: PushTicket, reason: string): PushMessage {
+  const title = `${formatTicketKey(ticket.projectKey, ticket.num)}: ${AUTO_REVIEW_STOPPED}`;
+  return message(title, reason, ticketPath(ticket.projectKey, ticket.num), ticketTag(ticket));
 }
 
 export function reviewedPush(ticket: PushTicket, rating: number): PushMessage {

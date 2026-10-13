@@ -1,13 +1,18 @@
 import { VERDICT_LABELS } from '../domain/activity';
 import { repoLine, ticketBlock, type PromptProject, type PromptTicket } from './prompt';
 
-// The same scale and verdict rules as the MCP review prompt (apps/agent/src/prompts/review.ts).
-const RATING_SCALE = [
+// Shared with the MCP review prompt (apps/agent/src/prompts/review.ts), so the two can't drift.
+export const REVIEW_RATING_SCALE = [
   '   - 5: fully meets the requirement, with good quality and tests',
   '   - 4: meets the requirement, with minor nits',
   '   - 3: works, but has notable issues',
   '   - 2: partially meets the requirement',
   '   - 1: does not meet the requirement',
+];
+
+export const REVIEW_VERDICT_RULES = [
+  '   - "approved" only when the requirement is fully met and your verification passed.',
+  '   - Otherwise "changes_requested", with specific, actionable feedback: what is wrong, where, and what to do. The ticket goes back to To do for a worker.',
 ];
 
 function workToReview({ lastReport, lastReview }: PromptTicket): string[] {
@@ -26,10 +31,9 @@ function reviewSteps(key: string): string[] {
     '2. Compare the work against the requirement in the title, description and comments, not just against the report. If there is an earlier review, check that its points were fixed.',
     '3. Verify the real changes yourself: read the diff and the changed files, run the tests and build, and try the feature where you can.',
     '4. Rate the work from 1 to 5:',
-    ...RATING_SCALE,
+    ...REVIEW_RATING_SCALE,
     `5. Call review_ticket for ${key} with the verdict, the rating and a short summary:`,
-    '   - "approved" only when the requirement is fully met and your verification passed.',
-    '   - Otherwise "changes_requested", with specific, actionable feedback: what is wrong, where, and what to do. The ticket goes back to To do for a worker.',
+    ...REVIEW_VERDICT_RULES,
   ];
 }
 

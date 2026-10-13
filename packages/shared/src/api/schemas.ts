@@ -54,6 +54,7 @@ export const updateProjectInput = z.object({
   description: z.string().max(5000).optional(),
   repo: z.string().trim().max(500).optional(),
   instructions: projectInstructions,
+  autoReview: z.boolean().optional(),
 });
 export type UpdateProjectInput = z.input<typeof updateProjectInput>;
 

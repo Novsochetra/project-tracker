@@ -4,6 +4,7 @@ import {
   HELPER_SILENCE_MS,
   RUNNER_ONLINE_MS,
   RUNNER_REMOVED,
+  type ProjectDetail,
   type Run,
   type RunJob,
   type Runner,
@@ -60,6 +61,7 @@ describe.each(DIALECTS)('Claude Code runs (%s)', (dialect) => {
       startedAt: null,
       endedAt: null,
       stepCount: 0,
+      chainStop: null,
     });
 
     clock.advance(5_000);
@@ -89,6 +91,9 @@ describe.each(DIALECTS)('Claude Code runs (%s)', (dialect) => {
   });
 
   it('queues a review run when the sheet asks for one, and the helper gets the role with the job', async () => {
+    const { body: detail } = await person<ProjectDetail>('GET', '/api/projects/MOB');
+    const inReview = detail.statuses.find((status) => status.category === 'in_review');
+    await person('POST', '/api/tickets/MOB-1/move', { statusId: inReview?.id });
     const started = await person<Run>('POST', '/api/tickets/MOB-1/runs', {
       runnerId: runner,
       prompt: 'Review MOB-1',

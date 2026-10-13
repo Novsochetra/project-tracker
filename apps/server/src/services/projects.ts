@@ -34,6 +34,11 @@ import { toProject, toStatus } from './mappers';
 type CreateProjectValues = z.output<typeof createProjectInput>;
 type UpdateProjectValues = z.output<typeof updateProjectInput>;
 
+const projectEdits = ({ autoReview, ...rest }: UpdateProjectValues): Partial<ProjectRow> => ({
+  ...rest,
+  ...(autoReview === undefined ? {} : { autoReview: autoReview ? 1 : 0 }),
+});
+
 function summarize(project: ProjectRow, stats: ProjectTicketStats | undefined): ProjectSummary {
   const total = stats?.total ?? 0;
   const done = stats?.done ?? 0;
@@ -89,6 +94,7 @@ export async function createProject(
       createdAt: at,
       updatedAt: at,
       ownerId: ctx.scope,
+      autoReview: 0,
     };
     const statuses = statusRows(template.statuses, project.id, at);
     await insertProject(trx, project);
@@ -112,7 +118,7 @@ export async function updateProject(
 ): Promise<Project> {
   const outcome = await inTransaction(ctx, async (trx) => {
     const project = await requireProject(trx, ctx.scope, key);
-    const edits = changedFields(project, input);
+    const edits = changedFields(project, projectEdits(input));
     if (isEmpty(edits)) return { project, changed: false };
     const changes = { ...edits, updatedAt: ctx.now() };
     await updateProjectRow(trx, project.id, changes);
