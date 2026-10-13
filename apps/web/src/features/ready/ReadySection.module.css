@@ -12,6 +12,26 @@
   font-size: var(--size-secondary);
 }
 
+/* As in a project's groups: an expanded card's header stays in view with its Show less (PT-180). */
+.card[data-expanded] .header {
+  position: sticky;
+  top: var(--sticky-top);
+  z-index: 5;
+  /* Over the first row's own top line, so the header keeps one line at rest and one when stuck. */
+  margin-bottom: -1px;
+  border-bottom: 1px solid var(--line);
+}
+
+/* What gets focus below a stuck header scrolls into view clear of it (WCAG 2.4.11). */
+.card[data-expanded] > :not(.header),
+.card[data-expanded] > :not(.header) * {
+  scroll-margin-top: calc(var(--sticky-top) + var(--sticky-header-height));
+}
+
+.header .less {
+  margin-right: calc(var(--space-2) * -1);
+}
+
 .heading {
   margin: 0;
   font-size: inherit;

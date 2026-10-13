@@ -1,5 +1,6 @@
 .card {
-  overflow: hidden;
+  /* Clip, not hidden: hidden makes the card a scroller of its own, where a header can't stick. */
+  overflow: clip;
   border: 1px solid var(--line);
   border-radius: var(--radius-container);
   background: var(--surface);

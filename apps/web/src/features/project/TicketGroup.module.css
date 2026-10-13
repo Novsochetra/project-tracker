@@ -1,5 +1,6 @@
 .group {
-  overflow: hidden;
+  /* Clip, not hidden: hidden makes the group a scroller of its own and its header could not stick. */
+  overflow: clip;
   border: 1px solid var(--line);
   border-radius: var(--radius-group);
   background: var(--surface);
@@ -29,6 +30,20 @@
   transition: background-color var(--duration-fast) var(--ease-out);
 }
 
+/* An expanded group's header stays in view with its Show less, so collapsing needs no scroll to
+   the footer (PT-180). Above the rows' handles and drop lines. */
+.group[data-expanded] .header {
+  position: sticky;
+  top: var(--sticky-top);
+  z-index: 5;
+}
+
+/* What gets focus below a stuck header scrolls into view clear of it (WCAG 2.4.11). */
+.group[data-expanded] > :not(.header),
+.group[data-expanded] > :not(.header) * {
+  scroll-margin-top: calc(var(--sticky-top) + var(--sticky-header-height));
+}
+
 .header[data-tint] {
   background: var(--drop-tint);
 }
@@ -48,6 +63,44 @@
 
 .add {
   margin-left: auto;
+}
+
+.less {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-height: 28px;
+  margin: 0 0 0 auto;
+  padding: 0 var(--space-2);
+  border: 0;
+  border-radius: var(--radius-control);
+  background: transparent;
+  color: var(--muted);
+  font-family: var(--font-sans);
+  font-size: var(--size-secondary);
+  font-weight: var(--weight-medium);
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    transform var(--duration-press) ease-out,
+    background-color var(--duration-fast) ease-out,
+    color var(--duration-fast) ease-out;
+}
+
+.less:active {
+  transform: scale(0.97);
+  background: var(--fill-2);
+}
+
+@media (hover: hover) {
+  .less:hover {
+    background: var(--fill-2);
+    color: var(--ink);
+  }
+}
+
+.less + .add {
+  margin-left: 0;
 }
 
 .zoneWrap {
@@ -125,6 +178,10 @@
   (pointer: coarse) and (device-height < 600px) {
   .more {
     min-height: 48px;
+  }
+
+  .less {
+    min-height: var(--touch-target);
   }
 }
 
