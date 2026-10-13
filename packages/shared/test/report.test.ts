@@ -327,6 +327,13 @@ describe('the report block in a reply', () => {
     expect(reportBlockFor(reply, 'mob-4')).toBe(reportBlockFor(reply, 'MOB-4'));
   });
 
+  it('keeps the OUTPUT line, the files attached to the ticket', () => {
+    const withOutput = lines(FENCE, 'TICKET: MOB-4', 'STATUS: done', 'OUTPUT: plan.md', FENCE);
+    expect(reportBlockFor(withOutput, 'MOB-4')).toBe(
+      lines('TICKET: MOB-4', 'STATUS: done', 'OUTPUT: plan.md'),
+    );
+  });
+
   it('finds nothing for another ticket or a reply without a block', () => {
     expect(reportBlockFor(reply, 'MOB-5')).toBeNull();
     expect(reportBlockFor('Done. I changed src/parse.ts.', 'MOB-4')).toBeNull();

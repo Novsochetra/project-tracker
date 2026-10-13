@@ -41,7 +41,9 @@ Revoke a token in **Connect Claude Code** → **API tokens** → **Revoke**. The
 
 The project key is optional: without it the agent finds the project with `list_projects` (by the repository) or asks you.
 
-Tools: `list_projects`, `list_statuses`, `list_tickets`, `get_ticket` (with up to 4 images), `create_ticket`, `update_ticket`, `move_ticket` (by status name), `add_comment`, `claim_next_ticket`, `claim_ticket`, `submit_for_review`, `review_ticket`.
+Tools: `list_projects`, `list_statuses`, `list_tickets`, `get_ticket` (with up to 4 images), `create_ticket`, `update_ticket`, `move_ticket` (by status name), `add_comment`, `attach_file`, `claim_next_ticket`, `claim_ticket`, `submit_for_review`, `review_ticket`.
+
+`attach_file { ticket, paths, comment? }` (CLI: `tracker attach KEY FILE… [--comment TEXT]`) uploads local files to a ticket, or with a comment to a new comment on it, so results that aren't code (a draft, a CSV, a PDF, an image) can be read on the phone. It takes the tracker's types and sizes, and only files in the current folder or a temp folder (`tmpdir()`, `/tmp`), by their real path: a symlink or `..` leading out, to `~/.ssh` for example, is refused. Every file is checked before any is sent. Reports list them under `OUTPUT:`, which the app shows as **Output**.
 
 ## Environment
 
@@ -69,6 +71,7 @@ tracker tickets MOB --status "In progress"
 tracker show MOB-3
 tracker claim MOB                     # or: tracker claim MOB-3
 tracker comment MOB-3 Found the cause: the rotation handler runs twice
+tracker attach MOB-3 plan.md budget.csv --comment "The plan and its budget"
 tracker submit MOB-3 --summary "Fixed the crash; added a test" --files src/profile.ts --next none
 tracker review MOB-3 --verdict changes_requested --rating 3 --summary "Landscape still crashes on iPad"
 tracker move MOB-3 In progress

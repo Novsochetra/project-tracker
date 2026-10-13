@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { parseCliArgs, prepareCommand, UsageError } from '../../src/cli/args';
 import { addComment } from '../../src/tools/addComment';
+import { attachFile } from '../../src/tools/attachFile';
 import { claimNextTicket } from '../../src/tools/claimNextTicket';
 import { claimTicket } from '../../src/tools/claimTicket';
 import { createTicket } from '../../src/tools/createTicket';
@@ -160,6 +161,18 @@ describe('prepareCommand', () => {
       tool: addComment,
       input: { ticket: 'MOB-3', text: 'Blocked on the API' },
     });
+  });
+
+  it('attach <KEY> <FILE…> takes every file, and --comment', () => {
+    expect(prepare('attach', 'mob-3', 'notes.md', 'out/data.csv')).toEqual({
+      tool: attachFile,
+      input: { ticket: 'MOB-3', paths: ['notes.md', 'out/data.csv'] },
+    });
+    expect(prepare('attach', 'MOB-3', 'a.png', '--comment', 'The chart')).toEqual({
+      tool: attachFile,
+      input: { ticket: 'MOB-3', paths: ['a.png'], comment: 'The chart' },
+    });
+    expect(usageError(['attach', 'MOB-3']).message).toBe('Missing <FILE>.');
   });
 
   it('claim <PROJECT> claims the next ticket and claim <KEY> a specific one', () => {

@@ -11,6 +11,7 @@ export type TrackerApi = Pick<
   | 'createTicket'
   | 'updateTicket'
   | 'addComment'
+  | 'uploadAttachment'
   | 'claimNext'
   | 'claimTicket'
   | 'submitForReview'

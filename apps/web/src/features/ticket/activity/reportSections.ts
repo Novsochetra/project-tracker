@@ -4,10 +4,11 @@ export interface ReportSections {
   status: { category: StatusCategory | null; text: string } | null;
   summary: string;
   files: string[];
+  output: string[];
   next: string | null;
 }
 
-type Field = 'ticket' | 'status' | 'summary' | 'files' | 'next';
+type Field = 'ticket' | 'status' | 'summary' | 'files' | 'output' | 'next';
 
 interface Label {
   field: Field;
@@ -23,7 +24,8 @@ interface Line {
 // Tolerates the Markdown that parseReport tolerates around TICKET and STATUS: quotes, bullets,
 // bold and code marks, and a full-width colon. Only marks right after the colon close the label;
 // after a space they belong to the value ("SUMMARY: `useAuth` retries").
-const LABEL = /^[\s>*_`#-]*(TICKET|STATUS|SUMMARY|FILES?|NEXT)[\s*_`]*[:：](?:[*_]+|`)?\s*(.*)$/i;
+const LABEL =
+  /^[\s>*_`#-]*(TICKET|STATUS|SUMMARY|FILES?|OUTPUT|NEXT)[\s*_`]*[:：](?:[*_]+|`)?\s*(.*)$/i;
 const NONE = /^(none|n\/a|nothing)\.?$/i;
 const MARKS = /[*_`]/g;
 const BULLET = /^[-*•]\s+/;
@@ -125,6 +127,7 @@ export function reportSections(text: string): ReportSections | null {
     status: statusOf(fields.get('status')),
     summary,
     files: fileList(fields.get('files') ?? ''),
+    output: fileList(fields.get('output') ?? ''),
     next: nextStep(fields.get('next') ?? ''),
   };
 }

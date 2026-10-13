@@ -31,8 +31,9 @@ export function ReportBody({ text, statuses }: ReportBodyProps) {
   );
 }
 
-// Next comes before Files: it is the part meant for the owner, and file lists run long.
-function SectionList({ sections: { summary, next, files } }: { sections: ReportSections }) {
+// Next and Output come before Files: they are the parts meant for the owner, and file lists run
+// long.
+function SectionList({ sections: { summary, next, output, files } }: { sections: ReportSections }) {
   return (
     <dl className={styles.sections}>
       <Section label="Summary">
@@ -41,6 +42,11 @@ function SectionList({ sections: { summary, next, files } }: { sections: ReportS
       {next && (
         <Section label="Next" className={styles.next}>
           <LinkedText text={next} />
+        </Section>
+      )}
+      {output.length > 0 && (
+        <Section label="Output">
+          <ReportFiles files={output} />
         </Section>
       )}
       {files.length > 0 && (
