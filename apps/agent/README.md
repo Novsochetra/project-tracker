@@ -41,7 +41,7 @@ Revoke a token in **Connect Claude Code** → **API tokens** → **Revoke**. The
 
 The project key is optional: without it the agent finds the project with `list_projects` (by the repository) or asks you.
 
-Tools: `list_projects`, `list_statuses`, `list_tickets`, `get_ticket` (with up to 4 images), `create_ticket`, `update_ticket`, `move_ticket` (by status name), `add_comment`, `claim_next_ticket`, `claim_ticket`, `submit_for_review`, `review_ticket`.
+Tools: `list_projects`, `list_statuses`, `list_tickets`, `get_ticket` (with up to 4 images), `create_ticket`, `update_ticket`, `move_ticket` (by status name), `add_comment`, `claim_next_ticket`, `claim_ticket`, `submit_for_review`, `review_ticket`, `ask_person` (asks the person a question on a ticket and waits up to 30 minutes for the answer from their phone; with no answer it tells Claude to go on with its best judgment).
 
 ## Environment
 

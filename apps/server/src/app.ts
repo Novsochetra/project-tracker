@@ -21,6 +21,7 @@ import { passwordRoutes } from './http/routes/password';
 import { passwordResetRoutes } from './http/routes/passwordResets';
 import { miscRoutes, testResetRoutes } from './http/routes/misc';
 import { projectRoutes } from './http/routes/projects';
+import { questionRoutes } from './http/routes/questions';
 import { reportRoutes } from './http/routes/reports';
 import { runRoutes } from './http/routes/runs';
 import { runRequestRoutes } from './http/routes/runRequests';
@@ -85,6 +86,7 @@ function createApi(ctx: ServiceContext, deps: AppDeps): Hono<AppEnv> {
     .route('/', runRoutes(ctx))
     .route('/', runStepRoutes(ctx))
     .route('/', runRequestRoutes(ctx))
+    .route('/', questionRoutes(ctx))
     .route('/', chatRoutes(ctx))
     .route(
       '/',

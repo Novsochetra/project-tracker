@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  ASK_PERSON_LINE,
   buildProjectPrompt,
   buildTicketPrompt,
   ticketBlock,
@@ -196,6 +197,8 @@ describe('buildTicketPrompt', () => {
         'STATUS: in progress',
         '…',
         '',
+        ASK_PERSON_LINE,
+        '',
         '## When you finish',
         'End your reply with this block, filled in, so I can paste it back into my tracker:',
         '',
@@ -219,6 +222,8 @@ describe('buildTicketPrompt', () => {
         'Priority: Medium · Status: To do',
         '',
         '(No description.)',
+        '',
+        ASK_PERSON_LINE,
         '',
         '## When you finish',
         'End your reply with this block, filled in, so I can paste it back into my tracker:',
@@ -246,6 +251,8 @@ describe('buildTicketPrompt', () => {
         '',
         'Last review: Changes requested · 2/5',
         'Colors are too dark.',
+        '',
+        ASK_PERSON_LINE,
         '',
         '## When you finish',
       ),

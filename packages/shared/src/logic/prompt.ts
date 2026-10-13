@@ -64,6 +64,10 @@ export function ticketBlock(ticket: PromptTicket, heading: string, now: Date = n
   return out.join('\n');
 }
 
+// Under claude -p nobody answers in the chat, so a run asks on the phone through the tracker.
+export const ASK_PERSON_LINE =
+  "If a decision only I can make blocks the work, ask me with the tracker's ask_person tool instead of guessing.";
+
 function repoLine(project: PromptProject): string[] {
   return project.repo ? [`Repository / folder: ${project.repo}`] : [];
 }
@@ -78,6 +82,8 @@ export function buildTicketPrompt(
     ...repoLine(project),
     '',
     ticketBlock(ticket, '##', now),
+    '',
+    ASK_PERSON_LINE,
     '',
     '## When you finish',
     'End your reply with this block, filled in, so I can paste it back into my tracker:',
