@@ -3,10 +3,12 @@ import type { ChatDetail } from '@tracker/shared';
 import { NEW_CHAT_LABEL } from '../../app/crumbs';
 import { NavBar, NavBarSpacer } from '../../navigation';
 import { savedAskOptions } from './askOptions';
+import { askPlaceholder } from './askPlaceholder';
 import { ChatFooterArea } from './ChatFooterArea';
 import { ChatOptionsSheet } from './ChatOptionsSheet';
 import styles from './ChatScreen.module.css';
 import { ChatTicketLink } from './ChatTicketLink';
+import { DoIt } from './DoIt';
 import { stoppedRunsOf } from './thread';
 import { chatBackLabel, chatIntro } from './ticketChat';
 import { MessageList } from './MessageList';
@@ -64,6 +66,7 @@ export function ChatView({ projectKey, chatId, detail, ticketNum }: ChatViewProp
             }
           />
         )}
+        <DoIt projectKey={projectKey} detail={detail} />
       </div>
       <ChatFooterArea
         projectKey={projectKey}
@@ -71,6 +74,7 @@ export function ChatView({ projectKey, chatId, detail, ticketNum }: ChatViewProp
         helper={helper}
         waiting={requests.waiting}
         savedOptions={savedAskOptions(detail?.chat)}
+        placeholder={askPlaceholder(detail, ticketNum)}
       />
     </div>
   );

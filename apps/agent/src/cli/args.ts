@@ -45,8 +45,8 @@ export function parseCliArgs(argv: readonly string[]): ParsedArgs {
     throw new UsageError(error instanceof Error ? error.message : String(error));
   }
   const { url, as, token, json = false, help = false, version = false, ...rest } = parsed.values;
-  const { install, uninstall, check, 'no-keep-awake': noKeepAwake, ...options } = rest;
-  const flags = { install, uninstall, check, 'no-keep-awake': noKeepAwake };
+  const { install, uninstall, check, 'no-keep-awake': noKeepAwake, approvals, ...options } = rest;
+  const flags = { install, uninstall, check, 'no-keep-awake': noKeepAwake, approvals };
   const [command, ...args] = parsed.positionals;
   return { command, args, global: { url, as, token, json, help, version }, options, flags };
 }

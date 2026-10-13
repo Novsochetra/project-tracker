@@ -3,6 +3,7 @@ export const ASK_INTRO =
 export const ASK_TICKET_INTRO =
   'Ask Claude Code on your computer about this ticket. Claude sees its description, notes, last report and review.';
 export const ASK_PLACEHOLDER = 'Ask about this project…';
+export const ASK_TICKET_PLACEHOLDER = 'Ask about this ticket…';
 export const MODEL_LABEL = 'Model';
 export const MODE_LABEL = 'Mode';
 export const EFFORT_LABEL = 'Effort';
@@ -20,3 +21,5 @@ export const DELETE_CHAT_QUESTION =
   'Delete this chat? Its messages are gone for good. Tickets made from it stay.';
 export const CHAT_DELETED = 'Chat deleted';
 export const CHAT_OPTIONS_LABEL = 'Chat options';
+export const DELETE_LABEL = 'Delete';
+export const chatOptionsLabel = (title: string) => `Options for ${title}`;

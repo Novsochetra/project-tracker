@@ -22,7 +22,9 @@ describe('claudeRunners', () => {
     );
     expect(steps.map(({ kind, label }) => `${kind}: ${label.split('\n')[0]}`)).toEqual([
       'tool: Read src/app.ts',
-      'text: ARGS ["-p","--output-format","stream-json","--verbose"]',
+      expect.stringMatching(
+        /^text: ARGS \["-p","--output-format","stream-json","--verbose","--allowedTools","mcp__tracker__ask_person,/,
+      ),
     ]);
     expect(JSON.stringify(steps)).not.toContain('SECRET');
   });

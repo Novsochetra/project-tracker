@@ -94,6 +94,8 @@ const writesOf = (a: AWorld): [string, string, unknown?][] => [
 // Refused to every agent token before any lookup, so a 403 says nothing about A's project.
 const personOnly = (a: AWorld) =>
   new Set([
+    'PATCH /api/projects/MOB',
+    'DELETE /api/projects/MOB',
     'POST /api/projects/MOB/labels',
     'PUT /api/projects/MOB/labels/order',
     `PATCH /api/labels/${a.labelId}`,

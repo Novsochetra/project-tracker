@@ -14,14 +14,13 @@ export async function waitForQuestion(
     await settleQuestions(ctx);
     return requireQuestion(ctx, ctx.scope, id);
   };
-  const first = await read();
   const row = await longPoll(ctx, {
     read,
     isOpen: (seen) => seen.status === 'open',
-    wakes: {
+    wakes: (first) => ({
       change: ({ event }) => event.ticketId === first.ticketId,
       run: ({ event }) => event.type === 'run' && event.runId === first.runId,
-    },
+    }),
     waitMs: (seen) => nextWaitMs(seen.expiresAt, ctx.now()),
     signal,
   });

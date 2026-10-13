@@ -1,0 +1,25 @@
+.doIt {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: var(--space-4);
+}
+
+.button {
+  align-self: flex-start;
+}
+
+.note,
+.error {
+  margin: var(--space-4) 0 0;
+  font-size: var(--size-secondary);
+}
+
+.note {
+  color: var(--muted);
+}
+
+.error {
+  margin: 0;
+  color: var(--danger);
+}

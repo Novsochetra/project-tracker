@@ -5,6 +5,7 @@ import { AnswerSteps } from './AnswerSteps';
 import { messageCards, type MessageCard } from './cards';
 import styles from './ChatScreen.module.css';
 import { ClaudeFrom } from './ClaudeFrom';
+import { Markdown } from './markdown/Markdown';
 import { StoppedSteps } from './StoppedSteps';
 import { threadItems } from './thread';
 import { TicketCardView } from './TicketCardView';
@@ -18,7 +19,7 @@ export interface MessageListProps {
   latestRun?: ReactNode;
 }
 
-// Rendered as text and links only, as comments are, so nothing Claude writes becomes markup.
+// A person's words show as written, with links, as comments do.
 function Text({ text }: { text: string }) {
   if (!text) return null;
   return (
@@ -44,7 +45,7 @@ function ClaudeMessage({ chatId, message, card, helper }: ClaudeMessageProps) {
       )}
       {card ? (
         <>
-          <Text text={card.split.before} />
+          <Markdown className={styles.text} text={card.split.before} />
           <TicketCardView
             key={message.id}
             chatId={chatId}
@@ -52,10 +53,10 @@ function ClaudeMessage({ chatId, message, card, helper }: ClaudeMessageProps) {
             card={card}
             helper={helper}
           />
-          <Text text={card.split.after} />
+          <Markdown className={styles.text} text={card.split.after} />
         </>
       ) : (
-        <Text text={message.text} />
+        <Markdown className={styles.text} text={message.text} />
       )}
     </article>
   );

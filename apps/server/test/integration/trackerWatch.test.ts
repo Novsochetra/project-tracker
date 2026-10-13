@@ -85,6 +85,7 @@ describe('tracker watch against a real tracker', () => {
   const written: string[] = [];
   let close: () => Promise<void> = () => Promise.resolve();
   let person: TrackerClient;
+  let helper: TrackerClient;
   let link: Awaited<ReturnType<typeof cuttableLink>>;
 
   const statusOf = async (runId: string): Promise<RunStatus> => (await person.getRun(runId)).status;
@@ -106,10 +107,11 @@ describe('tracker watch against a real tracker', () => {
       'Ask',
       'Stop',
       'Give up',
+      'Allow',
     ]) {
       await person.createTicket('MOB', { title });
     }
-    const helper = new TrackerClient({
+    helper = new TrackerClient({
       baseUrl: link.url,
       actor: { kind: 'agent', name: 'Claude' },
     });
@@ -279,6 +281,21 @@ describe('tracker watch against a real tracker', () => {
     expect(written.join('')).toContain(`DECISION {"behavior":"deny","message":"${DENIED}"}`);
   });
 
+  it("lets a ticket run go on once the person allows, which the helper can't do", async () => {
+    const runId = await start('MOB-10', promptCall('Bash', { command: 'git push' }));
+    const request = await openRequest(runId);
+    expect(request.label).toBe('Run git push');
+    await expect(helper.answerRunRequest(request.id, { decision: 'allow' })).rejects.toThrow(
+      'Only a person answers what Claude asks.',
+    );
+    expect(await statusOf(runId)).toBe('running');
+    await person.answerRunRequest(request.id, { decision: 'allow' });
+    await vi.waitFor(async () => expect(await statusOf(runId)).toBe('done'), settle);
+    expect(written.join('')).toContain(
+      'DECISION {"behavior":"allow","updatedInput":{"command":"git push"}}',
+    );
+  });
+
   it('ends the request on the tracker when Claude gives up on the call', async () => {
     const runId = await start('MOB-9', `GIVE UP ${promptCall('Bash', { command: 'npm test' })}`);
     await vi.waitFor(async () => {
@@ -320,7 +337,7 @@ describe('tracker watch, the command', () => {
     fake.remove();
   });
 
-  it('finds the project from its folder, runs with claude from PATH, and Ctrl-C cancels', async () => {
+  it('finds the project from its folder, runs with claude from PATH, asks with --approvals, and Ctrl-C cancels', async () => {
     const folder = realpathSync(mkdtempSync(join(tmpdir(), 'mobile-')));
     const config = mkdtempSync(join(tmpdir(), 'watch-config-'));
     const store = Object.assign(memoryStore(), { path: join(config, 'config.json') });
@@ -331,7 +348,7 @@ describe('tracker watch, the command', () => {
     let pressCtrlC = () => undefined as void;
     const watching = watch(
       { url: tracker.url, json: false, help: false, version: false },
-      { name: 'Test Mac', keepAwake: false },
+      { name: 'Test Mac', keepAwake: false, approvals: true },
       {
         env: {},
         store,
@@ -342,6 +359,9 @@ describe('tracker watch, the command', () => {
       },
     );
     await vi.waitFor(() => expect(lines.join('\n')).toContain('Watching MOB'), settle);
+    expect(lines).toContain(
+      "Ticket runs ask on your phone before each step your Claude Code allow rules don't cover.",
+    );
     const [runner] = await tracker.person.listRunners();
     expect(runner).toMatchObject({ name: 'Test Mac', projectKeys: ['MOB'], online: true });
 
@@ -350,6 +370,8 @@ describe('tracker watch, the command', () => {
       async () => expect((await tracker.person.getRun(done.id)).status).toBe('done'),
       settle,
     );
+    const said = (await tracker.person.listRunSteps(done.id)).map(({ label }) => label).join('\n');
+    expect(said).toContain('"--permission-mode","default","--allowedTools"');
     const waiting = await tracker.person.startRun('MOB-2', {
       runnerId: runner!.id,
       prompt: 'WAIT',

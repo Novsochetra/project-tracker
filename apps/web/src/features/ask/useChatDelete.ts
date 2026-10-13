@@ -11,7 +11,8 @@ export interface ChatDelete {
   reset: () => void;
 }
 
-export function useChatDelete(projectKey: string, chatId: string): ChatDelete {
+// The open chat goes back to the list once it is gone; the list itself stays where it is.
+export function useChatDelete(projectKey: string, chatId: string, leave = true): ChatDelete {
   const remove = useDeleteChat();
   const { back } = useNavigation();
   const toast = useToast();
@@ -22,7 +23,7 @@ export function useChatDelete(projectKey: string, chatId: string): ChatDelete {
       {
         onSuccess: () => {
           onDeleted();
-          back();
+          if (leave) back();
           toast.show(CHAT_DELETED);
         },
       },

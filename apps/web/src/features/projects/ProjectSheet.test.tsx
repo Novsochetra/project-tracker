@@ -80,6 +80,7 @@ describe('New project sheet', () => {
       description: 'Phone app',
       repo: '~/code/mobile',
       instructions: '',
+      template: 'software',
     });
     expect(await screen.findByText('“Mobile app” created')).toBeInTheDocument();
     expect(onClose).toHaveBeenCalled();
@@ -168,6 +169,7 @@ describe('Edit project sheet', () => {
     expect(within(dialog).getByLabelText('Repository or folder')).toHaveValue('~/code/web');
     expect(within(dialog).getByLabelText('Instructions for Claude')).toHaveValue('Plain voice.');
     expect(within(dialog).queryByLabelText('Ticket prefix')).not.toBeInTheDocument();
+    expect(within(dialog).queryByRole('button', { name: /^Template/ })).not.toBeInTheDocument();
     expect(
       within(dialog).getByText(
         'The repository is added to every Claude Code prompt for this project.',

@@ -8,6 +8,7 @@ import {
 import { LABEL_INSTRUCTIONS_MAX, LABEL_NAME_MAX, LABEL_TEMPLATE_MAX } from '../domain/label';
 import { PRIORITIES } from '../domain/priority';
 import { PROJECT_INSTRUCTIONS_MAX } from '../domain/project';
+import { DEFAULT_PROJECT_TEMPLATE, PROJECT_TEMPLATE_NAMES } from '../domain/projectTemplates';
 import { STATUS_CATEGORIES } from '../domain/status';
 import {
   TICKET_ASSIGNEE_MAX,
@@ -33,7 +34,10 @@ const attachmentIds = (owner: AttachmentOwner) =>
 const projectInstructions = z
   .string()
   .trim()
-  .max(PROJECT_INSTRUCTIONS_MAX, 'Instructions can be up to 20,000 characters.')
+  .max(
+    PROJECT_INSTRUCTIONS_MAX,
+    `Instructions can be up to ${PROJECT_INSTRUCTIONS_MAX.toLocaleString('en-US')} characters.`,
+  )
   .optional();
 
 export const createProjectInput = z.object({
@@ -42,6 +46,7 @@ export const createProjectInput = z.object({
   description: z.string().max(5000).optional(),
   repo: z.string().trim().max(500).optional(),
   instructions: projectInstructions,
+  template: z.enum(PROJECT_TEMPLATE_NAMES).default(DEFAULT_PROJECT_TEMPLATE),
 });
 export type CreateProjectInput = z.input<typeof createProjectInput>;
 

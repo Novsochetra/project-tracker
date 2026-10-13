@@ -34,6 +34,7 @@ export const WATCH_FLAGS = {
   uninstall: { type: 'boolean' },
   check: { type: 'boolean' },
   'no-keep-awake': { type: 'boolean' },
+  approvals: { type: 'boolean' },
 } as const satisfies NonNullable<ParseArgsConfig['options']>;
 
 export type WatchFlag = keyof typeof WATCH_FLAGS;
