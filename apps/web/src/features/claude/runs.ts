@@ -1,4 +1,10 @@
-import { AUTO_REVIEW_STOPPED, chainStopReason, type Run, type Runner } from '@tracker/shared';
+import {
+  AUTO_REVIEW_STOPPED,
+  chainStopReason,
+  RUN_PROMPT_MAX,
+  type Run,
+  type Runner,
+} from '@tracker/shared';
 import { isWorking, workingRun } from '../../api/workingRun';
 
 // Long enough to see on the next look at the ticket, short enough not to linger once forgotten.
@@ -43,6 +49,15 @@ function endedRun(run: Run): ShownRun | null {
   }
   return run.usage ? { state: 'finished', run, text: finishedText(run) } : null;
 }
+
+const count = new Intl.NumberFormat('en-US');
+
+// Long instructions, a long description or many comments can build one; Copy still takes it.
+export const runPromptTooLong = (text: string): string | null =>
+  text.length > RUN_PROMPT_MAX
+    ? `A run takes a prompt of up to ${count.format(RUN_PROMPT_MAX)} characters. ` +
+      `This one has ${count.format(text.length)}: shorten it to run it, or copy it.`
+    : null;
 
 export const sentText = (helper: Pick<Runner, 'name'>): string =>
   `Sent to Claude on ${helper.name}`;

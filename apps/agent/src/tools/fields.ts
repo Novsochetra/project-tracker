@@ -3,6 +3,7 @@ import {
   REVIEW_VERDICTS,
   STATUS_CATEGORIES,
   TICKET_DESCRIPTION_MAX,
+  TICKET_LABELS_MAX,
   TICKET_TITLE_MAX,
 } from '@tracker/shared';
 import { z } from 'zod';
@@ -37,6 +38,7 @@ export const labelName = z
 
 export const labelNames = z
   .array(labelName)
+  .max(TICKET_LABELS_MAX, `A ticket can have up to ${TICKET_LABELS_MAX} labels.`)
   .describe('Label names, case-insensitive, e.g. ["Bug"]. They must be the project\'s own labels.');
 
 export const category = z

@@ -22,7 +22,10 @@ export const startRunInput = z.object({
     .string()
     .trim()
     .min(1, 'Write a prompt for Claude Code.')
-    .max(RUN_PROMPT_MAX, `Use at most ${RUN_PROMPT_MAX} characters for the prompt.`),
+    .max(
+      RUN_PROMPT_MAX,
+      `A run takes a prompt of up to ${RUN_PROMPT_MAX.toLocaleString('en-US')} characters.`,
+    ),
   // The sheet's prompt says which; older apps send none and start work runs.
   role: z.enum(RUN_ROLES).optional(),
 });

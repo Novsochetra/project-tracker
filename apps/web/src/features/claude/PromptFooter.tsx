@@ -13,10 +13,12 @@ export interface PromptFooterProps {
   disabled: boolean;
   onCopy: () => void;
   run?: RunOffer | undefined;
+  runBlocked?: boolean;
   onRun: () => void;
 }
 
-export function PromptFooter({ copied, disabled, onCopy, run, onRun }: PromptFooterProps) {
+export function PromptFooter(props: PromptFooterProps) {
+  const { copied, disabled, onCopy, run, runBlocked = false, onRun } = props;
   const copy = (primary: boolean) => (
     <CopyButton copied={copied} disabled={disabled} primary={primary} onClick={onCopy} />
   );
@@ -31,7 +33,7 @@ export function PromptFooter({ copied, disabled, onCopy, run, onRun }: PromptFoo
               <RunOn helpers={footer.helpers} helper={footer.helper} onChoose={run.choose} />
             )
           }
-          action={<RunButton disabled={disabled || run.starting} onClick={onRun} />}
+          action={<RunButton disabled={disabled || runBlocked || run.starting} onClick={onRun} />}
           copy={copy(false)}
         />
       );

@@ -5,7 +5,12 @@ import {
   tooManyFilesMessage,
   type AttachmentOwner,
 } from '../domain/attachment';
-import { LABEL_INSTRUCTIONS_MAX, LABEL_NAME_MAX, LABEL_TEMPLATE_MAX } from '../domain/label';
+import {
+  LABEL_INSTRUCTIONS_MAX,
+  LABEL_NAME_MAX,
+  LABEL_TEMPLATE_MAX,
+  TICKET_LABELS_MAX,
+} from '../domain/label';
 import { PRIORITIES } from '../domain/priority';
 import { PROJECT_INSTRUCTIONS_MAX } from '../domain/project';
 import { DEFAULT_PROJECT_TEMPLATE, PROJECT_TEMPLATE_NAMES } from '../domain/projectTemplates';
@@ -83,7 +88,10 @@ const labelTemplate = z
 const labelInstructions = z
   .string()
   .trim()
-  .max(LABEL_INSTRUCTIONS_MAX, 'Instructions can be up to 20,000 characters.');
+  .max(
+    LABEL_INSTRUCTIONS_MAX,
+    `Instructions can be up to ${LABEL_INSTRUCTIONS_MAX.toLocaleString('en-US')} characters.`,
+  );
 
 export const createLabelInput = z.object({
   name: labelName,
@@ -105,7 +113,9 @@ export const reorderLabelsInput = z.object({ ids: z.array(id).min(1) });
 export type ReorderLabelsInput = z.input<typeof reorderLabelsInput>;
 
 // A ticket's whole set of labels, which replaces the one it had.
-const labelIds = z.array(id).max(50);
+const labelIds = z
+  .array(id)
+  .max(TICKET_LABELS_MAX, `A ticket can have up to ${TICKET_LABELS_MAX} labels.`);
 
 export const createTicketInput = z.object({
   title: z.string().trim().min(1, 'Add a title to create the ticket.').max(TICKET_TITLE_MAX),
