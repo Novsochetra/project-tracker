@@ -1,11 +1,14 @@
 import type { Locator, Page } from '@playwright/test';
-import { expect, isPhone, test } from './fixtures';
-import { openNewTicketIn, readActionSheet, resting, seedProject } from './helpers';
+import { expect, test } from './fixtures';
+import { openNewTicketIn, readActionSheet, resting, seedProject, toast } from './helpers';
 
 // PT-205: on an iPhone the Connect Claude Code sheet, scrolled down, stopped about a keyboard's
 // height above the bottom of the screen with no keyboard up. Its body ended there, cutting the
 // last command in half, and the screen behind showed under it. iOS can keep reporting the visual
-// viewport a keyboard shortened after the keyboard has gone; here it always reports one.
+// viewport a keyboard shortened after the keyboard has gone; here it always reports one, and the
+// sheet follows it only while a field is being edited. A press that takes focus out of the field
+// keeps the sheet up until the release: the sheet dropped under the finger on a tap on Create while
+// typing, and the release landed on the screen behind (the PT-205 review). WebKit and Chromium.
 
 const KEYBOARD = 335;
 
@@ -46,8 +49,9 @@ const scrollToEnd = (sheet: Locator) =>
 const sheetAt = (page: Page, y: number) =>
   page.evaluate((top) => !!document.elementFromPoint(187, top)?.closest('[role=dialog]'), y);
 
-test.beforeEach(async ({ api, page }, info) => {
-  test.skip(!isPhone(info.project.name), 'Phone sheets follow the keyboard');
+test.use({ viewport: { width: 375, height: 812 }, isMobile: true, hasTouch: true });
+
+test.beforeEach(async ({ api, page }) => {
   await staleViewport(page);
   await seedProject(api, 'Mobile app', 'MOB', [{ title: 'Crash on launch' }]);
 });
@@ -82,3 +86,20 @@ test('a focused field still lifts the sheet above the keyboard, and it drops bac
   await title.evaluate((field) => field.blur());
   await expect.poll(() => bottomOf(sheet)).toBe(height);
 });
+
+for (const press of ['click', 'tap'] as const) {
+  test(`a ${press} on Create while typing creates the ticket`, async ({ page }) => {
+    await page.goto('/p/MOB');
+    await openNewTicketIn(page, 'To do');
+    const sheet = page.getByRole('dialog', { name: 'New ticket' });
+    await resting(() => bottomOf(sheet));
+    const title = sheet.getByLabel('Ticket title');
+    await title.click();
+    await page.keyboard.type('Fix the login');
+    await expect.poll(() => bottomOf(sheet)).toBe((page.viewportSize()?.height ?? 0) - KEYBOARD);
+
+    await sheet.getByRole('button', { name: 'Create' })[press]();
+    await expect(toast(page, 'MOB-2 created')).toBeVisible();
+    await expect(sheet).toBeHidden();
+  });
+}

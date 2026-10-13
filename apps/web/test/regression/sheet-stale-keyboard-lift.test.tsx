@@ -1,13 +1,16 @@
-import { act, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, expect, it } from 'vitest';
+import { PHONE_QUERY } from '../../src/lib/media';
 import { Sheet } from '../../src/overlays';
-import { mockPhone, skipAnimations } from '../../src/overlays/testing';
+import { skipAnimations } from '../../src/overlays/testing';
 
 // PT-205: on an iPhone the Connect Claude Code sheet stopped about a keyboard's height above the
 // bottom of the screen, with no keyboard up: its body, and the scrolled content in it, ended there
 // and the screen behind showed under it. iOS can keep reporting the visual viewport a keyboard
 // shortened after the keyboard has gone, and the sheet lifted itself by that and shrank to it.
-// Only a focused text field brings the keyboard up, so only then does the sheet follow it.
+// Only a field being edited brings the keyboard up, so only then does the sheet follow it. A press
+// that takes focus out of the field keeps the sheet up until the release, or the sheet dropped
+// under the finger and a tap on Create missed it (the PT-205 review).
 
 const KEYBOARD = 335;
 
@@ -25,10 +28,29 @@ function staleViewport(): () => void {
   };
 }
 
+function touchPhone(): () => void {
+  const previous = Object.getOwnPropertyDescriptor(window, 'matchMedia');
+  const matches = (query: string) => query === PHONE_QUERY || query === '(hover: none)';
+  Object.defineProperty(window, 'matchMedia', {
+    configurable: true,
+    writable: true,
+    value: (query: string) => ({
+      matches: matches(query),
+      media: query,
+      addEventListener: () => undefined,
+      removeEventListener: () => undefined,
+    }),
+  });
+  return () => {
+    if (previous) Object.defineProperty(window, 'matchMedia', previous);
+    else Reflect.deleteProperty(window, 'matchMedia');
+  };
+}
+
 let restore: Array<() => void> = [];
 
 beforeEach(() => {
-  restore = [skipAnimations(), mockPhone(true), staleViewport()];
+  restore = [skipAnimations(), touchPhone(), staleViewport()];
 });
 
 afterEach(() => {
@@ -37,8 +59,9 @@ afterEach(() => {
 
 function renderSheet() {
   render(
-    <Sheet open onClose={() => undefined} label="Connect Claude Code" title="Connect Claude Code">
-      <input aria-label="Search" />
+    <Sheet open onClose={() => undefined} label="New ticket" title="New ticket">
+      <input aria-label="Ticket title" />
+      <button type="button">Create</button>
     </Sheet>,
   );
   const overlay = document.querySelector<HTMLElement>('[data-sheet]');
@@ -46,19 +69,35 @@ function renderSheet() {
   return overlay;
 }
 
+const lift = (overlay: HTMLElement) => overlay.style.getPropertyValue('--sheet-keyboard');
+const field = () => screen.getByRole('textbox', { name: 'Ticket title' });
+
 it('stays on the bottom of the screen at full height while no field has focus', () => {
   const overlay = renderSheet();
-  expect(overlay.style.getPropertyValue('--sheet-keyboard')).toBe('');
+  expect(lift(overlay)).toBe('');
   expect(overlay.style.getPropertyValue('--sheet-viewport')).toBe('');
 });
 
 it('still rises above the keyboard while a field in it has focus', () => {
   const overlay = renderSheet();
-  act(() => screen.getByRole('textbox', { name: 'Search' }).focus());
-  expect(overlay.style.getPropertyValue('--sheet-keyboard')).toBe(`${KEYBOARD}px`);
+  act(() => field().focus());
+  expect(lift(overlay)).toBe(`${KEYBOARD}px`);
   expect(overlay.style.getPropertyValue('--sheet-viewport')).toBe(
     `${window.innerHeight - KEYBOARD}px`,
   );
-  act(() => screen.getByRole('textbox', { name: 'Search' }).blur());
-  expect(overlay.style.getPropertyValue('--sheet-keyboard')).toBe('');
+  act(() => field().blur());
+  expect(lift(overlay)).toBe('');
+});
+
+it('stays up through a press that takes focus out of the field, and drops after it', async () => {
+  const overlay = renderSheet();
+  act(() => field().focus());
+  const create = screen.getByRole('button', { name: 'Create' });
+  fireEvent.pointerDown(create);
+  act(() => field().blur());
+  expect(lift(overlay)).toBe(`${KEYBOARD}px`);
+  fireEvent.pointerUp(create);
+  expect(lift(overlay)).toBe(`${KEYBOARD}px`);
+  await act(() => new Promise((resolve) => setTimeout(resolve)));
+  expect(lift(overlay)).toBe('');
 });

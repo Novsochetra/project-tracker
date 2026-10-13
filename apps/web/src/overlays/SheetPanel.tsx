@@ -11,6 +11,7 @@ import {
 import { useKeyboardInset } from '../gestures/useKeyboardInset';
 import { useTopPull } from '../gestures/useTopPull';
 import { useAxisDrag } from '../gestures/useAxisDrag';
+import { useEditingText } from '../navigation/useEditingText';
 import { usePrefersReducedMotion } from '../lib/media';
 import { DiscardChangesSheet } from './DiscardChangesSheet';
 import styles from './Sheet.module.css';
@@ -28,9 +29,13 @@ export interface SheetPanelProps extends SheetProps {
   onExited: () => void;
 }
 
+// iOS can keep reporting the visual viewport a keyboard shortened after the keyboard has gone
+// (PT-205), so the sheet follows it only while a field is being edited. That includes a press that
+// took focus out of the field: the sheet waits for the release, so a tap on Create lands on it.
 function useKeyboardVars(enabled: boolean): CSSProperties | undefined {
   const { inset, viewportHeight } = useKeyboardInset();
-  if (!enabled || viewportHeight === 0) return undefined;
+  const editing = useEditingText();
+  if (!enabled || !editing || viewportHeight === 0) return undefined;
   return {
     '--sheet-keyboard': `${inset}px`,
     '--sheet-viewport': `${viewportHeight}px`,
