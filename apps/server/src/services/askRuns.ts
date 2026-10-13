@@ -1,4 +1,9 @@
-import { buildAskPrompt, type AskOptions, type ChatRole, type PromptTicket } from '@tracker/shared';
+import {
+  buildAskPrompt,
+  type AskHistoryMessage,
+  type AskOptions,
+  type PromptTicket,
+} from '@tracker/shared';
 import { randomUUID } from 'node:crypto';
 import type { ChatRow } from '../db/chatTables';
 import type { Db, ProjectRow } from '../db/schema';
@@ -11,7 +16,7 @@ export interface AskRequest {
   queued: QueuedRun;
   project: Pick<ProjectRow, 'key' | 'name' | 'instructions'>;
   chat: Pick<ChatRow, 'id' | 'sessionId' | 'sessionRunnerId'>;
-  history: readonly { role: ChatRole; text: string }[];
+  history: readonly AskHistoryMessage[];
   ticket: PromptTicket | null;
   question: string;
   options: AskOptions;
@@ -24,12 +29,12 @@ const resumableSession = ({ chat, queued }: AskRequest): string | null =>
 export async function queueAsk(trx: Db, request: AskRequest) {
   const { queued, chat, question, options } = request;
   const resumeSessionId = resumableSession(request);
-  const history = resumeSessionId ? [] : request.history;
   const prompt = buildAskPrompt({
     project: request.project,
     mode: options.mode,
     question,
-    history,
+    history: request.history,
+    resumed: resumeSessionId !== null,
     ticket: request.ticket,
   });
   const run = queuedRunRow(queued, {

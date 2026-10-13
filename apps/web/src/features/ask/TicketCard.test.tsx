@@ -22,7 +22,9 @@ const withCards = (...texts: string[]): ChatDetail =>
 const created = (detail: ChatDetail, messageId: string): ChatDetail => ({
   ...detail,
   messages: detail.messages.map((message) =>
-    message.id === messageId ? { ...message, ticketKey: 'MOB-7' } : message,
+    message.id === messageId
+      ? { ...message, cardTickets: [{ index: 0, ticketKey: 'MOB-7' }] }
+      : message,
   ),
 });
 
@@ -79,6 +81,7 @@ describe('Ask: ticket cards', () => {
       title: 'Faster sync',
       description: 'Why: sync is slow.',
       priority: 'high',
+      index: 0,
     });
     const made = await screen.findByRole('region', { name: 'Ticket MOB-7' });
     expect(within(made).getByText('Faster sync')).toBeInTheDocument();

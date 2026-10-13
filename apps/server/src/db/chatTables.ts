@@ -22,13 +22,21 @@ export interface ChatMessageRow {
   chatId: string;
   role: ChatRole;
   text: string;
+  // Before cards had their own links (chat_card_tickets, 0021); kept for the release before.
   ticketId: string | null;
   // The ask run that answered, on Claude's messages; null on the person's and older ones.
   runId: string | null;
   createdAt: number;
 }
 
+export interface ChatCardTicketRow {
+  messageId: string;
+  cardIndex: number;
+  ticketId: string;
+}
+
 export interface ChatTables {
   chats: ChatRow;
   chatMessages: ChatMessageRow;
+  chatCardTickets: ChatCardTicketRow;
 }

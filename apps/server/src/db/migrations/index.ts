@@ -17,6 +17,7 @@ import * as questions from './0015_questions';
 import * as pushSubscriptions from './0016_push_subscriptions';
 import * as projectInstructions from './0017_project_instructions';
 import * as autoReview from './0019_auto_review';
+import * as cardTickets from './0021_card_tickets';
 
 // Keyed by file name; they run in name order, so the four-digit number decides. The bundled server
 // can't list a folder, so a new file is added here too (test/unit/migrationFiles checks it is).
@@ -39,4 +40,5 @@ export const MIGRATIONS: Record<string, Migration> = {
   '0016_push_subscriptions': pushSubscriptions,
   '0017_project_instructions': projectInstructions,
   '0019_auto_review': autoReview,
+  '0021_card_tickets': cardTickets,
 };

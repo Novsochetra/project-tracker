@@ -31,6 +31,7 @@ export * from './api/runRequests';
 export * from './api/runSteps';
 export * from './api/schemas';
 export * from './api/ticketQuestions';
+export * from './logic/askCards';
 export * from './logic/askPrompt';
 export * from './logic/avatar';
 export * from './logic/drop';
