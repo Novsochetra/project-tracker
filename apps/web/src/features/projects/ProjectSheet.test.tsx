@@ -6,6 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { otherProject, project, statuses } from '../../api/test/fixtures';
 import { currentPath, projectSummary, renderWithApp } from '../../app/test/harness';
 import { mockPhone, skipAnimations } from '../../overlays/testing';
+import { EditProjectSheet } from './EditProjectSheet';
 import { ProjectSheet } from './ProjectSheet';
 
 let restore: Array<() => void> = [];
@@ -118,7 +119,7 @@ describe('Edit project sheet', () => {
 
   function renderEditSheet() {
     const onClose = vi.fn();
-    renderWithApp(<ProjectSheet open onClose={onClose} projectKey="WEB" />, {
+    renderWithApp(<EditProjectSheet open onClose={onClose} projectKey="WEB" />, {
       client: { updateProject },
       projects: [website],
     });

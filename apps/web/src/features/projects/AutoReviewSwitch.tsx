@@ -1,10 +1,12 @@
 import clsx from 'clsx';
+import { AUTO_REVIEW_ROUNDS } from '@tracker/shared';
 import { useId } from 'react';
 import { GroupedCard } from '../../components';
 import { Switch } from '../../components/Switch';
-import { AUTO_REVIEW_HINT } from './projectForm';
 import styles from './ProjectSheet.module.css';
 import type { ProjectForm } from './useProjectForm';
+
+export const AUTO_REVIEW_HINT = `When Claude finishes a ticket, Claude reviews it on the same computer. Changes it asks for go back to Claude, up to ${AUTO_REVIEW_ROUNDS} rounds.`;
 
 export function AutoReviewSwitch({ form: { values, setField } }: { form: ProjectForm }) {
   const hintId = useId();

@@ -1,5 +1,4 @@
 import {
-  AUTO_REVIEW_ROUNDS,
   derivePrefix,
   resolvePrefix,
   type CreateProjectInput,
@@ -28,8 +27,6 @@ export const EMPTY_PROJECT_FORM: ProjectFormValues = {
 export const NAME_REQUIRED = 'Add a name to create the project.';
 
 const REPO_HINT = 'The repository is added to every Claude Code prompt.';
-
-export const AUTO_REVIEW_HINT = `When Claude finishes a ticket, Claude reviews it on the same computer. Changes it asks for go back to Claude, up to ${AUTO_REVIEW_ROUNDS} rounds.`;
 
 type FormProject = Pick<Project, 'name' | 'description' | 'repo' | 'autoReview'>;
 

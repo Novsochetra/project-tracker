@@ -1,9 +1,8 @@
 import clsx from 'clsx';
-import { useRef, type FormEvent, type KeyboardEvent, type RefObject } from 'react';
+import { useRef, type FormEvent, type KeyboardEvent, type ReactNode, type RefObject } from 'react';
 import type { SheetProps } from '../../app/sheets/types';
 import { AutoTextarea } from '../../components';
 import { Sheet, SheetActionButton, SheetCancelButton } from '../../overlays';
-import { AutoReviewSwitch } from './AutoReviewSwitch';
 import { hasName, projectHint, type ProjectFormMode } from './projectForm';
 import { ProjectPathFields } from './ProjectPathFields';
 import styles from './ProjectSheet.module.css';
@@ -14,6 +13,7 @@ interface ProjectFormSheetProps extends SheetProps {
   form: ProjectForm;
   pending: boolean;
   onSubmit: () => void;
+  children?: ReactNode;
 }
 
 interface FieldsProps {
@@ -56,6 +56,7 @@ export function ProjectFormSheet({
   form,
   pending,
   onSubmit,
+  children,
   ...sheet
 }: ProjectFormSheetProps) {
   const nameRef = useRef<HTMLInputElement>(null);
@@ -89,7 +90,7 @@ export function ProjectFormSheet({
       <div className={styles.details}>
         <ProjectPathFields mode={mode} form={form} onEnter={explainBlankName} />
         <p className={styles.hint}>{projectHint(mode, form.values)}</p>
-        {mode === 'edit' && <AutoReviewSwitch form={form} />}
+        {children}
         {form.error && (
           <p role="alert" className={clsx(styles.error, 'fade-in')}>
             {form.error}

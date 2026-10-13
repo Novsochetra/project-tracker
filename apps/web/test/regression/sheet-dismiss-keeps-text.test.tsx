@@ -8,11 +8,12 @@ import type {
   UpdateProjectInput,
 } from '@tracker/shared';
 import { useState } from 'react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { queryKeys } from '../../src/api';
 import { deferred } from '../../src/api/test/deferred';
 import { makeBoard, otherProject, project, statuses } from '../../src/api/test/fixtures';
 import { setupApi } from '../../src/api/test/render';
+import { EditProjectSheet } from '../../src/app/lazyParts';
 import { useSheets } from '../../src/app/sheets/context';
 import { SheetsProvider } from '../../src/app/sheets/SheetsProvider';
 import type { SheetRequest } from '../../src/app/sheets/types';
@@ -218,6 +219,9 @@ function SheetOpener({ request }: { request: SheetRequest }) {
 const website = projectSummary({ ...otherProject, description: 'Docs', repo: '~/code/web' });
 const NEW_PROJECT: SheetRequest = { type: 'newProject' };
 const EDIT_WEBSITE: SheetRequest = { type: 'editProject', projectKey: 'WEB' };
+
+// Edit project loads when opened; these tests are about its form, not its loading.
+beforeAll(() => EditProjectSheet.preload());
 
 // Through SheetsProvider, as in the app, so every opening starts a fresh form.
 async function openProjectSheet(
