@@ -14,7 +14,7 @@ describe('regression: --check where nothing is installed', () => {
     const stderr = vi.spyOn(process.stderr, 'write');
     const lines: string[] = [];
     await check(
-      { json: false, help: false },
+      { json: false, help: false, version: false },
       {
         env: {},
         store: memoryStore(),

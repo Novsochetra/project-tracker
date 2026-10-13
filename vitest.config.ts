@@ -9,6 +9,7 @@ export default defineConfig({
       'apps/agent',
       'apps/web',
       { test: { name: 'eslint-rules', environment: 'node', include: ['eslint/**/*.test.ts'] } },
+      { test: { name: 'scripts', environment: 'node', include: ['scripts/**/*.test.ts'] } },
     ],
   },
 });

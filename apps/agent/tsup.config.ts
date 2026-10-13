@@ -1,4 +1,5 @@
 import { defineConfig } from 'tsup';
+import { rootVersionOnly } from '../../scripts/build/rootVersionOnly';
 
 export default defineConfig({
   entry: ['src/mcp.ts', 'src/cli.ts', 'src/promptTool.ts'],
@@ -10,4 +11,5 @@ export default defineConfig({
   banner: { js: '#!/usr/bin/env node' },
   // The workspace packages export TypeScript source, so they must be bundled.
   noExternal: [/^@tracker\//],
+  esbuildPlugins: [rootVersionOnly()],
 });

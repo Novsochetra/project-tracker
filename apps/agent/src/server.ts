@@ -1,4 +1,5 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { APP_VERSION } from '@tracker/shared';
 import { z } from 'zod';
 import type { TrackerApi } from './client';
 import { PROMPTS } from './prompts';
@@ -44,7 +45,7 @@ function registerPrompt(server: McpServer, prompt: PromptDefinition): void {
 
 export function createMcpServer(client: TrackerApi): McpServer {
   const server = new McpServer(
-    { name: SERVER_NAME, version: '0.0.0' },
+    { name: SERVER_NAME, version: APP_VERSION },
     { instructions: INSTRUCTIONS },
   );
   for (const tool of TOOLS) registerTool(server, tool, client);

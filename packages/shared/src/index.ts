@@ -41,4 +41,6 @@ export * from './logic/report';
 export * from './logic/statuses';
 export * from './logic/ticketCard';
 export * from './logic/ticketKey';
+export * from './logic/appVersion';
+export * from './logic/version';
 export * from './logic/workflow';

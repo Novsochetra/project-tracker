@@ -5,6 +5,7 @@ import type { SheetProps } from '../../app/sheets/types';
 import { Button, GroupedCard, Spinner } from '../../components';
 import { useOptionalNavigation } from '../../navigation/useNavigation';
 import { Sheet, SheetTextButton } from '../../overlays';
+import { VersionNote } from '../version/VersionNote';
 import { CommandRow } from './CommandRow';
 import { addressNote, agentAddress } from './agentAddress';
 import {
@@ -94,6 +95,7 @@ function Setup({ meta, projectKey }: { meta: ServerMeta; projectKey: string | nu
           {blocked}
         </p>
       )}
+      <VersionNote />
     </>
   );
 }

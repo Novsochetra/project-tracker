@@ -330,7 +330,7 @@ describe('tracker watch, the command', () => {
     const lines: string[] = [];
     let pressCtrlC = () => undefined as void;
     const watching = watch(
-      { url: tracker.url, json: false, help: false },
+      { url: tracker.url, json: false, help: false, version: false },
       { name: 'Test Mac', keepAwake: false },
       {
         env: {},
@@ -375,7 +375,7 @@ describe('tracker watch, the command', () => {
     try {
       await expect(
         watch(
-          { url: tracker.url, json: false, help: false },
+          { url: tracker.url, json: false, help: false, version: false },
           { keepAwake: false },
           {
             env: {},

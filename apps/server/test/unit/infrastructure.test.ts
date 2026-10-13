@@ -1,4 +1,5 @@
 import { join } from 'node:path';
+import { APP_VERSION } from '@tracker/shared';
 import { describe, expect, it, vi } from 'vitest';
 import { createClock } from '../../src/clock';
 import { DEFAULT_PORT, REPO_ROOT, loadConfig } from '../../src/config';
@@ -45,7 +46,13 @@ describe('loadConfig', () => {
       repoRoot: REPO_ROOT,
       publicUrl: null,
     });
-    expect(config.version).toMatch(/^\d+\.\d+\.\d+/);
+    expect(config.version).toBe(APP_VERSION);
+    expect(config.commit).toBeNull();
+  });
+
+  it('takes the build’s commit from Railway', () => {
+    const sha = 'A1B2C3D4E5F60718293a4b5c6d7e8f9012345678';
+    expect(loadConfig({ RAILWAY_GIT_COMMIT_SHA: sha }).commit).toBe('a1b2c3d');
   });
 
   it('reads the environment', () => {

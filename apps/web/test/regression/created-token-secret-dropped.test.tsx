@@ -18,6 +18,7 @@ const created: CreatedApiToken = {
 };
 const meta: ServerMeta = {
   version: '1.0.0',
+  commit: null,
   serverUrl: 'http://localhost:4100',
   repoRoot: '/repo',
   mcpEntry: '/repo/apps/agent/dist/mcp.js',
