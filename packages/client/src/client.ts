@@ -37,6 +37,8 @@ import type {
   ProjectDetail,
   ProjectSummary,
   PromptResult,
+  PushKey,
+  PushSubscriptionInput,
   RegisterRunnerInput,
   ReportInput,
   ReportPreview,
@@ -273,6 +275,14 @@ export class TrackerClient {
 
   resetPassword = (input: ResetPasswordInput) =>
     this.http.request<void>('POST', '/api/password-resets/use', { body: input });
+
+  getPushKey = () => this.http.request<PushKey>('GET', '/api/push/key');
+
+  savePushSubscription = (input: PushSubscriptionInput) =>
+    this.http.request<void>('PUT', '/api/push/subscription', { body: input });
+
+  removePushSubscription = (endpoint: string) =>
+    this.http.request<void>('DELETE', '/api/push/subscription', { body: { endpoint } });
 
   startRun = (ticketKey: string, input: StartRunInput) =>
     this.http.request<Run>('POST', `/api/tickets/${segment(ticketKey)}/runs`, { body: input });

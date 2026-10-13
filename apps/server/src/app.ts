@@ -21,6 +21,7 @@ import { passwordRoutes } from './http/routes/password';
 import { passwordResetRoutes } from './http/routes/passwordResets';
 import { miscRoutes, testResetRoutes } from './http/routes/misc';
 import { projectRoutes } from './http/routes/projects';
+import { pushRoutes } from './http/routes/push';
 import { reportRoutes } from './http/routes/reports';
 import { runRoutes } from './http/routes/runs';
 import { runRequestRoutes } from './http/routes/runRequests';
@@ -32,6 +33,7 @@ import { ticketRoutes } from './http/routes/tickets';
 import { tokenRoutes } from './http/routes/tokens';
 import { workflowRoutes } from './http/routes/workflow';
 import { mountWebApp } from './http/static';
+import { createPusher, type PushOptions } from './push/pusher';
 import type { ServiceContext } from './services/context';
 import type { FileStorage } from './storage/fileStorage';
 
@@ -49,6 +51,7 @@ export interface AppDeps {
   commit?: string | null;
   publicUrl?: string | null;
   heartbeatMs?: number;
+  push?: Partial<PushOptions>;
 }
 
 function createApi(ctx: ServiceContext, deps: AppDeps): Hono<AppEnv> {
@@ -86,6 +89,7 @@ function createApi(ctx: ServiceContext, deps: AppDeps): Hono<AppEnv> {
     .route('/', runStepRoutes(ctx))
     .route('/', runRequestRoutes(ctx))
     .route('/', chatRoutes(ctx))
+    .route('/', pushRoutes(ctx))
     .route(
       '/',
       eventRoutes(
@@ -99,13 +103,17 @@ function createApi(ctx: ServiceContext, deps: AppDeps): Hono<AppEnv> {
   return api;
 }
 
+const DEFAULT_PUSH: PushOptions = { keys: null, subject: 'mailto:tracker@localhost' };
+
 export function createApp(deps: AppDeps): Hono<AppEnv> {
+  const now = deps.now ?? createClock();
   const ctx: ServiceContext = {
     db: deps.db,
     storage: deps.storage,
     events: deps.events,
     runEvents: deps.runEvents ?? createBroadcaster(),
-    now: deps.now ?? createClock(),
+    now,
+    push: createPusher(deps.db, now, { ...DEFAULT_PUSH, ...deps.push }),
   };
   const app = new Hono<AppEnv>();
   app.onError(handleError);

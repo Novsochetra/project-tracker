@@ -2,13 +2,8 @@ import react from '@vitejs/plugin-react';
 import { defineConfig, type Plugin } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 import { precompress } from './src/build/precompress.ts';
-import { isSavedApiRead } from './src/pwa/apiReadRoute.ts';
-import { attachmentCachePlugin, isCachedAttachmentFile } from './src/pwa/attachmentFileRoute.ts';
-import { API_CACHE, ATTACHMENT_CACHE } from './src/pwa/cacheNames.ts';
-import { savedAnswerPlugin } from './src/pwa/savedAnswerPlugin.ts';
 
 const apiTarget = process.env.TRACKER_API_URL ?? 'http://localhost:4100';
-const DAY_SECONDS = 24 * 60 * 60;
 
 // The dev server is a Node server with Node's five minutes for a whole request to arrive, so an
 // upload sent slowly through its /api proxy failed with 408. It gets the hour the API gives
@@ -61,46 +56,15 @@ export default defineConfig({
           },
         ],
       },
-      workbox: {
+      // Our own worker (src/pwa/sw.ts), for the push handlers; Workbox's parts are bundled into it,
+      // so sw.js stays one file: a runtime in a file of its own, missing from a deploy, didn't fail
+      // the install, and a worker with no handlers took over (PT-99).
+      strategies: 'injectManifest',
+      srcDir: 'src/pwa',
+      filename: 'sw.ts',
+      injectManifest: {
         globPatterns: ['**/*.{js,css,html,woff2}'],
-        navigateFallback: '/index.html',
-        navigateFallbackDenylist: [/^\/api(?:\/|$)/],
-        // The plugin only sets these for autoUpdate when it injects its own register script.
-        skipWaiting: true,
-        clientsClaim: true,
-        // In a file of its own, a runtime missing from a deploy didn't fail the install: Workbox's
-        // loader swallows the failed importScripts, and a worker with no handlers took over (PT-99).
-        inlineWorkboxRuntime: true,
-        // Workbox copies each urlPattern into sw.js as source text, so they must be self-contained.
-        // Routes only match GET, so writes always go straight to the network.
-        runtimeCaching: [
-          {
-            urlPattern: isCachedAttachmentFile,
-            handler: 'CacheFirst',
-            options: {
-              cacheName: ATTACHMENT_CACHE,
-              cacheableResponse: { statuses: [200] },
-              expiration: {
-                maxEntries: 100,
-                maxAgeSeconds: 30 * DAY_SECONDS,
-                purgeOnQuotaError: true,
-              },
-              plugins: [attachmentCachePlugin],
-            },
-          },
-          {
-            urlPattern: isSavedApiRead,
-            handler: 'NetworkFirst',
-            options: {
-              cacheName: API_CACHE,
-              networkTimeoutSeconds: 3,
-              cacheableResponse: { statuses: [200] },
-              expiration: { maxEntries: 100, maxAgeSeconds: 7 * DAY_SECONDS },
-              // Last, so it marks only cached answers that are still fresh enough to use.
-              plugins: [savedAnswerPlugin],
-            },
-          },
-        ],
+        rollupFormat: 'iife',
       },
       devOptions: { enabled: false },
     }),

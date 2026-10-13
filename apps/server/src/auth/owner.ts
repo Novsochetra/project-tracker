@@ -9,6 +9,7 @@ import { assignOwnerlessRuns } from '../repositories/runs';
 import { deleteUserSessions } from '../repositories/sessions';
 import { assignOwnerlessProjects } from '../repositories/projects';
 import { assignOwnerlessUploads } from '../repositories/attachments';
+import { deleteOwnerlessSubscriptions } from '../repositories/pushSubscriptions';
 import { findOwner, findUserByEmail, insertUser, updateUserRow } from '../repositories/users';
 import { hashPassword, type ScryptParams } from './passwords';
 
@@ -55,6 +56,8 @@ async function createOwner(db: Db, owner: { email: string; passwordHash: string;
   await assignOwnerlessRuns(db, id);
   await assignOwnerlessRunners(db, id);
   await assignOwnerlessChats(db, id);
+  // A device turned notifications on with no sign-in; once it signs in, it turns them on again.
+  await deleteOwnerlessSubscriptions(db);
 }
 
 // A new password signs every device out: whoever knew the old one may hold a session.

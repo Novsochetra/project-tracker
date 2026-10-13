@@ -4,7 +4,6 @@ export interface RouteRequest {
   sameOrigin: boolean;
 }
 
-// Workbox copies this into sw.js as source text, so it can't use anything from outside itself.
 // The SSE stream never ends, so caching it would buffer it forever. The health check goes to the
 // network as the page's own request: the page stops a check after 3 s, but the worker's fetch for
 // it stayed open until the connection closed (PT-113). Fresh reads are taken too, so their

@@ -19,6 +19,7 @@ import { saveAnswer } from './chatAnswers';
 import { inTransaction, type ServiceContext } from './context';
 import { requireTicket, ticketKeyOf } from './lookups';
 import { endingOf } from './runEnding';
+import { pushRunEnd } from './runEndPush';
 import { notifyRun, toRun } from './runMappers';
 import { requireRunnerFor } from './runners';
 import { insertQueuedRun, queuedRunRow } from './runRows';
@@ -113,7 +114,10 @@ export async function endRun(
   if (!ended && after.status !== status) {
     throw conflict(`This run already ended (${after.status}).`);
   }
-  if (ended) notifyRun(ctx, scope, after);
+  if (ended) {
+    notifyRun(ctx, scope, after);
+    pushRunEnd(ctx, scope, after, { answer });
+  }
   return toRun(after);
 }
 

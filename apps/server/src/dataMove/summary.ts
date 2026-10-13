@@ -35,9 +35,9 @@ export function planLines(counts: TableCounts, files: FileTotals): string[] {
     'To copy:',
     ...COPIED_TABLE_NAMES.map((name) => row(name, counts[name])),
     `${row('files', files.count)} (${formatBytes(files.bytes)})`,
-    `Not copied: ${Object.keys(SKIPPED_TABLES).join(', ')} (sign-in, helpers and chats stay with ` +
-      'each tracker: set the online owner with owner-set, make new API tokens online and start ' +
-      'tracker watch against it).',
+    `Not copied: ${Object.keys(SKIPPED_TABLES).join(', ')} (sign-in, helpers, chats and ` +
+      'notifications stay with each tracker: set the online owner with owner-set, make new API ' +
+      'tokens online, start tracker watch against it and turn notifications on there).',
   ];
 }
 

@@ -17,6 +17,8 @@ import { listTicketRows } from '../repositories/tickets';
 import { inTransaction, notify, type UserContext } from './context';
 import { requireProject, requireTicketScope, ticketKeyOf, type TicketScope } from './lookups';
 import { toTicket } from './mappers';
+import { pushToUser } from './push';
+import { readyPush } from './reviewPush';
 import type { PlannedChange } from './ticketChanges';
 import { getTicketDetailById } from './ticketQueries';
 import { enterStatus, eventEntry, writeTicket, type WrittenTicket } from './ticketWrites';
@@ -153,23 +155,26 @@ export async function reviewTicket(
   key: string,
   input: ReviewValues,
 ): Promise<TicketDetail> {
-  const written = await inTransaction(ctx, async (trx) => {
+  const { written, ready } = await inTransaction(ctx, async (trx) => {
     const scope = await requireTicketScope(trx, ctx.scope, key);
     if (scope.status.category !== 'in_review') {
       throw conflict(`${ticketKeyOf(scope)} is not waiting for review.`);
     }
     const approved = input.verdict === 'approved';
+    const target = resolveStatus(scope.statuses, approved ? 'reviewed' : 'todo');
     const plan = await transition(trx, actor, scope, {
-      target: resolveStatus(scope.statuses, approved ? 'reviewed' : 'todo'),
+      target,
       verb: approved ? 'approved the work' : 'requested changes',
     });
     const review = { verdict: input.verdict, rating: input.rating };
-    return writeTicket(trx, ctx.now, {
+    const ticket = await writeTicket(trx, ctx.now, {
       ticket: scope.ticket,
       actor,
       changes: plan.changes,
       entries: [{ type: 'review', text: input.summary, review }, ...plan.entries],
     });
+    return { written: ticket, ready: readyPush(actor, scope, { target, rating: input.rating }) };
   });
+  if (ready) pushToUser(ctx, ctx.scope, ready);
   return finishDetail(ctx, written);
 }
