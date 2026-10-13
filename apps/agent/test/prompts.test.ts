@@ -20,6 +20,12 @@ describe('work prompt', () => {
     expect(text).toContain('only if I asked for more than one');
   });
 
+  it('attaches results that are not code and lists them as output', () => {
+    expect(text).toContain(
+      "- Attach results that aren't code (a draft, a CSV, a PDF, an image) with attach_file, and list them under output when you call submit_for_review.",
+    );
+  });
+
   it('verifies code with tests and build, and other work against the instructions', () => {
     expect(text).toContain('When the work is code, run the relevant tests, type checks and build');
     expect(text).toContain(

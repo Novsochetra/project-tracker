@@ -52,6 +52,12 @@ describe('claim_ticket', () => {
 });
 
 describe('submit_for_review', () => {
+  it('asks for verification that fits code and work that is not code', () => {
+    expect(submitForReview.description).toContain(
+      "the tests and the build when it is code, otherwise against the ticket and the project's instructions",
+    );
+  });
+
   it('submits the report and names the new status', async () => {
     const submitted = detail({ ticket: ticket({ statusId: 's3' }), status: statusAt(2) });
     const submitForReviewApi = vi.fn(returns(submitted));
@@ -68,6 +74,19 @@ describe('submit_for_review', () => {
     });
     expect(reply.text).toBe('Submitted MOB-3 for review. It is now in Need review.');
     expect(reply.data).toBe(submitted);
+  });
+
+  it('passes the attached results as output', async () => {
+    const submitForReviewApi = vi.fn(returns(detail()));
+    await run(submitForReview, fakeClient({ submitForReview: submitForReviewApi }), {
+      ticket: 'MOB-3',
+      summary: 'Wrote the draft.',
+      output: 'draft.md\nfigures.csv',
+    });
+    expect(submitForReviewApi).toHaveBeenCalledWith('MOB-3', {
+      summary: 'Wrote the draft.',
+      output: 'draft.md\nfigures.csv',
+    });
   });
 
   it('requires a summary', () => {

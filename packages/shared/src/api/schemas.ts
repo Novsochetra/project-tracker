@@ -157,6 +157,7 @@ export type ReportInput = z.input<typeof reportInput>;
 export const submitWorkInput = z.object({
   summary: z.string().trim().min(1).max(REPORT_TEXT_MAX),
   files: z.string().max(REPORT_TEXT_MAX).default(''),
+  output: z.string().max(REPORT_TEXT_MAX).default(''),
   next: z.string().max(REPORT_TEXT_MAX).default(''),
 });
 export type SubmitWorkInput = z.input<typeof submitWorkInput>;
