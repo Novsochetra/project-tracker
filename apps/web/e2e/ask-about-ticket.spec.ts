@@ -29,7 +29,8 @@ test('asks Claude about a ticket from its screen, with its context, and keeps th
   await expect(box).toHaveAttribute('placeholder', 'Ask about this ticket…');
   await box.fill('Why does it quit?');
   await page.getByRole('button', { name: 'Send', exact: true }).click();
-  await expect(page).toHaveURL(/\/p\/MOB\/1\/ask\/[\w-]+$/);
+  // The chat's own address comes once the question is in; /ask/new would let the take run first.
+  await expect(page).toHaveURL(/\/p\/MOB\/1\/ask\/[\da-f]{8}(-[\da-f]{4}){3}-[\da-f]{12}$/);
   const job = await api.takeNextRun(helperId, 'ask');
   expect(job?.prompt).toContain('## MOB-1: Crash when rotating');
   expect(job?.prompt).toContain('The app quits on rotate.');
