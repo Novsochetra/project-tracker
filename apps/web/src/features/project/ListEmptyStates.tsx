@@ -1,18 +1,15 @@
 import { Plus } from 'lucide-react';
-import { Button, EmptyState } from '../../components';
+import { EmptyState } from '../../components';
 import styles from './ProjectScreen.module.css';
 
-export function NoTickets({ projectName, onAdd }: { projectName: string; onAdd: () => void }) {
+// No button of its own: New ticket is already in the header on desktop and the nav bar on phones.
+export function NoTickets({ projectName }: { projectName: string }) {
   return (
     <EmptyState
+      fill
       icon={Plus}
       title="No tickets yet"
       text={`Create the first ticket for ${projectName}.`}
-      action={
-        <Button variant="primary" className={styles.emptyAction} onClick={onAdd}>
-          New ticket
-        </Button>
-      }
     />
   );
 }

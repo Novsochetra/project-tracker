@@ -1,5 +1,10 @@
 .root {
   position: relative;
+  display: flex;
+  flex-direction: column;
+  /* Down to the screen's bottom edge under its nav bar, so an empty state can centre in it.
+     The nav bar is its 1px line taller than --sticky-top; without it the screen scrolls by 1px. */
+  min-height: calc(100% - var(--sticky-top) - 1px);
 }
 
 .indicator {
@@ -15,7 +20,14 @@
 .content {
   position: relative;
   z-index: 1;
+  display: flex;
+  flex: 1 0 auto;
+  flex-direction: column;
   background: var(--surface);
+}
+
+.content > * {
+  flex: 1 0 auto;
 }
 
 .spinner {

@@ -14,6 +14,14 @@
   border-radius: var(--radius-group);
 }
 
+/* Centred in what its flex column leaves free; less padding so it still fits between the bars
+   on a phone held sideways. */
+.fill {
+  flex: 1 0 auto;
+  justify-content: center;
+  padding: var(--space-6);
+}
+
 .tile {
   display: inline-flex;
   align-items: center;
