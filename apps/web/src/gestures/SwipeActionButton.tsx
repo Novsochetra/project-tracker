@@ -1,5 +1,5 @@
 import clsx from 'clsx';
-import { motion, useTransform, type MotionValue } from 'motion/react';
+import { m, useTransform, type MotionValue } from 'motion/react';
 import styles from './SwipeActions.module.css';
 import { actionEdge, actionLabelOffset, type SwipeSide } from './swipeActionsMath';
 import type { SwipeAction } from './swipeTypes';
@@ -36,16 +36,16 @@ export function SwipeActionButton({
     (values) => -sign * actionLabelOffset(values[0] ?? 0, index, count, values[1] ?? 0),
   );
   return (
-    <motion.button
+    <m.button
       type="button"
       className={clsx(styles.action, styles[action.tone])}
       style={{ x: shift, zIndex: count - index }}
       onClick={() => onPress(action)}
     >
-      <motion.span className={styles.label} style={{ x: labelShift }}>
+      <m.span className={styles.label} style={{ x: labelShift }}>
         {action.icon}
         <span>{action.label}</span>
-      </motion.span>
-    </motion.button>
+      </m.span>
+    </m.button>
   );
 }
