@@ -137,6 +137,20 @@ describe('ReadySection', () => {
     );
   });
 
+  it('collapses from Show less in the header while expanded (PT-180)', async () => {
+    const user = userEvent.setup();
+    renderSection(Array.from({ length: 7 }, (_, index) => mobTicket(index + 1)));
+    const headerLess = () =>
+      within(section()).queryByRole('button', { name: 'Show less of Ready for you' });
+    expect(headerLess()).toBeNull();
+    await user.click(within(section()).getByRole('button', { name: 'Show 2 more' }));
+    expect(section()).toHaveAttribute('data-expanded');
+    await user.click(headerLess()!);
+    expect(within(section()).getAllByRole('button', { name: /^MOB-\d+\b/ })).toHaveLength(5);
+    expect(section()).not.toHaveAttribute('data-expanded');
+    expect(headerLess()).toBeNull();
+  });
+
   it('renders nothing when no ticket is ready', () => {
     renderSection([]);
     expect(screen.queryByRole('region', { name: 'Ready for you' })).not.toBeInTheDocument();

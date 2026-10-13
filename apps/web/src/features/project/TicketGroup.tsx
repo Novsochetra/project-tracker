@@ -1,4 +1,5 @@
 import { collapseGroup, type Status } from '@tracker/shared';
+import { useRef } from 'react';
 import { groupRiseDelay, revealedRowDelay, type TicketGroupData } from './buildGroups';
 import { DROP_GROUP_ATTRIBUTE } from './dnd/dropGroup';
 import { dropEdgeFor } from './dnd/dropTarget';
@@ -8,6 +9,7 @@ import { DropZone, GroupHeader, ShowMoreButton } from './GroupParts';
 import type { RowCallbacks } from './rowTypes';
 import styles from './TicketGroup.module.css';
 import { TicketRow } from './TicketRow';
+import { useGroupToggle } from './useGroupToggle';
 import type { RisePhase } from './useRisePhase';
 
 export interface TicketGroupProps {
@@ -25,16 +27,21 @@ export interface TicketGroupProps {
 export function TicketGroup(props: TicketGroupProps) {
   const { projectKey, group, index, rise, searching, next, drag, callbacks, onAdd } = props;
   const { status, tickets } = group;
+  const ref = useRef<HTMLElement>(null);
   const expanded = useIsExpanded(projectKey, status.id);
+  const toggle = useGroupToggle(ref, expanded, () => toggleExpanded(projectKey, status.id));
   const collapsed = collapseGroup(tickets, { expanded, searching });
+  const unfolded = expanded && collapsed.hasToggle;
   const target = drag?.target?.statusId === status.id ? drag.target : null;
   const tint = target !== null && drag?.ticket.statusId !== status.id;
   return (
     <section
+      ref={ref}
       aria-label={status.name}
       className={styles.group}
       {...{ [DROP_GROUP_ATTRIBUTE]: status.id }}
       data-rise={rise}
+      data-expanded={unfolded || undefined}
       style={{ animationDelay: `${groupRiseDelay(index)}ms` }}
     >
       <GroupHeader
@@ -42,6 +49,7 @@ export function TicketGroup(props: TicketGroupProps) {
         count={tickets.length}
         tint={tint}
         onAdd={() => onAdd(status.id)}
+        onCollapse={unfolded ? toggle : undefined}
       />
       {drag && tickets.length === 0 && <DropZone name={status.name} targeted={target !== null} />}
       {collapsed.shown.map((ticket, row) => (
@@ -57,11 +65,7 @@ export function TicketGroup(props: TicketGroupProps) {
         />
       ))}
       {collapsed.hasToggle && (
-        <ShowMoreButton
-          expanded={expanded}
-          hiddenCount={collapsed.hiddenCount}
-          onToggle={() => toggleExpanded(projectKey, status.id)}
-        />
+        <ShowMoreButton expanded={expanded} hiddenCount={collapsed.hiddenCount} onToggle={toggle} />
       )}
     </section>
   );

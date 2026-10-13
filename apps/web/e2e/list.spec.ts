@@ -58,7 +58,7 @@ test.describe('ticket list', () => {
     await expect(more).toHaveAttribute('aria-expanded', 'false');
     await more.click();
     await expect(todo.getByRole('button', { name: /^MOB-\d+/ })).toHaveCount(7);
-    await expect(todo.getByRole('button', { name: 'Show less' })).toHaveAttribute(
+    await expect(todo.getByRole('button', { name: 'Show less', exact: true })).toHaveAttribute(
       'aria-expanded',
       'true',
     );
