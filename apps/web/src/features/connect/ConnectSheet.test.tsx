@@ -93,6 +93,24 @@ describe('ConnectSheet', () => {
     expect(within(sheet()).getByRole('textbox', { name: 'Token name' })).toBeInTheDocument();
   });
 
+  it.each([
+    [false, ['1', '2']],
+    [true, ['1', '2', '3']],
+  ])('numbers the setup commands in the order they run (sign-in %s)', async (auth, numbers) => {
+    renderWithApi(<ConnectSheet open onClose={() => undefined} />, {
+      getMeta: vi.fn().mockResolvedValue({ ...meta, authRequired: auth }),
+      listApiTokens: vi.fn().mockResolvedValue([]),
+    });
+    const section = await within(sheet()).findByRole('region', {
+      name: 'Add the tracker to Claude Code',
+    });
+    const rows = within(section).getAllByRole('listitem');
+    expect(rows.map((row) => row.querySelector('[aria-hidden="true"]')?.textContent)).toEqual(
+      numbers,
+    );
+    expect(rows.at(-1)).toHaveTextContent(COMMAND);
+  });
+
   it('copies the commands and the address and confirms with a toast', async () => {
     renderWithApi(<ConnectSheet open onClose={() => undefined} />, {
       getMeta: vi.fn().mockResolvedValue(meta),

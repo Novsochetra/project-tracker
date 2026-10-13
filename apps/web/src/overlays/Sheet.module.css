@@ -63,6 +63,23 @@
   max-width: 600px;
 }
 
+/* A long reference sheet keeps its header and Close in view: the panel fits the window and only
+   its body scrolls, instead of the whole overlay. */
+.desktop.wide {
+  padding: 5vh var(--space-4);
+}
+
+.desktop.wide .panel {
+  max-width: 980px;
+  max-height: 90vh;
+}
+
+.desktop.wide .body {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  outline: none;
+}
+
 .phone .panel {
   max-height: calc(var(--sheet-viewport, 100vh) - 32px);
   margin-bottom: var(--sheet-keyboard, 0px);
