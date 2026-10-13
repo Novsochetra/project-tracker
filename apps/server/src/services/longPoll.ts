@@ -40,7 +40,8 @@ export function untilWoken(
 export interface LongPoll<T> {
   read: () => Promise<T>;
   isOpen: (value: T) => boolean;
-  wakes: Wakes;
+  // From the first read, so a caller needs no read of its own to know what to wake on.
+  wakes: (first: T) => Wakes;
   waitMs: (value: T) => number;
   signal: AbortSignal;
 }
@@ -50,7 +51,7 @@ export interface LongPoll<T> {
 export async function longPoll<T>(ctx: ServiceContext, poll: LongPoll<T>): Promise<T> {
   const first = await poll.read();
   if (!poll.isOpen(first)) return first;
-  const wait = untilWoken(ctx, poll.wakes, poll.waitMs(first), poll.signal);
+  const wait = untilWoken(ctx, poll.wakes(first), poll.waitMs(first), poll.signal);
   // Read again once listening, so an end in between isn't missed.
   if (!poll.isOpen(await poll.read())) wait.stop();
   await wait.woken;

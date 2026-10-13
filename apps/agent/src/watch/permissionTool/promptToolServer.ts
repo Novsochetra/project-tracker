@@ -2,7 +2,7 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { APP_VERSION } from '@tracker/shared';
 import { z } from 'zod';
 import { askHelper } from './askHelper';
-import { keepCallAlive } from './keepCallAlive';
+import { keepCallAlive } from '../../tools/keepCallAlive';
 
 export const PROMPT_SERVER = 'tracker-watch';
 export const PROMPT_TOOL = 'ask_person';

@@ -33,6 +33,7 @@ export const watchArgsFor = ({ config, projectKey, args }: JobInput): string[] =
   ...option('name', args.name),
   ...option('permission-mode', args.permissionMode),
   ...(args.keepAwake === false ? ['--no-keep-awake'] : []),
+  ...(args.approvals ? ['--approvals'] : []),
   projectKeyOf(projectKey),
 ];
 
