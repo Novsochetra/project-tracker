@@ -2,21 +2,23 @@ import type { ProjectSummary } from '@tracker/shared';
 import { ListCard } from '../../components';
 import { useIsPhone } from '../../lib/media';
 import { useNow } from '../../lib/useNow';
+import { readyColors, readyCounts, type ReadyItem } from '../ready';
 import { ProjectCard } from './ProjectCard';
-import styles from './ProjectCard.module.css';
+import styles from './ProjectList.module.css';
 import { ProjectRow } from './ProjectRow';
 import { useOpenProject } from './useOpenProject';
 
 export interface ProjectListProps {
   projects: readonly ProjectSummary[];
-  readyCounts: ReadonlyMap<string, number>;
+  ready: readonly ReadyItem[];
 }
 
-export function ProjectList({ projects, readyCounts }: ProjectListProps) {
+export function ProjectList({ projects, ready }: ProjectListProps) {
   const isPhone = useIsPhone();
   const now = useNow();
   const openProject = useOpenProject();
-  const readyOf = (project: ProjectSummary) => readyCounts.get(project.id) ?? 0;
+  const counts = readyCounts(ready);
+  const readyOf = (project: ProjectSummary) => counts.get(project.id) ?? 0;
   if (isPhone) {
     return (
       <ListCard>
@@ -39,6 +41,7 @@ export function ProjectList({ projects, readyCounts }: ProjectListProps) {
           <ProjectCard
             project={project}
             readyCount={readyOf(project)}
+            readyColor={readyColors(ready).get(project.id)}
             index={index}
             now={now}
             onOpen={() => openProject(project.key)}

@@ -56,7 +56,7 @@ describe('tracker <command>', () => {
   it('prints the formatted result', async () => {
     expect(await cli(['projects'], projects)).toMatchObject({
       code: EXIT_OK,
-      stdout: 'MOB · Mobile app · 3 open, 7 total',
+      stdout: 'MOB · Mobile app · 3 open, 0 reviewed, 7 total',
       stderr: '',
     });
   });

@@ -1,7 +1,7 @@
 import type { Status } from '@tracker/shared';
 import { describe, expect, it } from 'vitest';
 import { listItem, otherProject, project, STATUS, statuses } from '../../api/test/fixtures';
-import { readyCounts, readyItems } from './readyItems';
+import { readyColors, readyCounts, readyItems } from './readyItems';
 
 const webStatuses: Status[] = statuses.map((status, index) => ({
   ...status,
@@ -72,6 +72,15 @@ describe('readyItems', () => {
 
   it('is empty until the ready list loads', () => {
     expect(readyItems(undefined, [project])).toEqual([]);
+  });
+});
+
+describe('readyColors', () => {
+  it('takes each project’s Reviewed color from its newest ready ticket', () => {
+    const colors = readyColors(readyItems(list([web(2), mob(1)]), [project, otherProject]));
+    expect(colors.get(otherProject.id)).toBe('#12A594');
+    expect(colors.get(project.id)).toBe(statuses.find((s) => s.category === 'reviewed')?.color);
+    expect(colors.get('p-none')).toBeUndefined();
   });
 });
 

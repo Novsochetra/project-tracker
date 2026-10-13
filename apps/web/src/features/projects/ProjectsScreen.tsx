@@ -8,7 +8,7 @@ import { ErrorBoundary } from '../../lib/ErrorBoundary';
 import { LargeTitle, NavBar, NavBarButton, useScreen } from '../../navigation';
 import { AccountButton } from '../account';
 import { CaptureBar, canCapture, WaitingToSync } from '../capture';
-import { readyCounts, readyItems, ReadySection } from '../ready';
+import { readyItems, ReadySection, type ReadyItem } from '../ready';
 import { ProjectList } from './ProjectList';
 import styles from './ProjectsScreen.module.css';
 
@@ -45,7 +45,7 @@ export function ProjectsScreen() {
             <ErrorBoundary
               name="Projects ready list"
               retryKey={ready.data}
-              fallback={<ProjectsBody query={projects} readyCounts={NO_COUNTS} onNew={openNew} />}
+              fallback={<ProjectsBody query={projects} ready={NOTHING_READY} onNew={openNew} />}
             >
               <ProjectsAndReady query={projects} ready={ready.data} onNew={openNew} />
             </ErrorBoundary>
@@ -57,7 +57,7 @@ export function ProjectsScreen() {
   );
 }
 
-const NO_COUNTS: ReadonlyMap<string, number> = new Map();
+const NOTHING_READY: readonly ReadyItem[] = [];
 
 interface ProjectsAndReadyProps {
   query: TrackerQuery<ProjectSummary[]>;
@@ -69,7 +69,7 @@ function ProjectsAndReady({ query, ready, onNew }: ProjectsAndReadyProps) {
   const items = readyItems(ready, query.data ?? []);
   return (
     <>
-      <ProjectsBody query={query} readyCounts={readyCounts(items)} onNew={onNew} />
+      <ProjectsBody query={query} ready={items} onNew={onNew} />
       <ReadySection items={items} />
     </>
   );
@@ -77,14 +77,14 @@ function ProjectsAndReady({ query, ready, onNew }: ProjectsAndReadyProps) {
 
 interface ProjectsBodyProps {
   query: TrackerQuery<ProjectSummary[]>;
-  readyCounts: ReadonlyMap<string, number>;
+  ready: readonly ReadyItem[];
   onNew: () => void;
 }
 
-function ProjectsBody({ query, readyCounts, onNew }: ProjectsBodyProps) {
+function ProjectsBody({ query, ready, onNew }: ProjectsBodyProps) {
   if (query.data) {
     return query.data.length > 0 ? (
-      <ProjectList projects={query.data} readyCounts={readyCounts} />
+      <ProjectList projects={query.data} ready={ready} />
     ) : (
       <EmptyState
         bordered

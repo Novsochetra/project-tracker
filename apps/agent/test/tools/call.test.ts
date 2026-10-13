@@ -12,7 +12,7 @@ describe('callTool', () => {
   it('returns the reply text as content', async () => {
     const client = fakeClient({ listProjects: returns([projectSummary()]) });
     expect(await callTool(listProjects, client, {})).toEqual({
-      content: [{ type: 'text', text: 'MOB · Mobile app · 3 open, 7 total' }],
+      content: [{ type: 'text', text: 'MOB · Mobile app · 3 open, 0 reviewed, 7 total' }],
     });
   });
 

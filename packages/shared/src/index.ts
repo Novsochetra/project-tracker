@@ -33,6 +33,7 @@ export * from './logic/json';
 export * from './logic/listView';
 export * from './logic/loopback';
 export * from './logic/prefix';
+export * from './logic/projectCounts';
 export * from './logic/prompt';
 export * from './logic/rank';
 export * from './logic/runRequests';

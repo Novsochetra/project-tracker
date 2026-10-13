@@ -14,9 +14,7 @@ export function ProjectsHeaderActions() {
       <Button icon={Plus} onClick={() => sheets.open({ type: 'newProject' })}>
         New project
       </Button>
-      {capture && (
-        <CaptureButton variant="primary" onClick={() => sheets.open({ type: 'capture' })} />
-      )}
+      {capture && <CaptureButton onClick={() => sheets.open({ type: 'capture' })} />}
     </div>
   );
 }

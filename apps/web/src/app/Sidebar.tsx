@@ -1,4 +1,4 @@
-import type { ProjectSummary } from '@tracker/shared';
+import { openNotReviewed, type ProjectSummary } from '@tracker/shared';
 import clsx from 'clsx';
 import { LayoutGrid, Plus } from 'lucide-react';
 import type { ReactNode } from 'react';
@@ -7,7 +7,6 @@ import { Icon, IconButton, LogoGlyph } from '../components';
 import { AccountRow } from '../features/account';
 import { sameProjectKey } from '../features/projects/projectLookup';
 import { useOpenProject } from '../features/projects/useOpenProject';
-import { openNotReady } from '../features/projects/projectProgress';
 import { readyCounts, readyItems } from '../features/ready/readyItems';
 import { ErrorBoundary } from '../lib/ErrorBoundary';
 import { useIsOpening, useNavigation, type Route } from '../navigation';
@@ -64,7 +63,7 @@ function ProjectItems({ projects, ready }: ProjectItemsProps) {
         </>
       )}
       <span className={styles.count}>
-        {openNotReady(project.openCount, ready.get(project.id) ?? 0)}{' '}
+        {openNotReviewed(project.openCount, ready.get(project.id) ?? 0)}{' '}
         <span className="visually-hidden">open</span>
       </span>
     </SidebarItem>

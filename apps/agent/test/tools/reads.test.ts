@@ -24,7 +24,7 @@ describe('list_projects', () => {
     const projects = [projectSummary()];
     const client = fakeClient({ listProjects: vi.fn(returns(projects)) });
     const reply = await run(listProjects, client, {});
-    expect(reply.text).toBe('MOB · Mobile app · 3 open, 7 total');
+    expect(reply.text).toBe('MOB · Mobile app · 3 open, 0 reviewed, 7 total');
     expect(reply.data).toBe(projects);
   });
 });

@@ -88,7 +88,8 @@ describe('ProjectsScreen', () => {
     expect(row).toHaveTextContent('Updated 5m ago');
     const empty = screen.getByRole('button', { name: /^Website/ });
     expect(empty).toHaveTextContent('No description');
-    expect(empty).toHaveTextContent('0% No tickets');
+    expect(empty).toHaveTextContent('No tickets');
+    expect(empty).not.toHaveTextContent('%');
     expect(screen.getByRole('heading', { name: 'Projects' }).parentElement).toHaveTextContent('2');
     expect(screen.getAllByRole('listitem')).toHaveLength(2);
   });

@@ -23,5 +23,6 @@ export interface ProjectSummary extends Project {
   totalCount: number;
   openCount: number;
   doneCount: number;
+  reviewedCount: number;
   lastActivityAt: number;
 }

@@ -11,13 +11,15 @@ describe('formatProjects', () => {
       projectSummary({
         key: 'WEB',
         name: 'Website',
-        openCount: 0,
+        openCount: 2,
+        reviewedCount: 2,
+        doneCount: 0,
         totalCount: 2,
         repo: '~/code/web',
       }),
     ];
     expect(formatProjects(projects)).toBe(
-      'MOB · Mobile app · 3 open, 7 total\nWEB · Website · 0 open, 2 total · repo ~/code/web',
+      'MOB · Mobile app · 3 open, 0 reviewed, 7 total\nWEB · Website · 0 open, 2 reviewed, 2 total · repo ~/code/web',
     );
   });
 

@@ -1,22 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { openNotReady, progressParts, projectProgress } from './projectProgress';
+import { progressParts, projectProgress } from './projectProgress';
 
 const counts = (totalCount: number, doneCount: number) => ({
   totalCount,
   doneCount,
   openCount: totalCount - doneCount,
-});
-
-describe('openNotReady', () => {
-  it('leaves the ready tickets out of the open count', () => {
-    expect(openNotReady(180, 178)).toBe(2);
-    expect(openNotReady(3, 0)).toBe(3);
-  });
-
-  it('never goes below 0 while the ready list is a moment behind', () => {
-    expect(openNotReady(1, 4)).toBe(0);
-    expect(openNotReady(2, -1)).toBe(2);
-  });
 });
 
 describe('projectProgress', () => {

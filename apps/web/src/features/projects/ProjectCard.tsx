@@ -9,12 +9,14 @@ import { descriptionText, riseDelay } from './projectRows';
 interface ProjectCardProps {
   project: ProjectSummary;
   readyCount: number;
+  readyColor: string | undefined;
   index: number;
   now: number;
   onOpen: () => void;
 }
 
-export function ProjectCard({ project, readyCount, index, now, onOpen }: ProjectCardProps) {
+export function ProjectCard(props: ProjectCardProps) {
+  const { project, readyCount, readyColor, index, now, onOpen } = props;
   const opening = useIsOpening({ name: 'project', key: project.key });
   const progress = projectProgress(project, readyCount);
   return (
@@ -35,7 +37,8 @@ export function ProjectCard({ project, readyCount, index, now, onOpen }: Project
         </span>
       </span>{' '}
       <span className={styles.description}>{descriptionText(project.description)}</span>{' '}
-      <ProjectProgressBar progress={progress} /> <ProjectProgressParts progress={progress} />
+      <ProjectProgressBar progress={progress} readyColor={readyColor} />{' '}
+      <ProjectProgressParts progress={progress} readyColor={readyColor} />
     </button>
   );
 }

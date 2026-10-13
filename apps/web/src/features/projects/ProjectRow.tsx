@@ -1,10 +1,9 @@
-import type { ProjectSummary } from '@tracker/shared';
+import { openNotReviewed, type ProjectSummary } from '@tracker/shared';
 import clsx from 'clsx';
 import { ChevronRight } from 'lucide-react';
 import { Icon, ListRow } from '../../components';
 import { useIsOpening } from '../../navigation';
 import styles from './ProjectList.module.css';
-import { openNotReady } from './projectProgress';
 import { descriptionText, riseDelay } from './projectRows';
 
 interface ProjectRowProps {
@@ -34,7 +33,7 @@ export function ProjectRow({ project, readyCount, index, onOpen }: ProjectRowPro
         </span>
       </span>{' '}
       <span className={styles.counts}>
-        <span className={styles.open}>{openNotReady(project.openCount, readyCount)} open</span>{' '}
+        <span className={styles.open}>{openNotReviewed(project.openCount, readyCount)} open</span>{' '}
         {readyCount > 0 && <span className={styles.ready}>{readyCount} ready</span>}
       </span>
       <Icon icon={ChevronRight} size={20} className={styles.chevron} />

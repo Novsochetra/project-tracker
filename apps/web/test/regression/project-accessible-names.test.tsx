@@ -34,6 +34,7 @@ describe('project names read with spaces between their parts', () => {
       <ProjectCard
         project={project}
         readyCount={2}
+        readyColor={undefined}
         index={0}
         now={project.lastActivityAt}
         onOpen={() => {}}
