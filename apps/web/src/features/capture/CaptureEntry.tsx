@@ -1,13 +1,18 @@
 import clsx from 'clsx';
 import { CloudUpload, Plus } from 'lucide-react';
-import { Button, Icon } from '../../components';
+import { Button, Icon, type ButtonVariant } from '../../components';
 import { BottomBar } from '../../navigation';
 import styles from './CaptureEntry.module.css';
 import { useWaitingCount } from './queueStore';
 
-export function CaptureButton({ onClick }: { onClick: () => void }) {
+interface CaptureButtonProps {
+  variant?: ButtonVariant;
+  onClick: () => void;
+}
+
+export function CaptureButton({ variant, onClick }: CaptureButtonProps) {
   return (
-    <Button icon={Plus} aria-keyshortcuts="C" onClick={onClick}>
+    <Button variant={variant} icon={Plus} aria-keyshortcuts="C" onClick={onClick}>
       New ticket
       <kbd className={styles.key} aria-hidden="true">
         C

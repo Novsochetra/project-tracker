@@ -71,7 +71,7 @@ describe('regression: the desktop sidebar with a ready list it cannot read', () 
     await act(() => queryClient.refetchQueries({ queryKey: queryKeys.ready() }));
     expect(await within(sidebar()).findByText('1 ready')).toBeInTheDocument();
     expect(within(sidebar()).getByRole('button', { name: /^Mobile app/ })).toHaveTextContent(
-      'Mobile app 1 ready 3 open',
+      'Mobile app 1 ready 2 open',
     );
   });
 });

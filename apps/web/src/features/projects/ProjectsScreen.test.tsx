@@ -64,7 +64,7 @@ describe('ProjectsScreen', () => {
     expect(sheets.open).toHaveBeenCalledWith({ type: 'newProject' });
   });
 
-  it('lists each project with its key, description, progress, open count and update time', async () => {
+  it('shows each project as a card with its key, description, progress and update time', async () => {
     const mobile = projectSummary({
       description: 'iOS and Android',
       totalCount: 4,
@@ -72,19 +72,25 @@ describe('ProjectsScreen', () => {
       openCount: 3,
       lastActivityAt: Date.now() - 5 * MINUTE,
     });
-    const web = { ...projectSummary(otherProject), description: '', totalCount: 0, doneCount: 0 };
+    const web = projectSummary({
+      ...otherProject,
+      description: '',
+      totalCount: 0,
+      doneCount: 0,
+      openCount: 0,
+    });
     renderProjects(() => Promise.resolve([mobile, web]));
     const row = await screen.findByRole('button', { name: /^Mobile app/ });
     expect(row).toHaveTextContent('MOB');
     expect(row).toHaveTextContent('iOS and Android');
     expect(row).toHaveTextContent('25%');
-    expect(row).toHaveTextContent('3 open');
+    expect(row).toHaveTextContent('1 done 3 open');
     expect(row).toHaveTextContent('Updated 5m ago');
     const empty = screen.getByRole('button', { name: /^Website/ });
     expect(empty).toHaveTextContent('No description');
-    expect(empty).toHaveTextContent('0%');
+    expect(empty).toHaveTextContent('0% No tickets');
     expect(screen.getByRole('heading', { name: 'Projects' }).parentElement).toHaveTextContent('2');
-    expect(screen.getByText('Progress')).toBeInTheDocument();
+    expect(screen.getAllByRole('listitem')).toHaveLength(2);
   });
 
   it('opens a project', async () => {
@@ -105,7 +111,7 @@ describe('ProjectsScreen', () => {
     expect(rows[0]).toHaveClass('rise');
   });
 
-  it('uses the phone nav bar and drops the desktop columns on phones', async () => {
+  it('uses the phone nav bar and a list of rows without progress on phones', async () => {
     restore.push(mockPhone(true));
     const user = userEvent.setup();
     const { sheets } = renderProjects(() => Promise.resolve([projectSummary()]));
@@ -114,16 +120,14 @@ describe('ProjectsScreen', () => {
     expect(navBar).not.toBeNull();
     await user.click(within(navBar as HTMLElement).getByRole('button', { name: 'New project' }));
     expect(sheets.open).toHaveBeenCalledWith({ type: 'newProject' });
-    expect(screen.queryByText('Progress')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /^Mobile app/ })).not.toHaveTextContent('%');
+    expect(screen.queryByRole('listitem')).not.toBeInTheDocument();
   });
 
-  it('opens quick capture from the New ticket button, which shows its C shortcut', async () => {
-    const user = userEvent.setup();
-    const { sheets } = renderProjects(() => Promise.resolve([projectSummary()]));
-    const button = await screen.findByRole('button', { name: 'New ticket' });
-    expect(button).toHaveAttribute('aria-keyshortcuts', 'C');
-    await user.click(button);
-    expect(sheets.open).toHaveBeenCalledWith({ type: 'capture' });
+  it('leaves New ticket to the desktop header', async () => {
+    renderProjects(() => Promise.resolve([projectSummary()]));
+    await screen.findByRole('button', { name: /^Mobile app/ });
+    expect(screen.queryByRole('button', { name: 'New ticket' })).not.toBeInTheDocument();
     expect(document.querySelector('[data-bottom-bar]')).toBeNull();
   });
 
@@ -170,7 +174,7 @@ describe('ProjectsScreen', () => {
     expect(await screen.findByText('2 waiting to sync')).toBeInTheDocument();
   });
 
-  it('puts tickets waiting in a reviewed status under Ready for you, above the projects', async () => {
+  it('puts tickets waiting in a reviewed status under Ready for you, below the projects', async () => {
     renderWithReady(() => Promise.resolve([reviewedTicket(3)]));
     const section = await screen.findByRole('region', { name: 'Ready for you' });
     const ticket = within(section).getByRole('button', { name: /^MOB-3\b/ });
@@ -178,16 +182,15 @@ describe('ProjectsScreen', () => {
     expect(ticket).toHaveTextContent('Mobile app');
     expect(within(ticket).getByRole('img', { name: 'Rated 4 out of 5' })).toBeInTheDocument();
     const firstProject = screen.getByRole('button', { name: /^Mobile app/ });
-    expect(section.compareDocumentPosition(firstProject)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+    expect(section.compareDocumentPosition(firstProject)).toBe(Node.DOCUMENT_POSITION_PRECEDING);
   });
 
   it('labels each project’s counts with how many of its tickets are ready', async () => {
     renderWithReady(() => Promise.resolve([reviewedTicket(3), reviewedTicket(4)]));
     const mobile = await screen.findByRole('button', { name: /^Mobile app/ });
-    await waitFor(() => expect(mobile).toHaveTextContent('2 ready'));
-    expect(mobile).toHaveTextContent('3 open');
+    await waitFor(() => expect(mobile).toHaveTextContent('2 ready 1 open'));
     const web = screen.getByRole('button', { name: /^Website/ });
-    expect(web).toHaveTextContent('0 open');
+    expect(web).toHaveTextContent('No tickets');
     expect(web).not.toHaveTextContent('ready');
   });
 

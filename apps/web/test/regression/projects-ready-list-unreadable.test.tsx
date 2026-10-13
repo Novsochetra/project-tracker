@@ -83,14 +83,16 @@ describe.each([
     await server.answer({ tickets: [reviewed(4)], statuses });
     const section = await screen.findByRole('region', { name: 'Ready for you' });
     expect(within(section).getByRole('button', { name: /^MOB-4\b/ })).toBeInTheDocument();
-    expect(projectRow('Mobile app')).toHaveTextContent('3 open 1 ready');
+    expect(projectRow('Mobile app')).toHaveTextContent('1 ready');
+    expect(projectRow('Mobile app')).toHaveTextContent('2 open');
   });
 
   it('shows the ready tickets around an entry it cannot read', async () => {
     renderProjects({ tickets: [reviewed(4), null, reviewed(2)], statuses: [null, ...statuses] });
     const section = await screen.findByRole('region', { name: 'Ready for you' });
     expect(within(section).getAllByRole('button', { name: /^MOB-\d\b/ })).toHaveLength(2);
-    expect(projectRow('Mobile app')).toHaveTextContent('3 open 2 ready');
+    expect(projectRow('Mobile app')).toHaveTextContent('2 ready');
+    expect(projectRow('Mobile app')).toHaveTextContent('1 open');
     expect(screen.queryByText('Something went wrong')).toBeNull();
   });
 });

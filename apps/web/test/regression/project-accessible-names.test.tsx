@@ -2,6 +2,7 @@ import { screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { Sidebar } from '../../src/app/Sidebar';
 import { projectSummary, renderWithApp } from '../../src/app/test/harness';
+import { ProjectCard } from '../../src/features/projects/ProjectCard';
 import { ProjectRow } from '../../src/features/projects/ProjectRow';
 
 // The name, key and counts are separate spans; without spaces between them screen readers
@@ -14,24 +15,23 @@ describe('project names read with spaces between their parts', () => {
     expect(screen.getByRole('button', { name: 'Mobile app 3 open' })).toBeInTheDocument();
   });
 
-  it('in the Projects list', () => {
-    renderWithApp(
-      <ProjectRow
-        project={project}
-        readyCount={0}
-        index={0}
-        now={project.lastActivityAt}
-        onOpen={() => {}}
-      />,
-    );
+  it('in the phone Projects list', () => {
+    renderWithApp(<ProjectRow project={project} readyCount={0} index={0} onOpen={() => {}} />);
     expect(
-      screen.getByRole('button', { name: 'Mobile app MOB Phone app 25% 3 open Updated just now' }),
+      screen.getByRole('button', { name: 'Mobile app MOB Phone app 3 open' }),
     ).toBeInTheDocument();
   });
 
-  it('in the Projects list, with tickets ready for you', () => {
+  it('in the phone Projects list, with tickets ready for you', () => {
+    renderWithApp(<ProjectRow project={project} readyCount={2} index={0} onOpen={() => {}} />);
+    expect(
+      screen.getByRole('button', { name: 'Mobile app MOB Phone app 1 open 2 ready' }),
+    ).toBeInTheDocument();
+  });
+
+  it('in the desktop Projects grid, with tickets ready for you', () => {
     renderWithApp(
-      <ProjectRow
+      <ProjectCard
         project={project}
         readyCount={2}
         index={0}
@@ -41,7 +41,7 @@ describe('project names read with spaces between their parts', () => {
     );
     expect(
       screen.getByRole('button', {
-        name: 'Mobile app MOB Phone app 25% 3 open 2 ready Updated just now',
+        name: 'Mobile app MOB Updated just now Phone app 75% 1 done 2 ready 1 open',
       }),
     ).toBeInTheDocument();
   });

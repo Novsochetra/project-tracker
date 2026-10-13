@@ -7,6 +7,7 @@ import { Icon, IconButton, LogoGlyph } from '../components';
 import { AccountRow } from '../features/account';
 import { sameProjectKey } from '../features/projects/projectLookup';
 import { useOpenProject } from '../features/projects/useOpenProject';
+import { openNotReady } from '../features/projects/projectProgress';
 import { readyCounts, readyItems } from '../features/ready/readyItems';
 import { ErrorBoundary } from '../lib/ErrorBoundary';
 import { useIsOpening, useNavigation, type Route } from '../navigation';
@@ -63,7 +64,8 @@ function ProjectItems({ projects, ready }: ProjectItemsProps) {
         </>
       )}
       <span className={styles.count}>
-        {project.openCount} <span className="visually-hidden">open</span>
+        {openNotReady(project.openCount, ready.get(project.id) ?? 0)}{' '}
+        <span className="visually-hidden">open</span>
       </span>
     </SidebarItem>
   ));

@@ -6,10 +6,11 @@
   height: 18px;
   margin-left: 2px;
   padding: 0 4px;
-  border: 1px solid var(--line);
+  border: 1px solid color-mix(in srgb, currentColor 22%, transparent);
   border-radius: var(--radius-square);
-  background: var(--fill);
-  color: var(--muted);
+  background: color-mix(in srgb, currentColor 8%, transparent);
+  color: inherit;
+  opacity: 0.75;
   font-family: var(--font-mono);
   font-size: var(--size-caption);
   line-height: 1;
