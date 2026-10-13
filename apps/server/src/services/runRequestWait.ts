@@ -20,19 +20,18 @@ export async function waitForRunRequest(
 ): Promise<RunRequest> {
   const read = async () => {
     await settleRequests(ctx);
-    return requireRunRequest(ctx, scope, id);
+    const found = await requireRunRequest(ctx, scope, id);
+    if (found.run.runnerId !== runnerId) {
+      throw forbidden('Only the helper that took this run waits for its requests.');
+    }
+    return found;
   };
-  const first = await read();
-  if (first.run.runnerId !== runnerId) {
-    throw forbidden('Only the helper that took this run waits for its requests.');
-  }
-  const runId = first.run.id;
   const { row } = await longPoll(ctx, {
     read,
     isOpen: (seen) => seen.row.status === 'open',
-    wakes: {
-      run: ({ event }) => ENDS_WAIT.has(event.type) && 'runId' in event && event.runId === runId,
-    },
+    wakes: ({ run }) => ({
+      run: ({ event }) => ENDS_WAIT.has(event.type) && 'runId' in event && event.runId === run.id,
+    }),
     waitMs: (seen) => nextWaitMs(seen.row.expiresAt, ctx.now()),
     signal,
   });

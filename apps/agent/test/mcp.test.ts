@@ -4,7 +4,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { TicketQuestion } from '@tracker/shared';
 import type { TrackerApi } from '../src/client';
 import { createMcpServer } from '../src/server';
-import { PROGRESS_MS } from '../src/watch/permissionTool/keepCallAlive';
+import { PROGRESS_MS } from '../src/tools/keepCallAlive';
 import { fakeClient, imageResponse, rejectWith, returns } from './fakeClient';
 import { attachment, detail, projectSummary, statuses, ticket } from './fixtures';
 

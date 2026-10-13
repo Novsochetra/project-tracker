@@ -46,6 +46,8 @@ export const USAGE = [
   '      is passed to claude for ticket runs and Edit questions. Without it, your own Claude',
   '      Code settings decide for a ticket run, and an Edit question asks on the phone before',
   '      each step (default). Ask and Plan questions are always read-only.',
+  '      --approvals makes ticket runs ask on the phone before each step too; use it with',
+  '      --permission-mode acceptEdits rather than bypassPermissions, which never asks.',
   '      It keeps the Mac from idle sleep while it runs (--no-keep-awake turns that off).',
   '      --install makes it start by itself (at login on macOS, at boot on Linux), --uninstall',
   '      stops that, and --check says whether it is installed, running and online.',

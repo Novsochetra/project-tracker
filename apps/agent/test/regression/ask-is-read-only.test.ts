@@ -2,6 +2,7 @@ import { realpathSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { DEFAULT_ASK_OPTIONS, type AskMode } from '@tracker/shared';
 import { afterAll, describe, expect, it, vi } from 'vitest';
+import { runPermissionMode } from '../../src/watch/approvals';
 import { askOutcomeOf } from '../../src/watch/ask/askOutcome';
 import { claudeRunners } from '../../src/watch/claudeRunners';
 import type { AskPerson } from '../../src/watch/permissionTool/askPerson';
@@ -21,6 +22,11 @@ const claude = claudeRunners({
   write: () => undefined,
   prompts: { command: ['node', 'promptTool.js'], ask: askPerson },
 });
+
+const TRACKER =
+  'mcp__tracker__ask_person,mcp__tracker__get_ticket,mcp__tracker__add_comment,mcp__tracker__attach_file';
+const EDIT_TOOLS = ['--allowedTools', TRACKER];
+const WORK_TOOLS = ['--allowedTools', `${TRACKER},mcp__tracker__submit_for_review`];
 
 const PROMPT_TOOL_ARGS = [
   '--mcp-config',
@@ -83,6 +89,7 @@ describe('regression: an ask runs Claude read-only', () => {
       const args = argsOf((await ask('Delete X', null, mode)).answer);
       expect(args).not.toContain('--permission-prompt-tool');
       expect(args).not.toContain('--mcp-config');
+      expect(args).not.toContain('--allowedTools');
     }
     expect(askPerson).not.toHaveBeenCalled();
   });
@@ -96,6 +103,7 @@ describe('regression: an ask runs Claude read-only', () => {
       '--verbose',
       '--permission-mode',
       'bypassPermissions',
+      ...EDIT_TOOLS,
       ...PROMPT_TOOL_ARGS,
     ]);
     expect(args).not.toContain('--strict-mcp-config');
@@ -111,6 +119,7 @@ describe('regression: an ask runs Claude read-only', () => {
       '--verbose',
       '--permission-mode',
       'bypassPermissions',
+      ...WORK_TOOLS,
       ...PROMPT_TOOL_ARGS,
     ]);
   });
@@ -134,6 +143,7 @@ describe('regression: an ask runs Claude read-only', () => {
       ...STREAM,
       '--permission-mode',
       'default',
+      ...EDIT_TOOLS,
       ...PROMPT_TOOL_ARGS,
     ]);
     for (const mode of ['ask', 'plan'] as const) {
@@ -152,7 +162,45 @@ describe('regression: an ask runs Claude read-only', () => {
       new AbortController().signal,
       noSteps,
     );
-    expect(argsOf(ticket.results[0]?.text)).toEqual([...STREAM, ...PROMPT_TOOL_ARGS]);
+    expect(argsOf(ticket.results[0]?.text)).toEqual([
+      ...STREAM,
+      ...WORK_TOOLS,
+      ...PROMPT_TOOL_ARGS,
+    ]);
+  });
+
+  it('with --approvals asks in a ticket run too, and keeps Ask and Plan read-only', async () => {
+    const approving = claudeRunners({
+      command: fake.command,
+      cwd: realpathSync(tmpdir()),
+      permissionMode: runPermissionMode({ approvals: true }),
+      write: () => undefined,
+      prompts: { command: ['node', 'promptTool.js'], ask: askPerson },
+    });
+    const ticket = await approving.runClaude(
+      job('r-3', 'MOB-1'),
+      new AbortController().signal,
+      noSteps,
+    );
+    expect(argsOf(ticket.results[0]?.text)).toEqual([
+      ...STREAM,
+      '--permission-mode',
+      'default',
+      ...WORK_TOOLS,
+      ...PROMPT_TOOL_ARGS,
+    ]);
+    for (const mode of ['ask', 'plan'] as const) {
+      const readOnly = {
+        ...askJob('r-4', 'c-1', null, { ...DEFAULT_ASK_OPTIONS, mode }),
+        prompt: 'X',
+      };
+      const outcome = askOutcomeOf(
+        await approving.runAsk(readOnly, new AbortController().signal, noSteps),
+        false,
+      );
+      expect(argsOf(outcome.answer)).toEqual(READ_ONLY_ARGS);
+    }
+    expect(askPerson).not.toHaveBeenCalled();
   });
 
   it("resumes the chat's session and hands back the new one", async () => {

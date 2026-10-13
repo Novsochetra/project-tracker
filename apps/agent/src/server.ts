@@ -7,7 +7,7 @@ import type { PromptDefinition } from './prompts/prompt';
 import { TOOLS } from './tools';
 import { callTool } from './tools/call';
 import type { Tool } from './tools/tool';
-import { keepCallAlive } from './watch/permissionTool/keepCallAlive';
+import { keepCallAlive } from './tools/keepCallAlive';
 
 export const SERVER_NAME = 'tracker';
 

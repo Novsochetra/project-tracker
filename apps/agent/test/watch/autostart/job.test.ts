@@ -23,7 +23,7 @@ describe('the job tracker watch installs', () => {
     const job = jobFor(
       input({
         config: { ...config, agentName: 'Claude (home)' },
-        args: { name: 'Mac', permissionMode: 'acceptEdits', keepAwake: false },
+        args: { name: 'Mac', permissionMode: 'acceptEdits', keepAwake: false, approvals: true },
       }),
       CLI,
     );
@@ -35,6 +35,7 @@ describe('the job tracker watch installs', () => {
       '--name=Mac',
       '--permission-mode=acceptEdits',
       '--no-keep-awake',
+      '--approvals',
       'MOB',
     ]);
     expect(job.environment).toEqual({
