@@ -53,6 +53,7 @@ describe('helperCanTake', () => {
     userId: 'u-1',
     name: 'Mac',
     projectIds: '["p-1"]',
+    tools: null,
     createdAt: 0,
     lastSeenAt: 10_000,
   };
