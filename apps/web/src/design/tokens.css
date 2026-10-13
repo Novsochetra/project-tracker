@@ -65,6 +65,8 @@
   --size-body: 14px;
   --size-headline: 15px;
   --size-input: 16px;
+  /* A second-level heading in Claude's answers: between the answer's text and its first level. */
+  --size-subheading: 17px;
   --size-heading: 20px;
   --size-title: 22px;
   --weight-regular: 400;

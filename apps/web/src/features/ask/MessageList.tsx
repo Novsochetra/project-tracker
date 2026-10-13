@@ -5,6 +5,7 @@ import { CardThread } from './CardThread';
 import { messageCards, type MessageCards } from './cards';
 import styles from './ChatScreen.module.css';
 import { ClaudeFrom } from './ClaudeFrom';
+import { Markdown } from './markdown/Markdown';
 import { MessageText as Text } from './MessageText';
 import { StoppedSteps } from './StoppedSteps';
 import { threadItems } from './thread';
@@ -35,7 +36,7 @@ function ClaudeMessage({ chatId, message, cards, helper }: ClaudeMessageProps) {
       {cards ? (
         <CardThread chatId={chatId} message={message} cards={cards} helper={helper} />
       ) : (
-        <Text text={message.text} />
+        <Markdown className={styles.text} text={message.text} />
       )}
     </article>
   );

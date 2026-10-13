@@ -25,7 +25,9 @@ test('asks Claude about a ticket from its screen, with its context, and keeps th
   await expect(ticketLink).toBeVisible();
   await settledScreenshot(page, info.outputPath(`ask-about-ticket-${info.project.name}.png`));
 
-  await page.getByRole('textbox', { name: 'Question for Claude' }).fill('Why does it quit?');
+  const box = page.getByRole('textbox', { name: 'Question for Claude' });
+  await expect(box).toHaveAttribute('placeholder', 'Ask about this ticket…');
+  await box.fill('Why does it quit?');
   await page.getByRole('button', { name: 'Send', exact: true }).click();
   await expect(page).toHaveURL(/\/p\/MOB\/1\/ask\/[\w-]+$/);
   const job = await api.takeNextRun(helperId, 'ask');
