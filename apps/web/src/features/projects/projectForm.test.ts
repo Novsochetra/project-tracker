@@ -74,6 +74,7 @@ describe('inputs', () => {
     repo: ' ~/code/mobile ',
     prefix: 'mob',
     instructions: '\n Run the tests first. \n',
+    template: 'research',
   });
 
   it('trims the fields and sends the resolved prefix on create', () => {
@@ -83,11 +84,12 @@ describe('inputs', () => {
       description: 'iOS and Android',
       repo: '~/code/mobile',
       instructions: 'Run the tests first.',
+      template: 'research',
     });
     expect(createProjectInput(form({ name: 'Mobile app' })).key).toBe('MA');
   });
 
-  it('never sends a prefix on edit', () => {
+  it('never sends a prefix or a template on edit', () => {
     expect(updateProjectInput(values)).toEqual({
       name: 'Mobile app',
       description: 'iOS and Android',
@@ -103,6 +105,7 @@ describe('inputs', () => {
       repo: '~/web',
       prefix: '',
       instructions: '',
+      template: 'software',
     });
     const instructed = { name: 'Blog', description: '', repo: '', instructions: 'Plain voice.' };
     expect(formValuesOf(instructed).instructions).toBe('Plain voice.');
@@ -121,6 +124,7 @@ describe('projectFormChanged', () => {
     expect(changed({ prefix: 'gp' })).toBe(true);
     expect(changed({ instructions: ' \n ' })).toBe(false);
     expect(changed({ instructions: 'Plain voice.' })).toBe(true);
+    expect(changed({ template: 'writing' })).toBe(true);
   });
 
   it('compares an edit with the project it loaded', () => {

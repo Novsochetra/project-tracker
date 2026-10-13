@@ -1,8 +1,10 @@
 import {
+  DEFAULT_PROJECT_TEMPLATE,
   derivePrefix,
   resolvePrefix,
   type CreateProjectInput,
   type Project,
+  type ProjectTemplateName,
   type UpdateProjectInput,
 } from '@tracker/shared';
 
@@ -14,6 +16,7 @@ export interface ProjectFormValues {
   repo: string;
   prefix: string;
   instructions: string;
+  template: ProjectTemplateName;
 }
 
 export const EMPTY_PROJECT_FORM: ProjectFormValues = {
@@ -22,6 +25,7 @@ export const EMPTY_PROJECT_FORM: ProjectFormValues = {
   repo: '',
   prefix: '',
   instructions: '',
+  template: DEFAULT_PROJECT_TEMPLATE,
 };
 
 export const NAME_REQUIRED = 'Add a name to create the project.';
@@ -46,6 +50,7 @@ const FORM_FIELDS: readonly (keyof ProjectFormValues)[] = [
   'repo',
   'prefix',
   'instructions',
+  'template',
 ];
 
 // Trimmed like Create and Save send them, so a stray space doesn't make the sheet ask.
@@ -72,6 +77,7 @@ export const createProjectInput = (values: ProjectFormValues): CreateProjectInpu
   description: values.description.trim(),
   repo: values.repo.trim(),
   instructions: values.instructions.trim(),
+  template: values.template,
 });
 
 export const updateProjectInput = (values: ProjectFormValues): UpdateProjectInput => ({
