@@ -147,6 +147,7 @@ describe('ReadySection', () => {
     expect(section()).toHaveAttribute('data-expanded');
     await user.click(headerLess()!);
     expect(within(section()).getAllByRole('button', { name: /^MOB-\d+\b/ })).toHaveLength(5);
+    expect(within(section()).getByRole('button', { name: 'Show 2 more' })).toHaveFocus();
     expect(section()).not.toHaveAttribute('data-expanded');
     expect(headerLess()).toBeNull();
   });

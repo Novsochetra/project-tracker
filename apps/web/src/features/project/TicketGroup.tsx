@@ -28,8 +28,11 @@ export function TicketGroup(props: TicketGroupProps) {
   const { projectKey, group, index, rise, searching, next, drag, callbacks, onAdd } = props;
   const { status, tickets } = group;
   const ref = useRef<HTMLElement>(null);
+  const footerRef = useRef<HTMLButtonElement>(null);
   const expanded = useIsExpanded(projectKey, status.id);
-  const toggle = useGroupToggle(ref, expanded, () => toggleExpanded(projectKey, status.id));
+  const toggle = useGroupToggle({ top: ref, footer: footerRef }, expanded, () =>
+    toggleExpanded(projectKey, status.id),
+  );
   const collapsed = collapseGroup(tickets, { expanded, searching });
   const unfolded = expanded && collapsed.hasToggle;
   const target = drag?.target?.statusId === status.id ? drag.target : null;
@@ -65,7 +68,12 @@ export function TicketGroup(props: TicketGroupProps) {
         />
       ))}
       {collapsed.hasToggle && (
-        <ShowMoreButton expanded={expanded} hiddenCount={collapsed.hiddenCount} onToggle={toggle} />
+        <ShowMoreButton
+          ref={footerRef}
+          expanded={expanded}
+          hiddenCount={collapsed.hiddenCount}
+          onToggle={toggle}
+        />
       )}
     </section>
   );

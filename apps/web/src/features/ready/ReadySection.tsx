@@ -16,8 +16,11 @@ export function ReadySection({ items }: { items: readonly ReadyItem[] }) {
   const headingId = useId();
   // The header tops the card, and once the card has collapsed it no longer sticks.
   const ref = useRef<HTMLDivElement>(null);
+  const footerRef = useRef<HTMLButtonElement>(null);
   const [expanded, setExpanded] = useState(false);
-  const toggle = useGroupToggle(ref, expanded, () => setExpanded((value) => !value));
+  const toggle = useGroupToggle({ top: ref, footer: footerRef }, expanded, () =>
+    setExpanded((value) => !value),
+  );
   const { push } = useNavigation();
   const changeStatus = useStatusChange();
   if (items.length === 0) return null;
@@ -48,7 +51,12 @@ export function ReadySection({ items }: { items: readonly ReadyItem[] }) {
         <ReadyRow key={item.ticket.id} item={item} index={index} onOpen={open} onDone={done} />
       ))}
       {hasToggle && (
-        <ShowMoreButton expanded={expanded} hiddenCount={hiddenCount} onToggle={toggle} />
+        <ShowMoreButton
+          ref={footerRef}
+          expanded={expanded}
+          hiddenCount={hiddenCount}
+          onToggle={toggle}
+        />
       )}
     </ListCard>
   );

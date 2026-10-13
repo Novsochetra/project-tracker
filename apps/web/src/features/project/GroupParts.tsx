@@ -1,5 +1,6 @@
 import type { Status } from '@tracker/shared';
 import clsx from 'clsx';
+import type { Ref } from 'react';
 import { ChevronDown, ChevronUp, Plus } from 'lucide-react';
 import { Icon, IconButton, StatusGlyph } from '../../components';
 import styles from './TicketGroup.module.css';
@@ -68,11 +69,13 @@ export interface ShowMoreButtonProps {
   expanded: boolean;
   hiddenCount: number;
   onToggle: () => void;
+  ref?: Ref<HTMLButtonElement> | undefined;
 }
 
-export function ShowMoreButton({ expanded, hiddenCount, onToggle }: ShowMoreButtonProps) {
+export function ShowMoreButton({ expanded, hiddenCount, onToggle, ref }: ShowMoreButtonProps) {
   return (
     <button
+      ref={ref}
       type="button"
       className={clsx('ring-inside', styles.more)}
       aria-expanded={expanded}

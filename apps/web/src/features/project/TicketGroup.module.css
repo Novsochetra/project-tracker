@@ -38,6 +38,12 @@
   z-index: 5;
 }
 
+/* What gets focus below a stuck header scrolls into view clear of it (WCAG 2.4.11). */
+.group[data-expanded] > :not(.header),
+.group[data-expanded] > :not(.header) * {
+  scroll-margin-top: calc(var(--sticky-top) + var(--sticky-header-height));
+}
+
 .header[data-tint] {
   background: var(--drop-tint);
 }

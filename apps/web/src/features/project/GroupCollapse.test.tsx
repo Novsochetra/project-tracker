@@ -48,6 +48,19 @@ describe('collapsing an expanded group (PT-180)', () => {
     expect(within(todo).getByRole('button', { name: 'Show 7 more' })).toBeInTheDocument();
   });
 
+  it('hands focus from the header Show less to the footer Show more', async () => {
+    const { user, todo } = await renderExpandedTodo();
+    within(todo).getByRole('button', { name: 'Show less of To do' }).focus();
+    await user.keyboard('{Enter}');
+    expect(within(todo).getByRole('button', { name: 'Show 7 more' })).toHaveFocus();
+  });
+
+  it('keeps focus on the footer when it collapses the group itself', async () => {
+    const { user, todo } = await renderExpandedTodo();
+    await user.click(within(todo).getByRole('button', { name: 'Show less' }));
+    expect(within(todo).getByRole('button', { name: 'Show 7 more' })).toHaveFocus();
+  });
+
   it('scrolls back up to the group when it collapses above the view', async () => {
     const { user, todo } = await renderExpandedTodo();
     scroller().scrollTop = 900;
