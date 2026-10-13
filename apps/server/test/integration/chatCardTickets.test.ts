@@ -19,7 +19,9 @@ describe.each(DIALECTS)('several ticket cards in one answer (%s)', (dialect) => 
   const clock = testClock();
   const api = useTestServer(dialect, { now: clock.now });
   const runner = randomUUID();
+  const otherRunner = randomUUID();
   let person: Caller;
+  let helper: Caller;
   let chatId: string;
   let messageId: string;
 
@@ -39,9 +41,10 @@ describe.each(DIALECTS)('several ticket cards in one answer (%s)', (dialect) => 
     clock.set(1_000_000);
     const owner = await addUser(api.db, 'owner@example.com', clock.now());
     person = caller(() => api.app, owner.person);
-    const helper = caller(() => api.app, owner.helper);
+    helper = caller(() => api.app, owner.helper);
     await person('POST', '/api/projects', { name: 'Mobile', key: 'MOB' });
     await helper('PUT', `/api/runners/${runner}`, helperName('Dara’s MacBook'));
+    await helper('PUT', `/api/runners/${otherRunner}`, helperName('Office Mac'));
     const started = await person<ChatDetail>('POST', '/api/projects/MOB/chats', {
       runnerId: runner,
       text: 'Split this into tickets',
@@ -52,6 +55,7 @@ describe.each(DIALECTS)('several ticket cards in one answer (%s)', (dialect) => 
     await helper('POST', `/api/runs/${job?.run.id ?? ''}/finish`, {
       status: 'done',
       answer: SPLIT,
+      sessionId: randomUUID(),
     });
     messageId =
       (await person<ChatDetail>('GET', `/api/chats/${chatId}`)).body.messages[1]?.id ?? '';
@@ -103,5 +107,19 @@ describe.each(DIALECTS)('several ticket cards in one answer (%s)', (dialect) => 
     await create(1);
     expect((await person('DELETE', '/api/tickets/MOB-1')).status).toBe(204);
     expect(await links()).toEqual([{ index: 1, ticketKey: 'MOB-2' }]);
+  });
+
+  it('tells Claude which cards are tickets now, resumed or not', async () => {
+    await create(1);
+    const promptOn = async (runnerId: string) => {
+      await person('POST', `/api/chats/${chatId}/messages`, { runnerId, text: 'Make 1 smaller' });
+      const job = await helper<RunJob | null>('POST', `/api/runners/${runnerId}/next?kind=ask`);
+      await person('POST', `/api/runs/${job.body?.run.id ?? ''}/cancel`);
+      return job.body?.prompt ?? '';
+    };
+    const elsewhere = await promptOn(otherRunner);
+    expect(elsewhere).toContain('title: Third\n---\nWhy.\n````\n[card 2 → MOB-1]');
+    const resumed = await promptOn(runner);
+    expect(resumed).toContain('Your cards that are tickets now:\n[card 2 → MOB-1] Second');
   });
 });

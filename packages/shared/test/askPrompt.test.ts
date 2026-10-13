@@ -57,6 +57,50 @@ describe('buildAskPrompt', () => {
     ]);
   });
 
+  it('asks for every card not yet a ticket again on a change, and leaves made ones out', () => {
+    const prompt = buildAskPrompt({ project, mode: 'plan', question: 'q', history: [] });
+    expect(prompt).toContain(
+      'When they ask for any change, send again, in order, every card that is not a ticket yet',
+    );
+    expect(prompt).toContain('A card marked like [card 2 → PT-14] is a ticket now: leave it out.');
+  });
+
+  const card = (title: string) => ['````ticket', `title: ${title}`, '````'].join('\n');
+  const answered = [
+    { role: 'person' as const, text: 'Split it' },
+    {
+      role: 'claude' as const,
+      text: ['Two tickets:', card('First'), card('Second')].join('\n'),
+      cardTickets: [{ index: 1, ticketKey: 'PT-14' }],
+    },
+  ];
+
+  it('marks the cards that became tickets in the chat so far', () => {
+    const prompt = buildAskPrompt({ project, mode: 'plan', question: 'q', history: answered });
+    expect(prompt).toContain('title: Second\n````\n[card 2 → PT-14]\n\n---');
+    expect(prompt).not.toContain('[card 1');
+  });
+
+  it('lists the made cards with their titles when the session is resumed', () => {
+    const prompt = buildAskPrompt({
+      project,
+      mode: 'plan',
+      question: 'q',
+      history: answered,
+      resumed: true,
+    });
+    expect(prompt).not.toContain('Earlier in this chat');
+    expect(prompt).toContain('Your cards that are tickets now:\n[card 2 → PT-14] Second');
+    const none = buildAskPrompt({
+      project,
+      mode: 'plan',
+      question: 'q',
+      history: [],
+      resumed: true,
+    });
+    expect(none).not.toContain('Your cards');
+  });
+
   it('puts earlier messages before the question when the session can not be resumed', () => {
     const prompt = buildAskPrompt({
       project,

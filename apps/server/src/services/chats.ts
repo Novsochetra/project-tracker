@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import {
   chosenAskOptions,
+  type AskHistoryMessage,
   type askInput,
   type Chat,
   type ChatDetail,
@@ -9,7 +10,7 @@ import {
 import type { z } from 'zod';
 import type { UserScope } from '../auth/scope';
 import type { ChatRow } from '../db/chatTables';
-import type { ProjectRow } from '../db/schema';
+import type { Db, ProjectRow } from '../db/schema';
 import { notFound } from '../errors';
 import { listCardTicketRows } from '../repositories/chatCardTickets';
 import {
@@ -21,7 +22,7 @@ import {
 } from '../repositories/chats';
 import { latestChatRunRow, listStoppedChatRunRows } from '../repositories/runs';
 import { queueAsk } from './askRuns';
-import { chatTitle, toChat, toMessage } from './chatMappers';
+import { chatTitle, toCardTicket, toChat, toMessage } from './chatMappers';
 import { chatPromptTicket, requireChatTicket } from './chatTicket';
 import { inTransaction, type ServiceContext } from './context';
 import { requireProject } from './lookups';
@@ -77,6 +78,17 @@ export async function getChat(
   };
 }
 
+// So the prompt can say which cards are tickets now.
+async function askHistory(db: Db, chatId: string): Promise<AskHistoryMessage[]> {
+  const cards = await listCardTicketRows(db, chatId);
+  const messages = await listMessageRows(db, chatId);
+  return messages.map(({ id, role, text }) => ({
+    role,
+    text,
+    cardTickets: cards.filter((card) => card.messageId === id).map(toCardTicket),
+  }));
+}
+
 interface AskIn {
   project: ProjectRow;
   chat: ChatRow;
@@ -91,7 +103,7 @@ async function askIn(
 ): Promise<ChatDetail> {
   const runner = await requireRunnerFor(ctx, scope, input.runnerId, project);
   await expireSilentRuns(ctx);
-  const history = isNew ? [] : await listMessageRows(ctx.db, chat.id);
+  const history = isNew ? [] : await askHistory(ctx.db, chat.id);
   const ticket = await chatPromptTicket(ctx.db, chat, project.key);
   const queued = { scope, runner, projectId: project.id, now: ctx.now() };
   const run = await inTransaction(ctx, async (trx) => {

@@ -1,5 +1,6 @@
 import { isPriority, type Priority } from '../domain/priority';
 import { TICKET_DESCRIPTION_MAX, TICKET_TITLE_MAX } from '../domain/ticket';
+import { codeFences } from './codeFences';
 
 export interface TicketCard {
   title: string;
@@ -11,36 +12,16 @@ export interface TicketCard {
 export type CardSegment =
   { kind: 'text'; text: string } | { kind: 'card'; index: number; card: TicketCard };
 
-const OPEN = /^(`{3,})ticket[ \t]*$/i;
 const FIELD = /^(title|priority)[ \t]*:[ \t]*(.*)$/i;
 const SEPARATOR = /^-{3,}[ \t]*$/;
 
-interface Fence {
-  start: number;
-  end: number;
-}
-
-// As in Markdown, only a fence at least as long closes it, so a description can hold ``` blocks.
-function closingLine(lines: readonly string[], from: number, ticks: number): number {
-  for (let i = from; i < lines.length; i += 1) {
-    const close = /^(`{3,})[ \t]*$/.exec(lines[i] ?? '');
-    if (close?.[1] && close[1].length >= ticks) return i;
-  }
-  return -1;
-}
-
-function fences(lines: readonly string[]): Fence[] {
-  const found: Fence[] = [];
-  for (let i = 0; i < lines.length; i += 1) {
-    const ticks = OPEN.exec(lines[i] ?? '')?.[1]?.length;
-    if (!ticks) continue;
-    const end = closingLine(lines, i + 1, ticks);
-    if (end === -1) break;
-    found.push({ start: i, end });
-    i = end;
-  }
-  return found;
-}
+// Every other code block is skipped whole, so a card shown inside one stays code, as Markdown
+// renders it.
+const ticketFences = (lines: readonly string[]) =>
+  codeFences(lines).filter(
+    ({ end, marker, info }) =>
+      end !== -1 && marker.startsWith('`') && info.toLowerCase() === 'ticket',
+  );
 
 function parseBody(body: readonly string[]): TicketCard | null {
   const split = body.findIndex((line) => SEPARATOR.test(line));
@@ -72,7 +53,7 @@ export function splitTicketCards(text: string): CardSegment[] {
   const segments: CardSegment[] = [];
   let from = 0;
   let index = 0;
-  for (const fence of fences(lines)) {
+  for (const fence of ticketFences(lines)) {
     const card = parseBody(lines.slice(fence.start + 1, fence.end));
     if (!card) continue;
     pushText(segments, lines.slice(from, fence.start));
