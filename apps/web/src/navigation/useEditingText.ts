@@ -34,16 +34,22 @@ function leave(event: FocusEvent): void {
   notify();
 }
 
+// A tap sends its pointer events first and its mouse events after them; the mousedown is what takes
+// focus out of the field, so the mouse events count as the press too.
+const PRESS_EVENTS = [
+  ['pointerdown', press],
+  ['pointerup', release],
+  ['pointercancel', release],
+  ['mousedown', press],
+  ['mouseup', release],
+] as const;
+
 function listen(): () => void {
-  document.addEventListener('pointerdown', press, true);
-  document.addEventListener('pointerup', release, true);
-  document.addEventListener('pointercancel', release, true);
+  PRESS_EVENTS.forEach(([type, handler]) => document.addEventListener(type, handler, true));
   document.addEventListener('focusin', notify);
   document.addEventListener('focusout', leave);
   return () => {
-    document.removeEventListener('pointerdown', press, true);
-    document.removeEventListener('pointerup', release, true);
-    document.removeEventListener('pointercancel', release, true);
+    PRESS_EVENTS.forEach(([type, handler]) => document.removeEventListener(type, handler, true));
     document.removeEventListener('focusin', notify);
     document.removeEventListener('focusout', leave);
     pressing = held = false;

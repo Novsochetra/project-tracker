@@ -2,6 +2,7 @@ import type {
   AskEffort,
   AskMode,
   AskModel,
+  ChainStop,
   RunKind,
   RunRequestDecision,
   RunRequestKind,
@@ -49,6 +50,9 @@ export interface RunRow {
   costMicros: number | null;
   turns: number | null;
   durationMs: number | null;
+  // The chain's work round (logic/reviewChain); null on a run a person started.
+  round: number | null;
+  chainStop: ChainStop | null;
 }
 
 export interface RunStepRow {

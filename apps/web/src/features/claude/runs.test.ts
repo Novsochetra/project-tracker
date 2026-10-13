@@ -1,3 +1,4 @@
+import type { Run } from '@tracker/shared';
 import { describe, expect, it } from 'vitest';
 import { DARA, makeRun, makeRunner } from '../../api/test/runFixtures';
 import {
@@ -111,5 +112,20 @@ describe('shownRun', () => {
     expect(shownRun([makeRun({ status: 'done', endedAt: NOW }), failed(NOW)], NOW)).toBeNull();
     expect(shownRun([makeRun({ status: 'cancelled', endedAt: NOW })], NOW)).toBeNull();
     expect(shownRun([], NOW)).toBeNull();
+  });
+
+  it('says why the automatic review stopped after a run that ended well, for a day', () => {
+    const stopped = (chainStop: Run['chainStop'], endedAt = NOW) =>
+      shownRun([makeRun({ status: 'done', endedAt, chainStop })], NOW);
+    expect(stopped('rounds')).toMatchObject({
+      state: 'stopped',
+      text: 'Automatic review stopped. The review still asks for changes after 2 rounds.',
+    });
+    expect(stopped('moved')?.text).toBe('Automatic review stopped. You moved the ticket.');
+    expect(stopped('offline')?.text).toBe(
+      `Automatic review stopped. ${DARA} can't take the next run.`,
+    );
+    expect(stopped('moved', NOW - STOPPED_SHOWN_MS)).toBeNull();
+    expect(stopped(null)).toBeNull();
   });
 });

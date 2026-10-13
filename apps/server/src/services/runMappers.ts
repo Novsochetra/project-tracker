@@ -32,6 +32,7 @@ export const toRun = (row: RunWithKey): Run => ({
   endedAt: row.endedAt,
   stepCount: row.stepCount,
   usage: usageOfRow(row),
+  chainStop: row.chainStop,
 });
 
 export function parseProjectIds(row: RunnerRow): string[] {

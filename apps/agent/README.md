@@ -34,10 +34,10 @@ Revoke a token in **Connect Claude Code** → **API tokens** → **Revoke**. The
 
 ## Slash commands
 
-| Command                     | What the agent does                                                                                                                                                                                                                                                         |
-| --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `/mcp__tracker__work MOB`   | Claims the next To do ticket, reads it fully, does the work in the current repository, comments on decisions and blockers, verifies (tests and build for code, else against the ticket and the project's instructions) and submits it for review with summary, files, next. |
-| `/mcp__tracker__review MOB` | Lists tickets in Need review, checks the real changes against the ticket (and the project's instructions), rates them 1–5 and approves or requests changes with actionable feedback.                                                                                        |
+| Command                     | What the agent does                                                                                                                                                                                                                                                                 |
+| --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/mcp__tracker__work MOB`   | Claims the next To do ticket, reads it fully, does the work in the current repository, comments on decisions and blockers, verifies (tests and build for code, else against the ticket and the project's instructions) and submits it for review with summary, files, output, next. |
+| `/mcp__tracker__review MOB` | Lists tickets in Need review, checks the real changes against the ticket (and the project's instructions), rates them 1–5 and approves or requests changes with actionable feedback.                                                                                                |
 
 The project key is optional: without it the agent finds the project with `list_projects` (by the repository) or asks you.
 
@@ -45,7 +45,7 @@ The project key is optional: without it the agent finds the project with `list_p
 
 Tools: `list_projects`, `list_statuses`, `list_tickets`, `get_ticket` (with up to 4 images), `create_ticket`, `update_ticket`, `move_ticket` (by status name), `add_comment`, `attach_file`, `claim_next_ticket`, `claim_ticket`, `submit_for_review`, `review_ticket`, `ask_person` (asks the person a question on a ticket and waits up to 30 minutes for the answer from their phone; with no answer it tells Claude to go on with its best judgment).
 
-`attach_file { ticket, paths, comment? }` (CLI: `tracker attach KEY FILE… [--comment TEXT]`) uploads local files to a ticket, or with a comment to a new comment on it, so results that aren't code (a draft, a CSV, a PDF, an image) can be read on the phone. It takes the tracker's types and sizes, and only files in the current folder or a temp folder (`tmpdir()`, `/tmp`), by their real path: a symlink or `..` leading out, to `~/.ssh` for example, is refused. Every file is checked before any is sent. Reports list them under `OUTPUT:`, which the app shows as **Output**.
+`attach_file { ticket, paths, comment? }` (CLI: `tracker attach KEY FILE… [--comment TEXT]`) uploads local files to a ticket, or with a comment to a new comment on it, so results that aren't code (a draft, a CSV, a PDF, an image) can be read on the phone. It takes the tracker's types and sizes, and only files in the current folder or a temp folder (`tmpdir()`, `/tmp`), by their real path: a symlink or `..` leading out, to `~/.ssh` for example, is refused, and so is a file in a dot-folder (`.ssh`, `.aws`, `.config`, …) and anything from a current folder that is your home folder or above it. Every file is checked and opened before any is sent, and the upload reads what was checked. Reports list them under `OUTPUT:` (`submit_for_review`'s `output`, `tracker submit --output`), which the app shows as **Output**.
 
 ## Environment
 

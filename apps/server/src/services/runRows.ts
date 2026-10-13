@@ -41,6 +41,8 @@ export const queuedRunRow = (run: QueuedRun, target: RunTarget): RunRow => ({
   costMicros: null,
   turns: null,
   durationMs: null,
+  round: null,
+  chainStop: null,
   ...target,
   prompt: target.prompt.trim(),
 });

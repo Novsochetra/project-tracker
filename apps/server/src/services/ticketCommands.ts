@@ -35,6 +35,7 @@ import {
   type TicketScope,
 } from './lookups';
 import { toTicket } from './mappers';
+import { statusChangedText } from './statusEvents';
 import { fieldChanges, mergeChanges, type PlannedChange } from './ticketChanges';
 import { activityRow, assertMayEnter, enterStatus, eventEntry, writeTicket } from './ticketWrites';
 
@@ -164,7 +165,7 @@ async function statusChange(
   const status = requireStatusIn(scope.statuses, statusId);
   return {
     changes: await enterStatus(trx, actor, status),
-    entries: [eventEntry(`changed status to ${status.name}`)],
+    entries: [eventEntry(statusChangedText(status.name))],
   };
 }
 
@@ -230,7 +231,7 @@ export async function moveTicket(
       ticket: scope.ticket,
       actor,
       changes: { statusId: status.id, rank: plan.ranks.get(scope.ticket.id) ?? scope.ticket.rank },
-      entries: plan.statusChanged ? [eventEntry(`changed status to ${status.name}`)] : [],
+      entries: plan.statusChanged ? [eventEntry(statusChangedText(status.name))] : [],
     });
     return { ticket: toTicket(written.ticket, scope.project.key), changed: true };
   });

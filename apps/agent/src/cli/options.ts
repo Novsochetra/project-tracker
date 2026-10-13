@@ -20,6 +20,7 @@ export const COMMAND_OPTIONS = {
   due: { type: 'string' },
   summary: { type: 'string' },
   files: { type: 'string' },
+  output: { type: 'string' },
   next: { type: 'string' },
   comment: { type: 'string' },
   verdict: { type: 'string' },

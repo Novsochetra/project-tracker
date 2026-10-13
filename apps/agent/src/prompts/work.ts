@@ -25,6 +25,7 @@ export const workPrompt: PromptDefinition = {
       '',
       'Rules:',
       '- Never move a ticket to Done. Only a person does that, after review.',
+      "- Attach results that aren't code (a draft, a CSV, a PDF, an image) with attach_file, and list them under output when you call submit_for_review.",
       '- If a decision only I can make blocks the work, ask me with ask_person instead of guessing. If nobody answers, go on with your best judgment and note the assumption with add_comment.',
       '- If you are blocked, use add_comment to explain why and what you need, leave the ticket In progress, and tell me.',
       '- Work on one ticket. Continue with the next ticket (back to step 1) only if I asked for more than one.',

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  chainStoppedPush,
   chatAnsweredPush,
   chatPath,
   permissionPush,
@@ -26,6 +27,15 @@ describe('push messages', () => {
     expect(runEndedPush(TICKET, 'That computer was removed.').title).toBe(
       'MOB-3: Claude stopped: That computer was removed.',
     );
+  });
+
+  it('says the automatic review stopped and why, under the ticket’s tag', () => {
+    expect(chainStoppedPush(TICKET, 'You moved the ticket.')).toEqual({
+      title: 'MOB-3: Automatic review stopped',
+      body: 'You moved the ticket.',
+      url: '/p/MOB/3',
+      tag: 'ticket:MOB-3',
+    });
   });
 
   it('says a reviewed ticket is ready with its rating, under the same tag as its run', () => {

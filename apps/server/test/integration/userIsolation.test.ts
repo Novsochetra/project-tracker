@@ -87,8 +87,10 @@ const writesOf = (a: AWorld): [string, string, unknown?][] => [
 
 // Refused to every agent token before any lookup, so a 403 says nothing about A's project.
 const PERSON_ONLY = new Set(['PATCH /api/projects/MOB', 'DELETE /api/projects/MOB']);
+const personOnly = (method: string, path: string): boolean =>
+  PERSON_ONLY.has(`${method} ${path}`) || (method !== 'GET' && path.includes('/statuses'));
 const writeStatus = (auth: Auth, method: string, path: string): number =>
-  auth.token && PERSON_ONLY.has(`${method} ${path}`) ? 403 : 404;
+  auth.token && personOnly(method, path) ? 403 : 404;
 
 describe.each(DIALECTS)("one user's projects stay theirs (%s)", (dialect) => {
   const api = useTestServer(dialect);

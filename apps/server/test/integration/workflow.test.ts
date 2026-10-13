@@ -120,6 +120,17 @@ describe.each(DIALECTS)('agent workflow (%s)', (dialect) => {
       expect(await keysIn('in_review')).toEqual(['MA-2', 'MA-1']);
     });
 
+    it('lists the attached results under OUTPUT when given', async () => {
+      const ticket = await api.client().createTicket('MA', { title: 'Draft' });
+      await api.client(worker).claimTicket(ticket.key);
+      const detail = await api
+        .client(worker)
+        .submitForReview(ticket.key, { summary: 'Wrote it.', output: ' draft.md\nfigures.csv ' });
+      expect(detail.activity.at(-2)?.text).toBe(
+        'TICKET: MA-1\nSTATUS: done\nSUMMARY: Wrote it.\nFILES: none\nOUTPUT: draft.md\nfigures.csv\nNEXT: none',
+      );
+    });
+
     it('validates the summary', async () => {
       await api.client().createTicket('MA', { title: 'Work' });
       const res = await api.post<ErrorBody>(

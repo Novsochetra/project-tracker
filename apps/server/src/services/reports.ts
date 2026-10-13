@@ -21,6 +21,7 @@ import {
   type TicketRef,
   type TicketScope,
 } from './lookups';
+import { reportMoveText } from './statusEvents';
 import { enterStatus, eventEntry, writeTicket, type ActivityEntry } from './ticketWrites';
 
 interface ResolvedBlock {
@@ -70,8 +71,7 @@ async function applyBlock(
   { block, scope, target }: ResolvedBlock & { scope: TicketScope },
 ): Promise<TicketRef> {
   const entries: ActivityEntry[] = [{ type: 'report', text: block.text }];
-  if (target)
-    entries.push(eventEntry(`changed status to ${target.name} from a Claude Code report`));
+  if (target) entries.push(eventEntry(reportMoveText(target.name)));
   const changes = target ? await enterStatus(trx, actor, target) : {};
   const written = await writeTicket(trx, ctx.now, {
     ticket: scope.ticket,

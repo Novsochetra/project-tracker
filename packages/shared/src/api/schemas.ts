@@ -54,6 +54,7 @@ export const updateProjectInput = z.object({
   description: z.string().max(5000).optional(),
   repo: z.string().trim().max(500).optional(),
   instructions: projectInstructions,
+  autoReview: z.boolean().optional(),
 });
 export type UpdateProjectInput = z.input<typeof updateProjectInput>;
 
@@ -156,6 +157,7 @@ export type ReportInput = z.input<typeof reportInput>;
 export const submitWorkInput = z.object({
   summary: z.string().trim().min(1).max(REPORT_TEXT_MAX),
   files: z.string().max(REPORT_TEXT_MAX).default(''),
+  output: z.string().max(REPORT_TEXT_MAX).default(''),
   next: z.string().max(REPORT_TEXT_MAX).default(''),
 });
 export type SubmitWorkInput = z.input<typeof submitWorkInput>;

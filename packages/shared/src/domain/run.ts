@@ -1,4 +1,5 @@
 import type { AskOptions } from './askOptions';
+import type { ChainStop } from './autoReview';
 import type { RunUsage } from './runUsage';
 import type { StatusCategory } from './status';
 
@@ -71,6 +72,9 @@ export interface Run {
   // How many steps the helper has sent, the oldest dropped included (the latest step's seq).
   stepCount: number;
   usage: RunUsage | null;
+  // Why the project's automatic review went no further after this run. Optional: trackers from
+  // before PT-192 don't send it.
+  chainStop?: ChainStop | null;
 }
 
 export interface RunJob {

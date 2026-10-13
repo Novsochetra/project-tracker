@@ -134,10 +134,10 @@ export const COMMANDS: readonly Command[] = [
   },
   {
     name: 'submit',
-    usage: 'submit <KEY> --summary S [--files F] [--next N]',
+    usage: 'submit <KEY> --summary S [--files F] [--output O] [--next N]',
     summary: 'Submit finished work for review.',
     args: ['KEY'],
-    options: ['summary', 'files', 'next'],
+    options: ['summary', 'files', 'output', 'next'],
     required: ['summary'],
     plan: ([ticket], options) => ({ tool: submitForReview, input: { ticket, ...options } }),
   },
