@@ -5,6 +5,14 @@ import { join } from 'node:path';
 const SCRIPT = `#!/usr/bin/env node
 if (process.argv[2] === '--version') { console.log('9.9.9 (fake)'); process.exit(0); }
 if (process.argv[2] === 'mcp') {
+  // Leaves its process id beside itself, so a test can see whether a stop ended it.
+  if (process.env.FAKE_MCP === 'slow') {
+    const { writeFileSync } = require('node:fs');
+    const { dirname, join } = require('node:path');
+    writeFileSync(join(dirname(process.argv[1]), 'mcp-list.pid'), String(process.pid));
+    setTimeout(() => process.exit(0), 60000);
+    return;
+  }
   const state = process.env.FAKE_MCP === 'broken'
     ? '\u2717 Failed to connect'
     : '\u2714 Connected';

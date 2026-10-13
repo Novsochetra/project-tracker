@@ -46,11 +46,13 @@ export async function setUp(
     throw new ClaudeMissingError('Claude Code (the claude command) is not on PATH here.');
   }
   const folder = canonicalPath(io.cwd);
-  const listOutput = () => mcpListOutput(CLAUDE, folder);
-  const firstList = listOutput();
-  await requireTrackerTools({ listOutput: () => firstList, log: io.stdout });
+  const listOutput = () => mcpListOutput(CLAUDE, folder, signal);
+  const firstList = await listOutput();
+  // A list cut short by a stop reads as no servers, which would print a false warning.
+  signal.throwIfAborted();
+  await requireTrackerTools({ listOutput: () => Promise.resolve(firstList), log: io.stdout });
   const tools = createToolsCache({
-    first: await readTools(await firstList, folder),
+    first: await readTools(firstList, folder),
     read: async () => readTools(await listOutput(), folder),
   });
   const api = clientFor(config);
