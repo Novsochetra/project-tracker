@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterAll, describe, expect, it, vi } from 'vitest';
 import { attachFile, nameList } from '../../src/tools/attachFile';
-import { fakeClient, returns } from '../fakeClient';
+import { fakeClient, rejectWith, returns } from '../fakeClient';
 import { activity, attachment } from '../fixtures';
 import { run } from './run';
 
@@ -58,6 +58,48 @@ describe('attach_file', () => {
       run(attachFile, fakeClient({ uploadAttachment }), { ticket: 'MOB-3', paths }),
     ).rejects.toThrow("Can't attach /etc/hosts: only files in this folder or a temp folder");
     expect(uploadAttachment).not.toHaveBeenCalled();
+  });
+
+  it('names the files already attached when the tracker refuses one partway', async () => {
+    const refuseThird = vi
+      .fn(uploads())
+      .mockImplementationOnce(uploads())
+      .mockImplementationOnce(uploads())
+      .mockImplementationOnce(rejectWith(413, 'too_large', 'That file is too big.'));
+    writeFileSync(join(work, 'big.md'), 'big');
+    const paths = ['notes.md', 'data.csv', 'big.md'].map((name) => join(work, name));
+    await expect(
+      run(attachFile, fakeClient({ uploadAttachment: refuseThird }), { ticket: 'MOB-3', paths }),
+    ).rejects.toThrow(
+      'That file is too big. notes.md and data.csv were already attached to MOB-3.',
+    );
+  });
+
+  it('says no comment was added when a file for it is refused partway', async () => {
+    const refuseSecond = vi
+      .fn(uploads())
+      .mockImplementationOnce(uploads())
+      .mockImplementationOnce(rejectWith(413, 'too_large', 'That file is too big.'));
+    const addComment = vi.fn();
+    const paths = [join(work, 'notes.md'), join(work, 'data.csv')];
+    await expect(
+      run(attachFile, fakeClient({ uploadAttachment: refuseSecond, addComment }), {
+        ticket: 'MOB-3',
+        paths,
+        comment: 'The draft',
+      }),
+    ).rejects.toThrow(/^That file is too big\. No comment was added\.$/);
+    expect(addComment).not.toHaveBeenCalled();
+  });
+
+  it('keeps the tracker words alone when the first file is refused', async () => {
+    const uploadAttachment = vi.fn(rejectWith(413, 'too_large', 'That file is too big.'));
+    await expect(
+      run(attachFile, fakeClient({ uploadAttachment }), {
+        ticket: 'MOB-3',
+        paths: [join(work, 'notes.md')],
+      }),
+    ).rejects.toThrow(/^That file is too big\.$/);
   });
 
   it('needs one to twenty files', () => {

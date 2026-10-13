@@ -68,6 +68,53 @@ describe('allowedRealPath', () => {
     );
   });
 
+  it('refuses everything through a current folder that is the home folder or above it', async () => {
+    const file = join(home, 'notes.md');
+    writeFileSync(file, 'home');
+    const refusedIn = (folder: string) =>
+      `Can't attach ${file}: Claude Code runs in ${folder}, which holds your home folder, so only ` +
+      'files in a temp folder can be attached. Start it in a project folder instead.';
+    for (const folder of [home, root, '/']) {
+      await expect(allowedRealPath(file, [folder], home)).rejects.toThrow(refusedIn(folder));
+    }
+  });
+
+  it('still takes a temp file when the current folder holds the home folder', async () => {
+    const file = join(work, 'out', 'notes.md');
+    await expect(allowedRealPath(file, [root, work], home)).resolves.toBe(file);
+  });
+
+  it('refuses a file in a dot-folder under the current folder', async () => {
+    const dotFile = (folder: string) => {
+      mkdirSync(join(work, folder), { recursive: true });
+      writeFileSync(join(work, folder, 'config.json'), '{}');
+      return join(work, folder, 'config.json');
+    };
+    for (const folder of ['.ssh', '.aws', '.config/gh', 'out/.docker']) {
+      const file = dotFile(folder);
+      await expect(allowedRealPath(file, [work], home)).rejects.toThrow(
+        `Can't attach ${file}: it is in a folder whose name starts with a dot, where keys and ` +
+          'settings are kept.',
+      );
+    }
+  });
+
+  it('takes a file from a current folder that is itself inside a dot-folder', async () => {
+    const project = join(root, '.config', 'project');
+    mkdirSync(project, { recursive: true });
+    writeFileSync(join(project, 'notes.md'), 'mine');
+    await expect(allowedRealPath(join(project, 'notes.md'), [project], home)).resolves.toBe(
+      join(project, 'notes.md'),
+    );
+  });
+
+  it('takes a dot-file that is not in a dot-folder', async () => {
+    writeFileSync(join(work, '.notes.md'), 'hidden');
+    await expect(allowedRealPath(join(work, '.notes.md'), [work], home)).resolves.toBe(
+      join(work, '.notes.md'),
+    );
+  });
+
   it('allows the current folder and the temp folders', () => {
     expect(attachFolders()).toEqual([process.cwd(), tmpdir(), '/tmp']);
   });

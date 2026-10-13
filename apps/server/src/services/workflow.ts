@@ -123,6 +123,8 @@ export const submittedReport = (key: string, input: SubmitValues): string =>
     'STATUS: done',
     `SUMMARY: ${input.summary}`,
     `FILES: ${input.files.trim() || 'none'}`,
+    // Only when given, so a submission without attached results reads as before.
+    ...(input.output.trim() ? [`OUTPUT: ${input.output.trim()}`] : []),
     `NEXT: ${input.next.trim() || 'none'}`,
   ].join('\n');
 

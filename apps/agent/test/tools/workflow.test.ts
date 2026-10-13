@@ -70,6 +70,19 @@ describe('submit_for_review', () => {
     expect(reply.data).toBe(submitted);
   });
 
+  it('passes the attached results as output', async () => {
+    const submitForReviewApi = vi.fn(returns(detail()));
+    await run(submitForReview, fakeClient({ submitForReview: submitForReviewApi }), {
+      ticket: 'MOB-3',
+      summary: 'Wrote the draft.',
+      output: 'draft.md\nfigures.csv',
+    });
+    expect(submitForReviewApi).toHaveBeenCalledWith('MOB-3', {
+      summary: 'Wrote the draft.',
+      output: 'draft.md\nfigures.csv',
+    });
+  });
+
   it('requires a summary', () => {
     const result = submitForReview.input.safeParse({ ticket: 'MOB-3', summary: '' });
     expect(result.error?.issues[0]?.message).toBe('Write a summary of the work.');

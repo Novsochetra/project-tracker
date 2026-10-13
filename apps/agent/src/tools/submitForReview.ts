@@ -6,8 +6,8 @@ import { defineTool } from './tool';
 export const submitForReview = defineTool({
   name: 'submit_for_review',
   description:
-    'Submit your finished work on a ticket for review. Stores a report on the ticket (summary, files, next ' +
-    'steps) and moves it to Need review, where a reviewer picks it up. Call it only after you verified the ' +
+    'Submit your finished work on a ticket for review. Stores a report on the ticket (summary, files, output, ' +
+    'next steps) and moves it to Need review, where a reviewer picks it up. Call it only after you verified the ' +
     'work (tests, build). If you are blocked, use add_comment instead and leave the ticket In progress.',
   input: z.object({
     ticket: ticketKey,
@@ -22,6 +22,13 @@ export const submitForReview = defineTool({
       .max(REPORT_TEXT_MAX)
       .optional()
       .describe('Files you created or edited, one per line or comma separated.'),
+    output: z
+      .string()
+      .max(REPORT_TEXT_MAX)
+      .optional()
+      .describe(
+        "Results that aren't code that you attached with attach_file (a draft, a CSV, an image), one per line.",
+      ),
     next: z
       .string()
       .max(REPORT_TEXT_MAX)
@@ -29,8 +36,8 @@ export const submitForReview = defineTool({
       .describe('Anything the person still needs to do or decide, or "none".'),
   }),
   readOnly: false,
-  async handler(client, { ticket, summary, files, next }) {
-    const detail = await client.submitForReview(ticket, { summary, files, next });
+  async handler(client, { ticket, summary, files, output, next }) {
+    const detail = await client.submitForReview(ticket, { summary, files, output, next });
     return {
       text: `Submitted ${detail.ticket.key} for review. It is now in ${detail.status.name}.`,
       data: detail,
