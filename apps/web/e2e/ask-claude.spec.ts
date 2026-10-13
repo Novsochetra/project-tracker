@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 import type { TrackerClient } from '@tracker/client';
 import type { RunStepInput } from '@tracker/shared';
 import type { Page } from '@playwright/test';
+import { ASK_HINT, EDIT_HINT, PLAN_HINT } from '../src/features/ask/copy';
 import { expect, test, usesPhoneLayout } from './fixtures';
 import { readActionSheet, readMenuConfirm, seedProject, settledScreenshot, toast } from './helpers';
 
@@ -207,7 +208,7 @@ test('picks the model, effort and mode on one row above the box, and sends them'
   expect(group!.x + group!.width).toBeLessThanOrEqual(width);
   expect(group!.y + group!.height).toBeLessThanOrEqual(field!.y);
 
-  await expect(page.getByText(/Claude can change files and tickets/)).toBeVisible();
+  await expect(page.getByText(EDIT_HINT)).toBeVisible();
   await expect(page.getByRole('listbox')).toBeHidden();
   await expect(modes.getByRole('button', { name: 'Edit' })).toHaveAttribute('aria-pressed', 'true');
   await settledScreenshot(page, info.outputPath(`ask-options-${info.project.name}.png`));
@@ -218,6 +219,89 @@ test('picks the model, effort and mode on one row above the box, and sends them'
   await expect(modes.getByRole('button', { name: 'Edit' })).toHaveAttribute('aria-pressed', 'true');
   const job = await api.takeNextRun(helperId, 'ticket');
   expect(job?.run.askOptions).toEqual({ model: 'sonnet', mode: 'edit', effort: 'xhigh' });
+});
+
+// PT-202: Edit's hint took two lines on a phone, so switching modes moved the options row.
+test('keeps the options row still and each mode hint on one line when the mode changes', async ({
+  page,
+  api,
+}, info) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await seedProject(api, 'Mobile app', 'MOB');
+  await api.registerRunner(randomUUID(), { name: HELPER, projectKeys: ['MOB'] });
+  await page.goto('/p/MOB/ask/new');
+  const modes = page.getByRole('group', { name: 'Mode' });
+  const box = page.getByRole('textbox', { name: 'Question for Claude' });
+  const own = page.viewportSize()!;
+  const widths = (await usesPhoneLayout(page)) ? [320, own.width] : [own.width];
+  const hints = { Ask: ASK_HINT, Plan: PLAN_HINT, Edit: EDIT_HINT };
+  for (const width of widths) {
+    await page.setViewportSize({ width, height: own.height });
+    const places: unknown[] = [];
+    for (const mode of Object.keys(hints)) {
+      await modes.getByRole('button', { name: mode }).click();
+      places.push([await modes.boundingBox(), await box.boundingBox()]);
+    }
+    expect(places[1], `Plan at ${width}px`).toEqual(places[0]);
+    expect(places[2], `Edit at ${width}px`).toEqual(places[0]);
+    for (const [mode, hint] of Object.entries(hints)) {
+      await modes.getByRole('button', { name: mode }).click();
+      const line = page.getByText(hint);
+      await expect(line).toBeVisible();
+      expect(await line.evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(true);
+    }
+    await settledScreenshot(page, info.outputPath(`ask-mode-hint-${width}.png`));
+  }
+});
+
+// The label's own text box, since a label overflowing into its padding keeps scrollWidth unchanged.
+const labelEdges = (modes: ReturnType<Page['getByRole']>) =>
+  modes.getByRole('button').evaluateAll((buttons) =>
+    buttons.map((button) => {
+      const range = document.createRange();
+      range.selectNodeContents(button);
+      const text = range.getBoundingClientRect();
+      const own = button.getBoundingClientRect();
+      return {
+        left: text.left,
+        right: text.right,
+        inside: text.left >= own.left && text.right <= own.right,
+      };
+    }),
+  );
+
+const placeholderFits = (box: ReturnType<Page['getByRole']>) =>
+  box.evaluate((field: HTMLTextAreaElement) => {
+    const style = getComputedStyle(field);
+    const context = document.createElement('canvas').getContext('2d')!;
+    context.font = style.font;
+    const room = field.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
+    return context.measureText(field.placeholder).width <= room;
+  });
+
+// PT-204: at 320px the Mode labels ran together ("AskPlanEdit") with Edit's thumb past the
+// screen's edge, and the placeholder wrapped to a second line the box cut off.
+test('fits the options row and the placeholder on a 320px screen', async ({ page, api }, info) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await seedProject(api, 'Mobile app', 'MOB');
+  await api.registerRunner(randomUUID(), { name: HELPER, projectKeys: ['MOB'] });
+  await page.goto('/p/MOB/ask/new');
+  const modes = page.getByRole('group', { name: 'Mode' });
+  const box = page.getByRole('textbox', { name: 'Question for Claude' });
+  const own = page.viewportSize()!;
+  for (const width of [320, own.width]) {
+    await page.setViewportSize({ width, height: own.height });
+    await modes.getByRole('button', { name: 'Edit' }).click();
+    const labels = await labelEdges(modes);
+    for (const label of labels) expect(label.inside, `a label at ${width}px`).toBe(true);
+    for (let i = 1; i < labels.length; i++) {
+      expect(labels[i]!.left - labels[i - 1]!.right, `label gap at ${width}px`).toBeGreaterThan(8);
+    }
+    const group = (await modes.boundingBox())!;
+    expect(group.x + group.width, `Mode at ${width}px`).toBeLessThanOrEqual(width - 16);
+    expect(await placeholderFits(box), `placeholder at ${width}px`).toBe(true);
+    await settledScreenshot(page, info.outputPath(`ask-options-fit-${width}.png`));
+  }
 });
 
 test('shows what Claude does while it answers, then folds the steps above the answer', async ({

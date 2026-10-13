@@ -1,5 +1,4 @@
 import { modelTakesEffort, type AskOptions } from '@tracker/shared';
-import clsx from 'clsx';
 import { Gauge } from 'lucide-react';
 import { Segmented } from '../../components/Segmented';
 import styles from './AskOptionsRow.module.css';
@@ -13,7 +12,6 @@ export interface AskOptionsRowProps {
 }
 
 export function AskOptionsRow({ options, onChange }: AskOptionsRowProps) {
-  const hint = askOptionsHint(options);
   return (
     <>
       <div className={styles.row}>
@@ -42,7 +40,7 @@ export function AskOptionsRow({ options, onChange }: AskOptionsRowProps) {
           />
         </div>
       </div>
-      {hint && <p className={clsx(styles.hint, 'fade-in')}>{hint}</p>}
+      <p className={styles.hint}>{askOptionsHint(options)}</p>
     </>
   );
 }

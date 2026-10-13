@@ -45,10 +45,14 @@
   color: var(--subtle);
 }
 
+/* One line whatever the width, so a mode with a longer hint never moves the options row (PT-202). */
 .hint {
   margin: 0;
+  overflow: hidden;
   color: var(--muted);
   font-size: var(--size-secondary);
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 @media (width < 768px),
@@ -62,5 +66,17 @@
   .chip {
     height: 38px;
     font-size: var(--size-body);
+  }
+}
+
+/* The two chips and three segments need about 345px, so a narrower screen gives the Mode switch a
+   line of its own. Keyed to the width, not the chips, so picking Haiku never moves it (PT-204). */
+@media (width < 360px) {
+  .row {
+    flex-wrap: wrap;
+  }
+
+  .mode {
+    flex-basis: 100%;
   }
 }

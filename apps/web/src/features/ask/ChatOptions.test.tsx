@@ -4,7 +4,7 @@ import type { ChatDetail } from '@tracker/shared';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { makeChat, makeChatDetail, makeMessage } from '../../api/test/chatFixtures';
 import { makeRunner } from '../../api/test/runFixtures';
-import { EDIT_HINT } from './copy';
+import { ASK_HINT, EDIT_HINT } from './copy';
 import { renderAsk } from './test/renderAsk';
 
 const dara = makeRunner();
@@ -38,12 +38,13 @@ async function sendQuestion(text: string) {
 }
 
 describe('Ask: the model, effort and mode pickers', () => {
-  it('start a new chat on Default and Ask, with no hint', async () => {
+  it('start a new chat on Default and Ask, with its hint', async () => {
     setup(null);
     expect(await modelChip()).toHaveTextContent('Default');
     expect(effortChip()).toHaveTextContent('Default');
     expect(screen.getByRole('group', { name: 'Mode' })).toBeInTheDocument();
     expect(mode('Ask')).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByText(ASK_HINT)).toBeVisible();
     expect(screen.queryByText(EDIT_HINT)).not.toBeInTheDocument();
   });
 

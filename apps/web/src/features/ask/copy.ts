@@ -2,12 +2,13 @@ export const ASK_INTRO =
   'Ask Claude Code on your computer about this project: how something works, where something is, or to shape a ticket.';
 export const ASK_TICKET_INTRO =
   'Ask Claude Code on your computer about this ticket. Claude sees its description, notes, last report and review.';
-export const ASK_PLACEHOLDER = 'Ask Claude about this project…';
+export const ASK_PLACEHOLDER = 'Ask about this project…';
 export const MODEL_LABEL = 'Model';
 export const MODE_LABEL = 'Mode';
 export const EFFORT_LABEL = 'Effort';
-export const EDIT_HINT =
-  'Claude can change files and tickets. It waits for any ticket run on this computer.';
+export const ASK_HINT = 'Reads and answers. Changes nothing.';
+export const PLAN_HINT = 'Reads and plans. Changes nothing.';
+export const EDIT_HINT = 'Edits files and tickets. Waits if Claude is busy.';
 export const SEND_LABEL = 'Send';
 export const STOP_LABEL = 'Stop';
 export const WORKING_LABEL = 'Claude, working';
