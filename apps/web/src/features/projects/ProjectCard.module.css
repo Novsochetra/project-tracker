@@ -1,0 +1,164 @@
+.card {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin: 0;
+  padding: var(--space-4);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-group);
+  background: var(--surface);
+  color: var(--ink);
+  font: var(--text-body);
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color var(--duration-fast) ease-out,
+    box-shadow var(--duration-fast) ease-out,
+    background-color var(--duration-fast) ease-out;
+}
+
+@media (hover: hover) {
+  .card:hover {
+    border-color: var(--control-line);
+    box-shadow: var(--shadow-raised);
+  }
+}
+
+/* Held while the project's screen loads, so a click on a slow network doesn't look missed. */
+.card:active,
+.card[data-opening] {
+  background: var(--fill);
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.square {
+  flex: none;
+  width: 10px;
+  height: 10px;
+  border-radius: var(--radius-square);
+}
+
+.name {
+  min-width: 0;
+  overflow: hidden;
+  font: var(--text-headline);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.key {
+  flex: none;
+  color: var(--subtle);
+  font: var(--text-mono);
+}
+
+.updated {
+  flex: none;
+  margin-left: auto;
+  padding-left: var(--space-2);
+  color: var(--muted);
+  font-size: var(--size-caption);
+  white-space: nowrap;
+}
+
+/* Two lines tall even when shorter, so the bars of a row of cards line up. */
+.description {
+  display: -webkit-box;
+  min-height: calc(2 * 1.5em);
+  overflow: hidden;
+  color: var(--muted);
+  font: var(--text-secondary);
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+.progress {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: auto;
+}
+
+.track {
+  flex: 1;
+  height: 6px;
+  overflow: hidden;
+  border-radius: var(--radius-full);
+  background: var(--fill-2);
+}
+
+.fills {
+  display: flex;
+  height: 100%;
+  transform-origin: left center;
+  animation: grow var(--duration-grow) var(--ease-out) backwards;
+}
+
+.doneFill,
+.readyFill {
+  display: block;
+  height: 100%;
+}
+
+.doneFill {
+  background: var(--accent);
+}
+
+.readyFill {
+  background: var(--reviewed);
+}
+
+.percent {
+  min-width: 36px;
+  font-size: var(--size-caption);
+  font-weight: var(--weight-medium);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.parts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-3);
+  color: var(--muted);
+  font-size: var(--size-caption);
+  font-variant-numeric: tabular-nums;
+}
+
+.part {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-full);
+}
+
+.doneDot {
+  background: var(--accent);
+}
+
+.readyDot {
+  background: var(--reviewed);
+}
+
+@keyframes grow {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}

@@ -26,6 +26,7 @@ export const projectSummary = (overrides: Partial<ProjectSummary> = {}): Project
   totalCount: 7,
   openCount: 3,
   doneCount: 4,
+  reviewedCount: 0,
   lastActivityAt: T0,
   ...overrides,
 });
@@ -96,6 +97,7 @@ export const detail = (overrides: Partial<TicketDetail> = {}): TicketDetail => {
     totalCount: _t,
     openCount: _o,
     doneCount: _d,
+    reviewedCount: _r,
     lastActivityAt: _l,
     ...project
   } = projectSummary();

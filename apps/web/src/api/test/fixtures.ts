@@ -48,6 +48,7 @@ export const summaryOf = (value: Project): ProjectSummary => ({
   totalCount: 4,
   openCount: 3,
   doneCount: 1,
+  reviewedCount: 0,
   lastActivityAt: 1,
 });
 

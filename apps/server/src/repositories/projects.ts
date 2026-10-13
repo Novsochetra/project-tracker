@@ -59,6 +59,7 @@ export interface ProjectTicketStats {
   projectId: string;
   total: number;
   done: number;
+  reviewed: number;
   lastUpdatedAt: number;
 }
 
@@ -77,6 +78,16 @@ export async function ticketStatsByProject(
       eb.fn
         .sum(eb.case().when('statuses.category', '=', 'done').then(eb.lit(1)).else(eb.lit(0)).end())
         .as('done'),
+      eb.fn
+        .sum(
+          eb
+            .case()
+            .when('statuses.category', '=', 'reviewed')
+            .then(eb.lit(1))
+            .else(eb.lit(0))
+            .end(),
+        )
+        .as('reviewed'),
       eb.fn.max('tickets.updatedAt').as('lastUpdatedAt'),
     ])
     .groupBy('tickets.projectId')
@@ -85,6 +96,7 @@ export async function ticketStatsByProject(
     projectId: row.projectId,
     total: Number(row.total),
     done: Number(row.done),
+    reviewed: Number(row.reviewed),
     lastUpdatedAt: Number(row.lastUpdatedAt),
   }));
 }

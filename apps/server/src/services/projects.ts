@@ -41,6 +41,7 @@ function summarize(project: ProjectRow, stats: ProjectTicketStats | undefined): 
     totalCount: total,
     openCount: total - done,
     doneCount: done,
+    reviewedCount: stats?.reviewed ?? 0,
     lastActivityAt: Math.max(project.updatedAt, stats?.lastUpdatedAt ?? 0),
   };
 }

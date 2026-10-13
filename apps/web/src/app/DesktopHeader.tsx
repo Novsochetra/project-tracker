@@ -5,6 +5,7 @@ import { queryKeys } from '../api';
 import { Button } from '../components';
 import { ChatOptionsMenu } from '../features/ask/ChatOptionsMenu';
 import { ProjectOptionsButton } from '../features/projects/ProjectOptionsButton';
+import { ProjectsHeaderActions } from '../features/projects/ProjectsHeaderActions';
 import { useProjectSummary } from '../features/projects/useProjectSummary';
 import { useNavigation, type Route } from '../navigation';
 import { Breadcrumb } from './Breadcrumb';
@@ -27,11 +28,7 @@ function HeaderActions({ route, projectKey }: { route: Route; projectKey: string
   const { push } = useNavigation();
   switch (route.name) {
     case 'projects':
-      return (
-        <Button variant="primary" icon={Plus} onClick={() => sheets.open({ type: 'newProject' })}>
-          New project
-        </Button>
-      );
+      return <ProjectsHeaderActions />;
     case 'project':
       return (
         <div className={styles.actions}>

@@ -39,6 +39,15 @@ export function readyItems(
   });
 }
 
+// A project's tickets can sit in more than one reviewed status; the newest one's color wins.
+export function readyColors(items: readonly ReadyItem[]): ReadonlyMap<string, string> {
+  const colors = new Map<string, string>();
+  for (const { project, statusColor } of items) {
+    if (statusColor && !colors.has(project.id)) colors.set(project.id, statusColor);
+  }
+  return colors;
+}
+
 export function readyCounts(items: readonly ReadyItem[]): ReadonlyMap<string, number> {
   const counts = new Map<string, number>();
   for (const { project } of items) counts.set(project.id, (counts.get(project.id) ?? 0) + 1);

@@ -28,6 +28,25 @@ describe('DesktopHeader', () => {
     expect(sheets.open).toHaveBeenCalledWith({ type: 'newProject' });
   });
 
+  it('makes New ticket, with its C shortcut, the primary action on Projects', async () => {
+    const user = userEvent.setup();
+    const { sheets } = renderWithApp(<DesktopHeader />, { projects });
+    const button = await screen.findByRole('button', { name: 'New ticket' });
+    expect(button).toHaveAttribute('aria-keyshortcuts', 'C');
+    expect(screen.getAllByRole('button').map((each) => each.textContent)).toEqual([
+      'New project',
+      'New ticketC',
+    ]);
+    await user.click(button);
+    expect(sheets.open).toHaveBeenCalledWith({ type: 'capture' });
+  });
+
+  it('offers no New ticket on Projects before there is a project', () => {
+    renderWithApp(<DesktopHeader />, { projects: [] });
+    expect(screen.getByRole('button', { name: 'New project' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'New ticket' })).not.toBeInTheDocument();
+  });
+
   it('offers New ticket and the project options on a project', async () => {
     const user = userEvent.setup();
     const { sheets } = renderWithApp(<DesktopHeader />, { path: '/p/mob', projects });
@@ -90,7 +109,7 @@ describe('Sidebar', () => {
       projects: [...projects, projectSummary({ ...otherProject, openCount: 0 })],
       client: { listAllTickets },
     });
-    const mobile = await screen.findByRole('button', { name: 'Mobile app 2 ready 3 open' });
+    const mobile = await screen.findByRole('button', { name: 'Mobile app 2 ready 1 open' });
     expect(within(mobile).getByText('2 ready')).toBeVisible();
     expect(screen.getByRole('button', { name: 'Website 0 open' })).not.toHaveTextContent('ready');
     expect(listAllTickets).toHaveBeenCalledWith({ category: 'reviewed' });

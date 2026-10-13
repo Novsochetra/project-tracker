@@ -87,8 +87,9 @@ describe.each(DIALECTS)('projects (%s)', (dialect) => {
     const first = await client.createProject({ name: 'First' });
     const second = await client.createProject({ name: 'Second' });
     const done = statusOf(first, 'done');
+    const reviewed = statusOf(first, 'reviewed');
     await client.createTicket('FIR', { title: 'One' });
-    await client.createTicket('FIR', { title: 'Two' });
+    await client.createTicket('FIR', { title: 'Two', statusId: reviewed.id });
     const last = await client.createTicket('FIR', { title: 'Three', statusId: done.id });
 
     const res = await api.get<ProjectSummary[]>('/api/projects');
@@ -98,12 +99,14 @@ describe.each(DIALECTS)('projects (%s)', (dialect) => {
       totalCount: 3,
       openCount: 2,
       doneCount: 1,
+      reviewedCount: 1,
       lastActivityAt: last.updatedAt,
     });
     expect(res.body[1]).toMatchObject({
       totalCount: 0,
       openCount: 0,
       doneCount: 0,
+      reviewedCount: 0,
       lastActivityAt: second.project.updatedAt,
     });
   });

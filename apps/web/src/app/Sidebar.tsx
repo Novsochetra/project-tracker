@@ -1,4 +1,4 @@
-import type { ProjectSummary } from '@tracker/shared';
+import { openNotReviewed, type ProjectSummary } from '@tracker/shared';
 import clsx from 'clsx';
 import { LayoutGrid, Plus } from 'lucide-react';
 import type { ReactNode } from 'react';
@@ -63,7 +63,8 @@ function ProjectItems({ projects, ready }: ProjectItemsProps) {
         </>
       )}
       <span className={styles.count}>
-        {project.openCount} <span className="visually-hidden">open</span>
+        {openNotReviewed(project.openCount, ready.get(project.id) ?? 0)}{' '}
+        <span className="visually-hidden">open</span>
       </span>
     </SidebarItem>
   ));

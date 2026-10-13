@@ -7,7 +7,7 @@ import { useWaitingCount } from './queueStore';
 
 export function CaptureButton({ onClick }: { onClick: () => void }) {
   return (
-    <Button icon={Plus} aria-keyshortcuts="C" onClick={onClick}>
+    <Button variant="primary" icon={Plus} aria-keyshortcuts="C" onClick={onClick}>
       New ticket
       <kbd className={styles.key} aria-hidden="true">
         C

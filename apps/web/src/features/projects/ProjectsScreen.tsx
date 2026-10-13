@@ -5,11 +5,10 @@ import { useSheets } from '../../app/sheets/context';
 import { Button, EmptyState, Icon } from '../../components';
 import { PullToRefresh } from '../../gestures';
 import { ErrorBoundary } from '../../lib/ErrorBoundary';
-import { useIsPhone } from '../../lib/media';
 import { LargeTitle, NavBar, NavBarButton, useScreen } from '../../navigation';
 import { AccountButton } from '../account';
-import { CaptureBar, CaptureButton, canCapture, WaitingToSync } from '../capture';
-import { readyCounts, readyItems, ReadySection } from '../ready';
+import { CaptureBar, canCapture, WaitingToSync } from '../capture';
+import { readyItems, ReadySection, type ReadyItem } from '../ready';
 import { ProjectList } from './ProjectList';
 import styles from './ProjectsScreen.module.css';
 
@@ -17,7 +16,6 @@ export function ProjectsScreen() {
   const projects = useProjects();
   const ready = useReadyForYou();
   const sheets = useSheets();
-  const isPhone = useIsPhone();
   const { scrollRef } = useScreen();
   const openNew = () => sheets.open({ type: 'newProject' });
   const openCapture = () => sheets.open({ type: 'capture' });
@@ -39,10 +37,7 @@ export function ProjectsScreen() {
       >
         <div className={styles.page}>
           <div className={styles.content}>
-            <div className={styles.titleRow}>
-              <LargeTitle aside={projects.data?.length}>Projects</LargeTitle>
-              {capture && !isPhone && <CaptureButton onClick={openCapture} />}
-            </div>
+            <LargeTitle aside={projects.data?.length}>Projects</LargeTitle>
             <WaitingToSync />
             {/* A ready list it can't read only leaves out the Ready card and the counts; they are
                 tried again once the list changes. Projects that fail fail the fallback too, and
@@ -50,9 +45,9 @@ export function ProjectsScreen() {
             <ErrorBoundary
               name="Projects ready list"
               retryKey={ready.data}
-              fallback={<ProjectsBody query={projects} readyCounts={NO_COUNTS} onNew={openNew} />}
+              fallback={<ProjectsBody query={projects} ready={NOTHING_READY} onNew={openNew} />}
             >
-              <ReadyAndProjects query={projects} ready={ready.data} onNew={openNew} />
+              <ProjectsAndReady query={projects} ready={ready.data} onNew={openNew} />
             </ErrorBoundary>
           </div>
         </div>
@@ -62,34 +57,34 @@ export function ProjectsScreen() {
   );
 }
 
-const NO_COUNTS: ReadonlyMap<string, number> = new Map();
+const NOTHING_READY: readonly ReadyItem[] = [];
 
-interface ReadyAndProjectsProps {
+interface ProjectsAndReadyProps {
   query: TrackerQuery<ProjectSummary[]>;
   ready: TicketsAcrossProjects | undefined;
   onNew: () => void;
 }
 
-function ReadyAndProjects({ query, ready, onNew }: ReadyAndProjectsProps) {
+function ProjectsAndReady({ query, ready, onNew }: ProjectsAndReadyProps) {
   const items = readyItems(ready, query.data ?? []);
   return (
     <>
+      <ProjectsBody query={query} ready={items} onNew={onNew} />
       <ReadySection items={items} />
-      <ProjectsBody query={query} readyCounts={readyCounts(items)} onNew={onNew} />
     </>
   );
 }
 
 interface ProjectsBodyProps {
   query: TrackerQuery<ProjectSummary[]>;
-  readyCounts: ReadonlyMap<string, number>;
+  ready: readonly ReadyItem[];
   onNew: () => void;
 }
 
-function ProjectsBody({ query, readyCounts, onNew }: ProjectsBodyProps) {
+function ProjectsBody({ query, ready, onNew }: ProjectsBodyProps) {
   if (query.data) {
     return query.data.length > 0 ? (
-      <ProjectList projects={query.data} readyCounts={readyCounts} />
+      <ProjectList projects={query.data} ready={ready} />
     ) : (
       <EmptyState
         bordered

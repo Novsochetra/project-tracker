@@ -60,7 +60,8 @@ describe('regression: reviewed work shows on Projects', () => {
     const section = await screen.findByRole('region', { name: 'Ready for you' });
     expect(within(section).getAllByRole('button', { name: /^MOB-\d\b/ })).toHaveLength(2);
     expect(within(section).getAllByRole('img', { name: 'Rated 4 out of 5' })).toHaveLength(2);
-    expect(projectRow('Mobile app')).toHaveTextContent('4 open 2 ready');
+    expect(projectRow('Mobile app')).toHaveTextContent('2 ready');
+    expect(projectRow('Mobile app')).toHaveTextContent('2 open');
     expect(projectRow('Website')).not.toHaveTextContent('ready');
   });
 

@@ -11,6 +11,7 @@ const summaryOf = (project: Project): ProjectSummary => ({
   totalCount: 0,
   openCount: 0,
   doneCount: 0,
+  reviewedCount: 0,
   lastActivityAt: project.createdAt,
 });
 
