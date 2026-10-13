@@ -241,6 +241,7 @@ const DATA_MODEL: SchemaShape = {
       'created_at bigint not null',
       'updated_at bigint not null',
       'owner_id text',
+      "instructions text not null default ''",
     ],
     indexes: ['index (owner_id)', 'unique (key)'],
     foreignKeys: [],

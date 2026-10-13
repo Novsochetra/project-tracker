@@ -7,12 +7,17 @@ export const PROJECT_COLORS = [
   '#0091FF',
 ] as const;
 
+// A plain number as well as in the API's schemas, so the web app reads it without loading zod.
+export const PROJECT_INSTRUCTIONS_MAX = 20_000;
+
 export interface Project {
   id: string;
   name: string;
   key: string;
   description: string;
   repo: string;
+  // Optional: trackers from before PT-200 don't send it, and agents can be newer than their tracker.
+  instructions?: string;
   color: string;
   nextNum: number;
   createdAt: number;

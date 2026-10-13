@@ -34,12 +34,14 @@ Revoke a token in **Connect Claude Code** → **API tokens** → **Revoke**. The
 
 ## Slash commands
 
-| Command                     | What the agent does                                                                                                                                                                                     |
-| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `/mcp__tracker__work MOB`   | Claims the next To do ticket, reads it fully, does the work in the current repository, comments on decisions and blockers, verifies (tests, build) and submits it for review with summary, files, next. |
-| `/mcp__tracker__review MOB` | Lists tickets in Need review, checks the real changes against the ticket, rates them 1–5 and approves or requests changes with actionable feedback.                                                     |
+| Command                     | What the agent does                                                                                                                                                                                                                                                         |
+| --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/mcp__tracker__work MOB`   | Claims the next To do ticket, reads it fully, does the work in the current repository, comments on decisions and blockers, verifies (tests and build for code, else against the ticket and the project's instructions) and submits it for review with summary, files, next. |
+| `/mcp__tracker__review MOB` | Lists tickets in Need review, checks the real changes against the ticket (and the project's instructions), rates them 1–5 and approves or requests changes with actionable feedback.                                                                                        |
 
 The project key is optional: without it the agent finds the project with `list_projects` (by the repository) or asks you.
+
+`get_ticket`, `claim_ticket`, `claim_next_ticket` and `tracker show` print the project's instructions (set in the project's Edit sheet on the phone) under the ticket's header, when it has any.
 
 Tools: `list_projects`, `list_statuses`, `list_tickets`, `get_ticket` (with up to 4 images), `create_ticket`, `update_ticket`, `move_ticket` (by status name), `add_comment`, `attach_file`, `claim_next_ticket`, `claim_ticket`, `submit_for_review`, `review_ticket`, `ask_person` (asks the person a question on a ticket and waits up to 30 minutes for the answer from their phone; with no answer it tells Claude to go on with its best judgment).
 

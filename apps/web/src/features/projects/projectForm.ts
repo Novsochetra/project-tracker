@@ -13,6 +13,7 @@ export interface ProjectFormValues {
   description: string;
   repo: string;
   prefix: string;
+  instructions: string;
 }
 
 export const EMPTY_PROJECT_FORM: ProjectFormValues = {
@@ -20,22 +21,32 @@ export const EMPTY_PROJECT_FORM: ProjectFormValues = {
   description: '',
   repo: '',
   prefix: '',
+  instructions: '',
 };
 
 export const NAME_REQUIRED = 'Add a name to create the project.';
 
 const REPO_HINT = 'The repository is added to every Claude Code prompt.';
 
-export const formValuesOf = (project: Pick<Project, 'name' | 'description' | 'repo'>) => ({
+export const formValuesOf = (
+  project: Pick<Project, 'name' | 'description' | 'repo' | 'instructions'>,
+) => ({
   ...EMPTY_PROJECT_FORM,
   name: project.name,
   description: project.description,
   repo: project.repo,
+  instructions: project.instructions ?? '',
 });
 
 export const hasName = (values: ProjectFormValues): boolean => values.name.trim() !== '';
 
-const FORM_FIELDS: readonly (keyof ProjectFormValues)[] = ['name', 'description', 'repo', 'prefix'];
+const FORM_FIELDS: readonly (keyof ProjectFormValues)[] = [
+  'name',
+  'description',
+  'repo',
+  'prefix',
+  'instructions',
+];
 
 // Trimmed like Create and Save send them, so a stray space doesn't make the sheet ask.
 export const projectFormChanged = (
@@ -60,13 +71,18 @@ export const createProjectInput = (values: ProjectFormValues): CreateProjectInpu
   key: resolvePrefix(values.prefix, values.name),
   description: values.description.trim(),
   repo: values.repo.trim(),
+  instructions: values.instructions.trim(),
 });
 
 export const updateProjectInput = (values: ProjectFormValues): UpdateProjectInput => ({
   name: values.name.trim(),
   description: values.description.trim(),
   repo: values.repo.trim(),
+  instructions: values.instructions.trim(),
 });
+
+export const INSTRUCTIONS_HINT =
+  'Claude gets these with every ticket and question in this project.';
 
 export const createdToast = (name: string): string => `“${name}” created`;
 

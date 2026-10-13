@@ -77,6 +77,7 @@ export async function createProject(
       key: uniquePrefix(resolvePrefix(input.key ?? '', input.name), taken),
       description: input.description ?? '',
       repo: input.repo ?? '',
+      instructions: input.instructions ?? '',
       color: PROJECT_COLORS[existing.length % PROJECT_COLORS.length] ?? PROJECT_COLORS[0],
       nextNum: 1,
       createdAt: at,

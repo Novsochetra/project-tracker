@@ -18,6 +18,7 @@ export interface ProjectRow {
   key: string;
   description: string;
   repo: string;
+  instructions: string;
   color: string;
   nextNum: number;
   createdAt: number;

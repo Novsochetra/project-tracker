@@ -1,4 +1,9 @@
-import { attachmentKind, PRIORITY_LABELS, type TicketDetail } from '@tracker/shared';
+import {
+  attachmentKind,
+  instructionsBlock,
+  PRIORITY_LABELS,
+  type TicketDetail,
+} from '@tracker/shared';
 import { formatActivity } from './activity';
 import {
   formatAttachments,
@@ -35,8 +40,9 @@ export function formatTicket(detail: TicketDetail, view: FileView = NO_FILE_CONT
   const files = detail.attachments.filter((file) => file.activityId === null);
   const sections = [
     [`# ${ticket.key}: ${ticket.title || 'Untitled'}`, fieldsLine(detail), projectLine(detail)],
+    instructionsBlock(detail.project, '##'),
     ['## Description', ticket.description.trim() || '(No description.)'],
-  ];
+  ].filter((lines) => lines.length > 0);
   if (files.length > 0) sections.push(['## Attachments', ...formatAttachments(files, view)]);
   sections.push(['## Activity (oldest first)', formatActivity(detail.activity, view)]);
   const text = sections.map((lines) => lines.join('\n')).join('\n\n');

@@ -73,6 +73,7 @@ describe('inputs', () => {
     description: ' iOS and Android\n',
     repo: ' ~/code/mobile ',
     prefix: 'mob',
+    instructions: '\n Run the tests first. \n',
   });
 
   it('trims the fields and sends the resolved prefix on create', () => {
@@ -81,6 +82,7 @@ describe('inputs', () => {
       key: 'MOB',
       description: 'iOS and Android',
       repo: '~/code/mobile',
+      instructions: 'Run the tests first.',
     });
     expect(createProjectInput(form({ name: 'Mobile app' })).key).toBe('MA');
   });
@@ -90,6 +92,7 @@ describe('inputs', () => {
       name: 'Mobile app',
       description: 'iOS and Android',
       repo: '~/code/mobile',
+      instructions: 'Run the tests first.',
     });
   });
 
@@ -99,7 +102,10 @@ describe('inputs', () => {
       description: 'Docs',
       repo: '~/web',
       prefix: '',
+      instructions: '',
     });
+    const instructed = { name: 'Blog', description: '', repo: '', instructions: 'Plain voice.' };
+    expect(formValuesOf(instructed).instructions).toBe('Plain voice.');
   });
 });
 
@@ -113,6 +119,8 @@ describe('projectFormChanged', () => {
     expect(changed({ description: 'Seeds and beds' })).toBe(true);
     expect(changed({ repo: '~/code/garden' })).toBe(true);
     expect(changed({ prefix: 'gp' })).toBe(true);
+    expect(changed({ instructions: ' \n ' })).toBe(false);
+    expect(changed({ instructions: 'Plain voice.' })).toBe(true);
   });
 
   it('compares an edit with the project it loaded', () => {
@@ -125,6 +133,21 @@ describe('projectFormChanged', () => {
     expect(changed({ name: 'website' })).toBe(true);
     expect(changed({ description: '' })).toBe(true);
     expect(changed({ repo: '~/code/site' })).toBe(true);
+    expect(changed({ instructions: 'Cite two sources.' })).toBe(true);
+  });
+
+  it('counts a changed or cleared instruction on a project that has some', () => {
+    const loaded = formValuesOf({
+      name: 'Blog',
+      description: '',
+      repo: '',
+      instructions: 'Plain.',
+    });
+    const changed = (instructions: string) =>
+      projectFormChanged({ ...loaded, instructions }, loaded);
+    expect(changed('Plain.\n')).toBe(false);
+    expect(changed('Plain. Cite two sources.')).toBe(true);
+    expect(changed('')).toBe(true);
   });
 });
 

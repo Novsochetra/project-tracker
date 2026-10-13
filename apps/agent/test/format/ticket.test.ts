@@ -126,6 +126,32 @@ describe('formatTicket', () => {
   });
 });
 
+describe('formatTicket with project instructions', () => {
+  const withInstructions = (instructions: string | undefined) =>
+    formatTicket(detail({ project: { ...detail().project, instructions } }));
+
+  it('shows them after the project line, before the description', () => {
+    expect(withInstructions('  Write in a plain voice.\nCite two sources.\n')).toContain(
+      [
+        'Project: Mobile app (MOB)',
+        '',
+        '## Project instructions',
+        'Write in a plain voice.',
+        'Cite two sources.',
+        '',
+        '## Description',
+      ].join('\n'),
+    );
+  });
+
+  it('leaves them out when empty, blank or from a tracker without them', () => {
+    const today = withInstructions(undefined);
+    expect(today).not.toContain('Project instructions');
+    expect(withInstructions('')).toBe(today);
+    expect(withInstructions(' \n ')).toBe(today);
+  });
+});
+
 describe('formatActivity', () => {
   it('shows an approved review with its stars', () => {
     const review = activity({
