@@ -1,11 +1,16 @@
+import type { ProjectTemplateName } from '@tracker/shared';
 import { useState } from 'react';
 import { EMPTY_PROJECT_FORM, projectFormChanged, type ProjectFormValues } from './projectForm';
+import { withTemplate } from './projectTemplate';
+
+export type ProjectTextField = Exclude<keyof ProjectFormValues, 'template'>;
 
 export interface ProjectForm {
   values: ProjectFormValues;
   changed: boolean;
   error: string | null;
-  setField: (field: keyof ProjectFormValues, value: string) => void;
+  setField: (field: ProjectTextField, value: string) => void;
+  pickTemplate: (template: ProjectTemplateName) => void;
   setError: (error: string | null) => void;
 }
 
@@ -19,10 +24,14 @@ export function useProjectForm(initial: ProjectFormValues | undefined): ProjectF
     setStart(initial);
     setValues(initial);
   }
-  const setField = (field: keyof ProjectFormValues, value: string) => {
+  const setField = (field: ProjectTextField, value: string) => {
     setValues((current) => ({ ...current, [field]: value }));
     setError(null);
   };
+  const pickTemplate = (template: ProjectTemplateName) => {
+    setValues((current) => withTemplate(current, template));
+    setError(null);
+  };
   const changed = projectFormChanged(values, start ?? EMPTY_PROJECT_FORM);
-  return { values, changed, error, setField, setError };
+  return { values, changed, error, setField, pickTemplate, setError };
 }

@@ -12,6 +12,7 @@ export * from './domain/passwordReset';
 export * from './domain/priority';
 export * from './domain/push';
 export * from './domain/project';
+export * from './domain/projectTemplates';
 export * from './domain/run';
 export * from './domain/runRequest';
 export * from './domain/runStep';

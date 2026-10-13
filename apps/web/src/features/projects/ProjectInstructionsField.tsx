@@ -1,3 +1,4 @@
+import { PROJECT_INSTRUCTIONS_MAX } from '@tracker/shared';
 import clsx from 'clsx';
 import { PenLine } from 'lucide-react';
 import { useId } from 'react';
@@ -21,6 +22,7 @@ export function ProjectInstructionsField({ form: { values, setField } }: { form:
             className={styles.instructionsInput}
             placeholder="How to work on this project: the voice, the sources, what to check."
             rows={3}
+            maxLength={PROJECT_INSTRUCTIONS_MAX}
             value={values.instructions}
             onChange={(event) => setField('instructions', event.currentTarget.value)}
           />

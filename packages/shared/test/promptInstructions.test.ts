@@ -119,4 +119,11 @@ describe('project instructions in the API schemas', () => {
     expect(createProjectInput.safeParse({ name: 'Blog', instructions: text }).success).toBe(false);
     expect(updateProjectInput.safeParse({ instructions: text }).success).toBe(false);
   });
+
+  it('says the limit from the constant', () => {
+    const text = 'x'.repeat(PROJECT_INSTRUCTIONS_MAX + 1);
+    expect(updateProjectInput.safeParse({ instructions: text }).error?.issues[0]?.message).toBe(
+      'Instructions can be up to 20,000 characters.',
+    );
+  });
 });
