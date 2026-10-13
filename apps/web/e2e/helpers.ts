@@ -39,6 +39,20 @@ export const ticketRow = (page: Page, key: string) =>
 
 export const toast = (page: Page, text: string) => page.getByText(text, { exact: true });
 
+// Playwright can't drive a touch drag in WebKit, so the swipe is synthetic touch pointer events.
+export async function swipeLeft(row: Locator): Promise<void> {
+  const box = await row.boundingBox();
+  if (!box) throw new Error('The row is not on screen.');
+  const start = box.x + box.width - 24;
+  const base = { pointerId: 7, pointerType: 'touch', isPrimary: true, button: 0 };
+  const at = (x: number) => ({ ...base, clientX: x, clientY: box.y + box.height / 2 });
+  await row.dispatchEvent('pointerdown', at(start));
+  for (let step = 1; step <= 12; step += 1) {
+    await row.dispatchEvent('pointermove', at(start - step * 10));
+  }
+  await row.dispatchEvent('pointerup', at(start - 120));
+}
+
 export async function openNewTicketIn(page: Page, statusName: string): Promise<void> {
   await page.getByRole('button', { name: `New ticket in ${statusName}` }).click();
   await expect(page.getByRole('dialog', { name: 'New ticket' })).toBeVisible();

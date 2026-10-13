@@ -9,9 +9,50 @@
   max-width: 720px;
 }
 
+.item {
+  display: flex;
+  align-items: center;
+  background: var(--surface);
+  transition: background-color var(--duration-fast) ease-out;
+}
+
+@media (hover: hover) {
+  .item:hover,
+  .item:hover .row {
+    background: var(--fill);
+  }
+}
+
+.swipe {
+  flex: 1;
+  min-width: 0;
+}
+
 .row {
+  flex: 1;
+  min-width: 0;
   gap: var(--space-3);
   min-height: 56px;
+}
+
+/* Shown on hover, while the row has focus and while its menu is open, so the keyboard reaches it. */
+.options {
+  flex: none;
+  margin-right: var(--space-2);
+  opacity: 0;
+  transition: opacity var(--duration-handle) ease-out;
+}
+
+.item:hover .options,
+.item:focus-within .options,
+.options:has([aria-expanded='true']) {
+  opacity: 1;
+}
+
+@media (hover: none) {
+  .options {
+    opacity: 1;
+  }
 }
 
 .chatTitle {
