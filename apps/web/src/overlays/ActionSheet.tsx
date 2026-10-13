@@ -1,8 +1,9 @@
 import clsx from 'clsx';
-import { motion } from 'motion/react';
+import { m } from 'motion/react';
 import { useRef, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { useTapShield } from '../lib/clickShield';
+import { MotionScope } from '../lib/MotionScope';
 import styles from './ActionSheet.module.css';
 import { actionSheetContent } from './actionSheetContent';
 import { useActionSheetMotion } from './useActionSheetMotion';
@@ -44,7 +45,7 @@ function ActionSheetPanel(props: ActionSheetProps & { onExited: () => void }) {
 
   return (
     <div className={styles.overlay} inert={!open} data-action-sheet="" {...closeHold}>
-      <motion.button
+      <m.button
         type="button"
         tabIndex={-1}
         aria-label="Close"
@@ -52,7 +53,7 @@ function ActionSheetPanel(props: ActionSheetProps & { onExited: () => void }) {
         style={{ opacity: values.scrim }}
         onClick={onClose}
       />
-      <motion.div
+      <m.div
         ref={panelRef}
         role="dialog"
         aria-modal="true"
@@ -87,7 +88,7 @@ function ActionSheetPanel(props: ActionSheetProps & { onExited: () => void }) {
         <button type="button" className={clsx(styles.cancel, 'ring-inside')} onClick={onClose}>
           {cancelLabel}
         </button>
-      </motion.div>
+      </m.div>
     </div>
   );
 }
@@ -96,5 +97,10 @@ function ActionSheetPanel(props: ActionSheetProps & { onExited: () => void }) {
 export function ActionSheet(props: ActionSheetProps) {
   const { mounted, onExited } = usePresence(props.open);
   if (!mounted) return null;
-  return createPortal(<ActionSheetPanel {...props} onExited={onExited} />, document.body);
+  return createPortal(
+    <MotionScope>
+      <ActionSheetPanel {...props} onExited={onExited} />
+    </MotionScope>,
+    document.body,
+  );
 }

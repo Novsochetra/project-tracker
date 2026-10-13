@@ -1,5 +1,5 @@
 import { ChevronLeft, ChevronRight, X } from 'lucide-react';
-import { motion, type MotionValue } from 'motion/react';
+import { m, type MotionValue } from 'motion/react';
 import styles from './ImageViewer.module.css';
 
 export interface ViewerChromeProps {
@@ -13,7 +13,7 @@ export interface ViewerChromeProps {
 
 export function ViewerChrome({ index, count, visible, opacity, onClose, onGo }: ViewerChromeProps) {
   return (
-    <motion.div className={styles.chrome} style={{ opacity }}>
+    <m.div className={styles.chrome} style={{ opacity }}>
       <div className={styles.controls} data-hidden={visible ? undefined : ''}>
         <button type="button" className={styles.close} aria-label="Close" onClick={onClose}>
           <X size={20} strokeWidth={1.75} />
@@ -44,6 +44,6 @@ export function ViewerChrome({ index, count, visible, opacity, onClose, onGo }: 
           </>
         )}
       </div>
-    </motion.div>
+    </m.div>
   );
 }

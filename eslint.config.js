@@ -79,6 +79,25 @@ export default tseslint.config(
     },
   },
   {
+    files: ['apps/web/src/**/*.{ts,tsx}'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: [
+            {
+              name: 'motion/react',
+              importNames: ['motion'],
+              message:
+                'Use m elements inside a MotionScope (lib/MotionScope.tsx): motion elements put ' +
+                'drag, layout and gestures in the first load (PT-207).',
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
     files: ['apps/*/src/**/*.{ts,tsx}', 'packages/*/src/**/*.{ts,tsx}'],
     ignores: testFiles,
     plugins: { local },
