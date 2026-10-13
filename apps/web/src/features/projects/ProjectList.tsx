@@ -18,6 +18,7 @@ export function ProjectList({ projects, ready }: ProjectListProps) {
   const now = useNow();
   const openProject = useOpenProject();
   const counts = readyCounts(ready);
+  const colors = readyColors(ready);
   const readyOf = (project: ProjectSummary) => counts.get(project.id) ?? 0;
   if (isPhone) {
     return (
@@ -41,7 +42,7 @@ export function ProjectList({ projects, ready }: ProjectListProps) {
           <ProjectCard
             project={project}
             readyCount={readyOf(project)}
-            readyColor={readyColors(ready).get(project.id)}
+            readyColor={colors.get(project.id)}
             index={index}
             now={now}
             onOpen={() => openProject(project.key)}

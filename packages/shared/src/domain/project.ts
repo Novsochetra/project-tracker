@@ -23,6 +23,7 @@ export interface ProjectSummary extends Project {
   totalCount: number;
   openCount: number;
   doneCount: number;
-  reviewedCount: number;
+  // Optional: trackers from before PT-181 don't send it, and agents can be newer than their tracker.
+  reviewedCount?: number;
   lastActivityAt: number;
 }
