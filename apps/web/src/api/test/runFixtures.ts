@@ -6,6 +6,7 @@ export const makeRunner = (overrides: Partial<Runner> = {}): Runner => ({
   id: 'h-dara',
   name: DARA,
   projectKeys: ['MOB'],
+  tools: null,
   createdAt: 1,
   lastSeenAt: Date.now(),
   online: true,

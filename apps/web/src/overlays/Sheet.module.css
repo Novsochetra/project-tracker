@@ -82,6 +82,7 @@
 
 .phone .panel {
   max-height: calc(var(--sheet-viewport, 100vh) - 32px);
+  max-height: calc(var(--sheet-viewport, 100dvh) - 32px);
   margin-bottom: var(--sheet-keyboard, 0px);
   padding-bottom: var(--safe-bottom);
   border-radius: var(--radius-sheet) var(--radius-sheet) 0 0;

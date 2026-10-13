@@ -24,8 +24,8 @@ type RunTarget = Pick<
   | 'askMode'
   | 'askEffort'
   | 'role'
-  | 'questionId'
->;
+> &
+  Partial<Pick<RunRow, 'questionId'>>;
 
 export const queuedRunRow = (run: QueuedRun, target: RunTarget): RunRow => ({
   id: randomUUID(),
@@ -39,6 +39,9 @@ export const queuedRunRow = (run: QueuedRun, target: RunTarget): RunRow => ({
   startedAt: null,
   endedAt: null,
   stepCount: 0,
+  round: null,
+  chainStop: null,
+  questionId: null,
   ...target,
   prompt: target.prompt.trim(),
 });

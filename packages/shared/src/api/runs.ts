@@ -8,6 +8,8 @@ import {
   RUN_PROMPT_MAX,
   RUNNER_NAME_MAX,
   RUNNER_PROJECTS_MAX,
+  RUNNER_TOOL_NAME_MAX,
+  RUNNER_TOOLS_MAX,
 } from '../domain/run';
 
 // A helper picks its own id once and keeps it, so runs queued while it restarts still find it.
@@ -25,6 +27,14 @@ export const startRunInput = z.object({
 });
 export type StartRunInput = z.input<typeof startRunInput>;
 
+const toolNames = z.array(z.string().trim().min(1).max(RUNNER_TOOL_NAME_MAX)).max(RUNNER_TOOLS_MAX);
+
+export const runnerTools = z.object({
+  servers: toolNames,
+  commands: toolNames,
+  skills: toolNames,
+});
+
 export const registerRunnerInput = z.object({
   name: z
     .string()
@@ -35,6 +45,8 @@ export const registerRunnerInput = z.object({
     .array(z.string().trim().min(1).max(20))
     .min(1, 'Name at least one project this computer runs.')
     .max(RUNNER_PROJECTS_MAX),
+  // Older helpers send none.
+  tools: runnerTools.optional(),
 });
 export type RegisterRunnerInput = z.input<typeof registerRunnerInput>;
 

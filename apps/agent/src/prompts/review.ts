@@ -1,3 +1,4 @@
+import { REVIEW_RATING_SCALE, REVIEW_VERDICT_RULES } from '@tracker/shared';
 import {
   findProjectStep,
   normalizeProject,
@@ -21,14 +22,9 @@ export const reviewPrompt: PromptDefinition = {
       '3. Compare the work against the requirement in the title, description and comments, not just against the report.',
       "4. Verify the real result yourself. When the work is code, read the diff and the changed files, run the tests and build, and try the feature where you can. Otherwise check the result against the ticket and the project's instructions.",
       '5. Rate the work from 1 to 5:',
-      '   - 5: fully meets the requirement, with good quality and tests',
-      '   - 4: meets the requirement, with minor nits',
-      '   - 3: works, but has notable issues',
-      '   - 2: partially meets the requirement',
-      '   - 1: does not meet the requirement',
+      ...REVIEW_RATING_SCALE,
       '6. Call review_ticket with the verdict, the rating and a short summary:',
-      '   - "approved" only when the requirement is fully met and your verification passed.',
-      '   - Otherwise "changes_requested", with specific, actionable feedback: what is wrong, where, and what to do. The ticket goes back to To do for a worker.',
+      ...REVIEW_VERDICT_RULES,
       '',
       'Rules:',
       '- Never move a ticket to Done. Only a person does that, after your review.',

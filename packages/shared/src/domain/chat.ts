@@ -16,6 +16,11 @@ export interface ChatTicket {
   title: string;
 }
 
+export interface CardTicketLink {
+  index: number;
+  ticketKey: string;
+}
+
 export interface Chat {
   id: string;
   projectKey: string;
@@ -35,8 +40,8 @@ export interface ChatMessage {
   chatId: string;
   role: ChatRole;
   text: string;
-  // The ticket made from this message's ticket card, once the person taps Create.
-  ticketKey: string | null;
+  // The tickets made from this message's cards, by card index, once the person taps Create.
+  cardTickets: CardTicketLink[];
   // The run that gave Claude's answer, so its steps can fold under it; null on the person's.
   runId: string | null;
   // The steps its open list shows, so an older answer can say "23 steps" before they are read:

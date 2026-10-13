@@ -6,6 +6,7 @@ import { makeAskRun, makeChat, makeChatDetail, makeMessage } from '../../api/tes
 import { listItem, makeTicketDetail, STATUS } from '../../api/test/fixtures';
 import { makeRunner } from '../../api/test/runFixtures';
 import { currentPath } from '../../app/test/harness';
+import { ASK_PLACEHOLDER, ASK_TICKET_PLACEHOLDER } from './copy';
 import { renderAsk } from './test/renderAsk';
 
 const dara = makeRunner();
@@ -31,6 +32,7 @@ function setup(path: string, detail: ChatDetail | null, client: Record<string, u
 }
 
 const ticketLink = () => screen.findByRole('link', { name: /About MOB-3/ });
+const box = () => screen.findByRole('textbox', { name: 'Question for Claude' });
 
 describe('Ask: a chat about a ticket', () => {
   it('starts from the ticket screen with the ticket on top, and sends it with the question', async () => {
@@ -71,5 +73,23 @@ describe('Ask: a chat about a ticket', () => {
     setup('/p/MOB/3/ask/c-1', makeChatDetail());
     expect(await screen.findByRole('list', { name: 'Messages' })).toBeInTheDocument();
     expect(screen.queryByRole('link', { name: /About/ })).not.toBeInTheDocument();
+  });
+
+  // PT-208: a ticket chat kept the project's wording in its box.
+  it('asks about the ticket in a new ticket chat', async () => {
+    setup('/p/MOB/3/ask/new', null);
+    expect(await box()).toHaveAttribute('placeholder', ASK_TICKET_PLACEHOLDER);
+  });
+
+  it('asks about the ticket in a chat about one, wherever it was opened from', async () => {
+    setup('/p/MOB/ask/c-1', makeChatDetail({ chat: aboutTicket }));
+    await ticketLink();
+    expect(await box()).toHaveAttribute('placeholder', ASK_TICKET_PLACEHOLDER);
+  });
+
+  it('asks about the project in a chat about none', async () => {
+    setup('/p/MOB/ask/c-1', makeChatDetail());
+    expect(await screen.findByRole('list', { name: 'Messages' })).toBeInTheDocument();
+    expect(await box()).toHaveAttribute('placeholder', ASK_PLACEHOLDER);
   });
 });

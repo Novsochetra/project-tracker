@@ -2,6 +2,7 @@ import { RANK_STEP, byRank, type Actor } from '@tracker/shared';
 import type { Clock } from '../clock';
 import type { Db, StatusRow } from '../db/schema';
 import { listGroupRanks, listTicketsInStatus } from '../repositories/tickets';
+import { statusChangedText } from './statusEvents';
 import { assertMayEnter, eventEntry, writeTicket } from './ticketWrites';
 
 export interface GroupMove {
@@ -31,7 +32,7 @@ export async function moveGroupToEnd(
       ticket,
       actor,
       changes: { statusId: target.id, rank: start + index * RANK_STEP },
-      entries: [eventEntry(`changed status to ${target.name}`)],
+      entries: [eventEntry(statusChangedText(target.name))],
     });
   }
 }

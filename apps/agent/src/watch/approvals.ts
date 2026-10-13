@@ -1,11 +1,12 @@
 import type { WatchArgs } from './watchIo';
 
-// Claude Code never calls the prompt tool in these, so the phone would never be asked.
-const NEVER_ASKS: ReadonlySet<string> = new Set(['bypassPermissions', 'dontAsk']);
+// Claude Code never calls the prompt tool in bypassPermissions or dontAsk, and in auto its
+// classifier decides most steps itself, so the phone wouldn't be asked before each step.
+const ASKS_NO_ONE: ReadonlySet<string> = new Set(['auto', 'bypassPermissions', 'dontAsk']);
 
 export function approvalsProblem({ approvals, permissionMode }: WatchArgs): string | undefined {
-  if (!approvals || !permissionMode || !NEVER_ASKS.has(permissionMode)) return undefined;
-  return `--approvals asks on the phone, but --permission-mode ${permissionMode} never asks. Use acceptEdits.`;
+  if (!approvals || !permissionMode || !ASKS_NO_ONE.has(permissionMode)) return undefined;
+  return `--approvals asks on the phone before each step, but --permission-mode ${permissionMode} doesn't. Use acceptEdits.`;
 }
 
 // Without --approvals a ticket run keeps Claude Code's own settings (often auto, which asks almost

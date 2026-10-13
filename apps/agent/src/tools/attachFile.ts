@@ -1,8 +1,9 @@
 import { COMMENT_TEXT_MAX, MAX_NEW_ATTACHMENTS, type Attachment } from '@tracker/shared';
 import { z } from 'zod';
 import type { TrackerApi } from '../client';
+import { describeError, ToolError } from '../errors';
 import { attachFolders } from '../files/allowedPath';
-import { checkLocalFile, readLocalFile, type LocalFile } from '../files/localFile';
+import { checkLocalFile, closeLocalFiles, readLocalFile, type LocalFile } from '../files/localFile';
 import { ticketKey } from './fields';
 import { defineTool, type ToolReply } from './tool';
 
@@ -11,11 +12,30 @@ const TOO_MANY = `Attach up to ${MAX_NEW_ATTACHMENTS} files at a time.`;
 export const nameList = (names: readonly string[]): string =>
   names.length < 2 ? (names[0] ?? '') : `${names.slice(0, -1).join(', ')} and ${names.at(-1)}`;
 
+// Files sent before a refused one stay on the ticket, so Claude must know not to send them again.
+function partwayError(
+  error: unknown,
+  client: TrackerApi,
+  sent: readonly string[],
+  ticket?: string,
+) {
+  if (sent.length === 0) return error;
+  const already = ticket
+    ? `${nameList(sent)} ${sent.length === 1 ? 'was' : 'were'} already attached to ${ticket}.`
+    : 'No comment was added.';
+  return new ToolError(`${describeError(error, client)} ${already}`);
+}
+
 // One at a time, so they keep the order given and a big video isn't held in memory with the rest.
 async function upload(client: TrackerApi, files: readonly LocalFile[], ticket?: string) {
   const uploaded: Attachment[] = [];
   for (const file of files) {
-    uploaded.push(await client.uploadAttachment(await readLocalFile(file), file.name, ticket));
+    try {
+      uploaded.push(await client.uploadAttachment(await readLocalFile(file), file.name, ticket));
+    } catch (error) {
+      const sent = files.slice(0, uploaded.length).map((sentFile) => sentFile.name);
+      throw partwayError(error, client, sent, ticket);
+    }
   }
   return uploaded;
 }
@@ -41,8 +61,9 @@ export const attachFile = defineTool({
   description:
     "Attach local files to a ticket, or to a new comment on it when you pass a comment. Use it for results that aren't " +
     'code changes, such as a draft, a CSV, a PDF or an image, so the person can read them on their phone, and list ' +
-    'them under OUTPUT in your report. Only files in the current folder or a temp folder can be attached: images ' +
-    '(PNG, JPEG, GIF, WebP, HEIC), videos (MP4, MOV, WebM), text files (TXT, LOG, MD, CSV, JSON) and PDFs.',
+    "them in submit_for_review's output (OUTPUT in a written report). Only files in the current folder or a temp " +
+    'folder, outside dot-folders such as .ssh, can be attached: images (PNG, JPEG, GIF, WebP, HEIC), videos (MP4, ' +
+    'MOV, WebM), text files (TXT, LOG, MD, CSV, JSON) and PDFs.',
   input: z.object({
     ticket: ticketKey,
     paths: z
@@ -63,8 +84,12 @@ export const attachFile = defineTool({
   async handler(client, { ticket, paths, comment = '' }) {
     const folders = attachFolders();
     const files: LocalFile[] = [];
-    // Every file is checked before any is sent, so a bad path leaves the ticket as it was.
-    for (const path of paths) files.push(await checkLocalFile(path, folders));
-    return attach(client, ticket, files, comment);
+    try {
+      // Every file is checked before any is sent, so a bad path leaves the ticket as it was.
+      for (const path of paths) files.push(await checkLocalFile(path, folders));
+      return await attach(client, ticket, files, comment);
+    } finally {
+      await closeLocalFiles(files);
+    }
   },
 });

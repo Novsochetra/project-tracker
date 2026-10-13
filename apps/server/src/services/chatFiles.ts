@@ -8,7 +8,6 @@ import {
   listMessageAttachmentRows,
   type ChatFileTarget,
 } from '../repositories/chatAttachments';
-import { listMessageRows } from '../repositories/chats';
 import { toAttachment } from './mappers';
 
 // Another user's file, one already sent or attached, and one that expired are all refused alike.
@@ -40,14 +39,4 @@ export async function chatFilesByMessage(
 export async function runFiles(db: Db, run: RunRow): Promise<Attachment[]> {
   if (run.questionId === null) return [];
   return (await listMessageAttachmentRows(db, run.questionId)).map(toAttachment);
-}
-
-// For a helper that can't resume the session: each message with the names of the files sent with it.
-export async function chatHistory(db: Db, chatId: string) {
-  const files = await chatFilesByMessage(db, chatId);
-  return (await listMessageRows(db, chatId)).map(({ id, role, text }) => ({
-    role,
-    text,
-    files: (files.get(id) ?? []).map((file) => file.fileName),
-  }));
 }

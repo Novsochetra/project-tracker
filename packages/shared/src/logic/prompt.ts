@@ -74,7 +74,7 @@ export function repoLine(project: PromptProject): string[] {
   return project.repo ? [`Repository / folder: ${project.repo}`] : [];
 }
 
-const instructionLines = (project: PromptProject): string[] => {
+export const instructionLines = (project: PromptProject): string[] => {
   const block = instructionsBlock(project, '##');
   return block.length > 0 ? ['', ...block] : [];
 };

@@ -11,22 +11,23 @@ import {
 import { projectPrompt } from '../../services/prompts';
 import { getBoard } from '../../services/ticketQueries';
 import type { AppEnv } from '../env';
+import { personCreatesProjects, personEditsProjects } from '../personOnly';
 import { userContext } from '../userContext';
 import { jsonBody } from '../validation';
 
 export const projectRoutes = (ctx: ServiceContext) =>
   new Hono<AppEnv>()
     .get('/projects', async (c) => c.json(await listProjectSummaries(userContext(ctx, c))))
-    .post('/projects', jsonBody(createProjectInput), async (c) =>
+    .post('/projects', personCreatesProjects, jsonBody(createProjectInput), async (c) =>
       c.json(await createProject(userContext(ctx, c), c.req.valid('json')), 201),
     )
     .get('/projects/:key', async (c) =>
       c.json(await getProjectDetail(userContext(ctx, c), c.req.param('key'))),
     )
-    .patch('/projects/:key', jsonBody(updateProjectInput), async (c) =>
+    .patch('/projects/:key', personEditsProjects, jsonBody(updateProjectInput), async (c) =>
       c.json(await updateProject(userContext(ctx, c), c.req.param('key'), c.req.valid('json'))),
     )
-    .delete('/projects/:key', async (c) => {
+    .delete('/projects/:key', personEditsProjects, async (c) => {
       await deleteProject(userContext(ctx, c), c.req.param('key'));
       return c.body(null, 204);
     })

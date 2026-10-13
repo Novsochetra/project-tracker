@@ -1,6 +1,7 @@
-import { motion } from 'motion/react';
+import { m } from 'motion/react';
 import { useCallback, useRef, useState, type KeyboardEvent } from 'react';
 import { createPortal } from 'react-dom';
+import { MotionScope } from '../lib/MotionScope';
 import { clamp } from '../gestures/math';
 import { useViewportSize } from '../gestures/useViewportSize';
 import { fitSize, type Size } from '../gestures/zoomMath';
@@ -73,7 +74,7 @@ function ViewerPanel(props: ImageViewerProps & { onExited: () => void }) {
 
   const stride = pageStride(viewport);
   return (
-    <motion.div
+    <m.div
       ref={panelRef}
       role="dialog"
       aria-modal="true"
@@ -84,9 +85,9 @@ function ViewerPanel(props: ImageViewerProps & { onExited: () => void }) {
       inert={!open}
       onKeyDown={onKeyDown}
     >
-      <motion.div className={styles.backdrop} style={{ opacity: values.backdrop }} />
-      <motion.div ref={stageRef} className={styles.stage} style={{ scale: values.stageScale }}>
-        <motion.div className={styles.track} style={{ x: values.track }}>
+      <m.div className={styles.backdrop} style={{ opacity: values.backdrop }} />
+      <m.div ref={stageRef} className={styles.stage} style={{ scale: values.stageScale }}>
+        <m.div className={styles.track} style={{ x: values.track }}>
           {images.map((image, i) => (
             <ViewerSlide
               key={keys[i]}
@@ -100,8 +101,8 @@ function ViewerPanel(props: ImageViewerProps & { onExited: () => void }) {
               onNaturalSize={onNaturalSize}
             />
           ))}
-        </motion.div>
-      </motion.div>
+        </m.div>
+      </m.div>
       <ViewerChrome
         index={index}
         count={count}
@@ -110,12 +111,17 @@ function ViewerPanel(props: ImageViewerProps & { onExited: () => void }) {
         onClose={onClose}
         onGo={go}
       />
-    </motion.div>
+    </m.div>
   );
 }
 
 export function ImageViewer(props: ImageViewerProps) {
   const { mounted, onExited } = usePresence(props.open && props.images.length > 0);
   if (!mounted) return null;
-  return createPortal(<ViewerPanel {...props} onExited={onExited} />, document.body);
+  return createPortal(
+    <MotionScope>
+      <ViewerPanel {...props} onExited={onExited} />
+    </MotionScope>,
+    document.body,
+  );
 }

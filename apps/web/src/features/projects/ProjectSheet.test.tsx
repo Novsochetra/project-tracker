@@ -6,6 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { otherProject, project, statuses } from '../../api/test/fixtures';
 import { currentPath, projectSummary, renderWithApp } from '../../app/test/harness';
 import { mockPhone, readActionSheet, skipAnimations } from '../../overlays/testing';
+import { EditProjectSheet } from './EditProjectSheet';
 import { ProjectSheet } from './ProjectSheet';
 
 let restore: Array<() => void> = [];
@@ -80,6 +81,7 @@ describe('New project sheet', () => {
       description: 'Phone app',
       repo: '~/code/mobile',
       instructions: '',
+      template: 'software',
     });
     expect(await screen.findByText('“Mobile app” created')).toBeInTheDocument();
     expect(onClose).toHaveBeenCalled();
@@ -154,7 +156,7 @@ describe('Edit project sheet', () => {
 
   function renderEditSheet() {
     const onClose = vi.fn();
-    renderWithApp(<ProjectSheet open onClose={onClose} projectKey="WEB" />, {
+    renderWithApp(<EditProjectSheet open onClose={onClose} projectKey="WEB" />, {
       client: { updateProject },
       projects: [website],
     });
@@ -168,6 +170,7 @@ describe('Edit project sheet', () => {
     expect(within(dialog).getByLabelText('Repository or folder')).toHaveValue('~/code/web');
     expect(within(dialog).getByLabelText('Instructions for Claude')).toHaveValue('Plain voice.');
     expect(within(dialog).queryByLabelText('Ticket prefix')).not.toBeInTheDocument();
+    expect(within(dialog).queryByRole('button', { name: /^Template/ })).not.toBeInTheDocument();
     expect(
       within(dialog).getByText(
         'The repository is added to every Claude Code prompt for this project.',
@@ -188,9 +191,28 @@ describe('Edit project sheet', () => {
       description: 'Docs',
       repo: '~/code/web',
       instructions: 'Plain voice.',
+      autoReview: false,
     });
     expect(await screen.findByText('Project updated')).toBeInTheDocument();
     await waitFor(() => expect(onClose).toHaveBeenCalled());
+  });
+
+  it('turns automatic review on with a switch that Save sends', async () => {
+    const user = userEvent.setup();
+    const { dialog } = renderEditSheet();
+    const save = within(dialog).getByRole('button', { name: 'Save' });
+    const toggle = within(dialog).getByRole('switch', { name: 'Review automatically' });
+    expect(toggle).toHaveAttribute('aria-checked', 'false');
+    expect(toggle).toHaveAccessibleDescription(
+      'When Claude finishes a ticket, Claude reviews it on the same computer. Changes it asks for go back to Claude, up to 2 rounds.',
+    );
+    await user.click(toggle);
+    expect(toggle).toHaveAttribute('aria-checked', 'true');
+    await user.click(save);
+    expect(updateProject).toHaveBeenLastCalledWith(
+      'WEB',
+      expect.objectContaining({ autoReview: true }),
+    );
   });
 
   it('saves changed instructions', async () => {

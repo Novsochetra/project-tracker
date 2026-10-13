@@ -37,5 +37,7 @@ export const cardTicketInput = z.object({
   title: z.string().trim().min(1, 'Add a title to create the ticket.').max(TICKET_TITLE_MAX),
   description: z.string().max(TICKET_DESCRIPTION_MAX).default(''),
   priority: z.enum(PRIORITIES).default('medium'),
+  // An older page sends none for its only card.
+  index: z.number().int().min(0).default(0),
 });
 export type CardTicketInput = z.input<typeof cardTicketInput>;

@@ -215,7 +215,7 @@ describe('summary', () => {
       '  activities   1283',
       '  attachments     3',
       '  files           3 (266 KB)',
-      'Not copied: users, sessions, api_tokens, invites, runners, runs, run_steps, run_requests, questions, chats, chat_messages, ' +
+      'Not copied: users, sessions, api_tokens, invites, runners, runs, run_steps, run_requests, questions, chats, chat_messages, chat_card_tickets, ' +
         'push_subscriptions, push_keys (sign-in, helpers, chats and notifications stay with each ' +
         'tracker: set the online owner with owner-set, make new API tokens online, start tracker ' +
         'watch against it and turn notifications on there).',

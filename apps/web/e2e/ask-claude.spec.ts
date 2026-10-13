@@ -3,10 +3,9 @@ import type { TrackerClient } from '@tracker/client';
 import type { RunStepInput } from '@tracker/shared';
 import type { Page } from '@playwright/test';
 import { ASK_HINT, EDIT_HINT, PLAN_HINT } from '../src/features/ask/copy';
+import { answer, ask, HELPER } from './askChat';
 import { expect, test, usesPhoneLayout } from './fixtures';
 import { readActionSheet, readMenuConfirm, seedProject, settledScreenshot, toast } from './helpers';
-
-const HELPER = "Dara's MacBook";
 
 const card = (title: string, priority: string, steps: string) =>
   [
@@ -24,13 +23,6 @@ const card = (title: string, priority: string, steps: string) =>
     'Tell me what to change, or tap Create.',
   ].join('\n');
 
-// The helper's side, as `tracker watch` reports an answer (apps/agent/src/watch/ask).
-async function answer(api: TrackerClient, helperId: string, text: string): Promise<void> {
-  const job = await api.takeNextRun(helperId, 'ask');
-  expect(job?.run.kind).toBe('ask');
-  await api.finishRun(job!.run.id, { status: 'done', answer: text, sessionId: randomUUID() });
-}
-
 // The helper's side of live steps, as `tracker watch` sends them (apps/agent/src/watch/steps).
 const step = (label: string, more: Partial<RunStepInput> = {}): RunStepInput => ({
   kind: 'tool',
@@ -39,12 +31,6 @@ const step = (label: string, more: Partial<RunStepInput> = {}): RunStepInput => 
   toolId: null,
   ...more,
 });
-
-async function ask(page: Page, question: string): Promise<void> {
-  await page.getByRole('textbox', { name: 'Question for Claude' }).fill(question);
-  await page.getByRole('button', { name: 'Send', exact: true }).click();
-  await expect(page.getByText(`Claude is thinking on ${HELPER}…`)).toBeVisible();
-}
 
 test('asks Claude about a project, shapes a ticket card, creates it and runs it', async ({
   page,

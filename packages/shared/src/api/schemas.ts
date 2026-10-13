@@ -7,6 +7,7 @@ import {
 } from '../domain/attachment';
 import { PRIORITIES } from '../domain/priority';
 import { PROJECT_INSTRUCTIONS_MAX } from '../domain/project';
+import { DEFAULT_PROJECT_TEMPLATE, PROJECT_TEMPLATE_NAMES } from '../domain/projectTemplates';
 import { STATUS_CATEGORIES } from '../domain/status';
 import {
   TICKET_ASSIGNEE_MAX,
@@ -32,7 +33,10 @@ const attachmentIds = (owner: AttachmentOwner) =>
 const projectInstructions = z
   .string()
   .trim()
-  .max(PROJECT_INSTRUCTIONS_MAX, 'Instructions can be up to 20,000 characters.')
+  .max(
+    PROJECT_INSTRUCTIONS_MAX,
+    `Instructions can be up to ${PROJECT_INSTRUCTIONS_MAX.toLocaleString('en-US')} characters.`,
+  )
   .optional();
 
 export const createProjectInput = z.object({
@@ -41,6 +45,7 @@ export const createProjectInput = z.object({
   description: z.string().max(5000).optional(),
   repo: z.string().trim().max(500).optional(),
   instructions: projectInstructions,
+  template: z.enum(PROJECT_TEMPLATE_NAMES).default(DEFAULT_PROJECT_TEMPLATE),
 });
 export type CreateProjectInput = z.input<typeof createProjectInput>;
 
@@ -49,6 +54,7 @@ export const updateProjectInput = z.object({
   description: z.string().max(5000).optional(),
   repo: z.string().trim().max(500).optional(),
   instructions: projectInstructions,
+  autoReview: z.boolean().optional(),
 });
 export type UpdateProjectInput = z.input<typeof updateProjectInput>;
 
@@ -151,6 +157,7 @@ export type ReportInput = z.input<typeof reportInput>;
 export const submitWorkInput = z.object({
   summary: z.string().trim().min(1).max(REPORT_TEXT_MAX),
   files: z.string().max(REPORT_TEXT_MAX).default(''),
+  output: z.string().max(REPORT_TEXT_MAX).default(''),
   next: z.string().max(REPORT_TEXT_MAX).default(''),
 });
 export type SubmitWorkInput = z.input<typeof submitWorkInput>;

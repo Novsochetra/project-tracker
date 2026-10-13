@@ -52,8 +52,13 @@ export async function longPoll<T>(ctx: ServiceContext, poll: LongPoll<T>): Promi
   const first = await poll.read();
   if (!poll.isOpen(first)) return first;
   const wait = untilWoken(ctx, poll.wakes(first), poll.waitMs(first), poll.signal);
-  // Read again once listening, so an end in between isn't missed.
-  if (!poll.isOpen(await poll.read())) wait.stop();
+  try {
+    // Read again once listening, so an end in between isn't missed.
+    if (!poll.isOpen(await poll.read())) wait.stop();
+  } catch (error) {
+    wait.stop();
+    throw error;
+  }
   await wait.woken;
   return poll.read();
 }

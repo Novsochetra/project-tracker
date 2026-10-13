@@ -11,9 +11,7 @@ export interface ChatWithKey extends ChatRow {
   ticketTitle: string | null;
 }
 
-export interface MessageWithKey extends ChatMessageRow {
-  projectKey: string | null;
-  ticketNum: number | null;
+export interface MessageWithSteps extends ChatMessageRow {
   stepCount: number | null;
   lastStepKind: RunStepKind | null;
   lastStepLabel: string | null;
@@ -70,15 +68,13 @@ export const listProjectChatRows = (
 export const listMessageRows = (db: Db, chatId: string) =>
   db
     .selectFrom('chatMessages')
-    .leftJoin('tickets', 'tickets.id', 'chatMessages.ticketId')
-    .leftJoin('projects', 'projects.id', 'tickets.projectId')
     .leftJoin('runs', 'runs.id', 'chatMessages.runId')
     // A step's seq counts the run's steps, so the last one's is the run's stepCount.
     .leftJoin('runSteps as lastStep', (join) =>
       join.onRef('lastStep.runId', '=', 'runs.id').onRef('lastStep.seq', '=', 'runs.stepCount'),
     )
     .selectAll('chatMessages')
-    .select(['projects.key as projectKey', 'tickets.num as ticketNum', 'runs.stepCount'])
+    .select('runs.stepCount')
     .select([
       'lastStep.kind as lastStepKind',
       'lastStep.label as lastStepLabel',
@@ -116,10 +112,6 @@ export async function updateChatRow(
   >,
 ): Promise<void> {
   await db.updateTable('chats').set(changes).where('id', '=', id).execute();
-}
-
-export async function setMessageTicket(db: Db, id: string, ticketId: string): Promise<void> {
-  await db.updateTable('chatMessages').set({ ticketId }).where('id', '=', id).execute();
 }
 
 export const assignOwnerlessChats = (db: Db, userId: string) =>

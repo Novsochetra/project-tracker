@@ -1,4 +1,4 @@
-import type { Run, Runner } from '@tracker/shared';
+import { AUTO_REVIEW_STOPPED, chainStopReason, type Run, type Runner } from '@tracker/shared';
 import { isWorking, workingRun } from '../../api/workingRun';
 
 // Long enough to see on the next look at the ticket, short enough not to linger once forgotten.
@@ -28,6 +28,15 @@ export const workingText = (run: Pick<Run, 'runnerName'>): string =>
 
 export const stoppedText = (run: Pick<Run, 'error'>): string =>
   run.error ? `Claude stopped: ${run.error}` : 'Claude stopped.';
+
+// A run that failed says why; one that ended well says so only when the automatic review stopped.
+function endedText(run: Run): string | null {
+  if (run.status === 'failed') return stoppedText(run);
+  if (run.status === 'done' && run.chainStop) {
+    return `${AUTO_REVIEW_STOPPED}. ${chainStopReason(run.chainStop, run.runnerName)}`;
+  }
+  return null;
+}
 
 export const sentText = (helper: Pick<Runner, 'name'>): string =>
   `Sent to Claude on ${helper.name}`;
@@ -59,6 +68,7 @@ export function shownRun(runs: readonly Run[] | undefined, now: number): ShownRu
   const latest = runs?.[0];
   if (!latest) return null;
   if (isWorking(latest)) return { state: 'working', run: latest, text: workingText(latest) };
-  if (latest.status !== 'failed' || now - runTime(latest) >= STOPPED_SHOWN_MS) return null;
-  return { state: 'stopped', run: latest, text: stoppedText(latest) };
+  const text = endedText(latest);
+  if (!text || now - runTime(latest) >= STOPPED_SHOWN_MS) return null;
+  return { state: 'stopped', run: latest, text };
 }

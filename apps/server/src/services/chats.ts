@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import {
   chosenAskOptions,
+  type AskHistoryMessage,
   type askInput,
   type Chat,
   type ChatDetail,
@@ -9,8 +10,9 @@ import {
 import type { z } from 'zod';
 import type { UserScope } from '../auth/scope';
 import type { ChatRow } from '../db/chatTables';
-import type { ProjectRow } from '../db/schema';
+import type { Db, ProjectRow } from '../db/schema';
 import { notFound } from '../errors';
+import { listCardTicketRows } from '../repositories/chatCardTickets';
 import {
   findChatInScope,
   insertChat,
@@ -20,8 +22,8 @@ import {
 } from '../repositories/chats';
 import { latestChatRunRow, listStoppedChatRunRows } from '../repositories/runs';
 import { queueAsk } from './askRuns';
-import { chatFilesByMessage, chatHistory } from './chatFiles';
-import { chatTitle, toChat, toMessage } from './chatMappers';
+import { chatFilesByMessage } from './chatFiles';
+import { chatTitle, toCardTicket, toChat, toMessage } from './chatMappers';
 import { chatPromptTicket, requireChatTicket } from './chatTicket';
 import { inTransaction, type ServiceContext } from './context';
 import { requireProject } from './lookups';
@@ -67,14 +69,28 @@ export async function getChat(
   const chat = await requireChat(ctx, scope, id);
   const messages = await listMessageRows(ctx.db, chat.id);
   const files = await chatFilesByMessage(ctx.db, chat.id);
+  const cards = await listCardTicketRows(ctx.db, chat.id);
   const run = await latestChatRunRow(ctx.db, scope, chat.id);
   const stopped = await listStoppedChatRunRows(ctx.db, scope, chat.id);
   return {
     chat: toChat(chat),
-    messages: messages.map((message) => toMessage(message, files.get(message.id) ?? [])),
+    messages: messages.map((message) => toMessage(message, cards, files.get(message.id) ?? [])),
     run: run ? toRun(run) : null,
     stoppedRuns: stopped.map(toRun),
   };
+}
+
+// So the prompt can say which cards are tickets now, and which files each question had.
+async function askHistory(db: Db, chatId: string): Promise<AskHistoryMessage[]> {
+  const cards = await listCardTicketRows(db, chatId);
+  const files = await chatFilesByMessage(db, chatId);
+  const messages = await listMessageRows(db, chatId);
+  return messages.map(({ id, role, text }) => ({
+    role,
+    text,
+    cardTickets: cards.filter((card) => card.messageId === id).map(toCardTicket),
+    files: (files.get(id) ?? []).map((file) => file.fileName),
+  }));
 }
 
 interface AskIn {
@@ -91,7 +107,7 @@ async function askIn(
 ): Promise<ChatDetail> {
   const runner = await requireRunnerFor(ctx, scope, input.runnerId, project);
   await expireSilentRuns(ctx);
-  const history = isNew ? [] : await chatHistory(ctx.db, chat.id);
+  const history = isNew ? [] : await askHistory(ctx.db, chat.id);
   const ticket = await chatPromptTicket(ctx.db, chat, project.key);
   const queued = { scope, runner, projectId: project.id, now: ctx.now() };
   const run = await inTransaction(ctx, async (trx) => {

@@ -2,6 +2,7 @@ import type {
   AskEffort,
   AskMode,
   AskModel,
+  ChainStop,
   RunKind,
   RunRequestDecision,
   RunRequestKind,
@@ -17,6 +18,8 @@ export interface RunnerRow {
   name: string;
   // Ids, not keys, so renaming a project keeps its helpers.
   projectIds: string;
+  // RunnerTools as JSON text (§2); null from a helper that sends none.
+  tools: string | null;
   createdAt: number;
   lastSeenAt: number;
 }
@@ -46,6 +49,9 @@ export interface RunRow {
   stepCount: number;
   // Null on runs queued before there were roles, which were all work runs.
   role: RunRole | null;
+  // The chain's work round (logic/reviewChain); null on a run a person started.
+  round: number | null;
+  chainStop: ChainStop | null;
   // The person's message an ask answers, whose files the helper is given; null on ticket runs.
   questionId: string | null;
 }

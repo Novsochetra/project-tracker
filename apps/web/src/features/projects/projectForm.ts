@@ -1,8 +1,10 @@
 import {
+  DEFAULT_PROJECT_TEMPLATE,
   derivePrefix,
   resolvePrefix,
   type CreateProjectInput,
   type Project,
+  type ProjectTemplateName,
   type UpdateProjectInput,
 } from '@tracker/shared';
 
@@ -14,6 +16,8 @@ export interface ProjectFormValues {
   repo: string;
   prefix: string;
   instructions: string;
+  template: ProjectTemplateName;
+  autoReview: boolean;
 }
 
 export const EMPTY_PROJECT_FORM: ProjectFormValues = {
@@ -22,6 +26,8 @@ export const EMPTY_PROJECT_FORM: ProjectFormValues = {
   repo: '',
   prefix: '',
   instructions: '',
+  template: DEFAULT_PROJECT_TEMPLATE,
+  autoReview: false,
 };
 
 export const NAME_REQUIRED = 'Add a name to create the project.';
@@ -29,30 +35,27 @@ export const NAME_REQUIRED = 'Add a name to create the project.';
 const REPO_HINT = 'The repository is added to every Claude Code prompt.';
 
 export const formValuesOf = (
-  project: Pick<Project, 'name' | 'description' | 'repo' | 'instructions'>,
-) => ({
+  project: Pick<Project, 'name' | 'description' | 'repo' | 'instructions' | 'autoReview'>,
+): ProjectFormValues => ({
   ...EMPTY_PROJECT_FORM,
   name: project.name,
   description: project.description,
   repo: project.repo,
   instructions: project.instructions ?? '',
+  autoReview: project.autoReview ?? false,
 });
 
 export const hasName = (values: ProjectFormValues): boolean => values.name.trim() !== '';
 
-const FORM_FIELDS: readonly (keyof ProjectFormValues)[] = [
-  'name',
-  'description',
-  'repo',
-  'prefix',
-  'instructions',
-];
+const TEXT_FIELDS = ['name', 'description', 'repo', 'prefix', 'instructions', 'template'] as const;
 
 // Trimmed like Create and Save send them, so a stray space doesn't make the sheet ask.
 export const projectFormChanged = (
   values: ProjectFormValues,
   baseline: ProjectFormValues,
-): boolean => FORM_FIELDS.some((field) => values[field].trim() !== baseline[field].trim());
+): boolean =>
+  values.autoReview !== baseline.autoReview ||
+  TEXT_FIELDS.some((field) => values[field].trim() !== baseline[field].trim());
 
 export const prefixPlaceholder = (values: ProjectFormValues): string => derivePrefix(values.name);
 
@@ -72,6 +75,7 @@ export const createProjectInput = (values: ProjectFormValues): CreateProjectInpu
   description: values.description.trim(),
   repo: values.repo.trim(),
   instructions: values.instructions.trim(),
+  template: values.template,
 });
 
 export const updateProjectInput = (values: ProjectFormValues): UpdateProjectInput => ({
@@ -79,6 +83,7 @@ export const updateProjectInput = (values: ProjectFormValues): UpdateProjectInpu
   description: values.description.trim(),
   repo: values.repo.trim(),
   instructions: values.instructions.trim(),
+  autoReview: values.autoReview,
 });
 
 export const INSTRUCTIONS_HINT =

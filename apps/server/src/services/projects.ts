@@ -1,13 +1,14 @@
 import { randomUUID } from 'node:crypto';
 import {
-  DEFAULT_STATUSES,
   PROJECT_COLORS,
+  PROJECT_TEMPLATES,
   resolvePrefix,
   uniquePrefix,
   type createProjectInput,
   type Project,
   type ProjectDetail,
   type ProjectSummary,
+  type StatusTemplate,
   type updateProjectInput,
 } from '@tracker/shared';
 import type { z } from 'zod';
@@ -34,6 +35,11 @@ import { toProject, toStatus } from './mappers';
 type CreateProjectValues = z.output<typeof createProjectInput>;
 type UpdateProjectValues = z.output<typeof updateProjectInput>;
 
+const projectEdits = ({ autoReview, ...rest }: UpdateProjectValues): Partial<ProjectRow> => ({
+  ...rest,
+  ...(autoReview === undefined ? {} : { autoReview: autoReview ? 1 : 0 }),
+});
+
 function summarize(project: ProjectRow, stats: ProjectTicketStats | undefined): ProjectSummary {
   const total = stats?.total ?? 0;
   const done = stats?.done ?? 0;
@@ -54,8 +60,12 @@ export async function listProjectSummaries(ctx: UserContext): Promise<ProjectSum
   return projects.map((project) => summarize(project, statsOf.get(project.id)));
 }
 
-function defaultStatuses(projectId: string, at: number): StatusRow[] {
-  return DEFAULT_STATUSES.map((template, position) => ({
+function statusRows(
+  templates: readonly StatusTemplate[],
+  projectId: string,
+  at: number,
+): StatusRow[] {
+  return templates.map((template, position) => ({
     id: randomUUID(),
     projectId,
     ...template,
@@ -68,6 +78,7 @@ export async function createProject(
   ctx: UserContext,
   input: CreateProjectValues,
 ): Promise<ProjectDetail> {
+  const template = PROJECT_TEMPLATES[input.template];
   const detail = await inTransaction(ctx, async (trx) => {
     const existing = await listProjectRows(trx, ctx.scope);
     const taken = new Set(await listProjectKeys(trx));
@@ -78,14 +89,15 @@ export async function createProject(
       key: uniquePrefix(resolvePrefix(input.key ?? '', input.name), taken),
       description: input.description ?? '',
       repo: input.repo ?? '',
-      instructions: input.instructions ?? '',
+      instructions: input.instructions ?? template.instructions,
       color: PROJECT_COLORS[existing.length % PROJECT_COLORS.length] ?? PROJECT_COLORS[0],
       nextNum: 1,
       createdAt: at,
       updatedAt: at,
       ownerId: ctx.scope,
+      autoReview: 0,
     };
-    const statuses = defaultStatuses(project.id, at);
+    const statuses = statusRows(template.statuses, project.id, at);
     await insertProject(trx, project);
     await insertStatuses(trx, statuses);
     return { project: toProject(project), statuses: statuses.map(toStatus) };
@@ -107,7 +119,7 @@ export async function updateProject(
 ): Promise<Project> {
   const outcome = await inTransaction(ctx, async (trx) => {
     const project = await requireProject(trx, ctx.scope, key);
-    const edits = changedFields(project, input);
+    const edits = changedFields(project, projectEdits(input));
     if (isEmpty(edits)) return { project, changed: false };
     const changes = { ...edits, updatedAt: ctx.now() };
     await updateProjectRow(trx, project.id, changes);

@@ -10,7 +10,6 @@ import { isSubmitShortcut } from '../ticket/activity/commentRules';
 import { AskOptionsRow } from './AskOptionsRow';
 import { AttachButton } from './AttachButton';
 import styles from './ChatScreen.module.css';
-import { ASK_PLACEHOLDER } from './copy';
 import { QuestionFilesArea } from './QuestionFilesArea';
 import { SendButton } from './SendButton';
 import { useAskOptions } from './useAskOptions';
@@ -25,6 +24,7 @@ export interface AskComposerProps {
   stoppableRun: Run | null;
   offersSend: boolean;
   savedOptions: AskOptions;
+  placeholder: string;
 }
 
 export function AskComposer({
@@ -34,6 +34,7 @@ export function AskComposer({
   stoppableRun,
   offersSend,
   savedOptions,
+  placeholder,
 }: AskComposerProps) {
   const [text, setText] = useState('');
   const { options, pick, forget } = useAskOptions(savedOptions);
@@ -76,7 +77,7 @@ export function AskComposer({
         <AttachButton onFiles={question.files.add} />
         <AutoTextarea
           aria-label="Question for Claude"
-          placeholder={ASK_PLACEHOLDER}
+          placeholder={placeholder}
           rows={1}
           className={styles.input}
           maxLength={CHAT_QUESTION_MAX}
