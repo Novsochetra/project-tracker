@@ -13,6 +13,8 @@ export const COPIED_TABLES = [
   { name: 'tickets', references: ['projects', 'statuses'] },
   { name: 'activities', references: ['tickets'] },
   { name: 'attachments', references: ['tickets', 'activities'] },
+  { name: 'labels', references: ['projects'] },
+  { name: 'ticketLabels', references: ['tickets', 'labels'] },
 ] as const satisfies readonly CopiedTable[];
 
 export type CopiedTableName = (typeof COPIED_TABLES)[number]['name'];

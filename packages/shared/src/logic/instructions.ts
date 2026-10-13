@@ -2,8 +2,36 @@ export interface PromptInstructions {
   instructions?: string;
 }
 
-// One block for every prompt, so instructions from more places can join it later.
-export function instructionsBlock(project: PromptInstructions, heading: string): string[] {
-  const text = project.instructions?.trim();
-  return text ? [`${heading} Project instructions`, text] : [];
+export interface PromptLabel {
+  name: string;
+  instructions: string;
+}
+
+const block = (heading: string, text: string | undefined): string[] => {
+  const trimmed = text?.trim();
+  return trimmed ? [heading, trimmed] : [];
+};
+
+export function instructionsBlock(
+  project: PromptInstructions,
+  heading: string,
+  labels: readonly PromptLabel[] = [],
+): string[] {
+  const blocks = [
+    block(`${heading} Project instructions`, project.instructions),
+    ...labels.map((label) =>
+      block(`${heading} Instructions for "${label.name}" tickets`, label.instructions),
+    ),
+  ].filter((lines) => lines.length > 0);
+  return blocks.flatMap((lines, index) => (index === 0 ? lines : ['', ...lines]));
+}
+
+export function distinctLabels(
+  tickets: readonly { labels?: readonly PromptLabel[] | undefined }[],
+): PromptLabel[] {
+  const seen = new Map<string, PromptLabel>();
+  for (const label of tickets.flatMap((ticket) => ticket.labels ?? [])) {
+    if (!seen.has(label.name)) seen.set(label.name, label);
+  }
+  return [...seen.values()];
 }

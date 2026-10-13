@@ -1,7 +1,14 @@
 import { filterTabs, resolveFilter, type ProjectBoard } from '@tracker/shared';
 import { SearchField } from '../../components/SearchField';
 import { Segmented, type SegmentedOption } from '../../components/Segmented';
-import { setListFilter, setListQuery, useListView } from './listViewStore';
+import { LabelFilter } from './LabelFilter';
+import {
+  pickedLabel,
+  setListFilter,
+  setListLabel,
+  setListQuery,
+  useListView,
+} from './listViewStore';
 import styles from './ProjectScreen.module.css';
 import { FilterTabs } from './tabs/FilterTabs';
 import { setViewMode, useViewMode, type ViewMode } from './viewModeStore';
@@ -16,16 +23,26 @@ const viewOptions: SegmentedOption<ViewMode>[] = [
 ];
 
 export function FilterRow({ board }: FilterRowProps) {
-  const { project, statuses, tickets } = board;
-  const { filter, query } = useListView(project.key);
+  const { project, statuses, tickets, labels = [] } = board;
+  const view = useListView(project.key);
+  const { filter, query } = view;
   const viewMode = useViewMode(project.key);
   return (
     <div className={styles.filters}>
-      <FilterTabs
-        tabs={filterTabs(statuses, tickets)}
-        value={resolveFilter(statuses, filter)}
-        onChange={(next) => setListFilter(project.key, next)}
-      />
+      <div className={styles.statusFilters}>
+        <FilterTabs
+          tabs={filterTabs(statuses, tickets)}
+          value={resolveFilter(statuses, filter)}
+          onChange={(next) => setListFilter(project.key, next)}
+        />
+        {labels.length > 0 && (
+          <LabelFilter
+            labels={labels}
+            picked={pickedLabel(view, labels)}
+            onChange={(label) => setListLabel(project.key, label)}
+          />
+        )}
+      </div>
       <div className={styles.tools}>
         <SearchField
           aria-label="Search tickets"

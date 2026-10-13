@@ -127,7 +127,7 @@ describe('tracker <command>', () => {
     const result = await cli(['update', 'MOB-3'], fakeClient({}));
     expect(result.code).toBe(EXIT_ERROR);
     expect(result.stderr).toBe(
-      'Error: Nothing to update. Pass at least one of: title, description, priority, assignee, due.',
+      'Error: Nothing to update. Pass at least one of: title, description, priority, assignee, due, labels.',
     );
   });
 

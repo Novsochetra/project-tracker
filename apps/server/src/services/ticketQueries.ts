@@ -1,6 +1,8 @@
 import {
   byRank,
+  hasLabel,
   matchesSearch,
+  type Label,
   sortStatuses,
   type ListTicketsQuery,
   type ProjectBoard,
@@ -14,7 +16,9 @@ import type { AttachmentRow, Db, StatusRow, TicketRow } from '../db/schema';
 import { listTicketActivities } from '../repositories/activities';
 import { listTicketAttachments } from '../repositories/attachments';
 import { listProjectRows } from '../repositories/projects';
+import { listLabelRows, listLabelRowsOfProjects } from '../repositories/labels';
 import { listAllStatusRows, listStatusRows } from '../repositories/statuses';
+import { labelIdsInProject, labelIdsInScope, labelIdsOfTicket } from '../repositories/ticketLabels';
 import { listTicketItemRows, listTicketItemRowsInStatuses } from '../repositories/tickets';
 import type { UserContext } from './context';
 import {
@@ -27,6 +31,7 @@ import {
 import {
   toActivity,
   toAttachment,
+  toLabel,
   toProject,
   toStatus,
   toTicket,
@@ -47,11 +52,13 @@ export async function loadTicketDetail(db: Db, ref: TicketRef): Promise<TicketDe
   const activities = await listTicketActivities(db, ref.ticket.id);
   const attachments = await listTicketAttachments(db, ref.ticket.id);
   const byActivity = groupByActivity(attachments);
+  const labelIds = await labelIdsOfTicket(db, ref.ticket.id);
   return {
-    ticket: toTicket(scope.ticket, scope.project.key),
+    ticket: toTicket(scope.ticket, scope.project.key, labelIds),
     project: toProject(scope.project),
     status: toStatus(scope.status),
     statuses: scope.statuses.map(toStatus),
+    labels: (await listLabelRows(db, ref.project.id)).map(toLabel),
     activity: activities.map((row) => toActivity(row, byActivity.get(row.id) ?? [])),
     attachments: attachments.filter((row) => row.activityId === null).map(toAttachment),
   };
@@ -78,10 +85,14 @@ export async function getBoard(ctx: UserContext, projectKey: string): Promise<Pr
   const project = await requireProject(ctx.db, ctx.scope, projectKey);
   const statuses = await listStatusRows(ctx.db, project.id);
   const tickets = await listTicketItemRows(ctx.db, readerOf(ctx), project.id);
+  const labelIds = await labelIdsInProject(ctx.db, project.id);
   return {
     project: toProject(project),
     statuses: statuses.map(toStatus),
-    tickets: sortForBoard(tickets, statuses).map((row) => toTicketListItem(row, project.key)),
+    labels: (await listLabelRows(ctx.db, project.id)).map(toLabel),
+    tickets: sortForBoard(tickets, statuses).map((row) =>
+      toTicketListItem(row, project.key, labelIds.get(row.id) ?? []),
+    ),
   };
 }
 
@@ -96,6 +107,14 @@ function allowedStatusIds(statuses: readonly StatusFields[], query: ListTicketsQ
     .map((status) => status.id);
 }
 
+// Names are unique within a project, so across projects a name can match one label in each.
+function labelFilter(labels: readonly Label[], query: ListTicketsQuery) {
+  if (query.label === undefined) return () => true;
+  const name = query.label.trim().toLowerCase();
+  const ids = labels.filter((label) => label.name.toLowerCase() === name).map((label) => label.id);
+  return (ticket: TicketListItem) => ids.some((id) => hasLabel(ticket, id));
+}
+
 export async function listTickets(
   ctx: UserContext,
   projectKey: string,
@@ -103,8 +122,10 @@ export async function listTickets(
 ): Promise<TicketListItem[]> {
   const board = await getBoard(ctx, projectKey);
   const allowed = new Set(allowedStatusIds(board.statuses, query));
+  const labeled = labelFilter(board.labels ?? [], query);
   return board.tickets.filter(
-    (ticket) => allowed.has(ticket.statusId) && matchesSearch(ticket, query.q ?? ''),
+    (ticket) =>
+      allowed.has(ticket.statusId) && labeled(ticket) && matchesSearch(ticket, query.q ?? ''),
   );
 }
 
@@ -118,12 +139,18 @@ export async function listAllTickets(
   const statuses = await listAllStatusRows(ctx.db, ctx.scope);
   const statusIds = allowedStatusIds(statuses, query);
   const rows = await listTicketItemRowsInStatuses(ctx.db, readerOf(ctx), statusIds);
+  const labelIds = await labelIdsInScope(ctx.db, ctx.scope);
+  const labels = (await listLabelRowsOfProjects(ctx.db, ctx.scope)).map(toLabel);
+  const labeled = labelFilter(labels, query);
   const tickets = rows
-    .map((row) => toTicketListItem(row, projectKeys.get(row.projectId) ?? ''))
-    .filter((ticket) => matchesSearch(ticket, query.q ?? ''));
+    .map((row) =>
+      toTicketListItem(row, projectKeys.get(row.projectId) ?? '', labelIds.get(row.id) ?? []),
+    )
+    .filter((ticket) => labeled(ticket) && matchesSearch(ticket, query.q ?? ''));
   const listed = new Set(tickets.map((ticket) => ticket.projectId));
   return {
     tickets,
     statuses: sortStatuses(statuses.filter((status) => listed.has(status.projectId))).map(toStatus),
+    labels: labels.filter((label) => listed.has(label.projectId)),
   };
 }

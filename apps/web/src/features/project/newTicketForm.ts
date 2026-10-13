@@ -18,6 +18,7 @@ export interface NewTicketForm {
   assignee: string;
   due: string;
   attachments: Attachment[];
+  labelIds: string[];
 }
 
 export const TITLE_REQUIRED = 'Add a title to create the ticket.';
@@ -32,11 +33,15 @@ export const blankForm = (): NewTicketForm => ({
   assignee: '',
   due: '',
   attachments: [],
+  labelIds: [],
 });
 
 export const newTicketDraftId = (projectKey: string): string => `new-ticket:${projectKey}`;
 
 const textOf = (value: unknown): string => (typeof value === 'string' ? value : '');
+
+const idsOf = (value: unknown): string[] =>
+  Array.isArray(value) ? value.filter((item): item is string => typeof item === 'string') : [];
 
 // Kept fields come from storage, which an older build or another tab may have written.
 export function formFromDraft(
@@ -53,6 +58,7 @@ export function formFromDraft(
     assignee: textOf(values.assignee),
     due: textOf(values.due),
     attachments: keptAttachments(values.attachments, now),
+    labelIds: idsOf(values.labelIds),
   };
 }
 
@@ -61,7 +67,7 @@ const hasText = (value: string): boolean => value.trim() !== '';
 export function hasChanges(form: NewTicketForm, defaultStatus: string | undefined): boolean {
   const blank = blankForm();
   if (hasText(form.title) || hasText(form.description) || hasText(form.assignee)) return true;
-  if (form.attachments.length > 0) return true;
+  if (form.attachments.length > 0 || form.labelIds.length > 0) return true;
   const statusPicked = form.statusId !== null && form.statusId !== defaultStatus;
   return statusPicked || form.priority !== blank.priority || form.due !== blank.due;
 }
@@ -104,6 +110,7 @@ export function toCreateInput(
     assignee: form.assignee.trim(),
     due: form.due,
     ...(statusId ? { statusId } : {}),
+    ...(form.labelIds.length > 0 ? { labelIds: form.labelIds } : {}),
     ...(form.attachments.length > 0
       ? { attachmentIds: form.attachments.map((attachment) => attachment.id) }
       : {}),

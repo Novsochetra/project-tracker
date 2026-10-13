@@ -47,6 +47,14 @@
   padding: 14px 32px 16px;
 }
 
+.statusFilters {
+  display: flex;
+  flex: 0 1 auto;
+  gap: var(--space-2);
+  min-width: 0;
+  max-width: 100%;
+}
+
 /* Starts as narrow as it gets (the search at its 160px minimum beside the 136px switch) and grows
    to the search's 240px, so the status tabs keep this row while both fit (SPEC §4.2). */
 .tools {
@@ -116,6 +124,10 @@
     padding-left: var(--space-4);
   }
 
+  .statusFilters {
+    flex: 1 1 100%;
+  }
+
   .tools {
     flex: 1 1 100%;
     max-width: none;
@@ -167,5 +179,9 @@
 
   .tools {
     flex: 0 0 340px;
+  }
+
+  .statusFilters {
+    flex: 1 1 auto;
   }
 }

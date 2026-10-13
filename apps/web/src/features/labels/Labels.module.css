@@ -1,0 +1,15 @@
+.dot {
+  flex: none;
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: var(--radius-full);
+  background: currentColor;
+}
+
+/* Sized like a status glyph, so label rows line up with status rows. */
+.dotLarge {
+  width: 14px;
+  height: 14px;
+  margin: 1px;
+}

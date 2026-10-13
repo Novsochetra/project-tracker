@@ -60,6 +60,7 @@ export const USAGE = [
   'Examples:',
   '  tracker login --url https://tracker.example.com',
   '  tracker tickets MOB --status "In progress"',
+  '  tracker create MOB --title "Crash on launch" --label Bug',
   '  tracker claim MOB',
   '  tracker move MOB-3 In progress',
   '  tracker attach MOB-3 notes.md data.csv --comment "The draft and its numbers"',

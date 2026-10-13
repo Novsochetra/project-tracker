@@ -1,38 +1,39 @@
-import type { Status } from '@tracker/shared';
 import { Reorder } from 'motion/react';
 import { useId, type ReactNode } from 'react';
 import { announce } from '../../app/announce';
 import { GroupedCard } from '../../components';
 import { usePrefersReducedMotion } from '../../lib/media';
+import { OrderedListRow, type OrderedItem } from './OrderedListRow';
 import styles from './StatusManagerSheet.module.css';
 import { moveInOrder } from './statusForm';
-import { StatusListRow } from './StatusListRow';
-import type { StatusOrder } from './useStatusOrder';
+import type { SavedOrder } from './useSavedOrder';
 
-export interface StatusListProps {
-  order: StatusOrder;
-  statuses: ReadonlyMap<string, Status>;
+export interface OrderedListProps<T extends OrderedItem> {
+  order: SavedOrder;
+  items: ReadonlyMap<string, T>;
   counts: ReadonlyMap<string, number>;
   editingId: string | null;
   dragDisabled: boolean;
+  leading: (item: T) => ReactNode;
+  hint?: (item: T) => string | null;
   onEdit: (id: string) => void;
-  renderEditor: (status: Status) => ReactNode;
+  renderEditor: (item: T) => ReactNode;
   rowRef: (id: string) => (element: HTMLButtonElement | null) => void;
   children?: ReactNode;
 }
 
 const INSTANT = { duration: 0 } as const;
 
-export function StatusList(props: StatusListProps) {
-  const { order, statuses, counts, editingId, onEdit, renderEditor, rowRef } = props;
+export function OrderedList<T extends OrderedItem>(props: OrderedListProps<T>) {
+  const { order, items, counts, editingId, onEdit, renderEditor, rowRef } = props;
   const hintId = useId();
   const reducedMotion = usePrefersReducedMotion();
-  const items = order.ids.flatMap((id) => statuses.get(id) ?? []);
-  const move = (status: Status, delta: number) => {
-    const next = moveInOrder(order.ids, status.id, delta);
+  const shown = order.ids.flatMap((id) => items.get(id) ?? []);
+  const move = (item: T, delta: number) => {
+    const next = moveInOrder(order.ids, item.id, delta);
     if (!next) return;
     order.commit(next);
-    announce(`${status.name} moved to position ${next.indexOf(status.id) + 1} of ${next.length}`);
+    announce(`${item.name} moved to position ${next.indexOf(item.id) + 1} of ${next.length}`);
   };
   return (
     <>
@@ -51,19 +52,21 @@ export function StatusList(props: StatusListProps) {
           layout
           layoutRoot
         >
-          {items.map((status) => (
-            <StatusListRow
-              key={status.id}
-              status={status}
-              count={counts.get(status.id) ?? 0}
-              editor={status.id === editingId ? renderEditor(status) : null}
+          {shown.map((item) => (
+            <OrderedListRow
+              key={item.id}
+              item={item}
+              leading={props.leading(item)}
+              hint={props.hint?.(item) ?? null}
+              count={counts.get(item.id) ?? 0}
+              editor={item.id === editingId ? renderEditor(item) : null}
               dragDisabled={props.dragDisabled}
               hintId={hintId}
               transition={reducedMotion ? INSTANT : undefined}
-              onEdit={() => onEdit(status.id)}
-              onMove={(delta) => move(status, delta)}
+              onEdit={() => onEdit(item.id)}
+              onMove={(delta) => move(item, delta)}
               onDragEnd={order.commitPreview}
-              rowRef={rowRef(status.id)}
+              rowRef={rowRef(item.id)}
             />
           ))}
         </Reorder.Group>

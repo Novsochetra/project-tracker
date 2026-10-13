@@ -64,7 +64,8 @@ import type {
   UpdateStatusInput,
   UpdateTicketInput,
 } from '@tracker/shared';
-import { AskingClient, segment } from './asking';
+import { segment } from './asking';
+import { LabelingClient } from './labeling';
 import type { ReadOptions } from './http';
 import type { UploadOptions } from './upload';
 
@@ -75,9 +76,10 @@ const listQuery = (query: ListTicketsQuery) => ({
   status: query.status,
   category: query.category,
   q: query.q,
+  label: query.label,
 });
 
-export class TrackerClient extends AskingClient {
+export class TrackerClient extends LabelingClient {
   listProjects = () => this.http.request<ProjectSummary[]>('GET', '/api/projects');
 
   createProject = (input: CreateProjectInput) =>

@@ -8,6 +8,7 @@ import type {
 import type { Kysely } from 'kysely';
 import type { AuthTables } from './authTables';
 import type { ChatTables } from './chatTables';
+import type { LabelTables } from './labelTables';
 import type { PushTables } from './pushTables';
 import type { QuestionTables } from './questionTables';
 import type { RunTables } from './runTables';
@@ -85,7 +86,8 @@ export interface AttachmentRow {
   userId: string | null;
 }
 
-export interface Database extends AuthTables, ChatTables, PushTables, QuestionTables, RunTables {
+export interface Database
+  extends AuthTables, ChatTables, LabelTables, PushTables, QuestionTables, RunTables {
   projects: ProjectRow;
   statuses: StatusRow;
   tickets: TicketRow;

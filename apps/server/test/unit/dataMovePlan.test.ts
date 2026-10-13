@@ -26,7 +26,15 @@ import { verificationProblems } from '../../src/dataMove/verify';
 import type { MigrationState } from '../../src/db/migrator';
 import { fileNameOf } from '../../src/services/attachments';
 
-const NONE: TableCounts = { projects: 0, statuses: 0, tickets: 0, activities: 0, attachments: 0 };
+const NONE: TableCounts = {
+  projects: 0,
+  statuses: 0,
+  tickets: 0,
+  activities: 0,
+  attachments: 0,
+  labels: 0,
+  ticketLabels: 0,
+};
 
 const COUNTS: TableCounts = {
   projects: 1,
@@ -34,6 +42,8 @@ const COUNTS: TableCounts = {
   tickets: 130,
   activities: 1283,
   attachments: 3,
+  labels: 2,
+  ticketLabels: 40,
 };
 
 const PHOTO: AttachmentRow = {
@@ -158,7 +168,7 @@ describe('targetProblems', () => {
     const problems = targetProblems(state({ existing: COUNTS, sameIds: COUNTS }), true);
     expect(problems).toEqual([
       'The target already has 1 project, 5 statuses, 130 tickets, 1283 activity entries, ' +
-        '3 attachments with the same ids as this data: it was moved there before. Nothing ' +
+        '3 attachments, 2 labels, 40 ticket labels with the same ids as this data: it was moved there before. Nothing ' +
         'needs to be moved again.',
     ]);
   });
@@ -208,12 +218,14 @@ describe('summary', () => {
   it('lists what will be copied, numbers lined up', () => {
     expect(planLines(COUNTS, { count: 3, bytes: 272_047 })).toEqual([
       'To copy:',
-      '  projects        1',
-      '  statuses        5',
-      '  tickets       130',
-      '  activities   1283',
-      '  attachments     3',
-      '  files           3 (266 KB)',
+      '  projects          1',
+      '  statuses          5',
+      '  tickets         130',
+      '  activities     1283',
+      '  attachments       3',
+      '  labels            2',
+      '  ticket_labels    40',
+      '  files             3 (266 KB)',
       'Not copied: users, sessions, api_tokens, invites, runners, runs, run_steps, run_requests, questions, chats, chat_messages, chat_card_tickets, ' +
         'push_subscriptions, push_keys (sign-in, helpers, chats and notifications stay with each ' +
         'tracker: set the online owner with owner-set, make new API tokens online, start tracker ' +
@@ -240,7 +252,7 @@ describe('summary', () => {
   it('says what was checked, and mentions renamed files only when a text names one', () => {
     expect(checkedLine(COUNTS)).toBe(
       'Checked: the target has every row moved (1 project, 5 statuses, 130 tickets, 1283 ' +
-        "activity entries, 3 attachments) and every attachment's file, at its size. Done.",
+        "activity entries, 3 attachments, 2 labels, 40 ticket labels) and every attachment's file, at its size. Done.",
     );
     expect(renamedTextsLine(0)).toEqual([]);
     expect(renamedTextsLine(2)[0]).toMatch(/^2 ticket or comment text\(s\) name a compressed/);

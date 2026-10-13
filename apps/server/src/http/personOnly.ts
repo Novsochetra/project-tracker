@@ -37,3 +37,7 @@ export const personEditsProjects = refuseAgents('Only a person changes or delete
 
 // A status's category decides what counts as done and its name goes into prompts.
 export const personEditsStatuses = refuseAgents("Only a person changes a project's statuses.");
+
+// A label's instructions go into the prompts of its tickets, so an agent could rewrite what later
+// runs are told. Agents still put labels on tickets.
+export const personEditsLabels = refuseAgents('Only a person changes labels.');

@@ -607,6 +607,33 @@ const DATA_MODEL: SchemaShape = {
     indexes: [],
     foreignKeys: [],
   },
+  labels: {
+    columns: [
+      'id text primary key',
+      'project_id text not null',
+      'name text not null',
+      'color text not null',
+      "template text not null default ''",
+      "instructions text not null default ''",
+      'position integer not null',
+      'created_at bigint not null',
+    ],
+    indexes: ['index (project_id)'],
+    foreignKeys: ['project_id -> projects.id on delete cascade'],
+  },
+  ticket_labels: {
+    columns: [
+      'id text primary key',
+      'ticket_id text not null',
+      'label_id text not null',
+      'created_at bigint not null',
+    ],
+    indexes: ['index (label_id)', 'unique (ticket_id, label_id)'],
+    foreignKeys: [
+      'label_id -> labels.id on delete cascade',
+      'ticket_id -> tickets.id on delete cascade',
+    ],
+  },
 };
 
 describe('migrations on SQLite and on Postgres', () => {

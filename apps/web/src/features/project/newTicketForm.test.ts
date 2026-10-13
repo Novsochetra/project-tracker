@@ -1,3 +1,4 @@
+import type { Label } from '@tracker/shared';
 import { describe, expect, it } from 'vitest';
 import { STATUS, statuses } from '../../api/test/fixtures';
 import {
@@ -5,10 +6,12 @@ import {
   chosenStatusId,
   defaultStatusId,
   formFromDraft,
+  hasChanges,
   newTicketDraftId,
   toCreateInput,
   withoutGoneStatus,
 } from './newTicketForm';
+import { withLabels, withoutGoneLabels } from './newTicketLabels';
 
 describe('defaultStatusId', () => {
   it('uses the status of the group the sheet was opened from', () => {
@@ -68,6 +71,7 @@ describe('new ticket drafts', () => {
       assignee: 'Dara',
       due: '2026-10-09',
       attachments: [],
+      labelIds: ['bug'],
     };
     expect(formFromDraft({ ...form })).toEqual(form);
   });
@@ -103,5 +107,53 @@ describe('toCreateInput', () => {
 
   it('leaves the status to the server when there is none yet', () => {
     expect(toCreateInput(blankForm(), undefined)).not.toHaveProperty('statusId');
+  });
+});
+
+describe('labels on a new ticket', () => {
+  const label = (id: string, template: string, position: number): Label => ({
+    id,
+    projectId: 'p1',
+    name: id,
+    color: '#B42318',
+    template,
+    instructions: '',
+    position,
+    createdAt: 1,
+  });
+  const labels = [label('bug', '## Steps to reproduce\n', 0), label('ui', '', 1)];
+
+  it('start the description from the template of a label picked while it is empty', () => {
+    expect(withLabels(blankForm(), ['bug'], labels)).toEqual({
+      labelIds: ['bug'],
+      description: '## Steps to reproduce\n',
+    });
+    const typed = { ...blankForm(), description: 'It crashes.' };
+    expect(withLabels(typed, ['bug'], labels)).toEqual({ labelIds: ['bug'] });
+    expect(withLabels(blankForm(), ['ui'], labels)).toEqual({ labelIds: ['ui'] });
+  });
+
+  it('leave the description alone when a label is taken off or was picked before', () => {
+    const picked = { ...blankForm(), labelIds: ['bug'] };
+    expect(withLabels(picked, [], labels)).toEqual({ labelIds: [] });
+    expect(withLabels(picked, ['bug', 'ui'], labels)).toEqual({ labelIds: ['bug', 'ui'] });
+  });
+
+  it('count as a change, are kept with the draft and sent with the ticket', () => {
+    const form = { ...blankForm(), labelIds: ['bug'] };
+    expect(hasChanges(form, undefined)).toBe(true);
+    expect(formFromDraft({ labelIds: ['bug', 7, null] }).labelIds).toEqual(['bug']);
+    expect(formFromDraft({ labelIds: 'bug' }).labelIds).toEqual([]);
+    expect(toCreateInput({ ...form, title: 'Crash' }, undefined).labelIds).toEqual(['bug']);
+    expect(toCreateInput({ ...blankForm(), title: 'Crash' }, undefined)).not.toHaveProperty(
+      'labelIds',
+    );
+  });
+
+  it('drop kept labels deleted since', () => {
+    const form = { ...blankForm(), labelIds: ['bug', 'gone'] };
+    expect(withoutGoneLabels(form, labels).labelIds).toEqual(['bug']);
+    const known = { ...blankForm(), labelIds: ['bug'] };
+    expect(withoutGoneLabels(known, labels)).toBe(known);
   });
 });

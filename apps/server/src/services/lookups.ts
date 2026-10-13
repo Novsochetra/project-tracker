@@ -1,5 +1,6 @@
 import { formatTicketKey, parseTicketKey } from '@tracker/shared';
 import { inScope, type UserScope } from '../auth/scope';
+import type { LabelRow } from '../db/labelTables';
 import type {
   ActivityRow,
   AttachmentRow,
@@ -11,6 +12,7 @@ import type {
 import { notFound } from '../errors';
 import { findActivityById } from '../repositories/activities';
 import { findAttachmentById } from '../repositories/attachments';
+import { findLabelById } from '../repositories/labels';
 import { findProjectById, findProjectByKey } from '../repositories/projects';
 import { findStatusById, listStatusRows } from '../repositories/statuses';
 import { findTicketById, findTicketByNum } from '../repositories/tickets';
@@ -79,6 +81,13 @@ export async function requireStatus(db: Db, scope: UserScope, id: string): Promi
     : undefined;
   if (!status || !project) throw notFound('Status was not found.');
   return status;
+}
+
+export async function requireLabel(db: Db, scope: UserScope, id: string): Promise<LabelRow> {
+  const label = await findLabelById(db, id);
+  const project = label ? reachable(await findProjectById(db, label.projectId), scope) : undefined;
+  if (!label || !project) throw notFound('Label was not found.');
+  return label;
 }
 
 export async function requireActivity(db: Db, scope: UserScope, id: string): Promise<ActivityRow> {

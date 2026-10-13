@@ -1,6 +1,7 @@
 import type { TicketDetail } from '@tracker/shared';
 import { useId } from 'react';
 import { DateRow, GroupedCard, SelectRow } from '../../../components';
+import { LabelsRow } from '../../labels/LabelsRow';
 import { useDetailFields } from '../details/useDetailFields';
 import { FieldNote } from '../fields/FieldNote';
 import { AssigneeRow } from './AssigneeRow';
@@ -11,6 +12,7 @@ export function DetailsCard({ detail }: { detail: TicketDetail }) {
   const { ticket } = detail;
   const fields = useDetailFields(detail);
   const { assignee } = fields;
+  const labels = detail.labels ?? [];
   const noteId = useId();
   return (
     <div className={styles.section}>
@@ -30,6 +32,9 @@ export function DetailsCard({ detail }: { detail: TicketDetail }) {
         />
         <AssigneeRow draft={assignee} describedBy={assignee.failed ? noteId : undefined} />
         <DateRow value={ticket.due} overdue={fields.overdue} onChange={fields.setDue} />
+        {labels.length > 0 && (
+          <LabelsRow labels={labels} value={ticket.labelIds ?? []} onChange={fields.setLabels} />
+        )}
       </GroupedCard>
       <FieldNote draft={assignee} subject="Assignee" id={noteId} />
     </div>

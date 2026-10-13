@@ -41,7 +41,9 @@ Revoke a token in **Connect Claude Code** → **API tokens** → **Revoke**. The
 
 The project key is optional: without it the agent finds the project with `list_projects` (by the repository) or asks you.
 
-`get_ticket`, `claim_ticket`, `claim_next_ticket` and `tracker show` print the project's instructions (set in the project's Edit sheet on the phone) under the ticket's header, when it has any.
+`get_ticket`, `claim_ticket`, `claim_next_ticket` and `tracker show` print the project's instructions (set in the project's Edit sheet on the phone) under the ticket's header, when it has any, then the instructions of each of the ticket's labels that has some (set in the project's **Manage labels** sheet).
+
+**Labels** are the project's own (a person makes them on the phone). `create_ticket` and `update_ticket` take `labels`, a list of names in any case (`update_ticket` sets the whole list; `[]` removes them all), and `list_tickets` takes one `label` to filter by. An unknown name fails before anything is sent, listing the project's labels. Lists and `get_ticket` show a ticket's labels. CLI: `tracker create MOB --title "Crash" --label "Bug, UI"`, `tracker update MOB-3 --label ""` and `tracker tickets MOB --label Bug`.
 
 Tools: `list_projects`, `list_statuses`, `list_tickets`, `get_ticket` (with up to 4 images), `create_ticket`, `update_ticket`, `move_ticket` (by status name), `add_comment`, `attach_file`, `claim_next_ticket`, `claim_ticket`, `submit_for_review`, `review_ticket`, `ask_person` (asks the person a question on a ticket and waits up to 30 minutes for the answer from their phone; with no answer it tells Claude to go on with its best judgment).
 
@@ -70,6 +72,8 @@ tracker login --url https://your-tracker.up.railway.app   # paste the API token
 tracker projects
 tracker projects --url http://localhost:4100              # one-off: another tracker
 tracker tickets MOB --status "In progress"
+tracker tickets MOB --label Bug
+tracker create MOB --title "Crash on launch" --label Bug
 tracker show MOB-3
 tracker claim MOB                     # or: tracker claim MOB-3
 tracker comment MOB-3 Found the cause: the rotation handler runs twice

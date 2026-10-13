@@ -3,6 +3,9 @@ import { COPIED_TABLES, SKIPPED_TABLES } from '../../src/dataMove/tables';
 import { portableSchema } from '../helpers/schemaShape';
 import { createTestDatabase, DIALECTS } from '../helpers/server';
 
+// The schema names tables as the database does; the move as Kysely's camel-case plugin does.
+const snakeCase = (name: string) => name.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`);
+
 const referencedTables = (foreignKeys: string[]) =>
   [...new Set(foreignKeys.map((key) => /-> (\w+)\./.exec(key)?.[1]))].sort();
 
@@ -12,13 +15,13 @@ describe.each(DIALECTS)('the tables the data move copies (%s)', (dialect) => {
     const db = await createTestDatabase(dialect);
     try {
       const schema = await portableSchema(db, dialect);
-      const copied = COPIED_TABLES.map((table) => table.name as string);
+      const copied = COPIED_TABLES.map((table) => snakeCase(table.name));
 
       expect(Object.keys(schema).sort()).toEqual(
         [...copied, ...Object.keys(SKIPPED_TABLES)].sort(),
       );
       for (const table of COPIED_TABLES) {
-        expect(referencedTables(schema[table.name]!.foreignKeys)).toEqual(
+        expect(referencedTables(schema[snakeCase(table.name)]!.foreignKeys)).toEqual(
           [...table.references].sort(),
         );
       }

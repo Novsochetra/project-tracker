@@ -146,6 +146,22 @@
   flex: none;
 }
 
+/* The title keeps most of a wide row. */
+.main .labels {
+  flex: 0 1 auto;
+  flex-wrap: nowrap;
+  max-width: 40%;
+  overflow: hidden;
+}
+
+.main .dots {
+  display: none;
+}
+
+.main .due[data-no-date] {
+  display: none;
+}
+
 .flash {
   position: absolute;
   inset: 0;
@@ -233,6 +249,25 @@
 
   .main .due {
     container: due / inline-size;
+  }
+
+  .main .labels {
+    display: none;
+  }
+
+  /* Phone rows show a ticket's labels as dots after the due date, only as many as fit: they
+     give way first, so the date keeps its line and the row its height. */
+  .main .due[data-no-date] {
+    display: inline-flex;
+  }
+
+  .main .dots {
+    display: inline-flex;
+    flex: 0 1000 auto;
+    flex-wrap: wrap;
+    min-width: 0;
+    height: 8px;
+    overflow: hidden;
   }
 
   /* Only a sent-back row gets the chip's column: an empty one would still add a gap. */

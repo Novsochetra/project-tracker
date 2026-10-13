@@ -16,11 +16,11 @@ import { listStatusRows } from '../repositories/statuses';
 import { listTicketRows } from '../repositories/tickets';
 import { inTransaction, notify, type UserContext } from './context';
 import { requireProject, requireTicketScope, ticketKeyOf, type TicketScope } from './lookups';
-import { toTicket } from './mappers';
 import { WORKFLOW_VERBS, workflowMoveText, type WorkflowVerb } from './statusEvents';
 import { pushToUser } from './push';
 import { readyPush } from './reviewPush';
 import type { PlannedChange } from './ticketChanges';
+import { ticketOut } from './ticketOut';
 import { getTicketDetailById } from './ticketQueries';
 import { enterStatus, eventEntry, writeTicket, type WrittenTicket } from './ticketWrites';
 
@@ -63,7 +63,7 @@ export async function markSent(
       verb: WORKFLOW_VERBS.send,
     });
     const written = await writeTicket(trx, ctx.now, { ticket: scope.ticket, actor, ...plan });
-    return toTicket(written.ticket, scope.project.key);
+    return ticketOut(trx, written.ticket, scope.project.key);
   });
   notify(ctx, ticket.projectId, ticket.id);
   return ticket;

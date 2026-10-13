@@ -15,6 +15,7 @@ import { insertActivity } from '../repositories/activities';
 import { storageKeysOfTicket } from '../repositories/attachments';
 import { takeTicketNumber, updateProjectRow } from '../repositories/projects';
 import { listStatusRows } from '../repositories/statuses';
+import { setTicketLabels } from '../repositories/ticketLabels';
 import {
   deleteTicketRow,
   findTicketByClientId,
@@ -36,7 +37,9 @@ import {
 } from './lookups';
 import { toTicket } from './mappers';
 import { statusChangedText } from './statusEvents';
+import { ticketOut } from './ticketOut';
 import { fieldChanges, mergeChanges, type PlannedChange } from './ticketChanges';
+import { chosenLabels, labelChange } from './ticketLabelChanges';
 import { activityRow, assertMayEnter, enterStatus, eventEntry, writeTicket } from './ticketWrites';
 
 type CreateTicketValues = z.output<typeof createTicketInput>;
@@ -64,6 +67,7 @@ async function insertNewTicket(trx: Db, ctx: UserContext, request: NewTicket): P
   const statuses = await listStatusRows(trx, project.id);
   const status = input.statusId ? requireStatusIn(statuses, input.statusId) : statuses[0];
   if (!status) throw new Error(`Project ${project.key} has no statuses.`);
+  const labelIds = (await chosenLabels(trx, project.id, input.labelIds)).map((label) => label.id);
   const placement = await enterStatus(trx, actor, status);
   const num = await takeTicketNumber(trx, project.id);
   const at = ctx.now();
@@ -86,7 +90,8 @@ async function insertNewTicket(trx: Db, ctx: UserContext, request: NewTicket): P
   await insertActivity(trx, activityRow({ ...created, text: 'created the ticket' }));
   const target = { ticketId: row.id, activityId: null, uploader: ctx.scope };
   await attachUploads(trx, input.attachmentIds, target);
-  return toTicket(row, project.key);
+  await setTicketLabels(trx, row.id, labelIds, at);
+  return toTicket(row, project.key, labelIds);
 }
 
 interface CreateRequest {
@@ -113,7 +118,7 @@ async function repeatCreate(
   const { attached, leftOut } = await attachLaterUploads(trx, later, attachmentIds);
   const updatedAt = attached ? ctx.now() : earlier.updatedAt;
   if (attached) await updateTicketRow(trx, earlier.id, { updatedAt });
-  const ticket = toTicket({ ...earlier, updatedAt }, project.key);
+  const ticket = await ticketOut(trx, { ...earlier, updatedAt }, project.key);
   if (leftOut.length === 0) return { ticket, changed: attached };
   return { ticket: { ...ticket, leftOutAttachmentIds: leftOut }, changed: attached };
 }
@@ -181,12 +186,14 @@ export async function updateTicket(ctx: UserContext, update: TicketUpdate): Prom
   const outcome = await inTransaction(ctx, async (trx): Promise<Outcome> => {
     const scope = await requireTicketScope(trx, ctx.scope, key);
     const match = expectedMatch(scope.ticket, input, expected);
+    const labels = await labelChange(trx, scope.ticket, input.labelIds);
     const plan = mergeChanges([
       await statusChange(trx, actor, scope, input.statusId),
       fieldChanges(scope.ticket, input, new Date()),
+      { changes: {}, entries: labels ? [labels.entry] : [] },
     ]);
-    if (isEmpty(plan.changes)) {
-      return { ticket: toTicket(scope.ticket, scope.project.key), changed: false };
+    if (isEmpty(plan.changes) && !labels) {
+      return { ticket: await ticketOut(trx, scope.ticket, scope.project.key), changed: false };
     }
     const written = await writeTicket(trx, ctx.now, {
       ticket: scope.ticket,
@@ -194,7 +201,9 @@ export async function updateTicket(ctx: UserContext, update: TicketUpdate): Prom
       ...plan,
       match,
     });
-    return { ticket: toTicket(written.ticket, scope.project.key), changed: true };
+    if (labels)
+      await setTicketLabels(trx, scope.ticket.id, labels.labelIds, written.ticket.updatedAt);
+    return { ticket: await ticketOut(trx, written.ticket, scope.project.key), changed: true };
   });
   return finish(ctx, outcome);
 }
@@ -222,7 +231,9 @@ export async function moveTicket(
     const status = requireStatusIn(scope.statuses, input.statusId);
     const tickets = await listTicketRows(trx, scope.project.id);
     const plan = planMove(tickets, scope.ticket.id, { ...input, statusId: status.id });
-    if (!plan) return { ticket: toTicket(scope.ticket, scope.project.key), changed: false };
+    if (!plan) {
+      return { ticket: await ticketOut(trx, scope.ticket, scope.project.key), changed: false };
+    }
     if (plan.statusChanged) assertMayEnter(actor, status);
     for (const [id, rank] of plan.ranks) {
       if (id !== scope.ticket.id) await updateTicketRow(trx, id, { rank });
@@ -233,7 +244,7 @@ export async function moveTicket(
       changes: { statusId: status.id, rank: plan.ranks.get(scope.ticket.id) ?? scope.ticket.rank },
       entries: plan.statusChanged ? [eventEntry(statusChangedText(status.name))] : [],
     });
-    return { ticket: toTicket(written.ticket, scope.project.key), changed: true };
+    return { ticket: await ticketOut(trx, written.ticket, scope.project.key), changed: true };
   });
   return finish(ctx, outcome);
 }

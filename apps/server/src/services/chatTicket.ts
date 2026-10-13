@@ -5,7 +5,7 @@ import { notFound } from '../errors';
 import { listTicketActivities } from '../repositories/activities';
 import { findStatusById } from '../repositories/statuses';
 import { findTicketById, findTicketByNum } from '../repositories/tickets';
-import { promptTicket } from './prompts';
+import { promptTicket, ticketLabels } from './prompts';
 
 // Only a ticket of the chat's own project, so the chat's key and prompt name the right one.
 export async function requireChatTicket(
@@ -30,6 +30,9 @@ export async function chatPromptTicket(
   const ticket = chat.ticketId ? await findTicketById(db, chat.ticketId) : undefined;
   if (!ticket) return null;
   const status = await findStatusById(db, ticket.statusId);
-  const activities = await listTicketActivities(db, ticket.id);
-  return promptTicket(ticket, projectKey, status?.name ?? '', activities);
+  return promptTicket(ticket, projectKey, {
+    statusName: status?.name ?? '',
+    activities: await listTicketActivities(db, ticket.id),
+    labels: await ticketLabels(db, ticket),
+  });
 }
