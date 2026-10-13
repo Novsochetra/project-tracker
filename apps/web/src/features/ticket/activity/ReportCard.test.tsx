@@ -67,6 +67,25 @@ describe('report card sections', () => {
     });
   });
 
+  it('shows OUTPUT as Output, a list like Files, after Next', () => {
+    const text = lines(
+      'TICKET: MOB-1',
+      'STATUS: done',
+      'SUMMARY: Wrote the launch plan.',
+      'FILES: docs/plan.md',
+      'OUTPUT: plan.md, budget.csv, chart.png',
+      'NEXT: Pick a date',
+    );
+    const card = renderReport(report(text));
+    expect(card).not.toHaveTextContent('OUTPUT');
+    expect(terms(card)).toEqual(['Summary', 'Next', 'Output', 'Files']);
+    expect(
+      within(section(card, 'Output'))
+        .getAllByRole('listitem')
+        .map((item) => item.textContent),
+    ).toEqual(['plan.md', 'budget.csv', 'chart.png']);
+  });
+
   it('leaves out Files and Next when the report says none', () => {
     const card = renderReport(
       report(

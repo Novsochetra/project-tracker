@@ -1,7 +1,15 @@
 import type { CDPSession, Locator, Page } from '@playwright/test';
 import type { StatusCategory } from '@tracker/shared';
 import { expect, test, usesPhoneLayout } from './fixtures';
-import { readActionSheet, resting, seedProject, settled, ticketRow, toast } from './helpers';
+import {
+  readActionSheet,
+  resting,
+  seedProject,
+  settled,
+  swipeLeft,
+  ticketRow,
+  toast,
+} from './helpers';
 
 // PT-112: a phone turned sideways keeps the phone layout (PT-84) on a short screen: 390px on an
 // iPhone 13, about 296px on an iPhone 17 Pro under Safari's address and tab bars. An action sheet
@@ -69,20 +77,6 @@ async function expectRowCutMidway(sheet: Locator): Promise<void> {
   const share = await shareOfCutRow(sheet);
   expect(share).toBeGreaterThanOrEqual(0.3);
   expect(share).toBeLessThanOrEqual(0.7);
-}
-
-// Playwright can't drive a touch drag in WebKit, so the swipe is synthetic touch pointer events.
-async function swipeLeft(row: Locator): Promise<void> {
-  const box = await row.boundingBox();
-  if (!box) throw new Error('The row is not on screen.');
-  const start = box.x + box.width - 24;
-  const base = { pointerId: 7, pointerType: 'touch', isPrimary: true, button: 0 };
-  const at = (x: number) => ({ ...base, clientX: x, clientY: box.y + box.height / 2 });
-  await row.dispatchEvent('pointerdown', at(start));
-  for (let step = 1; step <= 12; step += 1) {
-    await row.dispatchEvent('pointermove', at(start - step * 10));
-  }
-  await row.dispatchEvent('pointerup', at(start - 120));
 }
 
 interface Point {

@@ -1,7 +1,9 @@
 import {
   buildProjectPrompt,
+  buildReviewPrompt,
   buildTicketPrompt,
   formatTicketKey,
+  roleForCategory,
   workableTickets,
   type PromptProject,
   type PromptResult,
@@ -19,6 +21,7 @@ const promptProject = (project: ProjectRow): PromptProject => ({
   name: project.name,
   key: project.key,
   repo: project.repo,
+  instructions: project.instructions,
 });
 
 function lastReview(activities: readonly ActivityRow[]): PromptReview | null {
@@ -53,14 +56,16 @@ export async function ticketPrompt(ctx: UserContext, key: string): Promise<Promp
   const scope = await requireTicketScope(ctx.db, ctx.scope, key);
   const activities = await listTicketActivities(ctx.db, scope.ticket.id);
   const ticket = promptTicket(scope.ticket, scope.project.key, scope.status.name, activities);
-  return { text: buildTicketPrompt(promptProject(scope.project), ticket), ticketCount: 1 };
+  const role = roleForCategory(scope.status.category);
+  const build = role === 'review' ? buildReviewPrompt : buildTicketPrompt;
+  return { text: build(promptProject(scope.project), ticket), ticketCount: 1, role };
 }
 
 export async function projectPrompt(ctx: UserContext, key: string): Promise<PromptResult> {
   const project = await requireProject(ctx.db, ctx.scope, key);
   const statuses = await listStatusRows(ctx.db, project.id);
   const tickets = workableTickets(await listTicketRows(ctx.db, project.id), statuses);
-  if (tickets.length === 0) return { text: '', ticketCount: 0 };
+  if (tickets.length === 0) return { text: '', ticketCount: 0, role: 'work' };
   const activities = await listActivitiesOfTickets(
     ctx.db,
     tickets.map((ticket) => ticket.id),
@@ -77,5 +82,6 @@ export async function projectPrompt(ctx: UserContext, key: string): Promise<Prom
   return {
     text: buildProjectPrompt(promptProject(project), prompts),
     ticketCount: tickets.length,
+    role: 'work',
   };
 }

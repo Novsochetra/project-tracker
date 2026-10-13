@@ -7,6 +7,7 @@ export interface WatchArgs {
   permissionMode?: string | undefined;
   maxTurns?: string | undefined;
   keepAwake?: boolean | undefined;
+  approvals?: boolean | undefined;
 }
 
 export interface WatchIo {

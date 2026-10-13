@@ -87,6 +87,14 @@ describe('breadcrumbFor', () => {
     expect(fresh.at(-1)?.label).toBe('New chat');
   });
 
+  it('goes through the ticket to a chat opened from it', () => {
+    const chat = { name: 'chat', key: 'MOB', chatId: null, ticketNum: 3 } as const;
+    expect(breadcrumbFor(chat, project).slice(2)).toEqual([
+      { level: 'ticket', label: 'MOB-3', target: { name: 'ticket', key: 'MOB', num: 3 } },
+      { level: 'chat', label: 'New chat', target: null },
+    ]);
+  });
+
   it('shows the key while the project is still loading', () => {
     const crumbs = breadcrumbFor({ name: 'ticket', key: 'web', num: 1 }, undefined);
     expect(crumbs.map((crumb) => crumb.label)).toEqual(['Projects', 'WEB', 'WEB-1']);

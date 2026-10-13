@@ -9,6 +9,7 @@ import {
   joinSubtitle,
   movesOnSend,
   openTicketsLabel,
+  promptRole,
   sendTarget,
   showsSwitch,
   switchLabel,
@@ -54,6 +55,7 @@ function TicketPromptSheet({ open, onClose, ticketKey }: SheetProps & { ticketKe
       query={query}
       draft={draft}
       onSent={() => mark(movesOnSend(target, switchOn))}
+      role={promptRole(draft.result, ticket.data)}
       run={run}
       boxNote={run.footer.kind === 'setup' && <SetupLine />}
       sendSwitch={

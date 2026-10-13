@@ -11,6 +11,7 @@ export type TrackerApi = Pick<
   | 'createTicket'
   | 'updateTicket'
   | 'addComment'
+  | 'uploadAttachment'
   | 'claimNext'
   | 'claimTicket'
   | 'submitForReview'
@@ -18,6 +19,9 @@ export type TrackerApi = Pick<
   | 'fetchAttachment'
   | 'fetchAttachmentText'
   | 'attachmentFileUrl'
+  | 'askQuestion'
+  | 'waitForQuestion'
+  | 'cancelQuestion'
 > & {
   // Download links need the token too, so replies note it when requests carry one.
   readonly usesToken?: boolean;

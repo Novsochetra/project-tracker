@@ -31,7 +31,7 @@ describe('tracker watch', () => {
 
   it('is in the usage', () => {
     expect(USAGE).toContain(
-      '\n  watch [PROJECT] [--name NAME] [--permission-mode MODE] [--max-turns N] [--no-keep-awake] [--install | --uninstall | --check]\n',
+      '\n  watch [PROJECT] [--name NAME] [--permission-mode MODE] [--max-turns N] [--approvals] [--no-keep-awake] [--install | --uninstall | --check]\n',
     );
   });
 
@@ -39,7 +39,7 @@ describe('tracker watch', () => {
     expect(await cli(['watch', 'MOB', 'WEB'])).toEqual({
       code: EXIT_USAGE,
       stderr:
-        'Unexpected argument "WEB".\nUsage: tracker watch [PROJECT] [--name NAME] [--permission-mode MODE] [--max-turns N] [--no-keep-awake] [--install | --uninstall | --check]',
+        'Unexpected argument "WEB".\nUsage: tracker watch [PROJECT] [--name NAME] [--permission-mode MODE] [--max-turns N] [--approvals] [--no-keep-awake] [--install | --uninstall | --check]',
     });
     expect((await cli(['watch', '--title', 'x'])).stderr).toContain(
       '"watch" has no --title option.',
@@ -70,6 +70,24 @@ describe('tracker watch', () => {
     expect((await cli(['watch', '--uninstall', '--name', 'Mac'])).stderr).toContain(
       '--uninstall takes no project or other options',
     );
+  });
+
+  it('refuses --approvals with a mode that does not ask, and for --check and --uninstall', async () => {
+    for (const mode of ['auto', 'bypassPermissions']) {
+      expect(await cli(['watch', '--approvals', '--permission-mode', mode])).toEqual({
+        code: EXIT_USAGE,
+        stderr: expect.stringContaining(
+          `--approvals asks on the phone before each step, but --permission-mode ${mode} doesn't. Use acceptEdits.`,
+        ),
+      });
+    }
+    expect((await cli(['watch', '--check', '--approvals'])).stderr).toContain(
+      '--check takes no project or other options',
+    );
+    expect((await cli(['claim', 'MOB', '--approvals'])).stderr).toContain(
+      '"claim" has no --approvals option.',
+    );
+    expect(parseCliArgs(['watch', '--approvals']).flags.approvals).toBe(true);
   });
 
   it('says so when Claude Code is not installed', async () => {

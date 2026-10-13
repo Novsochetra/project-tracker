@@ -19,6 +19,7 @@ import { saveAnswer } from './chatAnswers';
 import { inTransaction, type ServiceContext } from './context';
 import { requireTicket, ticketKeyOf } from './lookups';
 import { endingOf } from './runEnding';
+import { pushRunEnd } from './runEndPush';
 import { notifyRun, toRun } from './runMappers';
 import { requireRunnerFor } from './runners';
 import { usageOfFinish } from './runUsage';
@@ -72,6 +73,7 @@ export async function startRun(
     askModel: null,
     askMode: null,
     askEffort: null,
+    role: input.role ?? 'work',
   });
   await insertQueuedRun(ctx.db, row, `Claude is already working on ${ticketKeyOf(ref)}.`);
   notifyRun(ctx, scope, row);
@@ -115,7 +117,10 @@ export async function endRun(
   if (!ended && after.status !== status) {
     throw conflict(`This run already ended (${after.status}).`);
   }
-  if (ended) notifyRun(ctx, scope, after);
+  if (ended) {
+    notifyRun(ctx, scope, after);
+    pushRunEnd(ctx, scope, after, { answer });
+  }
   return toRun(after);
 }
 

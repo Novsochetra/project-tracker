@@ -25,3 +25,9 @@ export const personAnswers = refuseAgents('Only a person answers what Claude ask
 
 // A chat is the person's own conversation with Claude; an agent never removes one.
 export const personDeletesChats = refuseAgents('Only a person deletes a chat.');
+
+// Notifications are for a person's own phone; an agent's token has no device to send them to.
+export const personPushes = refuseAgents('Only a person turns on notifications.');
+
+// A project's repo and instructions go into every prompt, so an agent could rewrite what later runs are told.
+export const personEditsProjects = refuseAgents('Only a person changes or deletes a project.');

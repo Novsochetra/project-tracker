@@ -30,28 +30,22 @@
   padding: 64px var(--space-6);
 }
 
-/* The design's 12px padding lets both labels fit the 1 : 1.35 split at 375px. */
-button.barSecondary,
+/* Ask Claude and Paste report are squares, as on the Project screen (PT-184), so the primary
+   keeps its whole label at 320px. */
+button.barSquare {
+  flex: none;
+  width: var(--bar-button);
+  padding: 0;
+}
+
 button.barPrimary {
   flex: 1 1 0;
   padding: 0 var(--space-3);
 }
 
-button.barPrimary {
-  flex-grow: 1.35;
-}
-
 /* A long done name shrinks the Move to Done button, but not its icon. */
 .barPrimary svg {
   flex: none;
-}
-
-/* Below 360px "Paste report" beside "Send to Claude" or "Move to Done" needs about 347px, so it
-   shows "Paste"; its accessible name stays "Paste report". */
-@media (max-width: 359px) {
-  .reportWord {
-    display: none;
-  }
 }
 
 @media (width < 768px),

@@ -3,6 +3,7 @@ import { Suspense } from 'react';
 import { useLiveUpdates } from '../api';
 import { useToastRaise } from '../components';
 import { QuickCapture } from '../features/capture';
+import { useNotificationOpen } from '../features/push/useNotificationOpen';
 import { useIsPhone } from '../lib/media';
 import { StackNavigator, useBottomBarVisible } from '../navigation';
 import { DesktopHeader } from './DesktopHeader';
@@ -24,6 +25,7 @@ export function Shell() {
   const reachability = useReachability();
   useLiveUpdates(reachability.tracker);
   useToastRaise(useBottomBarVisible());
+  useNotificationOpen();
   const isPhone = useIsPhone();
   const unreachable = useApiUnreachable(reachability);
   return (

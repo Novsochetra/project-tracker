@@ -36,6 +36,7 @@ const app = createApp({
   version: config.version,
   commit: config.commit,
   publicUrl: config.publicUrl,
+  push: config.push,
 });
 
 // Node gives a whole request five minutes and then answers 408, which cut off a 100 MB video sent

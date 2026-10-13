@@ -7,6 +7,7 @@ import {
 } from '@tracker/shared';
 import { askArgs } from './ask/askArgs';
 import { claudeArgs, runClaude } from './claude';
+import { trackerAllowedArgs } from './mcp/trackerAllowedTools';
 import type { ClaudeExit } from './outcome';
 import { withPromptTool, type PromptTool } from './permissionTool/withPromptTool';
 
@@ -45,17 +46,20 @@ export function claudeRunners(setup: ClaudeSetup) {
   // A reader a run: it remembers that run's open tool calls.
   const onEvent = (onSteps: OnSteps) => stepsOf(readSteps(cwd), onSteps);
   // Only runs of the ticket lane, the ones that may change the folder, may ask the person: ticket
-  // runs and Edit questions. An Ask or Plan question gets no prompt tool, so no answer can widen
-  // what it may do.
-  const asking = (run: Run, start: (promptArgs: string[]) => Promise<ClaudeExit>) =>
-    prompts && laneOf(run.kind, run.askOptions) === 'ticket'
-      ? withPromptTool(prompts, run, start)
-      : start([]);
+  // runs and Edit questions. An Ask or Plan question gets no prompt tool and no tracker tools, so
+  // no answer can widen what it may do.
+  const asking = (run: Run, start: (laneArgs: string[]) => Promise<ClaudeExit>) => {
+    if (laneOf(run.kind, run.askOptions) !== 'ticket') return start([]);
+    const allowed = trackerAllowedArgs(run);
+    return prompts
+      ? withPromptTool(prompts, run, (promptArgs) => start([...allowed, ...promptArgs]))
+      : start(allowed);
+  };
   return {
     runClaude: (job: RunJob, stop: AbortSignal, onSteps: OnSteps) =>
-      asking(job.run, (promptArgs) =>
+      asking(job.run, (laneArgs) =>
         runClaude(
-          { command, cwd, args: [...claudeArgs(permissionMode), ...limit, ...promptArgs] },
+          { command, cwd, args: [...claudeArgs(permissionMode), ...limit, ...laneArgs] },
           job.prompt,
           stop,
           { onOutput: write, onEvent: onEvent(onSteps) },
@@ -63,9 +67,9 @@ export function claudeRunners(setup: ClaudeSetup) {
       ),
     // An answer goes to the chat, not to this window.
     runAsk: (job: RunJob, stop: AbortSignal, onSteps: OnSteps) =>
-      asking(job.run, (promptArgs) =>
+      asking(job.run, (laneArgs) =>
         runClaude(
-          { command, cwd, args: [...askArgs(job, permissionMode), ...limit, ...promptArgs] },
+          { command, cwd, args: [...askArgs(job, permissionMode), ...limit, ...laneArgs] },
           job.prompt,
           stop,
           { onOutput: () => undefined, onEvent: onEvent(onSteps) },

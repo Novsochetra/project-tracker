@@ -38,6 +38,25 @@ const headersOf = (call: Call) => new Headers(call.init.headers);
 const jsonBody = (call: Call): unknown => JSON.parse(call.init.body as string);
 
 const routes: Route[] = [
+  { name: 'getPushKey', method: 'GET', path: '/api/push/key', call: (c) => c.getPushKey() },
+  {
+    name: 'savePushSubscription',
+    method: 'PUT',
+    path: '/api/push/subscription',
+    body: { endpoint: 'https://web.push.apple.com/a', keys: { p256dh: 'p', auth: 'a' } },
+    call: (c) =>
+      c.savePushSubscription({
+        endpoint: 'https://web.push.apple.com/a',
+        keys: { p256dh: 'p', auth: 'a' },
+      }),
+  },
+  {
+    name: 'removePushSubscription',
+    method: 'DELETE',
+    path: '/api/push/subscription',
+    body: { endpoint: 'https://web.push.apple.com/a' },
+    call: (c) => c.removePushSubscription('https://web.push.apple.com/a'),
+  },
   { name: 'listProjects', method: 'GET', path: '/api/projects', call: (c) => c.listProjects() },
   {
     name: 'createProject',

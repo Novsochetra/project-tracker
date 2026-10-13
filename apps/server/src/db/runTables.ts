@@ -6,6 +6,7 @@ import type {
   RunRequestDecision,
   RunRequestKind,
   RunRequestStatus,
+  RunRole,
   RunStatus,
   RunStepKind,
 } from '@tracker/shared';
@@ -43,6 +44,8 @@ export interface RunRow {
   askMode: AskMode | null;
   askEffort: AskEffort | null;
   stepCount: number;
+  // Null on runs queued before there were roles, which were all work runs.
+  role: RunRole | null;
   costMicros: number | null;
   turns: number | null;
   durationMs: number | null;

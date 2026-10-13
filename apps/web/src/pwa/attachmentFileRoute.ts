@@ -1,8 +1,6 @@
-// With its extension, because vite.config.ts loads this file too.
-import type { RouteRequest } from './apiReadRoute.ts';
+import type { RouteRequest } from './apiReadRoute';
 
-// Workbox copies these into sw.js as source text, so they can't use anything from outside
-// themselves. A ranged read (how browsers play video) goes to the network: a cached whole file
+// A ranged read (how browsers play video) goes to the network: a cached whole file
 // is the wrong answer to it, and iOS doesn't play video without real ranges.
 export const isCachedAttachmentFile = ({ url, request, sameOrigin }: RouteRequest): boolean =>
   sameOrigin &&

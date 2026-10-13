@@ -5,6 +5,7 @@ export const makeChat = (overrides: Partial<Chat> = {}): Chat => ({
   id: 'c-1',
   projectKey: 'MOB',
   title: 'How does sync work?',
+  ticket: null,
   options: DEFAULT_ASK_OPTIONS,
   waiting: false,
   createdAt: Date.now() - 60_000,

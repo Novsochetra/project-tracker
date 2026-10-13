@@ -18,6 +18,7 @@ export interface RunLoopDeps {
   describe: (error: unknown) => string;
   onProblem: (source: ProblemSource, error: unknown) => void;
   handBack: (job: RunJob, texts: readonly string[]) => Promise<void>;
+  checkReview: (job: RunJob, outcome: FinishRunInput) => Promise<FinishRunInput>;
   signOfLife: (ticketKey: string) => () => void;
   stepsFor: (runId: string) => StepBatcher;
   usageOf: (job: RunJob, exit: ClaudeExit) => RunUsageInput | undefined;
@@ -50,11 +51,23 @@ type Runner = (
 const withUsage = (outcome: FinishRunInput, usage: RunUsageInput | undefined): FinishRunInput =>
   usage ? { ...outcome, usage } : outcome;
 
+async function ticketEnding(
+  deps: RunLoopDeps,
+  job: RunJob,
+  exit: ClaudeExit,
+  outcome: FinishRunInput,
+): Promise<FinishRunInput> {
+  // A cancelled run was stopped part way, so whatever it printed is not a report of the work.
+  if (outcome.status === 'cancelled') return outcome;
+  // A reviewer's words are a review, not a report of the work; review_ticket records it.
+  if (job.run.role === 'review') return deps.checkReview(job, outcome);
+  await deps.handBack(job, reportTexts(exit));
+  return outcome;
+}
+
 const runTicket: Runner = async (deps, job, stop, onSteps) => {
   const exit = await deps.runClaude(job, stop, onSteps);
-  const outcome = ticketOutcomeOf(exit, stop.aborted);
-  // A cancelled run was stopped part way, so whatever it printed is not a report of the work.
-  if (outcome.status !== 'cancelled') await deps.handBack(job, reportTexts(exit));
+  const outcome = await ticketEnding(deps, job, exit, ticketOutcomeOf(exit, stop.aborted));
   return withUsage(outcome, deps.usageOf(job, exit));
 };
 

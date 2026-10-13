@@ -12,6 +12,7 @@ import { createDatabase } from '../../src/db/createDatabase';
 import { REPO_ROOT } from '../../src/config';
 import { findOwner } from '../../src/repositories/users';
 import { addOwner, CHEAP_SCRYPT, JSON_HEADERS, OWNER, signIn } from '../helpers/auth';
+import { newDevice } from '../helpers/push';
 import { addUser } from '../helpers/runs';
 import { DIALECTS, useTestServer } from '../helpers/server';
 
@@ -55,6 +56,12 @@ describe.each(DIALECTS)('owner setup (%s)', (dialect) => {
     expect(projects).toEqual([{ ownerId: owner!.id }]);
     const files = await api.db.selectFrom('attachments').select('userId').execute();
     expect(files).toEqual([{ userId: owner!.id }]);
+  });
+
+  it('drops devices that turned notifications on before there was an owner', async () => {
+    expect((await api.put('/api/push/subscription', newDevice().subscription)).status).toBe(204);
+    await addOwner(api.db);
+    expect(await api.db.selectFrom('pushSubscriptions').selectAll().execute()).toEqual([]);
   });
 
   it('refuses an email another account already uses', async () => {

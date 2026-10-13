@@ -55,8 +55,9 @@ export interface FirstLoadLimits {
 }
 
 export const FIRST_LOAD_LIMITS: FirstLoadLimits = {
-  // Gzipped kB: 262.5 with every screen in one script, 206.5 after the split (PT-48). The room
-  // left is for small changes; one that needs more should load later, or raise this on purpose.
+  // Gzipped kB: 262.5 with every screen in one script, 206.5 after the split (PT-48), 215.6 to
+  // 201.1 with motion's m elements (PT-207). The room left is for small changes; one that needs
+  // more should load later, or raise this on purpose.
   budgetKB: 215,
   // The entry and the chunk it shares with the lazy parts. Each 3rd file so far was shared code that
   // stopped folding into the entry: the people and statuses hooks (PT-98), the viewers without the

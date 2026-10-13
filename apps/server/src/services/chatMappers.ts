@@ -4,14 +4,22 @@ import {
   isAnswerStep,
   type Chat,
   type ChatMessage,
+  type ChatTicket,
 } from '@tracker/shared';
 import type { ChatWithKey, MessageWithKey } from '../repositories/chats';
 import { usageOfRow } from './runUsage';
+
+// A chat's ticket is one of its own project's, so the project's key makes the ticket's.
+const chatTicket = (row: ChatWithKey): ChatTicket | null =>
+  row.ticketNum === null
+    ? null
+    : { key: formatTicketKey(row.projectKey, row.ticketNum), title: row.ticketTitle ?? '' };
 
 export const toChat = (row: ChatWithKey): Chat => ({
   id: row.id,
   projectKey: row.projectKey,
   title: row.title,
+  ticket: chatTicket(row),
   options: { model: row.askModel, mode: row.askMode, effort: row.askEffort },
   // SQLite answers exists() with 0 or 1, Postgres with a boolean.
   waiting: Boolean(row.waiting),

@@ -20,6 +20,12 @@ export const askInput = z.object({
 });
 export type AskInput = z.input<typeof askInput>;
 
+// A chat started from a ticket screen is about that ticket for good.
+export const startChatInput = askInput.extend({
+  ticketKey: z.string().trim().min(1).max(40).optional(),
+});
+export type StartChatInput = z.input<typeof startChatInput>;
+
 // The card's fields as the person left them, edits included.
 export const cardTicketInput = z.object({
   title: z.string().trim().min(1, 'Add a title to create the ticket.').max(TICKET_TITLE_MAX),

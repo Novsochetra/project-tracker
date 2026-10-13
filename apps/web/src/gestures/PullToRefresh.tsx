@@ -1,6 +1,7 @@
-import { motion, useMotionValue, useTransform } from 'motion/react';
+import { m, useMotionValue, useTransform } from 'motion/react';
 import { useLayoutEffect, useRef, useState, type ReactNode, type RefObject } from 'react';
 import { usePrefersReducedMotion } from '../lib/media';
+import { MotionScope } from '../lib/MotionScope';
 import { spring } from './animation';
 import { haptic } from './haptics';
 import styles from './PullToRefresh.module.css';
@@ -72,20 +73,22 @@ export function PullToRefresh({
   });
 
   return (
-    <div ref={rootRef} className={styles.root} data-refreshing={refreshing || undefined}>
-      <motion.div
-        className={styles.indicator}
-        style={{ y: spinnerY, opacity: progress }}
-        aria-hidden="true"
-      >
-        <RefreshSpinner progress={progress} spinning={refreshing} />
-      </motion.div>
-      <motion.div className={styles.content} style={{ y: pull }}>
-        {children}
-      </motion.div>
-      <span role="status" className="visually-hidden">
-        {refreshing ? 'Refreshing' : ''}
-      </span>
-    </div>
+    <MotionScope>
+      <div ref={rootRef} className={styles.root} data-refreshing={refreshing || undefined}>
+        <m.div
+          className={styles.indicator}
+          style={{ y: spinnerY, opacity: progress }}
+          aria-hidden="true"
+        >
+          <RefreshSpinner progress={progress} spinning={refreshing} />
+        </m.div>
+        <m.div className={styles.content} style={{ y: pull }}>
+          {children}
+        </m.div>
+        <span role="status" className="visually-hidden">
+          {refreshing ? 'Refreshing' : ''}
+        </span>
+      </div>
+    </MotionScope>
   );
 }

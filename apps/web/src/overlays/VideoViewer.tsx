@@ -1,6 +1,7 @@
-import { motion } from 'motion/react';
+import { m } from 'motion/react';
 import { useLayoutEffect, useRef, type RefObject } from 'react';
 import { createPortal } from 'react-dom';
+import { MotionScope } from '../lib/MotionScope';
 import { useViewportSize } from '../gestures/useViewportSize';
 import { usePrefersReducedMotion } from '../lib/media';
 import styles from './ImageViewer.module.css';
@@ -70,7 +71,7 @@ function VideoPanel({
   usePlayWhileOpen(videoRef, open);
   const trapKeys = useOverlayBehavior({ active: open, panelRef, onClose, focusInitial: false });
   return (
-    <motion.div
+    <m.div
       ref={panelRef}
       role="dialog"
       aria-modal="true"
@@ -81,9 +82,9 @@ function VideoPanel({
       inert={!open}
       onKeyDown={trapKeys}
     >
-      <motion.div className={styles.backdrop} style={{ opacity: values.backdrop }} />
-      <motion.div ref={stageRef} className={styles.stage} style={{ scale: values.stageScale }}>
-        <motion.div
+      <m.div className={styles.backdrop} style={{ opacity: values.backdrop }} />
+      <m.div ref={stageRef} className={styles.stage} style={{ scale: values.stageScale }}>
+        <m.div
           className={videoStyles.frame}
           style={{ x: values.x, y: values.y, scale: values.scale }}
         >
@@ -99,8 +100,8 @@ function VideoPanel({
             preload="metadata"
             tabIndex={0}
           />
-        </motion.div>
-      </motion.div>
+        </m.div>
+      </m.div>
       <ViewerChrome
         index={0}
         count={1}
@@ -109,7 +110,7 @@ function VideoPanel({
         onClose={onClose}
         onGo={stay}
       />
-    </motion.div>
+    </m.div>
   );
 }
 
@@ -117,7 +118,9 @@ export function VideoViewer(props: VideoViewerProps) {
   const { mounted, onExited } = usePresence(props.open && props.video !== null);
   if (!mounted || !props.video) return null;
   return createPortal(
-    <VideoPanel {...props} video={props.video} onExited={onExited} />,
+    <MotionScope>
+      <VideoPanel {...props} video={props.video} onExited={onExited} />
+    </MotionScope>,
     document.body,
   );
 }

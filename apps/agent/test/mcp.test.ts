@@ -1,8 +1,10 @@
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import type { TicketQuestion } from '@tracker/shared';
 import type { TrackerApi } from '../src/client';
 import { createMcpServer } from '../src/server';
+import { PROGRESS_MS } from '../src/tools/keepCallAlive';
 import { fakeClient, imageResponse, rejectWith, returns } from './fakeClient';
 import { attachment, detail, projectSummary, statuses, ticket } from './fixtures';
 
@@ -15,10 +17,12 @@ const TOOL_NAMES = [
   'update_ticket',
   'move_ticket',
   'add_comment',
+  'attach_file',
   'claim_next_ticket',
   'claim_ticket',
   'submit_for_review',
   'review_ticket',
+  'ask_person',
 ];
 
 let client: Client | undefined;
@@ -34,6 +38,7 @@ async function connect(tracker: TrackerApi): Promise<Client> {
 }
 
 afterEach(async () => {
+  vi.useRealTimers();
   await client?.close();
   client = undefined;
 });
@@ -155,6 +160,26 @@ describe('MCP server', () => {
     });
     expect(result.isError).toBe(true);
     expect(JSON.stringify(result.content)).toContain('Rating must be a whole number from 1 to 5.');
+  });
+
+  it('keeps an ask_person call alive with progress while the person answers', async () => {
+    vi.useFakeTimers();
+    const question = { id: 'q1', status: 'open' } as TicketQuestion;
+    let answer = (_seen: TicketQuestion) => undefined as void;
+    const tracker = fakeClient({
+      askQuestion: returns(question),
+      waitForQuestion: () => new Promise((resolve) => (answer = resolve)),
+    });
+    const onprogress = vi.fn();
+    const call = (await connect(tracker)).callTool(
+      { name: 'ask_person', arguments: { ticket: 'MOB-3', question: 'Which name?' } },
+      undefined,
+      { onprogress },
+    );
+    await vi.advanceTimersByTimeAsync(PROGRESS_MS * 2);
+    expect(onprogress).toHaveBeenCalledTimes(2);
+    answer({ ...question, status: 'answered', answer: 'Night' });
+    expect((await call).content).toEqual([{ type: 'text', text: 'The person answered: Night' }]);
   });
 
   it('lists the work and review prompts with an optional project argument', async () => {

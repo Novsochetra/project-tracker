@@ -23,7 +23,9 @@ export interface RenderAskOptions {
 
 function screenFor(route: Route): ReactNode {
   if (route.name === 'chats') return <ChatsScreen projectKey={route.key} />;
-  if (route.name === 'chat') return <ChatScreen projectKey={route.key} chatId={route.chatId} />;
+  if (route.name === 'chat') {
+    return <ChatScreen projectKey={route.key} chatId={route.chatId} ticketNum={route.ticketNum} />;
+  }
   return <p>{routePath(route)}</p>;
 }
 

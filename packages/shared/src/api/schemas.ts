@@ -6,6 +6,8 @@ import {
   type AttachmentOwner,
 } from '../domain/attachment';
 import { PRIORITIES } from '../domain/priority';
+import { PROJECT_INSTRUCTIONS_MAX } from '../domain/project';
+import { DEFAULT_PROJECT_TEMPLATE, PROJECT_TEMPLATE_NAMES } from '../domain/projectTemplates';
 import { STATUS_CATEGORIES } from '../domain/status';
 import {
   TICKET_ASSIGNEE_MAX,
@@ -28,11 +30,22 @@ const id = z.string().min(1).max(64);
 const attachmentIds = (owner: AttachmentOwner) =>
   z.array(id).max(MAX_NEW_ATTACHMENTS, tooManyFilesMessage(owner));
 
+const projectInstructions = z
+  .string()
+  .trim()
+  .max(
+    PROJECT_INSTRUCTIONS_MAX,
+    `Instructions can be up to ${PROJECT_INSTRUCTIONS_MAX.toLocaleString('en-US')} characters.`,
+  )
+  .optional();
+
 export const createProjectInput = z.object({
   name: z.string().trim().min(1, 'Add a name to create the project.').max(120),
   key: z.string().max(20).optional(),
   description: z.string().max(5000).optional(),
   repo: z.string().trim().max(500).optional(),
+  instructions: projectInstructions,
+  template: z.enum(PROJECT_TEMPLATE_NAMES).default(DEFAULT_PROJECT_TEMPLATE),
 });
 export type CreateProjectInput = z.input<typeof createProjectInput>;
 
@@ -40,6 +53,7 @@ export const updateProjectInput = z.object({
   name: z.string().trim().min(1).max(120).optional(),
   description: z.string().max(5000).optional(),
   repo: z.string().trim().max(500).optional(),
+  instructions: projectInstructions,
 });
 export type UpdateProjectInput = z.input<typeof updateProjectInput>;
 

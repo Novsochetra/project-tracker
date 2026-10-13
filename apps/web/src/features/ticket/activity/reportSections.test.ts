@@ -16,8 +16,27 @@ describe('reportSections', () => {
       status: { category: 'in_review', text: 'done' },
       summary: 'Fixed the rotation crash.',
       files: ['src/profile/Header.tsx', 'src/profile/Header.test.tsx'],
+      output: [],
       next: 'Check on a real device in landscape',
     });
+  });
+
+  it('reads OUTPUT, the files attached to the ticket, like FILES', () => {
+    const text = lines(
+      'TICKET: PT-191',
+      'STATUS: done',
+      'SUMMARY: Wrote the launch plan.',
+      'OUTPUT: plan.md, budget.csv (by month)',
+      'FILES: none',
+      'NEXT: none',
+    );
+    expect(reportSections(text)).toMatchObject({
+      output: ['plan.md', 'budget.csv (by month)'],
+      files: [],
+    });
+    const listed = lines('SUMMARY: Drew the chart.', '**Output:**', '- `chart.png`', '- data.csv');
+    expect(reportSections(listed)?.output).toEqual(['chart.png', 'data.csv']);
+    expect(reportSections(lines('SUMMARY: Nothing made.', 'OUTPUT: none'))?.output).toEqual([]);
   });
 
   it('keeps a summary’s lines and reads files one per line', () => {
@@ -54,6 +73,7 @@ describe('reportSections', () => {
       status: null,
       summary: 'Only a summary.',
       files: [],
+      output: [],
       next: null,
     });
   });
@@ -72,6 +92,7 @@ describe('reportSections', () => {
       status: { category: 'in_review', text: 'done' },
       summary: 'Added the inline error.',
       files: ['src/login/LoginForm.tsx', 'src/login/my_errors.ts'],
+      output: [],
       next: 'Ask design about the copy',
     });
   });
@@ -147,6 +168,7 @@ describe('reportSections', () => {
       status: { category: 'in_review', text: 'done' },
       summary: 'Fixed the parser.\nStatus: all tests pass.\nNext: the reviewer checks 320px.',
       files: ['src/a.ts'],
+      output: [],
       next: null,
     });
   });

@@ -1,4 +1,5 @@
 import { addComment } from '../tools/addComment';
+import { attachFile } from '../tools/attachFile';
 import { claimNextTicket } from '../tools/claimNextTicket';
 import { claimTicket } from '../tools/claimTicket';
 import { createTicket } from '../tools/createTicket';
@@ -106,6 +107,19 @@ export const COMMANDS: readonly Command[] = [
     rest: true,
     options: [],
     plan: ([ticket, ...text]) => ({ tool: addComment, input: { ticket, text: text.join(' ') } }),
+  },
+  {
+    name: 'attach',
+    usage: 'attach <KEY> <FILE…> [--comment TEXT]',
+    summary:
+      'Attach files from this folder or a temp folder to a ticket, or to a new comment with --comment.',
+    args: ['KEY', 'FILE'],
+    rest: true,
+    options: ['comment'],
+    plan: ([ticket, ...paths], options) => ({
+      tool: attachFile,
+      input: { ticket, paths, ...options },
+    }),
   },
   {
     name: 'claim',

@@ -65,6 +65,7 @@ describe.each(DIALECTS)('chats with Claude Code (%s)', (dialect) => {
       id: expect.any(String),
       projectKey: 'MOB',
       title: 'Where are runs queued?',
+      ticket: null,
       options: { model: 'default', mode: 'ask', effort: 'default' },
       waiting: false,
       createdAt: 1_000_000,
@@ -75,6 +76,7 @@ describe.each(DIALECTS)('chats with Claude Code (%s)', (dialect) => {
     ]);
     expect(run).toMatchObject({
       kind: 'ask',
+      role: 'work',
       ticketKey: null,
       chatId: made.id,
       askOptions: { model: 'default', mode: 'ask', effort: 'default' },

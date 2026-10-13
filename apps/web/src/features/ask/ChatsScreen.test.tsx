@@ -28,7 +28,7 @@ describe('Ask: the chat list', () => {
     ]);
     const user = userEvent.setup();
     const list = await screen.findByRole('region', { name: 'Chats' });
-    const rows = within(list).getAllByRole('button');
+    const rows = within(list).getAllByRole('button', { name: /ago$/ });
     expect(rows.map((row) => row.textContent)).toEqual([
       expect.stringMatching(/^Where is the login code\? 1h ago/),
       expect.stringMatching(/^How does sync work\? 2d ago/),
@@ -43,7 +43,9 @@ describe('Ask: the chat list', () => {
       makeChat({ id: 'c-1', title: 'How does sync work?' }),
     ]);
     const list = await screen.findByRole('region', { name: 'Chats' });
-    const rows = within(list).getAllByRole('button');
+    const rows = within(list)
+      .getAllByRole('button')
+      .filter((row) => !row.hasAttribute('aria-expanded'));
     expect(rows[0]).toHaveAccessibleName('Rename the queue Claude is waiting for you');
     expect(within(rows[0]!).getByText('Waiting for you')).toBeVisible();
     expect(rows[0]).not.toHaveTextContent(/ago/);

@@ -2,6 +2,7 @@ import { realpathSync } from 'node:fs';
 import { dirname } from 'node:path';
 import type { GlobalValues } from '../cli/options';
 import { describeError } from '../errors';
+import { runPermissionMode } from './approvals';
 import { CLAUDE } from './claude';
 import { claudeRunners } from './claudeRunners';
 import { lockFolder } from './folderLock';
@@ -16,6 +17,9 @@ import { createWatcher } from './watcher';
 import type { WatchArgs, WatchIo } from './watchIo';
 
 const CHECK_IN_MS = 20_000;
+
+const APPROVALS_ON =
+  "Ticket runs ask on your phone before each step your Claude Code allow rules don't cover.";
 
 const aborted = (signal: AbortSignal): Promise<void> =>
   new Promise((resolve) => {
@@ -40,7 +44,7 @@ async function keepWatching(setup: Setup, args: WatchArgs, io: WatchIo, signal: 
   const claude = claudeRunners({
     command: CLAUDE,
     cwd: folder,
-    permissionMode: args.permissionMode,
+    permissionMode: runPermissionMode(args),
     maxTurns: args.maxTurns,
     write: io.write,
     prompts: promptTool(setup, io),
@@ -50,6 +54,7 @@ async function keepWatching(setup: Setup, args: WatchArgs, io: WatchIo, signal: 
     `Watching ${settings.projectKey} on ${config.url} as "${settings.name}". ` +
       `Runs started from the app open Claude Code in ${folder}. Leave this open; Ctrl-C stops.`,
   );
+  if (args.approvals) io.stdout(APPROVALS_ON);
   const timer = setInterval(() => void watcher.checkIn(), CHECK_IN_MS);
   const stream = followRunEvents({
     url: api.eventsUrl(),

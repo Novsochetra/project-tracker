@@ -3,6 +3,7 @@ import { CHAT_ANSWER_MAX } from '../domain/chat';
 import {
   ENDED_RUN_STATUSES,
   RUN_KINDS,
+  RUN_ROLES,
   RUN_ERROR_MAX,
   RUN_PROMPT_MAX,
   RUNNER_NAME_MAX,
@@ -20,6 +21,8 @@ export const startRunInput = z.object({
     .trim()
     .min(1, 'Write a prompt for Claude Code.')
     .max(RUN_PROMPT_MAX, `Use at most ${RUN_PROMPT_MAX} characters for the prompt.`),
+  // The sheet's prompt says which; older apps send none and start work runs.
+  role: z.enum(RUN_ROLES).optional(),
 });
 export type StartRunInput = z.input<typeof startRunInput>;
 

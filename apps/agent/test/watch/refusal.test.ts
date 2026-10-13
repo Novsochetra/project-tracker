@@ -8,6 +8,7 @@ const job = (run: Partial<Run>): RunJob => ({
   run: {
     id: 'r-1',
     kind: 'ticket',
+    role: 'work',
     projectKey: 'MOB',
     ticketKey: 'MOB-3',
     chatId: null,

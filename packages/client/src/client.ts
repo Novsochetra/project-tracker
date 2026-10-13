@@ -1,10 +1,7 @@
 import type {
   AcceptInviteInput,
   Activity,
-  AddRunRequestInput,
   AddRunStepsInput,
-  AnswerRunRequestInput,
-  CancelRunRequestInput,
   ChangePasswordInput,
   ApiToken,
   AskInput,
@@ -38,6 +35,8 @@ import type {
   ProjectSummary,
   ProjectUsage,
   PromptResult,
+  PushKey,
+  PushSubscriptionInput,
   RegisterRunnerInput,
   ReportInput,
   ReportPreview,
@@ -49,10 +48,10 @@ import type {
   RunJob,
   RunKind,
   Runner,
-  RunRequest,
   RunStep,
   ServerMeta,
   SessionState,
+  StartChatInput,
   StartRunInput,
   Status,
   SubmitWorkInput,
@@ -64,12 +63,10 @@ import type {
   UpdateProjectInput,
   UpdateStatusInput,
   UpdateTicketInput,
-  WaitRunRequestQuery,
 } from '@tracker/shared';
-import { Http, type HttpOptions, type ReadOptions } from './http';
+import { AskingClient, segment } from './asking';
+import type { ReadOptions } from './http';
 import type { UploadOptions } from './upload';
-
-const segment = (value: string): string => encodeURIComponent(value);
 
 const attachmentFilePath = (attachmentId: string): string =>
   `/api/attachments/${segment(attachmentId)}/file`;
@@ -80,13 +77,7 @@ const listQuery = (query: ListTicketsQuery) => ({
   q: query.q,
 });
 
-export class TrackerClient {
-  private readonly http: Http;
-
-  constructor(options: HttpOptions) {
-    this.http = new Http(options);
-  }
-
+export class TrackerClient extends AskingClient {
   listProjects = () => this.http.request<ProjectSummary[]>('GET', '/api/projects');
 
   createProject = (input: CreateProjectInput) =>
@@ -278,6 +269,14 @@ export class TrackerClient {
   resetPassword = (input: ResetPasswordInput) =>
     this.http.request<void>('POST', '/api/password-resets/use', { body: input });
 
+  getPushKey = () => this.http.request<PushKey>('GET', '/api/push/key');
+
+  savePushSubscription = (input: PushSubscriptionInput) =>
+    this.http.request<void>('PUT', '/api/push/subscription', { body: input });
+
+  removePushSubscription = (endpoint: string) =>
+    this.http.request<void>('DELETE', '/api/push/subscription', { body: { endpoint } });
+
   startRun = (ticketKey: string, input: StartRunInput) =>
     this.http.request<Run>('POST', `/api/tickets/${segment(ticketKey)}/runs`, { body: input });
 
@@ -321,42 +320,10 @@ export class TrackerClient {
       query: { after: after === undefined ? undefined : String(after) },
     });
 
-  addRunRequest = (runId: string, input: AddRunRequestInput) =>
-    this.http.request<RunRequest>('POST', `/api/runs/${segment(runId)}/requests`, { body: input });
-
-  listRunRequests = (runId: string) =>
-    this.http.request<RunRequest[]>('GET', `/api/runs/${segment(runId)}/requests`);
-
-  answerRunRequest = (requestId: string, input: AnswerRunRequestInput) =>
-    this.http.request<RunRequest>('POST', `/api/requests/${segment(requestId)}/answer`, {
-      body: input,
-    });
-
-  // A long poll: it may answer with the request still open, and is called again then.
-  waitForRunRequest = (
-    requestId: string,
-    { runnerId }: WaitRunRequestQuery,
-    { signal }: { signal?: AbortSignal } = {},
-  ) =>
-    this.http.request<RunRequest>('GET', `/api/requests/${segment(requestId)}/wait`, {
-      query: { runnerId },
-      signal,
-    });
-
-  cancelRunRequest = (
-    requestId: string,
-    input: CancelRunRequestInput,
-    { signal }: { signal?: AbortSignal } = {},
-  ) =>
-    this.http.request<RunRequest>('POST', `/api/requests/${segment(requestId)}/cancel`, {
-      body: input,
-      signal,
-    });
-
   listChats = (projectKey: string) =>
     this.http.request<Chat[]>('GET', `/api/projects/${segment(projectKey)}/chats`);
 
-  startChat = (projectKey: string, input: AskInput) =>
+  startChat = (projectKey: string, input: StartChatInput) =>
     this.http.request<ChatDetail>('POST', `/api/projects/${segment(projectKey)}/chats`, {
       body: input,
     });

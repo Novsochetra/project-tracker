@@ -1,4 +1,4 @@
-import { buildAskPrompt, type AskOptions, type ChatRole } from '@tracker/shared';
+import { buildAskPrompt, type AskOptions, type ChatRole, type PromptTicket } from '@tracker/shared';
 import { randomUUID } from 'node:crypto';
 import type { ChatRow } from '../db/chatTables';
 import type { Db, ProjectRow } from '../db/schema';
@@ -9,9 +9,10 @@ export const CHAT_BUSY = 'Claude is still answering. Wait for the answer or canc
 
 export interface AskRequest {
   queued: QueuedRun;
-  project: Pick<ProjectRow, 'key' | 'name'>;
+  project: Pick<ProjectRow, 'key' | 'name' | 'instructions'>;
   chat: Pick<ChatRow, 'id' | 'sessionId' | 'sessionRunnerId'>;
   history: readonly { role: ChatRole; text: string }[];
+  ticket: PromptTicket | null;
   question: string;
   options: AskOptions;
 }
@@ -29,6 +30,7 @@ export async function queueAsk(trx: Db, request: AskRequest) {
     mode: options.mode,
     question,
     history,
+    ticket: request.ticket,
   });
   const run = queuedRunRow(queued, {
     prompt,
@@ -39,6 +41,7 @@ export async function queueAsk(trx: Db, request: AskRequest) {
     askModel: options.model,
     askMode: options.mode,
     askEffort: options.effort,
+    role: 'work',
   });
   await insertQueuedRun(trx, run, CHAT_BUSY);
   await insertMessage(trx, {

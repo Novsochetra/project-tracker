@@ -47,6 +47,7 @@ describe.each(DIALECTS)('Claude Code runs (%s)', (dialect) => {
     expect(started.body).toEqual({
       id: expect.any(String),
       kind: 'ticket',
+      role: 'work',
       projectKey: 'MOB',
       ticketKey: 'MOB-1',
       chatId: null,
@@ -86,6 +87,36 @@ describe.each(DIALECTS)('Claude Code runs (%s)', (dialect) => {
     expect((await next()).body).toMatchObject({ run: { id: first.body.id } });
     await finish(first.body.id, { status: 'done' });
     expect((await next()).body).toMatchObject({ run: { id: second.body.id } });
+  });
+
+  it('queues a review run when the sheet asks for one, and the helper gets the role with the job', async () => {
+    const started = await person<Run>('POST', '/api/tickets/MOB-1/runs', {
+      runnerId: runner,
+      prompt: 'Review MOB-1',
+      role: 'review',
+    });
+    expect(started.status).toBe(201);
+    expect(started.body.role).toBe('review');
+    expect((await next()).body?.run).toMatchObject({ id: started.body.id, role: 'review' });
+    const listed = await person<Run[]>('GET', '/api/tickets/MOB-1/runs');
+    expect(listed.body.map((run) => run.role)).toEqual(['review']);
+  });
+
+  it('refuses a role it does not know', async () => {
+    const refused = await person('POST', '/api/tickets/MOB-1/runs', {
+      runnerId: runner,
+      prompt: 'Go',
+      role: 'boss',
+    });
+    expect(refused.status).toBe(400);
+    expect(await api.db.selectFrom('runs').selectAll().execute()).toEqual([]);
+  });
+
+  it('reads a run queued before there were roles as a work run', async () => {
+    const started = await start();
+    await api.db.updateTable('runs').set({ role: null }).execute();
+    expect((await next()).body?.run.role).toBe('work');
+    expect((await person<Run>('GET', `/api/runs/${started.body.id}`)).body.role).toBe('work');
   });
 
   it('lets only a person start a run: an agent token gets 403 before its body is read', async () => {

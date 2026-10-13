@@ -15,6 +15,7 @@ describe('regression: stopping while a run is being taken', () => {
       run: {
         id: 'r-1',
         kind: 'ticket',
+        role: 'work',
         projectKey: 'MOB',
         ticketKey: 'MOB-1',
         chatId: null,

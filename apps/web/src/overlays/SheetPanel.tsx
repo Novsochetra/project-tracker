@@ -1,5 +1,5 @@
 import clsx from 'clsx';
-import { motion } from 'motion/react';
+import { m } from 'motion/react';
 import {
   useCallback,
   useRef,
@@ -12,6 +12,7 @@ import { useKeyboardInset } from '../gestures/useKeyboardInset';
 import { useTopPull } from '../gestures/useTopPull';
 import { useAxisDrag } from '../gestures/useAxisDrag';
 import { usePrefersReducedMotion } from '../lib/media';
+import { MotionScope } from '../lib/MotionScope';
 import { DiscardChangesSheet } from './DiscardChangesSheet';
 import styles from './Sheet.module.css';
 import { SheetCancelContext } from './sheetCancel';
@@ -137,48 +138,50 @@ export function SheetPanel(props: SheetPanelProps) {
     <SheetContent {...props} handleRef={handleRef} bodyRef={bodyRef} bodyScrolls={bodyScrolls} />
   );
   return (
-    <SheetCancelContext.Provider value={cancel}>
-      <div
-        className={clsx(styles.overlay, styles[size], isPhone ? styles.phone : styles.desktop)}
-        style={keyboardVars}
-        inert={!open}
-        data-sheet=""
-        {...closeHold}
-      >
-        <motion.button
-          type="button"
-          tabIndex={-1}
-          aria-label="Close"
-          className={styles.scrim}
-          style={{ opacity: scrim }}
-          onMouseDown={keepFocus}
-          onClick={guard.requestClose}
-        />
-        <motion.div
-          ref={panelRef}
-          role="dialog"
-          aria-modal="true"
-          aria-label={label}
-          tabIndex={-1}
-          className={styles.panel}
-          style={panelStyle}
-          onKeyDown={trapKeys}
+    <MotionScope>
+      <SheetCancelContext.Provider value={cancel}>
+        <div
+          className={clsx(styles.overlay, styles[size], isPhone ? styles.phone : styles.desktop)}
+          style={keyboardVars}
+          inert={!open}
+          data-sheet=""
+          {...closeHold}
         >
-          {onSubmit ? (
-            <form className={styles.sheetForm} onSubmit={onSubmit} noValidate>
-              {content}
-            </form>
-          ) : (
-            content
-          )}
-        </motion.div>
-        {/* Inside, though it opens on the body, so a press on Discard changes counts as the sheet's. */}
-        <DiscardChangesSheet
-          open={guard.asking}
-          onKeep={guard.keepEditing}
-          onDiscard={guard.discard}
-        />
-      </div>
-    </SheetCancelContext.Provider>
+          <m.button
+            type="button"
+            tabIndex={-1}
+            aria-label="Close"
+            className={styles.scrim}
+            style={{ opacity: scrim }}
+            onMouseDown={keepFocus}
+            onClick={guard.requestClose}
+          />
+          <m.div
+            ref={panelRef}
+            role="dialog"
+            aria-modal="true"
+            aria-label={label}
+            tabIndex={-1}
+            className={styles.panel}
+            style={panelStyle}
+            onKeyDown={trapKeys}
+          >
+            {onSubmit ? (
+              <form className={styles.sheetForm} onSubmit={onSubmit} noValidate>
+                {content}
+              </form>
+            ) : (
+              content
+            )}
+          </m.div>
+          {/* Inside, though it opens on the body, so a press on Discard changes counts as the sheet's. */}
+          <DiscardChangesSheet
+            open={guard.asking}
+            onKeep={guard.keepEditing}
+            onDiscard={guard.discard}
+          />
+        </div>
+      </SheetCancelContext.Provider>
+    </MotionScope>
   );
 }
