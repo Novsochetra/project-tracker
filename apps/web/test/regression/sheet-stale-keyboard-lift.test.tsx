@@ -89,15 +89,35 @@ it('still rises above the keyboard while a field in it has focus', () => {
   expect(lift(overlay)).toBe('');
 });
 
-it('stays up through a press that takes focus out of the field, and drops after it', async () => {
+const nextTask = () => act(() => new Promise((resolve) => setTimeout(resolve)));
+
+it('stays up through a click that takes focus out of the field, and drops after it', async () => {
   const overlay = renderSheet();
   act(() => field().focus());
   const create = screen.getByRole('button', { name: 'Create' });
   fireEvent.pointerDown(create);
+  fireEvent.mouseDown(create);
   act(() => field().blur());
   expect(lift(overlay)).toBe(`${KEYBOARD}px`);
   fireEvent.pointerUp(create);
+  fireEvent.mouseUp(create);
   expect(lift(overlay)).toBe(`${KEYBOARD}px`);
-  await act(() => new Promise((resolve) => setTimeout(resolve)));
+  await nextTask();
+  expect(lift(overlay)).toBe('');
+});
+
+// A tap's pointer events all come before its mouse events, and its mousedown takes the focus.
+it('stays up through a tap that takes focus out of the field, and drops after it', async () => {
+  const overlay = renderSheet();
+  act(() => field().focus());
+  const create = screen.getByRole('button', { name: 'Create' });
+  fireEvent.pointerDown(create);
+  fireEvent.pointerUp(create);
+  fireEvent.mouseDown(create);
+  act(() => field().blur());
+  expect(lift(overlay)).toBe(`${KEYBOARD}px`);
+  fireEvent.mouseUp(create);
+  expect(lift(overlay)).toBe(`${KEYBOARD}px`);
+  await nextTask();
   expect(lift(overlay)).toBe('');
 });
