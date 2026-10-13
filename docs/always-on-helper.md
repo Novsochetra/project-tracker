@@ -66,12 +66,15 @@ Arguments after the image name go to `tracker watch` too, so `tracker-helper MOB
 
 ### On Railway
 
-The repo's root `railway.json` builds and runs the tracker, and Railway applies it to every service from this repo unless the service names another config file. The helper has its own: `docker/helper/railway.json` (the Dockerfile builder, restart always, no pre-deploy command, start command or health check).
+Railway finds a Dockerfile by itself only at the repo root, so the helper's service names it in a variable.
 
 1. In the tracker's Railway project, **New** → **GitHub Repo** → this repo, as a second service.
-2. In its **Settings** → **Config-as-code**, set the config file path to `/docker/helper/railway.json`. Check the next deploy's build logs: they must show the Dockerfile build, not Railpack and `npm run build`.
-3. Add a **Volume** mounted at `/data`.
-4. Add the variables above, `TRACKER_PROJECT` and `TRACKER_HELPER_NAME` included. It needs no public domain.
+2. Add the service variable `RAILWAY_DOCKERFILE_PATH=docker/helper/Dockerfile`, and the variables above, `TRACKER_PROJECT` and `TRACKER_HELPER_NAME` included.
+3. Leave its start command empty: a start command replaces the image's entrypoint. It needs no pre-deploy command, health check or public domain.
+4. Restart policy: **Always**.
+5. Add a **Volume** mounted at `/data`.
+
+If the Railway project is managed with `.railway/railway.ts`, declare the helper service in that file too: applying the whole project removes services the file leaves out.
 
 ## Linux without Docker (systemd)
 
