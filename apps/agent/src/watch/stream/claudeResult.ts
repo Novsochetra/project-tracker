@@ -21,3 +21,8 @@ export function resultOf(event: unknown): ClaudeResult | null {
     isError: event.is_error === true,
   };
 }
+
+// The last turn's result is how the run ended, as `--output-format json` prints only it: an
+// earlier one is Claude saying it started background work, or a failure it went on from.
+export const finalResult = (results: readonly ClaudeResult[]): ClaudeResult | undefined =>
+  results.at(-1);

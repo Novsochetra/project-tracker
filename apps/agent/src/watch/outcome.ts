@@ -1,5 +1,5 @@
 import { RUN_ERROR_MAX, type FinishRunInput } from '@tracker/shared';
-import type { ClaudeResult } from './stream/claudeResult';
+import { finalResult, type ClaudeResult } from './stream/claudeResult';
 
 export interface ClaudeExit {
   code: number | null;
@@ -23,11 +23,16 @@ export function reasonOf({ code, signal }: Pick<ClaudeExit, 'code' | 'signal'>):
   return signal ? `Claude Code was stopped (${signal}).` : 'Claude Code did not start.';
 }
 
-export function ticketOutcomeOf(
-  exit: Omit<ClaudeExit, 'results'>,
-  cancelled: boolean,
-): FinishRunInput {
+// Claude's own words when its last turn failed, such as a turn limit it reached; else the end of
+// what the window showed, which has stderr when Claude Code could not get as far as a result.
+export function failureOf(exit: ClaudeExit): FinishRunInput {
+  const result = finalResult(exit.results);
+  const said = result?.isError && result.text ? result.text : exit.output;
+  return { status: 'failed', error: lastLines(`${reasonOf(exit)}\n${said}`) };
+}
+
+export function ticketOutcomeOf(exit: ClaudeExit, cancelled: boolean): FinishRunInput {
   if (cancelled) return { status: 'cancelled' };
-  if (exit.code === 0) return { status: 'done' };
-  return { status: 'failed', error: lastLines(`${reasonOf(exit)}\n${exit.output}`) };
+  if (exit.code === 0 && !finalResult(exit.results)?.isError) return { status: 'done' };
+  return failureOf(exit);
 }
