@@ -1,6 +1,5 @@
 import { sortStatuses, type ProjectBoard, type Status } from '@tracker/shared';
 import { Plus } from 'lucide-react';
-import { useInstantLayoutTransition } from 'motion/react';
 import { useState } from 'react';
 import { flushSync } from 'react-dom';
 import { errorMessage, useBoard } from '../../api';
@@ -12,6 +11,7 @@ import { StatusEditor } from './StatusEditor';
 import { OrderedList } from './OrderedList';
 import styles from './StatusManagerSheet.module.css';
 import { categoryHint, ticketCounts } from './statusForm';
+import { useInPlace } from './useInPlace';
 import { useRowFocus } from './useRowFocus';
 import { useStatusOrder } from './useStatusOrder';
 
@@ -70,7 +70,7 @@ function StatusManagerBody({ projectKey, board, onDirtyChange }: StatusManagerBo
   const adding = editing?.kind === 'new';
   // Rows animate layout changes so reorders slide. An editor opening or closing isn't one, so
   // the rows around it move at once instead of sliding over it.
-  const inPlace = useInstantLayoutTransition();
+  const inPlace = useInPlace();
 
   // The editor replaces the row (or the Add button), so focus goes back once it is gone.
   const close = (update: () => void, focusId?: string) => {

@@ -1,6 +1,5 @@
 import { sortLabels, type Label, type ProjectBoard } from '@tracker/shared';
 import { Plus } from 'lucide-react';
-import { useInstantLayoutTransition } from 'motion/react';
 import { useState } from 'react';
 import { flushSync } from 'react-dom';
 import { errorMessage, useBoard } from '../../api';
@@ -10,6 +9,7 @@ import { Sheet, SheetCancelButton } from '../../overlays';
 import { BoardState } from '../statuses/BoardState';
 import { OrderedList } from '../statuses/OrderedList';
 import styles from '../statuses/StatusManagerSheet.module.css';
+import { useInPlace } from '../statuses/useInPlace';
 import { useRowFocus } from '../statuses/useRowFocus';
 import { LabelDot } from './LabelDot';
 import { LabelEditor } from './LabelEditor';
@@ -64,7 +64,7 @@ function LabelManagerBody({ projectKey, board, onDirtyChange }: LabelManagerBody
   const { addRef, rowRef, focusRow } = useRowFocus();
   const editingId = editing?.kind === 'edit' && byId.has(editing.id) ? editing.id : null;
   const adding = editing?.kind === 'new';
-  const inPlace = useInstantLayoutTransition();
+  const inPlace = useInPlace();
   const close = (focusId?: string) => {
     flushSync(() => inPlace(() => setEditing(null)));
     focusRow(focusId);
