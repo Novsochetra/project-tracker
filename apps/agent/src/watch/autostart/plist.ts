@@ -1,9 +1,7 @@
-export interface LaunchAgent {
-  label: string;
-  program: readonly string[];
-  folder: string;
+import type { HelperJob } from './job';
+
+export interface LaunchAgent extends HelperJob {
   logPath: string;
-  environment: Readonly<Record<string, string>>;
 }
 
 const escapeXml = (text: string): string =>

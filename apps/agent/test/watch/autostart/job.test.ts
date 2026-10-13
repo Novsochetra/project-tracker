@@ -42,7 +42,7 @@ describe('the job tracker watch installs', () => {
       TRACKER_CONFIG: '/Users/dara/.config/project-tracker/config.json',
     });
     expect(JSON.stringify(job)).not.toContain('trk_secret');
-    expect(job.logPath).toContain(`${job.label}.log`);
+    expect(job.label).toMatch(/^com\.project-tracker\.watch\.[0-9a-f]{12}$/);
   });
 
   it('refuses a project key shaped like a flag, which could come from the tracker', () => {
