@@ -1,0 +1,42 @@
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: 48px;
+  padding: 0 12px 0 14px;
+  font-size: var(--size-body);
+}
+
+.label {
+  flex: 1;
+  min-width: 0;
+}
+
+.note {
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--size-caption);
+  line-height: 1.55;
+  text-wrap: pretty;
+}
+
+.error {
+  margin: 0;
+  color: var(--danger);
+  font-size: var(--size-secondary);
+}
+
+@media (width < 768px),
+  (pointer: coarse) and (device-width < 600px),
+  (pointer: coarse) and (device-height < 600px) {
+  .row {
+    min-height: 50px;
+    font-size: var(--size-input);
+  }
+}

@@ -68,6 +68,7 @@ AWS_SECRET_ACCESS_KEY=
 - `PORT=4100` fixes the port the tracker listens on, so the domain in step 4 can point at it before anything has run.
 - `NODE_ENV`, `HOST` and `TRUST_PROXY` are set for you on Railway anyway; writing them down keeps them visible.
 - Leave `MIGRATE_ON_START` unset: the pre-deploy command migrates.
+- Notifications need nothing here: without `VAPID_PUBLIC_KEY` and `VAPID_PRIVATE_KEY` the tracker makes its own push keys once and keeps them in the database. To bring your own pair (from any web-push key generator, such as `npx web-push generate-vapid-keys` on your Mac), set both, and `VAPID_SUBJECT=mailto:you@example.com` if you like (default: the tracker's https address). Changing the keys later means turning notifications off and on again on each phone.
 - Every variable and what it means: `.env.example`.
 
 ## 4. Give it a public address
@@ -160,6 +161,7 @@ With exported variables, `npm run data:move -- --from data/tracker.db --uploads 
 
 1. Safari → `https://<name>.up.railway.app` → sign in.
 2. **Share** → **Add to Home Screen**. It opens full screen like an app. HTTPS also turns on offline support and the clipboard.
+3. Open it from the Home Screen → **Account** → turn on **Notifications on this device** and allow them. The phone then tells you when Claude finishes a run, answers a chat or a ticket is ready for you. iOS offers notifications only to the app opened from the Home Screen, not in Safari.
 
 ## 9. Connect Claude Code agents
 
@@ -238,3 +240,4 @@ What could only be proved on Railway itself:
 - After step 7, upload a photo to a ticket: it is stored as WebP in the bucket under `attachments/`. (Before the move, a ticket made online would make the move refuse.)
 - Keep a ticket open on the phone and change it from the Mac: the change shows up right away (live updates through Railway's proxy).
 - Push a small commit: the old deployment's logs end without errors, and the phone reconnects to the new one.
+- Turn on notifications on the phone (step 8), lock it and start a run on a ticket: when it ends, a notification says "MOB-3: Claude finished", and tapping it opens the ticket.

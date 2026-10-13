@@ -63,6 +63,9 @@ const PROTECTED: readonly (readonly [string, string])[] = [
   ['GET', '/api/questions/q1/wait'],
   ['POST', '/api/questions/q1/answer'],
   ['POST', '/api/questions/q1/cancel'],
+  ['GET', '/api/push/key'],
+  ['PUT', '/api/push/subscription'],
+  ['DELETE', '/api/push/subscription'],
   ['POST', '/api/test/reset'],
   ['GET', '/api/nope'],
 ];

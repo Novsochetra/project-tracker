@@ -1,5 +1,5 @@
-// Workbox copies these callbacks into sw.js as source text, so they can't use anything from
-// outside themselves; the header is SAVED_ANSWER_HEADER in savedAnswers.ts.
+// The headers are written out rather than imported (SAVED_ANSWER_HEADER in savedAnswers.ts), so
+// the service worker takes in none of the page's own code.
 export const savedAnswerPlugin = {
   // A proxy in front of a stopped API answers with a bare 5xx. Failing the request makes
   // NetworkFirst answer from its cache, as it does when the network is down.

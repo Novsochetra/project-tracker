@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { queryKeys } from '../../api';
 import { renderWithApi, sheetTestSetup } from '../claude/test/renderWithApi';
+import { stubPush, unstubPush } from '../push/test/fakePush';
 import { AccountSheet } from './AccountSheet';
 
 const OWNER = { authRequired: true, authenticated: true, email: 'me@example.com', role: 'owner' };
@@ -38,6 +39,7 @@ beforeEach(() => {
 
 afterEach(() => {
   restore();
+  unstubPush();
 });
 
 describe('AccountSheet', () => {
@@ -104,5 +106,16 @@ describe('AccountSheet', () => {
     expect(within(sheet()).queryByText('Invite someone')).not.toBeInTheDocument();
     expect(listInvites).not.toHaveBeenCalled();
     expect(listInvitedUsers).not.toHaveBeenCalled();
+  });
+
+  it('has the notifications switch, and signing out lets this device go of its pushes', async () => {
+    const user = userEvent.setup();
+    const push = stubPush({ permission: 'granted', subscribed: true });
+    const logout = vi.fn().mockResolvedValue(SIGNED_OUT);
+    renderSheet(() => undefined, { logout });
+    const toggle = within(sheet()).getByRole('switch', { name: 'Notifications on this device' });
+    await waitFor(() => expect(toggle).toHaveAttribute('aria-checked', 'true'));
+    await user.click(within(sheet()).getByRole('button', { name: 'Sign out' }));
+    await waitFor(() => expect(push.subscription.unsubscribe).toHaveBeenCalled());
   });
 });

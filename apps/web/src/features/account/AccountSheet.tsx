@@ -3,6 +3,7 @@ import { errorMessage, useKnownSession, useLogout, useSignOutEverywhere } from '
 import type { SheetProps } from '../../app/sheets/types';
 import { Button, ConfirmCard } from '../../components';
 import { Sheet, SheetTextButton } from '../../overlays';
+import { NotificationsSection } from '../push/NotificationsSection';
 import { VersionNote } from '../version/VersionNote';
 import styles from './AccountSheet.module.css';
 import { ChangePassword } from './ChangePassword';
@@ -31,6 +32,7 @@ export function AccountSheet({ open, onClose }: SheetProps) {
           Signed in as <span className={styles.email}>{session?.email ?? 'the owner'}</span>
         </p>
         <ChangePassword />
+        <NotificationsSection />
         <section className={styles.section}>
           <Button size="lg" fullWidth disabled={pending} onClick={() => signOut(logout)}>
             Sign out
