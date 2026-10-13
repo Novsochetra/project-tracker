@@ -71,7 +71,9 @@ test.describe('API tokens for agents', () => {
 
     const projects = tracker(['projects'], config);
     expect(projects.stderr).toBe('');
-    expect(projects.stdout.trim()).toBe('MOB · Mobile app · 1 open, 1 total · repo ~/code/demo');
+    expect(projects.stdout.trim()).toBe(
+      'MOB · Mobile app · 1 open, 0 reviewed, 1 total · repo ~/code/demo',
+    );
 
     await card.getByRole('button', { name: 'Done' }).click();
     await expect(sheet.getByText(secret)).toHaveCount(0);
