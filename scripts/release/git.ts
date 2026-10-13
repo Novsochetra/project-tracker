@@ -1,10 +1,12 @@
 import { execFileSync } from 'node:child_process';
 
 export interface Git {
+  branch(): string;
   isClean(): boolean;
   hasTag(tag: string): boolean;
   subjectsSince(tag: string): string[];
   commit(files: readonly string[], message: string): void;
+  unstage(files: readonly string[]): void;
   tag(tag: string, message: string): void;
 }
 
@@ -12,6 +14,7 @@ export function createGit(cwd: string): Git {
   const git = (...args: string[]): string =>
     execFileSync('git', args, { cwd, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
   return {
+    branch: () => git('branch', '--show-current').trim(),
     isClean: () => git('status', '--porcelain').trim() === '',
     hasTag: (tag) => {
       try {
@@ -28,6 +31,9 @@ export function createGit(cwd: string): Git {
     commit: (files, message) => {
       git('add', '--', ...files);
       git('commit', '--quiet', '--message', message);
+    },
+    unstage: (files) => {
+      git('reset', '--quiet', '--', ...files);
     },
     tag: (tag, message) => {
       git('tag', '--annotate', tag, '--message', message);

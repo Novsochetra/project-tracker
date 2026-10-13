@@ -301,8 +301,8 @@ Steps for the user: `docs/deploy-railway.md`.
 
 Steps: `docs/releasing.md`.
 
-- One semver version for the whole app: the root `package.json` (`APP_VERSION` in `packages/shared/src/logic/version.ts`, baked into each build). Workspace packages stay private at `0.0.0`. It started at 1.0.0 (PT-182), since the tracker was already in daily use on Railway.
-- `npm run release -- patch|minor|major` (`scripts/release/`) needs a clean tree and the tag of the current version, bumps `package.json` and `package-lock.json`, adds a `CHANGELOG.md` entry from the commit subjects since that tag (merges left out), commits `Release vX.Y.Z` and makes the annotated tag `vX.Y.Z`. It never pushes. Its tests run it in a throwaway repo.
+- One semver version for the whole app: the root `package.json` (`APP_VERSION` in `packages/shared/src/logic/appVersion.ts`, baked into each build; the server and agent builds keep only its `version` field, `scripts/build/rootVersionOnly.ts`). Workspace packages stay private at `0.0.0`. It started at 1.0.0 (PT-182), since the tracker was already in daily use on Railway.
+- `npm run release -- patch|minor|major` (`scripts/release/`) needs `main`, a clean tree and the tag of the current version, bumps `package.json` and `package-lock.json`, adds a `CHANGELOG.md` entry from the commit subjects since that tag (merges left out), commits `Release vX.Y.Z` and makes the annotated tag `vX.Y.Z`. When the commit fails (a hook, signing), it puts the files back. It never pushes. Its tests run it in a throwaway repo.
 - `/api/meta` gives `version` and `commit`: the first 7 characters of `RAILWAY_GIT_COMMIT_SHA`, or `null` off Railway. The server logs both at start. The web app shows them quietly ("Tracker v1.0.0 · a1b2c3d", `features/version/VersionNote`) at the bottom of the Account and Connect Claude Code sheets. `tracker --version` prints the CLI's own build version, which is also the MCP servers' version.
 
 ## 3. HTTP API

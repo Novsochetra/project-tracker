@@ -1,4 +1,5 @@
 import { defineConfig } from 'tsup';
+import { rootVersionOnly } from '../../scripts/build/rootVersionOnly';
 
 export default defineConfig({
   // Each sits right in dist/, one level below the package root, as config.ts expects.
@@ -17,5 +18,6 @@ export default defineConfig({
   clean: true,
   sourcemap: true,
   noExternal: [/^@tracker\//],
+  esbuildPlugins: [rootVersionOnly()],
   external: ['better-sqlite3', 'pg'],
 });

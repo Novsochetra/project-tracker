@@ -5,7 +5,6 @@ export function changelogEntry(version: string, day: string, subjects: readonly 
   return [`## v${version} (${day})`, '', ...lines, ''].join('\n');
 }
 
-// Newest first: the entry goes above the previous release's heading.
 export function addToChangelog(existing: string | null, entry: string): string {
   const text = existing?.trimEnd() ?? '';
   if (!text) return `${TITLE}\n\n${entry}`;

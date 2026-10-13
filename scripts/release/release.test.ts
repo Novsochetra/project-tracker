@@ -1,5 +1,5 @@
 import { execFileSync } from 'node:child_process';
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { chmodSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -75,6 +75,30 @@ describe('release', () => {
     git('checkout', '--quiet', 'main');
     git('merge', '--quiet', '--no-ff', '-m', "Merge branch 'side'", 'side');
     expect(run().subjects).toEqual(['Add a (PT-1)']);
+  });
+
+  it('releases from main only', () => {
+    git('checkout', '--quiet', '-b', 'feature');
+    commitFile('a.txt', 'a', 'Add a');
+    expect(run).toThrow('Release from main, not feature.');
+    git('checkout', '--quiet', '--detach');
+    expect(run).toThrow('Release from main, not a detached HEAD.');
+  });
+
+  it('puts the files back when the commit fails', () => {
+    commitFile('a.txt', 'a', 'Add a');
+    const before = ['package.json', 'package-lock.json', 'CHANGELOG.md'].map(read);
+    const hook = join(dir, '.git', 'hooks', 'pre-commit');
+    writeFileSync(hook, '#!/bin/sh\necho "hook says no" >&2\nexit 1\n');
+    chmodSync(hook, 0o755);
+
+    expect(run).toThrow(
+      /The release commit failed, so the files were put back:[\s\S]*hook says no/,
+    );
+    expect(['package.json', 'package-lock.json', 'CHANGELOG.md'].map(read)).toEqual(before);
+    expect(git('status', '--porcelain')).toBe('');
+    expect(git('log', '-1', '--format=%s')).toBe('Add a');
+    expect(git('tag', '--list', 'v1.1.0')).toBe('');
   });
 
   it('refuses with uncommitted changes', () => {

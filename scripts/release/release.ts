@@ -1,4 +1,4 @@
-import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { bumpVersion, type ReleasePart } from './bump';
 import { addToChangelog, changelogEntry } from './changelog';
@@ -20,7 +20,13 @@ export interface Released {
 
 const tagOf = (version: string) => `v${version}`;
 
+export const RELEASE_BRANCH = 'main';
+
 function checkReady(git: Git, current: string, next: string): string[] {
+  const branch = git.branch();
+  if (branch !== RELEASE_BRANCH) {
+    throw new Error(`Release from ${RELEASE_BRANCH}, not ${branch || 'a detached HEAD'}.`);
+  }
   if (!git.isClean()) throw new Error('Commit or stash your changes first.');
   const from = tagOf(current);
   if (!git.hasTag(from)) {
@@ -35,18 +41,40 @@ function checkReady(git: Git, current: string, next: string): string[] {
   return subjects;
 }
 
-function writeFiles(cwd: string, version: string, entry: string): string[] {
+type Originals = Map<string, string | null>;
+
+function writeFiles(cwd: string, version: string, entry: string): Originals {
   const path = (name: string) => join(cwd, name);
   const read = (name: string) => (existsSync(path(name)) ? readFileSync(path(name), 'utf8') : null);
-  const files = ['package.json', 'CHANGELOG.md'];
+  const originals: Originals = new Map(
+    ['package.json', 'CHANGELOG.md', 'package-lock.json'].map((name) => [name, read(name)]),
+  );
   writeFileSync(path('package.json'), setPackageVersion(read('package.json') ?? '{}', version));
   writeFileSync(path('CHANGELOG.md'), addToChangelog(read('CHANGELOG.md'), entry));
-  const lock = read('package-lock.json');
-  if (lock !== null) {
-    writeFileSync(path('package-lock.json'), setLockVersion(lock, version));
-    files.push('package-lock.json');
+  const lock = originals.get('package-lock.json');
+  if (lock === null || lock === undefined) originals.delete('package-lock.json');
+  else writeFileSync(path('package-lock.json'), setLockVersion(lock, version));
+  return originals;
+}
+
+function restoreFiles(cwd: string, originals: Originals): void {
+  for (const [name, text] of originals) {
+    if (text === null) rmSync(join(cwd, name), { force: true });
+    else writeFileSync(join(cwd, name), text);
   }
-  return files;
+}
+
+// A hook or commit signing can refuse the commit; the release then leaves the tree as it found it.
+function commitOrRestore(git: Git, cwd: string, originals: Originals, message: string): void {
+  const files = [...originals.keys()];
+  try {
+    git.commit(files, message);
+  } catch (error) {
+    git.unstage(files);
+    restoreFiles(cwd, originals);
+    const reason = error instanceof Error ? error.message : String(error);
+    throw new Error(`The release commit failed, so the files were put back:\n${reason}`);
+  }
 }
 
 // Commits and tags locally only: pushing stays a separate, deliberate step.
@@ -54,9 +82,9 @@ export function release({ cwd, part, day, git = createGit(cwd) }: ReleaseOptions
   const current = readVersion(readFileSync(join(cwd, 'package.json'), 'utf8'));
   const version = bumpVersion(current, part);
   const subjects = checkReady(git, current, version);
-  const files = writeFiles(cwd, version, changelogEntry(version, day, subjects));
+  const originals = writeFiles(cwd, version, changelogEntry(version, day, subjects));
   const tag = tagOf(version);
-  git.commit(files, `Release ${tag}`);
+  commitOrRestore(git, cwd, originals, `Release ${tag}`);
   git.tag(tag, `Release ${tag}`);
   return { version, tag, subjects };
 }

@@ -48,5 +48,5 @@ export interface GlobalValues {
   token?: string;
   json: boolean;
   help: boolean;
-  version?: boolean;
+  version: boolean;
 }
