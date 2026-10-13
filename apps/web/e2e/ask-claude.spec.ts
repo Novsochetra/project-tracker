@@ -254,6 +254,56 @@ test('keeps the options row still and each mode hint on one line when the mode c
   }
 });
 
+// The label's own text box, since a label overflowing into its padding keeps scrollWidth unchanged.
+const labelEdges = (modes: ReturnType<Page['getByRole']>) =>
+  modes.getByRole('button').evaluateAll((buttons) =>
+    buttons.map((button) => {
+      const range = document.createRange();
+      range.selectNodeContents(button);
+      const text = range.getBoundingClientRect();
+      const own = button.getBoundingClientRect();
+      return {
+        left: text.left,
+        right: text.right,
+        inside: text.left >= own.left && text.right <= own.right,
+      };
+    }),
+  );
+
+const placeholderFits = (box: ReturnType<Page['getByRole']>) =>
+  box.evaluate((field: HTMLTextAreaElement) => {
+    const style = getComputedStyle(field);
+    const context = document.createElement('canvas').getContext('2d')!;
+    context.font = style.font;
+    const room = field.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
+    return context.measureText(field.placeholder).width <= room;
+  });
+
+// PT-204: at 320px the Mode labels ran together ("AskPlanEdit") with Edit's thumb past the
+// screen's edge, and the placeholder wrapped to a second line the box cut off.
+test('fits the options row and the placeholder on a 320px screen', async ({ page, api }, info) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await seedProject(api, 'Mobile app', 'MOB');
+  await api.registerRunner(randomUUID(), { name: HELPER, projectKeys: ['MOB'] });
+  await page.goto('/p/MOB/ask/new');
+  const modes = page.getByRole('group', { name: 'Mode' });
+  const box = page.getByRole('textbox', { name: 'Question for Claude' });
+  const own = page.viewportSize()!;
+  for (const width of [320, own.width]) {
+    await page.setViewportSize({ width, height: own.height });
+    await modes.getByRole('button', { name: 'Edit' }).click();
+    const labels = await labelEdges(modes);
+    for (const label of labels) expect(label.inside, `a label at ${width}px`).toBe(true);
+    for (let i = 1; i < labels.length; i++) {
+      expect(labels[i]!.left - labels[i - 1]!.right, `label gap at ${width}px`).toBeGreaterThan(8);
+    }
+    const group = (await modes.boundingBox())!;
+    expect(group.x + group.width, `Mode at ${width}px`).toBeLessThanOrEqual(width - 16);
+    expect(await placeholderFits(box), `placeholder at ${width}px`).toBe(true);
+    await settledScreenshot(page, info.outputPath(`ask-options-fit-${width}.png`));
+  }
+});
+
 test('shows what Claude does while it answers, then folds the steps above the answer', async ({
   page,
   api,

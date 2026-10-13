@@ -68,3 +68,15 @@
     font-size: var(--size-body);
   }
 }
+
+/* The two chips and three segments need about 345px, so a narrower screen gives the Mode switch a
+   line of its own. Keyed to the width, not the chips, so picking Haiku never moves it (PT-204). */
+@media (width < 360px) {
+  .row {
+    flex-wrap: wrap;
+  }
+
+  .mode {
+    flex-basis: 100%;
+  }
+}
