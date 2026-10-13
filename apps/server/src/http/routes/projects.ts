@@ -11,13 +11,14 @@ import {
 import { projectPrompt } from '../../services/prompts';
 import { getBoard } from '../../services/ticketQueries';
 import type { AppEnv } from '../env';
+import { personCreatesProjects } from '../personOnly';
 import { userContext } from '../userContext';
 import { jsonBody } from '../validation';
 
 export const projectRoutes = (ctx: ServiceContext) =>
   new Hono<AppEnv>()
     .get('/projects', async (c) => c.json(await listProjectSummaries(userContext(ctx, c))))
-    .post('/projects', jsonBody(createProjectInput), async (c) =>
+    .post('/projects', personCreatesProjects, jsonBody(createProjectInput), async (c) =>
       c.json(await createProject(userContext(ctx, c), c.req.valid('json')), 201),
     )
     .get('/projects/:key', async (c) =>

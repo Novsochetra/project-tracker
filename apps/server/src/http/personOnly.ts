@@ -14,6 +14,9 @@ export const personOnly = refuseAgents(
   "Only a person can start Claude Code. Agents can't start more agents.",
 );
 
+// A project's instructions go into every prompt, so an agent could set what later runs are told.
+export const personCreatesProjects = refuseAgents('Only a person creates a project.');
+
 // Steps are for the person watching from the phone; an agent has the tracker's own tools.
 export const personReadsSteps = refuseAgents('Only a person reads what Claude did in a run.');
 

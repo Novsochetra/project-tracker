@@ -52,6 +52,12 @@ describe('claim_ticket', () => {
 });
 
 describe('submit_for_review', () => {
+  it('asks for verification that fits code and work that is not code', () => {
+    expect(submitForReview.description).toContain(
+      "the tests and the build when it is code, otherwise against the ticket and the project's instructions",
+    );
+  });
+
   it('submits the report and names the new status', async () => {
     const submitted = detail({ ticket: ticket({ statusId: 's3' }), status: statusAt(2) });
     const submitForReviewApi = vi.fn(returns(submitted));

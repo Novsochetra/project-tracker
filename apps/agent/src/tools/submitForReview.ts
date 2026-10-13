@@ -8,7 +8,8 @@ export const submitForReview = defineTool({
   description:
     'Submit your finished work on a ticket for review. Stores a report on the ticket (summary, files, output, ' +
     'next steps) and moves it to Need review, where a reviewer picks it up. Call it only after you verified the ' +
-    'work (tests, build). If you are blocked, use add_comment instead and leave the ticket In progress.',
+    "work: the tests and the build when it is code, otherwise against the ticket and the project's instructions. " +
+    'If you are blocked, use add_comment instead and leave the ticket In progress.',
   input: z.object({
     ticket: ticketKey,
     summary: z
