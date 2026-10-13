@@ -5,6 +5,7 @@ import { queryKeys } from '../queryKeys';
 import { isRefreshable } from '../refresh';
 import { changeScope } from './changeScope';
 import { cachedEntries } from './refreshForChange';
+import { refreshLive } from './refreshLive';
 
 // Only a running run asks, so only its end, not its start, can end the wait.
 export const endsRun = (status: RunStatus): boolean =>
@@ -18,6 +19,6 @@ export function refreshWaiting(queryClient: QueryClient, projectId: string, tick
   for (const projectKey of projectKeys) {
     const queryKey = queryKeys.board(projectKey);
     if (!isRefreshable(queryClient, queryKey, busy)) continue;
-    void queryClient.invalidateQueries({ queryKey, exact: true });
+    void refreshLive(queryClient, { queryKey, exact: true });
   }
 }

@@ -1,6 +1,7 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { useEffect, useLayoutEffect, useState, useSyncExternalStore } from 'react';
 import { useApi } from '../api';
+import { tagLiveReads } from '../api/live/liveReads';
 import { lastAnswerWasSaved, subscribeSavedAnswers, watchSavedAnswers } from '../pwa/savedAnswers';
 import { createReachability, watchApiTraffic, type Reachability } from './reachability';
 import { trackerCheckOf } from './trackerCheck';
@@ -11,7 +12,16 @@ export function useReachability(): Reachability {
   const client = useApi();
   const [reachability] = useState(createReachability);
   // A layout effect, so it is in place before the screens' first requests start in their effects.
-  useLayoutEffect(() => watchSavedAnswers(window), []);
+  // One effect undoes the wrappers in reverse order, so window.fetch is the browser's again
+  // (test/regression/fetch-wrappers-undone).
+  useLayoutEffect(() => {
+    const unwatch = watchSavedAnswers(window);
+    const untag = tagLiveReads(window);
+    return () => {
+      untag();
+      unwatch();
+    };
+  }, []);
   useEffect(
     () => watchApiTraffic(queryClient, reachability, trackerCheckOf(client), { recheck: true }),
     [client, queryClient, reachability],
