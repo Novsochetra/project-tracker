@@ -118,6 +118,14 @@ describe('Ask: the chat screen', () => {
     });
   });
 
+  it("names each helper's tools on the Run on row", async () => {
+    const tools = { servers: ['Notion'], commands: [], skills: ['drafting'] };
+    setup(makeChatDetail(), [makeRunner({ tools }), studio]);
+    const runOn = await screen.findByRole('button', { name: /^Run on/ });
+    expect(runOn).toHaveTextContent(`${DARA} · Notion, /drafting`);
+    expect(runOn).toHaveAttribute('title', `${DARA} · Notion, /drafting`);
+  });
+
   it('makes the chat with the first question and moves to its address', async () => {
     const detail = makeChatDetail({ messages: [makeMessage()], run: makeAskRun() });
     const startChat = vi.fn().mockResolvedValue(detail);

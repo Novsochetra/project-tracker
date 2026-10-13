@@ -18,6 +18,8 @@ export interface RunnerRow {
   name: string;
   // Ids, not keys, so renaming a project keeps its helpers.
   projectIds: string;
+  // RunnerTools as JSON text (§2); null from a helper that sends none.
+  tools: string | null;
   createdAt: number;
   lastSeenAt: number;
 }

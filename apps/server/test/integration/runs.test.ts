@@ -196,6 +196,7 @@ describe.each(DIALECTS)('Claude Code runs (%s)', (dialect) => {
         id: runner,
         name: 'Dara’s MacBook',
         projectKeys: ['MOB'],
+        tools: null,
         createdAt: 1_000_000,
         lastSeenAt: 1_000_000,
         online: true,

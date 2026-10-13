@@ -1,4 +1,4 @@
-import type { RunEvent } from '@tracker/shared';
+import type { RunEvent, RunnerTools } from '@tracker/shared';
 import { describeError } from '../errors';
 import { createProblemLog, type ProblemSource } from './problems';
 import { handBackReport } from './report/handBack';
@@ -24,6 +24,7 @@ export type WatcherDeps = Omit<
 > & {
   aliveEvery?: number | undefined;
   stepEvery?: number | undefined;
+  tools?: (() => RunnerTools) | undefined;
 };
 
 export function createWatcher(deps: WatcherDeps, settings: WatcherSettings) {
@@ -69,6 +70,7 @@ export function createWatcher(deps: WatcherDeps, settings: WatcherSettings) {
       await deps.api.registerRunner(settings.runnerId, {
         name: settings.name,
         projectKeys: [settings.projectKey],
+        tools: deps.tools?.(),
       });
       await stopIfCancelled();
       onProblem('check-in', undefined);

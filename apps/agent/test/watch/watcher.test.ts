@@ -206,6 +206,27 @@ describe('the watcher', () => {
     expect(idle.log).toEqual([]);
   });
 
+  it("sends the helper's tools with each check-in", async () => {
+    const tracker = fakeTracker([]);
+    const tools = { servers: ['Notion'], commands: ['standup'], skills: [] };
+    const watcher = createWatcher(
+      {
+        api: tracker.api,
+        runClaude: exits(0),
+        runAsk: noAsks,
+        log: () => undefined,
+        tools: () => tools,
+      },
+      { runnerId: RUNNER, name: 'Mac', projectKey: 'MOB', trackerUrl: 'http://tracker.test' },
+    );
+    await watcher.checkIn();
+    expect(tracker.api.registerRunner).toHaveBeenCalledWith(RUNNER, {
+      name: 'Mac',
+      projectKeys: ['MOB'],
+      tools,
+    });
+  });
+
   it('says once that the tracker is out of reach, and when it is back', async () => {
     let down = true;
     const tracker = fakeTracker([]);

@@ -10,6 +10,7 @@ export interface SelectRowProps<T extends string> {
   icon?: ReactNode;
   disabled?: boolean;
   className?: string | undefined;
+  title?: string | undefined;
 }
 
 export function SelectRow<T extends string>({
@@ -20,6 +21,7 @@ export function SelectRow<T extends string>({
   icon,
   disabled = false,
   className,
+  title,
 }: SelectRowProps<T>) {
   const [open, setOpen] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -35,6 +37,7 @@ export function SelectRow<T extends string>({
         aria-expanded={open}
         disabled={disabled}
         className={className}
+        title={title}
         onClick={() => setOpen((isOpen) => !isOpen)}
       />
       <Dropdown

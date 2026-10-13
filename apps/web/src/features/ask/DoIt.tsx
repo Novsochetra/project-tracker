@@ -4,7 +4,7 @@ import { Play } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '../../components';
 import { ActionSheet } from '../../overlays';
-import { DO_IT_LABEL, doItCaption, doItOffline } from './doItCopy';
+import { DO_IT_LABEL, doItAway, doItCaption } from './doItCopy';
 import styles from './DoIt.module.css';
 import { planToDo } from './planToDo';
 import { useDoIt } from './useDoIt';
@@ -19,9 +19,11 @@ interface DoItOfferProps {
 function DoItOffer({ projectKey, chat, plan }: DoItOfferProps) {
   const doIt = useDoIt(projectKey, chat, plan);
   const [open, setOpen] = useState(false);
-  const { helper } = doIt;
-  if (helper === undefined) return null;
-  if (helper === null) return <p className={styles.note}>{doItOffline(plan.runnerName)}</p>;
+  const { helper, away } = doIt;
+  if (!helper) {
+    if (!away) return null;
+    return <p className={styles.note}>{doItAway(plan.runnerName, away, projectKey)}</p>;
+  }
   const confirm = () => {
     setOpen(false);
     doIt.go(helper);

@@ -9,6 +9,7 @@ import type { UserScope } from '../auth/scope';
 import type { RunnerRow, RunRow } from '../db/runTables';
 import type { RunWithKey } from '../repositories/runs';
 import type { ServiceContext } from './context';
+import { parseRunnerTools } from './runnerToolsRow';
 
 // A question queued before there was an effort has none, so it ran on Claude's own.
 const askOptionsOf = ({ askModel, askMode, askEffort }: RunRow): AskOptions | null =>
@@ -55,6 +56,7 @@ export function toRunner(
     id: row.id,
     name: row.name,
     projectKeys,
+    tools: parseRunnerTools(row),
     createdAt: row.createdAt,
     lastSeenAt: row.lastSeenAt,
     online: now - row.lastSeenAt < RUNNER_ONLINE_MS,

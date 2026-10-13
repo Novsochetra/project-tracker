@@ -205,6 +205,30 @@ describe('ConnectSheet: Run Claude Code from your phone', () => {
     expect(writeText).toHaveBeenCalledWith(command);
   });
 
+  it("lists each computer's servers, commands and skills in full", async () => {
+    const tools = {
+      servers: ['GitHub', 'Notion', 'Gmail', 'Google Drive', 'Google Calendar'],
+      commands: ['standup', 'weekly-report'],
+      skills: ['drafting'],
+    };
+    renderWithApp(<ConnectSheet open onClose={() => undefined} />, {
+      path: '/p/mob/2',
+      client: {
+        getMeta: vi.fn().mockResolvedValue(meta),
+        listRunners: vi.fn().mockResolvedValue([makeRunner({ tools }), makeRunner({ id: 'h-2' })]),
+      },
+    });
+    const computers = await within(await step()).findByRole('list', { name: 'Your computers' });
+    expect(
+      within(computers)
+        .getAllByRole('listitem')
+        .map((row) => row.textContent),
+    ).toEqual([
+      `${DARA}MOB · OnlineGitHub, Notion, Gmail, Google Drive, Google Calendar, /standup, /weekly-report, /drafting`,
+      `${DARA}MOB · Online`,
+    ]);
+  });
+
   it('says when no computer runs it yet', async () => {
     renderWithApi(<ConnectSheet open onClose={() => undefined} />, {
       getMeta: vi.fn().mockResolvedValue(meta),

@@ -430,6 +430,7 @@ const DATA_MODEL: SchemaShape = {
       'project_ids text not null',
       'created_at bigint not null',
       'last_seen_at bigint not null',
+      'tools text',
     ],
     indexes: ['index (user_id)'],
     foreignKeys: ['user_id -> users.id on delete cascade'],
