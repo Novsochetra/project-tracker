@@ -103,7 +103,7 @@ describe('Ask: Do it', () => {
           listRunners: vi.fn().mockResolvedValue([makeRunner()]),
         },
       });
-      expect(await screen.findByText(/1\. Batch\./)).toBeVisible();
+      expect(await screen.findByText('Batch.')).toBeVisible();
       expect(screen.queryByRole('button', { name: 'Do it' })).not.toBeInTheDocument();
       view.unmount();
       undo();
