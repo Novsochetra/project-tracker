@@ -1,8 +1,9 @@
 import type { AskMode } from '../domain/askOptions';
 import type { ChatRole } from '../domain/chat';
+import { instructionsBlock, type PromptInstructions } from './instructions';
 
 export interface AskPromptInput {
-  project: { key: string; name: string };
+  project: { key: string; name: string } & PromptInstructions;
   mode: AskMode;
   question: string;
   // Earlier messages, for a helper that can't resume the chat's Claude Code session.
@@ -57,6 +58,8 @@ const transcript = (history: AskPromptInput['history']) =>
 
 export function buildAskPrompt({ project, mode, question, history }: AskPromptInput): string {
   const parts = [rules(project, mode)];
+  const instructions = instructionsBlock(project, '##');
+  if (instructions.length > 0) parts.push(instructions.join('\n'));
   if (history.length > 0) parts.push(`Earlier in this chat:\n\n${transcript(history)}`);
   parts.push(`Question:\n${question}`);
   return parts.join('\n\n---\n\n');

@@ -19,6 +19,7 @@ const promptProject = (project: ProjectRow): PromptProject => ({
   name: project.name,
   key: project.key,
   repo: project.repo,
+  instructions: project.instructions,
 });
 
 function lastReview(activities: readonly ActivityRow[]): PromptReview | null {

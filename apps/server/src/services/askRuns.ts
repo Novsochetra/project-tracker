@@ -9,7 +9,7 @@ export const CHAT_BUSY = 'Claude is still answering. Wait for the answer or canc
 
 export interface AskRequest {
   queued: QueuedRun;
-  project: Pick<ProjectRow, 'key' | 'name'>;
+  project: Pick<ProjectRow, 'key' | 'name' | 'instructions'>;
   chat: Pick<ChatRow, 'id' | 'sessionId' | 'sessionRunnerId'>;
   history: readonly { role: ChatRole; text: string }[];
   question: string;

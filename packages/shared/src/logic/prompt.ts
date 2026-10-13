@@ -1,8 +1,9 @@
 import { VERDICT_LABELS, type ReviewVerdict } from '../domain/activity';
 import { PRIORITY_LABELS, type Priority } from '../domain/priority';
 import { formatShortDay } from './format';
+import { instructionsBlock, type PromptInstructions } from './instructions';
 
-export interface PromptProject {
+export interface PromptProject extends PromptInstructions {
   name: string;
   key: string;
   repo: string;
@@ -68,6 +69,11 @@ function repoLine(project: PromptProject): string[] {
   return project.repo ? [`Repository / folder: ${project.repo}`] : [];
 }
 
+const instructionLines = (project: PromptProject): string[] => {
+  const block = instructionsBlock(project, '##');
+  return block.length > 0 ? ['', ...block] : [];
+};
+
 export function buildTicketPrompt(
   project: PromptProject,
   ticket: PromptTicket,
@@ -76,6 +82,7 @@ export function buildTicketPrompt(
   return [
     `Please work on ticket ${ticket.key} from my "${project.name}" project.`,
     ...repoLine(project),
+    ...instructionLines(project),
     '',
     ticketBlock(ticket, '##', now),
     '',
@@ -94,6 +101,7 @@ export function buildProjectPrompt(
   const lines = [
     `Here are the open tickets for my "${project.name}" project. Work through them in order, highest priority first, and check with me before large or risky changes.`,
     ...repoLine(project),
+    ...instructionLines(project),
   ];
   for (const ticket of tickets) lines.push('', '---', '', ticketBlock(ticket, '###', now));
   lines.push(

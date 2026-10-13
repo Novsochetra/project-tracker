@@ -4,6 +4,7 @@ import type { SheetProps } from '../../app/sheets/types';
 import { AutoTextarea } from '../../components';
 import { Sheet, SheetActionButton, SheetCancelButton } from '../../overlays';
 import { hasName, projectHint, type ProjectFormMode } from './projectForm';
+import { ProjectInstructionsField } from './ProjectInstructionsField';
 import { ProjectPathFields } from './ProjectPathFields';
 import styles from './ProjectSheet.module.css';
 import type { ProjectForm } from './useProjectForm';
@@ -88,6 +89,7 @@ export function ProjectFormSheet({
       <div className={styles.details}>
         <ProjectPathFields mode={mode} form={form} onEnter={explainBlankName} />
         <p className={styles.hint}>{projectHint(mode, form.values)}</p>
+        <ProjectInstructionsField form={form} />
         {form.error && (
           <p role="alert" className={clsx(styles.error, 'fade-in')}>
             {form.error}
