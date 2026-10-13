@@ -66,11 +66,13 @@ describe('labels in the tools', () => {
     expect(createTicketApi).not.toHaveBeenCalled();
   });
 
-  it('refuses more than 10 labels before asking the tracker', () => {
+  it('refuses more than 10 labels on a new ticket before asking the tracker', () => {
     const labels = Array.from({ length: 11 }, (_, index) => `L${index}`);
-    expect(() => updateTicket.input.parse({ ticket: 'MOB-3', labels })).toThrow(
+    expect(() => createTicket.input.parse({ project: 'MOB', title: 'Crash', labels })).toThrow(
       'A ticket can have up to 10 labels.',
     );
+    // An older ticket may keep more; the tracker holds an edit to its own count.
+    expect(updateTicket.input.parse({ ticket: 'MOB-3', labels }).labels).toHaveLength(11);
   });
 
   it('update_ticket sets the whole set of labels of the ticket’s project', async () => {

@@ -113,9 +113,11 @@ export const reorderLabelsInput = z.object({ ids: z.array(id).min(1) });
 export type ReorderLabelsInput = z.input<typeof reorderLabelsInput>;
 
 // A ticket's whole set of labels, which replaces the one it had.
-const labelIds = z
-  .array(id)
-  .max(TICKET_LABELS_MAX, `A ticket can have up to ${TICKET_LABELS_MAX} labels.`);
+export const TOO_MANY_LABELS = `A ticket can have up to ${TICKET_LABELS_MAX} labels.`;
+const labelIds = z.array(id).max(TICKET_LABELS_MAX, TOO_MANY_LABELS);
+// A ticket from before the cap of 10 may hold up to 50: it can always drop some, and the tracker
+// refuses only a list that grows it past the cap.
+const changedLabelIds = z.array(id).max(50, TOO_MANY_LABELS);
 
 export const createTicketInput = z.object({
   title: z.string().trim().min(1, 'Add a title to create the ticket.').max(TICKET_TITLE_MAX),
@@ -138,7 +140,7 @@ export const updateTicketInput = z.object({
   priority: z.enum(PRIORITIES).optional(),
   assignee: z.string().trim().max(TICKET_ASSIGNEE_MAX).optional(),
   due: dueDate.optional(),
-  labelIds: labelIds.optional(),
+  labelIds: changedLabelIds.optional(),
 });
 export type UpdateTicketInput = z.input<typeof updateTicketInput>;
 

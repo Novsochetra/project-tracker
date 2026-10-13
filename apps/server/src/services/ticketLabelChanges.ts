@@ -1,3 +1,4 @@
+import { TICKET_LABELS_MAX, TOO_MANY_LABELS } from '@tracker/shared';
 import type { LabelRow } from '../db/labelTables';
 import type { Db } from '../db/schema';
 import { invalidInput } from '../errors';
@@ -33,7 +34,11 @@ export async function labelChange(
   if (wanted === undefined) return null;
   const labels = await chosenLabels(db, ticket.projectId, wanted);
   const labelIds = labels.map((label) => label.id);
-  if (sameSet(labelIds, await labelIdsOfTicket(db, ticket.id))) return null;
+  const current = await labelIdsOfTicket(db, ticket.id);
+  if (sameSet(labelIds, current)) return null;
+  if (labelIds.length > Math.max(TICKET_LABELS_MAX, current.length)) {
+    throw invalidInput(TOO_MANY_LABELS);
+  }
   const names = labels.map((label) => label.name).join(', ');
   return { labelIds, entry: eventEntry(names ? `set labels to ${names}` : 'removed the labels') };
 }

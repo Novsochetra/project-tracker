@@ -5,6 +5,7 @@ import {
   TICKET_DESCRIPTION_MAX,
   TICKET_LABELS_MAX,
   TICKET_TITLE_MAX,
+  TOO_MANY_LABELS,
 } from '@tracker/shared';
 import { z } from 'zod';
 
@@ -36,10 +37,16 @@ export const labelName = z
   .min(1, 'Pass a label name like "Bug".')
   .describe('Label name, case-insensitive, e.g. "Bug". get_ticket and list_tickets show them.');
 
-export const labelNames = z
+const LABEL_NAMES =
+  'Label names, case-insensitive, e.g. ["Bug"]. They must be the project\'s own labels.';
+
+export const labelNames = z.array(labelName).describe(LABEL_NAMES);
+
+// An edit may keep more on a ticket from before the cap; the tracker checks those.
+export const newTicketLabelNames = z
   .array(labelName)
-  .max(TICKET_LABELS_MAX, `A ticket can have up to ${TICKET_LABELS_MAX} labels.`)
-  .describe('Label names, case-insensitive, e.g. ["Bug"]. They must be the project\'s own labels.');
+  .max(TICKET_LABELS_MAX, TOO_MANY_LABELS)
+  .describe(LABEL_NAMES);
 
 export const category = z
   .enum(STATUS_CATEGORIES)
