@@ -39,10 +39,12 @@ function useKeyboardVars(enabled: boolean): CSSProperties | undefined {
 interface SheetContentProps extends SheetPanelProps {
   handleRef: RefObject<HTMLDivElement | null>;
   bodyRef: RefObject<HTMLDivElement | null>;
+  bodyScrolls: boolean;
 }
 
 function SheetContent(props: SheetContentProps): ReactNode {
   const { isPhone, left, title, subtitle, right, children, footer, handleRef, bodyRef } = props;
+  const bodyTabIndex = props.bodyScrolls ? -1 : undefined;
   return (
     <>
       <div ref={handleRef} className={styles.handle}>
@@ -60,7 +62,7 @@ function SheetContent(props: SheetContentProps): ReactNode {
           <div className={styles.end}>{right}</div>
         </header>
       </div>
-      <div ref={bodyRef} className={styles.body}>
+      <div ref={bodyRef} className={styles.body} tabIndex={bodyTabIndex}>
         {children}
       </div>
       {footer !== undefined && <div className={styles.footer}>{footer}</div>}
@@ -117,18 +119,23 @@ export function SheetPanel(props: SheetPanelProps) {
   const { drag, panelStyle, scrim } = useSheetMotion(props, panelRef, guard.requestClose);
   useAxisDrag(handleRef, { ...drag, axis: 'y' });
   useTopPull(bodyRef, drag);
+  // A wide desktop sheet scrolls in its body, not the panel, so the body takes first focus for
+  // Page Down and the arrow keys to scroll it.
+  const bodyScrolls = !isPhone && size === 'wide';
   const trapKeys = useOverlayBehavior({
     active: open,
     panelRef,
     onClose: guard.requestClose,
-    initialFocusRef,
+    initialFocusRef: initialFocusRef ?? (bodyScrolls ? bodyRef : undefined),
     focusInitial: !isPhone,
   });
   // iOS asks before Cancel throws changes away; a desktop Cancel button is a deliberate click.
   const cancel = isPhone ? guard.requestClose : onClose;
   const closeHold = useCloseHold(open);
 
-  const content = <SheetContent {...props} handleRef={handleRef} bodyRef={bodyRef} />;
+  const content = (
+    <SheetContent {...props} handleRef={handleRef} bodyRef={bodyRef} bodyScrolls={bodyScrolls} />
+  );
   return (
     <SheetCancelContext.Provider value={cancel}>
       <div

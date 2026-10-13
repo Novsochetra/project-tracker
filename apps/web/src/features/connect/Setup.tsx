@@ -26,6 +26,8 @@ interface TrackerAddressProps {
   onCopy: CopyHandler;
 }
 
+// The address sits in the narrow column and has no spaces, so it wraps rather than hiding most of
+// itself behind the sideways scroll.
 function TrackerAddress({ address, serverUrl, onCopy }: TrackerAddressProps) {
   return (
     <Section title="This tracker">
@@ -34,6 +36,7 @@ function TrackerAddress({ address, serverUrl, onCopy }: TrackerAddressProps) {
           <CommandRow
             command={serverUrl}
             description={addressNote(address, serverUrl)}
+            wraps
             copyLabel="Copy address"
             onCopy={(command) => onCopy(command, ADDRESS_COPY)}
           />

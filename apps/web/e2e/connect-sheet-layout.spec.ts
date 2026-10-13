@@ -6,6 +6,16 @@ import { readActionSheet, seedProject, settled } from './helpers';
 // long commands wrapped over four lines. It now fits the window with Close always in view, puts
 // the overview beside the commands, and keeps each command on one line that scrolls sideways.
 
+const RAILWAY = 'https://project-tracker-production-aa4f.up.railway.app';
+
+// The tracker people use is on Railway, whose long address has to fit the narrow column.
+async function onRailway(page: Page): Promise<void> {
+  await page.route('**/api/meta', async (route) => {
+    const response = await route.fetch();
+    await route.fulfill({ response, json: { ...(await response.json()), serverUrl: RAILWAY } });
+  });
+}
+
 async function openConnect(page: Page): Promise<Locator> {
   await page.goto('/p/MOB');
   await page.getByRole('button', { name: 'Project options' }).first().click();
@@ -49,9 +59,9 @@ for (const height of [800, 700]) {
   }, info) => {
     test.skip(isPhone(info.project.name), 'Desktop layout');
     await page.setViewportSize({ width: 1280, height });
+    await onRailway(page);
     const sheet = await openConnect(page);
 
-    // 5vh from the top once its opening motion ends, and still there after the body scrolls.
     const top = () => expect.poll(async () => (await box(sheet)).y).toBeCloseTo(height * 0.05, 0);
     await top();
     const panel = await box(sheet);
@@ -60,6 +70,10 @@ for (const height of [800, 700]) {
     const address = await box(sheet.getByRole('heading', { name: 'This tracker' }));
     const setup = await box(sheet.getByRole('heading', { name: 'Add the tracker to Claude Code' }));
     expect(setup.x).toBeGreaterThan(address.x + address.width);
+
+    const url = sheet.getByText(RAILWAY, { exact: true });
+    expect(await overflowsSideways(url)).toBe(false);
+    expect((await box(url)).x + (await box(url)).width).toBeLessThan(setup.x);
 
     const command = mcpCommand(sheet);
     expect(await lineCount(command)).toBe(1);
@@ -71,6 +85,17 @@ for (const height of [800, 700]) {
     await top();
   });
 }
+
+test('desktop: Page Down scrolls the sheet right after it opens', async ({ page }, info) => {
+  test.skip(isPhone(info.project.name), 'Desktop layout');
+  const sheet = await openConnect(page);
+  const body = sheet.locator(':focus');
+  await expect(body).toContainText('Add the tracker to Claude Code');
+  await page.keyboard.press('PageDown');
+  await expect.poll(() => body.evaluate((element) => element.scrollTop)).toBeGreaterThan(0);
+  await page.keyboard.press('Escape');
+  await expect(sheet).toHaveCount(0);
+});
 
 test('phone: one column, and commands wrap instead of scrolling sideways', async ({
   page,

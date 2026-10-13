@@ -8,9 +8,11 @@ export interface CommandRowProps {
   copyLabel: string;
   onCopy: (command: string) => void;
   step?: number;
+  wraps?: boolean;
 }
 
-export function CommandRow({ command, description, copyLabel, onCopy, step }: CommandRowProps) {
+export function CommandRow(props: CommandRowProps) {
+  const { command, description, copyLabel, onCopy, step, wraps = false } = props;
   return (
     <li className={styles.row}>
       {step !== undefined && (
@@ -20,7 +22,9 @@ export function CommandRow({ command, description, copyLabel, onCopy, step }: Co
       )}
       <span className={styles.rowText}>
         <span className={styles.commandBox}>
-          <code className={styles.rowCommand}>{command}</code>
+          <code className={wraps ? `${styles.rowCommand} ${styles.wraps}` : styles.rowCommand}>
+            {command}
+          </code>
         </span>
         <span className={styles.rowDescription}>{description}</span>
       </span>
