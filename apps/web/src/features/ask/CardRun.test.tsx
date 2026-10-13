@@ -28,7 +28,7 @@ it('says a prompt is too long to run here and where to shorten it', async () => 
   await userEvent.setup().click(screen.getByRole('button', { name: 'Run MOB-1 in Claude Code' }));
 
   expect(await screen.findByRole('alert')).toHaveTextContent(
-    'A run takes a prompt of up to 100,000 characters. This ticket’s has 105,000: open the ticket to shorten it and run it from there.',
+    'A run takes a prompt of up to 100,000 characters. This ticket’s prompt has 105,000: open the ticket to shorten it and run it from there.',
   );
   expect(startRun).not.toHaveBeenCalled();
 });

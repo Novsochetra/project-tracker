@@ -7,7 +7,7 @@ export class PromptTooLongError extends Error {
   constructor(length: number) {
     super(
       `A run takes a prompt of up to ${count.format(RUN_PROMPT_MAX)} characters. ` +
-        `This ticket’s has ${count.format(length)}: open the ticket to shorten it and run it from there.`,
+        `This ticket’s prompt has ${count.format(length)}: open the ticket to shorten it and run it from there.`,
     );
   }
 }
