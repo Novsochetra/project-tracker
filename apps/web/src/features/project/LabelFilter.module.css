@@ -1,4 +1,4 @@
-/* Drawn like the status tabs' track it sits beside, as tall as it. */
+/* As tall as the status tabs' track beside it, so the filter row keeps its height. */
 .trigger {
   flex: none;
   display: inline-flex;

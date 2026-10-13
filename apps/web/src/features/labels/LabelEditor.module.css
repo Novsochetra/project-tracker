@@ -9,7 +9,6 @@
   font: var(--text-caption);
 }
 
-/* Bordered like the name field above it; it grows with its text up to a part of the screen. */
 .input {
   max-height: 30vh;
   padding: 8px 10px;

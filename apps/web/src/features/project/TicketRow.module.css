@@ -146,7 +146,7 @@
   flex: none;
 }
 
-/* Names after the title on wide rows; the title keeps most of the row. */
+/* The title keeps most of a wide row. */
 .main .labels {
   flex: 0 1 auto;
   flex-wrap: nowrap;

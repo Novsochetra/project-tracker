@@ -22,7 +22,7 @@ export function LabelChips({ labels, className }: LabelChipsProps) {
   );
 }
 
-// Only the colors, where a row has no room for names; the names stay for screen readers.
+// Rows have no room for the names, but screen readers still need them.
 export function LabelDots({ labels, className }: LabelChipsProps) {
   if (labels.length === 0) return null;
   return (

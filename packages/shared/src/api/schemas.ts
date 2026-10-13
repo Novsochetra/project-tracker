@@ -205,7 +205,6 @@ export const listTicketsQuery = z.object({
   status: z.string().max(40).optional(),
   category: z.enum(STATUS_CATEGORIES).optional(),
   q: z.string().max(TICKET_SEARCH_MAX).optional(),
-  // A label's name, case-insensitive, as for a status.
   label: z.string().max(LABEL_NAME_MAX).optional(),
 });
 export type ListTicketsQuery = z.input<typeof listTicketsQuery>;

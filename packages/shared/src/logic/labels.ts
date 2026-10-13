@@ -12,7 +12,6 @@ export function findLabelByName<T extends Pick<Label, 'name'>>(
   return labels.find((label) => label.name.toLowerCase() === wanted);
 }
 
-// In the project's order, whatever order the ids came in; ids of labels gone since are left out.
 export function labelsOf<T extends Label>(labels: readonly T[], ids: readonly string[] = []): T[] {
   const wanted = new Set(ids);
   return sortLabels(labels.filter((label) => wanted.has(label.id)));

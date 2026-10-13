@@ -30,7 +30,6 @@ export interface DueLabelProps {
   due: string;
   overdue: boolean;
   className?: string | undefined;
-  // What shares the date's place, if there is room after it: a phone row's label dots.
   children?: ReactNode;
 }
 

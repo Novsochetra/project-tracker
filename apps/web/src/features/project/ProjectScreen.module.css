@@ -47,7 +47,6 @@
   padding: 14px 32px 16px;
 }
 
-/* The status tabs and, in a project with labels, the label filter after them. */
 .statusFilters {
   display: flex;
   flex: 0 1 auto;

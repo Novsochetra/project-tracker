@@ -12,7 +12,6 @@ const block = (heading: string, text: string | undefined): string[] => {
   return trimmed ? [heading, trimmed] : [];
 };
 
-// One block for every prompt: the project's instructions, then those of the ticket's labels.
 export function instructionsBlock(
   project: PromptInstructions,
   heading: string,
@@ -27,7 +26,6 @@ export function instructionsBlock(
   return blocks.flatMap((lines, index) => (index === 0 ? lines : ['', ...lines]));
 }
 
-// Once each, in the order they come, for a prompt that holds several tickets.
 export function distinctLabels(
   tickets: readonly { labels?: readonly PromptLabel[] | undefined }[],
 ): PromptLabel[] {

@@ -1,4 +1,3 @@
-/* A label's color as a small dot, beside its name or in place of it where there is no room. */
 .dot {
   flex: none;
   display: inline-block;
