@@ -19,11 +19,9 @@ export interface MarkToken {
   kind: 'mark';
   char: Mark;
   start: number;
-  // The characters of the run that no emphasis used: they show as text.
   left: number;
   canOpen: boolean;
   canClose: boolean;
-  // Innermost first, in the order they were matched.
   opens: Emphasis[];
   closes: Emphasis[];
 }

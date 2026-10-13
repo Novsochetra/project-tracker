@@ -25,7 +25,8 @@ function parseBlocks(lines: readonly string[], depth: number): Block[] {
   return blocks;
 }
 
-// Each line is read a few times at most per level, and levels stop at MAX_DEPTH, so any answer
-// parses in linear time.
+// Each line is read a few times at most per level, levels stop at MAX_DEPTH, and table rows are
+// never padded, so any answer parses in linear time into a tree no bigger than a few nodes per
+// character (tables at most MAX_TABLE_CELLS cells).
 export const parseMarkdown = (text: string): Block[] =>
   parseBlocks(text.replace(/\r\n?/g, '\n').split('\n'), 0);

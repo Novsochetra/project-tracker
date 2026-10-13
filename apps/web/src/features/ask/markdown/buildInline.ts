@@ -6,7 +6,6 @@ export const MAX_INLINE_DEPTH = 8;
 
 interface Frame {
   children: Inline[];
-  // The marks shown as text when this emphasis is too deep to be one.
   literal: string | null;
 }
 
@@ -56,6 +55,7 @@ class Builder {
   mark(token: MarkToken): void {
     token.closes.forEach(() => this.close());
     this.text(token.char.repeat(token.left));
+    // Opens are matched innermost first, and the outermost must open first.
     for (let i = token.opens.length - 1; i >= 0; i -= 1) this.open(token.opens[i]!, token.char);
   }
 }

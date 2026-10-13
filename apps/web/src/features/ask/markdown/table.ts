@@ -2,6 +2,10 @@ import type { Align } from './types';
 
 const DELIMITER = /^:?-+:?$/;
 
+// A table holds at most this many cells, its head included; rows past it show as text. A cell can
+// cost one character, so without a cap an answer of pipes laid out a page too big to show.
+export const MAX_TABLE_CELLS = 5_000;
+
 export interface TableHead {
   align: Align[];
   head: string[];
@@ -48,8 +52,5 @@ export function tableAt(lines: readonly string[], at: number): TableHead | null 
   const align = delimiterRow(below);
   if (!align) return null;
   const head = splitRow(header);
-  return align.length === head.length ? { align, head } : null;
+  return align.length === head.length && head.length <= MAX_TABLE_CELLS ? { align, head } : null;
 }
-
-export const fitRow = (cells: readonly string[], width: number): string[] =>
-  Array.from({ length: width }, (_, index) => cells[index] ?? '');

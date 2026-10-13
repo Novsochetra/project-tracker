@@ -41,6 +41,11 @@ it.each([
   ['a rule-like line', fill('- ', '', 'x')],
   ['pipes', fill('|')],
   ['a table head with many cells', fill('|a', '', '\n') + fill('|-')],
+  [
+    'a wide table of one-pipe rows',
+    `|${' |'.repeat(1_000)}\n|${'-|'.repeat(1_000)}\n${fill('|\n')}`,
+  ],
+  ['a table of many short rows', `| a | b | c |\n|---|---|---|\n${fill('| x |\n')}`],
   ['many short lines', fill('a\n')],
   ['many fences', fill('```\n')],
   ['a deep list', fill(`${nestedList}\n`).slice(0, SIZE)],

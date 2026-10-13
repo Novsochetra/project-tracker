@@ -12,6 +12,7 @@ const ANSWER = [
   '## Steps',
   '1. Batch the captures\n2. Send them with `fetch`\n   - retry on a 5xx',
   '> Drafts stay on the phone until the tracker has them.',
+  '- Fewer requests\n- Smaller batches',
   '```ts',
   "const queue = await openQueue({ name: 'captures', retries: 3, backoffMs: 1000, onDrop: (item) => log(item) });",
   '```',
@@ -68,6 +69,12 @@ test('shows an answer with headings, a list, code and a table without a sideways
   await expect(message.getByRole('heading', { level: 2, name: 'Steps' })).toBeVisible();
   await expect(message.getByText('wait', { exact: true })).toHaveCSS('font-weight', '600');
   await expect(message.getByRole('listitem').filter({ hasText: /^retry on a 5xx$/ })).toBeVisible();
+  await expect(message.locator('ol').first()).toHaveCSS('list-style-type', 'decimal');
+  await expect(message.locator('ol ul')).toHaveCSS('list-style-type', 'circle');
+  await expect(message.locator('ul').filter({ hasText: 'Fewer requests' })).toHaveCSS(
+    'list-style-type',
+    'disc',
+  );
   await expect(message.getByRole('link', { name: 'https://x.dev/docs' })).toBeVisible();
   await expect(message.getByRole('cell', { name: 'Take a batch in one request' })).toBeVisible();
 

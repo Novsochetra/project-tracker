@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { MAX_DEPTH } from './lineKinds';
 import { parseMarkdown } from './parseMarkdown';
+import { MAX_TABLE_CELLS } from './table';
 import type { Block, Inline } from './types';
 
 const text = (value: string): Inline => ({ kind: 'text', text: value });
@@ -94,7 +95,7 @@ describe('parseMarkdown', () => {
     ]);
   });
 
-  it('reads tables with alignment, escaped pipes and uneven rows', () => {
+  it('reads tables with alignment, escaped pipes, and rows cut to the head but never padded', () => {
     const answer =
       'Before\n| Name | Size | Note |\n|:--|--:|:-:|\n| a \\| b | 1 |\n| c | 2 | x | extra |\nAfter';
     expect(parseMarkdown(answer)).toEqual([
@@ -104,12 +105,24 @@ describe('parseMarkdown', () => {
         align: ['left', 'right', 'center'],
         head: [[text('Name')], [text('Size')], [text('Note')]],
         rows: [
-          [[text('a | b')], [text('1')], []],
+          [[text('a | b')], [text('1')]],
           [[text('c')], [text('2')], [text('x')]],
         ],
       },
       paragraph('After'),
     ]);
+  });
+
+  it('shows rows past the cell cap as text', () => {
+    const rows = Array.from({ length: MAX_TABLE_CELLS }, (_, index) => `| ${index} |`);
+    const [table, rest] = parseMarkdown(`| n |\n|---|\n${rows.join('\n')}`);
+    expect(table?.kind === 'table' && table.rows.length).toBe(MAX_TABLE_CELLS - 1);
+    expect(rest).toEqual(paragraph(`| ${MAX_TABLE_CELLS - 1} |`));
+  });
+
+  it('shows a table whose head passes the cell cap as text', () => {
+    const wide = `|${' a |'.repeat(MAX_TABLE_CELLS + 1)}\n|${'-|'.repeat(MAX_TABLE_CELLS + 1)}`;
+    expect(parseMarkdown(wide).map((block) => block.kind)).toEqual(['paragraph']);
   });
 
   it('needs as many dashes cells as header cells for a table', () => {

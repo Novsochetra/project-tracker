@@ -9,7 +9,7 @@ import {
   startsBlock,
 } from './lineKinds';
 import { parseInline } from './parseInline';
-import { fitRow, splitRow, tableAt } from './table';
+import { MAX_TABLE_CELLS, splitRow, tableAt } from './table';
 import type { Block } from './types';
 
 const lineAt = (cursor: Cursor): string => cursor.lines[cursor.at] ?? '';
@@ -42,18 +42,28 @@ export function readRule(cursor: Cursor): Block | null {
   return { kind: 'rule' };
 }
 
-// Rows end at a line without a pipe, so text right under a table isn't read as a row.
+// Rows end at a line without a pipe, so text right under a table isn't read as a row. A short row
+// stays short, since padding every row to the head's width made width × rows cells from a few
+// characters each.
+function readRows(cursor: Cursor, width: number): string[][] {
+  const rows: string[][] = [];
+  let cells = width;
+  for (; cursor.at < cursor.lines.length; cursor.at += 1) {
+    const line = lineAt(cursor);
+    if (!line.includes('|') || startsBlock(line, cursor.depth)) break;
+    const row = splitRow(line).slice(0, width);
+    cells += row.length;
+    if (cells > MAX_TABLE_CELLS) break;
+    rows.push(row);
+  }
+  return rows;
+}
+
 export function readTable(cursor: Cursor): Block | null {
   const table = tableAt(cursor.lines, cursor.at);
   if (!table) return null;
-  const width = table.head.length;
-  const rows: string[][] = [];
   cursor.at += 2;
-  for (let line = lineAt(cursor); cursor.at < cursor.lines.length; line = lineAt(cursor)) {
-    if (!line.includes('|') || startsBlock(line, cursor.depth)) break;
-    rows.push(fitRow(splitRow(line), width));
-    cursor.at += 1;
-  }
+  const rows = readRows(cursor, table.head.length);
   return {
     kind: 'table',
     align: table.align,

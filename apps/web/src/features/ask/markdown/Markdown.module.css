@@ -67,6 +67,23 @@
   padding-left: var(--space-6);
 }
 
+/* The answer sits in the chat's own list, whose nesting would otherwise pick the markers. */
+ul.list {
+  list-style-type: disc;
+}
+
+.list ul.list {
+  list-style-type: circle;
+}
+
+.list .list ul.list {
+  list-style-type: square;
+}
+
+ol.list {
+  list-style-type: decimal;
+}
+
 .list > li + li,
 .list > li > * + * {
   margin-top: var(--space-1);
