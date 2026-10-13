@@ -100,7 +100,7 @@ tracker watch MOB --name "Dara's MacBook"
 - A ticket in **Need review** goes to a reviewer run instead: Claude reviews it and records the review with `review_ticket`. If the ticket is still in review when Claude finishes, the run ends with "Claude didn't record a review."
 - In a ticket run or an Edit question, a step that needs your OK, or a question Claude asks you, shows on the phone with **Allow** and **Deny** (or the choices), and Claude waits for your answer, up to 30 minutes. Ask and Plan questions are read-only and never ask.
 - `claude` must be installed and logged in here, with the tracker's MCP tools added (above), so Claude can claim, comment and submit. Your Claude Code settings decide what a ticket run may do; `--permission-mode` (for example `acceptEdits`) is passed on to `claude` for ticket runs and Edit questions. Without it, an Edit question gets `default`, so it asks on the phone before each step outside your allow rules.
-- It keeps the Mac from idle sleep while it runs (`caffeinate -i`; the screen can still turn off). `--no-keep-awake` turns that off. A closed laptop lid still sleeps unless it is on power with a display.
+- On macOS it keeps the Mac from idle sleep while it runs (`caffeinate -i`; the screen can still turn off). `--no-keep-awake` turns that off. A closed laptop lid still sleeps unless it is on power with a display.
 - Ctrl-C (or closing the terminal) stops it, and a run in progress is reported as cancelled. If the tracker can't be reached then, it keeps trying to report; a second Ctrl-C quits at once.
 
 ### Start it by itself (macOS)
@@ -120,6 +120,14 @@ tracker watch --uninstall
 - To change `--name` or another choice, run `--install` again with the new ones; it replaces the installed helper.
 - A LaunchAgent runs only while you are logged in: after a restart with FileVault on, the Mac waits for your password. "Start up automatically after a power failure" (System Settings → Energy) helps a Mac at home.
 - When the Mac is off, asleep or offline, a run waits 30 minutes and then fails with "Your computer didn't take the run."
+
+### Start it by itself (Linux)
+
+The same three commands write a systemd user unit (`~/.config/systemd/user/com.project-tracker.watch.<id>.service`), enable it and start it. It restarts two minutes after a crash and logs to the journal (`journalctl --user -u com.project-tracker.watch.<id>.service -f`). To start at boot rather than at login, `--install` turns on lingering (`loginctl enable-linger`), or says to run it with `sudo` when that is refused. As on macOS, log in with `tracker login` and log `claude` in itself: the unit gets only `PATH` and the config file's location.
+
+### A helper that's always on
+
+To start runs while your Mac is off, run the helper on a server or in Docker (`docker/helper/Dockerfile`): see [docs/always-on-helper.md](../../docs/always-on-helper.md).
 
 ## Workflow: worker → reviewer → person
 

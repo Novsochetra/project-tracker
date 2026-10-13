@@ -1,19 +1,12 @@
-import { execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { AutostartError } from './errors';
-import { plistPathOf } from './names';
-import { launchAgentPlist, type LaunchAgent } from './plist';
+import type { HelperJob } from './job';
+import { logPathOf, plistPathOf } from './names';
+import { launchAgentPlist } from './plist';
+import { failureOf, runCommand as run } from './run';
 
 const domain = (): string => `gui/${process.getuid!()}`;
-
-const run = (command: string, args: string[]): string =>
-  execFileSync(command, args, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
-
-const failureOf = (error: unknown): string => {
-  const failed = error as { stderr?: string; message?: string };
-  return (failed.stderr || failed.message || '').trim();
-};
 
 export const jobState = (label: string): string | undefined => {
   try {
@@ -35,12 +28,13 @@ function stopJob(label: string): void {
 
 export const isInstalled = (label: string): boolean => existsSync(plistPathOf(label));
 
-export function installAgent(agent: LaunchAgent): void {
-  const path = plistPathOf(agent.label);
+export function installAgent(job: HelperJob): void {
+  const path = plistPathOf(job.label);
+  const logPath = logPathOf(job.label);
   mkdirSync(dirname(path), { recursive: true });
-  mkdirSync(dirname(agent.logPath), { recursive: true });
-  stopJob(agent.label);
-  writeFileSync(path, launchAgentPlist(agent), { mode: 0o644 });
+  mkdirSync(dirname(logPath), { recursive: true });
+  stopJob(job.label);
+  writeFileSync(path, launchAgentPlist({ ...job, logPath }), { mode: 0o644 });
   try {
     run('/bin/launchctl', ['bootstrap', domain(), path]);
   } catch (error) {

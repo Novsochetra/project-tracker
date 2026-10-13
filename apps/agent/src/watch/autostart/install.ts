@@ -4,37 +4,30 @@ import { loadConfig } from '../../config';
 import { canonicalPath } from '../paths';
 import { setUp } from '../setup';
 import type { WatchArgs, WatchIo } from '../watchIo';
-import { jobFor, thisCli } from './job';
-import { pidFrom } from './jobState';
-import { installAgent, jobState, uninstallAgent } from './launchd';
+import { jobFor } from './job';
 import { labelFor } from './names';
-import { privacyNote, refuseTokenFromEnv, requireFreeFolder, requireMac } from './rules';
+import { requireAutostart } from './platform';
+import { refuseTokenFromEnv, requireFreeFolder } from './rules';
 
 export async function install(global: GlobalValues, args: WatchArgs, io: WatchIo): Promise<void> {
-  requireMac();
+  const autostart = requireAutostart();
   refuseTokenFromEnv(loadConfig(io.env, global, io.store.read()));
   const here = canonicalPath(io.cwd);
-  requireFreeFolder(dirname(io.store.path), here, () => pidFrom(jobState(labelFor(here))));
+  requireFreeFolder(dirname(io.store.path), here, () => autostart.runningPid(labelFor(here)));
   const { config, folder, settings } = await setUp(global, args, io, new AbortController().signal);
-  const cli = thisCli();
-  const job = jobFor(
-    {
-      config,
-      configPath: io.store.path,
-      folder,
-      projectKey: settings.projectKey,
-      args,
-      env: io.env,
-    },
-    cli,
-  );
-  installAgent(job);
+  const job = jobFor({
+    config,
+    configPath: io.store.path,
+    folder,
+    projectKey: settings.projectKey,
+    args,
+    env: io.env,
+  });
+  const installed = autostart.install(job);
   io.stdout(
     [
-      `Installed. tracker watch for ${settings.projectKey} now runs in ${folder} by itself: it starts when you log in, and again if it crashes.`,
-      `Logs: ${job.logPath}`,
-      'The Mac must stay logged in. After a restart with FileVault on, it waits for your password first.',
-      privacyNote([folder, cli.at(-1) ?? '']),
+      `Installed. tracker watch for ${settings.projectKey} now runs in ${folder} by itself: ${installed.starts}.`,
+      ...installed.notes,
       'Stop it with: tracker watch --uninstall',
     ]
       .filter(Boolean)
@@ -43,10 +36,10 @@ export async function install(global: GlobalValues, args: WatchArgs, io: WatchIo
 }
 
 export function uninstall(io: WatchIo): void {
-  requireMac();
+  const autostart = requireAutostart();
   const folder = canonicalPath(io.cwd);
   io.stdout(
-    uninstallAgent(labelFor(folder))
+    autostart.uninstall(labelFor(folder))
       ? `Uninstalled. tracker watch no longer starts by itself in ${folder}.`
       : `tracker watch wasn't installed for ${folder}.`,
   );

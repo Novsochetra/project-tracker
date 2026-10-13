@@ -6,9 +6,8 @@ import { describeError } from '../../errors';
 import { trackerKey } from '../../savedConfig';
 import { canonicalPath } from '../paths';
 import type { WatchIo } from '../watchIo';
-import { lastExitFrom, pidFrom } from './jobState';
-import { isInstalled, jobState, plistUrl } from './launchd';
-import { labelFor, logPathOf } from './names';
+import { labelFor } from './names';
+import { autostartOn, type Autostart } from './platform';
 
 async function trackerLine(
   url: string | undefined,
@@ -33,27 +32,19 @@ async function trackerLine(
   }
 }
 
-function jobLines(label: string, installed: boolean): string[] {
-  if (!installed) return ['Installed: no.'];
-  const state = jobState(label);
-  const pid = pidFrom(state);
-  if (pid !== undefined) return ['Installed: yes.', `Running by itself: yes (process ${pid}).`];
-  return [
-    'Installed: yes.',
-    `Running by itself: no (last exit code: ${lastExitFrom(state) ?? 'unknown'}).`,
-    `Log: ${logPathOf(label)}`,
-  ];
-}
-
-export async function check(global: GlobalValues, io: WatchIo): Promise<void> {
+export async function check(
+  global: GlobalValues,
+  io: WatchIo,
+  autostart: Autostart | undefined = autostartOn(),
+): Promise<void> {
   const folder = canonicalPath(io.cwd);
   const label = labelFor(folder);
-  const installed = process.platform === 'darwin' && isInstalled(label);
-  const url = (installed && plistUrl(label)) || global.url;
+  const installed = autostart?.isInstalled(label) ? autostart : undefined;
+  const url = installed?.installedUrl(label) || global.url;
   io.stdout(
     [
       `Folder: ${folder}`,
-      ...jobLines(label, installed),
+      ...(installed ? ['Installed: yes.', ...installed.statusLines(label)] : ['Installed: no.']),
       await trackerLine(url, global, io, folder),
     ].join('\n'),
   );
