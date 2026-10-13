@@ -1,4 +1,4 @@
-import type { ProjectUsage, RunUsage } from '../domain/runUsage';
+import type { ProjectUsage, RunUsage } from '@tracker/shared';
 
 const MICROS = 1_000_000;
 // Less than this shows as $0.00, which reads as free.

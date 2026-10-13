@@ -3,7 +3,7 @@ import { useRef, useState } from 'react';
 import { IconButton, MenuConfirm, MenuItem, Popover } from '../../components';
 import styles from './ProjectOptionsMenu.module.css';
 import { deleteMenuMessage } from './projectOptions';
-import { UsageNoteText } from './UsageNoteText';
+import { ProjectUsageNote } from './ProjectUsageNote';
 import { useProjectOptions } from './useProjectOptions';
 
 export function ProjectOptionsMenu({ projectKey }: { projectKey: string }) {
@@ -64,7 +64,7 @@ export function ProjectOptionsMenu({ projectKey }: { projectKey: string }) {
           </MenuItem>
           {options.usage && (
             <p className={styles.usage}>
-              <UsageNoteText note={options.usage} />
+              <ProjectUsageNote usage={options.usage} />
             </p>
           )}
         </>

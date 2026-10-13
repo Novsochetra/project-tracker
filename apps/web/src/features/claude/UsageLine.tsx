@@ -1,4 +1,5 @@
-import { runUsageParts, type RunUsage } from '@tracker/shared';
+import type { RunUsage } from '@tracker/shared';
+import { runUsageParts } from './usageFormat';
 import styles from './UsageLine.module.css';
 import { UsageParts } from './UsageParts';
 

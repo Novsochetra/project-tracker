@@ -1,10 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-  formatCost,
-  formatDuration,
-  projectUsageParts,
-  runUsageParts,
-} from '../src/logic/usageParts';
+import { formatCost, formatDuration, projectUsageParts, runUsageParts } from './usageFormat';
 
 const runUsageLine = (usage: Parameters<typeof runUsageParts>[0]) =>
   runUsageParts(usage).join(' · ');
