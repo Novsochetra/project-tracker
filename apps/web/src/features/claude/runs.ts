@@ -44,7 +44,8 @@ function endedRun(run: Run): ShownRun | null {
   if (run.status === 'failed') return { state: 'stopped', run, text: stoppedText(run) };
   if (run.status !== 'done') return null;
   if (run.chainStop) {
-    const text = `${AUTO_REVIEW_STOPPED}. ${chainStopReason(run.chainStop, run.runnerName)}`;
+    const reason = chainStopReason(run.chainStop, run.runnerName);
+    const text = reason ? `${AUTO_REVIEW_STOPPED}. ${reason}` : `${AUTO_REVIEW_STOPPED}.`;
     return { state: 'stopped', run, text };
   }
   return run.usage ? { state: 'finished', run, text: finishedText(run) } : null;

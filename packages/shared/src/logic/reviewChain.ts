@@ -1,4 +1,4 @@
-import { AUTO_REVIEW_ROUNDS, type ChainStop } from '../domain/autoReview';
+import { AUTO_REVIEW_ROUNDS, CHAIN_STOPS, type ChainStop } from '../domain/autoReview';
 import { RUN_PROMPT_MAX, type RunRole } from '../domain/run';
 import type { StatusCategory } from '../domain/status';
 
@@ -56,5 +56,9 @@ const STOP_REASONS: Record<ChainStop, (runnerName: string) => string> = {
   too_long: () => 'The next prompt is too long to run.',
 };
 
-export const chainStopReason = (stop: ChainStop, runnerName: string): string =>
-  STOP_REASONS[stop](runnerName);
+const isChainStop = (stop: string): stop is ChainStop =>
+  (CHAIN_STOPS as readonly string[]).includes(stop);
+
+// A tracker newer than this code can send a reason it has no words for: that one says none.
+export const chainStopReason = (stop: string, runnerName: string): string =>
+  isChainStop(stop) ? STOP_REASONS[stop](runnerName) : '';

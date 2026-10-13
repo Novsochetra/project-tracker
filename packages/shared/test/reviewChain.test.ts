@@ -96,5 +96,7 @@ describe('chainStopReason', () => {
     expect(chainStopReason('moved', 'Mac')).toBe('You moved the ticket.');
     expect(chainStopReason('offline', 'Mac')).toBe("Mac can't take the next run.");
     expect(chainStopReason('too_long', 'Mac')).toBe('The next prompt is too long to run.');
+    expect(chainStopReason('paused', 'Mac')).toBe('');
+    expect(chainStopReason('constructor', 'Mac')).toBe('');
   });
 });
