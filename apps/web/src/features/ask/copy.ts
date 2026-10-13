@@ -19,3 +19,5 @@ export const DELETE_CHAT_QUESTION =
   'Delete this chat? Its messages are gone for good. Tickets made from it stay.';
 export const CHAT_DELETED = 'Chat deleted';
 export const CHAT_OPTIONS_LABEL = 'Chat options';
+export const DELETE_LABEL = 'Delete';
+export const chatOptionsLabel = (title: string) => `Options for ${title}`;
