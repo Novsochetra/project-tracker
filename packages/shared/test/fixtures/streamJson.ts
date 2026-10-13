@@ -9,7 +9,9 @@ export const STREAMS = [
   'background-sub-agent',
   'denied-by-hook',
   'denied-by-person',
+  'max-turns',
   'sub-agent',
+  'ticket-run',
 ] as const;
 
 export const streamEvents = (name: (typeof STREAMS)[number]): unknown[] =>
