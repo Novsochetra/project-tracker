@@ -92,8 +92,7 @@ export interface RunJob {
   prompt: string;
   // Claude Code's session from the chat's last answer on this helper, for an ask to continue it.
   resumeSessionId: string | null;
-  // The files sent with the question, which the helper downloads for Claude to read (PT-187).
-  // Empty on ticket runs; an older tracker sends none.
+  // An older tracker sends none.
   files?: Attachment[];
 }
 

@@ -52,7 +52,7 @@ export interface RunRow {
   // The chain's work round (logic/reviewChain); null on a run a person started.
   round: number | null;
   chainStop: ChainStop | null;
-  // The person's message an ask answers, whose files the helper is given; null on ticket runs.
+  // So the helper is given the files of the question it answers.
   questionId: string | null;
 }
 

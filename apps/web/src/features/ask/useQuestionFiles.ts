@@ -7,14 +7,11 @@ export interface QuestionFiles {
   attachments: Attachment[];
   files: AttachmentList;
   drop: FileDrop;
-  // Files still on their way hold Send back, as they hold Comment.
   uploading: boolean;
   count: number;
   clear: () => void;
 }
 
-// The comment box's flow (§1.4): each file uploads as a pending one when picked, and the question
-// sends their ids.
 export function useQuestionFiles(): QuestionFiles {
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const files = useAttachmentList(setAttachments, {

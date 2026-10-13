@@ -39,7 +39,6 @@ export const savedAskOptions = (chat: Pick<Chat, 'options'> | null | undefined):
 
 export interface Question {
   text: string;
-  // Uploaded already, in the order they were picked.
   attachmentIds: string[];
 }
 

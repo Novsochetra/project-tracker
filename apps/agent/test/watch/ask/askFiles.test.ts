@@ -2,7 +2,7 @@ import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { basename, dirname, join } from 'node:path';
 import type { Attachment } from '@tracker/shared';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import {
   addDirArgs,
   ASK_FOLDER_PREFIX,
@@ -25,7 +25,12 @@ const file = (id: string, fileName: string): Attachment => ({
 
 const FILES = [file('f1', 'board.jpg'), file('f2', '../notes.txt')];
 
-const fetchFile: FetchFile = (id) => Promise.resolve(new Response(`bytes of ${id}`));
+const bytesOf = (id: string) => Promise.resolve(new Response(`bytes of ${id}`));
+
+const fetchFile: FetchFile = (id) => bytesOf(id);
+
+// A body that sends nothing until the download is given up.
+const silent: FetchFile = () => Promise.resolve(new Response(new ReadableStream()));
 
 const running = () => new AbortController().signal;
 
@@ -81,7 +86,7 @@ describe('withAskFiles', () => {
   it('says which file the tracker would not give, and removes what it got', async () => {
     const dirs: string[] = [];
     const halfway: FetchFile = (id) => {
-      if (id === 'f1') return fetchFile(id);
+      if (id === 'f1') return bytesOf(id);
       dirs.push(...foldersWithBoard());
       return Promise.reject(new Error('Attachment was not found.'));
     };
@@ -104,7 +109,7 @@ describe('withAskFiles', () => {
     const stopping: FetchFile = (id) => {
       stop.abort();
       asked.push(id);
-      return fetchFile(id);
+      return bytesOf(id);
     };
     let ran = false;
     const stopped = withAskFiles(stopping, { job: { files: FILES }, stop: stop.signal }, () => {
@@ -115,6 +120,38 @@ describe('withAskFiles', () => {
     expect(asked).toEqual(['f1']);
     expect(ran).toBe(false);
     expect(foldersWithBoard()).toEqual([]);
+  });
+
+  it('gives up a download that stalls, and says so', async () => {
+    const stalled = withAskFiles(
+      silent,
+      { job: { files: [file('f1', 'board.jpg')] }, stop: running(), stallMs: 50 },
+      () => Promise.resolve(),
+    );
+    await expect(stalled).rejects.toThrow(
+      "Couldn't get board.jpg from the tracker: the tracker sent nothing for 0 s.",
+    );
+  });
+
+  it('stops a download in progress at once when the question is stopped', async () => {
+    const stop = new AbortController();
+    const fetched = new Promise<void>((resolve) => {
+      const started: FetchFile = (id, options) => {
+        resolve();
+        return silent(id, options);
+      };
+      void withAskFiles(
+        started,
+        { job: { files: [file('f1', 'board.jpg')] }, stop: stop.signal },
+        () => Promise.resolve(),
+      ).catch((error: unknown) => errors.push(error));
+    });
+    const errors: unknown[] = [];
+    await fetched;
+    const at = Date.now();
+    stop.abort();
+    await vi.waitFor(() => expect(errors).toHaveLength(1));
+    expect(Date.now() - at).toBeLessThan(1000);
   });
 
   it("refuses files when this helper can't download them", async () => {

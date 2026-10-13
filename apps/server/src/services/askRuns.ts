@@ -20,7 +20,6 @@ export interface AskRequest {
   history: readonly AskHistoryMessage[];
   ticket: PromptTicket | null;
   question: string;
-  // Pending uploads of the person's, sent with the question.
   attachmentIds: readonly string[];
   options: AskOptions;
 }

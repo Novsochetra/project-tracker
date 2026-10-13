@@ -835,6 +835,15 @@ describe('responses', () => {
     expect(last().init.method).toBeUndefined();
   });
 
+  it('passes a signal to fetchAttachment, so a download can be stopped', async () => {
+    const { client, last } = setup(() => new Response('bytes', { status: 200 }));
+    const stop = new AbortController();
+
+    await client.fetchAttachment('f1', { signal: stop.signal });
+
+    expect(last().init.signal).toBe(stop.signal);
+  });
+
   it('returns the file as UTF-8 text from fetchAttachmentText', async () => {
     const text = 'line one\nlíne twö 📄';
     const { client, last } = setup(() => new Response(text, { status: 200 }));

@@ -83,7 +83,7 @@ export interface AttachmentRow {
   createdAt: number;
   // Who uploaded it: a file on no ticket yet is only theirs.
   userId: string | null;
-  // The person's chat message it was sent with (PT-187); such a file is on no ticket.
+  // A file sent in a chat is on no ticket, yet it isn't pending (PT-187).
   chatMessageId: string | null;
 }
 

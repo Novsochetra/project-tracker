@@ -89,7 +89,7 @@ process.stdin.on('end', () => {
     send({ id: 0, method: 'initialize', params: { protocolVersion: '2025-06-18', capabilities: {}, clientInfo } });
     return;
   }
-  // Says what the folder given with --add-dir holds while Claude runs.
+  // So a test can see the files are there while Claude runs.
   if (prompt.includes('SHOW FILES')) {
     const { readdirSync, readFileSync } = require('node:fs');
     const dir = process.argv[process.argv.indexOf('--add-dir') + 1];

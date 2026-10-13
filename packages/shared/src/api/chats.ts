@@ -18,7 +18,6 @@ export const askInput = z.object({
   model: z.enum(ASK_MODELS).optional(),
   mode: z.enum(ASK_MODES).optional(),
   effort: z.enum(ASK_EFFORTS).optional(),
-  // Uploaded first as pending files (§1.4), then sent with the question (PT-187).
   attachmentIds: z
     .array(z.string().min(1).max(64))
     .max(MAX_NEW_ATTACHMENTS, tooManyFilesMessage('question'))

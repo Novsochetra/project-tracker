@@ -47,7 +47,6 @@ export interface ChatMessage {
   // The steps its open list shows, so an older answer can say "23 steps" before they are read:
   // the run's, less Claude's last words when they are the answer itself. 0 on the person's.
   stepCount: number;
-  // The files the person sent with the question (PT-187); none on Claude's.
   attachments: Attachment[];
   createdAt: number;
 }

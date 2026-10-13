@@ -136,8 +136,11 @@ export class Http {
     return this.read<T>(response, false);
   }
 
-  async raw(path: string): Promise<Response> {
-    const response = await this.fetchImpl(this.url(path), { headers: this.headers(false) });
+  async raw(path: string, { signal }: { signal?: AbortSignal } = {}): Promise<Response> {
+    const response = await this.fetchImpl(this.url(path), {
+      headers: this.headers(false),
+      ...(signal ? { signal } : {}),
+    });
     if (!response.ok) await this.read(response, false);
     return response;
   }

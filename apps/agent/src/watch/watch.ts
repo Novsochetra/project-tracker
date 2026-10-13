@@ -3,6 +3,7 @@ import { dirname } from 'node:path';
 import type { GlobalValues } from '../cli/options';
 import { describeError } from '../errors';
 import { runPermissionMode } from './approvals';
+import { sweepAskFolders } from './ask/askFolderSweep';
 import { CLAUDE } from './claude';
 import { claudeRunners } from './claudeRunners';
 import { lockFolder } from './folderLock';
@@ -47,7 +48,7 @@ async function keepWatching(setup: Setup, args: WatchArgs, io: WatchIo, signal: 
     permissionMode: runPermissionMode(args),
     write: io.write,
     prompts: promptTool(setup, io),
-    fetchFile: (attachmentId) => api.fetchAttachment(attachmentId),
+    fetchFile: (attachmentId, options) => api.fetchAttachment(attachmentId, options),
   });
   const watcher = createWatcher({ api, log: io.stdout, tools: tools.current, ...claude }, settings);
   io.stdout(
@@ -74,6 +75,7 @@ export async function watch(global: GlobalValues, args: WatchArgs, io: WatchIo):
   void io.untilStopped().then(() => stopping.abort());
   const release = lockFolder(dirname(io.store.path), canonicalPath(io.cwd));
   if (args.keepAwake !== false) keepMacAwake();
+  void sweepAskFolders();
   try {
     await keepWatching(await setUp(global, args, io, stopping.signal), args, io, stopping.signal);
   } catch (error) {

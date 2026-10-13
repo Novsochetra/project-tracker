@@ -14,13 +14,23 @@ function localName(name: string, index: number): string {
   return plain;
 }
 
-// Two files of one question can share a name, so a later one gets its place in front.
+// APFS takes the NFC and NFD forms of a name, and both cases, as one file.
+const nameKey = (name: string): string => name.normalize('NFC').toLowerCase();
+
+function unusedName(name: string, index: number, used: ReadonlySet<string>): string {
+  let candidate = name;
+  for (let prefix = index + 1; used.has(nameKey(candidate)); prefix += 1) {
+    candidate = `${prefix}-${name}`;
+  }
+  return candidate;
+}
+
+// Two files of one question can share a name, so a later one gets a number in front.
 export function localNames(names: readonly string[]): string[] {
   const used = new Set<string>();
   return names.map((name, index) => {
-    const local = localName(name, index);
-    const unique = used.has(local.toLowerCase()) ? `${index + 1}-${local}` : local;
-    used.add(unique.toLowerCase());
+    const unique = unusedName(localName(name, index), index, used);
+    used.add(nameKey(unique));
     return unique;
   });
 }

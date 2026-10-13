@@ -50,7 +50,6 @@
   background: var(--fill-2);
 }
 
-/* The person's files sit above their words, on their side of the thread. */
 .sentFiles {
   justify-content: flex-end;
   max-width: 85%;

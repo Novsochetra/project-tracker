@@ -16,8 +16,8 @@ function FileTiles({ files }: { files: Attachment[] }) {
   );
 }
 
-// The files a person sent with a question, opened in the usual viewers. An older tracker sends no
-// list at all. Only a message with files needs the viewers' provider (the Shell's).
+// An older tracker sends no list. Only a message with files needs the viewers' provider (the
+// Shell's), so a chat shown without one still works.
 export function SentFiles({ attachments }: { attachments: Attachment[] | undefined }) {
   const files = readableFiles(attachments);
   return files.length > 0 ? <FileTiles files={files} /> : null;

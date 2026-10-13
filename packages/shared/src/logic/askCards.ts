@@ -5,7 +5,6 @@ export interface AskHistoryMessage {
   role: ChatRole;
   text: string;
   cardTickets?: readonly CardTicketLink[];
-  // Sent with the question (PT-187).
   files?: readonly string[];
 }
 

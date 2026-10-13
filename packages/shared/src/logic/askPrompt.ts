@@ -8,9 +8,8 @@ export interface AskPromptInput {
   project: { key: string; name: string } & PromptInstructions;
   mode: AskMode;
   question: string;
-  // Names of the files sent with the question; the helper adds where it put them (withSentFiles).
+  // Names only: the helper adds where it put them (withSentFiles).
   files?: readonly string[];
-  // Earlier messages, with the names of the files sent with each (no longer on the helper).
   history: readonly AskHistoryMessage[];
   // The helper resumes the chat's Claude Code session, which holds the messages already.
   resumed?: boolean;

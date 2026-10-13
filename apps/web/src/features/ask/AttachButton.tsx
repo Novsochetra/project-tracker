@@ -4,7 +4,6 @@ import { IconButton } from '../../components';
 import { FileInput } from '../attachments/FileInput';
 import styles from './ChatScreen.module.css';
 
-// The comment box's Attach files: on phones the photo library, the camera and Files.
 export function AttachButton({ onFiles }: { onFiles: (files: File[]) => void }) {
   const inputRef = useRef<HTMLInputElement>(null);
   return (

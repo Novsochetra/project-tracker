@@ -23,8 +23,7 @@ function unlessEnded(error: unknown) {
   if (!(error instanceof AppError && error.code === 'conflict')) throw error;
 }
 
-// Tickets made from the chat's cards stay; only their link to the message goes. The files sent
-// with its questions go with it (PT-187).
+// Tickets made from the chat's cards stay; only their link to the message goes.
 export async function deleteChat(ctx: ServiceContext, scope: UserScope, id: string) {
   const chat = await requireChat(ctx, scope, id);
   await cancelAnswer(ctx, scope, chat.id);
