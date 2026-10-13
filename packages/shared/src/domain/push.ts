@@ -14,6 +14,6 @@ export interface PushKey {
 export const PUSH_TITLE_MAX = 120;
 export const PUSH_BODY_MAX = 300;
 export const PUSH_ENDPOINT_MAX = 2000;
-// The command or file in "Claude wants to run … on MOB-12", so the title stays short on a lock
-// screen; the card shows it whole.
+// The program, file or host in "MOB-12: Claude wants to edit …", so the title stays short on a
+// lock screen; the card shows it whole.
 export const PUSH_ACTION_MAX = 40;

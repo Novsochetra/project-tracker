@@ -103,7 +103,7 @@ describe.each(DIALECTS)('push when Claude waits on the person (%s)', (dialect) =
       const runId = await ticketRun();
       expect((await request(runId, 'Run git push\necho done')).status).toBe(201);
       const asks: PushMessage = {
-        title: 'Claude wants to run git push … on MOB-12',
+        title: 'MOB-12: Claude wants to run git push',
         body: 'Ticket 12',
         url: '/p/MOB/12',
         tag: 'ticket:MOB-12',
@@ -141,7 +141,7 @@ describe.each(DIALECTS)('push when Claude waits on the person (%s)', (dialect) =
     const { chat } = started.body;
     expect(await service.messagesFor(phone)).toEqual([
       {
-        title: 'Claude wants to edit src/settings.ts …',
+        title: 'Claude wants to edit src/settings.ts',
         body: chat.title,
         url: `/p/MOB/ask/${chat.id}`,
         tag: `chat:${chat.id}`,

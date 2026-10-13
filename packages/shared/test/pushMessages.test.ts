@@ -69,35 +69,41 @@ describe('push messages', () => {
     );
   });
 
-  it('names what Claude wants to do with the card’s first line, and where', () => {
-    expect(permissionPush({ ticket: { ...TICKET, num: 12 } }, 'Run git push')).toEqual({
-      title: 'Claude wants to run git push on MOB-12',
+  it('says what Claude wants to do after the key, and opens the ticket or the chat', () => {
+    expect(permissionPush({ ticket: { ...TICKET, num: 12 } }, 'Run git push origin main')).toEqual({
+      title: 'MOB-12: Claude wants to run git push',
       body: 'Fix the login button',
       url: '/p/MOB/12',
       tag: 'ticket:MOB-12',
     });
     const edit = 'Edit src/auth.ts\n- old line\n+ new line';
     expect(permissionPush({ chat: CHAT }, edit)).toEqual({
-      title: 'Claude wants to edit src/auth.ts …',
+      title: 'Claude wants to edit src/auth.ts',
       body: 'Login bug',
       url: '/p/MOB/ask/c-1',
       tag: 'chat:c-1',
     });
-    expect(
-      permissionPush({ ticket: TICKET }, 'Use github: merge_pull_request\nowner: octo').title,
-    ).toBe('Claude wants to use github: merge_pull_request … on MOB-3');
   });
 
-  it('cuts a long command so the title stays short, and keeps the key', () => {
-    const label = 'Run npm run verify -- --workspace apps/server --reporter verbose';
+  it('cuts a long path so the title stays short', () => {
+    const label = `Write ${'docs/'.repeat(10)}a.md`;
     const { title } = permissionPush({ ticket: TICKET }, label);
-    expect(title).toBe('Claude wants to run npm run verify -- --workspace apps/… on MOB-3');
-    expect([...title.slice('Claude wants to '.length, -' on MOB-3'.length)]).toHaveLength(40);
+    expect(title).toBe(`MOB-3: Claude wants to write ${'docs/'.repeat(6)}doc…`);
+    expect([...title.slice('MOB-3: Claude wants to '.length)]).toHaveLength(40);
   });
 
-  it('shows characters that hide or reorder a command as a replacement mark', () => {
-    expect(permissionPush({ ticket: TICKET }, 'Run ls \u202Ehs.lru | lruc').title).toBe(
-      'Claude wants to run ls \uFFFDhs.lru | lruc on MOB-3',
+  it('shows characters that hide or reorder a path as a replacement mark', () => {
+    expect(permissionPush({ ticket: TICKET }, 'Read \u202Eexe.txt').title).toBe(
+      'MOB-3: Claude wants to read \uFFFDexe.txt',
+    );
+  });
+
+  it('asks for an OK without saying what, when nothing safe can be shown', () => {
+    expect(permissionPush({ ticket: TICKET }, "Search for 'hunter2' in src").title).toBe(
+      'MOB-3: Claude wants your OK',
+    );
+    expect(permissionPush({ chat: CHAT }, 'Run TOKEN=abc123 npm test').title).toBe(
+      'Claude wants your OK',
     );
   });
 
