@@ -183,17 +183,24 @@ describe('ProjectScreen', () => {
     await user.click(within(todo).getByRole('button', { name: 'Show less' }));
   });
 
-  it('offers the first ticket on an empty project', async () => {
+  it('says an empty project has no tickets yet, without a button of its own', async () => {
+    renderProject({ board: makeBoard([]) });
+    const title = await screen.findByText('No tickets yet');
+    const empty = title.parentElement!;
+    expect(within(empty).getByText('Create the first ticket for Mobile app.')).toBeInTheDocument();
+    expect(within(empty).queryByRole('button')).toBeNull();
+  });
+
+  it("leaves an empty project's New ticket to the nav bar on phones", async () => {
+    restore.unshift(mockPhone(true));
     const user = userEvent.setup();
     const { sheets } = renderProject({ board: makeBoard([]) });
-    expect(await screen.findByText('No tickets yet')).toBeInTheDocument();
-    expect(screen.getByText('Create the first ticket for Mobile app.')).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'New ticket' }));
-    expect(sheets.open).toHaveBeenCalledWith({
-      type: 'newTicket',
-      projectKey: 'MOB',
-      statusId: undefined,
-    });
+    await screen.findByText('No tickets yet');
+    const [newTicket, ...others] = screen.getAllByRole('button', { name: 'New ticket' });
+    expect(others).toEqual([]);
+    expect(newTicket!.closest('[data-navbar]')).not.toBeNull();
+    await user.click(newTicket!);
+    expect(sheets.open).toHaveBeenCalledWith({ type: 'newTicket', projectKey: 'MOB' });
   });
 
   it("opens New ticket preset to a group's status", async () => {

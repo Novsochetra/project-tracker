@@ -87,10 +87,6 @@
   animation: fade-up var(--duration-fade) var(--ease-out) backwards;
 }
 
-.emptyAction {
-  padding: 0 14px;
-}
-
 .barSend {
   flex: 1 1 0;
   padding: 0 12px;

@@ -63,7 +63,7 @@ export function TicketList({ board }: { board: ProjectBoard }) {
   );
   const renderBody = () => {
     if (tickets.length === 0) {
-      return <NoTickets projectName={project.name} onAdd={() => addTicket()} />;
+      return <NoTickets projectName={project.name} />;
     }
     if (groups.length > 0) return renderGroups();
     return (

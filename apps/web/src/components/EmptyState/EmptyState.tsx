@@ -10,6 +10,7 @@ export interface EmptyStateProps {
   text?: ReactNode;
   action?: ReactNode;
   bordered?: boolean;
+  fill?: boolean;
   className?: string | undefined;
 }
 
@@ -19,10 +20,13 @@ export function EmptyState({
   text,
   action,
   bordered = false,
+  fill = false,
   className,
 }: EmptyStateProps) {
   return (
-    <div className={clsx(styles.empty, bordered && styles.bordered, className)}>
+    <div
+      className={clsx(styles.empty, bordered && styles.bordered, fill && styles.fill, className)}
+    >
       <span className={styles.tile}>
         <Icon icon={icon} size={20} />
       </span>

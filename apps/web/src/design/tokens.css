@@ -139,6 +139,9 @@
   --safe-right: env(safe-area-inset-right, 0px);
   /* Where a sticky part of a screen stops: under the phone's nav bar, which desktop doesn't show. */
   --sticky-top: 0px;
+  /* The phone's nav bar, its 1px line included (one more than --sticky-top), so a page below it
+     can reach the screen's bottom edge without scrolling by that 1px. */
+  --nav-bar-height: 0px;
   /* A stuck group header: 40px, or on phones its 44px buttons and its 1px line. */
   --sticky-header-height: 40px;
 
@@ -164,6 +167,7 @@
     --dropdown-width: 240px;
     --handle-width: 34px;
     --sticky-top: calc(var(--nav-height) + var(--safe-top));
+    --nav-bar-height: calc(var(--nav-height) + var(--safe-top) + 1px);
     --sticky-header-height: 45px;
   }
 }
@@ -175,5 +179,6 @@
   :root {
     --bar-button: var(--touch-target);
     --sticky-top: calc(var(--touch-target) + var(--safe-top));
+    --nav-bar-height: calc(var(--touch-target) + var(--safe-top) + 1px);
   }
 }
