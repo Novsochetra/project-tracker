@@ -33,6 +33,28 @@ npm run test:e2e:clean  # the same on a clean copy of HEAD; E2E_API_PORT/E2E_WEB
 - All colors, type, radii, shadows and motion come from `apps/web/src/design/tokens.css`. No raw hex values in components.
 - Never install packages without asking; concurrent installs corrupt `node_modules`.
 
+## Code Style
+
+- Write self-explaining code. Keep comments minimal: no comments that restate what the code does, no section-banner comments, no long JSDoc on obvious functions.
+- Only comment non-obvious _why_ (workarounds, protocol quirks, security reasons).
+
+## Git & Commits
+
+- Other Claude sessions often run in this repo at the same time. When committing, stage ONLY files you changed in this session (`git add <paths>`, never `git add -A` or `git add .`). Leave unrelated changes alone, including CLAUDE.md edits.
+- Commit to the current branch. Do not push or merge to main unless I explicitly say "push" or "merge to main" in this session.
+- Never touch `git stash` (no stash, pop, or drop), and never reset or checkout files you did not modify. Subagents must follow these rules too.
+- Never commit build caches or generated artifacts. Check `git status` before each commit.
+
+## Parallel Ticket Workflow (PT-*)
+
+- Run at most 5 parallel workers. Never run more than 2 E2E/Playwright or simulator suites at once, because machine overload causes spurious failures.
+- Every worker ticket gets an independent strict reviewer pass. Reviewers must specifically check: secrets or passwords in logs, unbounded memory or regex, auth bypass, data deletion scope, and EXIF/GPS stripping.
+- Merge tickets into an integration branch first, then run `npm run verify` and the full test suite after merging.
+- Check the bundle size limit after merging.
+- If a test fails during a full run, rerun it alone before treating it as a real failure.
+- Skip tickets that need a physical device and say so.
+- Use the tracker MCP to move ticket status.
+
 ## Tests
 
 - Unit tests for pure logic, integration tests for API routes and data access (SQLite and PGlite), component tests for UI behavior, Playwright for flows.
