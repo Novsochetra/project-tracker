@@ -40,6 +40,7 @@ export function SetupCommands({ info, repoRoot, authRequired, onCopy }: SetupCom
       <GroupedCard>
         <ol className={styles.rows}>
           <CommandRow
+            step={1}
             command={BUILD_COMMAND}
             description="Builds the tracker’s MCP server and CLI."
             copyLabel="Copy build command"
@@ -47,6 +48,7 @@ export function SetupCommands({ info, repoRoot, authRequired, onCopy }: SetupCom
           />
           {authRequired && (
             <CommandRow
+              step={2}
               command={loginCommand(info)}
               description="Asks for an API token, checks it and saves it where the MCP server and the CLI find it."
               copyLabel="Copy login command"
@@ -54,6 +56,7 @@ export function SetupCommands({ info, repoRoot, authRequired, onCopy }: SetupCom
             />
           )}
           <CommandRow
+            step={authRequired ? 3 : 2}
             command={mcpAddCommand(info)}
             description="Adds the tracker’s MCP server to Claude Code."
             copyLabel="Copy MCP command"

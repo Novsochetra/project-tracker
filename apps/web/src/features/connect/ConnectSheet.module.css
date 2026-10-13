@@ -1,7 +1,15 @@
-.body {
+.layout {
+  container-type: inline-size;
+}
+
+.columns,
+.column {
   display: flex;
   flex-direction: column;
   gap: var(--space-5);
+}
+
+.columns {
   padding: var(--space-4) var(--space-5) var(--space-5);
 }
 
@@ -97,11 +105,27 @@
 }
 
 .rowCommand {
+  display: block;
   color: var(--ink);
   font: var(--text-mono);
   overflow-wrap: anywhere;
   user-select: all;
   -webkit-user-select: all;
+}
+
+.stepNumber {
+  flex: none;
+  display: inline-flex;
+  align-self: flex-start;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: var(--radius-full);
+  background: var(--fill-2);
+  color: var(--muted-2);
+  font: var(--text-caption);
+  font-variant-numeric: tabular-nums;
 }
 
 .rowDescription {
@@ -125,6 +149,45 @@
 
 .retry {
   align-self: flex-start;
+}
+
+/* On a desktop each command stays on one line and scrolls sideways, since wrapping split paths
+   and flags over several lines. */
+@media (width >= 768px) and (pointer: fine),
+  (width >= 768px) and (pointer: none),
+  (width >= 768px) and (device-width >= 600px) and (device-height >= 600px) {
+  .commandBox {
+    min-width: 0;
+    border-radius: var(--radius-tile);
+    background: var(--fill);
+  }
+
+  /* The fade marks a command that goes on past the edge; the end padding lets its last
+     characters scroll clear of the fade. */
+  .rowCommand {
+    padding: 5px 24px 5px 8px;
+    white-space: pre;
+    overflow-wrap: normal;
+    overflow-x: auto;
+    scrollbar-width: thin;
+    mask-image: linear-gradient(to left, transparent, var(--ink) 24px);
+  }
+
+  .stepNumber {
+    margin-top: 4px;
+  }
+
+  /* Side by side only where the commands' column is still wide enough to read them; a phone
+     turned sideways keeps its single column. */
+  @container (width >= 840px) {
+    .columns {
+      display: grid;
+      grid-template-columns: minmax(0, 340px) minmax(0, 1fr);
+      align-items: start;
+      gap: var(--space-8);
+      padding: var(--space-5) var(--space-6) var(--space-6);
+    }
+  }
 }
 
 @media (width < 768px),
