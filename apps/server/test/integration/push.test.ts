@@ -56,6 +56,9 @@ describe.each(DIALECTS)('push notifications (%s)', (dialect) => {
       const elsewhere = newDevice();
       elsewhere.subscription.endpoint = 'https://postgres.railway.internal/x';
       expect((await subscribe(person, elsewhere)).answer.status).toBe(400);
+      const shortKey = newDevice();
+      shortKey.subscription.keys.auth = 'abc';
+      expect((await subscribe(person, shortKey)).answer.status).toBe(400);
       expect(await rows()).toHaveLength(1);
     });
 
@@ -98,6 +101,7 @@ describe.each(DIALECTS)('push notifications (%s)', (dialect) => {
       expect(headers.get('content-encoding')).toBe('aes128gcm');
       expect(headers.get('authorization')).toMatch(/^vapid t=[\w-]+\.[\w-]+\.[\w-]+, k=[\w-]{87}$/);
       expect(headers.get('ttl')).toBe('86400');
+      expect(service.sent[0]?.init.redirect).toBe('error');
     });
 
     it('says why a run stopped, and nothing for a run the person cancelled', async () => {

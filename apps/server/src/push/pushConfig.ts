@@ -5,6 +5,16 @@ import { signingKeyOf } from './vapidKeys';
 const subjectOf = (publicUrl: string | null): string =>
   publicUrl?.startsWith('https://') ? publicUrl : 'mailto:tracker@localhost';
 
+// Push services refuse any other kind of contact, so a typo fails at start, not at every push.
+function checkedSubject(subject: string): string {
+  const mail = /^mailto:[^@\s]+@[^@\s]+$/.test(subject);
+  const web = URL.canParse(subject) && new URL(subject).protocol === 'https:';
+  if (!mail && !web) {
+    throw new Error('VAPID_SUBJECT must be mailto:you@example.com or an https:// address.');
+  }
+  return subject;
+}
+
 // Keys set in the environment win; without them the server makes its own (senderKeys.ts). A key
 // set wrong stops the start, rather than every push failing later.
 export function loadPushSettings(env: NodeJS.ProcessEnv, publicUrl: string | null): SenderSettings {
@@ -15,5 +25,5 @@ export function loadPushSettings(env: NodeJS.ProcessEnv, publicUrl: string | nul
   }
   const keys = publicKey ? { publicKey, privateKey } : null;
   if (keys) signingKeyOf(keys);
-  return { keys, subject: env.VAPID_SUBJECT?.trim() || subjectOf(publicUrl) };
+  return { keys, subject: checkedSubject(env.VAPID_SUBJECT?.trim() || subjectOf(publicUrl)) };
 }

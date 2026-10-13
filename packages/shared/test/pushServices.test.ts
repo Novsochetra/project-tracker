@@ -18,13 +18,22 @@ describe('isPushServiceUrl', () => {
     expect(isPushServiceUrl('not a url')).toBe(false);
   });
 
-  it('is what a subscription is checked with', () => {
-    const keys = { p256dh: 'p', auth: 'a' };
+  it('is what a subscription is checked with, with keys of the right size', () => {
+    const keys = { p256dh: `B${'x'.repeat(86)}`, auth: 'a'.repeat(22) };
     expect(pushSubscriptionInput.safeParse({ endpoint: 'https://x.test/', keys }).success).toBe(
       false,
     );
     expect(
       pushSubscriptionInput.safeParse({ endpoint: 'https://web.push.apple.com/a', keys }).success,
     ).toBe(true);
+    const endpoint = 'https://web.push.apple.com/a';
+    for (const wrong of [
+      { ...keys, p256dh: 'p' },
+      { ...keys, p256dh: `A${'x'.repeat(86)}` },
+      { ...keys, auth: 'a'.repeat(21) },
+      { ...keys, auth: 'a+b/'.repeat(5) + 'ab' },
+    ]) {
+      expect(pushSubscriptionInput.safeParse({ endpoint, keys: wrong }).success).toBe(false);
+    }
   });
 });

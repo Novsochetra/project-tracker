@@ -29,4 +29,15 @@ describe('loadPushSettings', () => {
     );
     expect(() => loadPushSettings({ ...ENV, VAPID_PRIVATE_KEY: 'short' }, null)).toThrow('P-256');
   });
+
+  it('stops the start for a subject push services would refuse', () => {
+    for (const subject of ['me@example.com', 'mailto:', 'http://tracker.example.com', 'tracker']) {
+      expect(() => loadPushSettings({ VAPID_SUBJECT: subject }, null), subject).toThrow(
+        'VAPID_SUBJECT must be',
+      );
+    }
+    expect(loadPushSettings({ VAPID_SUBJECT: 'https://tracker.example.com' }, null).subject).toBe(
+      'https://tracker.example.com',
+    );
+  });
 });

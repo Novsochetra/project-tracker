@@ -28,6 +28,8 @@ export function pushRequest(
   });
   return {
     method: 'POST',
+    // A redirect would take the signed message past the list of push services (isPushServiceUrl).
+    redirect: 'error',
     headers: {
       authorization: vapidAuthorization(token, sender.publicKey),
       'content-encoding': 'aes128gcm',

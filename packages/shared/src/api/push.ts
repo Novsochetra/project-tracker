@@ -2,7 +2,10 @@ import { z } from 'zod';
 import { PUSH_ENDPOINT_MAX } from '../domain/push';
 import { isPushServiceUrl } from '../logic/pushServices';
 
-const key = z.string().trim().min(1).max(200);
+// What browsers give, base64url: a P-256 public key (65 bytes, starting 0x04) and a 16-byte secret.
+// Anything else would only fail later, at every push.
+const p256dh = z.string().regex(/^B[\w-]{86}=?$/, "That isn't a browser's push key.");
+const auth = z.string().regex(/^[\w-]{22}(==)?$/, "That isn't a browser's push secret.");
 
 const endpoint = z
   .string()
@@ -11,7 +14,7 @@ const endpoint = z
 
 export const pushSubscriptionInput = z.object({
   endpoint,
-  keys: z.object({ p256dh: key, auth: key }),
+  keys: z.object({ p256dh, auth }),
 });
 export type PushSubscriptionInput = z.input<typeof pushSubscriptionInput>;
 
