@@ -73,7 +73,7 @@ async function laterColumns(db: Db, migration: string) {
   if (migration >= '0003') {
     await sql`update attachments set position = 2 where id = 'f-photo'`.execute(raw);
   }
-  if (migration >= '0024') {
+  if (migration >= '0023') {
     await sql`insert into labels (id, project_id, name, color, template, instructions, position,
       created_at) values ('l-bug', 'p1', 'Bug', '#B42318', '## Steps', 'Reproduce it first.', 0,
       1000)`.execute(raw);

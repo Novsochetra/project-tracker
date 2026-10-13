@@ -7,7 +7,7 @@ import { clientFor, DIALECTS } from '../helpers/server';
 // Labels are project data, so the move copies them with the tickets that have them (PT-190).
 describe.each(DIALECTS)('moving a tracker with labels into %s', (dialect) => {
   it('copies the labels and which tickets have them', async () => {
-    const source = await writeMoveSource('0024_labels');
+    const source = await writeMoveSource('0023_labels');
     const target = await openMoveTarget(dialect, null);
     const { ok, lines } = await moveData(source, target);
 
