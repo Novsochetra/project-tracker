@@ -112,7 +112,7 @@ test("reviews Claude's work automatically when the project says so, up to 2 roun
   }
   expect(job).toBeNull();
   await expect(card).toContainText(
-    'Automatic review stopped after 2 rounds. The review still asks for changes.',
+    'Automatic review stopped. The review still asks for changes after 2 rounds.',
   );
   await expect(card.getByRole('button', { name: 'Try again' })).toBeVisible();
   await settledScreenshot(page, info.outputPath(`auto-review-stopped-${info.project.name}.png`));

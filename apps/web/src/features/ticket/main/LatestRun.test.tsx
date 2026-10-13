@@ -119,7 +119,7 @@ describe('Claude Code run on the ticket screen', () => {
     const card = await runCard();
 
     expect(card).toHaveTextContent(
-      'Automatic review stopped after 2 rounds. The review still asks for changes.',
+      'Automatic review stopped. The review still asks for changes after 2 rounds.',
     );
     expect(within(card).getByRole('button', { name: 'Try again' })).toBeInTheDocument();
   });

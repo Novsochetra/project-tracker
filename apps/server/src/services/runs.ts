@@ -129,8 +129,8 @@ export async function endRun(
   }
   if (ended) {
     notifyRun(ctx, scope, after);
-    pushRunEnd(ctx, scope, after, { answer });
-    await continueChain(ctx, after);
+    // A chain that went on or stopped says so itself; "Claude finished" between its runs is noise.
+    if (!(await continueChain(ctx, after))) pushRunEnd(ctx, scope, after, { answer });
   }
   return toRun(after);
 }

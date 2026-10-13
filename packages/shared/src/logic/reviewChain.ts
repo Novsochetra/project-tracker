@@ -43,3 +43,15 @@ export function nextChainStep({ run, category, personMoved, helperOnline }: Chai
 // Runs a person started have no round: their work is the first, their review comes before any.
 export const chainRound = (role: RunRole, round: number | null): number =>
   round ?? (role === 'work' ? 1 : 0);
+
+export const AUTO_REVIEW_STOPPED = 'Automatic review stopped';
+
+// The run card and the push both say it, so the two read the same.
+const STOP_REASONS: Record<ChainStop, (runnerName: string) => string> = {
+  rounds: () => `The review still asks for changes after ${AUTO_REVIEW_ROUNDS} rounds.`,
+  moved: () => 'You moved the ticket.',
+  offline: (runnerName) => `${runnerName} can't take the next run.`,
+};
+
+export const chainStopReason = (stop: ChainStop, runnerName: string): string =>
+  STOP_REASONS[stop](runnerName);

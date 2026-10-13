@@ -1,4 +1,4 @@
-import { AUTO_REVIEW_ROUNDS, type ChainStop, type Run, type Runner } from '@tracker/shared';
+import { AUTO_REVIEW_STOPPED, chainStopReason, type Run, type Runner } from '@tracker/shared';
 import { isWorking, workingRun } from '../../api/workingRun';
 
 // Long enough to see on the next look at the ticket, short enough not to linger once forgotten.
@@ -29,17 +29,12 @@ export const workingText = (run: Pick<Run, 'runnerName'>): string =>
 export const stoppedText = (run: Pick<Run, 'error'>): string =>
   run.error ? `Claude stopped: ${run.error}` : 'Claude stopped.';
 
-const CHAIN_STOP_TEXT: Record<ChainStop, (run: Pick<Run, 'runnerName'>) => string> = {
-  rounds: () =>
-    `Automatic review stopped after ${AUTO_REVIEW_ROUNDS} rounds. The review still asks for changes.`,
-  moved: () => 'Automatic review stopped: you moved the ticket.',
-  offline: (run) => `Automatic review stopped: ${run.runnerName} can't take the next run.`,
-};
-
 // A run that failed says why; one that ended well says so only when the automatic review stopped.
 function endedText(run: Run): string | null {
   if (run.status === 'failed') return stoppedText(run);
-  if (run.status === 'done' && run.chainStop) return CHAIN_STOP_TEXT[run.chainStop](run);
+  if (run.status === 'done' && run.chainStop) {
+    return `${AUTO_REVIEW_STOPPED}. ${chainStopReason(run.chainStop, run.runnerName)}`;
+  }
   return null;
 }
 

@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { chainRound, nextChainStep, type ChainFacts } from '../src/logic/reviewChain';
+import {
+  chainRound,
+  chainStopReason,
+  nextChainStep,
+  type ChainFacts,
+} from '../src/logic/reviewChain';
 
 const facts = (changes: Partial<ChainFacts> = {}): ChainFacts => ({
   run: { role: 'work', round: 1 },
@@ -66,5 +71,15 @@ describe('chainRound', () => {
     expect(chainRound('work', null)).toBe(1);
     expect(chainRound('review', null)).toBe(0);
     expect(chainRound('work', 2)).toBe(2);
+  });
+});
+
+describe('chainStopReason', () => {
+  it('says why the automatic review stopped, naming the helper when it is the reason', () => {
+    expect(chainStopReason('rounds', 'Mac')).toBe(
+      'The review still asks for changes after 2 rounds.',
+    );
+    expect(chainStopReason('moved', 'Mac')).toBe('You moved the ticket.');
+    expect(chainStopReason('offline', 'Mac')).toBe("Mac can't take the next run.");
   });
 });

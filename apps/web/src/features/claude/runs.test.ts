@@ -109,11 +109,11 @@ describe('shownRun', () => {
       shownRun([makeRun({ status: 'done', endedAt, chainStop })], NOW);
     expect(stopped('rounds')).toMatchObject({
       state: 'stopped',
-      text: 'Automatic review stopped after 2 rounds. The review still asks for changes.',
+      text: 'Automatic review stopped. The review still asks for changes after 2 rounds.',
     });
-    expect(stopped('moved')?.text).toBe('Automatic review stopped: you moved the ticket.');
+    expect(stopped('moved')?.text).toBe('Automatic review stopped. You moved the ticket.');
     expect(stopped('offline')?.text).toBe(
-      `Automatic review stopped: ${DARA} can't take the next run.`,
+      `Automatic review stopped. ${DARA} can't take the next run.`,
     );
     expect(stopped('moved', NOW - STOPPED_SHOWN_MS)).toBeNull();
     expect(stopped(null)).toBeNull();
