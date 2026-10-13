@@ -45,10 +45,11 @@ async function openChecked(path: string, realPath: string): Promise<FileHandle> 
   throw changedError(path);
 }
 
-async function measure(path: string, handle: FileHandle) {
+// The name and type come from the real file: a symlink named x.txt must not send ~/.aws/credentials.
+async function measure(path: string, realPath: string, handle: FileHandle) {
   const info = await handle.stat();
   if (!info.isFile()) throw new Error(`Can't attach ${path}: it is not a file.`);
-  const name = basename(path);
+  const name = basename(realPath);
   const check = checkAttachment({ type: '', name, size: info.size });
   if (!check.ok) throw new Error(`Can't attach ${name}. ${check.message}`);
   return { name, mimeType: check.mimeType, size: info.size };
@@ -58,7 +59,7 @@ export async function checkLocalFile(path: string, folders: readonly string[]): 
   const realPath = await allowedRealPath(path, folders);
   const handle = await openChecked(path, realPath);
   try {
-    return { realPath, handle, ...(await measure(path, handle)) };
+    return { realPath, handle, ...(await measure(path, realPath, handle)) };
   } catch (error) {
     await handle.close();
     throw error;
