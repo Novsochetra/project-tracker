@@ -9,5 +9,8 @@ export function useProjectUsage(projectKey: string): TrackerQuery<ProjectUsage> 
   return useQuery({
     queryKey: queryKeys.projectUsage(projectKey),
     queryFn: () => client.getProjectUsage(projectKey),
+    // Read on each open of the ••• options, the only place it shows, rather than kept fresh on
+    // every run's end.
+    staleTime: 0,
   });
 }

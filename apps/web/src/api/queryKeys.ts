@@ -32,7 +32,6 @@ export const queryKeys = {
   runSteps: (runId: string) => ['runSteps', runId] as const,
   runRequests: (runId: string) => ['runRequests', runId] as const,
   projectUsage: (projectKey: string) => ['projectUsage', canonical(projectKey)] as const,
-  allProjectUsage: () => ['projectUsage'] as const,
   attachmentText: (attachmentId: string) => ['attachmentText', attachmentId] as const,
 };
 

@@ -1,5 +1,6 @@
 /* Not an item: what Claude Code's runs took here, under a line like a menu's footer. */
 .usage {
+  display: block;
   margin: 4px 0 0;
   padding: 8px 10px 6px;
   border-top: 1px solid var(--line);

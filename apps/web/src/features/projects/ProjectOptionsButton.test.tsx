@@ -64,7 +64,8 @@ describe('Project options in the desktop header', () => {
 
   it("says under the actions what Claude Code's runs took in the last 30 days", async () => {
     const user = userEvent.setup();
-    renderOptions('header', undefined, USED);
+    const { client } = renderOptions('header', undefined, USED);
+    expect(client.getProjectUsage).not.toHaveBeenCalled();
     await user.click(screen.getByRole('button', { name: 'Project options' }));
     const menu = screen.getByRole('group', { name: 'Project options' });
     await waitFor(() => expect(menu).toHaveTextContent(USAGE_TEXT));
@@ -158,8 +159,9 @@ describe('Project options in the phone nav bar', () => {
   it("says under the name what Claude Code's runs took in the last 30 days", async () => {
     const user = userEvent.setup();
     const { client } = renderOptions('navbar', undefined, USED);
-    await waitFor(() => expect(client.getProjectUsage).toHaveBeenCalledWith('MOB'));
+    expect(client.getProjectUsage).not.toHaveBeenCalled();
     await user.click(screen.getByRole('button', { name: 'Project options' }));
+    await waitFor(() => expect(client.getProjectUsage).toHaveBeenCalledWith('MOB'));
     const sheet = screen.getByRole('dialog', { name: 'Project options' });
     await waitFor(() => expect(sheet).toHaveTextContent(USAGE_TEXT));
   });

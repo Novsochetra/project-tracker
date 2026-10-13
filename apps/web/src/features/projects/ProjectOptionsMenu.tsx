@@ -62,11 +62,7 @@ export function ProjectOptionsMenu({ projectKey }: { projectKey: string }) {
           <MenuItem icon={Trash2} tone="danger" onClick={() => setConfirming(true)}>
             Delete project
           </MenuItem>
-          {options.usage && (
-            <p className={styles.usage}>
-              <ProjectUsageNote usage={options.usage} />
-            </p>
-          )}
+          <ProjectUsageNote projectKey={projectKey} className={styles.usage} />
         </>
       )}
     </Popover>

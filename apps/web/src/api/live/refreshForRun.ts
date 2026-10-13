@@ -38,10 +38,6 @@ export function refreshForRun(queryClient: QueryClient, event: RunEvent): void {
   if (event.ticketId && endsRun(event.status)) {
     refreshWaiting(queryClient, event.projectId, event.ticketId);
   }
-  // A run's end adds what it took to its project's last 30 days.
-  if (endsRun(event.status)) {
-    void queryClient.invalidateQueries({ queryKey: queryKeys.allProjectUsage() });
-  }
   if (event.chatId) {
     void queryClient.invalidateQueries({ queryKey: queryKeys.chat(event.chatId), exact: true });
     // An answer moves its chat to the top of the list.

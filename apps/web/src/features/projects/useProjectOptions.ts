@@ -1,5 +1,4 @@
-import type { ProjectUsage } from '@tracker/shared';
-import { errorMessage, useDeleteProject, useProjectUsage } from '../../api';
+import { errorMessage, useDeleteProject } from '../../api';
 import { useSheets } from '../../app/sheets/context';
 import { useToast } from '../../components';
 import { useNavigation, type Navigation } from '../../navigation';
@@ -9,8 +8,6 @@ import { useProjectSummary } from './useProjectSummary';
 export interface ProjectOptions {
   name: string;
   ticketCount: number;
-  // What Claude Code's runs took here in the last 30 days, once read and when any sent it.
-  usage: ProjectUsage | null;
   pending: boolean;
   error: string | null;
   edit: () => void;
@@ -31,7 +28,6 @@ export function useProjectOptions(projectKey: string): ProjectOptions {
   const toast = useToast();
   const navigation = useNavigation();
   const remove = useDeleteProject();
-  const usage = useProjectUsage(projectKey).data;
   const key = project?.key ?? projectKey;
   const name = project?.name ?? key;
   const deleteProject = (onDeleted: () => void) => {
@@ -50,7 +46,6 @@ export function useProjectOptions(projectKey: string): ProjectOptions {
   return {
     name,
     ticketCount: project?.totalCount ?? 0,
-    usage: usage && usage.runs > 0 ? usage : null,
     pending: remove.isPending,
     error: remove.error ? errorMessage(remove.error) : null,
     edit: () => sheets.open({ type: 'editProject', projectKey: key }),

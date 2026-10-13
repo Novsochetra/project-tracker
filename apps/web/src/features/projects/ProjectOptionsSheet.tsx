@@ -55,11 +55,7 @@ export function ProjectOptionsSheet({ projectKey }: { projectKey: string }) {
   ) : (
     <>
       {options.name}
-      {options.usage && (
-        <span className={styles.usage}>
-          <ProjectUsageNote usage={options.usage} />
-        </span>
-      )}
+      <ProjectUsageNote projectKey={projectKey} className={styles.usage} />
     </>
   );
   return (

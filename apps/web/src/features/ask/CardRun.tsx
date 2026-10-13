@@ -9,6 +9,7 @@ import { Button, Spinner, useToast } from '../../components';
 import { holdPresses } from '../../lib/holdPresses';
 import { useNow } from '../../lib/useNow';
 import { sentText, shownRun } from '../claude/runs';
+import { UsageLine } from '../claude/UsageLine';
 import styles from './TicketCard.module.css';
 
 export interface CardRunProps {
@@ -62,6 +63,7 @@ export function CardRun({ ticketKey, helper }: CardRunProps) {
   return (
     <div className={styles.run}>
       {shown && <p className={styles.runLine}>{shown.text}</p>}
+      {shown && <UsageLine usage={shown.run.usage} />}
       {start.error && (
         <p role="alert" className={clsx(styles.error, 'fade-in')}>
           {errorMessage(start.error)}
