@@ -30,10 +30,11 @@ export interface SheetPanelProps extends SheetProps {
 
 function useKeyboardVars(enabled: boolean): CSSProperties | undefined {
   const { inset, viewportHeight } = useKeyboardInset();
-  if (!enabled) return undefined;
-  const vars: Record<string, string> = { '--sheet-keyboard': `${inset}px` };
-  if (viewportHeight > 0) vars['--sheet-viewport'] = `${viewportHeight}px`;
-  return vars;
+  if (!enabled || viewportHeight === 0) return undefined;
+  return {
+    '--sheet-keyboard': `${inset}px`,
+    '--sheet-viewport': `${viewportHeight}px`,
+  } as CSSProperties;
 }
 
 interface SheetContentProps extends SheetPanelProps {
