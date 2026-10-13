@@ -15,6 +15,7 @@ The helper runs whatever Claude decides to run, in its project folder, with the 
 - Make it an API token of its own in **Connect Claude Code** → **API tokens**, so you can revoke it alone.
 - Give it git credentials only if it should push. A read-only deploy key or a fine-grained token with read-only access to the one repo is enough to pull. Without push access, its work stays on that machine until you fetch it from there.
 - Its Claude Code login (`ANTHROPIC_API_KEY`, or `CLAUDE_CODE_OAUTH_TOKEN`) is in its environment, so Claude's own commands can read it. Use a key you can revoke on its own.
+- Don't start the container with `docker run --user`. The entrypoint then can't take the API token out of the environment of the container's first process, which runs as the same user as Claude, so Claude's commands could read it.
 
 ## Docker
 
@@ -65,11 +66,12 @@ Arguments after the image name go to `tracker watch` too, so `tracker-helper MOB
 
 ### On Railway
 
+The repo's root `railway.json` builds and runs the tracker, and Railway applies it to every service from this repo unless the service names another config file. The helper has its own: `docker/helper/railway.json` (the Dockerfile builder, restart always, no pre-deploy command, start command or health check).
+
 1. In the tracker's Railway project, **New** → **GitHub Repo** → this repo, as a second service.
-2. In its **Settings**, set the builder to **Dockerfile** with the path `docker/helper/Dockerfile` (or add the variable `RAILWAY_DOCKERFILE_PATH=docker/helper/Dockerfile`). Its settings must not come from the tracker's: it has no pre-deploy command, start command or health check, and needs no public domain.
+2. In its **Settings** → **Config-as-code**, set the config file path to `/docker/helper/railway.json`. Check the next deploy's build logs: they must show the Dockerfile build, not Railpack and `npm run build`.
 3. Add a **Volume** mounted at `/data`.
-4. Add the variables above, `TRACKER_PROJECT` and `TRACKER_HELPER_NAME` included. Leave the start command empty, so the image's entrypoint runs.
-5. Restart policy: **Always**.
+4. Add the variables above, `TRACKER_PROJECT` and `TRACKER_HELPER_NAME` included. It needs no public domain.
 
 ## Linux without Docker (systemd)
 

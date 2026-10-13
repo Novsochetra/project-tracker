@@ -26,4 +26,19 @@ describe('the always-on helper image', () => {
     );
     expect(dockerfile).not.toMatch(/^VOLUME/m);
   });
+
+  // Railway applies the root railway.json to every service from this repo unless one names
+  // another file, which would build and run the tracker in the helper's service.
+  it('has a Railway config of its own that builds this image and runs nothing of the tracker', () => {
+    const config = JSON.parse(readFileSync(repo('docker/helper/railway.json'), 'utf8')) as {
+      build: Record<string, unknown>;
+      deploy: Record<string, unknown>;
+    };
+    expect(config.build).toEqual({
+      builder: 'DOCKERFILE',
+      dockerfilePath: 'docker/helper/Dockerfile',
+    });
+    expect(config.deploy).toEqual({ restartPolicyType: 'ALWAYS' });
+    expect(existsSync(repo(String(config.build.dockerfilePath)))).toBe(true);
+  });
 });
