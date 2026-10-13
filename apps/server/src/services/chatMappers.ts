@@ -7,8 +7,10 @@ import {
   type ChatMessage,
   type ChatTicket,
 } from '@tracker/shared';
+import type { AttachmentRow } from '../db/schema';
 import type { CardTicketRow } from '../repositories/chatCardTickets';
 import type { ChatWithKey, MessageWithSteps } from '../repositories/chats';
+import { toAttachment } from './mappers';
 import { usageOfRow } from './runUsage';
 
 // A chat's ticket is one of its own project's, so the project's key makes the ticket's.
@@ -47,7 +49,11 @@ export const toCardTicket = (row: CardTicketRow): CardTicketLink => ({
   ticketKey: formatTicketKey(row.projectKey, row.ticketNum),
 });
 
-export const toMessage = (row: MessageWithSteps, cards: readonly CardTicketRow[]): ChatMessage => ({
+export const toMessage = (
+  row: MessageWithSteps,
+  cards: readonly CardTicketRow[],
+  files: readonly AttachmentRow[],
+): ChatMessage => ({
   id: row.id,
   chatId: row.chatId,
   role: row.role,
@@ -55,6 +61,7 @@ export const toMessage = (row: MessageWithSteps, cards: readonly CardTicketRow[]
   cardTickets: cards.filter((card) => card.messageId === row.id).map(toCardTicket),
   runId: row.runId,
   stepCount: shownStepCount(row),
+  attachments: files.map(toAttachment),
   usage: usageOfRow(row),
   createdAt: row.createdAt,
 });

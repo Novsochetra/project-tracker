@@ -14,4 +14,5 @@ export type WatchApi = Pick<
   | 'getTicket'
   | 'applyReport'
   | 'eventsUrl'
+  | 'fetchAttachment'
 >;

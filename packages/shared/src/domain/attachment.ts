@@ -75,10 +75,16 @@ export const FILE_NAME_HEADER = 'x-file-name';
 // Only creates (`attachmentIds`) are limited; files added to a ticket later go one at a time.
 export const MAX_NEW_ATTACHMENTS = 20;
 
-export type AttachmentOwner = 'ticket' | 'comment';
+export type AttachmentOwner = 'ticket' | 'comment' | 'question';
+
+const OWNER_NAMES: Record<AttachmentOwner, string> = {
+  ticket: 'A new ticket',
+  comment: 'A comment',
+  question: 'A question',
+};
 
 export const tooManyFilesMessage = (owner: AttachmentOwner): string =>
-  `${owner === 'ticket' ? 'A new ticket' : 'A comment'} can have up to ${MAX_NEW_ATTACHMENTS} files.`;
+  `${OWNER_NAMES[owner]} can have up to ${MAX_NEW_ATTACHMENTS} files.`;
 
 // iOS Safari converts a picked photo to the first type a file input lists, unless the list takes
 // the photo's HEIC as it is. The server can neither shrink a HEIC nor strip its GPS location

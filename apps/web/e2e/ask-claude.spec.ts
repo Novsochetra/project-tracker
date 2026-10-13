@@ -286,6 +286,10 @@ test('fits the options row and the placeholder on a 320px screen', async ({ page
     const group = (await modes.boundingBox())!;
     expect(group.x + group.width, `Mode at ${width}px`).toBeLessThanOrEqual(width - 16);
     expect(await placeholderFits(box), `placeholder at ${width}px`).toBe(true);
+    // PT-187: Attach shares the box's line with the placeholder and Send.
+    const attach = (await page.getByRole('button', { name: 'Attach files' }).boundingBox())!;
+    const field = (await box.boundingBox())!;
+    expect(attach.x + attach.width, `Attach at ${width}px`).toBeLessThanOrEqual(field.x + 4);
     await settledScreenshot(page, info.outputPath(`ask-options-fit-${width}.png`));
   }
 });

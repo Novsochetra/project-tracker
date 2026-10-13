@@ -8,6 +8,8 @@ export interface AskPromptInput {
   project: { key: string; name: string } & PromptInstructions;
   mode: AskMode;
   question: string;
+  // Names only: the helper adds where it put them (withSentFiles).
+  files?: readonly string[];
   history: readonly AskHistoryMessage[];
   // The helper resumes the chat's Claude Code session, which holds the messages already.
   resumed?: boolean;
@@ -63,8 +65,17 @@ const rules = (project: AskPromptInput['project'], mode: AskMode) =>
 
 const SPEAKERS: Record<ChatRole, string> = { person: 'Person', claude: 'You' };
 
+const sentWith = (files: readonly string[] = []) =>
+  files.length > 0 ? `\n(Sent with it: ${files.join(', ')})` : '';
+
 const transcript = (history: AskPromptInput['history']) =>
-  history.map((message) => `${SPEAKERS[message.role]}:\n${markedText(message)}`).join('\n\n');
+  history
+    .map(
+      (message) => `${SPEAKERS[message.role]}:\n${markedText(message)}${sentWith(message.files)}`,
+    )
+    .join('\n\n');
+
+const PART = '\n\n---\n\n';
 
 function historyBlocks(history: AskPromptInput['history'], resumed: boolean): string[] {
   if (!resumed)
@@ -77,6 +88,7 @@ export function buildAskPrompt({
   project,
   mode,
   question,
+  files,
   history,
   resumed = false,
   ticket,
@@ -86,6 +98,17 @@ export function buildAskPrompt({
   if (instructions.length > 0) parts.push(instructions.join('\n'));
   if (ticket) parts.push(`This chat is about this ticket:\n\n${ticketBlock(ticket, '##')}`);
   parts.push(...historyBlocks(history, resumed));
-  parts.push(`Question:\n${question}`);
-  return parts.join('\n\n---\n\n');
+  parts.push(`Question:\n${question}${sentWith(files)}`);
+  return parts.join(PART);
+}
+
+// Only the helper knows where it put the question's files, so it adds their paths to the prompt
+// the tracker made (PT-187).
+export function withSentFiles(prompt: string, paths: readonly string[]): string {
+  if (paths.length === 0) return prompt;
+  const list = paths.map((path) => `- ${path}`).join('\n');
+  return [
+    prompt,
+    `They sent these files with the question. Read them before you answer; the Read tool opens images and PDFs too. They are copies that are removed after this answer.\n${list}`,
+  ].join(PART);
 }

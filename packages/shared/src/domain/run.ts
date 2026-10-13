@@ -1,4 +1,5 @@
 import type { AskOptions } from './askOptions';
+import type { Attachment } from './attachment';
 import type { ChainStop } from './autoReview';
 import type { RunUsage } from './runUsage';
 import type { StatusCategory } from './status';
@@ -93,6 +94,8 @@ export interface RunJob {
   prompt: string;
   // Claude Code's session from the chat's last answer on this helper, for an ask to continue it.
   resumeSessionId: string | null;
+  // An older tracker sends none.
+  files?: Attachment[];
 }
 
 export interface RunEvent {

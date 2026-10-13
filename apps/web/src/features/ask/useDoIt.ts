@@ -20,7 +20,8 @@ export function useDoIt(projectKey: string, chat: Chat, plan: Run): DoIt {
   const ask = useAsk();
   const go = (helper: Runner) => {
     if (ask.isPending) return;
-    const input = askInputOf(helper.id, DO_IT_TEXT, doItOptions(chat));
+    const question = { text: DO_IT_TEXT, attachmentIds: [] };
+    const input = askInputOf(helper.id, question, doItOptions(chat));
     ask.mutate({ chatId: chat.id, input });
   };
   const helper = runners.data && planHelper(plan, runners.data, projectKey);

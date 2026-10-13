@@ -52,6 +52,7 @@ describe('Ask: a chat about a ticket', () => {
     expect(client.startChat).toHaveBeenCalledWith('MOB', {
       runnerId: dara.id,
       text: 'Why?',
+      attachmentIds: [],
       ...DEFAULT_ASK_OPTIONS,
       ticketKey: 'MOB-3',
     });

@@ -84,6 +84,8 @@ export interface AttachmentRow {
   createdAt: number;
   // Who uploaded it: a file on no ticket yet is only theirs.
   userId: string | null;
+  // A file sent in a chat is on no ticket, yet it isn't pending (PT-187).
+  chatMessageId: string | null;
 }
 
 export interface Database

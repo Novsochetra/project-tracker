@@ -1,10 +1,12 @@
 import { ACTIVE_RUN_STATUSES } from '@tracker/shared';
 import type { UserScope } from '../auth/scope';
 import { AppError } from '../errors';
+import { storageKeysOfChats } from '../repositories/chatAttachments';
 import { deleteChatRow } from '../repositories/chats';
 import { latestChatRunRow } from '../repositories/runs';
 import { requireChat } from './chats';
-import type { ServiceContext } from './context';
+import { removeFiles } from '../storage/fileStorage';
+import { inTransaction, type ServiceContext } from './context';
 import { cancelRun } from './runs';
 
 const isActive = (status: string) => ACTIVE_RUN_STATUSES.some((active) => active === status);
@@ -25,7 +27,12 @@ function unlessEnded(error: unknown) {
 export async function deleteChat(ctx: ServiceContext, scope: UserScope, id: string) {
   const chat = await requireChat(ctx, scope, id);
   await cancelAnswer(ctx, scope, chat.id);
-  await deleteChatRow(ctx.db, chat.id);
+  const files = await inTransaction(ctx, async (trx) => {
+    const keys = await storageKeysOfChats(trx, 'id', chat.id);
+    await deleteChatRow(trx, chat.id);
+    return keys;
+  });
+  await removeFiles(ctx.storage, files);
   const event = { type: 'chat-deleted' as const, chatId: chat.id, projectId: chat.projectId };
   ctx.runEvents.publish({ userId: scope, event });
 }

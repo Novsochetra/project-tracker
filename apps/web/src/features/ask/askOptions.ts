@@ -37,9 +37,19 @@ export const savedAskOptions = (chat: Pick<Chat, 'options'> | null | undefined):
   ...chat?.options,
 });
 
-export const askInputOf = (runnerId: string, text: string, options: AskOptions): AskInput => ({
+export interface Question {
+  text: string;
+  attachmentIds: string[];
+}
+
+export const askInputOf = (
+  runnerId: string,
+  { text, attachmentIds }: Question,
+  options: AskOptions,
+): AskInput => ({
   runnerId,
   text,
+  attachmentIds,
   model: options.model,
   mode: options.mode,
   effort: options.effort,

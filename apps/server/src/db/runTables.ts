@@ -55,6 +55,8 @@ export interface RunRow {
   // The chain's work round (logic/reviewChain); null on a run a person started.
   round: number | null;
   chainStop: ChainStop | null;
+  // So the helper is given the files of the question it answers.
+  questionId: string | null;
 }
 
 export interface RunStepRow {

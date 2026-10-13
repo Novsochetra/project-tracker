@@ -1,7 +1,9 @@
-import { realpathSync } from 'node:fs';
+import { existsSync, readdirSync, realpathSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import type { RunStepInput } from '@tracker/shared';
-import { afterAll, describe, expect, it } from 'vitest';
+import { join } from 'node:path';
+import type { Attachment, RunStepInput } from '@tracker/shared';
+import { afterAll, describe, expect, it, vi } from 'vitest';
+import { ASK_FOLDER_PREFIX } from '../../src/watch/ask/askFiles';
 import { askOutcomeOf } from '../../src/watch/ask/askOutcome';
 import { claudeRunners } from '../../src/watch/claudeRunners';
 import type { ClaudeExit } from '../../src/watch/outcome';
@@ -66,5 +68,31 @@ describe('claudeRunners', () => {
     );
     expect(steps).toEqual([]);
     expect(askOutcomeOf(exit, false)).toMatchObject({ status: 'done' });
+  });
+
+  it("removes the question's folder when the question is stopped while Claude works", async () => {
+    const claude = claudeRunners({
+      command: fake.command,
+      cwd,
+      write: () => undefined,
+      fetchFile: () => Promise.resolve(new Response('a')),
+    });
+    const stop = new AbortController();
+    const files = [{ id: 'f1', fileName: 'stop-me.txt' } as Attachment];
+    const folders = () =>
+      readdirSync(tmpdir())
+        .filter((name) => name.startsWith(ASK_FOLDER_PREFIX))
+        .map((name) => join(tmpdir(), name))
+        .filter((dir) => existsSync(join(dir, 'stop-me.txt')));
+    const running = claude.runAsk(
+      { ...ask(), prompt: 'WAIT', files },
+      stop.signal,
+      () => undefined,
+    );
+    await vi.waitFor(() => expect(folders()).toHaveLength(1));
+    const [dir] = folders();
+    stop.abort();
+    await running.catch(() => undefined);
+    expect(existsSync(dir!)).toBe(false);
   });
 });

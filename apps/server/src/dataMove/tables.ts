@@ -3,6 +3,9 @@ import type { Database } from '../db/schema';
 export interface CopiedTable {
   name: keyof Database;
   references: readonly (keyof Database)[];
+  // Tables the move leaves behind (SKIPPED_TABLES) that some of its rows point at; those rows are
+  // left out too.
+  leftBehind?: readonly string[];
 }
 
 // Parents before children, so every foreign key finds its row as it is inserted.
@@ -12,7 +15,8 @@ export const COPIED_TABLES = [
   { name: 'statuses', references: ['projects'] },
   { name: 'tickets', references: ['projects', 'statuses'] },
   { name: 'activities', references: ['tickets'] },
-  { name: 'attachments', references: ['tickets', 'activities'] },
+  // Files sent in chats stay with their chats (pendingUploads.ts).
+  { name: 'attachments', references: ['tickets', 'activities'], leftBehind: ['chat_messages'] },
   { name: 'labels', references: ['projects'] },
   { name: 'ticketLabels', references: ['tickets', 'labels'] },
 ] as const satisfies readonly CopiedTable[];

@@ -28,10 +28,12 @@ describe('savedAskOptions', () => {
 });
 
 describe('askInputOf', () => {
-  it('sends the chosen names with the text', () => {
-    expect(askInputOf('h-1', 'Hi', { model: 'opus', mode: 'edit', effort: 'max' })).toEqual({
+  it('sends the chosen names with the text and the files', () => {
+    const question = { text: 'Hi', attachmentIds: ['f-1', 'f-2'] };
+    expect(askInputOf('h-1', question, { model: 'opus', mode: 'edit', effort: 'max' })).toEqual({
       runnerId: 'h-1',
       text: 'Hi',
+      attachmentIds: ['f-1', 'f-2'],
       model: 'opus',
       mode: 'edit',
       effort: 'max',

@@ -1,11 +1,13 @@
 import {
   createStepReader,
   laneOf,
+  withSentFiles,
   type Run,
   type RunJob,
   type RunStepInput,
 } from '@tracker/shared';
 import { askArgs } from './ask/askArgs';
+import { addDirArgs, withAskFiles, type FetchFile } from './ask/askFiles';
 import { claudeArgs, runClaude } from './claude';
 import { trackerAllowedArgs } from './mcp/trackerAllowedTools';
 import type { ClaudeExit } from './outcome';
@@ -22,6 +24,7 @@ export interface ClaudeSetup {
   write: (text: string) => void;
   readSteps?: ((folder: string) => StepReader) | undefined;
   prompts?: PromptTool | undefined;
+  fetchFile?: FetchFile | undefined;
 }
 
 // Runs inside stdout's listener, where a throw would end the helper mid-run; steps only show what
@@ -41,6 +44,7 @@ function stepsOf(read: StepReader, onSteps: OnSteps) {
 // question always gets the read-only flags.
 export function claudeRunners(setup: ClaudeSetup) {
   const { command, cwd, permissionMode, write, readSteps = createStepReader, prompts } = setup;
+  const { fetchFile } = setup;
   // Every run, questions too: a cap on what any one run can take.
   const limit = setup.maxTurns ? ['--max-turns', setup.maxTurns] : [];
   // A reader a run: it remembers that run's open tool calls.
@@ -67,12 +71,18 @@ export function claudeRunners(setup: ClaudeSetup) {
       ),
     // An answer goes to the chat, not to this window.
     runAsk: (job: RunJob, stop: AbortSignal, onSteps: OnSteps) =>
-      asking(job.run, (laneArgs) =>
-        runClaude(
-          { command, cwd, args: [...askArgs(job, permissionMode), ...limit, ...laneArgs] },
-          job.prompt,
-          stop,
-          { onOutput: () => undefined, onEvent: onEvent(onSteps) },
+      withAskFiles(fetchFile, { job, stop }, (folder) =>
+        asking(job.run, (laneArgs) =>
+          runClaude(
+            {
+              command,
+              cwd,
+              args: [...askArgs(job, permissionMode), ...limit, ...laneArgs, ...addDirArgs(folder)],
+            },
+            withSentFiles(job.prompt, folder?.paths ?? []),
+            stop,
+            { onOutput: () => undefined, onEvent: onEvent(onSteps) },
+          ),
         ),
       ),
   };

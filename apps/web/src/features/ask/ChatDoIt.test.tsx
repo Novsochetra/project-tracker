@@ -64,6 +64,7 @@ describe('Ask: Do it', () => {
     expect(client.ask).toHaveBeenCalledWith('c-1', {
       runnerId: 'h-dara',
       text: DO_IT_TEXT,
+      attachmentIds: [],
       model: 'opus',
       mode: 'edit',
       effort: 'high',

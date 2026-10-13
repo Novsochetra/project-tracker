@@ -24,6 +24,7 @@ const message = (
     text,
     cardTickets,
     runId: null,
+    attachments: [],
     stepCount: 0,
     usage: null,
     createdAt: next,

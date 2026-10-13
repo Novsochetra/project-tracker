@@ -21,8 +21,9 @@ describe.each(DIALECTS)('the tables the data move copies (%s)', (dialect) => {
         [...copied, ...Object.keys(SKIPPED_TABLES)].sort(),
       );
       for (const table of COPIED_TABLES) {
+        const leftBehind: readonly string[] = 'leftBehind' in table ? table.leftBehind : [];
         expect(referencedTables(schema[snakeCase(table.name)]!.foreignKeys)).toEqual(
-          [...table.references].sort(),
+          [...table.references, ...leftBehind].sort(),
         );
       }
     } finally {

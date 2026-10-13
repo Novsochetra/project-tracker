@@ -20,6 +20,7 @@ import * as runUsage from './0018_run_usage';
 import * as autoReview from './0019_auto_review';
 import * as runnerTools from './0020_runner_tools';
 import * as cardTickets from './0021_card_tickets';
+import * as chatAttachments from './0022_chat_attachments';
 import * as labels from './0023_labels';
 
 // Keyed by file name; they run in name order, so the four-digit number decides. The bundled server
@@ -46,5 +47,6 @@ export const MIGRATIONS: Record<string, Migration> = {
   '0019_auto_review': autoReview,
   '0020_runner_tools': runnerTools,
   '0021_card_tickets': cardTickets,
+  '0022_chat_attachments': chatAttachments,
   '0023_labels': labels,
 };

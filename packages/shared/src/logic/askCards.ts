@@ -5,6 +5,7 @@ export interface AskHistoryMessage {
   role: ChatRole;
   text: string;
   cardTickets?: readonly CardTicketLink[];
+  files?: readonly string[];
 }
 
 // Numbered from 1, as the person counts the cards on screen.

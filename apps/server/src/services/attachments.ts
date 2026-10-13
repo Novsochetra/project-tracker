@@ -132,6 +132,7 @@ function pendingRow(ctx: UserContext, id: string, fileName: string, content: Upl
     position: 0,
     createdAt: ctx.now(),
     userId: ctx.scope,
+    chatMessageId: null,
   } satisfies AttachmentRow;
 }
 

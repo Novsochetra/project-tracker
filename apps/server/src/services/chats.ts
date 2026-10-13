@@ -22,6 +22,7 @@ import {
 } from '../repositories/chats';
 import { latestChatRunRow, listStoppedChatRunRows } from '../repositories/runs';
 import { queueAsk } from './askRuns';
+import { chatFilesByMessage } from './chatFiles';
 import { chatTitle, toCardTicket, toChat, toMessage } from './chatMappers';
 import { chatPromptTicket, requireChatTicket } from './chatTicket';
 import { inTransaction, type ServiceContext } from './context';
@@ -67,25 +68,28 @@ export async function getChat(
   await expireSilentRuns(ctx);
   const chat = await requireChat(ctx, scope, id);
   const messages = await listMessageRows(ctx.db, chat.id);
+  const files = await chatFilesByMessage(ctx.db, chat.id);
   const cards = await listCardTicketRows(ctx.db, chat.id);
   const run = await latestChatRunRow(ctx.db, scope, chat.id);
   const stopped = await listStoppedChatRunRows(ctx.db, scope, chat.id);
   return {
     chat: toChat(chat),
-    messages: messages.map((message) => toMessage(message, cards)),
+    messages: messages.map((message) => toMessage(message, cards, files.get(message.id) ?? [])),
     run: run ? toRun(run) : null,
     stoppedRuns: stopped.map(toRun),
   };
 }
 
-// So the prompt can say which cards are tickets now.
+// So the prompt can say which cards are tickets now, and which files each question had.
 async function askHistory(db: Db, chatId: string): Promise<AskHistoryMessage[]> {
   const cards = await listCardTicketRows(db, chatId);
+  const files = await chatFilesByMessage(db, chatId);
   const messages = await listMessageRows(db, chatId);
   return messages.map(({ id, role, text }) => ({
     role,
     text,
     cardTickets: cards.filter((card) => card.messageId === id).map(toCardTicket),
+    files: (files.get(id) ?? []).map((file) => file.fileName),
   }));
 }
 
@@ -110,8 +114,9 @@ async function askIn(
     if (isNew) await insertChat(trx, chat);
     const saved = { model: chat.askModel, mode: chat.askMode, effort: chat.askEffort };
     const options = chosenAskOptions(input, saved);
-    const question = input.text;
-    return queueAsk(trx, { queued, project, chat, history, ticket, question, options });
+    const { text: question, attachmentIds } = input;
+    const request = { queued, project, chat, history, ticket, question, attachmentIds, options };
+    return queueAsk(trx, request);
   });
   notifyRun(ctx, scope, run);
   return getChat(ctx, scope, chat.id);

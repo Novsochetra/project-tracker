@@ -2,6 +2,7 @@ import clsx from 'clsx';
 import { Suspense } from 'react';
 import { useLiveUpdates } from '../api';
 import { useToastRaise } from '../components';
+import { AttachmentViewerProvider } from '../features/attachments/AttachmentViewerProvider';
 import { QuickCapture } from '../features/capture';
 import { useNotificationOpen } from '../features/push/useNotificationOpen';
 import { useIsPhone } from '../lib/media';
@@ -28,32 +29,37 @@ export function Shell() {
   useNotificationOpen();
   const isPhone = useIsPhone();
   const unreachable = useApiUnreachable(reachability);
+  // For the chat screens' files. Imported there, by a second lazy part beside the ticket screen,
+  // the provider made Rolldown split the first load into 5 files; the ticket screen keeps its own
+  // for the same reason.
   return (
-    <div className={styles.shell}>
-      {!isPhone && (
-        <ShellBoundary name="Sidebar" fallback={<SidebarError />}>
-          <Sidebar />
-        </ShellBoundary>
-      )}
-      <div className={styles.column}>
+    <AttachmentViewerProvider>
+      <div className={styles.shell}>
         {!isPhone && (
-          <ShellBoundary name="Desktop header" fallback={<HeaderError />}>
-            <DesktopHeader />
+          <ShellBoundary name="Sidebar" fallback={<SidebarError />}>
+            <Sidebar />
           </ShellBoundary>
         )}
-        {unreachable && <OfflineBanner />}
-        <main className={clsx(styles.stack, unreachable && styles.belowBanner)}>
-          {/* Above the stack, for a first load straight into a screen whose code is still on
+        <div className={styles.column}>
+          {!isPhone && (
+            <ShellBoundary name="Desktop header" fallback={<HeaderError />}>
+              <DesktopHeader />
+            </ShellBoundary>
+          )}
+          {unreachable && <OfflineBanner />}
+          <main className={clsx(styles.stack, unreachable && styles.belowBanner)}>
+            {/* Above the stack, for a first load straight into a screen whose code is still on
               its way: the first screens have no boundary of their own. A screen opened later
               shows the stack's loading state in its own layer. */}
-          <Suspense fallback={FIRST_LOAD}>
-            <StackNavigator renderScreen={renderScreen} loading={SCREEN_LOADING} />
-          </Suspense>
-        </main>
+            <Suspense fallback={FIRST_LOAD}>
+              <StackNavigator renderScreen={renderScreen} loading={SCREEN_LOADING} />
+            </Suspense>
+          </main>
+        </div>
+        <RouteFallback />
+        <LiveRegion />
+        <QuickCapture reachability={reachability} />
       </div>
-      <RouteFallback />
-      <LiveRegion />
-      <QuickCapture reachability={reachability} />
-    </div>
+    </AttachmentViewerProvider>
   );
 }

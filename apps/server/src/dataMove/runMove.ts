@@ -4,7 +4,7 @@ import type { FileStorage } from '../storage/fileStorage';
 import { copyFiles } from './copyFiles';
 import { textsNamingOldFiles, type MovedAttachment } from './movedAttachment';
 import { givenTo } from './owner';
-import { pendingUploadsLine, withoutPendingUploads } from './pendingUploads';
+import { leftOutLines, withoutPendingUploads } from './pendingUploads';
 import { targetProblems } from './plan';
 import { insertRows, readRows, rowCounts, type TableRows } from './rows';
 import { openSourceCopy } from './sourceCopy';
@@ -103,10 +103,11 @@ async function apply({ rows, files }: Source, target: Mover): Promise<boolean> {
 }
 
 async function readSource(db: Db, options: MoveOptions, say: MoveTarget['say']): Promise<Source> {
-  const { rows, pendingLeftOut } = withoutPendingUploads(await readRows(db));
+  const copied = withoutPendingUploads(await readRows(db));
+  const { rows } = copied;
   const files = await findSourceFiles(options.uploads, rows.attachments);
   const plan = planLines(rowCounts(rows), { count: files.length, bytes: totalBytes(files) });
-  for (const line of [...plan, ...pendingUploadsLine(pendingLeftOut)]) say(line);
+  for (const line of [...plan, ...leftOutLines(copied)]) say(line);
   return { rows, files };
 }
 

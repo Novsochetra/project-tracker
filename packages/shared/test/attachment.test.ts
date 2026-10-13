@@ -203,6 +203,7 @@ describe('messages', () => {
     expect(MAX_NEW_ATTACHMENTS).toBe(20);
     expect(tooManyFilesMessage('ticket')).toBe('A new ticket can have up to 20 files.');
     expect(tooManyFilesMessage('comment')).toBe('A comment can have up to 20 files.');
+    expect(tooManyFilesMessage('question')).toBe('A question can have up to 20 files.');
   });
 
   it('list everything that can be attached', () => {

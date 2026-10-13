@@ -36,12 +36,23 @@
   flex-direction: column;
 }
 
+.personMessage {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--space-2);
+}
+
 .person {
-  align-self: flex-end;
   max-width: 85%;
   padding: 10px 14px;
   border-radius: var(--radius-group);
   background: var(--fill-2);
+}
+
+.sentFiles {
+  justify-content: flex-end;
+  max-width: 85%;
 }
 
 .claude {
@@ -144,7 +155,7 @@
   display: flex;
   align-items: flex-end;
   gap: var(--space-2);
-  padding: 6px 6px 6px 14px;
+  padding: 6px;
   border: 1px solid var(--control-line);
   border-radius: var(--radius-group);
   background: var(--surface);
@@ -153,9 +164,47 @@
     box-shadow var(--duration-fast) var(--ease-out);
 }
 
-.box:focus-within {
+.box:focus-within,
+.composer[data-dropping] .box {
   border-color: var(--accent);
   box-shadow: 0 0 0 1px var(--accent);
+}
+
+.attach {
+  align-self: center;
+}
+
+/* Small screens: the attach button's touch target already holds the box's inner space, and its
+   icon's own space stands in for part of the gap, so the placeholder keeps one line at 320px. */
+@media (width < 768px),
+  (pointer: coarse) and (device-width < 600px),
+  (pointer: coarse) and (device-height < 600px) {
+  .box {
+    padding-left: 2px;
+  }
+
+  .attach {
+    margin-right: -4px;
+  }
+}
+
+/* Below 360px Send and Stop show their icon only, the name kept for screen readers, so the box
+   with Attach stays one line (PT-187). */
+@media (width < 360px) {
+  .send {
+    width: var(--touch-target);
+    padding: 0;
+    gap: 0;
+  }
+
+  .send .labels {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
 }
 
 .box .input {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildAskPrompt } from '../src/logic/askPrompt';
+import { buildAskPrompt, withSentFiles } from '../src/logic/askPrompt';
 import { ticketCards } from '../src/logic/ticketCard';
 import type { PromptTicket } from '../src/logic/prompt';
 
@@ -117,6 +117,21 @@ describe('buildAskPrompt', () => {
     expect(prompt.indexOf('Earlier')).toBeLessThan(prompt.indexOf('Question:'));
   });
 
+  it('names the files sent with earlier questions, which the helper no longer has', () => {
+    const prompt = buildAskPrompt({
+      project,
+      mode: 'ask',
+      question: 'And now?',
+      history: [
+        { role: 'person', text: 'Turn this into tickets', files: ['board.jpg', 'notes.txt'] },
+        { role: 'claude', text: 'Two tickets.', files: [] },
+      ],
+    });
+    expect(prompt).toContain(
+      'Person:\nTurn this into tickets\n(Sent with it: board.jpg, notes.txt)\n\nYou:\nTwo tickets.',
+    );
+  });
+
   it('keeps Ask and Plan read-only and plans in Plan', () => {
     const plan = buildAskPrompt({ project, mode: 'plan', question: 'q', history: [] });
     expect(plan).toContain('read-only');
@@ -156,5 +171,35 @@ describe('buildAskPrompt', () => {
       ticket: null,
     });
     expect(prompt).not.toContain('This chat is about');
+  });
+});
+
+describe('withSentFiles', () => {
+  it('follows a question that names its files', () => {
+    const named = buildAskPrompt({
+      project,
+      mode: 'ask',
+      question: 'Make tickets',
+      files: ['board.jpg'],
+      history: [],
+    });
+    expect(named.endsWith('Question:\nMake tickets\n(Sent with it: board.jpg)')).toBe(true);
+    expect(withSentFiles(named, ['/tmp/a/board.jpg'])).toContain(
+      '(Sent with it: board.jpg)\n\n---\n\nThey sent these files',
+    );
+  });
+
+  const prompt = buildAskPrompt({ project, mode: 'ask', question: 'Make tickets', history: [] });
+
+  it('lists the paths of the files sent with the question after it', () => {
+    const paths = ['/tmp/pt-ask-1/board.jpg', '/tmp/pt-ask-1/notes.txt'];
+    const sent = withSentFiles(prompt, paths);
+    expect(sent.startsWith(prompt)).toBe(true);
+    expect(sent).toContain('They sent these files with the question. Read them before you answer');
+    expect(sent.endsWith('\n- /tmp/pt-ask-1/board.jpg\n- /tmp/pt-ask-1/notes.txt')).toBe(true);
+  });
+
+  it('leaves a question without files as it was', () => {
+    expect(withSentFiles(prompt, [])).toBe(prompt);
   });
 });

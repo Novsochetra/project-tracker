@@ -72,6 +72,7 @@ describe.each(DIALECTS)('Claude Code runs (%s)', (dialect) => {
       run: { ...started.body, status: 'running', startedAt: 1_005_000 },
       prompt: 'Fix the crash on MOB-1',
       resumeSessionId: null,
+      files: [],
     });
     clock.advance(60_000);
     const done = await finish(started.body.id, { status: 'done', error: 'ignored' });

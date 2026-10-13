@@ -8,6 +8,7 @@ import styles from './ChatScreen.module.css';
 import { ClaudeFrom } from './ClaudeFrom';
 import { Markdown } from './markdown/Markdown';
 import { MessageText as Text } from './MessageText';
+import { SentFiles } from './SentFiles';
 import { StoppedSteps } from './StoppedSteps';
 import { threadItems } from './thread';
 
@@ -61,8 +62,11 @@ export function MessageList({
         return (
           <li key={message.id} className={`${styles.item} rise`}>
             {message.role === 'person' ? (
-              <article className={styles.person} aria-label="You">
-                <Text text={message.text} />
+              <article className={styles.personMessage} aria-label="You">
+                <SentFiles attachments={message.attachments} />
+                <div className={styles.person}>
+                  <Text text={message.text} />
+                </div>
               </article>
             ) : (
               <ClaudeMessage

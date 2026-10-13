@@ -1,6 +1,6 @@
-import { realpathSync } from 'node:fs';
+import { existsSync, realpathSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { DEFAULT_ASK_OPTIONS, type AskMode } from '@tracker/shared';
+import { DEFAULT_ASK_OPTIONS, type AskMode, type Attachment } from '@tracker/shared';
 import { afterAll, describe, expect, it, vi } from 'vitest';
 import { runPermissionMode } from '../../src/watch/approvals';
 import { askOutcomeOf } from '../../src/watch/ask/askOutcome';
@@ -208,6 +208,32 @@ describe('regression: an ask runs Claude read-only', () => {
     const outcome = await ask('and then?', session);
     expect(argsOf(outcome.answer).slice(-2)).toEqual(['--resume', session]);
     expect(outcome.sessionId).toBe('11111111-2222-4333-8444-555555555555');
+  });
+
+  it('lets Ask and Plan read the files sent with the question, and nothing more', async () => {
+    const withFiles = claudeRunners({
+      command: fake.command,
+      cwd: realpathSync(tmpdir()),
+      permissionMode: 'bypassPermissions',
+      write: () => undefined,
+      prompts: { command: ['node', 'promptTool.js'], ask: askPerson },
+      fetchFile: () => Promise.resolve(new Response('whiteboard')),
+    });
+    const board = { id: 'f1', fileName: 'board.jpg' } as Attachment;
+    for (const mode of ['ask', 'plan'] as const) {
+      const question = { ...askJob('r-5', 'c-1', null, { ...DEFAULT_ASK_OPTIONS, mode }) };
+      const job = { ...question, prompt: 'SHOW FILES', files: [board] };
+      const { answer = '' } = askOutcomeOf(
+        await withFiles.runAsk(job, new AbortController().signal, noSteps),
+        false,
+      );
+      expect(answer).toContain('FILES board.jpg=whiteboard');
+      const args = argsOf(answer);
+      const dir = args.at(-1) ?? '';
+      expect(args).toEqual([...READ_ONLY_ARGS, '--add-dir', dir]);
+      expect(answer).toContain(`- ${dir}/board.jpg`);
+      expect(existsSync(dir)).toBe(false);
+    }
   });
 
   it('reports why Claude could not answer', async () => {

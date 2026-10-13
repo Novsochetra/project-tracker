@@ -186,7 +186,8 @@ export class TrackerClient extends LabelingClient {
   deleteAttachment = (attachmentId: string) =>
     this.http.request<void>('DELETE', `/api/attachments/${segment(attachmentId)}`);
 
-  fetchAttachment = (attachmentId: string) => this.http.raw(attachmentFilePath(attachmentId));
+  fetchAttachment = (attachmentId: string, options: { signal?: AbortSignal } = {}) =>
+    this.http.raw(attachmentFilePath(attachmentId), options);
 
   fetchAttachmentText = async (attachmentId: string) =>
     (await this.fetchAttachment(attachmentId)).text();
