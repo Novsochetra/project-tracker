@@ -31,3 +31,6 @@ export const personPushes = refuseAgents('Only a person turns on notifications.'
 
 // A project's repo and instructions go into every prompt, so an agent could rewrite what later runs are told.
 export const personEditsProjects = refuseAgents('Only a person changes or deletes a project.');
+
+// A status's category decides what counts as done and its name goes into prompts.
+export const personEditsStatuses = refuseAgents("Only a person changes a project's statuses.");
