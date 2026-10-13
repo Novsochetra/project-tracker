@@ -20,6 +20,15 @@ export const planHelper = (
   projectKey: string,
 ): Runner | null => helpersFor(runners, projectKey).find(({ id }) => id === run.runnerId) ?? null;
 
+export type HelperAway = 'offline' | 'elsewhere' | 'removed';
+
+// Why planHelper found none. A removed helper's runs lose its id.
+export function helperAway(run: Pick<Run, 'runnerId'>, runners: readonly Runner[]): HelperAway {
+  const runner = runners.find(({ id }) => id === run.runnerId);
+  if (!runner) return 'removed';
+  return runner.online ? 'elsewhere' : 'offline';
+}
+
 export const doItOptions = (chat: Pick<Chat, 'options'>): AskOptions => ({
   ...savedAskOptions(chat),
   mode: 'edit',
