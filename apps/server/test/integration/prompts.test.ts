@@ -1,5 +1,6 @@
 import {
   buildProjectPrompt,
+  buildReviewPrompt,
   buildTicketPrompt,
   type ProjectDetail,
   type PromptResult,
@@ -44,6 +45,7 @@ describe.each(DIALECTS)('prompts and sending (%s)', (dialect) => {
       const res = await api.get<PromptResult>('/api/tickets/MA-1/prompt');
       expect(res.status).toBe(200);
       expect(res.body.ticketCount).toBe(1);
+      expect(res.body.role).toBe('work');
       expect(res.body.text).toBe(
         buildTicketPrompt(promptProject, {
           key: 'MA-1',
@@ -60,6 +62,50 @@ describe.each(DIALECTS)('prompts and sending (%s)', (dialect) => {
       );
       expect(res.body.text).toContain('Last review: Changes requested · 2/5');
       expect(res.body.text).toContain('- First note with a break');
+    });
+
+    it('asks for a review of a ticket in review, with the worker’s report', async () => {
+      const client = api.client();
+      const ticket = await client.createTicket('MA', { title: 'Crash on rotate' });
+      await client.submitForReview(ticket.key, { summary: 'Fixed it', files: 'src/a.ts' });
+
+      const res = await api.get<PromptResult>('/api/tickets/MA-1/prompt');
+      expect(res.body).toEqual({
+        text: buildReviewPrompt(promptProject, {
+          key: 'MA-1',
+          title: 'Crash on rotate',
+          description: '',
+          priority: 'medium',
+          statusName: 'Need review',
+          due: '',
+          assignee: '',
+          notes: [],
+          lastReport: 'TICKET: MA-1\nSTATUS: done\nSUMMARY: Fixed it\nFILES: src/a.ts\nNEXT: none',
+          lastReview: null,
+        }),
+        ticketCount: 1,
+        role: 'review',
+      });
+    });
+
+    it('goes by the status category, so a renamed review status still asks for a review', async () => {
+      const client = api.client();
+      await client.updateStatus(statusOf(project, 'in_review').id, { name: 'QA' });
+      await client.createTicket('MA', {
+        title: 'Check me',
+        statusId: statusOf(project, 'in_review').id,
+      });
+      await client.createTicket('MA', {
+        title: 'Approved',
+        statusId: statusOf(project, 'reviewed').id,
+      });
+
+      const review = await api.get<PromptResult>('/api/tickets/MA-1/prompt');
+      expect(review.body.role).toBe('review');
+      expect(review.body.text).toContain('Please review the work on ticket MA-1');
+      const reviewed = await api.get<PromptResult>('/api/tickets/MA-2/prompt');
+      expect(reviewed.body.role).toBe('work');
+      expect(reviewed.body.text).toContain('Please work on ticket MA-2');
     });
 
     it('answers 404 for an unknown ticket', async () => {
@@ -83,6 +129,7 @@ describe.each(DIALECTS)('prompts and sending (%s)', (dialect) => {
 
       const res = await api.get<PromptResult>('/api/projects/MA/prompt');
       expect(res.body.ticketCount).toBe(3);
+      expect(res.body.role).toBe('work');
       const block = (
         key: string,
         title: string,
@@ -114,7 +161,7 @@ describe.each(DIALECTS)('prompts and sending (%s)', (dialect) => {
         .client()
         .createTicket('MA', { title: 'Done', statusId: statusOf(project, 'done').id });
       const res = await api.get<PromptResult>('/api/projects/ma/prompt');
-      expect(res.body).toEqual({ text: '', ticketCount: 0 });
+      expect(res.body).toEqual({ text: '', ticketCount: 0, role: 'work' });
     });
   });
 

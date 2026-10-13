@@ -39,6 +39,7 @@ export async function queueAsk(trx: Db, request: AskRequest) {
     askModel: options.model,
     askMode: options.mode,
     askEffort: options.effort,
+    role: 'work',
   });
   await insertQueuedRun(trx, run, CHAT_BUSY);
   await insertMessage(trx, {

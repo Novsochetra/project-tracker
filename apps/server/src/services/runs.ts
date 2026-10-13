@@ -71,6 +71,7 @@ export async function startRun(
     askModel: null,
     askMode: null,
     askEffort: null,
+    role: input.role ?? 'work',
   });
   await insertQueuedRun(ctx.db, row, `Claude is already working on ${ticketKeyOf(ref)}.`);
   notifyRun(ctx, scope, row);

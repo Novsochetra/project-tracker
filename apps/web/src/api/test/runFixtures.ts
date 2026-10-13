@@ -15,6 +15,7 @@ export const makeRunner = (overrides: Partial<Runner> = {}): Runner => ({
 export const makeRun = (overrides: Partial<Run> = {}): Run => ({
   id: 'r-1',
   kind: 'ticket',
+  role: 'work',
   projectKey: 'MOB',
   ticketKey: 'MOB-1',
   chatId: null,

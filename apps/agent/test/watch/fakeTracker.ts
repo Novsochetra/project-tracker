@@ -8,6 +8,7 @@ import type {
   Run,
   RunJob,
   RunKind,
+  StatusCategory,
   TicketDetail,
 } from '@tracker/shared';
 import { vi } from 'vitest';
@@ -28,6 +29,7 @@ export const answered = (text: string, sessionId?: string): ClaudeExit => ({
 export const runOf = (id: string, ticketKey: string): Run => ({
   id,
   kind: 'ticket',
+  role: 'work',
   projectKey: ticketKey.split('-')[0] ?? '',
   ticketKey,
   chatId: null,
@@ -45,6 +47,12 @@ export const runOf = (id: string, ticketKey: string): Run => ({
 export const job = (id: string, ticketKey: string, prompt = `Work on ${ticketKey}`): RunJob => ({
   run: runOf(id, ticketKey),
   prompt,
+  resumeSessionId: null,
+});
+
+export const reviewJob = (id: string, ticketKey: string): RunJob => ({
+  run: { ...runOf(id, ticketKey), role: 'review' },
+  prompt: `Review ${ticketKey}`,
   resumeSessionId: null,
 });
 
@@ -68,6 +76,7 @@ export function fakeTracker(jobs: RunJob[]) {
   const reports: ReportInput[] = [];
   const activity: Activity[] = [];
   const steps: (AddRunStepsInput & { id: string })[] = [];
+  const ticket: { category: StatusCategory } = { category: 'in_progress' };
   const api: WatchApi = {
     listProjects: vi.fn(),
     eventsUrl: () => 'http://tracker.test/api/events',
@@ -87,7 +96,9 @@ export function fakeTracker(jobs: RunJob[]) {
     getRun: vi.fn((id: string) =>
       Promise.resolve({ ...runOf(id, 'MOB-1'), status: statuses.get(id) ?? 'running' }),
     ),
-    getTicket: vi.fn(() => Promise.resolve({ activity } as TicketDetail)),
+    getTicket: vi.fn(() =>
+      Promise.resolve({ activity, status: { category: ticket.category } } as TicketDetail),
+    ),
     applyReport: vi.fn((input: ReportInput) => {
       reports.push(input);
       return Promise.resolve({ updatedTicketKeys: [input.ticketKey ?? ''] });
@@ -96,5 +107,5 @@ export function fakeTracker(jobs: RunJob[]) {
     waitForRunRequest: vi.fn(() => Promise.reject(new Error('No requests here.'))),
     cancelRunRequest: vi.fn(() => Promise.reject(new Error('No requests here.'))),
   };
-  return { api, ended, statuses, reports, activity, steps };
+  return { api, ended, statuses, reports, activity, steps, ticket };
 }

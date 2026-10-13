@@ -64,7 +64,7 @@ export function ticketBlock(ticket: PromptTicket, heading: string, now: Date = n
   return out.join('\n');
 }
 
-function repoLine(project: PromptProject): string[] {
+export function repoLine(project: PromptProject): string[] {
   return project.repo ? [`Repository / folder: ${project.repo}`] : [];
 }
 

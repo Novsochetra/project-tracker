@@ -99,7 +99,9 @@ describe('Ask: ticket cards', () => {
     const cancelled: Run = { ...running, status: 'cancelled', endedAt: Date.now() };
     const startRun = vi.fn().mockResolvedValue(running);
     const cancelRun = vi.fn().mockResolvedValue(cancelled);
-    const getTicketPrompt = vi.fn().mockResolvedValue({ text: PROMPT, ticketCount: 1 });
+    const getTicketPrompt = vi
+      .fn()
+      .mockResolvedValue({ text: PROMPT, ticketCount: 1, role: 'work' });
     const listTicketRuns = vi
       .fn()
       .mockResolvedValueOnce([])
@@ -110,7 +112,11 @@ describe('Ask: ticket cards', () => {
     const user = userEvent.setup();
     await user.click(await screen.findByRole('button', { name: 'Run MOB-7 in Claude Code' }));
 
-    expect(client.startRun).toHaveBeenCalledWith('MOB-7', { runnerId: dara.id, prompt: PROMPT });
+    expect(client.startRun).toHaveBeenCalledWith('MOB-7', {
+      runnerId: dara.id,
+      prompt: PROMPT,
+      role: 'work',
+    });
     expect(await screen.findByText(`Sent to Claude on ${DARA}`)).toBeInTheDocument();
     const made = screen.getByRole('region', { name: 'Ticket MOB-7' });
     expect(made).toHaveTextContent(`Claude is working on ${DARA}…`);

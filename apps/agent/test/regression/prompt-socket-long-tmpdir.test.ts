@@ -63,6 +63,7 @@ describe('regression: the prompt socket under a long TMPDIR', () => {
         describe: (error) => (error as Error).message,
         onProblem: vi.fn(),
         handBack: () => Promise.resolve(),
+        checkReview: (_job, outcome) => Promise.resolve(outcome),
         signOfLife: () => () => undefined,
         stepsFor: () => ({ add: () => undefined, end }),
       },

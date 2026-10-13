@@ -1,4 +1,4 @@
-import type { PromptResult } from '@tracker/shared';
+import type { PromptResult, RunRole } from '@tracker/shared';
 import clsx from 'clsx';
 import { Share } from 'lucide-react';
 import { useRef, type ReactNode, type RefObject } from 'react';
@@ -9,7 +9,13 @@ import { canShare, sharePrompt } from '../../lib/share';
 import { Sheet, SheetTextButton } from '../../overlays';
 import { PromptFooter } from './PromptFooter';
 import styles from './PromptSheet.module.css';
-import { COPY_BLOCKED, copyPromptFlow, promptHelp, sharePromptFlow } from './sendPrompt';
+import {
+  COPY_BLOCKED,
+  copyPromptFlow,
+  promptHelp,
+  sharePromptFlow,
+  sheetTitle,
+} from './sendPrompt';
 import { useCopyState } from './useCopyState';
 import type { PromptDraft } from './usePromptDraft';
 import type { RunOffer } from './useRunOffer';
@@ -21,6 +27,7 @@ export interface PromptViewProps {
   query: TrackerQuery<PromptResult>;
   draft: PromptDraft;
   onSent: () => void;
+  role?: RunRole;
   run?: RunOffer;
   boxNote?: ReactNode;
   sendSwitch?: ReactNode;
@@ -34,6 +41,7 @@ export function PromptView({
   query,
   draft,
   onSent,
+  role = 'work',
   run,
   ...rest
 }: PromptViewProps) {
@@ -55,10 +63,10 @@ export function PromptView({
     <Sheet
       open={open}
       onClose={onClose}
-      label="Send to Claude Code"
+      label={sheetTitle(role)}
       size="prompt"
       left={<SheetTextButton onClick={onClose}>Close</SheetTextButton>}
-      title="Send to Claude Code"
+      title={sheetTitle(role)}
       subtitle={subtitle || undefined}
       right={
         hasPrompt && canShare() ? (
@@ -78,7 +86,7 @@ export function PromptView({
             disabled={!draft.text.trim()}
             onCopy={() => void copy()}
             run={run}
-            onRun={() => run?.start(draft.text)}
+            onRun={() => run?.start(draft.text, role)}
           />
         ) : undefined
       }
@@ -90,6 +98,7 @@ export function PromptView({
           fieldRef={fieldRef}
           copyFailed={copyOutcome === 'failed'}
           offersRun={run?.footer.kind === 'run'}
+          role={role}
           {...rest}
         />
       </div>
@@ -103,6 +112,7 @@ interface PromptBodyProps {
   fieldRef: RefObject<HTMLTextAreaElement | null>;
   copyFailed: boolean;
   offersRun: boolean;
+  role: RunRole;
   boxNote?: ReactNode;
   sendSwitch?: ReactNode;
   sendError?: Error | null;
@@ -114,6 +124,7 @@ function PromptBody({
   fieldRef,
   copyFailed,
   offersRun,
+  role,
   boxNote,
   sendSwitch,
   sendError,
@@ -130,7 +141,7 @@ function PromptBody({
   const hasPrompt = draft.result.text.length > 0;
   return (
     <>
-      <p className={styles.help}>{promptHelp(hasPrompt, offersRun)}</p>
+      <p className={styles.help}>{promptHelp(hasPrompt, offersRun, role)}</p>
       {hasPrompt && (
         <textarea
           ref={fieldRef}
