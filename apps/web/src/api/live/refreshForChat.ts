@@ -2,6 +2,7 @@ import type { QueryClient } from '@tanstack/react-query';
 import type { ChatDeletedEvent } from '@tracker/shared';
 import type { DeleteChatVariables } from '../hooks/chats';
 import { queryKeys } from '../queryKeys';
+import { refreshLive } from './refreshLive';
 
 const deletingHere = (queryClient: QueryClient, chatId: string): boolean =>
   queryClient.isMutating({
@@ -16,7 +17,7 @@ export function refreshForChatDeleted(
   queryClient: QueryClient,
   { chatId }: ChatDeletedEvent,
 ): void {
-  void queryClient.invalidateQueries({ queryKey: queryKeys.allChats() });
+  void refreshLive(queryClient, { queryKey: queryKeys.allChats() });
   if (deletingHere(queryClient, chatId)) return;
-  void queryClient.invalidateQueries({ queryKey: queryKeys.chat(chatId), exact: true });
+  void refreshLive(queryClient, { queryKey: queryKeys.chat(chatId), exact: true });
 }
