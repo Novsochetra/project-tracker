@@ -58,6 +58,7 @@ export const USAGE = [
   '  tracker tickets MOB --status "In progress"',
   '  tracker claim MOB',
   '  tracker move MOB-3 In progress',
+  '  tracker attach MOB-3 notes.md data.csv --comment "The draft and its numbers"',
   '  tracker submit MOB-3 --summary "Fixed the crash; tests pass" --files src/profile.ts --next none',
   '  tracker review MOB-3 --verdict approved --rating 5 --summary "Works and is tested"',
 ].join('\n');

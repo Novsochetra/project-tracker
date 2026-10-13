@@ -21,6 +21,7 @@ export const COMMAND_OPTIONS = {
   summary: { type: 'string' },
   files: { type: 'string' },
   next: { type: 'string' },
+  comment: { type: 'string' },
   verdict: { type: 'string' },
   rating: { type: 'string' },
   name: { type: 'string' },

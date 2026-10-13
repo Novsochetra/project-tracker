@@ -15,6 +15,7 @@ const TOOL_NAMES = [
   'update_ticket',
   'move_ticket',
   'add_comment',
+  'attach_file',
   'claim_next_ticket',
   'claim_ticket',
   'submit_for_review',

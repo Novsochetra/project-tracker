@@ -34,6 +34,7 @@ function replyFormat(key: string): string {
     'STATUS: done | in progress | blocked',
     'SUMMARY: what you changed, in 1-3 sentences',
     'FILES: files you created or edited',
+    'OUTPUT: results that aren\'t code (a draft, a CSV, an image), attached with attach_file, or "none"',
     'NEXT: anything I still need to do, or "none"',
     '```',
   ].join('\n');
