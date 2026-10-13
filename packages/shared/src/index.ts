@@ -45,6 +45,7 @@ export * from './logic/pushMessages';
 export * from './logic/pushServices';
 export * from './logic/rank';
 export * from './logic/runRequests';
+export * from './logic/runnerTools';
 export * from './logic/runSteps';
 export * from './logic/report';
 export * from './logic/statuses';

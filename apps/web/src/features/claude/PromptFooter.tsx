@@ -1,8 +1,9 @@
-import type { Run, Runner } from '@tracker/shared';
+import { helperLabel, type Run, type Runner } from '@tracker/shared';
 import { Check, Copy, Laptop, Play } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { Button, GroupedCard, Icon, SelectRow, Spinner } from '../../components';
 import { useIsPhone } from '../../lib/media';
+import { helperOptions } from './helperOptions';
 import styles from './PromptSheet.module.css';
 import { workingText } from './runs';
 import type { RunOffer } from './useRunOffer';
@@ -126,8 +127,9 @@ function RunOn({ helpers, helper, onChoose }: RunOnProps) {
       <SelectRow
         label="Run on"
         icon={<Icon icon={Laptop} className={styles.runOnIcon} />}
-        options={helpers.map(({ id, name }) => ({ value: id, label: name }))}
+        options={helperOptions(helpers)}
         value={helper.id}
+        title={helperLabel(helper)}
         onChange={onChoose}
       />
     </GroupedCard>

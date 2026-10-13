@@ -38,14 +38,25 @@ export const REVIEW_NOT_RECORDED = "Claude didn't record a review.";
 
 export const RUNNER_NAME_MAX = 60;
 export const RUNNER_PROJECTS_MAX = 50;
+export const RUNNER_TOOLS_MAX = 40;
+export const RUNNER_TOOL_NAME_MAX = 64;
 export const RUN_ERROR_MAX = 2000;
 // A ticket's longest description, its last review and room to edit.
 export const RUN_PROMPT_MAX = 100_000;
+
+// Names only: a server's address, command or environment can hold a secret.
+export interface RunnerTools {
+  servers: string[];
+  commands: string[];
+  skills: string[];
+}
 
 export interface Runner {
   id: string;
   name: string;
   projectKeys: string[];
+  // Null from a helper older than tools.
+  tools: RunnerTools | null;
   createdAt: number;
   lastSeenAt: number;
   online: boolean;

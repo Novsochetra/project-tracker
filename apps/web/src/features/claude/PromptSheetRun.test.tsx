@@ -177,6 +177,21 @@ describe('PromptSheet with several helpers online', () => {
     await waitFor(() => expect(localStorage.getItem(LAST_HELPER_STORAGE_KEY)).toBe(dara.id));
   });
 
+  it("names each helper's tools on its row, the whole list on hover", async () => {
+    const tools = { servers: ['GitHub', 'Notion', 'Gmail'], commands: ['standup'], skills: [] };
+    renderWithApi(<Harness />, client([makeRunner({ tools }), studio]));
+    const user = userEvent.setup();
+    const label = `${DARA} · GitHub, Notion, Gmail, /standup`;
+    const runOn = await screen.findByRole('button', { name: /^Run on/ });
+    expect(runOn).toHaveTextContent(label);
+    expect(runOn).toHaveAttribute('title', label);
+
+    await user.click(runOn);
+    const options = within(screen.getByRole('listbox', { name: 'Run on' })).getAllByRole('option');
+    expect(options.map((option) => option.textContent)).toEqual([label, 'Studio']);
+    expect(options[0]).toHaveAttribute('title', label);
+  });
+
   it('has no Run on row for a single helper', async () => {
     renderWithApi(<Harness />, client([dara]));
     await promptBox();

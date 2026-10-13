@@ -1,10 +1,11 @@
-import type { AskOptions, Run } from '@tracker/shared';
+import { helperLabel, type AskOptions, type Run } from '@tracker/shared';
 import clsx from 'clsx';
 import { Laptop, MessageCircleQuestion } from 'lucide-react';
 import { GroupedCard, Icon, SelectRow, Spinner } from '../../components';
 import { useIsPhone } from '../../lib/media';
 import { useOptionalScreen } from '../../navigation';
 import { useRegisterBottomBar } from '../../navigation/bottomBarStore';
+import { helperOptions } from '../claude/helperOptions';
 import { SetupLine } from '../claude/SetupLine';
 import { WAITING_TEXT } from '../requests/copy';
 import { AskComposer } from './AskComposer';
@@ -48,8 +49,9 @@ function RunOn({ helper }: { helper: AskHelper }) {
       <SelectRow
         label="Run on"
         icon={<Icon icon={Laptop} className={styles.runOnIcon} />}
-        options={footer.helpers.map(({ id, name }) => ({ value: id, label: name }))}
+        options={helperOptions(footer.helpers)}
         value={footer.helper.id}
+        title={helperLabel(footer.helper)}
         onChange={choose}
       />
     </GroupedCard>
