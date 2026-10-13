@@ -14,7 +14,7 @@ import * as passwordResets from './0012_password_resets';
 import * as runRole from './0013_run_role';
 import * as chatTicket from './0014_chat_ticket';
 import * as questions from './0015_questions';
-import * as pushSubscriptions from './0018_push_subscriptions';
+import * as pushSubscriptions from './0016_push_subscriptions';
 
 // Keyed by file name; they run in name order, so the four-digit number decides. The bundled server
 // can't list a folder, so a new file is added here too (test/unit/migrationFiles checks it is).
@@ -34,5 +34,5 @@ export const MIGRATIONS: Record<string, Migration> = {
   '0013_run_role': runRole,
   '0014_chat_ticket': chatTicket,
   '0015_questions': questions,
-  '0018_push_subscriptions': pushSubscriptions,
+  '0016_push_subscriptions': pushSubscriptions,
 };
