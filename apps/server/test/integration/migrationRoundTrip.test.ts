@@ -459,6 +459,27 @@ const DATA_MODEL: SchemaShape = {
     indexes: ['index (run_id, created_at)', 'index (status, expires_at)'],
     foreignKeys: ['run_id -> runs.id on delete cascade'],
   },
+  questions: {
+    columns: [
+      'id text primary key',
+      'user_id text',
+      'ticket_id text not null',
+      'run_id text',
+      'text text not null',
+      'choices text not null',
+      'status text not null',
+      'answer text',
+      'created_at bigint not null',
+      'expires_at bigint not null',
+      'ended_at bigint',
+    ],
+    indexes: ['index (status, expires_at)', 'index (ticket_id, created_at)'],
+    foreignKeys: [
+      'run_id -> runs.id on delete set null',
+      'ticket_id -> tickets.id on delete cascade',
+      'user_id -> users.id on delete cascade',
+    ],
+  },
   chats: {
     columns: [
       'id text primary key',
