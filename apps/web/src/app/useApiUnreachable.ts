@@ -12,8 +12,16 @@ export function useReachability(): Reachability {
   const client = useApi();
   const [reachability] = useState(createReachability);
   // A layout effect, so it is in place before the screens' first requests start in their effects.
-  useLayoutEffect(() => watchSavedAnswers(window), []);
-  useLayoutEffect(() => tagLiveReads(window), []);
+  // One effect undoes the wrappers in reverse order, so window.fetch is the browser's again
+  // (test/regression/fetch-wrappers-undone).
+  useLayoutEffect(() => {
+    const unwatch = watchSavedAnswers(window);
+    const untag = tagLiveReads(window);
+    return () => {
+      untag();
+      unwatch();
+    };
+  }, []);
   useEffect(
     () => watchApiTraffic(queryClient, reachability, trackerCheckOf(client), { recheck: true }),
     [client, queryClient, reachability],
