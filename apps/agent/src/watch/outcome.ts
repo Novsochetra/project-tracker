@@ -8,6 +8,8 @@ export interface ClaudeExit {
   output: string;
   // One a turn: background work Claude started (a sub agent) gets a turn of its own when it ends.
   results: ClaudeResult[];
+  // The tokens this run's own calls read, to tell a resumed session's earlier figures apart.
+  readTokens?: number;
 }
 
 export function lastLines(text: string, max = RUN_ERROR_MAX): string {

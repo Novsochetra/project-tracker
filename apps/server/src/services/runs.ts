@@ -4,6 +4,7 @@ import {
   HELPER_SILENCE_MS,
   type FinishRunInput,
   type Run,
+  type RunRole,
   type StartRunInput,
 } from '@tracker/shared';
 import type { UserScope } from '../auth/scope';
@@ -17,11 +18,13 @@ import {
 } from '../repositories/runs';
 import { saveAnswer } from './chatAnswers';
 import { inTransaction, type ServiceContext } from './context';
-import { requireTicket, ticketKeyOf } from './lookups';
+import { loadTicketScope, requireTicket, ticketKeyOf, type TicketRef } from './lookups';
+import { continueChain } from './reviewChain/continueChain';
 import { endingOf } from './runEnding';
 import { pushRunEnd } from './runEndPush';
 import { notifyRun, toRun } from './runMappers';
 import { requireRunnerFor } from './runners';
+import { usageOfFinish } from './runUsage';
 import { insertQueuedRun, queuedRunRow } from './runRows';
 
 const TICKET_RUNS_SHOWN = 20;
@@ -53,6 +56,14 @@ export async function requireRun(
   return row;
 }
 
+// A reviewer of a ticket that isn't in review would have nothing to review.
+async function requireRoleFits(ctx: ServiceContext, ref: TicketRef, role: RunRole) {
+  if (role !== 'review') return;
+  const { status } = await loadTicketScope(ctx.db, ref);
+  if (status.category !== 'in_review')
+    throw conflict(`${ticketKeyOf(ref)} isn't waiting for review.`);
+}
+
 export async function startRun(
   ctx: ServiceContext,
   scope: UserScope,
@@ -60,6 +71,8 @@ export async function startRun(
   input: StartRunInput,
 ): Promise<Run> {
   const ref = await requireTicket(ctx.db, scope, ticketKey);
+  const role = input.role ?? 'work';
+  await requireRoleFits(ctx, ref, role);
   const runner = await requireRunnerFor(ctx, scope, input.runnerId, ref.project);
   await expireSilentRuns(ctx);
   const queued = { scope, runner, projectId: ref.project.id, now: ctx.now() };
@@ -72,7 +85,7 @@ export async function startRun(
     askModel: null,
     askMode: null,
     askEffort: null,
-    role: input.role ?? 'work',
+    role,
   });
   await insertQueuedRun(ctx.db, row, `Claude is already working on ${ticketKeyOf(ref)}.`);
   notifyRun(ctx, scope, row);
@@ -107,7 +120,8 @@ export async function endRun(
   const { status, error, answer } = endingOf(before, input);
   const endedAt = ctx.now();
   const ended = await inTransaction(ctx, async (trx) => {
-    const marked = await markRunEnded(trx, scope, before.id, { status, error, endedAt });
+    const changes = { status, error, endedAt, ...usageOfFinish(input) };
+    const marked = await markRunEnded(trx, scope, before.id, changes);
     if (marked && answer) await saveAnswer(trx, before, { ...answer, at: endedAt });
     return marked;
   });
@@ -117,7 +131,8 @@ export async function endRun(
   }
   if (ended) {
     notifyRun(ctx, scope, after);
-    pushRunEnd(ctx, scope, after, { answer });
+    // A chain that went on or stopped says so itself; "Claude finished" between its runs is noise.
+    if (!(await continueChain(ctx, after))) pushRunEnd(ctx, scope, after, { answer });
   }
   return toRun(after);
 }

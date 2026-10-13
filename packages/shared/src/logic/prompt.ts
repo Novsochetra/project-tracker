@@ -82,7 +82,10 @@ export function repoLine(project: PromptProject): string[] {
   return project.repo ? [`Repository / folder: ${project.repo}`] : [];
 }
 
-const instructionLines = (project: PromptProject, labels?: readonly PromptLabel[]): string[] => {
+export const instructionLines = (
+  project: PromptProject,
+  labels?: readonly PromptLabel[],
+): string[] => {
   const block = instructionsBlock(project, '##', labels);
   return block.length > 0 ? ['', ...block] : [];
 };

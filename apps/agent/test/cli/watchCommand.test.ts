@@ -31,7 +31,7 @@ describe('tracker watch', () => {
 
   it('is in the usage', () => {
     expect(USAGE).toContain(
-      '\n  watch [PROJECT] [--name NAME] [--permission-mode MODE] [--approvals] [--no-keep-awake] [--install | --uninstall | --check]\n',
+      '\n  watch [PROJECT] [--name NAME] [--permission-mode MODE] [--max-turns N] [--approvals] [--no-keep-awake] [--install | --uninstall | --check]\n',
     );
   });
 
@@ -39,7 +39,7 @@ describe('tracker watch', () => {
     expect(await cli(['watch', 'MOB', 'WEB'])).toEqual({
       code: EXIT_USAGE,
       stderr:
-        'Unexpected argument "WEB".\nUsage: tracker watch [PROJECT] [--name NAME] [--permission-mode MODE] [--approvals] [--no-keep-awake] [--install | --uninstall | --check]',
+        'Unexpected argument "WEB".\nUsage: tracker watch [PROJECT] [--name NAME] [--permission-mode MODE] [--max-turns N] [--approvals] [--no-keep-awake] [--install | --uninstall | --check]',
     });
     expect((await cli(['watch', '--title', 'x'])).stderr).toContain(
       '"watch" has no --title option.',
@@ -47,6 +47,11 @@ describe('tracker watch', () => {
     expect((await cli(['claim', 'MOB', '--name', 'x'])).stderr).toContain(
       '"claim" has no --name option.',
     );
+    for (const turns of ['0', '-5', '1.5', 'many', '--name=x']) {
+      expect((await cli(['watch', `--max-turns=${turns}`])).stderr).toContain(
+        'Use a whole number of turns for --max-turns, like 50.',
+      );
+    }
   });
 
   it('takes one of --install, --uninstall and --check, and only for watch', async () => {

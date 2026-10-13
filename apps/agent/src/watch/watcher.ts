@@ -1,4 +1,4 @@
-import type { RunEvent } from '@tracker/shared';
+import type { RunEvent, RunnerTools } from '@tracker/shared';
 import { describeError } from '../errors';
 import { createProblemLog, type ProblemSource } from './problems';
 import { handBackReport } from './report/handBack';
@@ -7,6 +7,8 @@ import { createLanes } from './lanes';
 import type { RunLoopDeps } from './runLoop';
 import { createStepBatcher } from './steps/stepBatcher';
 import { showStillWorking } from './stillWorking';
+import { runUsageOf } from './usage/runUsage';
+import { createSessionMarks } from './usage/sessionMarks';
 
 export interface WatcherSettings {
   runnerId: string;
@@ -20,10 +22,11 @@ const STEP_SEND_TIMEOUT_MS = 10_000;
 
 export type WatcherDeps = Omit<
   RunLoopDeps,
-  'describe' | 'onProblem' | 'handBack' | 'checkReview' | 'signOfLife' | 'stepsFor'
+  'describe' | 'onProblem' | 'handBack' | 'checkReview' | 'signOfLife' | 'stepsFor' | 'usageOf'
 > & {
   aliveEvery?: number | undefined;
   stepEvery?: number | undefined;
+  tools?: (() => RunnerTools) | undefined;
 };
 
 export function createWatcher(deps: WatcherDeps, settings: WatcherSettings) {
@@ -31,6 +34,8 @@ export function createWatcher(deps: WatcherDeps, settings: WatcherSettings) {
   const noteProblem = createProblemLog(deps.log);
   const onProblem = (source: ProblemSource, error: unknown) =>
     noteProblem(source, error === undefined ? undefined : describe(error));
+  // Both lanes: an Edit question resumes its chat's session in the ticket lane.
+  const sessions = createSessionMarks();
   const runs = createLanes(
     {
       ...deps,
@@ -54,6 +59,7 @@ export function createWatcher(deps: WatcherDeps, settings: WatcherSettings) {
           describe,
           every: deps.stepEvery,
         }),
+      usageOf: (job, exit) => runUsageOf(job, exit, sessions),
     },
     settings,
   );
@@ -69,6 +75,7 @@ export function createWatcher(deps: WatcherDeps, settings: WatcherSettings) {
       await deps.api.registerRunner(settings.runnerId, {
         name: settings.name,
         projectKeys: [settings.projectKey],
+        tools: deps.tools?.(),
       });
       await stopIfCancelled();
       onProblem('check-in', undefined);

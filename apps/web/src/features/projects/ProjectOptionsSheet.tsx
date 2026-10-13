@@ -4,6 +4,7 @@ import { Icon } from '../../components';
 import { NavBarButton } from '../../navigation';
 import { ActionSheet, type ActionSheetAction } from '../../overlays';
 import { deleteSheetCaption } from './projectOptions';
+import { ProjectUsageNote } from './ProjectUsageNote';
 import styles from './ProjectOptionsSheet.module.css';
 import { useProjectOptions, type ProjectOptions } from './useProjectOptions';
 
@@ -53,7 +54,10 @@ export function ProjectOptionsSheet({ projectKey }: { projectKey: string }) {
       {options.error ?? deleteSheetCaption(options.name, options.ticketCount)}
     </span>
   ) : (
-    options.name
+    <>
+      {options.name}
+      <ProjectUsageNote projectKey={projectKey} className={styles.usage} />
+    </>
   );
   return (
     <>

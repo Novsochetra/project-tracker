@@ -35,6 +35,20 @@ test.describe('report cards', () => {
     await expect(card.getByText('Check on a real device in landscape')).toBeVisible();
   });
 
+  test('a submission’s output reads as Output', async ({ page, api, agent }) => {
+    await seedProject(api, 'Mobile app', 'MOB', [{ title: 'Draft the launch post' }]);
+    await agent.claimTicket('MOB-1');
+    await agent.submitForReview('MOB-1', {
+      summary: 'Wrote the launch post.',
+      output: 'launch-post.md\nheader.png',
+    });
+
+    await page.goto('/p/MOB/1');
+    const card = reportCard(page, 'Claude report');
+    await expect(card.getByRole('term')).toHaveText(['Summary', 'Output']);
+    await expect(card.getByRole('listitem')).toHaveText(['launch-post.md', 'header.png']);
+  });
+
   test('a pasted Claude Code report reads the same way and still moves the ticket', async ({
     page,
     api,

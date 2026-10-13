@@ -5,6 +5,7 @@ import { ErrorBoundary } from '../../lib/ErrorBoundary';
 import {
   AccountSheet,
   ConnectSheet,
+  EditProjectSheet,
   LabelManagerSheet,
   NewTicketSheet,
   PromptSheet,
@@ -41,7 +42,7 @@ function RequestedSheet({ request, open, onClose }: SheetProps & { request: Shee
     case 'newProject':
       return <ProjectSheet {...sheet} />;
     case 'editProject':
-      return <ProjectSheet {...sheet} projectKey={request.projectKey} />;
+      return <EditProjectSheet {...sheet} projectKey={request.projectKey} />;
     case 'newTicket':
       return (
         <NewTicketSheet {...sheet} projectKey={request.projectKey} statusId={request.statusId} />

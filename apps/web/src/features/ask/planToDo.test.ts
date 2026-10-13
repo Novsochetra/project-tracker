@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { makeAskRun, makeChat, makeChatDetail, makeMessage } from '../../api/test/chatFixtures';
 import { makeRunner } from '../../api/test/runFixtures';
-import { doItOptions, planHelper, planToDo } from './planToDo';
+import { doItOptions, helperAway, planHelper, planToDo } from './planToDo';
 
 const plan = makeAskRun({
   status: 'done',
@@ -60,6 +60,16 @@ describe('planHelper', () => {
     expect(planHelper(plan, [other, { ...dara, online: false }], 'MOB')).toBeNull();
     expect(planHelper(plan, [{ ...dara, projectKeys: ['WEB'] }], 'MOB')).toBeNull();
     expect(planHelper({ runnerId: null }, [dara], 'MOB')).toBeNull();
+  });
+});
+
+describe('helperAway', () => {
+  it('tells an offline helper from one online elsewhere and one removed', () => {
+    const dara = makeRunner();
+    expect(helperAway(plan, [{ ...dara, online: false }])).toBe('offline');
+    expect(helperAway(plan, [{ ...dara, projectKeys: ['WEB'] }])).toBe('elsewhere');
+    expect(helperAway(plan, [makeRunner({ id: 'h-sam' })])).toBe('removed');
+    expect(helperAway({ runnerId: null }, [dara])).toBe('removed');
   });
 });
 

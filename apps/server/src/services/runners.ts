@@ -66,9 +66,9 @@ async function projectIdsOf(
 async function saveRunner(ctx: ServiceContext, row: RunnerRow, retried = false): Promise<void> {
   const existing = await findRunnerRow(ctx.db, row.id);
   if (existing && !inScope(existing.userId, row.userId)) throw notFound(RUNNER_NOT_FOUND);
-  const { name, projectIds, lastSeenAt } = row;
+  const { name, projectIds, tools, lastSeenAt } = row;
   if (existing)
-    return updateRunnerRow(ctx.db, row.userId, row.id, { name, projectIds, lastSeenAt });
+    return updateRunnerRow(ctx.db, row.userId, row.id, { name, projectIds, tools, lastSeenAt });
   try {
     await insertRunner(ctx.db, row);
   } catch (error) {
@@ -91,6 +91,7 @@ export async function registerRunner(
     userId: scope,
     name: input.name.trim(),
     projectIds: JSON.stringify(projectIds),
+    tools: input.tools ? JSON.stringify(input.tools) : null,
     createdAt: now,
     lastSeenAt: now,
   };

@@ -8,7 +8,10 @@ import {
   RUN_PROMPT_MAX,
   RUNNER_NAME_MAX,
   RUNNER_PROJECTS_MAX,
+  RUNNER_TOOL_NAME_MAX,
+  RUNNER_TOOLS_MAX,
 } from '../domain/run';
+import { runUsageInput } from './runUsage';
 
 // A helper picks its own id once and keeps it, so runs queued while it restarts still find it.
 export const runnerId = z.uuid('Use a UUID for the runner id.');
@@ -25,6 +28,14 @@ export const startRunInput = z.object({
 });
 export type StartRunInput = z.input<typeof startRunInput>;
 
+const toolNames = z.array(z.string().trim().min(1).max(RUNNER_TOOL_NAME_MAX)).max(RUNNER_TOOLS_MAX);
+
+export const runnerTools = z.object({
+  servers: toolNames,
+  commands: toolNames,
+  skills: toolNames,
+});
+
 export const registerRunnerInput = z.object({
   name: z
     .string()
@@ -35,6 +46,8 @@ export const registerRunnerInput = z.object({
     .array(z.string().trim().min(1).max(20))
     .min(1, 'Name at least one project this computer runs.')
     .max(RUNNER_PROJECTS_MAX),
+  // Older helpers send none.
+  tools: runnerTools.optional(),
 });
 export type RegisterRunnerInput = z.input<typeof registerRunnerInput>;
 
@@ -48,5 +61,6 @@ export const finishRunInput = z.object({
   // An ask run's answer and the Claude Code session that gave it.
   answer: z.string().trim().max(CHAT_ANSWER_MAX).optional(),
   sessionId: z.uuid().optional(),
+  usage: runUsageInput.optional(),
 });
 export type FinishRunInput = z.input<typeof finishRunInput>;

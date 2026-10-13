@@ -1,5 +1,6 @@
 import { isPriority, type Priority } from '../domain/priority';
 import { TICKET_DESCRIPTION_MAX, TICKET_TITLE_MAX } from '../domain/ticket';
+import { codeFences } from './codeFences';
 
 export interface TicketCard {
   title: string;
@@ -7,42 +8,20 @@ export interface TicketCard {
   description: string;
 }
 
-export interface CardSplit {
-  before: string;
-  card: TicketCard;
-  after: string;
-}
+// `index` counts the cards only, so it names a card whatever text surrounds it.
+export type CardSegment =
+  { kind: 'text'; text: string } | { kind: 'card'; index: number; card: TicketCard };
 
-const OPEN = /^(`{3,})ticket[ \t]*$/i;
 const FIELD = /^(title|priority)[ \t]*:[ \t]*(.*)$/i;
 const SEPARATOR = /^-{3,}[ \t]*$/;
 
-interface Fence {
-  start: number;
-  end: number;
-}
-
-// As in Markdown, only a fence at least as long closes it, so a description can hold ``` blocks.
-function closingLine(lines: readonly string[], from: number, ticks: number): number {
-  for (let i = from; i < lines.length; i += 1) {
-    const close = /^(`{3,})[ \t]*$/.exec(lines[i] ?? '');
-    if (close?.[1] && close[1].length >= ticks) return i;
-  }
-  return -1;
-}
-
-function lastFence(lines: readonly string[]): Fence | null {
-  let found: Fence | null = null;
-  for (let i = 0; i < lines.length; i += 1) {
-    const ticks = OPEN.exec(lines[i] ?? '')?.[1]?.length;
-    if (!ticks) continue;
-    const end = closingLine(lines, i + 1, ticks);
-    if (end === -1) break;
-    found = { start: i, end };
-    i = end;
-  }
-  return found;
-}
+// Every other code block is skipped whole, so a card shown inside one stays code, as Markdown
+// renders it.
+const ticketFences = (lines: readonly string[]) =>
+  codeFences(lines).filter(
+    ({ end, marker, info }) =>
+      end !== -1 && marker.startsWith('`') && info.toLowerCase() === 'ticket',
+  );
 
 function parseBody(body: readonly string[]): TicketCard | null {
   const split = body.findIndex((line) => SEPARATOR.test(line));
@@ -63,19 +42,28 @@ function parseBody(body: readonly string[]): TicketCard | null {
   };
 }
 
-// The last card wins, since Claude sends a new card when the person asks for a change.
-export function splitTicketCard(text: string): CardSplit | null {
-  const lines = text.replace(/\r/g, '').split('\n');
-  const fence = lastFence(lines);
-  if (!fence) return null;
-  const card = parseBody(lines.slice(fence.start + 1, fence.end));
-  if (!card) return null;
-  return {
-    before: lines.slice(0, fence.start).join('\n').trim(),
-    card,
-    after: lines
-      .slice(fence.end + 1)
-      .join('\n')
-      .trim(),
-  };
+function pushText(segments: CardSegment[], lines: readonly string[]): void {
+  const text = lines.join('\n').trim();
+  if (text) segments.push({ kind: 'text', text });
 }
+
+// A card with no title or no closing fence stays text, never half a ticket.
+export function splitTicketCards(text: string): CardSegment[] {
+  const lines = text.replace(/\r/g, '').split('\n');
+  const segments: CardSegment[] = [];
+  let from = 0;
+  let index = 0;
+  for (const fence of ticketFences(lines)) {
+    const card = parseBody(lines.slice(fence.start + 1, fence.end));
+    if (!card) continue;
+    pushText(segments, lines.slice(from, fence.start));
+    segments.push({ kind: 'card', index, card });
+    index += 1;
+    from = fence.end + 1;
+  }
+  pushText(segments, lines.slice(from));
+  return segments;
+}
+
+export const ticketCards = (text: string): TicketCard[] =>
+  splitTicketCards(text).flatMap((segment) => (segment.kind === 'card' ? [segment.card] : []));

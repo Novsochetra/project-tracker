@@ -21,12 +21,14 @@ export const COMMAND_OPTIONS = {
   due: { type: 'string' },
   summary: { type: 'string' },
   files: { type: 'string' },
+  output: { type: 'string' },
   next: { type: 'string' },
   comment: { type: 'string' },
   verdict: { type: 'string' },
   rating: { type: 'string' },
   name: { type: 'string' },
   'permission-mode': { type: 'string' },
+  'max-turns': { type: 'string' },
 } as const satisfies NonNullable<ParseArgsConfig['options']>;
 
 export const WATCH_FLAGS = {

@@ -5,6 +5,7 @@ export interface WatchArgs {
   project?: string | undefined;
   name?: string | undefined;
   permissionMode?: string | undefined;
+  maxTurns?: string | undefined;
   keepAwake?: boolean | undefined;
   approvals?: boolean | undefined;
 }

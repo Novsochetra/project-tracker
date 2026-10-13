@@ -18,6 +18,8 @@ export interface DropdownOption<T extends string = string> {
   value: T;
   label: string;
   icon?: ReactNode;
+  // The whole label on hover, where a long one is cut.
+  title?: string | undefined;
 }
 
 export interface DropdownProps<T extends string = string> {
@@ -111,6 +113,7 @@ function Menu<T extends string>({
           role="option"
           aria-selected={option.value === value}
           tabIndex={-1}
+          title={option.title}
           className={clsx('ring-inside', styles.option)}
           onClick={() => choose(option.value)}
         >

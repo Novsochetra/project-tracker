@@ -66,6 +66,7 @@ describe('regression: the prompt socket under a long TMPDIR', () => {
         checkReview: (_job, outcome) => Promise.resolve(outcome),
         signOfLife: () => () => undefined,
         stepsFor: () => ({ add: () => undefined, end }),
+        usageOf: () => undefined,
       },
       { runnerId: 'runner-1', projectKey: 'MOB', kind: 'ticket' },
     );

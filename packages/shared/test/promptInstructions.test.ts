@@ -3,6 +3,7 @@ import { PROJECT_INSTRUCTIONS_MAX } from '../src/domain/project';
 import { createProjectInput, updateProjectInput } from '../src/api/schemas';
 import { buildAskPrompt } from '../src/logic/askPrompt';
 import { instructionsBlock } from '../src/logic/instructions';
+import { buildReviewPrompt } from '../src/logic/reviewPrompt';
 import {
   buildProjectPrompt,
   buildTicketPrompt,
@@ -176,6 +177,13 @@ describe('label instructions', () => {
       ticket: labelled,
     });
     expect(prompt).toContain('## Instructions for "Bug" tickets\nWrite a failing test first.');
+  });
+
+  it('go into the review prompt after the project instructions', () => {
+    const prompt = buildReviewPrompt(instructed, labelled, NOW);
+    expect(prompt).toContain(
+      `## Project instructions\n${INSTRUCTIONS}\n\n## Instructions for "Bug" tickets\nWrite a failing test first.`,
+    );
   });
 
   it('leave a ticket without labels as it was', () => {

@@ -1,5 +1,6 @@
 import type { AskOptions } from './askOptions';
 import type { Run } from './run';
+import type { RunUsage } from './runUsage';
 
 export const CHAT_ROLES = ['person', 'claude'] as const;
 export type ChatRole = (typeof CHAT_ROLES)[number];
@@ -13,6 +14,11 @@ export const CHAT_NO_ANSWER = 'Claude Code gave no answer.';
 export interface ChatTicket {
   key: string;
   title: string;
+}
+
+export interface CardTicketLink {
+  index: number;
+  ticketKey: string;
 }
 
 export interface Chat {
@@ -34,13 +40,15 @@ export interface ChatMessage {
   chatId: string;
   role: ChatRole;
   text: string;
-  // The ticket made from this message's ticket card, once the person taps Create.
-  ticketKey: string | null;
+  // The tickets made from this message's cards, by card index, once the person taps Create.
+  cardTickets: CardTicketLink[];
   // The run that gave Claude's answer, so its steps can fold under it; null on the person's.
   runId: string | null;
   // The steps its open list shows, so an older answer can say "23 steps" before they are read:
   // the run's, less Claude's last words when they are the answer itself. 0 on the person's.
   stepCount: number;
+  // What the answer's run took; null on the person's and on answers from older helpers.
+  usage: RunUsage | null;
   createdAt: number;
 }
 

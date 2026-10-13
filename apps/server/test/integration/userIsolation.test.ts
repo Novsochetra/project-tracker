@@ -92,7 +92,7 @@ const writesOf = (a: AWorld): [string, string, unknown?][] => [
 ];
 
 // Refused to every agent token before any lookup, so a 403 says nothing about A's project.
-const personOnly = (a: AWorld) =>
+const personOnlyPaths = (a: AWorld) =>
   new Set([
     'PATCH /api/projects/MOB',
     'DELETE /api/projects/MOB',
@@ -101,8 +101,10 @@ const personOnly = (a: AWorld) =>
     `PATCH /api/labels/${a.labelId}`,
     `DELETE /api/labels/${a.labelId}`,
   ]);
-const writeStatus = (a: AWorld, auth: Auth, request: string): number =>
-  auth.token && personOnly(a).has(request) ? 403 : 404;
+const personOnly = (a: AWorld, method: string, path: string): boolean =>
+  personOnlyPaths(a).has(`${method} ${path}`) || (method !== 'GET' && path.includes('/statuses'));
+const writeStatus = (a: AWorld, auth: Auth, method: string, path: string): number =>
+  auth.token && personOnly(a, method, path) ? 403 : 404;
 
 describe.each(DIALECTS)("one user's projects stay theirs (%s)", (dialect) => {
   const api = useTestServer(dialect);
@@ -206,9 +208,7 @@ describe.each(DIALECTS)("one user's projects stay theirs (%s)", (dialect) => {
     for (const auth of b.auths) {
       for (const [method, path, body] of writesOf(world)) {
         const response = await request(auth, method, path, body);
-        expect(response.status, `${method} ${path}`).toBe(
-          writeStatus(world, auth, `${method} ${path}`),
-        );
+        expect(response.status, `${method} ${path}`).toBe(writeStatus(world, auth, method, path));
       }
     }
     const ticket = await a.person<{ ticket: { title: string } }>('GET', '/api/tickets/MOB-1');

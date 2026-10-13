@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { buildAskPrompt } from '../src/logic/askPrompt';
+import { ticketCards } from '../src/logic/ticketCard';
 import type { PromptTicket } from '../src/logic/prompt';
 
 const project = { key: 'PT', name: 'Project Tracker' };
@@ -35,6 +36,69 @@ describe('buildAskPrompt', () => {
     expect(buildAskPrompt({ project, mode: 'ask', question: 'q', history: [] })).toContain(
       '````ticket\ntitle: <short title>\npriority: high | medium | low\n---',
     );
+  });
+
+  it('asks for one card per ticket only when the work is split, and the parser reads them', () => {
+    const prompt = buildAskPrompt({ project, mode: 'plan', question: 'q', history: [] });
+    expect(prompt).toContain('end your answer with one ticket card');
+    expect(prompt).toContain('split or plan work into tickets, end with one such card per ticket');
+    const example = /````ticket[\s\S]*?\n````/.exec(prompt)?.[0] ?? '';
+    const filled = (title: string) =>
+      example
+        .replace('<short title>', title)
+        .replace('high | medium | low', 'low')
+        .replace(/<description[^>]*>/, '## Why\nIt helps.');
+    const answer = ['Two tickets:', filled('First'), filled('Second'), 'Tap Create all.'].join(
+      '\n',
+    );
+    expect(ticketCards(answer)).toEqual([
+      { title: 'First', priority: 'low', description: '## Why\nIt helps.' },
+      { title: 'Second', priority: 'low', description: '## Why\nIt helps.' },
+    ]);
+  });
+
+  it('asks for every card not yet a ticket again on a change, and leaves made ones out', () => {
+    const prompt = buildAskPrompt({ project, mode: 'plan', question: 'q', history: [] });
+    expect(prompt).toContain(
+      'When they ask for any change, send again, in order, every card that is not a ticket yet',
+    );
+    expect(prompt).toContain('A card marked like [card 2 → PT-14] is a ticket now: leave it out.');
+  });
+
+  const card = (title: string) => ['````ticket', `title: ${title}`, '````'].join('\n');
+  const answered = [
+    { role: 'person' as const, text: 'Split it' },
+    {
+      role: 'claude' as const,
+      text: ['Two tickets:', card('First'), card('Second')].join('\n'),
+      cardTickets: [{ index: 1, ticketKey: 'PT-14' }],
+    },
+  ];
+
+  it('marks the cards that became tickets in the chat so far', () => {
+    const prompt = buildAskPrompt({ project, mode: 'plan', question: 'q', history: answered });
+    expect(prompt).toContain('title: Second\n````\n[card 2 → PT-14]\n\n---');
+    expect(prompt).not.toContain('[card 1');
+  });
+
+  it('lists the made cards with their titles when the session is resumed', () => {
+    const prompt = buildAskPrompt({
+      project,
+      mode: 'plan',
+      question: 'q',
+      history: answered,
+      resumed: true,
+    });
+    expect(prompt).not.toContain('Earlier in this chat');
+    expect(prompt).toContain('Your cards that are tickets now:\n[card 2 → PT-14] Second');
+    const none = buildAskPrompt({
+      project,
+      mode: 'plan',
+      question: 'q',
+      history: [],
+      resumed: true,
+    });
+    expect(none).not.toContain('Your cards');
   });
 
   it('puts earlier messages before the question when the session can not be resumed', () => {

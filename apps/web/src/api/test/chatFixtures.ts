@@ -18,9 +18,10 @@ export const makeMessage = (overrides: Partial<ChatMessage> = {}): ChatMessage =
   chatId: 'c-1',
   role: 'person',
   text: 'How does sync work?',
-  ticketKey: null,
+  cardTickets: [],
   runId: null,
   stepCount: 0,
+  usage: null,
   createdAt: Date.now() - 60_000,
   ...overrides,
 });

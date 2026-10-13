@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { EMPTY_PROJECT_FORM, projectFormChanged, type ProjectFormValues } from './projectForm';
 import { withTemplate } from './projectTemplate';
 
-export type ProjectTextField = Exclude<keyof ProjectFormValues, 'template'>;
+export type ProjectTextField = Exclude<keyof ProjectFormValues, 'template' | 'autoReview'>;
 
 export interface ProjectForm {
   values: ProjectFormValues;
@@ -11,6 +11,7 @@ export interface ProjectForm {
   error: string | null;
   setField: (field: ProjectTextField, value: string) => void;
   pickTemplate: (template: ProjectTemplateName) => void;
+  setAutoReview: (on: boolean) => void;
   setError: (error: string | null) => void;
 }
 
@@ -32,6 +33,10 @@ export function useProjectForm(initial: ProjectFormValues | undefined): ProjectF
     setValues((current) => withTemplate(current, template));
     setError(null);
   };
+  const setAutoReview = (autoReview: boolean) => {
+    setValues((current) => ({ ...current, autoReview }));
+    setError(null);
+  };
   const changed = projectFormChanged(values, start ?? EMPTY_PROJECT_FORM);
-  return { values, changed, error, setField, pickTemplate, setError };
+  return { values, changed, error, setField, pickTemplate, setAutoReview, setError };
 }

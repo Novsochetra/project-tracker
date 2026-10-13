@@ -202,6 +202,16 @@ describe('prepareCommand', () => {
       tool: submitForReview,
       input: { ticket: 'MOB-3', summary: 'Fixed it', files: 'a.ts', next: 'none' },
     });
+    expect(prepare(...argv, '--output', 'draft.md')).toEqual({
+      tool: submitForReview,
+      input: {
+        ticket: 'MOB-3',
+        summary: 'Fixed it',
+        files: 'a.ts',
+        output: 'draft.md',
+        next: 'none',
+      },
+    });
   });
 
   it('review <KEY> turns the rating into a number', () => {
@@ -232,7 +242,11 @@ describe('usage errors', () => {
     [['projects', '--title', 'x'], '"projects" has no --title option.', 'projects'],
     [['create', 'MOB'], 'Missing --title.', createUsage()],
     [['create', '--title', 'x'], 'Missing <PROJECT>.', createUsage()],
-    [['submit', 'MOB-3'], 'Missing --summary.', 'submit <KEY> --summary S [--files F] [--next N]'],
+    [
+      ['submit', 'MOB-3'],
+      'Missing --summary.',
+      'submit <KEY> --summary S [--files F] [--output O] [--next N]',
+    ],
   ])('%j', (argv, message, usage) => {
     const error = usageError(argv);
     expect(error.message).toBe(message);

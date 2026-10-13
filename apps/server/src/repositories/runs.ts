@@ -3,6 +3,7 @@ import {
   type EndedRunStatus,
   type RunKind,
   type RunStatus,
+  type RunUsage,
 } from '@tracker/shared';
 import type { ExpressionBuilder } from 'kysely';
 import type { UserScope } from '../auth/scope';
@@ -15,7 +16,7 @@ export interface RunWithKey extends RunRow {
 }
 
 // '=' never matches a null user, so the open tracker's rows need 'is'.
-const ownedBy = (userId: UserScope) => (eb: ExpressionBuilder<Database, 'runs'>) =>
+export const ownedBy = (userId: UserScope) => (eb: ExpressionBuilder<Database, 'runs'>) =>
   userId === null ? eb('runs.userId', 'is', null) : eb('runs.userId', '=', userId);
 
 const runsOf = (db: Db, userId: UserScope) =>
@@ -124,7 +125,7 @@ export async function markRunEnded(
   db: Db,
   userId: UserScope,
   id: string,
-  changes: { status: EndedRunStatus; error: string | null; endedAt: number },
+  changes: Pick<RunRow, 'error' | 'endedAt'> & Partial<RunUsage> & { status: EndedRunStatus },
 ): Promise<boolean> {
   const result = await db
     .updateTable('runs')

@@ -9,7 +9,10 @@ if (process.argv[2] === 'mcp') {
     ? '\u2717 Failed to connect'
     : '\u2714 Connected';
   if (process.env.FAKE_MCP === 'unreadable') { console.log('mcp list is not available'); }
-  else { console.log('tracker: node /gone/apps/agent/dist/mcp.js - ' + state); }
+  else {
+    console.log('claude.ai Notion: https://mcp.notion.com/mcp - \u2714 Connected');
+    console.log('tracker: node /gone/apps/agent/dist/mcp.js - ' + state);
+  }
   process.exit(0);
 }
 const { existsSync } = require('node:fs');

@@ -1,29 +1,16 @@
 import { createStepReader, type RunStepInput } from '@tracker/shared';
-import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { runClaude } from '../../../src/watch/claude';
 import { ticketOutcomeOf } from '../../../src/watch/outcome';
 import { handBackReport } from '../../../src/watch/report/handBack';
 import { fakeTracker, job } from '../fakeTracker';
-
-// Real ticket runs of Claude Code 2.1.296, recorded for the step reader's tests.
-const recording = (name: string) =>
-  fileURLToPath(
-    new URL(
-      `../../../../../packages/shared/test/fixtures/stream-json/${name}.jsonl`,
-      import.meta.url,
-    ),
-  );
+import { replayCommand } from '../recording';
 
 async function replay(name: string, code: number) {
   const steps: RunStepInput[] = [];
   const read = createStepReader('/work/app');
   let window = '';
-  const command = {
-    command: '/bin/sh',
-    args: ['-c', 'cat "$0"; exit "$1"', recording(name), `${code}`],
-    cwd: '/',
-  };
+  const command = replayCommand(name, code);
   const exit = await runClaude(command, 'fix MOB-1', new AbortController().signal, {
     onOutput: (text) => (window += text),
     onEvent: (event) => steps.push(...read(event)),

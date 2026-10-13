@@ -25,7 +25,7 @@ describe('regression: Run on a created card while Claude thinks', () => {
           id: 'm-1',
           role: 'claude',
           text: ticketCardText('Faster sync'),
-          ticketKey: 'MOB-7',
+          cardTickets: [{ index: 0, ticketKey: 'MOB-7' }],
         }),
         makeMessage({ id: 'm-2', text: 'And the tests?' }),
       ],

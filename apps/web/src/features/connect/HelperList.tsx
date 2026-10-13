@@ -1,3 +1,4 @@
+import { toolsText } from '@tracker/shared';
 import { useRunners } from '../../api/hooks/runs';
 import { GroupedCard } from '../../components';
 import { useNow } from '../../lib/useNow';
@@ -18,10 +19,16 @@ export function HelperList() {
             <span className={shared.rowText}>
               <span className={styles.name}>{runner.name}</span>
               <span className={shared.rowDescription}>{helperDetails(runner, now)}</span>
+              <HelperTools text={toolsText(runner.tools)} />
             </span>
           </li>
         ))}
       </ul>
     </GroupedCard>
   );
+}
+
+function HelperTools({ text }: { text: string }) {
+  if (!text) return null;
+  return <span className={shared.rowDescription}>{text}</span>;
 }

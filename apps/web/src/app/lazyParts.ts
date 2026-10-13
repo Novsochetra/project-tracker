@@ -23,6 +23,9 @@ export const PromptSheet = lazyWithPreload(() =>
 export const ReportSheet = lazyWithPreload(() =>
   import('../features/claude/ReportSheet').then((module) => module.ReportSheet),
 );
+export const EditProjectSheet = lazyWithPreload(() =>
+  import('../features/projects/EditProjectSheet').then((module) => module.EditProjectSheet),
+);
 export const StatusManagerSheet = lazyWithPreload(() =>
   import('../features/statuses/StatusManagerSheet').then((module) => module.StatusManagerSheet),
 );
@@ -62,6 +65,7 @@ const SHEETS: Part[] = [
   NewTicketSheet,
   PromptSheet,
   ReportSheet,
+  EditProjectSheet,
   StatusManagerSheet,
   LabelManagerSheet,
   RunStepsSheet,

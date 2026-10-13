@@ -24,7 +24,7 @@ const reviewSteps = [
   '## How to review',
   "1. Call get_ticket for MOB-2 and read it in full: comments, attachments and the worker's report.",
   '2. Compare the work against the requirement in the title, description and comments, not just against the report. If there is an earlier review, check that its points were fixed.',
-  '3. Verify the real changes yourself: read the diff and the changed files, run the tests and build, and try the feature where you can.',
+  "3. Verify the real result yourself. When the work is code, read the diff and the changed files, run the tests and build, and try the feature where you can. Otherwise check the result against the ticket and the project's instructions.",
   '4. Rate the work from 1 to 5:',
   '   - 5: fully meets the requirement, with good quality and tests',
   '   - 4: meets the requirement, with minor nits',
@@ -80,6 +80,30 @@ describe('buildReviewPrompt', () => {
     expect(text).toContain("The worker's report:\n(No report yet.)");
     expect(text).not.toContain('Repository / folder');
     expect(text).not.toContain('Your last report');
+  });
+
+  it('gives a project without code its instructions to check the work against', () => {
+    const writing: PromptProject = {
+      name: 'Newsletter',
+      key: 'NEWS',
+      repo: '',
+      instructions: 'Plain words, under 600 words, British spelling.',
+    };
+    const lines = buildReviewPrompt(writing, login, NOW).split('\n');
+    expect(lines.slice(0, 4)).toEqual([
+      'Please review the work on ticket MOB-2 from my "Newsletter" project, using the tracker MCP tools.',
+      '',
+      '## Project instructions',
+      'Plain words, under 600 words, British spelling.',
+    ]);
+    expect(lines).toContain(
+      "3. Verify the real result yourself. When the work is code, read the diff and the changed files, run the tests and build, and try the feature where you can. Otherwise check the result against the ticket and the project's instructions.",
+    );
+  });
+
+  it('leaves out blank instructions', () => {
+    const text = buildReviewPrompt({ ...project, instructions: '  ' }, login, NOW);
+    expect(text).not.toContain('Project instructions');
   });
 
   it('never asks for the paste-back report block', () => {

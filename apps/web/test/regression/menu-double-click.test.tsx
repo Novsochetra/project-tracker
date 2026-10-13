@@ -1,7 +1,8 @@
 import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useState } from 'react';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { EditProjectSheet } from '../../src/app/lazyParts';
 import { SheetsProvider } from '../../src/app/sheets/SheetsProvider';
 import { projectSummary, renderWithApp } from '../../src/app/test/harness';
 import { ProjectOptionsButton } from '../../src/features/projects/ProjectOptionsButton';
@@ -17,6 +18,9 @@ import { advance, stillClock } from './stillClock';
 // menus the second click reached what lay under them too.
 
 let restore: Array<() => void> = [];
+
+// Edit project loads when opened; this is about the second click, not its loading.
+beforeAll(() => EditProjectSheet.preload());
 
 beforeEach(() => {
   restore = [skipAnimations(), mockPhone(false)];

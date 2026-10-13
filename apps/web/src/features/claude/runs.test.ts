@@ -1,3 +1,4 @@
+import type { Run } from '@tracker/shared';
 import { describe, expect, it } from 'vitest';
 import { DARA, makeRun, makeRunner } from '../../api/test/runFixtures';
 import {
@@ -97,9 +98,34 @@ describe('shownRun', () => {
     expect(shownRun([failed(NOW - STOPPED_SHOWN_MS)], NOW)).toBeNull();
   });
 
-  it('shows nothing once the latest run is done or cancelled', () => {
+  it('shows a finished run for a day when its helper said what it took', () => {
+    const usage = { costMicros: 840_000, turns: 23, durationMs: 361_000 };
+    const done = (endedAt: number) => makeRun({ status: 'done', endedAt, usage });
+    expect(shownRun([done(NOW - STOPPED_SHOWN_MS + 1)], NOW)).toMatchObject({
+      state: 'finished',
+      text: `Claude finished on ${DARA}.`,
+    });
+    expect(shownRun([done(NOW - STOPPED_SHOWN_MS)], NOW)).toBeNull();
+  });
+
+  it('shows nothing once the latest run is done without usage or cancelled', () => {
     expect(shownRun([makeRun({ status: 'done', endedAt: NOW }), failed(NOW)], NOW)).toBeNull();
     expect(shownRun([makeRun({ status: 'cancelled', endedAt: NOW })], NOW)).toBeNull();
     expect(shownRun([], NOW)).toBeNull();
+  });
+
+  it('says why the automatic review stopped after a run that ended well, for a day', () => {
+    const stopped = (chainStop: Run['chainStop'], endedAt = NOW) =>
+      shownRun([makeRun({ status: 'done', endedAt, chainStop })], NOW);
+    expect(stopped('rounds')).toMatchObject({
+      state: 'stopped',
+      text: 'Automatic review stopped. The review still asks for changes after 2 rounds.',
+    });
+    expect(stopped('moved')?.text).toBe('Automatic review stopped. You moved the ticket.');
+    expect(stopped('offline')?.text).toBe(
+      `Automatic review stopped. ${DARA} can't take the next run.`,
+    );
+    expect(stopped('moved', NOW - STOPPED_SHOWN_MS)).toBeNull();
+    expect(stopped(null)).toBeNull();
   });
 });

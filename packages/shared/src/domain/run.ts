@@ -1,4 +1,6 @@
 import type { AskOptions } from './askOptions';
+import type { ChainStop } from './autoReview';
+import type { RunUsage } from './runUsage';
 import type { StatusCategory } from './status';
 
 export const RUN_STATUSES = ['queued', 'running', 'done', 'failed', 'cancelled'] as const;
@@ -38,14 +40,25 @@ export const REVIEW_NOT_RECORDED = "Claude didn't record a review.";
 
 export const RUNNER_NAME_MAX = 60;
 export const RUNNER_PROJECTS_MAX = 50;
+export const RUNNER_TOOLS_MAX = 40;
+export const RUNNER_TOOL_NAME_MAX = 64;
 export const RUN_ERROR_MAX = 2000;
 // A ticket's longest description, its last review and room to edit.
 export const RUN_PROMPT_MAX = 100_000;
+
+// Names only: a server's address, command or environment can hold a secret.
+export interface RunnerTools {
+  servers: string[];
+  commands: string[];
+  skills: string[];
+}
 
 export interface Runner {
   id: string;
   name: string;
   projectKeys: string[];
+  // Null from a helper older than tools.
+  tools: RunnerTools | null;
   createdAt: number;
   lastSeenAt: number;
   online: boolean;
@@ -69,6 +82,10 @@ export interface Run {
   endedAt: number | null;
   // How many steps the helper has sent, the oldest dropped included (the latest step's seq).
   stepCount: number;
+  usage: RunUsage | null;
+  // Why the project's automatic review went no further after this run. Optional: trackers from
+  // before PT-192 don't send it.
+  chainStop?: ChainStop | null;
 }
 
 export interface RunJob {

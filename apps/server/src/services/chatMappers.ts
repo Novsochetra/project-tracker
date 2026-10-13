@@ -2,11 +2,14 @@ import {
   CHAT_TITLE_MAX,
   formatTicketKey,
   isAnswerStep,
+  type CardTicketLink,
   type Chat,
   type ChatMessage,
   type ChatTicket,
 } from '@tracker/shared';
-import type { ChatWithKey, MessageWithKey } from '../repositories/chats';
+import type { CardTicketRow } from '../repositories/chatCardTickets';
+import type { ChatWithKey, MessageWithSteps } from '../repositories/chats';
+import { usageOfRow } from './runUsage';
 
 // A chat's ticket is one of its own project's, so the project's key makes the ticket's.
 const chatTicket = (row: ChatWithKey): ChatTicket | null =>
@@ -28,7 +31,7 @@ export const toChat = (row: ChatWithKey): Chat => ({
 
 // The count above an answer is what its open list shows, which leaves out Claude's last words
 // when they are the answer itself.
-function shownStepCount(row: MessageWithKey): number {
+function shownStepCount(row: MessageWithSteps): number {
   const count = row.stepCount ?? 0;
   if (row.lastStepKind === null || row.lastStepLabel === null) return count;
   const last = {
@@ -39,17 +42,20 @@ function shownStepCount(row: MessageWithKey): number {
   return isAnswerStep(last, row.text) ? count - 1 : count;
 }
 
-export const toMessage = (row: MessageWithKey): ChatMessage => ({
+export const toCardTicket = (row: CardTicketRow): CardTicketLink => ({
+  index: row.cardIndex,
+  ticketKey: formatTicketKey(row.projectKey, row.ticketNum),
+});
+
+export const toMessage = (row: MessageWithSteps, cards: readonly CardTicketRow[]): ChatMessage => ({
   id: row.id,
   chatId: row.chatId,
   role: row.role,
   text: row.text,
-  ticketKey:
-    row.projectKey === null || row.ticketNum === null
-      ? null
-      : formatTicketKey(row.projectKey, row.ticketNum),
+  cardTickets: cards.filter((card) => card.messageId === row.id).map(toCardTicket),
   runId: row.runId,
   stepCount: shownStepCount(row),
+  usage: usageOfRow(row),
   createdAt: row.createdAt,
 });
 

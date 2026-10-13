@@ -197,6 +197,50 @@ describe.each(DIALECTS)('every migration up and down (%s)', (dialect) => {
     });
   });
 
+  it("moves a message's ticket to its first card, and back on rollback", async () => {
+    await withDatabase(dialect, async (db) => {
+      const before = NAMES.filter((name) => name < '0021_card_tickets').at(-1)!;
+      const migrator = createMigrator(db);
+      await migrator.migrateTo(before);
+      await sql`insert into projects (id, name, key, description, repo, color, next_num,
+        created_at, updated_at) values ('p', 'Mobile', 'MOB', '', '', '#5B5BD6', 3, 1000, 1000)`.execute(
+        db,
+      );
+      await sql`insert into statuses (id, project_id, name, category, color, position, created_at)
+        values ('s', 'p', 'To do', 'todo', '#8E8E93', 0, 1000)`.execute(db);
+      for (const [id, num] of [
+        ['t1', 1],
+        ['t2', 2],
+      ] as const) {
+        await sql`insert into tickets (id, project_id, num, status_id, rank, title, description,
+          priority, assignee, due, created_at, updated_at) values (${id}, 'p', ${num}, 's', ${num},
+          'T', '', 'medium', '', '', 1000, 1000)`.execute(db);
+      }
+      await sql`insert into chats (id, project_id, title, created_at, updated_at)
+        values ('c', 'p', 'Q', 1000, 1000)`.execute(db);
+      await sql`insert into chat_messages (id, chat_id, role, text, ticket_id, created_at) values
+        ('made', 'c', 'claude', 'card', 't1', 1000),
+        ('open', 'c', 'claude', 'card', null, 1001)`.execute(db);
+
+      await migrator.migrateTo('0021_card_tickets');
+      const links = sql`select message_id, card_index, ticket_id from chat_card_tickets
+        order by card_index`;
+      expect((await links.execute(db)).rows).toEqual([
+        { messageId: 'made', cardIndex: 0, ticketId: 't1' },
+      ]);
+
+      await sql`insert into chat_card_tickets (message_id, card_index, ticket_id)
+        values ('open', 0, 't2'), ('made', 1, 't2')`.execute(db);
+      await migrator.migrateTo(before);
+      const back = await sql<{ id: string; ticketId: string | null }>`select id, ticket_id
+        from chat_messages order by created_at`.execute(db);
+      expect(back.rows).toEqual([
+        { id: 'made', ticketId: 't1' },
+        { id: 'open', ticketId: 't2' },
+      ]);
+    });
+  });
+
   it('keeps one open reset link per account, and drops reset links on rollback', async () => {
     await withDatabase(dialect, async (db) => {
       await migrateToLatest(db);
@@ -242,6 +286,7 @@ const DATA_MODEL: SchemaShape = {
       'updated_at bigint not null',
       'owner_id text',
       "instructions text not null default ''",
+      'auto_review integer',
     ],
     indexes: ['index (owner_id)', 'unique (key)'],
     foreignKeys: [],
@@ -385,6 +430,7 @@ const DATA_MODEL: SchemaShape = {
       'project_ids text not null',
       'created_at bigint not null',
       'last_seen_at bigint not null',
+      'tools text',
     ],
     indexes: ['index (user_id)'],
     foreignKeys: ['user_id -> users.id on delete cascade'],
@@ -411,9 +457,15 @@ const DATA_MODEL: SchemaShape = {
       'step_count integer not null default 0',
       'ask_effort text',
       'role text',
+      'cost_micros bigint',
+      'turns integer',
+      'duration_ms bigint',
+      'round integer',
+      'chain_stop text',
     ],
     indexes: [
       'index (chat_id, created_at)',
+      'index (project_id, ended_at)',
       'index (runner_id, status)',
       'index (status, created_at)',
       'unique (chat_id)',
@@ -515,6 +567,18 @@ const DATA_MODEL: SchemaShape = {
     foreignKeys: [
       'chat_id -> chats.id on delete cascade',
       'ticket_id -> tickets.id on delete set null',
+    ],
+  },
+  chat_card_tickets: {
+    columns: [
+      'message_id text primary key',
+      'card_index integer primary key',
+      'ticket_id text not null',
+    ],
+    indexes: ['index (ticket_id)'],
+    foreignKeys: [
+      'message_id -> chat_messages.id on delete cascade',
+      'ticket_id -> tickets.id on delete cascade',
     ],
   },
   push_subscriptions: {

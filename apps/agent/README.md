@@ -34,10 +34,10 @@ Revoke a token in **Connect Claude Code** → **API tokens** → **Revoke**. The
 
 ## Slash commands
 
-| Command                     | What the agent does                                                                                                                                                                                                                                                         |
-| --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `/mcp__tracker__work MOB`   | Claims the next To do ticket, reads it fully, does the work in the current repository, comments on decisions and blockers, verifies (tests and build for code, else against the ticket and the project's instructions) and submits it for review with summary, files, next. |
-| `/mcp__tracker__review MOB` | Lists tickets in Need review, checks the real changes against the ticket (and the project's instructions), rates them 1–5 and approves or requests changes with actionable feedback.                                                                                        |
+| Command                     | What the agent does                                                                                                                                                                                                                                                                 |
+| --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/mcp__tracker__work MOB`   | Claims the next To do ticket, reads it fully, does the work in the current repository, comments on decisions and blockers, verifies (tests and build for code, else against the ticket and the project's instructions) and submits it for review with summary, files, output, next. |
+| `/mcp__tracker__review MOB` | Lists tickets in Need review, checks the real changes against the ticket (and the project's instructions), rates them 1–5 and approves or requests changes with actionable feedback.                                                                                                |
 
 The project key is optional: without it the agent finds the project with `list_projects` (by the repository) or asks you.
 
@@ -47,7 +47,7 @@ The project key is optional: without it the agent finds the project with `list_p
 
 Tools: `list_projects`, `list_statuses`, `list_tickets`, `get_ticket` (with up to 4 images), `create_ticket`, `update_ticket`, `move_ticket` (by status name), `add_comment`, `attach_file`, `claim_next_ticket`, `claim_ticket`, `submit_for_review`, `review_ticket`, `ask_person` (asks the person a question on a ticket and waits up to 30 minutes for the answer from their phone; with no answer it tells Claude to go on with its best judgment).
 
-`attach_file { ticket, paths, comment? }` (CLI: `tracker attach KEY FILE… [--comment TEXT]`) uploads local files to a ticket, or with a comment to a new comment on it, so results that aren't code (a draft, a CSV, a PDF, an image) can be read on the phone. It takes the tracker's types and sizes, and only files in the current folder or a temp folder (`tmpdir()`, `/tmp`), by their real path: a symlink or `..` leading out, to `~/.ssh` for example, is refused. Every file is checked before any is sent. Reports list them under `OUTPUT:`, which the app shows as **Output**.
+`attach_file { ticket, paths, comment? }` (CLI: `tracker attach KEY FILE… [--comment TEXT]`) uploads local files to a ticket, or with a comment to a new comment on it, so results that aren't code (a draft, a CSV, a PDF, an image) can be read on the phone. It takes the tracker's types and sizes, and only files in the current folder or a temp folder (`tmpdir()`, `/tmp`), by their real path: a symlink or `..` leading out, to `~/.ssh` for example, is refused, and so is a file in a dot-folder (`.ssh`, `.aws`, `.config`, …) and anything from a current folder that is your home folder or above it. Every file is checked and opened before any is sent, and the upload reads what was checked. Reports list them under `OUTPUT:` (`submit_for_review`'s `output`, `tracker submit --output`), which the app shows as **Output**.
 
 ## Environment
 
@@ -101,9 +101,12 @@ tracker watch MOB --name "Dara's MacBook"
 - It only calls out to the tracker over https (or to `localhost`), so it works behind a home router with no open port. It waits for the tracker when it can't reach it, reconnects by itself after a drop, a deploy or sleep, and checks for runs every 20 s besides.
 - It also answers questions from **Ask Claude** in the app. One run of each kind at a time: a ticket run or an Edit question in one lane, an Ask or Plan question in the other, so a question is answered while a ticket run works, but two Claudes never change this folder at once. The prompt goes to `claude -p` on stdin, in this folder. The tracker never sends it a command, folder or flag.
 - The app shows Claude's steps while it works ("Read src/a.ts", "Run npm test"), never a file's contents.
+- The app also shows what it can use: the names of the MCP servers `claude mcp list` says are connected here (not the tracker's own), and the folder's commands (`.claude/commands`) and skills (`.claude/skills`). Names only, never a server's command, address or environment. It reads them at start and every 5 minutes.
 - A ticket in **Need review** goes to a reviewer run instead: Claude reviews it and records the review with `review_ticket`. If the ticket is still in review when Claude finishes, the run ends with "Claude didn't record a review."
 - In a ticket run or an Edit question, a step that needs your OK, or a question Claude asks you, shows on the phone with **Allow** and **Deny** (or the choices), and Claude waits for your answer, up to 30 minutes. Ask and Plan questions are read-only and never ask.
 - `claude` must be installed and logged in here, with the tracker's MCP tools added (above), so Claude can claim, comment and submit. Your Claude Code settings decide what a ticket run may do; `--permission-mode` (for example `acceptEdits`) is passed on to `claude` for ticket runs and Edit questions. Without it, an Edit question gets `default`, so it asks on the phone before each step outside your allow rules.
+- `--max-turns N` caps every run and question at N turns (`claude --max-turns N`). One that reaches the cap stops, and the app shows Claude Code's reason, as "Reached maximum number of turns (N)".
+- When a run ends it sends what Claude Code says it took: time, turns and cost. The app shows "6 min · 23 turns · about $0.84" on the ticket's run and under each answer, and the project's last 30 days in its ••• menu. On a subscription the cost is Claude Code's estimate, hence "about". A follow-up question resumes its chat's session, and Claude Code then counts that session's earlier cost in again; the helper takes it off, and leaves the cost out when it can't tell (after the helper restarted).
 - `--approvals` makes ticket runs ask the same way: a command your allow rules don't cover waits for **Allow** or **Deny** on the phone, and no answer within 30 minutes is a no. Rather than `--permission-mode bypassPermissions` or `dontAsk` (which never ask) or `auto` (where Claude Code decides most steps itself), all refused with `--approvals`, use `tracker watch MOB --approvals --permission-mode acceptEdits`: file edits in this folder go ahead, and commands outside your allow rules ask you.
 - Runs may use the tracker tools their prompt names without asking: `ask_person`, `get_ticket`, `add_comment` and `attach_file`, plus `submit_for_review` in a work run and `review_ticket` in a review run.
 - On macOS it keeps the Mac from idle sleep while it runs (`caffeinate -i`; the screen can still turn off). `--no-keep-awake` turns that off. A closed laptop lid still sleeps unless it is on power with a display.
@@ -134,6 +137,10 @@ The same three commands write a systemd user unit (`~/.config/systemd/user/com.p
 ### A helper that's always on
 
 To start runs while your Mac is off, run the helper on a server or in Docker (`docker/helper/Dockerfile`): see [docs/always-on-helper.md](../../docs/always-on-helper.md).
+
+### A project that isn't code
+
+For a folder with Notion, Gmail or Drive connected rather than code, see [docs/workspaces.md](../../docs/workspaces.md).
 
 ## Workflow: worker → reviewer → person
 

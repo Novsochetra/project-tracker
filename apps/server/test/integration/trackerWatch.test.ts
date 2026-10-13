@@ -1,6 +1,13 @@
 import { randomUUID } from 'node:crypto';
 import { once } from 'node:events';
-import { existsSync, mkdtempSync, readdirSync, realpathSync, writeFileSync } from 'node:fs';
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readdirSync,
+  realpathSync,
+  writeFileSync,
+} from 'node:fs';
 import { connect, createServer, type AddressInfo, type Socket } from 'node:net';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -339,6 +346,8 @@ describe('tracker watch, the command', () => {
 
   it('finds the project from its folder, runs with claude from PATH, asks with --approvals, and Ctrl-C cancels', async () => {
     const folder = realpathSync(mkdtempSync(join(tmpdir(), 'mobile-')));
+    mkdirSync(join(folder, '.claude', 'commands'), { recursive: true });
+    writeFileSync(join(folder, '.claude', 'commands', 'standup.md'), '# Standup');
     const config = mkdtempSync(join(tmpdir(), 'watch-config-'));
     const store = Object.assign(memoryStore(), { path: join(config, 'config.json') });
     await tracker.person.createProject({ name: 'Mobile', key: 'MOB', repo: folder });
@@ -364,6 +373,7 @@ describe('tracker watch, the command', () => {
     );
     const [runner] = await tracker.person.listRunners();
     expect(runner).toMatchObject({ name: 'Test Mac', projectKeys: ['MOB'], online: true });
+    expect(runner?.tools).toEqual({ servers: ['Notion'], commands: ['standup'], skills: [] });
 
     const done = await tracker.person.startRun('MOB-1', { runnerId: runner!.id, prompt: 'Fix it' });
     await vi.waitFor(

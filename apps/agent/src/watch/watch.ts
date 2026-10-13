@@ -40,15 +40,16 @@ function promptTool({ api, folder, settings }: Setup, io: WatchIo): PromptTool {
 }
 
 async function keepWatching(setup: Setup, args: WatchArgs, io: WatchIo, signal: AbortSignal) {
-  const { api, config, folder, settings } = setup;
+  const { api, config, folder, settings, tools } = setup;
   const claude = claudeRunners({
     command: CLAUDE,
     cwd: folder,
     permissionMode: runPermissionMode(args),
+    maxTurns: args.maxTurns,
     write: io.write,
     prompts: promptTool(setup, io),
   });
-  const watcher = createWatcher({ api, log: io.stdout, ...claude }, settings);
+  const watcher = createWatcher({ api, log: io.stdout, tools: tools.current, ...claude }, settings);
   io.stdout(
     `Watching ${settings.projectKey} on ${config.url} as "${settings.name}". ` +
       `Runs started from the app open Claude Code in ${folder}. Leave this open; Ctrl-C stops.`,

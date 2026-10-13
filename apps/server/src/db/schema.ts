@@ -26,6 +26,8 @@ export interface ProjectRow {
   updatedAt: number;
   // Null only on a tracker without an owner yet (services/lookups.ts).
   ownerId: string | null;
+  // 1 when on; 0 or null (projects from before it) when off. No booleans (§2).
+  autoReview: number | null;
 }
 
 export interface StatusRow {
