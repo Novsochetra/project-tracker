@@ -1,10 +1,11 @@
-import type { Run } from '@tracker/shared';
+import { RUN_PROMPT_MAX, type Run } from '@tracker/shared';
 import { describe, expect, it } from 'vitest';
 import { DARA, makeRun, makeRunner } from '../../api/test/runFixtures';
 import {
   helpersFor,
   pickHelper,
   runFooter,
+  runPromptTooLong,
   sentText,
   shownRun,
   STOPPED_SHOWN_MS,
@@ -76,6 +77,15 @@ describe('run texts', () => {
       'Claude stopped: Your computer stopped answering.',
     );
     expect(stoppedText(makeRun({ error: null }))).toBe('Claude stopped.');
+  });
+});
+
+describe('runPromptTooLong', () => {
+  it('says nothing up to the limit, the limit and the length past it', () => {
+    expect(runPromptTooLong('x'.repeat(RUN_PROMPT_MAX))).toBeNull();
+    expect(runPromptTooLong('x'.repeat(RUN_PROMPT_MAX + 1234))).toBe(
+      'A run takes a prompt of up to 100,000 characters. This one has 101,234: shorten it to run it, or copy it.',
+    );
   });
 });
 

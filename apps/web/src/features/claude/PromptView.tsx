@@ -9,6 +9,7 @@ import { canShare, sharePrompt } from '../../lib/share';
 import { Sheet, SheetTextButton } from '../../overlays';
 import { PromptFooter } from './PromptFooter';
 import styles from './PromptSheet.module.css';
+import { runPromptTooLong } from './runs';
 import {
   COPY_BLOCKED,
   copyPromptFlow,
@@ -49,6 +50,8 @@ export function PromptView({
   const fieldRef = useRef<HTMLTextAreaElement>(null);
   const [copyOutcome, reportCopy] = useCopyState();
   const hasPrompt = Boolean(draft.result?.text);
+  const offersRun = run?.footer.kind === 'run';
+  const tooLong = offersRun ? runPromptTooLong(draft.text) : null;
   const copy = async () =>
     reportCopy(
       await copyPromptFlow({
@@ -86,6 +89,7 @@ export function PromptView({
             disabled={!draft.text.trim()}
             onCopy={() => void copy()}
             run={run}
+            runBlocked={tooLong !== null}
             onRun={() => run?.start(draft.text, role)}
           />
         ) : undefined
@@ -97,7 +101,8 @@ export function PromptView({
           draft={draft}
           fieldRef={fieldRef}
           copyFailed={copyOutcome === 'failed'}
-          offersRun={run?.footer.kind === 'run'}
+          offersRun={offersRun}
+          tooLong={tooLong}
           role={role}
           {...rest}
         />
@@ -112,6 +117,7 @@ interface PromptBodyProps {
   fieldRef: RefObject<HTMLTextAreaElement | null>;
   copyFailed: boolean;
   offersRun: boolean;
+  tooLong: string | null;
   role: RunRole;
   boxNote?: ReactNode;
   sendSwitch?: ReactNode;
@@ -124,6 +130,7 @@ function PromptBody({
   fieldRef,
   copyFailed,
   offersRun,
+  tooLong,
   role,
   boxNote,
   sendSwitch,
@@ -154,6 +161,7 @@ function PromptBody({
         />
       )}
       {hasPrompt && boxNote}
+      {tooLong && <Alert>{tooLong}</Alert>}
       {sendSwitch}
       {copyFailed && <Alert>{COPY_BLOCKED}</Alert>}
       {sendError && <Alert>{errorMessage(sendError)}</Alert>}

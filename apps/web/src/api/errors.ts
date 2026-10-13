@@ -1,4 +1,5 @@
 import { ApiError } from '@tracker/client';
+import { PromptTooLongError } from './promptTooLong';
 
 export const NETWORK_ERROR_MESSAGE = "Can't reach the tracker. Check your connection.";
 export const FALLBACK_ERROR_MESSAGE = 'Something went wrong. Try again.';
@@ -32,5 +33,6 @@ export const isNetworkError = (error: unknown): boolean =>
 export function errorMessage(error: unknown): string {
   if (isNetworkError(error)) return NETWORK_ERROR_MESSAGE;
   if (isApiError(error) && error.message) return error.message;
+  if (error instanceof PromptTooLongError) return error.message;
   return FALLBACK_ERROR_MESSAGE;
 }

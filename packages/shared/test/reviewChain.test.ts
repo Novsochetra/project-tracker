@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { RUN_PROMPT_MAX } from '../src/domain/run';
 import {
   chainRound,
   chainStopReason,
@@ -11,6 +12,7 @@ const facts = (changes: Partial<ChainFacts> = {}): ChainFacts => ({
   category: 'in_review',
   personMoved: false,
   helperOnline: true,
+  promptLength: 1_000,
   ...changes,
 });
 
@@ -55,6 +57,18 @@ describe('nextChainStep', () => {
     });
   });
 
+  it('stops when the next prompt is longer than Run would send, rather than queue it', () => {
+    expect(nextChainStep(facts({ promptLength: RUN_PROMPT_MAX }))).toEqual({
+      kind: 'queue',
+      role: 'review',
+      round: 1,
+    });
+    expect(nextChainStep(facts({ promptLength: RUN_PROMPT_MAX + 1 }))).toEqual({
+      kind: 'stop',
+      reason: 'too_long',
+    });
+  });
+
   it('ends quietly where the chain has nothing more to do', () => {
     const ends: Partial<ChainFacts>[] = [
       { run: { role: 'review', round: 1 }, category: 'reviewed' },
@@ -81,5 +95,8 @@ describe('chainStopReason', () => {
     );
     expect(chainStopReason('moved', 'Mac')).toBe('You moved the ticket.');
     expect(chainStopReason('offline', 'Mac')).toBe("Mac can't take the next run.");
+    expect(chainStopReason('too_long', 'Mac')).toBe('The next prompt is too long to run.');
+    expect(chainStopReason('paused', 'Mac')).toBe('');
+    expect(chainStopReason('constructor', 'Mac')).toBe('');
   });
 });

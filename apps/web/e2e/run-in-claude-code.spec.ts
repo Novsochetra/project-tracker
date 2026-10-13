@@ -1,5 +1,12 @@
 import { randomUUID } from 'node:crypto';
-import { permissionLabel, type RunStepInput } from '@tracker/shared';
+import {
+  LABEL_INSTRUCTIONS_MAX,
+  permissionLabel,
+  PROJECT_INSTRUCTIONS_MAX,
+  TICKET_DESCRIPTION_MAX,
+  TICKET_LABELS_MAX,
+  type RunStepInput,
+} from '@tracker/shared';
 import { doubleTap, doubleTapViewports } from './doubleTap';
 import { expect, isPhone, test } from './fixtures';
 import { readActionSheet, seedProject, settledScreenshot, toast } from './helpers';
@@ -116,6 +123,39 @@ test("reviews Claude's work automatically when the project says so, up to 2 roun
   );
   await expect(card.getByRole('button', { name: 'Try again' })).toBeVisible();
   await settledScreenshot(page, info.outputPath(`auto-review-stopped-${info.project.name}.png`));
+});
+
+test('says why a prompt is too long to run and runs it once shortened', async ({
+  page,
+  api,
+}, info) => {
+  await seedProject(api, 'Mobile app', 'MOB', [
+    { title: 'Crash when rotating', description: 'd'.repeat(TICKET_DESCRIPTION_MAX) },
+  ]);
+  await api.updateProject('MOB', { instructions: 'p'.repeat(PROJECT_INSTRUCTIONS_MAX) });
+  const labelIds: string[] = [];
+  for (let index = 0; index < TICKET_LABELS_MAX; index += 1) {
+    const instructions = 'l'.repeat(LABEL_INSTRUCTIONS_MAX);
+    labelIds.push((await api.createLabel('MOB', { name: `Label ${index}`, instructions })).id);
+  }
+  await api.updateTicket('MOB-1', { labelIds });
+  await api.registerRunner(randomUUID(), { name: HELPER, projectKeys: ['MOB'] });
+  await page.goto('/p/MOB/1');
+  await page.getByRole('button', { name: sendButton(info.project.name), exact: true }).click();
+  const dialog = page.getByRole('dialog', { name: 'Send to Claude Code' });
+  const run = dialog.getByRole('button', { name: 'Run in Claude Code' });
+
+  await expect(dialog.getByRole('alert')).toHaveText(
+    /^A run takes a prompt of up to 100,000 characters\. This one has 1\d\d,\d{3}: shorten it to run it, or copy it\.$/,
+  );
+  await expect(run).toBeDisabled();
+  await expect(dialog.getByRole('button', { name: 'Copy prompt' })).toBeEnabled();
+  await settledScreenshot(page, info.outputPath(`prompt-too-long-${info.project.name}.png`));
+
+  await dialog.getByRole('textbox', { name: 'Prompt for Claude Code' }).fill('Fix MOB-1, please.');
+  await expect(dialog.getByRole('alert')).toHaveCount(0);
+  await run.click();
+  await expect(toast(page, `Sent to Claude on ${HELPER}`)).toBeVisible();
 });
 
 // Long descriptions put the bottom bar's Send to Claude under Run, short ones the comment box or

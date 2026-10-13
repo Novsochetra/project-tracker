@@ -1,5 +1,5 @@
-import { AUTO_REVIEW_ROUNDS, type ChainStop } from '../domain/autoReview';
-import type { RunRole } from '../domain/run';
+import { AUTO_REVIEW_ROUNDS, CHAIN_STOPS, type ChainStop } from '../domain/autoReview';
+import { RUN_PROMPT_MAX, type RunRole } from '../domain/run';
 import type { StatusCategory } from '../domain/status';
 
 export interface EndedChainRun {
@@ -13,6 +13,7 @@ export interface ChainFacts {
   category: StatusCategory;
   personMoved: boolean;
   helperOnline: boolean;
+  promptLength: number;
 }
 
 export type ChainStep =
@@ -31,12 +32,13 @@ function nextRun({ role, round }: EndedChainRun, category: StatusCategory): Chai
 }
 
 // A person who moved the ticket took it over, so nothing more starts, wherever it is now.
-export function nextChainStep({ run, category, personMoved, helperOnline }: ChainFacts): ChainStep {
-  if (personMoved) return { kind: 'stop', reason: 'moved' };
-  const next = nextRun(run, category);
+export function nextChainStep(facts: ChainFacts): ChainStep {
+  if (facts.personMoved) return { kind: 'stop', reason: 'moved' };
+  const next = nextRun(facts.run, facts.category);
   if (next.kind !== 'queue') return next;
   if (next.round > AUTO_REVIEW_ROUNDS) return { kind: 'stop', reason: 'rounds' };
-  if (!helperOnline) return { kind: 'stop', reason: 'offline' };
+  if (!facts.helperOnline) return { kind: 'stop', reason: 'offline' };
+  if (facts.promptLength > RUN_PROMPT_MAX) return { kind: 'stop', reason: 'too_long' };
   return next;
 }
 
@@ -51,7 +53,12 @@ const STOP_REASONS: Record<ChainStop, (runnerName: string) => string> = {
   rounds: () => `The review still asks for changes after ${AUTO_REVIEW_ROUNDS} rounds.`,
   moved: () => 'You moved the ticket.',
   offline: (runnerName) => `${runnerName} can't take the next run.`,
+  too_long: () => 'The next prompt is too long to run.',
 };
 
-export const chainStopReason = (stop: ChainStop, runnerName: string): string =>
-  STOP_REASONS[stop](runnerName);
+const isChainStop = (stop: string): stop is ChainStop =>
+  (CHAIN_STOPS as readonly string[]).includes(stop);
+
+// A tracker newer than this code can send a reason it has no words for: that one says none.
+export const chainStopReason = (stop: string, runnerName: string): string =>
+  isChainStop(stop) ? STOP_REASONS[stop](runnerName) : '';

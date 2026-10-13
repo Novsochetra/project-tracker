@@ -18,8 +18,8 @@ export interface LabelMenuProps {
   onClose: () => void;
 }
 
-// The dropdown's look, but a ticket has any number of labels: a pick toggles one and the menu
-// stays open for the next.
+// The dropdown's look, but a ticket has several labels: a pick toggles one and the menu stays
+// open for the next.
 export function LabelMenu(props: LabelMenuProps) {
   return (
     <FloatingPortal open={props.open}>

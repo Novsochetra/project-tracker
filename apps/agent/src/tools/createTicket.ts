@@ -1,6 +1,13 @@
 import { z } from 'zod';
 import { formatTicketLine, statusNameOf } from '../format/tickets';
-import { description, labelNames, priority, projectKey, statusName, title } from './fields';
+import {
+  description,
+  newTicketLabelNames,
+  priority,
+  projectKey,
+  statusName,
+  title,
+} from './fields';
 import { labelsByName } from './labelsByName';
 import { statusByName } from './statusByName';
 import { defineTool } from './tool';
@@ -20,7 +27,7 @@ export const createTicket = defineTool({
       .describe('Details, steps to reproduce or acceptance criteria. Plain text.'),
     priority: priority.optional(),
     status: statusName.optional(),
-    labels: labelNames.optional(),
+    labels: newTicketLabelNames.optional(),
   }),
   readOnly: false,
   async handler(client, input) {

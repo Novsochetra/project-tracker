@@ -63,9 +63,9 @@ describe.each(DIALECTS)('labels (%s)', (dialect) => {
     );
     const long = await api.post<ErrorBody>('/api/projects/MA/labels', {
       name: 'x',
-      instructions: 'a'.repeat(20_001),
+      instructions: 'a'.repeat(4_001),
     });
-    expect(long.body.error.message).toBe('Instructions can be up to 20,000 characters.');
+    expect(long.body.error.message).toBe('Instructions can be up to 4,000 characters.');
   });
 
   it('edits, reorders and deletes labels', async () => {
@@ -129,6 +129,19 @@ describe.each(DIALECTS)('labels (%s)', (dialect) => {
     await api.client().createTicket('MA', { title: 'y' });
     const update = await api.patch<ErrorBody>('/api/tickets/MA-1', { labelIds: ['missing'] });
     expect(update.status).toBe(400);
+  });
+
+  it('puts at most 10 labels on a ticket', async () => {
+    const ids: string[] = [];
+    for (let index = 0; index < 11; index += 1) ids.push((await makeLabel(`L${index}`)).id);
+    const create = await api.post<ErrorBody>('/api/projects/MA/tickets', {
+      title: 'x',
+      labelIds: ids,
+    });
+    expect(create.status).toBe(400);
+    expect(create.body.error.message).toBe('A ticket can have up to 10 labels.');
+    const created = await api.client().createTicket('MA', { title: 'y', labelIds: ids.slice(1) });
+    expect(created.labelIds).toHaveLength(10);
   });
 
   it('lists labels on the board and filters lists by label name', async () => {

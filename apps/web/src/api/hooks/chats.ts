@@ -1,14 +1,16 @@
 import { useMutation, useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query';
-import type {
-  AskInput,
-  CardTicketInput,
-  Chat,
-  ChatDetail,
-  Run,
-  StartChatInput,
+import {
+  RUN_PROMPT_MAX,
+  type AskInput,
+  type CardTicketInput,
+  type Chat,
+  type ChatDetail,
+  type Run,
+  type StartChatInput,
 } from '@tracker/shared';
 import { useApi } from '../context';
 import { isNotFound } from '../errors';
+import { PromptTooLongError } from '../promptTooLong';
 import { refreshProjectList } from '../projectListRefresh';
 import { queryKeys } from '../queryKeys';
 import type { TrackerMutation, TrackerQuery } from '../types';
@@ -127,6 +129,7 @@ export function useRunCardTicket(): TrackerMutation<Run, RunCardTicketVariables>
   return useMutation({
     mutationFn: async ({ ticketKey, runnerId }: RunCardTicketVariables) => {
       const { text, role } = await client.getTicketPrompt(ticketKey);
+      if (text.length > RUN_PROMPT_MAX) throw new PromptTooLongError(text.length);
       return client.startRun(ticketKey, { runnerId, prompt: text, role });
     },
     onSuccess: (run) => showRun(queryClient, run),
