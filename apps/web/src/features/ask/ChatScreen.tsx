@@ -12,6 +12,7 @@ import { ChatView } from './ChatView';
 export interface ChatScreenProps {
   projectKey: string;
   chatId: string | null;
+  ticketNum?: number | undefined;
 }
 
 // Another user's chat answers 404 like a deleted one, and both fall back to the chat list.
@@ -23,16 +24,19 @@ function useLeaveMissingChat(error: Error | null, projectKey: string): void {
   }, [missing, projectKey, replace]);
 }
 
-export function ChatScreen({ projectKey, chatId }: ChatScreenProps) {
+export function ChatScreen({ projectKey, chatId, ticketNum }: ChatScreenProps) {
   const query = useChat(chatId);
   useLeaveMissingChat(query.error, projectKey);
   if (chatId === null || query.data) {
-    return <ChatView projectKey={projectKey} chatId={chatId} detail={query.data ?? null} />;
+    const detail = query.data ?? null;
+    return (
+      <ChatView projectKey={projectKey} chatId={chatId} detail={detail} ticketNum={ticketNum} />
+    );
   }
   const failed = query.error !== null && !isNotFound(query.error);
   return (
     <>
-      <ChatLoadingBar chatId={chatId} />
+      <ChatLoadingBar projectKey={projectKey} chatId={chatId} ticketNum={ticketNum} />
       {failed ? (
         <EmptyState
           icon={CircleAlert}

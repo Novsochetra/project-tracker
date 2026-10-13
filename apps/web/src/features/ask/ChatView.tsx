@@ -1,13 +1,14 @@
 import { useMemo } from 'react';
 import type { ChatDetail } from '@tracker/shared';
-import { ASK_LABEL, NEW_CHAT_LABEL } from '../../app/crumbs';
+import { NEW_CHAT_LABEL } from '../../app/crumbs';
 import { NavBar, NavBarSpacer } from '../../navigation';
 import { savedAskOptions } from './askOptions';
 import { ChatFooterArea } from './ChatFooterArea';
 import { ChatOptionsSheet } from './ChatOptionsSheet';
 import styles from './ChatScreen.module.css';
-import { ASK_INTRO } from './copy';
+import { ChatTicketLink } from './ChatTicketLink';
 import { stoppedRunsOf } from './thread';
+import { chatBackLabel, chatIntro } from './ticketChat';
 import { MessageList } from './MessageList';
 import { useAskHelper } from './useAskHelper';
 import { useScrollToEnd } from './useScrollToEnd';
@@ -18,9 +19,11 @@ export interface ChatViewProps {
   projectKey: string;
   chatId: string | null;
   detail: ChatDetail | null;
+  // The ticket the screen was opened from, whose screen Back returns to.
+  ticketNum?: number | undefined;
 }
 
-export function ChatView({ projectKey, chatId, detail }: ChatViewProps) {
+export function ChatView({ projectKey, chatId, detail, ticketNum }: ChatViewProps) {
   const helper = useAskHelper(projectKey, detail?.run);
   const messages = detail?.messages ?? [];
   useScrollToEnd(`${messages.length}:${helper.footer.kind}`);
@@ -32,7 +35,7 @@ export function ChatView({ projectKey, chatId, detail }: ChatViewProps) {
     <div className={styles.screen}>
       <NavBar
         title={detail?.chat.title ?? NEW_CHAT_LABEL}
-        backLabel={ASK_LABEL}
+        backLabel={chatBackLabel(projectKey, ticketNum)}
         right={
           detail ? (
             <ChatOptionsSheet
@@ -46,8 +49,9 @@ export function ChatView({ projectKey, chatId, detail }: ChatViewProps) {
         }
       />
       <div ref={threadRef} className={styles.thread}>
+        <ChatTicketLink projectKey={projectKey} detail={detail} ticketNum={ticketNum} />
         {messages.length === 0 ? (
-          <p className={styles.intro}>{ASK_INTRO}</p>
+          <p className={styles.intro}>{chatIntro(ticketNum)}</p>
         ) : (
           <MessageList
             chatId={chatId ?? ''}

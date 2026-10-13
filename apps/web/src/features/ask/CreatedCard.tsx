@@ -1,21 +1,17 @@
-import { parseTicketKey, PRIORITY_LABELS, type Runner, type TicketCard } from '@tracker/shared';
+import { PRIORITY_LABELS, type Runner, type TicketCard } from '@tracker/shared';
 import { Ticket } from 'lucide-react';
 import type { MouseEvent } from 'react';
 import { useTicket } from '../../api';
 import { Icon, PriorityBars } from '../../components';
-import { routePath, useNavigation, type Route } from '../../navigation';
+import { routePath, useNavigation } from '../../navigation';
 import { CardRun } from './CardRun';
 import styles from './TicketCard.module.css';
+import { ticketRoute } from './ticketChat';
 
 export interface CreatedCardProps {
   ticketKey: string;
   card: TicketCard;
   helper: Runner | null;
-}
-
-function ticketRoute(ticketKey: string): Route | null {
-  const parsed = parseTicketKey(ticketKey);
-  return parsed ? { name: 'ticket', key: parsed.projectKey, num: parsed.num } : null;
 }
 
 // The ticket as the tracker has it: the person may have changed the card before Create.

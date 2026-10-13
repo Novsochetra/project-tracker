@@ -1,13 +1,17 @@
 import { render, screen, within } from '@testing-library/react';
+import { MemoryRouter } from 'react-router';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { statuses, STATUS } from '../../src/api/test/fixtures';
 import { SheetsContext, type SheetsApi } from '../../src/app/sheets/context';
 import { TicketBottomBar } from '../../src/features/ticket/TicketBottomBar';
+import { NavigationProvider } from '../../src/navigation';
 import { mockPhone } from '../../src/overlays/testing';
 import { phoneRule, phoneStyle, pixels } from './phoneCss';
 
 // At 320px the Ticket screen's bar needed 346px: "Send to Claude" ended 10px past the screen's
-// edge, and a reviewed ticket's primary read "Move to D…" with its check icon squeezed.
+// edge, and a reviewed ticket's primary read "Move to D…" with its check icon squeezed. Since
+// PT-184 Ask Claude leads the bar and it and Paste report are 48px squares, as on the Project
+// screen.
 
 const SCREEN = 'features/ticket/TicketScreen.module.css';
 const BUTTON = 'components/Button/Button.module.css';
@@ -16,30 +20,33 @@ const WIDTHS = [320, 360, 375];
 // The labels in the bar's 15px Geist, measured in WebKit: medium for the secondary button,
 // semibold for the primary.
 const LABEL_WIDTH: Record<string, number> = {
-  'Paste report': 86.6,
-  Paste: 40.1,
   'Send to Claude': 109.8,
   'Move to Done': 98.9,
 };
 const ICON = 20;
 const BORDERS = 2;
 const GUTTER = 16;
+const BAR_SQUARE = 48;
 
 const done = statuses.find((status) => status.id === STATUS.done)!;
 
 function renderBar(reviewed: boolean) {
   const sheets: SheetsApi = { open: vi.fn(), close: vi.fn(), current: null };
   const { container } = render(
-    <SheetsContext.Provider value={sheets}>
-      <TicketBottomBar
-        ticketKey="MOB-3"
-        projectKey="MOB"
-        done={reviewed ? { status: done, move: vi.fn() } : null}
-      />
-    </SheetsContext.Provider>,
+    <MemoryRouter initialEntries={['/p/MOB/3']}>
+      <NavigationProvider>
+        <SheetsContext.Provider value={sheets}>
+          <TicketBottomBar
+            ticketKey="MOB-3"
+            projectKey="MOB"
+            done={reviewed ? { status: done, move: vi.fn() } : null}
+          />
+        </SheetsContext.Provider>
+      </NavigationProvider>
+    </MemoryRouter>,
   );
-  const [secondary, primary] = within(container).getAllByRole('button');
-  return { secondary: secondary!, primary: primary! };
+  const [ask, paste, primary] = within(container).getAllByRole('button');
+  return { ask: ask!, paste: paste!, primary: primary! };
 }
 
 const shows = (element: Element, width: number) =>
@@ -67,30 +74,16 @@ function contentWidth(button: HTMLElement, width: number): number {
   return 2 * pixels(side) + BORDERS + ICON + pixels(style.get('gap')) + label;
 }
 
-interface Item {
-  button: HTMLElement;
-  // The Done button may shrink below its content (min-width: 0, ellipsis); that clips its text.
-  shrinks: boolean;
-}
-
-// Flex 1 : 1.35 from a basis of 0, as the browser lays it out: a button that doesn't shrink keeps
-// its content's width and the other one takes the rest.
-function layOut(items: Item[], width: number) {
-  const bar = items[0]!.button.closest('[data-bottom-bar]')!;
-  const room = width - 2 * GUTTER - pixels(phoneStyle(bar, BAR, width).get('gap'));
-  const sized = items.map(({ button, shrinks }) => {
-    const content = contentWidth(button, width);
-    const grow = Number(phoneStyle(button, SCREEN, width).get('flex-grow') ?? '1');
-    return { content, grow, min: shrinks ? 0 : content };
-  });
-  const grows = sized.reduce((sum, item) => sum + item.grow, 0);
-  const frozen = sized.map((item) => (room * item.grow) / grows < item.min);
-  const taken = sized.reduce((sum, item, index) => sum + (frozen[index] ? item.min : 0), 0);
-  const freeGrow = sized.reduce((sum, item, index) => sum + (frozen[index] ? 0 : item.grow), 0);
-  const widths = sized.map((item, index) =>
-    frozen[index] ? item.min : ((room - taken) * item.grow) / freeGrow,
-  );
-  return { room, sized, widths };
+// The squares keep their width and the primary takes the rest of the bar.
+function primaryRoom(squares: HTMLElement[], width: number): number {
+  const bar = squares[0]!.closest('[data-bottom-bar]')!;
+  const gap = pixels(phoneStyle(bar, BAR, width).get('gap'));
+  const taken = squares.reduce((sum, square) => {
+    const style = phoneStyle(square, SCREEN, width);
+    expect(style.get('flex')).toBe('none');
+    return sum + BAR_SQUARE + gap;
+  }, 0);
+  return width - 2 * GUTTER - taken;
 }
 
 let restore: () => void;
@@ -105,27 +98,20 @@ describe('regression: the Ticket bar fits 320, 360 and 375px phones', () => {
   for (const reviewed of [false, true]) {
     const bar = reviewed ? 'a reviewed ticket' : 'a ticket';
 
-    it(`keeps both buttons of ${bar} inside the 16px gutters with their text whole`, () => {
-      const { secondary, primary } = renderBar(reviewed);
-      const items = [
-        { button: secondary, shrinks: false },
-        { button: primary, shrinks: reviewed },
-      ];
+    it(`keeps the buttons of ${bar} inside the 16px gutters with the primary's text whole`, () => {
+      const { ask, paste, primary } = renderBar(reviewed);
       for (const width of WIDTHS) {
-        const { room, sized, widths } = layOut(items, width);
-        const used = widths.reduce((sum, itemWidth) => sum + itemWidth, 0);
-        expect(used, `${width}px`).toBeLessThanOrEqual(room + 0.5);
-        sized.forEach(({ content }, index) => {
-          const label = visibleLabel(items[index]!.button, width);
-          expect(widths[index], `${label} at ${width}px`).toBeGreaterThanOrEqual(content - 0.5);
-        });
+        const label = visibleLabel(primary, width);
+        expect(primaryRoom([ask, paste], width), `${label} at ${width}px`).toBeGreaterThanOrEqual(
+          contentWidth(primary, width) - 0.5,
+        );
       }
     });
 
     // Voice Control users say the words they see, so a shorter label must be part of the name.
     it(`keeps every visible label of ${bar} inside its button's accessible name`, () => {
-      const { secondary, primary } = renderBar(reviewed);
-      for (const button of [secondary, primary]) {
+      const { ask, paste, primary } = renderBar(reviewed);
+      for (const button of [ask, paste, primary]) {
         const name = (button.getAttribute('aria-label') ?? button.textContent ?? '').toLowerCase();
         for (const width of WIDTHS) {
           expect(name).toContain(visibleLabel(button, width).toLowerCase());
@@ -138,16 +124,16 @@ describe('regression: the Ticket bar fits 320, 360 and 375px phones', () => {
   // which would show as a wide space inside "Paste report".
   it('keeps every label one flex item beside its icon', () => {
     for (const reviewed of [false, true]) {
-      for (const button of Object.values(renderBar(reviewed))) {
-        const items = [...button.childNodes].filter((node) => node.nodeName !== 'svg');
-        expect(items, button.textContent ?? '').toHaveLength(1);
-      }
+      const { primary } = renderBar(reviewed);
+      const items = [...primary.childNodes].filter((node) => node.nodeName !== 'svg');
+      expect(items, primary.textContent ?? '').toHaveLength(1);
     }
   });
 
   it('keeps the accessible names', () => {
-    const { secondary, primary } = renderBar(false);
-    expect(screen.getByRole('button', { name: 'Paste report' })).toBe(secondary);
+    const { ask, paste, primary } = renderBar(false);
+    expect(screen.getByRole('button', { name: 'Ask Claude' })).toBe(ask);
+    expect(screen.getByRole('button', { name: 'Paste report' })).toBe(paste);
     expect(screen.getByRole('button', { name: 'Send to Claude' })).toBe(primary);
   });
 

@@ -16,7 +16,9 @@ function screenFor(route: Route): ReactNode {
     case 'chats':
       return <ChatsScreen projectKey={route.key} />;
     case 'chat':
-      return <ChatScreen projectKey={route.key} chatId={route.chatId} />;
+      return (
+        <ChatScreen projectKey={route.key} chatId={route.chatId} ticketNum={route.ticketNum} />
+      );
   }
 }
 

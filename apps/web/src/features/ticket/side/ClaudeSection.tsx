@@ -1,9 +1,11 @@
 import { formatRelative, type TicketDetail } from '@tracker/shared';
-import { ClipboardCheck, Terminal } from 'lucide-react';
+import { ClipboardCheck, MessageCircle, Terminal } from 'lucide-react';
+import { ASK_LABEL } from '../../../app/crumbs';
 import { useSheets } from '../../../app/sheets/context';
 import { Button } from '../../../components';
 import { lastReportAt } from '../activity/activityItems';
 import { promptSheet, reportSheet } from '../ticketSheets';
+import { useAskClaude } from '../useAskClaude';
 import styles from './SidePanel.module.css';
 
 export interface ClaudeSectionProps {
@@ -16,6 +18,7 @@ export interface ClaudeSectionProps {
 export function ClaudeSection({ detail, now, offersDone }: ClaudeSectionProps) {
   const sheets = useSheets();
   const { ticket, project } = detail;
+  const askClaude = useAskClaude(ticket.key);
   const reportAt = lastReportAt(detail.activity);
   return (
     <div className={styles.section}>
@@ -28,6 +31,9 @@ export function ClaudeSection({ detail, now, offersDone }: ClaudeSectionProps) {
         onClick={() => sheets.open(promptSheet(ticket.key))}
       >
         Send to Claude Code
+      </Button>
+      <Button size="lg" fullWidth icon={MessageCircle} onClick={askClaude}>
+        {ASK_LABEL}
       </Button>
       <Button
         size="lg"

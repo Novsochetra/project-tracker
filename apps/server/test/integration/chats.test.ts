@@ -65,6 +65,7 @@ describe.each(DIALECTS)('chats with Claude Code (%s)', (dialect) => {
       id: expect.any(String),
       projectKey: 'MOB',
       title: 'Where are runs queued?',
+      ticket: null,
       options: { model: 'default', mode: 'ask', effort: 'default' },
       waiting: false,
       createdAt: 1_000_000,

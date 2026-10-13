@@ -1,4 +1,4 @@
-import { askInput, cardTicketInput } from '@tracker/shared';
+import { askInput, cardTicketInput, startChatInput } from '@tracker/shared';
 import { Hono, type Context } from 'hono';
 import { requireScope } from '../../auth/scope';
 import { askInChat, getChat, listChats, startChat } from '../../services/chats';
@@ -16,7 +16,7 @@ export const chatRoutes = (ctx: ServiceContext) =>
     .get('/projects/:key/chats', async (c) =>
       c.json(await listChats(ctx, scope(c), c.req.param('key'))),
     )
-    .post('/projects/:key/chats', personOnly, jsonBody(askInput), async (c) =>
+    .post('/projects/:key/chats', personOnly, jsonBody(startChatInput), async (c) =>
       c.json(await startChat(ctx, scope(c), c.req.param('key'), c.req.valid('json')), 201),
     )
     .get('/chats/:id', async (c) => c.json(await getChat(ctx, scope(c), c.req.param('id'))))
