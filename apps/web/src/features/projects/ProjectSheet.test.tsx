@@ -224,7 +224,7 @@ describe('Edit project sheet', () => {
     const toggle = within(dialog).getByRole('switch', { name: 'Hide name' });
     expect(toggle).toHaveAttribute('aria-checked', 'false');
     expect(toggle).toHaveAccessibleDescription(
-      "Shows the project's key instead of its name, and hides its description, everywhere but here. Claude still gets the name.",
+      "Shows the project's key instead of its name, and hides its description and folder. This sheet and the prompt for Claude Code still show them.",
     );
     await user.click(toggle);
     expect(within(dialog).getByLabelText('Project name')).toHaveValue('Website');

@@ -4,7 +4,7 @@ import type { ProjectSwitch } from './projectForm';
 export const PROJECT_SWITCH_TEXT: Record<ProjectSwitch, { label: string; hint: string }> = {
   hideName: {
     label: 'Hide name',
-    hint: "Shows the project's key instead of its name, and hides its description, everywhere but here. Claude still gets the name.",
+    hint: "Shows the project's key instead of its name, and hides its description and folder. This sheet and the prompt for Claude Code still show them.",
   },
   autoReview: {
     label: 'Review automatically',

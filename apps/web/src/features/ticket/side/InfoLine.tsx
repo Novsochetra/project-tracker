@@ -14,7 +14,7 @@ export function InfoLine({ detail, now }: { detail: TicketDetail; now: number })
     <p className={styles.infoLine}>
       <span className={styles.project}>
         <span className={styles.square} style={{ background: project.color }} />
-        <span className="visually-hidden">Project </span>
+        {!project.hideName && <span className="visually-hidden">Project </span>}
         <span className={styles.projectName}>{projectDisplayName(project)}</span>
       </span>{' '}
       <span className={styles.part}>Created {formatFullDate(ticket.createdAt)}</span>{' '}
