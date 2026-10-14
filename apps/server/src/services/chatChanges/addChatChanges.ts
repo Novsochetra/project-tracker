@@ -25,6 +25,7 @@ export async function addChatChanges(
     chatId: run.chatId,
     version: run.id,
     runnerId: input.runnerId,
+    tree: input.tree,
     diff: input.diff,
     cut: input.cut ? 1 : 0,
     files: JSON.stringify(input.files),

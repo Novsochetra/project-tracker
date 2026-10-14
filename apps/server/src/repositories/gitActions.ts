@@ -61,12 +61,18 @@ export const endGitActions = (
     .returningAll()
     .execute();
 
-export async function endGitAction(db: Db, id: string, ending: GitActionEnding): Promise<boolean> {
+// Only from the status it was read in, so an end that races another changes nothing.
+export async function endGitAction(
+  db: Db,
+  id: string,
+  ending: GitActionEnding,
+  from: 'queued' | 'running' = 'running',
+): Promise<boolean> {
   const result = await db
     .updateTable('chatGitActions')
     .set(ending)
     .where('id', '=', id)
-    .where('status', '=', 'running')
+    .where('status', '=', from)
     .executeTakeFirst();
   return Number(result.numUpdatedRows) > 0;
 }

@@ -41,7 +41,12 @@ const reportedBranch = z
 
 const changedFile = z.object({ path, dirtyBefore: z.boolean() });
 
+// A git object id, SHA-1 or SHA-256.
+const objectId = z.string().regex(/^[0-9a-f]{40}(?:[0-9a-f]{24})?$/);
+
 const changesBody = {
+  // The folder's snapshot the diff was read from: a commit takes the files only as they were then.
+  tree: objectId,
   diff: z.string().max(RUN_DIFF_MAX),
   cut: z.boolean(),
   files: z.array(changedFile).max(CHAT_FILES_MAX),

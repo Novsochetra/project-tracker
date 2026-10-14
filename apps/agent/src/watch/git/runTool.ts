@@ -29,16 +29,31 @@ const QUIET_ENV = {
 
 const keepEnd = (text: string, max: number) => (text.length > max ? text.slice(-max) : text);
 
+// A group of its own, so a deadline stops the hooks and helpers git starts too.
+function killGroup(pid: number | undefined) {
+  try {
+    if (pid !== undefined) process.kill(-pid, 'SIGKILL');
+  } catch {
+    // It ended already.
+  }
+}
+
 // Arguments go to the program as they are, with no shell, so a branch name or a message can't
 // run anything. A program that isn't installed rejects.
 export function runTool(command: string, args: readonly string[], options: ToolOptions) {
   return new Promise<ToolOutput>((resolve, reject) => {
+    if (options.signal.aborted) return reject(new Error('Stopped before it started.'));
     const child = spawn(command, [...args], {
       cwd: options.cwd,
       env: { ...process.env, ...QUIET_ENV, ...options.env },
       stdio: ['ignore', 'pipe', 'pipe'],
-      signal: options.signal,
+      detached: true,
     });
+    const stop = () => {
+      killGroup(child.pid);
+      reject(new Error('Stopped at its deadline.'));
+    };
+    options.signal.addEventListener('abort', stop, { once: true });
     let out = '';
     let err = '';
     child.stdout.setEncoding('utf8');
@@ -50,6 +65,9 @@ export function runTool(command: string, args: readonly string[], options: ToolO
       err = keepEnd(err + chunk, ERR_MAX);
     });
     child.on('error', reject);
-    child.on('close', (code) => resolve({ code, out, err }));
+    child.on('close', (code) => {
+      options.signal.removeEventListener('abort', stop);
+      resolve({ code, out, err });
+    });
   });
 }

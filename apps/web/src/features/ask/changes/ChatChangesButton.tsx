@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useChatChanges } from '../../../api/hooks/chatChanges';
 import { Button } from '../../../components';
 import styles from './ChatChanges.module.css';
+import { currentAction } from './actionNote';
 import { ChatChangesSheet } from './ChatChangesSheet';
 import { CHANGES_LABEL } from './copy';
 
@@ -16,7 +17,7 @@ type Shown = ChatChangesAnswer & { changes: ChatChanges };
 
 // After a commit nothing may be left to change, but the result and Open PR still are.
 const shown = (answer: ChatChangesAnswer | undefined): answer is Shown =>
-  !!answer?.changes && (answer.changes.files.length > 0 || answer.action !== null);
+  !!answer?.changes && (answer.changes.files.length > 0 || currentAction(answer) !== null);
 
 export function ChatChangesButton({ chatId, chatTitle }: ChatChangesButtonProps) {
   const { data } = useChatChanges(chatId);

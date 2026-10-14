@@ -626,6 +626,7 @@ const DATA_MODEL: SchemaShape = {
       'chat_id text primary key',
       'version text not null',
       'runner_id text not null',
+      'tree text not null',
       'diff text not null',
       'cut integer not null',
       'files text not null',

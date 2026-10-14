@@ -9,11 +9,14 @@ import {
   type RunJob,
 } from '@tracker/shared';
 import { beforeEach, describe, expect, it } from 'vitest';
+import { HELPER_OFFLINE } from '../../src/services/chatChanges/queueGitAction';
+import { GIT_ACTION_NOT_TAKEN } from '../../src/services/chatChanges/expireGitAction';
 import { testClock } from '../helpers/auth';
 import { addUser, caller, helperName, type Caller } from '../helpers/runs';
 import { DIALECTS, useTestServer } from '../helpers/server';
 
 const DIFF = 'diff --git a/a.ts b/a.ts\n--- a/a.ts\n+++ b/a.ts\n@@ -1 +1 @@\n-a\n+b\n';
+const TREE = 'a'.repeat(40);
 const FILES = [
   { path: 'a.ts', dirtyBefore: false },
   { path: 'notes.md', dirtyBefore: true },
@@ -30,6 +33,7 @@ describe.each(DIALECTS)("a chat's changes (%s)", (dialect) => {
 
   const changesBody = (body: object = {}) => ({
     runnerId: runner,
+    tree: TREE,
     diff: DIFF,
     cut: false,
     files: FILES,
@@ -152,6 +156,7 @@ describe.each(DIALECTS)("a chat's changes (%s)", (dialect) => {
       message: 'Fix the login',
       paths: ['a.ts'],
       branch: 'chat/new',
+      tree: TREE,
       keep: [FILES[1]],
     });
   });
@@ -185,6 +190,29 @@ describe.each(DIALECTS)("a chat's changes (%s)", (dialect) => {
       kind: 'pull_request',
       title: 'Fix the login',
     });
+  });
+
+  it('fails one never taken, or lost by a helper gone silent, when the phone looks', async () => {
+    await takeTurn();
+    await commit();
+    clock.advance(11 * 60_000);
+    expect((await read()).body.action).toMatchObject({
+      status: 'failed',
+      error: GIT_ACTION_NOT_TAKEN,
+    });
+    await helper('PUT', `/api/runners/${runner}`, helperName('Mac'));
+    await commit();
+    await takeAction();
+    clock.advance(2 * 60_000);
+    expect((await read()).body.action).toMatchObject({ status: 'failed', error: GIT_ACTION_LOST });
+  });
+
+  it('refuses a commit for a computer that is offline', async () => {
+    await takeTurn();
+    clock.advance(2 * 60_000);
+    expect((await commit()).body).toMatchObject({ error: { message: HELPER_OFFLINE } });
+    await helper('PUT', `/api/runners/${runner}`, helperName('Mac'));
+    expect((await commit()).status).toBe(200);
   });
 
   it('fails an action the helper lost in a restart, and one it never took in time', async () => {

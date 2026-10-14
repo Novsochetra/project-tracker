@@ -4,7 +4,7 @@ import { useMemo } from 'react';
 import { Button, EmptyState } from '../../../components';
 import { CUT_NOTE } from '../../changes/copy';
 import { DiffView } from '../../changes/DiffView';
-import { isGoing } from './actionNote';
+import { currentAction, isGoing } from './actionNote';
 import { ActionNoteLine } from './ActionNoteLine';
 import styles from './ChatChanges.module.css';
 import { canOpenPullRequest } from './commitValues';
@@ -31,7 +31,8 @@ function prNote(changes: ChatChanges): string | null {
 }
 
 export function ChangesOverview({ answer, onCommit, onPullRequest }: ChangesOverviewProps) {
-  const { changes, action } = answer;
+  const { changes } = answer;
+  const action = currentAction(answer);
   const files = useMemo(() => parseDiff(changes.diff), [changes.diff]);
   const busy = isGoing(action);
   const note = prNote(changes);

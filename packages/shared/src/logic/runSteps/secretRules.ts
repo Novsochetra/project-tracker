@@ -17,14 +17,12 @@ export const MASK = '***';
 const quoted = (value: string): boolean => /^["']/.test(value);
 // `$TOKEN`, `$(gh auth token)`, a backtick or a `{expression}` names a secret without holding it.
 const reference = (value: string): boolean => /^["']?[$\x60{]/.test(value);
-// fetch's `credentials: 'include'` names a mode, not a secret.
-const fetchMode = (value: string): boolean =>
-  /^["']?(?:include|omit|same-origin)["']?$/.test(value);
+// fetch's `credentials: 'include'` names a mode, not a secret; any other name with it is masked.
+const fetchMode = (name: string, value: string): boolean =>
+  name === 'credentials' && /^["']?(?:include|omit|same-origin)["']?$/.test(value);
 // A word after `Bearer` or `--token ` in prose ("a Bearer token in the header") stays.
 const looksSecret = (value: string): boolean =>
-  !reference(value) &&
-  !fetchMode(value) &&
-  (quoted(value) || /\d/.test(value) || value.length >= 12);
+  !reference(value) && (quoted(value) || /\d/.test(value) || value.length >= 12);
 
 type Replace = (match: string, ...groups: string[]) => string;
 
@@ -77,7 +75,7 @@ export const SECRET_RULES: readonly SecretRule[] = [
     String.raw`(\\?["'](${NAME})\\?["']\s{0,4}:\s{0,4}\\?(["']))(?![\s"'])(?:(?!\3)[^\\\n]|\\(?!\3))+`,
     'g',
     (m, head = '', name = '') =>
-      secretName(name) && !fetchMode(m.slice(head.length)) ? masked(head) : m,
+      secretName(name) && !fetchMode(name, m.slice(head.length)) ? masked(head) : m,
   ),
   // A numeric user is a uid (docker run -u 1000:1000), not a login.
   rule(
@@ -110,7 +108,11 @@ export const SECRET_RULES: readonly SecretRule[] = [
     String.raw`((?:^|[^\w-])(${NAME})["']?\s{0,4}[:=]\s{1,4})(${VALUE})`,
     'gm',
     (m, head = '', name = '', value = '') =>
-      secretName(name) && looksSecret(value) && !value.includes(MASK) && !/^[^"']*[([]/.test(value)
+      secretName(name) &&
+      looksSecret(value) &&
+      !fetchMode(name, value) &&
+      !value.includes(MASK) &&
+      !/^[^"']*[([]/.test(value)
         ? masked(head)
         : m,
   ),

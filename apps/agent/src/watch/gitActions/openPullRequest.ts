@@ -15,22 +15,12 @@ type PullRequestJob = Extract<GitActionJob, { kind: 'pull_request' }>;
 const BODY = 'Opened from a chat in the project tracker.';
 const URL = /^https:\/\/\S+$/;
 
-// gh's default branch is GitHub's own word on it, whatever origin/HEAD says on this computer.
-async function protectedOf(context: StepContext): Promise<string | null> {
-  const local = await defaultBranch(context.cwd, context.signal);
-  const args = ['repo', 'view', '--json', 'defaultBranchRef', '--jq', '.defaultBranchRef.name'];
-  const remote = (
-    await step(context, 'gh', args, "Couldn't read the repository on GitHub.")
-  ).trim();
-  return remote || local;
-}
-
 async function branchToPush(
   context: StepContext,
 ): Promise<{ branch: string; base: string | null }> {
   const branch = await currentBranch(context.cwd, context.signal);
   if (!branch) throw new GitActionError('Check out a branch first: HEAD is detached.');
-  const base = await protectedOf(context);
+  const base = await defaultBranch(context.cwd, context.signal, true);
   if (isProtectedBranch(branch, base)) throw new GitActionError(PROTECTED_BRANCH);
   const problem = branchNameProblem(branch);
   if (problem) throw new GitActionError(problem);

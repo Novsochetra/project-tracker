@@ -6,6 +6,8 @@ export interface ChatChangesRow {
   version: string;
   // The helper whose folder these are; a commit goes to it.
   runnerId: string;
+  // The folder's snapshot the diff was read from, which a commit is checked against.
+  tree: string;
   diff: string;
   // 0 or 1: no booleans (§2).
   cut: number;

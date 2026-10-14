@@ -18,6 +18,8 @@ export const ENDED_GIT_ACTION_STATUSES = ['done', 'failed'] as const;
 export const GIT_ACTION_LOST = 'The helper stopped before it finished. Try again.';
 export const GH_NOT_SET_UP =
   'Open PR needs the GitHub CLI on your computer. Install gh and run `gh auth login` there, then try again.';
+export const CHANGED_SINCE_LOOKED =
+  'These files changed since you looked. Check the changes again.';
 export const PROTECTED_BRANCH =
   'Nothing is pushed to the main branch. Commit to a new branch first, then open the pull request.';
 
@@ -70,10 +72,12 @@ export type GitActionJob = {
   id: string;
   chatId: string;
   keep: ChatChangedFile[];
-} & (
-  | { kind: 'commit'; message: string; paths: string[]; branch: string | null }
-  | { kind: 'pull_request'; title: string }
-);
+} &
+  // tree: the snapshot the person looked at; the helper commits nothing that changed since.
+  (
+    | { kind: 'commit'; message: string; paths: string[]; branch: string | null; tree: string }
+    | { kind: 'pull_request'; title: string }
+  );
 
 export interface ChatGitEvent {
   type: 'chat-git';

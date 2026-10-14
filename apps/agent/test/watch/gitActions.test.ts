@@ -2,13 +2,21 @@ import { execFileSync } from 'node:child_process';
 import { chmodSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { GH_NOT_SET_UP, PROTECTED_BRANCH, type GitActionJob } from '@tracker/shared';
+import {
+  CHANGED_SINCE_LOOKED,
+  GH_NOT_SET_UP,
+  PROTECTED_BRANCH,
+  type GitActionJob,
+} from '@tracker/shared';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { snapshotTree } from '../../src/watch/changes/snapshot';
 import { createGitActions } from '../../src/watch/gitActions/takeGitActions';
 import { createWatcher } from '../../src/watch/watcher';
 import { fakeTracker, noAsks, RUNNER } from './fakeTracker';
 
 let root: string;
+// The snapshot the person looked at on the phone.
+let seen = '';
 let folder: string;
 const path = process.env.PATH;
 
@@ -74,6 +82,10 @@ async function run(job: GitActionJob) {
   return { ended: tracker.gitEnded, log };
 }
 
+const look = async () => {
+  seen = (await snapshotTree(folder, AbortSignal.timeout(10_000))) ?? '';
+};
+
 const commitJob = (
   body: Partial<Extract<GitActionJob, { kind: 'commit' }>> = {},
 ): GitActionJob => ({
@@ -83,6 +95,7 @@ const commitJob = (
   message: 'Fix the login',
   paths: ['a.ts', 'b.ts', 'gone.ts'],
   branch: null,
+  tree: seen,
   keep: [{ path: 'notes.md', dirtyBefore: true }],
   ...body,
 });
@@ -102,13 +115,14 @@ const ghCalls = () =>
     .map((call) => call.trimEnd().split('\n'));
 
 describe('Commit', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     write('a.ts', 'const a = 2;\n');
     write('b.ts', 'export const b = 1;\n');
     rmSync(join(folder, 'gone.ts'));
     write('staged.md', 'the person staged this\n');
     git('add', 'staged.md');
     write('notes.md', 'the person wrote this\n');
+    await look();
   });
 
   it("commits only the picked files and leaves the person's index and edits alone", async () => {
@@ -149,17 +163,36 @@ describe('Commit', () => {
     expect(ended[0]?.result?.branch).toBe('chat/fix-login');
   });
 
-  it('fails with why, and never makes a branch git would read as a flag', async () => {
+  it('fails with why and puts the index and the branch back as they were', async () => {
+    const hook = join(folder, '.git/hooks/pre-commit');
     writeFileSync(
-      join(folder, '.git/hooks/pre-commit'),
+      hook,
       '#!/bin/sh\necho "lint failed: TOKEN=ghp_abcdefghijklmnopqrstuvwxyz0123" >&2\nexit 1\n',
     );
-    chmodSync(join(folder, '.git/hooks/pre-commit'), 0o755);
-    const { ended, log } = await run(commitJob());
+    chmodSync(hook, 0o755);
+    const before = git('status', '--porcelain');
+    const { ended, log } = await run(commitJob({ branch: 'chat/fix-login' }));
     expect(ended[0]).toMatchObject({ status: 'failed' });
-    expect(ended[0]?.error).toContain('The commit failed; the files are left staged. lint failed');
+    expect(ended[0]?.error).toContain('The commit failed; nothing was committed. lint failed');
     expect(ended[0]?.error).not.toContain('ghp_');
     expect(log).toEqual(['chat chat-123: The commit failed.']);
+    expect(git('status', '--porcelain')).toBe(before);
+    expect(git('branch', '--show-current').trim()).toBe('main');
+    expect(git('branch', '--list').trim()).toBe('* main');
+    rmSync(hook);
+    const again = await run(commitJob({ branch: 'chat/fix-login' }));
+    expect(again.ended[0]).toMatchObject({ status: 'done', result: { branch: 'chat/fix-login' } });
+  });
+
+  it('commits nothing that changed since the person looked', async () => {
+    write('a.ts', 'const a = "changed after the look";\n');
+    const head = git('rev-parse', 'HEAD');
+    const { ended } = await run(commitJob());
+    expect(ended[0]).toMatchObject({ status: 'failed', error: CHANGED_SINCE_LOOKED });
+    expect(git('rev-parse', 'HEAD')).toBe(head);
+  });
+
+  it('never makes a branch git would read as a flag', async () => {
     const refused = await run(commitJob({ branch: '--force' }));
     expect(refused.ended[0]).toMatchObject({ status: 'failed' });
     expect(git('branch', '--list').trim()).toBe('* main');
@@ -201,6 +234,7 @@ describe('Open PR', () => {
 describe("the helper's ticket lane", () => {
   it('runs the commits the person asked for before its next run, and the ask lane none', async () => {
     write('a.ts', 'const a = 3;\n');
+    await look();
     const tracker = fakeTracker([], [commitJob({ paths: ['a.ts'] })]);
     const watcher = createWatcher(
       {

@@ -1,4 +1,4 @@
-import type { ChatGitAction } from '@tracker/shared';
+import type { ChatChangesAnswer, ChatGitAction } from '@tracker/shared';
 
 export type NoteTone = 'busy' | 'done' | 'failed';
 
@@ -35,3 +35,9 @@ export function actionNote(action: ChatGitAction | null): ActionNote | null {
 
 export const isGoing = (action: ChatGitAction | null): boolean =>
   action?.status === 'queued' || action?.status === 'running';
+
+// A later turn's changes make an ended action's note old news; the changes a commit left keep it.
+export function currentAction({ changes, action }: ChatChangesAnswer): ChatGitAction | null {
+  if (!action || isGoing(action) || !changes) return action;
+  return changes.version === action.id || action.createdAt >= changes.createdAt ? action : null;
+}

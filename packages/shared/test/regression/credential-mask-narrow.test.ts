@@ -29,6 +29,9 @@ describe('credential names in a diff (PT-229 review, PT-237)', () => {
       ["credentials: 'hunter2hunter2'", 'hunter2hunter2'],
       ['const dbCredential = "s3cr3t-value"', 's3cr3t-value'],
       ['{ "credentials": "abc123def456" }', 'abc123def456'],
+      ['{ "password": "include" }', 'include'],
+      ['password: "omit"', 'omit'],
+      ["TOKEN = 'same-origin'", 'same-origin'],
     ] as const) {
       expect(maskSecrets(line), line).not.toContain(secret);
     }

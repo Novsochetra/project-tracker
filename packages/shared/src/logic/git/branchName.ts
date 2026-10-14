@@ -23,8 +23,9 @@ export function branchNameProblem(name: string): string | null {
   return null;
 }
 
+// Case apart, since a case-insensitive file system holds refs/heads/Main and main as one.
 export const isProtectedBranch = (name: string, defaultBranch: string | null): boolean =>
-  PROTECTED.has(name) || name === defaultBranch;
+  PROTECTED.has(name.toLowerCase()) || name.toLowerCase() === defaultBranch?.toLowerCase();
 
 const SLUG_MAX = 40;
 

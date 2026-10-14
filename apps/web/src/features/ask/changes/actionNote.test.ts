@@ -1,6 +1,6 @@
 import type { ChatGitAction } from '@tracker/shared';
 import { describe, expect, it } from 'vitest';
-import { actionNote } from './actionNote';
+import { actionNote, currentAction } from './actionNote';
 
 const action = (overrides: Partial<ChatGitAction>): ChatGitAction => ({
   id: 'g-1',
@@ -36,5 +36,30 @@ describe('actionNote', () => {
   it("shows a failure's own words", () => {
     const failed = action({ status: 'failed', error: 'The commit failed; lint failed' });
     expect(actionNote(failed)).toEqual({ tone: 'failed', text: 'The commit failed; lint failed' });
+  });
+});
+
+describe('currentAction', () => {
+  const changes = {
+    version: 'r-2',
+    diff: '',
+    cut: false,
+    files: [],
+    branch: 'main',
+    defaultBranch: 'main',
+    ghReady: true,
+    createdAt: 10,
+  };
+  const failed = action({ status: 'failed', error: 'The commit failed.', createdAt: 5 });
+
+  it('drops an ended note once a newer turn sent changes', () => {
+    expect(currentAction({ changes, action: failed })).toBeNull();
+    expect(currentAction({ changes, action: { ...failed, createdAt: 11 } })).not.toBeNull();
+  });
+
+  it('keeps a going one and the commit whose changes these are', () => {
+    expect(currentAction({ changes, action: action({ createdAt: 1 }) })).not.toBeNull();
+    const done = action({ id: 'r-2', status: 'done', createdAt: 1 });
+    expect(currentAction({ changes, action: done })).toBe(done);
   });
 });

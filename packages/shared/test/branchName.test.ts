@@ -40,6 +40,8 @@ describe('isProtectedBranch', () => {
     expect(isProtectedBranch('master', 'develop')).toBe(true);
     expect(isProtectedBranch('develop', 'develop')).toBe(true);
     expect(isProtectedBranch('chat/x', 'main')).toBe(false);
+    expect(isProtectedBranch('Main', null)).toBe(true);
+    expect(isProtectedBranch('DEVELOP', 'develop')).toBe(true);
   });
 });
 

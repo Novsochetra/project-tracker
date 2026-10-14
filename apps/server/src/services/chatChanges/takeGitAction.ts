@@ -12,16 +12,14 @@ import { findChatInScope } from '../../repositories/chats';
 import type { ServiceContext } from '../context';
 import { requireRunner } from '../runners';
 import { filesOf } from './chatChangesRows';
+import { GIT_ACTION_NOT_TAKEN, GIT_ACTION_WAIT_MS } from './expireGitAction';
 import { notifyGitAction } from './gitActionEvents';
-
-// Long enough for a laptop to wake; a commit the person asked for long ago isn't made by surprise.
-export const GIT_ACTION_WAIT_MS = 10 * 60_000;
-export const GIT_ACTION_NOT_TAKEN = "Your computer didn't take it in time. Try again.";
 
 interface CommitInput {
   message: string;
   paths: string[];
   branch: string | null;
+  tree: string;
 }
 
 async function endAll(

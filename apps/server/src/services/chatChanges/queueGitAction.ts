@@ -19,36 +19,47 @@ import { requireChat } from '../chats';
 import type { ServiceContext } from '../context';
 import { requireRunner } from '../runners';
 import { filesOf, isActive } from './chatChangesRows';
+import { expireGitAction, isOnline } from './expireGitAction';
 import { notifyGitAction } from './gitActionEvents';
 import { readChatChanges } from './readChatChanges';
 
 export const NO_CHAT_CHANGES = 'Claude changed no files in this chat.';
 export const CHANGED_SINCE = 'Claude changed more since you looked. Look at the changes again.';
 
+interface Chat {
+  id: string;
+  projectId: string;
+}
+
 interface Person {
   ctx: ServiceContext;
   scope: UserScope;
 }
 
+export const HELPER_OFFLINE =
+  'Your computer is offline. Start tracker watch there, then try again.';
+
 // Claude may still be changing the files, and one commit at a time keeps git's index its own.
-async function requireQuiet({ ctx, scope }: Person, chatId: string, version: string) {
-  const changes = await findChatChanges(ctx.db, chatId);
+async function requireQuiet({ ctx, scope }: Person, chat: Chat, version: string) {
+  const changes = await findChatChanges(ctx.db, chat.id);
   if (!changes) throw conflict(NO_CHAT_CHANGES);
   if (changes.version !== version) throw conflict(CHANGED_SINCE);
-  if (isActive(await latestGitAction(ctx.db, chatId))) {
+  await expireGitAction(ctx, scope, chat);
+  if (isActive(await latestGitAction(ctx.db, chat.id))) {
     throw conflict('The last commit or pull request is still going on.');
   }
-  const run = await latestChatRunRow(ctx.db, scope, chatId);
+  const run = await latestChatRunRow(ctx.db, scope, chat.id);
   if (run && (ACTIVE_RUN_STATUSES as readonly string[]).includes(run.status)) {
     throw conflict('Wait until Claude finishes in this chat.');
   }
-  await requireRunner(ctx, scope, changes.runnerId);
+  const runner = await requireRunner(ctx, scope, changes.runnerId);
+  if (!isOnline(runner.lastSeenAt, ctx.now())) throw conflict(HELPER_OFFLINE);
   return changes;
 }
 
 async function queue(
   person: Person,
-  chat: { id: string; projectId: string },
+  chat: Chat,
   changes: ChatChangesRow,
   action: { kind: GitActionKind; input: object },
 ): Promise<ChatChangesAnswer> {
@@ -86,7 +97,7 @@ export async function queueCommit(
 ): Promise<ChatChangesAnswer> {
   const person = { ctx, scope };
   const chat = await requireChat(ctx, scope, chatId);
-  const changes = await requireQuiet(person, chat.id, input.version);
+  const changes = await requireQuiet(person, chat, input.version);
   requireChatFiles(changes, input.paths);
   const branch = input.branch && input.branch !== changes.branch ? input.branch : null;
   if (branch && isProtectedBranch(branch, changes.defaultBranch)) {
@@ -95,7 +106,7 @@ export async function queueCommit(
   const paths = [...new Set(input.paths)];
   return queue(person, chat, changes, {
     kind: 'commit',
-    input: { message: input.message, paths, branch },
+    input: { message: input.message, paths, branch, tree: changes.tree },
   });
 }
 
@@ -107,7 +118,7 @@ export async function queuePullRequest(
 ): Promise<ChatChangesAnswer> {
   const person = { ctx, scope };
   const chat = await requireChat(ctx, scope, chatId);
-  const changes = await requireQuiet(person, chat.id, input.version);
+  const changes = await requireQuiet(person, chat, input.version);
   if (changes.ghReady !== 1) throw conflict(GH_NOT_SET_UP);
   if (changes.branch === null || isProtectedBranch(changes.branch, changes.defaultBranch)) {
     throw conflict(PROTECTED_BRANCH);

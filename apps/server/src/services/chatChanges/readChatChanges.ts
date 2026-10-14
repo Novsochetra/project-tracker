@@ -5,6 +5,7 @@ import { latestGitAction } from '../../repositories/gitActions';
 import { requireChat } from '../chats';
 import type { ServiceContext } from '../context';
 import { toChatChanges, toGitAction } from './chatChangesRows';
+import { expireGitAction } from './expireGitAction';
 
 export async function readChatChanges(
   ctx: ServiceContext,
@@ -12,6 +13,7 @@ export async function readChatChanges(
   chatId: string,
 ): Promise<ChatChangesAnswer> {
   const chat = await requireChat(ctx, scope, chatId);
+  await expireGitAction(ctx, scope, chat);
   const [changes, action] = await Promise.all([
     findChatChanges(ctx.db, chat.id),
     latestGitAction(ctx.db, chat.id),

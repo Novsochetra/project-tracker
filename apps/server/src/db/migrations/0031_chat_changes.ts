@@ -15,6 +15,7 @@ export async function up(db: SchemaDb): Promise<void> {
     )
     .addColumn('version', 'text', (col) => col.notNull())
     .addColumn('runner_id', 'text', (col) => col.notNull())
+    .addColumn('tree', 'text', (col) => col.notNull())
     .addColumn('diff', 'text', (col) => col.notNull())
     .addColumn('cut', 'integer', (col) => col.notNull())
     .addColumn('files', 'text', (col) => col.notNull())

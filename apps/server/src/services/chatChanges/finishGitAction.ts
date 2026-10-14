@@ -16,6 +16,7 @@ async function saveLeft(
 ) {
   await saveChatChanges(ctx.db, {
     ...ids,
+    tree: changes.tree,
     diff: changes.diff,
     cut: changes.cut ? 1 : 0,
     files: JSON.stringify(changes.files),

@@ -43,12 +43,14 @@ export async function readChatChanges(
   ghCheck: GhCheck = ghReady,
 ): Promise<ChatChangesBody> {
   const { files, diff, cut } = await diffOf(cwd, input.files, input.to, signal);
+  const ready = await ghCheck(cwd);
   return {
+    tree: input.to,
     diff,
     cut: cut || input.cut,
     files,
     branch: sane(await currentBranch(cwd, signal)),
-    defaultBranch: sane(await defaultBranch(cwd, signal)),
-    ghReady: await ghCheck(cwd),
+    defaultBranch: sane(await defaultBranch(cwd, signal, ready)),
+    ghReady: ready,
   };
 }

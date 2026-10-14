@@ -19,13 +19,28 @@ export const headTree = async (cwd: string, signal: AbortSignal): Promise<string
 export const currentBranch = (cwd: string, signal: AbortSignal) =>
   line(cwd, ['symbolic-ref', '--short', '-q', 'HEAD'], signal);
 
-export async function defaultBranch(cwd: string, signal: AbortSignal): Promise<string | null> {
-  const remote = await line(
-    cwd,
-    ['symbolic-ref', '--short', '-q', 'refs/remotes/origin/HEAD'],
-    signal,
-  );
-  return remote?.replace(/^origin\//, '') ?? null;
+const GH_DEFAULT = ['repo', 'view', '--json', 'defaultBranchRef', '--jq', '.defaultBranchRef.name'];
+const ORIGIN_HEAD = ['symbolic-ref', '--short', '-q', 'refs/remotes/origin/HEAD'];
+
+async function ghDefault(cwd: string, signal: AbortSignal): Promise<string | null> {
+  try {
+    const { code, out } = await runTool('gh', GH_DEFAULT, { cwd, signal });
+    return code === 0 && out.trim() ? out.trim() : null;
+  } catch {
+    return null;
+  }
+}
+
+// One rule for the phone's confirm text and the helper's push: GitHub's own word when gh can ask
+// it, else what origin/HEAD says on this computer.
+export async function defaultBranch(
+  cwd: string,
+  signal: AbortSignal,
+  ghIsReady: boolean,
+): Promise<string | null> {
+  const remote = ghIsReady ? await ghDefault(cwd, signal) : null;
+  if (remote) return remote;
+  return (await line(cwd, ORIGIN_HEAD, signal))?.replace(/^origin\//, '') ?? null;
 }
 
 // Signed in, so Open PR can push and open one; gh not installed counts as not set up.
