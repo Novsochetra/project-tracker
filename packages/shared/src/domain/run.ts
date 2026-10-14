@@ -36,7 +36,7 @@ export type EndedRunStatus = (typeof ENDED_RUN_STATUSES)[number];
 // project can set its own within the maximum.
 export const DEFAULT_MAX_PARALLEL_RUNS = 5;
 export const MAX_PARALLEL_RUNS_MAX = 5;
-// How many sub agents one ticket run may use at once; 1 means it works alone.
+// 1 keeps the ticket prompt exactly as it was before sub agents.
 export const DEFAULT_MAX_SUB_AGENTS = 3;
 export const MAX_SUB_AGENTS_MAX = 5;
 // One Claude session hands out every ticket of its batch and gets every sub agent's result, so a
