@@ -18,7 +18,7 @@ const CHAT = { projectKey: 'MOB', projectName: 'Mobile', chatId: 'c-1', title: '
 
 describe('push messages', () => {
   it('says a ticket run finished and opens the ticket', () => {
-    expect(runEndedPush(TICKET, null)).toEqual({
+    expect(runEndedPush(TICKET, 'done')).toEqual({
       title: 'MOB-3: Claude finished',
       body: 'Fix the login button',
       url: '/p/MOB/3',
@@ -26,15 +26,18 @@ describe('push messages', () => {
     });
   });
 
-  it('says why a ticket run stopped', () => {
-    expect(runEndedPush(TICKET, 'That computer was removed.').title).toBe(
-      'MOB-3: Claude stopped: That computer was removed.',
-    );
+  it('says a ticket run stopped and to open the ticket for why', () => {
+    expect(runEndedPush(TICKET, 'failed')).toEqual({
+      title: 'MOB-3: Claude stopped',
+      body: 'Fix the login button · Open the ticket to see why.',
+      url: '/p/MOB/3',
+      tag: 'ticket:MOB-3',
+    });
   });
 
   it('says how many tickets a batch did and which it left, and opens Activity', () => {
     const batch = { runId: 'r-1', projectKey: 'MOB', total: 10, notDoneKeys: ['MOB-3', 'MOB-7'] };
-    expect(batchEndedPush(batch, null)).toEqual({
+    expect(batchEndedPush(batch, 'done')).toEqual({
       title: 'MOB: Run all finished: 8 of 10 done',
       body: 'Not finished: MOB-3, MOB-7',
       url: '/activity',
@@ -42,12 +45,12 @@ describe('push messages', () => {
     });
   });
 
-  it('says a batch did every ticket, or why it stopped', () => {
+  it('says a batch did every ticket, or that it stopped and what it left', () => {
     const batch = { runId: 'r-1', projectKey: 'MOB', total: 2, notDoneKeys: [] };
-    expect(batchEndedPush(batch, null).body).toBe('Every ticket is done.');
-    const stopped = batchEndedPush({ ...batch, notDoneKeys: ['MOB-2'] }, 'Claude exited.');
+    expect(batchEndedPush(batch, 'done').body).toBe('Every ticket is done.');
+    const stopped = batchEndedPush({ ...batch, notDoneKeys: ['MOB-2'] }, 'failed');
     expect(stopped.title).toBe('MOB: Run all stopped: 1 of 2 done');
-    expect(stopped.body).toBe('Claude exited. · Not finished: MOB-2');
+    expect(stopped.body).toBe('Not finished: MOB-2');
   });
 
   it('says the automatic review stopped and why, under the ticket’s tag', () => {
@@ -86,28 +89,26 @@ describe('push messages', () => {
 
   it('reads the chat back from a chat push’s tag only', () => {
     expect(chatOfTag(chatAnsweredPush(CHAT).tag)).toBe('c-1');
-    expect(chatOfTag(runEndedPush(TICKET, null).tag)).toBeNull();
+    expect(chatOfTag(runEndedPush(TICKET, 'done').tag)).toBeNull();
   });
 
-  it('says Claude has a question on a ticket, with the question, under the ticket’s tag', () => {
-    expect(questionPush({ ticket: TICKET }, 'Which name should\nthe setting have?')).toEqual({
+  it('says Claude has a question on a ticket, under the ticket’s tag', () => {
+    expect(questionPush({ ticket: TICKET })).toEqual({
       title: 'MOB-3: Claude has a question',
-      body: 'Which name should the setting have?',
+      body: 'Fix the login button · Open the ticket to answer.',
       url: '/p/MOB/3',
       tag: 'ticket:MOB-3',
     });
   });
 
   it('says Claude has a question in a chat, under the tag its answer will replace', () => {
-    expect(questionPush({ chat: CHAT }, 'Plan or edit?')).toEqual({
+    expect(questionPush({ chat: CHAT })).toEqual({
       title: 'Claude has a question: Login bug',
       body: 'Mobile · Open the chat to answer.',
       url: '/p/MOB/ask/c-1',
       tag: 'chat:c-1',
     });
-    expect(questionPush({ chat: { ...CHAT, title: '' } }, 'Plan or edit?').title).toBe(
-      'Claude has a question',
-    );
+    expect(questionPush({ chat: { ...CHAT, title: '' } }).title).toBe('Claude has a question');
   });
 
   it('says what Claude wants to do after the key, and opens the ticket or the chat', () => {
@@ -149,7 +150,7 @@ describe('push messages', () => {
   });
 
   it('cuts long text by code point, so an emoji is never split', () => {
-    const body = runEndedPush({ ...TICKET, title: `${'a'.repeat(298)}😀😀😀` }, null).body;
+    const body = runEndedPush({ ...TICKET, title: `${'a'.repeat(298)}😀😀😀` }, 'done').body;
     expect([...body]).toHaveLength(300);
     expect(body.endsWith('a😀…')).toBe(true);
   });

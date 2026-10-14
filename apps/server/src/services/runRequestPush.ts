@@ -34,8 +34,6 @@ export function pushRunRequest(
     const now = await findRunRequestRow(ctx.db, row.id);
     const place = now?.status === 'open' ? await placeOfRun(ctx, scope, run) : null;
     if (!place) return null;
-    return row.kind === 'question'
-      ? questionPush(place, row.label)
-      : permissionPush(place, row.label);
+    return row.kind === 'question' ? questionPush(place) : permissionPush(place, row.label);
   });
 }
