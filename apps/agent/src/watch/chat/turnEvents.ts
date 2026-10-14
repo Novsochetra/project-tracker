@@ -18,3 +18,15 @@ export const replayOf = (event: unknown): string | undefined =>
   typeof event.uuid === 'string'
     ? event.uuid
     : undefined;
+
+const systemOf = (event: unknown, subtype: string): string | undefined =>
+  isJson(event) &&
+  event.type === 'system' &&
+  event.subtype === subtype &&
+  typeof event.task_id === 'string'
+    ? event.task_id
+    : undefined;
+
+// Background work (a Bash shell, a sub agent) starts and ends as a task.
+export const taskStartedOf = (event: unknown) => systemOf(event, 'task_started');
+export const taskEndedOf = (event: unknown) => systemOf(event, 'task_notification');

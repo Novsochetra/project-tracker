@@ -1,4 +1,5 @@
 import { RUN_REQUEST_DEADLINE_MS, type RunRequest } from '@tracker/shared';
+import { planDecision } from './planDecision';
 import { deny, type PromptCall, type PromptDecision } from './promptCall';
 
 const MINUTES = RUN_REQUEST_DEADLINE_MS / 60_000;
@@ -28,6 +29,7 @@ function answersFor(call: PromptCall, request: RunRequest): Record<string, strin
 }
 
 function answered(call: PromptCall, request: RunRequest): PromptDecision {
+  if (request.kind === 'plan') return planDecision(request);
   const asked = request.kind === 'question';
   if (request.decision !== 'allow') return deny(asked ? DECLINED : DENIED);
   if (!asked) return { behavior: 'allow', updatedInput: call.input };

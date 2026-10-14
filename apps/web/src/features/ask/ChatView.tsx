@@ -15,8 +15,8 @@ import { chatBackLabel, chatIntro } from './ticketChat';
 import { MessageList } from './MessageList';
 import { useAskHelper } from './useAskHelper';
 import { useScrollToEnd } from './useScrollToEnd';
+import { ThreadEnd } from './ThreadEnd';
 import { useWorkingMessage } from './useWorkingMessage';
-import { WorkingMessage } from './WorkingMessage';
 
 export interface ChatViewProps {
   projectKey: string;
@@ -29,11 +29,9 @@ export interface ChatViewProps {
 export function ChatView({ projectKey, chatId, detail, ticketNum }: ChatViewProps) {
   const helper = useAskHelper(projectKey, detail?.run);
   const messages = detail?.messages ?? [];
-  useScrollToEnd(`${messages.length}:${helper.footer.kind}`);
-  const { threadRef, rows, requests } = useWorkingMessage(detail?.run);
+  useScrollToEnd(`${messages.length}:${detail?.queued?.length ?? 0}:${helper.footer.kind}`);
+  const { threadRef, ...live } = useWorkingMessage(detail?.run);
   const stoppedRuns = useMemo(() => stoppedRunsOf(detail), [detail]);
-  // A request that comes before any step shows the working message too.
-  const working = rows.length > 0 || requests.shown.length > 0;
   return (
     <div className={styles.screen}>
       <NavBar
@@ -63,8 +61,12 @@ export function ChatView({ projectKey, chatId, detail, ticketNum }: ChatViewProp
             helper={helper.cardHelper}
             stoppedRuns={stoppedRuns}
             latestRun={
-              detail?.run &&
-              working && <WorkingMessage runId={detail.run.id} rows={rows} requests={requests} />
+              <ThreadEnd
+                chatId={chatId ?? ''}
+                detail={detail}
+                live={live}
+                waits={helper.footer.kind === 'thinking'}
+              />
             }
           />
         )}
@@ -75,7 +77,7 @@ export function ChatView({ projectKey, chatId, detail, ticketNum }: ChatViewProp
         projectKey={projectKey}
         chatId={chatId}
         helper={helper}
-        waiting={requests.waiting}
+        waiting={live.requests.waiting}
         savedOptions={savedAskOptions(detail?.chat)}
         placeholder={askPlaceholder(detail, ticketNum)}
         detail={detail}

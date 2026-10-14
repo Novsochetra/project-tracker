@@ -4,9 +4,11 @@ import { makeQuestion } from '../../api/test/requestFixtures';
 import {
   ALLOW,
   answerOf,
+  approvePlan,
   answersAtOnce,
   choiceAnswer,
   DENY,
+  keepPlanning,
   NO_PICK,
   otherRoom,
   questionAnswers,
@@ -89,5 +91,17 @@ describe('a question', () => {
     expect(questionAnswers([one, NO_PICK])).toBeNull();
     expect(questionAnswers([{ chosen: [], other: '  ' }])).toBeNull();
     expect(questionAnswers([])).toBeNull();
+  });
+});
+
+describe('answering a plan', () => {
+  it('approves with the picked mode', () => {
+    expect(approvePlan('edit')).toEqual({ decision: 'allow', answers: ['edit'] });
+    expect(approvePlan('auto')).toEqual({ decision: 'allow', answers: ['auto'] });
+  });
+
+  it('keeps planning with the trimmed note, or none when it is blank', () => {
+    expect(keepPlanning('  Add tests ')).toEqual({ decision: 'deny', answers: ['Add tests'] });
+    expect(keepPlanning('   ')).toEqual({ decision: 'deny' });
   });
 });

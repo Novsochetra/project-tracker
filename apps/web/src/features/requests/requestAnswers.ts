@@ -1,6 +1,7 @@
 import {
   RUN_REQUEST_ANSWER_MAX,
   type AnswerRunRequestInput,
+  type PlanMode,
   type RunQuestion,
 } from '@tracker/shared';
 
@@ -71,3 +72,13 @@ export const choiceAnswer = (label: string): AnswerRunRequestInput => ({
   decision: 'allow',
   answers: [label],
 });
+
+export const approvePlan = (mode: PlanMode): AnswerRunRequestInput => ({
+  decision: 'allow',
+  answers: [mode],
+});
+
+export function keepPlanning(note: string): AnswerRunRequestInput {
+  const text = note.trim();
+  return text ? { decision: 'deny', answers: [text] } : { decision: 'deny' };
+}

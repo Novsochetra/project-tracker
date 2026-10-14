@@ -262,7 +262,7 @@ describe('requestOfCall', () => {
 });
 
 describe('answerProblem', () => {
-  const permission = { kind: 'permission' as const, questions: null };
+  const permission = { kind: 'permission' as const, questions: null, labelCut: false };
   const question = requestOfCall('AskUserQuestion', colorQuestion, FOLDER)!;
 
   it('takes allow or deny alone for a permission', () => {

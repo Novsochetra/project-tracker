@@ -37,8 +37,20 @@ export interface ChatCardTicketRow {
   ticketId: string;
 }
 
+// A person's message that waits for the answer before it (PT-234), with what it runs with.
+export interface ChatQueueRow {
+  messageId: string;
+  chatId: string;
+  runnerId: string;
+  askModel: AskModel;
+  askMode: AskMode;
+  askEffort: AskEffort;
+  position: number;
+}
+
 export interface ChatTables {
   chats: ChatRow;
   chatMessages: ChatMessageRow;
   chatCardTickets: ChatCardTicketRow;
+  chatQueue: ChatQueueRow;
 }

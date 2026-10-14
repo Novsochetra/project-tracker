@@ -1,4 +1,4 @@
-import { CHAT_ANSWER_MAX, type FinishRunInput } from '@tracker/shared';
+import { CHAT_ANSWER_MAX, CHAT_NO_ANSWER, type FinishRunInput } from '@tracker/shared';
 import { failureOf, type ClaudeExit } from '../outcome';
 import { finalResult } from '../stream/claudeResult';
 import { isSessionId } from './askArgs';
@@ -12,6 +12,8 @@ export const fittedAnswer = (answer: string): string =>
 
 export function askOutcomeOf(exit: ClaudeExit, cancelled: boolean): FinishRunInput {
   if (cancelled) return { status: 'cancelled' };
+  if (exit.turnEnded && exit.results.length === 0)
+    return { status: 'failed', error: CHAT_NO_ANSWER };
   const result = finalResult(exit.results);
   const answer = result?.text ?? '';
   if ((exit.code === 0 || exit.turnEnded) && result && !result.isError && answer) {

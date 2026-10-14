@@ -19,8 +19,10 @@ import {
   type RunWithKey,
 } from '../repositories/runs';
 import { saveAnswer } from './chatAnswers';
+import { startNextQueued } from './chatQueue/startNext';
 import { inTransaction, type ServiceContext } from './context';
 import { loadTicketScope, requireTicket, ticketKeyOf, type TicketRef } from './lookups';
+import { carryOutApprovedPlan } from './planFollowUp';
 import { continueChain } from './reviewChain/continueChain';
 import { endingOf } from './runEnding';
 import { pushRunEnd } from './runEndPush';
@@ -135,12 +137,20 @@ export async function endRun(
     throw conflict(`This run already ended (${after.status}).`);
   }
   if (ended.marked) {
+    // First, so the chat read on this event shows why an approved plan didn't start.
+    await carryOutApprovedPlan(ctx, scope, after);
     notifyRun(ctx, scope, after);
     // A chain that went on or stopped says so itself; "Claude finished" between its runs is noise.
     if (!(await continueChain(ctx, after))) pushRunEnd(ctx, scope, after);
+    if (after.chatId) await startNextQueued(ctx, scope, after.chatId).catch(logQueueError);
   }
   for (const row of ended.held) notifyRun(ctx, scope, row);
   return toRun(after);
+}
+
+// The run has ended either way, so the helper's report must not fail; the message waits for Send now.
+function logQueueError(error: unknown): void {
+  console.error('Could not start the next queued chat message:', error);
 }
 
 // What the batch's Claude did not finish ends with it; a cancel ends it as cancelled.
