@@ -29,6 +29,7 @@ import * as runChanges from './0027_run_changes';
 import * as hideName from './0028_hide_name';
 import * as runStepTodos from './0029_run_step_todos';
 import * as chatQueue from './0030_chat_queue';
+import * as chatChanges from './0031_chat_changes';
 import * as runContext from './0032_run_context';
 
 // Keyed by file name; they run in name order, so the four-digit number decides. The bundled server
@@ -64,5 +65,6 @@ export const MIGRATIONS: Record<string, Migration> = {
   '0028_hide_name': hideName,
   '0029_run_step_todos': runStepTodos,
   '0030_chat_queue': chatQueue,
+  '0031_chat_changes': chatChanges,
   '0032_run_context': runContext,
 };

@@ -17,6 +17,7 @@ function connect(tracker?: TrackerReachability) {
     onRunStep: vi.fn(),
     onRunRequest: vi.fn(),
     onChatDeleted: vi.fn(),
+    onChatGit: vi.fn(),
     onReconnect: vi.fn(),
     onRefreshPending: vi.fn(),
     onRefused: vi.fn(),
@@ -156,6 +157,23 @@ describe('connectLiveUpdates', () => {
     expect(onChatDeleted).toHaveBeenCalledWith(deleted);
     expect(onRun).not.toHaveBeenCalled();
     expect(onChange).not.toHaveBeenCalled();
+  });
+
+  it("passes a named chat-git event, so the chat's changes are read again", () => {
+    const { source, onRun, onChatGit } = connect();
+    const git = {
+      type: 'chat-git',
+      actionId: 'g-1',
+      runnerId: 'r',
+      chatId: 'c-1',
+      projectId: 'p-mob',
+      status: 'done',
+    };
+    source.emit(git, 'chat-git');
+    source.emit({ ...git, status: 'lost' }, 'chat-git');
+    expect(onChatGit).toHaveBeenCalledTimes(1);
+    expect(onChatGit).toHaveBeenCalledWith(git);
+    expect(onRun).not.toHaveBeenCalled();
   });
 
   it('reports reconnects but not the first connection', () => {
@@ -529,6 +547,7 @@ describe('connectLiveUpdates', () => {
       onRunStep: vi.fn(),
       onRunRequest: vi.fn(),
       onChatDeleted: vi.fn(),
+      onChatGit: vi.fn(),
       onReconnect: vi.fn(),
       onRefreshPending: vi.fn(),
       onRefused: vi.fn(),

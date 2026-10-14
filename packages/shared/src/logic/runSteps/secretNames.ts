@@ -7,10 +7,19 @@ const ANYWHERE = new Set([
   'token',
   'cookie',
   'authorization',
+]);
+// A credential's id or path (`credential_id`, `credentialsFile`) names one without holding it.
+const LAST = new Set([
+  'key',
+  'pass',
+  'apikey',
+  'secretkey',
+  'accesskey',
+  'privatekey',
+  'authkey',
   'credential',
   'credentials',
 ]);
-const LAST = new Set(['key', 'pass', 'apikey', 'secretkey', 'accesskey', 'privatekey', 'authkey']);
 
 // By its words, so `MONKEY`, `KEYBOARD_LAYOUT`, `BYPASS_CACHE` and `--key-path` stay readable while
 // `GITHUB_TOKEN`, `PGPASSWORD`, `_authToken`, `SECRET_KEY_BASE` and `X-Api-Key` are secret.

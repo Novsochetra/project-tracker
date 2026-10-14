@@ -25,6 +25,9 @@ function refreshTicketRuns(queryClient: QueryClient, ticketId: string, projectId
   }
 }
 
+export const refreshChatChanges = (queryClient: QueryClient, chatId: string): void =>
+  void refreshLive(queryClient, { queryKey: queryKeys.chatChanges(chatId), exact: true });
+
 export const refreshRunRequests = (queryClient: QueryClient, runId: string): void =>
   void refreshLive(queryClient, { queryKey: queryKeys.runRequests(runId), exact: true });
 
@@ -45,6 +48,8 @@ export function refreshForRun(queryClient: QueryClient, event: RunEvent): void {
   }
   if (event.chatId) {
     void refreshLive(queryClient, { queryKey: queryKeys.chat(event.chatId), exact: true });
+    // An Edit turn sends its changes just before its end.
+    refreshChatChanges(queryClient, event.chatId);
     // An answer moves its chat to the top of the list.
     void refreshLive(queryClient, { queryKey: queryKeys.allChats() });
   }

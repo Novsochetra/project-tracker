@@ -30,6 +30,7 @@ import { runRoutes } from './http/routes/runs';
 import { runRequestRoutes } from './http/routes/runRequests';
 import { runStepRoutes } from './http/routes/runSteps';
 import { changesRoutes } from './http/routes/changes';
+import { chatChangesRoutes } from './http/routes/chatChanges';
 import { runUsageRoutes } from './http/routes/runUsage';
 import { chatRoutes } from './http/routes/chats';
 import { sessionRoutes } from './http/routes/session';
@@ -95,6 +96,7 @@ function createApi(ctx: ServiceContext, deps: AppDeps): Hono<AppEnv> {
     .route('/', batchRunRoutes(ctx))
     .route('/', runStepRoutes(ctx))
     .route('/', changesRoutes(ctx))
+    .route('/', chatChangesRoutes(ctx))
     .route('/', runUsageRoutes(ctx))
     .route('/', runRequestRoutes(ctx))
     .route('/', questionRoutes(ctx))

@@ -1,6 +1,8 @@
-import type { RunEvent, RunnerTools } from '@tracker/shared';
+import type { ChatGitEvent, RunEvent, RunJob, RunnerTools } from '@tracker/shared';
 import { describeError } from '../errors';
-import { trackRunChanges } from './changes/runChanges';
+import { trackChatChanges, type ChatChangesDeps } from './changes/chatChanges';
+import { trackRunChanges, type ChangesDeps } from './changes/runChanges';
+import { createGitActions } from './gitActions/takeGitActions';
 import { createProblemLog, type ProblemSource } from './problems';
 import { handBackReport } from './report/handBack';
 import { reviewOutcome } from './report/reviewCheck';
@@ -32,6 +34,10 @@ export type WatcherDeps = Omit<
   changesIn?: string | undefined;
 };
 
+// A question's turn adds to its chat's changes; a ticket run has its own.
+const trackerOf = (changeDeps: ChangesDeps & ChatChangesDeps) => (job: RunJob) =>
+  job.run.kind === 'ask' ? trackChatChanges(changeDeps, job) : trackRunChanges(changeDeps, job);
+
 export function createWatcher(deps: WatcherDeps, settings: WatcherSettings) {
   const describe = (error: unknown) => describeError(error, { trackerUrl: settings.trackerUrl });
   const noteProblem = createProblemLog(deps.log);
@@ -41,6 +47,7 @@ export function createWatcher(deps: WatcherDeps, settings: WatcherSettings) {
   const sessions = createSessionMarks();
   const { changesIn } = deps;
   const changeDeps = { api: deps.api, runnerId: settings.runnerId, log: deps.log, describe };
+  const gitActions = changesIn && createGitActions({ ...changeDeps, cwd: changesIn });
   const runs = createLanes(
     {
       ...deps,
@@ -65,8 +72,9 @@ export function createWatcher(deps: WatcherDeps, settings: WatcherSettings) {
           every: deps.stepEvery,
         }),
       usageOf: (job, exit) => runUsageOf(job, exit, sessions),
-      trackChanges: changesIn
-        ? (job) => trackRunChanges({ ...changeDeps, cwd: changesIn }, job)
+      trackChanges: changesIn ? trackerOf({ ...changeDeps, cwd: changesIn }) : undefined,
+      betweenRuns: gitActions
+        ? (lane) => (lane === 'ticket' ? gitActions() : Promise.resolve())
         : undefined,
     },
     settings,
@@ -99,7 +107,11 @@ export function createWatcher(deps: WatcherDeps, settings: WatcherSettings) {
     if (event.status === 'cancelled') runs.cancel(event.runId);
   }
 
-  return { checkIn, onRunEvent, lookForWork: runs.lookForWork, stop: runs.stop };
+  function onGitEvent(event: ChatGitEvent) {
+    if (event.runnerId === settings.runnerId && event.status === 'queued') void runs.lookForWork();
+  }
+
+  return { checkIn, onRunEvent, onGitEvent, lookForWork: runs.lookForWork, stop: runs.stop };
 }
 
 export type Watcher = ReturnType<typeof createWatcher>;

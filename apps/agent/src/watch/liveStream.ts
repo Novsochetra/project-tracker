@@ -1,4 +1,4 @@
-import { LIVE_STALE_MS, type RunEvent } from '@tracker/shared';
+import { LIVE_STALE_MS, type ChatGitEvent, type RunEvent } from '@tracker/shared';
 import { retryDelay } from './retry';
 import { wait } from './wait';
 import { createSseParser } from './sse';
@@ -9,26 +9,31 @@ export interface LiveStreamOptions {
   signal: AbortSignal;
   onOpen: () => void;
   onRun: (event: RunEvent) => void;
+  onGit?: ((event: ChatGitEvent) => void) | undefined;
   staleMs?: number;
 }
 
-function parseRunEvent(data: string): RunEvent | null {
+function parseEvent<T extends { type: string }>(data: string, type: T['type']): T | null {
   try {
-    const event = JSON.parse(data) as RunEvent;
-    return event.type === 'run' ? event : null;
+    const event = JSON.parse(data) as T;
+    return event.type === type ? event : null;
   } catch {
     return null;
   }
+}
+
+function readMessage(event: string, data: string, options: LiveStreamOptions) {
+  const run = event === 'run' ? parseEvent<RunEvent>(data, 'run') : null;
+  if (run) options.onRun(run);
+  const git = event === 'chat-git' ? parseEvent<ChatGitEvent>(data, 'chat-git') : null;
+  if (git) options.onGit?.(git);
 }
 
 // A proxy can keep a dead stream open, so silence past two pings counts as a drop.
 async function readUntilDropped(response: Response, options: LiveStreamOptions): Promise<void> {
   const reader = response.body!.getReader();
   const decoder = new TextDecoder();
-  const feed = createSseParser(({ event, data }) => {
-    const run = event === 'run' ? parseRunEvent(data) : null;
-    if (run) options.onRun(run);
-  });
+  const feed = createSseParser(({ event, data }) => readMessage(event, data, options));
   let silence: NodeJS.Timeout | undefined;
   const alive = () => {
     clearTimeout(silence);

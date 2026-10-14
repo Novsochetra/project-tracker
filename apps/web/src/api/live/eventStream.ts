@@ -2,6 +2,7 @@ import {
   LIVE_STALE_MS,
   type ChangeEvent,
   type ChatDeletedEvent,
+  type ChatGitEvent,
   type RunEvent,
   type RunRequestEvent,
   type RunStepEvent,
@@ -10,6 +11,7 @@ import { retryDelay } from './backoff';
 import {
   parseChangeEvent,
   parseChatDeletedEvent,
+  parseChatGitEvent,
   parseRunEvent,
   parseRunRequestEvent,
   parseRunStepEvent,
@@ -22,6 +24,7 @@ export interface LiveHandlers {
   onRunStep: (event: RunStepEvent) => void;
   onRunRequest: (event: RunRequestEvent) => void;
   onChatDeleted: (event: ChatDeletedEvent) => void;
+  onChatGit: (event: ChatGitEvent) => void;
   onReconnect: () => void;
   // While true, reads can wait for onReconnect: it runs once the stream reports every later change.
   onRefreshPending: (pending: boolean) => void;
@@ -44,6 +47,16 @@ const relay =
     const event = parse(message.data);
     if (event) deliver(event);
   };
+
+// Run notices are named after their type, so the change handling never sees them.
+const namedListeners = (alive: () => void, handlers: LiveHandlers) =>
+  [
+    ['run', relay(alive, parseRunEvent, handlers.onRun)],
+    ['run-step', relay(alive, parseRunStepEvent, handlers.onRunStep)],
+    ['run-request', relay(alive, parseRunRequestEvent, handlers.onRunRequest)],
+    ['chat-deleted', relay(alive, parseChatDeletedEvent, handlers.onChatDeleted)],
+    ['chat-git', relay(alive, parseChatGitEvent, handlers.onChatGit)],
+  ] as const;
 
 // Reads wait for a reopening stream only while it is likely to open soon: behind a proxy that
 // refuses the stream while the API answers, it never does, and focus would never read again.
@@ -105,10 +118,7 @@ export function connectLiveUpdates(
     if (missed) handlers.onReconnect();
   };
   const onMessage = relay(alive, parseChangeEvent, handlers.onChange);
-  const onRun = relay(alive, parseRunEvent, handlers.onRun);
-  const onRunStep = relay(alive, parseRunStepEvent, handlers.onRunStep);
-  const onRunRequest = relay(alive, parseRunRequestEvent, handlers.onRunRequest);
-  const onChatDeleted = relay(alive, parseChatDeletedEvent, handlers.onChatDeleted);
+  const named = namedListeners(alive, handlers);
   const onError = () => {
     if (source?.readyState === EventSource.CLOSED) {
       reopenLater();
@@ -125,10 +135,7 @@ export function connectLiveUpdates(
     source.addEventListener('open', onOpen);
     source.addEventListener('message', onMessage);
     source.addEventListener('changed', onMessage);
-    source.addEventListener('run', onRun);
-    source.addEventListener('run-step', onRunStep);
-    source.addEventListener('run-request', onRunRequest);
-    source.addEventListener('chat-deleted', onChatDeleted);
+    for (const [name, listener] of named) source.addEventListener(name, listener);
     source.addEventListener('ping', alive);
     source.addEventListener('error', onError);
     alive();

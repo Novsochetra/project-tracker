@@ -16,7 +16,10 @@ const SECRET_NAMES = [
   /^secrets?\.(?:json|ya?ml|toml|env)$/,
 ];
 
+// A template of names with made-up values, read line by line like any other file.
+const EXAMPLE = /^\.env\.(?:example|sample|template)$/;
+
 export function isSecretPath(path: string): boolean {
   const name = (path.split('/').at(-1) ?? '').toLowerCase();
-  return SECRET_NAMES.some((pattern) => pattern.test(name));
+  return !EXAMPLE.test(name) && SECRET_NAMES.some((pattern) => pattern.test(name));
 }

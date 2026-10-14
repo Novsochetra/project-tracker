@@ -4,7 +4,7 @@ import { useApi } from '../context';
 import { connectLiveUpdates, type TrackerReachability } from '../live/eventStream';
 import { refreshForChange } from '../live/refreshForChange';
 import { refreshForChatDeleted } from '../live/refreshForChat';
-import { refreshForRun, refreshForRunRequest } from '../live/refreshForRun';
+import { refreshChatChanges, refreshForRun, refreshForRunRequest } from '../live/refreshForRun';
 import { refreshRunSteps } from '../live/refreshRunSteps';
 import { setLiveRefreshPending } from '../live/refreshPending';
 import { recheckSession } from './session';
@@ -23,6 +23,7 @@ export function useLiveUpdates(tracker?: TrackerReachability): void {
           onRunStep: (event) => void refreshRunSteps(queryClient, event.runId, event.count),
           onRunRequest: (event) => refreshForRunRequest(queryClient, event),
           onChatDeleted: (event) => refreshForChatDeleted(queryClient, event),
+          onChatGit: (event) => refreshChatChanges(queryClient, event.chatId),
           onReconnect: () => refreshForChange(queryClient, null),
           onRefreshPending: (pending) => setLiveRefreshPending(queryClient, pending),
           // Signing out shows the token screen, which ends the stream's retries.

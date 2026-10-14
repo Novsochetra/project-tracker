@@ -1,7 +1,7 @@
 import { once } from 'node:events';
 import { createServer, type ServerResponse } from 'node:http';
 import type { AddressInfo } from 'node:net';
-import type { RunEvent } from '@tracker/shared';
+import type { ChatGitEvent, RunEvent } from '@tracker/shared';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { followRunEvents } from '../../src/watch/liveStream';
 
@@ -12,6 +12,15 @@ const RUN: RunEvent = {
   projectId: 'p',
   ticketId: 't',
   chatId: null,
+  status: 'queued',
+};
+
+const GIT: ChatGitEvent = {
+  type: 'chat-git',
+  actionId: 'g-1',
+  runnerId: 'x',
+  chatId: 'c-1',
+  projectId: 'p',
   status: 'queued',
 };
 
@@ -67,6 +76,29 @@ describe('followRunEvents', () => {
 
     server.dropAll();
     await vi.waitFor(() => expect(onOpen).toHaveBeenCalledTimes(2), { timeout: 5_000 });
+  });
+
+  it('hands on chat commit events apart from runs', async () => {
+    const server = await sseServer();
+    close = server.close;
+    const onRun = vi.fn();
+    const onGit = vi.fn();
+    const onOpen = vi.fn();
+    void followRunEvents({
+      url: server.url,
+      token: undefined,
+      signal: stop.signal,
+      onOpen,
+      onRun,
+      onGit,
+    });
+    await vi.waitFor(() => expect(onOpen).toHaveBeenCalledTimes(1));
+    server.send(
+      `event: chat-git\ndata: ${JSON.stringify(GIT)}\n\nevent: chat-git\ndata: {"type":"run"}\n\n`,
+    );
+    await vi.waitFor(() => expect(onGit).toHaveBeenCalledWith(GIT));
+    expect(onGit).toHaveBeenCalledTimes(1);
+    expect(onRun).not.toHaveBeenCalled();
   });
 
   it('reconnects a stream that goes silent, as a proxy can keep a dead one open', async () => {

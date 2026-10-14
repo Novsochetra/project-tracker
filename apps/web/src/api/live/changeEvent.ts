@@ -1,8 +1,10 @@
 import {
+  GIT_ACTION_STATUSES,
   RUN_REQUEST_STATUSES,
   RUN_STATUSES,
   type ChangeEvent,
   type ChatDeletedEvent,
+  type ChatGitEvent,
   type RunEvent,
   type RunRequestEvent,
   type RunStepEvent,
@@ -76,4 +78,19 @@ export function parseChatDeletedEvent(data: unknown): ChatDeletedEvent | null {
   const projectId = idOrNull(value?.projectId);
   if (value?.type !== 'chat-deleted' || !chatId || !projectId) return null;
   return { type: 'chat-deleted', chatId, projectId };
+}
+
+export function parseChatGitEvent(data: unknown): ChatGitEvent | null {
+  const value = readJson(data);
+  const status = GIT_ACTION_STATUSES.find((known) => known === value?.status);
+  const [actionId, runnerId, chatId, projectId] = [
+    value?.actionId,
+    value?.runnerId,
+    value?.chatId,
+    value?.projectId,
+  ].map(idOrNull);
+  if (value?.type !== 'chat-git' || !status || !actionId || !runnerId || !chatId || !projectId) {
+    return null;
+  }
+  return { type: 'chat-git', actionId, runnerId, chatId, projectId, status };
 }
