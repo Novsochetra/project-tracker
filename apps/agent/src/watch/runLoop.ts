@@ -28,6 +28,8 @@ export interface RunLoopDeps {
     ((outcome: FinishRunInput, stop: AbortSignal) => Promise<FinishRunInput>) | undefined;
   // Sends what the run changed in its folder once Claude exits; none in tests that don't ask.
   trackChanges?: ((job: RunJob) => Promise<SendChanges>) | undefined;
+  // Work the lane does before it takes each run, as the commits the person asked for (PT-237).
+  betweenRuns?: ((lane: RunLane) => Promise<void>) | undefined;
   retryDelay?: ((attempt: number) => number) | undefined;
 }
 
@@ -171,6 +173,8 @@ export function createRunLoop(deps: RunLoopDeps, settings: RunLoopSettings) {
   async function takeRuns() {
     try {
       while (!stopped) {
+        if (deps.betweenRuns) await deps.betweenRuns(settings.kind);
+        if (stopped) break;
         const job = await api.takeNextRun(settings.runnerId, settings.kind);
         if (!job) break;
         await work(job);

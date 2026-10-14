@@ -1,7 +1,10 @@
 import { laneOf } from '@tracker/shared';
 import type {
   Activity,
+  AddChatChangesInput,
   AddRunChangesInput,
+  FinishGitActionInput,
+  GitActionJob,
   AddRunStepsInput,
   AskOptions,
   FinishRunInput,
@@ -75,13 +78,15 @@ export const askJob = (
 export const reportEntry = (createdAt: number): Activity =>
   ({ id: `a-${createdAt}`, type: 'report', text: 'TICKET: MOB-1', createdAt }) as Activity;
 
-export function fakeTracker(jobs: RunJob[]) {
+export function fakeTracker(jobs: RunJob[], gitJobs: GitActionJob[] = []) {
   const ended: (FinishRunInput & { id: string })[] = [];
   const statuses = new Map<string, Run['status']>();
   const reports: ReportInput[] = [];
   const activity: Activity[] = [];
   const steps: (AddRunStepsInput & { id: string })[] = [];
   const changes: (AddRunChangesInput & { id: string })[] = [];
+  const chatChanges: (AddChatChangesInput & { id: string })[] = [];
+  const gitEnded: (FinishGitActionInput & { id: string })[] = [];
   const ticket: { category: StatusCategory } = { category: 'in_progress' };
   const api: WatchApi = {
     listProjects: vi.fn(),
@@ -103,6 +108,15 @@ export function fakeTracker(jobs: RunJob[]) {
       changes.push({ id, ...input });
       return Promise.resolve();
     }),
+    addChatChanges: vi.fn((id: string, input: AddChatChangesInput) => {
+      chatChanges.push({ id, ...input });
+      return Promise.resolve();
+    }),
+    takeGitAction: vi.fn(() => Promise.resolve(gitJobs.shift() ?? null)),
+    finishGitAction: vi.fn((id: string, input: FinishGitActionInput) => {
+      gitEnded.push({ id, ...input });
+      return Promise.resolve();
+    }),
     getRun: vi.fn((id: string) =>
       Promise.resolve({ ...runOf(id, 'MOB-1'), status: statuses.get(id) ?? 'running' }),
     ),
@@ -119,5 +133,5 @@ export function fakeTracker(jobs: RunJob[]) {
     fetchAttachment: vi.fn(() => Promise.reject(new Error('No files here.'))),
     uploadAttachment: vi.fn(() => Promise.reject(new Error('No uploads here.'))),
   };
-  return { api, ended, statuses, reports, activity, steps, changes, ticket };
+  return { api, ended, statuses, reports, activity, steps, changes, chatChanges, gitEnded, ticket };
 }

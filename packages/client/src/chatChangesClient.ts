@@ -43,8 +43,13 @@ export class ChatChangesClient extends RunsClient {
       { allowEmpty: true },
     );
 
-  finishGitAction = (actionId: string, input: FinishGitActionInput) =>
+  finishGitAction = (
+    actionId: string,
+    input: FinishGitActionInput,
+    { signal }: { signal?: AbortSignal } = {},
+  ) =>
     this.http.request<void>('POST', `/api/git-actions/${segment(actionId)}/finish`, {
       body: input,
+      signal,
     });
 }

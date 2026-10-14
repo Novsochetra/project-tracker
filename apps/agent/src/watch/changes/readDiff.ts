@@ -21,14 +21,16 @@ const DIFF = [
 // Masking reads twice the cap at most (prepareDiff), so more is never held.
 const ROOM = RUN_DIFF_MAX * 2;
 
+// paths: only these files, each as it is, never a pattern.
 export async function readDiff(
   cwd: string,
-  trees: { from: string; to: string },
+  trees: { from: string; to: string; paths?: readonly string[] | undefined },
   signal: AbortSignal,
 ): Promise<RawDiff> {
-  const diff = await gitOutput(cwd, [...DIFF, trees.from, trees.to, '--'], {
+  const diff = await gitOutput(cwd, [...DIFF, trees.from, trees.to, '--', ...(trees.paths ?? [])], {
     maxChars: ROOM,
     signal,
+    env: { GIT_LITERAL_PATHSPECS: '1' },
   });
   if (diff.code !== 0) throw new Error(`git diff exited with ${diff.code}.`);
   return { raw: diff.text, cut: diff.cut };

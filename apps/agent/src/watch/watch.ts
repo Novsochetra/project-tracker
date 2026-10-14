@@ -80,6 +80,7 @@ async function keepWatching(setup: Setup, args: WatchArgs, io: WatchIo, signal: 
     signal,
     onOpen: () => void watcher.lookForWork(),
     onRun: watcher.onRunEvent,
+    onGit: watcher.onGitEvent,
   });
   await aborted(signal);
   clearInterval(timer);
