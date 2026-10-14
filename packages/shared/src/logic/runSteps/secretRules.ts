@@ -23,7 +23,7 @@ const looksSecret = (value: string): boolean =>
 
 type Replace = (match: string, ...groups: string[]) => string;
 
-const KEYED = String.raw`[\w-]{0,40}(?:token|key|secret|pass|pwd|cookie)[\w-]{0,40}`;
+const KEYED = String.raw`[\w-]{0,40}(?:token|key|secret|pass|pwd|cookie|credential)[\w-]{0,40}`;
 
 export interface SecretRule {
   // The shape it masks, as the tests name it.
@@ -135,5 +135,11 @@ export const SECRET_RULES: readonly SecretRule[] = [
   rule('known prefix', String.raw`\b(?:${PREFIXED})`, 'g', () => MASK),
   rule('slack webhook', String.raw`(hooks\.slack\.com\/services\/)[^\s"']+`, 'g', (_m, head = '') =>
     masked(head),
+  ),
+  rule(
+    'discord webhook',
+    String.raw`(discord(?:app)?\.com\/api\/webhooks\/)[^\s"']+`,
+    'g',
+    (_m, head = '') => masked(head),
   ),
 ];

@@ -19,7 +19,6 @@ export function commentLine(activity: Activity): LineRef | null {
   return isSide(side) ? { runId, path, side, line: number } : null;
 }
 
-// The run's line comments, oldest first, by line.
 export function lineThreads(activity: readonly Activity[], runId: string): Map<string, Activity[]> {
   const threads = new Map<string, Activity[]>();
   for (const item of readableEntries(activity)) {

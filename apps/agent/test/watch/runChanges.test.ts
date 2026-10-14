@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { parseDiff, type RunJob } from '@tracker/shared';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { pickBase } from '../../src/watch/changes/diffBase';
+import { gitOutput } from '../../src/watch/changes/gitOutput';
 import { trackRunChanges } from '../../src/watch/changes/runChanges';
 import { createWatcher } from '../../src/watch/watcher';
 import { fakeTracker, job, noAsks, RUNNER } from './fakeTracker';
@@ -48,7 +48,7 @@ describe("a ticket run's changes", () => {
     commit('b.ts', 'export const b = 2;\n');
     writeFileSync(join(folder, 'a.ts'), 'const a = 3;\n');
     writeFileSync(
-      join(folder, 'new file.env'),
+      join(folder, 'new file.sh'),
       'GITHUB_TOKEN=ghp_abcdefghijklmnopqrstuvwxyz0123456789\n',
     );
     await send({ status: 'done' });
@@ -58,7 +58,7 @@ describe("a ticket run's changes", () => {
     expect(files.map(({ path, status }) => [path, status])).toEqual([
       ['a.ts', 'modified'],
       ['b.ts', 'added'],
-      ['new file.env', 'added'],
+      ['new file.sh', 'added'],
     ]);
     expect(sent?.diff).toContain('+GITHUB_TOKEN=***');
     expect(sent?.diff).not.toContain('ghp_');
@@ -115,13 +115,10 @@ describe("a ticket run's changes", () => {
   });
 });
 
-describe('pickBase', () => {
-  const facts = { branch: 'main', defaultBranch: 'origin/main', mergeBase: 'm1', start: 's1' };
-
-  it('takes the run start on the default branch, and where the branch left it elsewhere', () => {
-    expect(pickBase(facts)).toBe('s1');
-    expect(pickBase({ ...facts, branch: 'ticket/pt-1' })).toBe('m1');
-    expect(pickBase({ ...facts, branch: 'ticket/pt-1', mergeBase: null })).toBe('s1');
-    expect(pickBase({ ...facts, defaultBranch: null, branch: 'x' })).toBe('s1');
+describe('gitOutput', () => {
+  it('runs nothing once the deadline the calls of a step share has passed', async () => {
+    const signal = AbortSignal.abort();
+    const read = gitOutput(folder, ['rev-parse', 'HEAD'], { maxChars: 100, signal });
+    await expect(read).rejects.toThrow();
   });
 });

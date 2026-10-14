@@ -18,7 +18,6 @@ export interface LineThreadProps {
   onClose: () => void;
 }
 
-// The line's comments under it, then the box for a new one while it is open.
 export function LineThread({ comments, boxOpen, now, ...box }: LineThreadProps) {
   if (comments.length === 0 && !boxOpen) return null;
   return (

@@ -22,7 +22,6 @@ export interface TicketChangesProps {
   className?: string | undefined;
 }
 
-// The latest ticket run's changes: viewed ticks, line comments and the person's verdict.
 export function TicketChanges({ detail, changes, files, className }: TicketChangesProps) {
   const ticketKey = detail.ticket.key;
   const { runId } = changes;

@@ -99,11 +99,13 @@ describe.each(DIALECTS)('run changes (%s)', (dialect) => {
     const tick = (body: object, as = person) =>
       as('PUT', '/api/tickets/MOB-1/changes/viewed', body);
     expect((await tick({ path: 'src/a.ts', digest: 'd1', viewed: true })).status).toBe(204);
-    await tick({ path: 'src/b.ts', digest: 'd2', viewed: true });
+    expect((await read()).body.changes?.viewed).toEqual({ 'src/a.ts': 'd1' });
     await tick({ path: 'src/a.ts', digest: 'd3', viewed: true });
-    await tick({ path: 'src/b.ts', digest: 'd2', viewed: false });
     expect((await read()).body.changes?.viewed).toEqual({ 'src/a.ts': 'd3' });
-    expect((await tick({ path: 'src/b.ts', digest: 'd2', viewed: true }, helper)).status).toBe(403);
+    await tick({ path: 'src/a.ts', digest: 'd3', viewed: false });
+    expect((await read()).body.changes?.viewed).toEqual({});
+    expect((await tick({ path: 'src/b.ts', digest: 'd2', viewed: true })).status).toBe(404);
+    expect((await tick({ path: 'src/a.ts', digest: 'd2', viewed: true }, helper)).status).toBe(403);
     expect((await tick({ path: 'x', digest: 'd', viewed: true }, other.person)).status).toBe(404);
   });
 

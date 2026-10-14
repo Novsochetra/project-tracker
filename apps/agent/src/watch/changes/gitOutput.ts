@@ -7,18 +7,24 @@ export interface GitOutput {
   cut: boolean;
 }
 
-const GIT_TIMEOUT_MS = 30_000;
+export interface GitOptions {
+  maxChars: number;
+  // One deadline for every git call of a step, so many calls can't add up.
+  signal: AbortSignal;
+  env?: Record<string, string>;
+}
 
 // Git reads no terminal and starts no pager or editor.
 const GIT_ENV = { GIT_TERMINAL_PROMPT: '0', GIT_PAGER: 'cat', GIT_OPTIONAL_LOCKS: '0' };
 
-export function gitOutput(cwd: string, args: readonly string[], maxChars: number) {
+export function gitOutput(cwd: string, args: readonly string[], options: GitOptions) {
+  const { maxChars, signal, env = {} } = options;
   return new Promise<GitOutput>((resolve, reject) => {
     const child = spawn('git', [...args], {
       cwd,
-      env: { ...process.env, ...GIT_ENV },
+      env: { ...process.env, ...GIT_ENV, ...env },
       stdio: ['ignore', 'pipe', 'ignore'],
-      signal: AbortSignal.timeout(GIT_TIMEOUT_MS),
+      signal,
     });
     let text = '';
     let cut = false;

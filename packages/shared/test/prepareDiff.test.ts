@@ -2,7 +2,13 @@ import { describe, expect, it } from 'vitest';
 import { capDiff, lineNote, maskDiff, prepareDiff } from '../src/logic/diff';
 
 const fileOf = (lines: string[]) =>
-  ['diff --git a/.env b/.env', '--- a/.env', '+++ b/.env', '@@ -1,2 +1,2 @@', ...lines].join('\n');
+  [
+    'diff --git a/src/config.ts b/src/config.ts',
+    '--- a/src/config.ts',
+    '+++ b/src/config.ts',
+    '@@ -1,2 +1,2 @@',
+    ...lines,
+  ].join('\n');
 
 describe('maskDiff', () => {
   it('masks secrets in added, removed and kept lines by the steps rules', () => {

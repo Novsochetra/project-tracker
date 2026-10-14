@@ -6,7 +6,6 @@ import styles from './DiffView.module.css';
 
 export interface DiffViewProps {
   files: readonly DiffFile[];
-  // Path to the digest of the file's change when it was ticked.
   viewed?: Readonly<Record<string, string>>;
   onViewedChange?: ((file: DiffFile, viewed: boolean) => void) | undefined;
   onLineSelect?: ((file: DiffFile, at: LineAt) => void) | undefined;
@@ -20,8 +19,7 @@ const toggled = (open: ReadonlySet<string>, path: string, on: boolean): Readonly
   return next;
 };
 
-// A read-only diff: a list of files, each opening to its lines. Ticking a file as viewed closes
-// it, as the person is done with it.
+// Ticking a file as viewed closes it: the person is done with it.
 export function DiffView({
   files,
   viewed = {},
