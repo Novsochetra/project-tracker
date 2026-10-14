@@ -9,7 +9,7 @@ import { createMemoryStorage } from '../../src/storage/memoryStorage';
 import { clientFor, DIALECTS, openEmptyDatabase } from '../helpers/server';
 
 const BEFORE = Object.fromEntries(
-  Object.entries(MIGRATIONS).filter(([name]) => name < '0027_hide_name'),
+  Object.entries(MIGRATIONS).filter(([name]) => name < '0028_hide_name'),
 );
 
 describe.each(DIALECTS)('hide name migration (%s)', (dialect) => {

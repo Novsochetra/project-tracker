@@ -17,7 +17,7 @@ test('a project that hides its name shows its key on every screen but Edit proje
 
   for (const path of ['/', '/p/SL', '/p/SL/1']) {
     await page.goto(path);
-    await expect(page.getByText('Project SL').first()).toBeVisible();
+    await expect(page.getByText('Project SL').filter({ visible: true }).first()).toBeVisible();
     await expect(page.locator('body')).not.toContainText('Secret launch');
   }
   await page.screenshot({ path: info.outputPath('hidden-name-ticket.png') });
