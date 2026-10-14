@@ -19,6 +19,7 @@ describe.each(DIALECTS)('Run all from a chat card (%s)', (dialect) => {
     as<RunAllResult>('POST', `/api/chats/${chatId}/messages/${messageId}/run-all`, {
       runnerId: runner,
       maxParallel: 3,
+      ticketKeys: ['MOB-1', 'MOB-2'],
     });
   const chat = async () => (await person<ChatDetail>('GET', `/api/chats/${chatId}`)).body;
 

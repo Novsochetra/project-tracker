@@ -54,3 +54,9 @@ export function splitRunAllCard(text: string): RunAllCardSplit | null {
       .trim(),
   };
 }
+
+// A priority edit may reorder the list; the set is what the person agreed to run.
+export function sameTicketKeys(shown: readonly string[], picked: readonly string[]): boolean {
+  const seen = new Set(shown);
+  return seen.size === picked.length && picked.every((key) => seen.has(key));
+}

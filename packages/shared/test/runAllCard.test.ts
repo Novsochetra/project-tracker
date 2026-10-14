@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildAskPrompt, splitRunAllCard } from '../src';
+import { buildAskPrompt, sameTicketKeys, splitRunAllCard } from '../src';
 
 const card = (...body: string[]) => ['````run-all', ...body, '````'].join('\n');
 
@@ -52,5 +52,19 @@ describe('splitRunAllCard', () => {
     });
     const example = /````run-all\n[\s\S]*?\n````/.exec(prompt)?.[0] ?? '';
     expect(splitRunAllCard(example)).toEqual({ before: '', limit: null, after: '' });
+  });
+});
+
+describe('sameTicketKeys', () => {
+  it('matches the same tickets in any order', () => {
+    expect(sameTicketKeys(['MOB-1', 'MOB-2'], ['MOB-2', 'MOB-1'])).toBe(true);
+    expect(sameTicketKeys([], [])).toBe(true);
+  });
+
+  it('refuses a ticket added, left out or swapped', () => {
+    expect(sameTicketKeys(['MOB-1'], ['MOB-1', 'MOB-3'])).toBe(false);
+    expect(sameTicketKeys(['MOB-1', 'MOB-2'], ['MOB-1'])).toBe(false);
+    expect(sameTicketKeys(['MOB-1', 'MOB-2'], ['MOB-1', 'MOB-3'])).toBe(false);
+    expect(sameTicketKeys(['MOB-1', 'MOB-1'], ['MOB-1', 'MOB-2'])).toBe(false);
   });
 });

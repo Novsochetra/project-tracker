@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { RunAllInput, RunAllPreview, RunAllResult, RunBatch } from '@tracker/shared';
+import type { RunAllCardInput, RunAllPreview, RunAllResult, RunBatch } from '@tracker/shared';
 import { useApi } from '../context';
 import { refreshBatches } from '../live/refreshBatches';
 import { queryKeys } from '../queryKeys';
@@ -34,7 +34,7 @@ export interface CardRunAllVariables {
   chatId: string;
   projectKey: string;
   messageId: string;
-  input: RunAllInput;
+  input: RunAllCardInput;
 }
 
 export function useRunAllFromCard(): TrackerMutation<RunAllResult, CardRunAllVariables> {
@@ -43,7 +43,8 @@ export function useRunAllFromCard(): TrackerMutation<RunAllResult, CardRunAllVar
   return useMutation({
     mutationFn: ({ chatId, messageId, input }: CardRunAllVariables) =>
       client.runAllFromCard(chatId, messageId, input),
-    // The chat's message now holds the batch, so the card shows its progress, not Confirm.
+    // The chat's message now holds the batch, so the card shows its progress, not Confirm. After
+    // a 409 the To do list changed, so the card reloads it before the person confirms again.
     onSettled: (_result, _error, { chatId, projectKey }) => {
       refreshBatches(queryClient);
       void queryClient.invalidateQueries({ queryKey: queryKeys.runAllPreview(projectKey) });

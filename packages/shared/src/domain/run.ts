@@ -191,6 +191,11 @@ export interface RunAllInput {
   maxParallel?: number | undefined;
 }
 
+// A chat card's Confirm runs exactly the tickets the card showed, or none.
+export interface RunAllCardInput extends RunAllInput {
+  ticketKeys: string[];
+}
+
 // Run all Todo: the batch it queued, and why it left tickets out.
 export interface RunAllResult {
   runId: string | null;
