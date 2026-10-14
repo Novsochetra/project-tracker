@@ -24,8 +24,13 @@ describe('endingOf', () => {
     expect(endingOf(ask, { status: 'done', answer: ' Yes. ', sessionId: SESSION })).toEqual({
       status: 'done',
       error: null,
-      answer: { text: 'Yes.', sessionId: SESSION },
+      answer: { text: 'Yes.', sessionId: SESSION, attachmentIds: [] },
     });
+  });
+
+  it("keeps the pictures an ask's answer shows", () => {
+    const ended = endingOf(ask, { status: 'done', answer: 'See.', attachmentIds: ['a', 'b'] });
+    expect(ended.answer?.attachmentIds).toEqual(['a', 'b']);
   });
 
   it('fails an ask that is done without an answer', () => {

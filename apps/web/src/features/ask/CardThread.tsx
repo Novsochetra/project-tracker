@@ -1,9 +1,8 @@
 import type { CardSegment, ChatMessage, Runner, TicketCard } from '@tracker/shared';
 import { Fragment, useState } from 'react';
+import { AnswerText } from './AnswerText';
 import { cardsOf, cardTicketKey, offersCreateAll, pendingCards, type MessageCards } from './cards';
-import styles from './ChatScreen.module.css';
 import { CreateAllButton } from './CreateAllButton';
-import { Markdown } from './markdown/Markdown';
 import { TicketCardView } from './TicketCardView';
 import { useCreateAll } from './useCreateAll';
 
@@ -45,7 +44,7 @@ export function CardThread({ chatId, message, cards, helper }: CardThreadProps) 
     <>
       {cards.segments.map((segment, at) =>
         segment.kind === 'text' ? (
-          <Markdown key={at} className={styles.text} text={segment.text} />
+          <AnswerText key={at} text={segment.text} />
         ) : (
           <Fragment key={at}>
             {cardView(segment.index, segment.card)}

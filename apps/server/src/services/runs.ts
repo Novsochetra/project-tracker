@@ -126,7 +126,7 @@ export async function endRun(
   const ended = await inTransaction(ctx, async (trx) => {
     const changes = { status, error, endedAt, ...usageOfFinish(input) };
     const marked = await markRunEnded(trx, scope, before.id, changes);
-    if (marked && answer) await saveAnswer(trx, before, { ...answer, at: endedAt });
+    if (marked && answer) await saveAnswer(trx, scope, before, { ...answer, at: endedAt });
     const held = marked ? await endHeldTickets(trx, before, status, endedAt) : [];
     return { marked, held };
   });

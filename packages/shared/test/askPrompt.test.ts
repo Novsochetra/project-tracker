@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { answerImagePaths } from '../src/logic/answerImages';
 import { buildAskPrompt, withSentFiles } from '../src/logic/askPrompt';
 import { ticketCards } from '../src/logic/ticketCard';
 import type { PromptTicket } from '../src/logic/prompt';
@@ -201,5 +202,29 @@ describe('withSentFiles', () => {
 
   it('leaves a question without files as it was', () => {
     expect(withSentFiles(prompt, [])).toBe(prompt);
+  });
+});
+
+describe('buildAskPrompt: pictures (PT-225)', () => {
+  const imageExample = (prompt: string) => /````image[\s\S]*?\n````/.exec(prompt)?.[0] ?? '';
+
+  it('shows an image card the parser reads', () => {
+    const prompt = buildAskPrompt({ project, mode: 'ask', question: 'q', history: [] });
+    const filled = imageExample(prompt).replace('<path of the image file>', 'docs/home.png');
+    expect(answerImagePaths(`Here:\n${filled}`)).toEqual(['docs/home.png']);
+  });
+
+  it('lets Ask and Plan show only pictures the folder has, and Edit and Auto make them', () => {
+    for (const mode of ['ask', 'plan'] as const) {
+      const prompt = buildAskPrompt({ project, mode, question: 'q', history: [] });
+      expect(prompt).toContain('pick a PNG, JPEG, GIF or WebP file in the project folder');
+      expect(prompt).not.toContain('save it as a PNG');
+    }
+    for (const mode of ['edit', 'auto'] as const) {
+      const prompt = buildAskPrompt({ project, mode, question: 'q', history: [] });
+      expect(prompt).toContain(
+        'save it as a PNG, JPEG, GIF or WebP file in the project folder or a temp folder',
+      );
+    }
   });
 });

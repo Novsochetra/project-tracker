@@ -12,6 +12,16 @@ export const CHAT_ANSWER_MAX = 100_000;
 export const CHAT_TITLE_MAX = 80;
 export const CHAT_NO_ANSWER = 'Claude Code gave no answer.';
 
+// Pictures Claude shows in one answer (PT-225), each named by an image card.
+export const CHAT_ANSWER_IMAGES_MAX = 10;
+// Only types the tracker always strips of their metadata, so no picture carries where it was taken.
+export const CHAT_ANSWER_IMAGE_TYPES: readonly string[] = [
+  'image/png',
+  'image/jpeg',
+  'image/gif',
+  'image/webp',
+];
+
 export interface ChatTicket {
   key: string;
   title: string;
@@ -50,6 +60,7 @@ export interface ChatMessage {
   // The steps its open list shows, so an older answer can say "23 steps" before they are read:
   // the run's, less Claude's last words when they are the answer itself. 0 on the person's.
   stepCount: number;
+  // The files the person sent with a question, or the pictures Claude showed in its answer.
   attachments: Attachment[];
   // What the answer's run took; null on the person's and on answers from older helpers.
   usage: RunUsage | null;

@@ -4,6 +4,7 @@ import type { RunRow } from '../db/runTables';
 export interface Answer {
   text: string;
   sessionId: string | null;
+  attachmentIds: string[];
 }
 
 export interface RunEnding {
@@ -19,5 +20,10 @@ export function endingOf(run: Pick<RunRow, 'kind'>, input: FinishRunInput): RunE
   if (run.kind !== 'ask') return { status: 'done', error: null, answer: null };
   const text = input.answer?.trim();
   if (!text) return { status: 'failed', error: CHAT_NO_ANSWER, answer: null };
-  return { status: 'done', error: null, answer: { text, sessionId: input.sessionId ?? null } };
+  const answer = {
+    text,
+    sessionId: input.sessionId ?? null,
+    attachmentIds: input.attachmentIds ?? [],
+  };
+  return { status: 'done', error: null, answer };
 }
