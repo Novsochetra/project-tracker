@@ -1,6 +1,6 @@
 import type { DiffFile } from '@tracker/shared';
 import { ChevronRight } from 'lucide-react';
-import { Fragment } from 'react';
+import { Fragment, useState } from 'react';
 import { Icon } from '../../components';
 import { STATUS_WORDS } from './copy';
 import { DiffHunks, type LineHandlers } from './DiffHunks';
@@ -54,6 +54,15 @@ function Counts({ file }: { file: DiffFile }) {
   );
 }
 
+// The tick follows the tap at once: the caller's viewed state can come a moment later (an
+// optimistic update waits for reads on their way to stop), and a controlled checkbox would
+// flick back meanwhile.
+function useTick(viewed: boolean) {
+  const [tick, setTick] = useState({ viewed, checked: viewed });
+  if (tick.viewed !== viewed) setTick({ viewed, checked: viewed });
+  return [tick.checked, (checked: boolean) => setTick({ viewed, checked })] as const;
+}
+
 export function DiffFileCard({
   file,
   open,
@@ -62,8 +71,9 @@ export function DiffFileCard({
   onViewedChange,
   ...lines
 }: DiffFileCardProps) {
+  const [checked, setChecked] = useTick(viewed);
   return (
-    <section className={styles.file} data-viewed={viewed || undefined}>
+    <section className={styles.file} data-viewed={checked || undefined}>
       <div className={styles.fileHeader}>
         <button type="button" className={styles.toggle} aria-expanded={open} onClick={onToggle}>
           <Icon icon={ChevronRight} size={16} className={styles.chevron} />
@@ -75,8 +85,11 @@ export function DiffFileCard({
             <input
               type="checkbox"
               aria-label={`Viewed ${file.path}`}
-              checked={viewed}
-              onChange={(event) => onViewedChange(event.currentTarget.checked)}
+              checked={checked}
+              onChange={(event) => {
+                setChecked(event.currentTarget.checked);
+                onViewedChange(event.currentTarget.checked);
+              }}
             />
             Viewed
           </label>
