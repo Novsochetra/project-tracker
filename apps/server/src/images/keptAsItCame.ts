@@ -34,14 +34,15 @@ function shapeOf(bytes: Uint8Array, facts: ImageFacts | null): Shape | null {
 }
 
 // `recognized`: the bytes are the image `mimeType` says (sniffImageType). Bytes that are no image
-// at all have no metadata to find, and are kept as they are.
+// at all have no metadata to find, and are kept as they are, with no size: only a known size
+// lets them show as a picture in Claude's answer (PT-225 review; image-size reads SVG too).
 export function keptAsItCame(
   original: Uint8Array,
   mimeType: AttachmentMimeType,
   facts: ImageFacts | null,
   recognized: boolean,
 ): StoredImage {
-  const shape = shapeOf(original, facts);
+  const shape = recognized ? shapeOf(original, facts) : null;
   const orientation = shape?.orientation ?? 1;
   const stripped = recognized ? stripMetadata(original, mimeType, orientation) : original;
   const bytes = stripped ?? original;

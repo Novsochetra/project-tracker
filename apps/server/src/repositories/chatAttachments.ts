@@ -23,7 +23,8 @@ export async function linkChatAttachments(
       .where('id', '=', id)
       .where('activityId', 'is', null)
       .where(pendingOf(uploader));
-    if (types) update = update.where('mimeType', 'in', [...types]);
+    // A picture must have been read as an image; bytes that weren't have no width.
+    if (types) update = update.where('mimeType', 'in', [...types]).where('width', 'is not', null);
     const result = await update.executeTakeFirst();
     linked += Number(result.numUpdatedRows);
   }

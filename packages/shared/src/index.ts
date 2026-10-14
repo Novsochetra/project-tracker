@@ -38,6 +38,8 @@ export * from './api/schemas';
 export * from './api/ticketQuestions';
 export * from './logic/askCards';
 export * from './logic/answerImages';
+export * from './logic/sniffImage';
+export * from './logic/withheldFiles';
 export * from './logic/askPrompt';
 export * from './logic/avatar';
 export * from './logic/diff';

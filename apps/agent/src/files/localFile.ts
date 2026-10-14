@@ -67,7 +67,7 @@ export async function checkLocalFile(path: string, folders: readonly string[]): 
 }
 
 // Only the bytes the check measured, so a file that grew since can't pass the size limit.
-async function readChecked(file: LocalFile): Promise<Uint8Array<ArrayBuffer>> {
+export async function readLocalBytes(file: LocalFile): Promise<Uint8Array<ArrayBuffer>> {
   const bytes = new Uint8Array(file.size);
   let filled = 0;
   while (filled < file.size) {
@@ -79,7 +79,7 @@ async function readChecked(file: LocalFile): Promise<Uint8Array<ArrayBuffer>> {
 }
 
 export const readLocalFile = async (file: LocalFile): Promise<Blob> =>
-  new Blob([await readChecked(file)], { type: file.mimeType });
+  new Blob([await readLocalBytes(file)], { type: file.mimeType });
 
 export const closeLocalFiles = async (files: readonly LocalFile[]): Promise<void> => {
   await Promise.all(files.map((file) => file.handle.close()));

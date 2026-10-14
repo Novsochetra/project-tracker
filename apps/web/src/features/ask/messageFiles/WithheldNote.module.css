@@ -1,0 +1,8 @@
+.note {
+  max-width: 85%;
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--size-secondary);
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
