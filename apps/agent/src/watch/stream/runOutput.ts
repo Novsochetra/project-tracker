@@ -1,3 +1,4 @@
+import { contextUseOf, readContext, type ContextReading, type ContextUse } from '@tracker/shared';
 import type { ClaudeExit } from '../outcome';
 import { resultOf, type ClaudeResult } from './claudeResult';
 import { createReadTokenCount } from './readTokens';
@@ -9,10 +10,13 @@ export interface ClaudeListeners {
   onEvent: (event: unknown) => void;
 }
 
+const withContext = (context: ContextUse | undefined) => (context ? { context } : {});
+
 export function createRunOutput({ onOutput, onEvent }: ClaudeListeners) {
   let output = '';
   const results: ClaudeResult[] = [];
   const tokens = createReadTokenCount();
+  let context: ContextReading = {};
   const say = (text: string) => {
     output = (output + text).slice(-KEPT_OUTPUT);
     onOutput(text);
@@ -22,6 +26,7 @@ export function createRunOutput({ onOutput, onEvent }: ClaudeListeners) {
     event(event: unknown): ClaudeResult | null {
       onEvent(event);
       tokens.add(event);
+      context = readContext(context, event);
       const found = resultOf(event);
       if (!found) return null;
       results.push(found);
@@ -36,6 +41,7 @@ export function createRunOutput({ onOutput, onEvent }: ClaudeListeners) {
       output,
       results,
       readTokens: tokens.total(),
+      ...withContext(contextUseOf(context)),
     }),
   };
 }

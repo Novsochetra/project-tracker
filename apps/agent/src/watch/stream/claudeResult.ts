@@ -1,4 +1,4 @@
-import { isJson, type Json } from '@tracker/shared';
+import { isJson, turnTokensOf, type Json } from '@tracker/shared';
 import { readTokensOf } from './readTokens';
 
 // Claude Code's own figures on a result. The turns and time are this turn's; the cost and the
@@ -8,6 +8,8 @@ export interface ResultUsage {
   turns: number | undefined;
   durationMs: number | undefined;
   readTokens: number | undefined;
+  // What this turn read and wrote, Claude's main conversation only.
+  tokens?: number | undefined;
 }
 
 export interface ClaudeResult {
@@ -45,6 +47,7 @@ const usageOf = (event: Json): ResultUsage => ({
   turns: numberOf(event.num_turns),
   durationMs: numberOf(event.duration_ms),
   readTokens: sessionReadTokens(event.modelUsage),
+  tokens: turnTokensOf(event),
 });
 
 export function resultOf(event: unknown): ClaudeResult | null {

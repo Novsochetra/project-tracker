@@ -52,6 +52,10 @@ export interface RunRow {
   costMicros: number | null;
   turns: number | null;
   durationMs: number | null;
+  // How full Claude's context was at the run's end, and the tokens it read and wrote (PT-239).
+  contextTokens: number | null;
+  contextWindow: number | null;
+  tokens: number | null;
   // The chain's work round (logic/reviewChain); null on a run a person started.
   round: number | null;
   chainStop: ChainStop | null;
@@ -60,6 +64,11 @@ export interface RunRow {
   // The batch run that holds this ticket's run: the batch's Claude works on it, no helper takes it.
   batchId: string | null;
 }
+
+export type RunUsageColumns = Pick<
+  RunRow,
+  'costMicros' | 'turns' | 'durationMs' | 'contextTokens' | 'contextWindow' | 'tokens'
+>;
 
 export interface RunStepRow {
   runId: string;
