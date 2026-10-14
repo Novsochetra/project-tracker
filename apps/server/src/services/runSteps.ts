@@ -6,19 +6,25 @@ import {
   countMoreSteps,
   dropOldSteps,
   insertRunSteps,
+  keepLatestTodos,
   listRunStepRows,
 } from '../repositories/runSteps';
 import { inTransaction, type ServiceContext } from './context';
 import { requireRun } from './runs';
+import { todosColumn, todosOfColumn } from './runTodos';
 
-const toStep = (row: RunStepRow): RunStep => ({
-  seq: row.seq,
-  kind: row.kind,
-  label: row.label,
-  subAgent: row.subAgent === 1,
-  toolId: row.toolId,
-  at: row.createdAt,
-});
+function toStep(row: RunStepRow): RunStep {
+  const todos = todosOfColumn(row.todos);
+  return {
+    seq: row.seq,
+    kind: row.kind,
+    label: row.label,
+    subAgent: row.subAgent === 1,
+    toolId: row.toolId,
+    ...(todos && { todos }),
+    at: row.createdAt,
+  };
+}
 
 type Steps = AddRunStepsInput['steps'];
 
@@ -30,6 +36,7 @@ const rowsOf = (runId: string, steps: Steps, count: number, at: number) =>
     label: step.label,
     subAgent: step.subAgent ? 1 : 0,
     toolId: step.toolId ?? null,
+    todos: 'todos' in step ? todosColumn(step) : null,
     createdAt: at,
   }));
 
@@ -69,7 +76,9 @@ export async function addRunSteps(
   const count = await inTransaction(ctx, async (trx) => {
     const counted = await countMoreSteps(trx, run.id, steps.length);
     if (counted === undefined) return undefined;
-    await insertRunSteps(trx, rowsOf(run.id, steps, counted, at));
+    const rows = rowsOf(run.id, steps, counted, at);
+    await insertRunSteps(trx, rows);
+    await keepLatestTodos(trx, rows);
     await dropOldSteps(trx, run.id, counted);
     return counted;
   });

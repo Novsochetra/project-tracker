@@ -8,6 +8,7 @@ import { notQueued } from './chatQueue';
 export interface ChatWithKey extends ChatRow {
   projectKey: string;
   projectName: string;
+  projectHideName: number;
   waiting: number | boolean;
   ticketNum: number | null;
   ticketTitle: string | null;
@@ -18,6 +19,7 @@ export interface MessageWithSteps extends ChatMessageRow {
   lastStepKind: RunStepKind | null;
   lastStepLabel: string | null;
   lastStepSubAgent: number | null;
+  todos: string | null;
   costMicros: number | null;
   turns: number | null;
   durationMs: number | null;
@@ -49,7 +51,11 @@ const chatsOf = (db: Db, userId: UserScope, now: number) =>
     .innerJoin('projects', 'projects.id', 'chats.projectId')
     .leftJoin('tickets as chatTicket', 'chatTicket.id', 'chats.ticketId')
     .selectAll('chats')
-    .select(['projects.key as projectKey', 'projects.name as projectName'])
+    .select([
+      'projects.key as projectKey',
+      'projects.name as projectName',
+      'projects.hideName as projectHideName',
+    ])
     .select(['chatTicket.num as ticketNum', 'chatTicket.title as ticketTitle'])
     .select(waitingAt(now))
     .where(ownedBy(userId));
@@ -85,6 +91,16 @@ export const listMessageRows = (db: Db, chatId: string) =>
       'lastStep.label as lastStepLabel',
       'lastStep.subAgent as lastStepSubAgent',
     ])
+    .select((eb) =>
+      eb
+        .selectFrom('runSteps as todoStep')
+        .select('todoStep.todos')
+        .whereRef('todoStep.runId', '=', 'runs.id')
+        .where('todoStep.todos', 'is not', null)
+        .orderBy('todoStep.seq', 'desc')
+        .limit(1)
+        .as('todos'),
+    )
     .select(['runs.costMicros', 'runs.turns', 'runs.durationMs'])
     .where('chatMessages.chatId', '=', chatId)
     // A queued message joins the thread when its own run starts.

@@ -1,4 +1,4 @@
-import type { Project } from '@tracker/shared';
+import { projectDisplayName, projectDisplayRepo, type Project } from '@tracker/shared';
 import { ClipboardCheck, Folder, MessageCircle, Plus, Terminal } from 'lucide-react';
 import { ASK_LABEL } from '../../app/crumbs';
 import { useSheets } from '../../app/sheets/context';
@@ -14,7 +14,7 @@ export function ProjectNavBar({ project }: { project: Project }) {
   const sheets = useSheets();
   return (
     <NavBar
-      title={project.name}
+      title={projectDisplayName(project)}
       backLabel="Projects"
       right={
         <>
@@ -79,13 +79,14 @@ export function ProjectToolbar({ project }: { project: Project }) {
   const openAsk = useOpenAsk(project.key);
   const isPhone = useIsPhone();
   const scope = projectScope(project.key);
+  const repo = projectDisplayRepo(project);
   if (isPhone) return null;
   return (
     <div className={styles.toolbar}>
-      {project.repo && (
-        <span className={styles.repo} title={project.repo}>
+      {repo && (
+        <span className={styles.repo} title={repo}>
           <Icon icon={Folder} size={14} />
-          <span className={styles.repoPath}>{project.repo}</span>
+          <span className={styles.repoPath}>{repo}</span>
         </span>
       )}
       <Button size="sm" icon={MessageCircle} onClick={openAsk}>

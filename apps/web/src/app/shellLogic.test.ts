@@ -55,6 +55,13 @@ describe('breadcrumbFor', () => {
     ]);
   });
 
+  it('names a project that hides its name by its key', () => {
+    const hidden = { ...project, hideName: true };
+    expect(breadcrumbFor({ name: 'ticket', key: 'MOB', num: 3 }, hidden)[1]?.label).toBe(
+      'Project MOB',
+    );
+  });
+
   it('links to the project and ends with the ticket key on a ticket', () => {
     expect(breadcrumbFor({ name: 'ticket', key: 'mob', num: 3 }, project)).toEqual([
       { level: 'projects', label: 'Projects', target: { name: 'projects' } },

@@ -1,4 +1,4 @@
-import type { ProjectSummary } from '@tracker/shared';
+import { projectDisplayName, type ProjectSummary } from '@tracker/shared';
 import { findProject } from '../projects/projectLookup';
 
 export interface ProjectChoice {
@@ -9,17 +9,20 @@ export interface ProjectChoice {
 
 export const LAST_PROJECT_STORAGE_KEY = 'tracker.capture.project';
 
-const toChoice = ({ key, name, color }: ProjectChoice): ProjectChoice => ({ key, name, color });
+export const choiceOf = (project: ProjectSummary): ProjectChoice => ({
+  key: project.key,
+  name: projectDisplayName(project),
+  color: project.color,
+});
 
+// No name in storage, so a name hidden later can't stay on the device; offline the key stands in.
 function parseChoice(text: string | null): ProjectChoice | null {
   if (!text) return null;
   try {
     const value = JSON.parse(text) as Partial<Record<keyof ProjectChoice, unknown>> | null;
-    const { key, name, color } = value ?? {};
-    if (typeof key !== 'string' || typeof name !== 'string' || typeof color !== 'string') {
-      return null;
-    }
-    return { key, name, color };
+    const { key, color } = value ?? {};
+    if (typeof key !== 'string' || typeof color !== 'string') return null;
+    return { key, name: key, color };
   } catch {
     return null;
   }
@@ -35,7 +38,10 @@ export function readLastProject(): ProjectChoice | null {
 
 export function rememberProject(project: ProjectChoice): void {
   try {
-    window.localStorage.setItem(LAST_PROJECT_STORAGE_KEY, JSON.stringify(toChoice(project)));
+    window.localStorage.setItem(
+      LAST_PROJECT_STORAGE_KEY,
+      JSON.stringify({ key: project.key, color: project.color }),
+    );
   } catch {
     // Without storage the default still lands on this project: it is now the most recently active.
   }
@@ -49,7 +55,7 @@ export function projectChoices(
   projects: readonly ProjectSummary[] | undefined,
   remembered: ProjectChoice | null,
 ): ProjectChoice[] {
-  if (projects) return projects.map(toChoice);
+  if (projects) return projects.map(choiceOf);
   return remembered ? [remembered] : [];
 }
 

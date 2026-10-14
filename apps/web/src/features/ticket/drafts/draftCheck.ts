@@ -17,6 +17,7 @@ export function serverText(detail: TicketDetail, draft: StoredDraft): string | u
     case 'comment':
     case 'comment-send':
     case 'comment-back':
+    case 'line-comment':
       return undefined;
   }
 }

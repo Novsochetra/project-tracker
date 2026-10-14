@@ -1,0 +1,219 @@
+.files {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.file {
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-group);
+  background: var(--surface);
+}
+
+.fileHeader {
+  display: flex;
+  align-items: stretch;
+  min-height: var(--touch-target);
+}
+
+.file[data-viewed] .fileHeader {
+  background: var(--panel);
+}
+
+.toggle {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+  padding: var(--space-2) var(--space-3);
+  border: 0;
+  background: none;
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+}
+
+.toggle:hover {
+  background: var(--row-hover);
+}
+
+.toggle:focus-visible {
+  outline-offset: -2px;
+}
+
+.chevron {
+  flex: none;
+  color: var(--subtle);
+  transition: transform var(--duration-fast) var(--ease-out);
+}
+
+.toggle[aria-expanded='true'] .chevron {
+  transform: rotate(90deg);
+}
+
+.name {
+  flex: 1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-1) var(--space-2);
+  min-width: 0;
+}
+
+/* Paths are long and alike at the start, so they wrap rather than lose their end. */
+.path {
+  min-width: 0;
+  font: var(--text-mono);
+  overflow-wrap: break-word;
+}
+
+.status {
+  color: var(--muted);
+  font: var(--text-caption);
+}
+
+.counts {
+  flex: none;
+  display: flex;
+  gap: 6px;
+  font: var(--text-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.added {
+  color: var(--reviewed);
+}
+
+.removed {
+  color: var(--danger);
+}
+
+.viewed {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 var(--space-3);
+  border-left: 1px solid var(--line);
+  color: var(--muted);
+  font: var(--text-caption);
+  cursor: pointer;
+}
+
+.viewed input {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  accent-color: var(--accent);
+}
+
+.note {
+  margin: 0;
+  padding: var(--space-3);
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: var(--size-secondary);
+}
+
+.hunks {
+  border-top: 1px solid var(--line);
+}
+
+.hunk + .hunk {
+  border-top: 1px solid var(--line);
+}
+
+.hunkHeader {
+  padding: var(--space-1) var(--space-3);
+  background: var(--fill);
+  color: var(--muted);
+  font: var(--text-mono);
+  overflow-wrap: anywhere;
+}
+
+.line {
+  display: grid;
+  grid-template-columns: 40px 40px 16px minmax(0, 1fr);
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: var(--surface);
+  color: var(--ink);
+  font: var(--text-mono);
+  text-align: left;
+  user-select: text;
+}
+
+button.line {
+  cursor: pointer;
+}
+
+/* Lines keep their color under the pointer, so only the numbers say which one a tap comments on. */
+button.line:hover .number {
+  color: var(--ink);
+}
+
+button.line:focus-visible {
+  outline-offset: -2px;
+}
+
+.number {
+  padding: 0 6px;
+  color: var(--placeholder);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  user-select: none;
+}
+
+.sign {
+  text-align: center;
+  user-select: none;
+}
+
+.code {
+  padding-right: var(--space-3);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.line[data-kind='add'] {
+  background: var(--diff-add-bg);
+}
+
+.line[data-kind='add'] .number {
+  background: var(--diff-add-gutter);
+}
+
+.line[data-kind='add'] .sign {
+  color: var(--reviewed);
+}
+
+.line[data-kind='del'] {
+  background: var(--diff-del-bg);
+}
+
+.line[data-kind='del'] .number {
+  background: var(--diff-del-gutter);
+}
+
+.line[data-kind='del'] .sign {
+  color: var(--danger);
+}
+
+@media (width < 768px),
+  (pointer: coarse) and (device-width < 600px),
+  (pointer: coarse) and (device-height < 600px) {
+  .line {
+    grid-template-columns: 32px 32px 14px minmax(0, 1fr);
+  }
+
+  .number {
+    padding: 0 4px;
+  }
+}

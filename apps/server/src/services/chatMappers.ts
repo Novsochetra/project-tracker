@@ -13,6 +13,7 @@ import type { CardTicketRow } from '../repositories/chatCardTickets';
 import type { QueuedRow } from '../repositories/chatQueue';
 import type { ChatWithKey, MessageWithSteps } from '../repositories/chats';
 import { toAttachment } from './mappers';
+import { todosOfColumn } from './runTodos';
 import { usageOfRow } from './runUsage';
 
 // A chat's ticket is one of its own project's, so the project's key makes the ticket's.
@@ -51,6 +52,11 @@ export const toCardTicket = (row: CardTicketRow): CardTicketLink => ({
   ticketKey: formatTicketKey(row.projectKey, row.ticketNum),
 });
 
+const shownTodos = (row: MessageWithSteps) => {
+  const todos = todosOfColumn(row.todos);
+  return todos && todos.length > 0 ? { todos } : {};
+};
+
 export const toMessage = (
   row: MessageWithSteps,
   cards: readonly CardTicketRow[],
@@ -64,6 +70,7 @@ export const toMessage = (
   runId: row.runId,
   batchRunId: row.batchRunId,
   stepCount: shownStepCount(row),
+  ...shownTodos(row),
   attachments: files.map(toAttachment),
   usage: usageOfRow(row),
   createdAt: row.createdAt,

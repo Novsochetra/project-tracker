@@ -49,7 +49,8 @@ function answerImagesOf({ api, folder, settings }: Setup) {
     upload: (file: Blob, name: string, signal: AbortSignal) =>
       api.uploadAttachment(file, name, undefined, { signal }),
   };
-  return (outcome: FinishRunInput, stop: AbortSignal) => withAnswerImages(deps, outcome, stop);
+  return (outcome: FinishRunInput, stop: AbortSignal, mode: unknown) =>
+    withAnswerImages(deps, outcome, stop, mode);
 }
 
 async function keepWatching(setup: Setup, args: WatchArgs, io: WatchIo, signal: AbortSignal) {
@@ -65,7 +66,7 @@ async function keepWatching(setup: Setup, args: WatchArgs, io: WatchIo, signal: 
   });
   const answerImages = answerImagesOf(setup);
   const watcher = createWatcher(
-    { api, log: io.stdout, tools: tools.current, ...claude, answerImages },
+    { api, log: io.stdout, tools: tools.current, changesIn: folder, ...claude, answerImages },
     settings,
   );
   io.stdout(

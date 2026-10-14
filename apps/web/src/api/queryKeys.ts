@@ -17,6 +17,7 @@ export const queryKeys = {
   ticketPrompt: (ticketKey: string) => ['ticket', canonical(ticketKey), 'prompt'] as const,
   ticketRuns: (ticketKey: string) => ['ticket', canonical(ticketKey), 'runs'] as const,
   ticketQuestions: (ticketKey: string) => ['ticket', canonical(ticketKey), 'questions'] as const,
+  ticketChanges: (ticketKey: string) => ['ticket', canonical(ticketKey), 'changes'] as const,
   people: () => ['people'] as const,
   reportPreview: (text: string, ticketKey?: string) =>
     ['reportPreview', ticketKey ? canonical(ticketKey) : '', text] as const,

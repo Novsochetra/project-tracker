@@ -1,6 +1,7 @@
 import { FileNotes } from '../attachments/FileNote';
 import { ThumbnailGrid } from '../attachments/ThumbnailGrid';
 import styles from './ChatScreen.module.css';
+import { WithheldNote } from './messageFiles/WithheldNote';
 import type { QuestionFiles } from './useQuestionFiles';
 
 export function QuestionFilesArea({ question }: { question: QuestionFiles }) {
@@ -17,6 +18,7 @@ export function QuestionFilesArea({ question }: { question: QuestionFiles }) {
           className={styles.questionFiles}
         />
       )}
+      <WithheldNote files={attachments} />
       <FileNotes notices={files.notices} onDismiss={files.dismissNotice} />
     </>
   );

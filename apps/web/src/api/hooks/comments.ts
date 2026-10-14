@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import type { Activity, Attachment } from '@tracker/shared';
+import type { Activity, Attachment, LineRef } from '@tracker/shared';
 import {
   appendActivity,
   draftComment,
@@ -18,6 +18,8 @@ export interface AddCommentVariables {
   ticketKey: string;
   text: string;
   attachments?: Attachment[];
+  // A comment on one line of a run's changes (the Changes tab).
+  line?: LineRef;
 }
 
 export interface UpdateCommentVariables {
@@ -44,10 +46,20 @@ export function useAddComment(): TrackerMutation<Activity, AddCommentVariables> 
   const client = useApi();
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ ticketKey, text, attachments = [] }: AddCommentVariables) =>
-      client.addComment(ticketKey, { text, attachmentIds: attachments.map(({ id }) => id) }),
-    onMutate: async ({ ticketKey, text, attachments = [] }) => {
-      const draft = { id: nextDraftId(), text, attachments, createdAt: Date.now() };
+    mutationFn: ({ ticketKey, text, attachments = [], line }: AddCommentVariables) =>
+      client.addComment(ticketKey, {
+        text,
+        attachmentIds: attachments.map(({ id }) => id),
+        ...(line ? { line } : {}),
+      }),
+    onMutate: async ({ ticketKey, text, attachments = [], line }) => {
+      const draft = {
+        id: nextDraftId(),
+        text,
+        attachments,
+        createdAt: Date.now(),
+        ...(line ? { line } : {}),
+      };
       await applyOptimistic(queryClient, [
         ticketChange(ticketKey, (detail) => appendActivity(detail, draftComment(detail, draft))),
       ]);

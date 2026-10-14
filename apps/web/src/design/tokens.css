@@ -32,6 +32,12 @@
   --reviewed: #18794e;
   --danger: #b42318;
   --danger-line: #f4cfca;
+  /* A diff's added and removed lines (the Changes tab): a tint behind the code, a deeper one behind
+     the line numbers. */
+  --diff-add-bg: #e9f6ee;
+  --diff-add-gutter: #d2ecdc;
+  --diff-del-bg: #fdeceb;
+  --diff-del-gutter: #f7d6d2;
   /* Danger is 2.6:1 on Ink, so the error toast's icon takes a lighter red that keeps 3:1
      (WCAG 1.4.11) on the toast. */
   --danger-inverse: #f97066;

@@ -7,6 +7,8 @@ const ANYWHERE = new Set([
   'token',
   'cookie',
   'authorization',
+  'credential',
+  'credentials',
 ]);
 const LAST = new Set(['key', 'pass', 'apikey', 'secretkey', 'accesskey', 'privatekey', 'authkey']);
 

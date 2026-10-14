@@ -1,6 +1,7 @@
 import { laneOf } from '@tracker/shared';
 import type {
   Activity,
+  AddRunChangesInput,
   AddRunStepsInput,
   AskOptions,
   FinishRunInput,
@@ -80,6 +81,7 @@ export function fakeTracker(jobs: RunJob[]) {
   const reports: ReportInput[] = [];
   const activity: Activity[] = [];
   const steps: (AddRunStepsInput & { id: string })[] = [];
+  const changes: (AddRunChangesInput & { id: string })[] = [];
   const ticket: { category: StatusCategory } = { category: 'in_progress' };
   const api: WatchApi = {
     listProjects: vi.fn(),
@@ -95,6 +97,10 @@ export function fakeTracker(jobs: RunJob[]) {
     }),
     addRunSteps: vi.fn((id: string, input: AddRunStepsInput) => {
       steps.push({ id, ...input });
+      return Promise.resolve();
+    }),
+    addRunChanges: vi.fn((id: string, input: AddRunChangesInput) => {
+      changes.push({ id, ...input });
       return Promise.resolve();
     }),
     getRun: vi.fn((id: string) =>
@@ -113,5 +119,5 @@ export function fakeTracker(jobs: RunJob[]) {
     fetchAttachment: vi.fn(() => Promise.reject(new Error('No files here.'))),
     uploadAttachment: vi.fn(() => Promise.reject(new Error('No uploads here.'))),
   };
-  return { api, ended, statuses, reports, activity, steps, ticket };
+  return { api, ended, statuses, reports, activity, steps, changes, ticket };
 }

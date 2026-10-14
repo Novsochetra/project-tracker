@@ -195,4 +195,12 @@ describe('updateProjectInput', () => {
   it('leaves the sub agents out of an edit that does not change them', () => {
     expect(updateProjectInput.parse({ name: 'Mobile' })).toEqual({ name: 'Mobile' });
   });
+
+  it.each([true, false])('takes hide name %j', (hideName) => {
+    expect(updateProjectInput.parse({ hideName })).toEqual({ hideName });
+  });
+
+  it.each([1, 'true', null])('refuses hide name %j', (hideName) => {
+    expect(updateProjectInput.safeParse({ hideName }).success).toBe(false);
+  });
 });

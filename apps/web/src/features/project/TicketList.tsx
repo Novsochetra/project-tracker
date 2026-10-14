@@ -1,4 +1,4 @@
-import { resolveFilter, type ProjectBoard } from '@tracker/shared';
+import { projectDisplayName, resolveFilter, type ProjectBoard } from '@tracker/shared';
 import { useRef } from 'react';
 import { useSheets } from '../../app/sheets/context';
 import { useScreen } from '../../navigation';
@@ -63,7 +63,7 @@ export function TicketList({ board }: { board: ProjectBoard }) {
   );
   const renderBody = () => {
     if (tickets.length === 0) {
-      return <NoTickets projectName={project.name} />;
+      return <NoTickets projectName={projectDisplayName(project)} />;
     }
     if (groups.length > 0) return renderGroups();
     return (

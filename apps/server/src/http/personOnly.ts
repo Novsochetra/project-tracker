@@ -41,3 +41,6 @@ export const personEditsStatuses = refuseAgents("Only a person changes a project
 // A label's instructions go into the prompts of its tickets, so an agent could rewrite what later
 // runs are told. Agents still put labels on tickets.
 export const personEditsLabels = refuseAgents('Only a person changes labels.');
+
+// Approve and Ask for changes decide where the ticket goes, so an agent can't approve its own work.
+export const personReviewsChanges = refuseAgents('Only a person reviews the changes.');

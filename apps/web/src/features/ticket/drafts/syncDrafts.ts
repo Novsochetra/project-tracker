@@ -69,7 +69,7 @@ export const clearRefusedDrafts = (): void => refused.clear();
 // What the comment box keeps is never sent for the user, nor an edit nobody pressed Save for.
 // Their tickets are still read, so their text goes once the ticket or comment is gone.
 const isBox = (draft: StoredDraft): boolean =>
-  draft.field === 'comment' || draft.field === 'comment-back';
+  draft.field === 'comment' || draft.field === 'comment-back' || draft.field === 'line-comment';
 
 const isSentForUser = (draft: StoredDraft): boolean =>
   draft.field === 'comment-edit' ? draft.submitted === true : !isBox(draft);

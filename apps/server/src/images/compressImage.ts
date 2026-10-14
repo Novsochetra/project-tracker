@@ -1,6 +1,7 @@
 import {
   UNSUPPORTED_ATTACHMENT_MESSAGE,
   attachmentKind,
+  sniffImageType,
   type AttachmentMimeType,
 } from '@tracker/shared';
 import sharp from 'sharp';
@@ -17,7 +18,6 @@ import {
 import { countJpegScans } from './jpegSegments';
 import { keptAsItCame, type StoredImage } from './keptAsItCame';
 import { createWorkLimiter } from './limiter';
-import { sniffImageType } from './sniffImage';
 
 export type { StoredImage } from './keptAsItCame';
 

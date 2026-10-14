@@ -21,7 +21,7 @@ symlinkSync(join(work, 'out', 'notes.md'), join(work, 'link.md'));
 afterAll(() => rmSync(root, { recursive: true, force: true }));
 
 const refusal = (path: string) =>
-  `Can't attach ${path}: only files in this folder or a temp folder can be attached (${work}).`;
+  `Can't attach ${path}: only files in this folder can be attached (${work}).`;
 
 describe('allowedRealPath', () => {
   it('takes a file anywhere under an allowed folder, by its real path', async () => {
@@ -72,8 +72,8 @@ describe('allowedRealPath', () => {
     const file = join(home, 'notes.md');
     writeFileSync(file, 'home');
     const refusedIn = (folder: string) =>
-      `Can't attach ${file}: Claude Code runs in ${folder}, which holds your home folder, so only ` +
-      'files in a temp folder can be attached. Start it in a project folder instead.';
+      `Can't attach ${file}: Claude Code runs in ${folder}, which holds your home folder, so no ` +
+      'file can be attached. Start it in a project folder instead.';
     for (const folder of [home, root, '/']) {
       await expect(allowedRealPath(file, [folder], home)).rejects.toThrow(refusedIn(folder));
     }

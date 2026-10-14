@@ -1,4 +1,9 @@
-import { formatFullDate, formatRelative, type TicketDetail } from '@tracker/shared';
+import {
+  formatFullDate,
+  formatRelative,
+  projectDisplayName,
+  type TicketDetail,
+} from '@tracker/shared';
 import styles from './SidePanel.module.css';
 
 // The phone's stand-in for the Info card: rarely needed, so one quiet line at the end of the
@@ -9,8 +14,8 @@ export function InfoLine({ detail, now }: { detail: TicketDetail; now: number })
     <p className={styles.infoLine}>
       <span className={styles.project}>
         <span className={styles.square} style={{ background: project.color }} />
-        <span className="visually-hidden">Project </span>
-        <span className={styles.projectName}>{project.name}</span>
+        {!project.hideName && <span className="visually-hidden">Project </span>}
+        <span className={styles.projectName}>{projectDisplayName(project)}</span>
       </span>{' '}
       <span className={styles.part}>Created {formatFullDate(ticket.createdAt)}</span>{' '}
       <span className={styles.part}>Updated {formatRelative(ticket.updatedAt, now)}</span>

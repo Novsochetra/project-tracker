@@ -69,6 +69,8 @@ export interface RunStepRow {
   // 0 or 1: neither database's boolean is portable.
   subAgent: number;
   toolId: string | null;
+  // A TodoWrite call's list as JSON; '[]' once a later call's list replaced it.
+  todos: string | null;
   createdAt: number;
 }
 

@@ -94,6 +94,20 @@ describe('ProjectsScreen', () => {
     expect(screen.getAllByRole('listitem')).toHaveLength(2);
   });
 
+  it('shows a project that hides its name by its key, without its description', async () => {
+    const hidden = projectSummary({
+      name: 'Secret launch',
+      description: 'The new app',
+      hideName: true,
+    });
+    renderProjects(() => Promise.resolve([hidden]));
+    const row = await screen.findByRole('button', { name: /^Project MOB/ });
+    expect(row).toHaveTextContent('Hidden');
+    expect(row).not.toHaveTextContent('Secret launch');
+    expect(row).not.toHaveTextContent('The new app');
+    expect(row).not.toHaveTextContent('Project MOB MOB');
+  });
+
   it('opens a project', async () => {
     const user = userEvent.setup();
     renderProjects(() => Promise.resolve([projectSummary()]));

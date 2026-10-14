@@ -11,6 +11,16 @@ export const RUN_STEP_TEXT_MAX = 2000;
 export const RUN_STEPS_KEPT = 500;
 export const RUN_STEPS_BATCH_MAX = 100;
 
+export const RUN_TODO_STATUSES = ['pending', 'in_progress', 'completed'] as const;
+export type RunTodoStatus = (typeof RUN_TODO_STATUSES)[number];
+// A to-do item is one line like a step's label; past this many the rest of the list is left out.
+export const RUN_TODOS_MAX = 30;
+
+export interface RunTodo {
+  text: string;
+  status: RunTodoStatus;
+}
+
 export interface RunStepInput {
   kind: RunStepKind;
   label: string;
@@ -18,6 +28,9 @@ export interface RunStepInput {
   subAgent: boolean;
   // Claude Code's id for the tool call, which ties a call to what became of it; null for text.
   toolId: string | null;
+  // Claude's to-do list as its TodoWrite call wrote it. The tracker keeps only a run's latest one,
+  // so an earlier call's list reads back empty.
+  todos?: RunTodo[];
 }
 
 export interface RunStep extends RunStepInput {

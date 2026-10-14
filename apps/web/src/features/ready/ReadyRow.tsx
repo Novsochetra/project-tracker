@@ -1,4 +1,4 @@
-import type { Status } from '@tracker/shared';
+import { projectDisplayName, type Status } from '@tracker/shared';
 import clsx from 'clsx';
 import { ArrowRight, Check, ChevronRight } from 'lucide-react';
 import { Button, Icon, StarRating, VerdictChip } from '../../components';
@@ -96,7 +96,7 @@ function ReadyRowMain({
       <span className={styles.title}>{ticket.title || 'Untitled'}</span>{' '}
       <span className={styles.project}>
         <span className={styles.square} style={{ background: project.color }} aria-hidden="true" />
-        <span className={styles.projectName}>{project.name}</span>
+        <span className={styles.projectName}>{projectDisplayName(project)}</span>
       </span>{' '}
       {ticket.lastReview && (
         <span className={styles.review}>

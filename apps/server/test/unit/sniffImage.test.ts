@@ -1,6 +1,6 @@
+import { sniffImageType } from '@tracker/shared';
 import sharp from 'sharp';
 import { describe, expect, it } from 'vitest';
-import { sniffImageType } from '../../src/images/sniffImage';
 import { TINY_HEIC } from '../helpers/images';
 
 const solid = () => sharp({ create: { width: 4, height: 4, channels: 3, background: '#fff' } });

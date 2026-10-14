@@ -41,10 +41,20 @@ const ticketTag = (ticket: PushTicket) =>
 const ticketMessage = (title: string, ticket: PushTicket, body = ticket.title) =>
   message(title, body, ticketPath(ticket.projectKey, ticket.num), ticketTag(ticket));
 
-export function runEndedPush(ticket: PushTicket, error: string | null): PushMessage {
+export type PushRunEnd = 'done' | 'failed';
+
+// A lock screen shows a push without unlocking, and a failed run's error (the end of the helper's
+// stderr) or Claude's question can hold command output or secrets, so a ticket push holds neither.
+const opened = (ticket: PushTicket, line: string) => `${ticket.title} · ${line}`;
+
+export function runEndedPush(ticket: PushTicket, ended: PushRunEnd): PushMessage {
   const key = formatTicketKey(ticket.projectKey, ticket.num);
-  const title = error === null ? `${key}: Claude finished` : `${key}: Claude stopped: ${error}`;
-  return ticketMessage(title, ticket);
+  if (ended === 'done') return ticketMessage(`${key}: Claude finished`, ticket);
+  return ticketMessage(
+    `${key}: Claude stopped`,
+    ticket,
+    opened(ticket, 'Open the ticket to see why.'),
+  );
 }
 
 export function chainStoppedPush(ticket: PushTicket, reason: string): PushMessage {
@@ -68,16 +78,14 @@ export interface PushBatch {
 }
 
 // One push for the whole batch rather than one a ticket, so its keys name what was left.
-export function batchEndedPush(batch: PushBatch, error: string | null): PushMessage {
+export function batchEndedPush(batch: PushBatch, ended: PushRunEnd): PushMessage {
   const done = `${batch.total - batch.notDoneKeys.length} of ${batch.total} done`;
-  const ended = error === null ? 'Run all finished' : 'Run all stopped';
-  const notDone = batch.notDoneKeys.length
+  const what = ended === 'done' ? 'Run all finished' : 'Run all stopped';
+  const body = batch.notDoneKeys.length
     ? `Not finished: ${batch.notDoneKeys.join(', ')}`
     : 'Every ticket is done.';
-  // The reason goes first so the body's length cap cuts the ticket list, not the reason.
-  const body = error === null ? notDone : `${error} · ${notDone}`;
   return message(
-    `${batch.projectKey}: ${ended}: ${done}`,
+    `${batch.projectKey}: ${what}: ${done}`,
     body,
     ACTIVITY_PATH,
     `batch:${batch.runId}`,
@@ -125,10 +133,15 @@ export type PushPlace = { ticket: PushTicket } | { chat: PushChat };
 
 const keyOf = (ticket: PushTicket) => formatTicketKey(ticket.projectKey, ticket.num);
 
-export function questionPush(place: PushPlace, question: string): PushMessage {
+export function questionPush(place: PushPlace): PushMessage {
   const asks = 'Claude has a question';
   if ('chat' in place) return chatMessage(named(asks, place.chat), place.chat, ANSWER_IT);
-  return ticketMessage(`${keyOf(place.ticket)}: ${asks}`, place.ticket, question);
+  const { ticket } = place;
+  return ticketMessage(
+    `${keyOf(ticket)}: ${asks}`,
+    ticket,
+    opened(ticket, 'Open the ticket to answer.'),
+  );
 }
 
 // A lock screen shows text as it is, so a bidi override or a zero-width character could make a

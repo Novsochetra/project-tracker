@@ -1,8 +1,7 @@
+import { projectDisplayName, type NamedProject } from '@tracker/shared';
 import type { Route } from '../navigation';
 
-export interface CrumbProject {
-  name: string;
-  key: string;
+export interface CrumbProject extends NamedProject {
   color: string;
 }
 
@@ -55,7 +54,7 @@ export function breadcrumbFor(
   const key = project?.key ?? route.key.toUpperCase();
   const projectCrumb: Crumb = {
     level: 'project',
-    label: project?.name ?? key,
+    label: project ? projectDisplayName(project) : key,
     color: project?.color,
     target: route.name === 'project' ? null : { name: 'project', key },
   };

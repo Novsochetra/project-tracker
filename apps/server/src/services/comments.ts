@@ -7,13 +7,14 @@ import type {
 } from '@tracker/shared';
 import type { z } from 'zod';
 import type { ActivityRow, Db } from '../db/schema';
-import { conflict, staleEdit } from '../errors';
+import { conflict, notFound, staleEdit } from '../errors';
 import {
   deleteActivityRow,
   updateActivityMatching,
   updateActivityRow,
 } from '../repositories/activities';
 import { listActivityAttachments, storageKeysOfActivity } from '../repositories/attachments';
+import { findRunChanges } from '../repositories/runChanges';
 import { updateTicketRow } from '../repositories/tickets';
 import { removeFiles } from '../storage/fileStorage';
 import { attachUploads } from './attachmentLinks';
@@ -25,6 +26,16 @@ import { writeTicket } from './ticketWrites';
 type CommentValues = z.output<typeof createCommentInput>;
 type CommentEdit = z.output<typeof updateCommentRequest>;
 type Edit = Pick<ActivityRow, 'text' | 'editedAt'>;
+
+const lineOf = ({ line }: CommentValues) => (line ? { line } : {});
+
+// A line comment is on a run of this ticket that sent its changes.
+async function requireChangesOf(db: Db, ref: TicketRef, runId: string): Promise<void> {
+  const changes = await findRunChanges(db, runId);
+  if (changes?.ticketId !== ref.ticket.id) {
+    throw notFound("That line isn't in this ticket's changes.");
+  }
+}
 
 const DELETABLE: ReadonlySet<ActivityType> = new Set(['comment', 'report', 'review']);
 
@@ -46,10 +57,11 @@ export async function addComment(
 ): Promise<Activity> {
   const outcome = await inTransaction(ctx, async (trx) => {
     const ref = await requireTicket(trx, ctx.scope, key);
+    if (input.line) await requireChangesOf(trx, ref, input.line.runId);
     const written = await writeTicket(trx, ctx.now, {
       ticket: ref.ticket,
       actor,
-      entries: [{ type: 'comment', text: input.text.trim() }],
+      entries: [{ type: 'comment', text: input.text.trim(), ...lineOf(input) }],
     });
     const [row] = written.activities;
     if (!row) throw new Error('The comment was not written.');
