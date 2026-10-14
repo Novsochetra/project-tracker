@@ -1,9 +1,10 @@
 import { randomUUID } from 'node:crypto';
 import type { Attachment, ChatDetail, RunJob } from '@tracker/shared';
+import sharp from 'sharp';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { PENDING_TTL_MS, removeStalePendingAttachments } from '../../src/services/attachments';
 import { testClock } from '../helpers/auth';
-import { pngImage, twoColorPixels } from '../helpers/images';
+import { containsText, jpegPhoto, pngImage, twoColorPixels } from '../helpers/images';
 import { addUser, caller, helperName, type Auth, type Caller } from '../helpers/runs';
 import { DIALECTS, useTestServer } from '../helpers/server';
 
@@ -70,6 +71,23 @@ describe.each(DIALECTS)('files sent with a chat question (%s)', (dialect) => {
     await finish(job?.run.id ?? '');
     const detail = (await person<ChatDetail>('GET', `/api/chats/${started.body.chat.id}`)).body;
     expect(detail.messages.map((message) => message.attachments.length)).toEqual([2, 0]);
+  });
+
+  it('gives the helper a photo without where it was taken or with what', async () => {
+    const photo = await jpegPhoto({ width: 64, height: 48, camera: true });
+    expect(containsText(photo, 'iPhone 15 Pro')).toBe(true);
+    const sent = await upload(photo, 'IMG_0001.jpg', 'image/jpeg');
+    expect((await startChat('What is wrong here?', [sent.id])).status).toBe(201);
+    const job = (await next()).body;
+    const headers = { authorization: `Bearer ${helperAuth.token ?? ''}` };
+    const file = await api.app.request(`/api/attachments/${job?.files?.[0]?.id ?? ''}/file`, {
+      headers,
+    });
+    const bytes = new Uint8Array(await file.arrayBuffer());
+    expect(containsText(bytes, 'iPhone 15 Pro')).toBe(false);
+    const meta = await sharp(bytes).metadata();
+    expect(meta.exif).toBeUndefined();
+    expect(meta.width).toBe(64);
   });
 
   it('sends files with a later question, and names earlier ones to a helper without the session', async () => {

@@ -10,6 +10,13 @@ import { retryUntilAnswered } from './retry';
 import type { StepBatcher } from './steps/stepBatcher';
 import type { WatchApi } from './watchApi';
 
+// The mode is the ask's own: Ask and Plan show pictures from the project folder only.
+export type AnswerImages = (
+  outcome: FinishRunInput,
+  stop: AbortSignal,
+  mode: unknown,
+) => Promise<FinishRunInput>;
+
 export interface RunLoopDeps {
   api: WatchApi;
   runClaude: (job: RunJob, signal: AbortSignal, onSteps: OnSteps) => Promise<ClaudeExit>;
@@ -23,8 +30,7 @@ export interface RunLoopDeps {
   stepsFor: (runId: string) => StepBatcher;
   usageOf: (job: RunJob, exit: ClaudeExit) => RunUsageInput | undefined;
   // Uploads the pictures the answer's image cards name (PT-225).
-  answerImages?:
-    ((outcome: FinishRunInput, stop: AbortSignal) => Promise<FinishRunInput>) | undefined;
+  answerImages?: AnswerImages | undefined;
   retryDelay?: ((attempt: number) => number) | undefined;
 }
 
@@ -83,7 +89,8 @@ const runTicket: Runner = async (deps, job, stop, onSteps) => {
 const runAsk: Runner = async (deps, job, stop, onSteps) => {
   const exit = await deps.runAsk(job, stop, onSteps);
   const outcome = askOutcomeOf(exit, stop.aborted);
-  const shown = deps.answerImages ? await deps.answerImages(outcome, stop) : outcome;
+  const mode = job.run.askOptions?.mode;
+  const shown = deps.answerImages ? await deps.answerImages(outcome, stop, mode) : outcome;
   return withUsage(shown, deps.usageOf(job, exit));
 };
 

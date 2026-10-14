@@ -21,6 +21,7 @@ describe('the watcher with pictures in an answer (PT-225)', () => {
     expect(answerImages).toHaveBeenCalledWith(
       { status: 'done', answer: 'See the screen.', sessionId: SESSION },
       expect.any(AbortSignal),
+      undefined,
     );
     expect(tracker.ended).toEqual([
       {

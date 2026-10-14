@@ -62,6 +62,32 @@ describe('Ask: files sent with a question', () => {
     await waitFor(() => expect(screen.queryByRole('img', { name: 'Image 1' })).toBeNull());
   });
 
+  it('leaves out a file its x removed before Send', async () => {
+    const detail = makeChatDetail();
+    const notes = attachment('notes', {
+      ticketId: null,
+      fileName: 'notes.txt',
+      mimeType: 'text/plain',
+    });
+    const photo = attachment('board', { ticketId: null });
+    const ask = vi.fn().mockResolvedValue({ ...detail, run: makeAskRun() });
+    setup(detail, {
+      uploadAttachment: vi.fn((file: File) =>
+        Promise.resolve(file.name === 'notes.txt' ? notes : photo),
+      ),
+      ask,
+    });
+    const user = userEvent.setup();
+    await user.type(await question(), 'Look at the log');
+    const notesFile = new File(['ok'], 'notes.txt', { type: 'text/plain' });
+    await user.upload(screen.getByLabelText('Attach files to question'), [board(), notesFile]);
+    await user.click(await screen.findByRole('button', { name: 'Remove image 1' }));
+    expect(screen.queryByRole('img', { name: 'Image 1' })).toBeNull();
+    await waitFor(() => expect(sendButton()).toBeEnabled());
+    await user.click(sendButton());
+    expect(ask).toHaveBeenCalledWith('c-1', expect.objectContaining({ attachmentIds: ['notes'] }));
+  });
+
   it('keeps the files when the tracker refuses the question', async () => {
     const detail = makeChatDetail();
     setup(detail, {
