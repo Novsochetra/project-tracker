@@ -1,4 +1,4 @@
-import type { Attachment } from '@tracker/shared';
+import { keepsLocation, type Attachment } from '@tracker/shared';
 import type { RunRow } from '../db/runTables';
 import type { AttachmentRow, Db } from '../db/schema';
 import { invalidInput } from '../errors';
@@ -36,7 +36,17 @@ export async function chatFilesByMessage(
   return byMessage;
 }
 
-export async function runFiles(db: Db, run: RunRow): Promise<Attachment[]> {
-  if (run.questionId === null) return [];
-  return (await listMessageAttachmentRows(db, run.questionId)).map(toAttachment);
+export interface RunFiles {
+  files: Attachment[];
+  withheld: string[];
+}
+
+// Decided here, not on the helper, so an older helper never gets a photo with its location either.
+export async function runFiles(db: Db, run: RunRow): Promise<RunFiles> {
+  if (run.questionId === null) return { files: [], withheld: [] };
+  const rows = await listMessageAttachmentRows(db, run.questionId);
+  return {
+    files: rows.filter((row) => !keepsLocation(row.mimeType)).map(toAttachment),
+    withheld: rows.filter((row) => keepsLocation(row.mimeType)).map((row) => row.fileName),
+  };
 }

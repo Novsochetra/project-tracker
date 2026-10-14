@@ -115,4 +115,29 @@ describe('Ask: files sent with a question', () => {
     await user.click(within(mine).getByRole('button', { name: 'Open image 1' }));
     expect(await screen.findByRole('dialog')).toBeInTheDocument();
   });
+
+  it("says which photo Claude won't get, before Send and on the sent message", async () => {
+    const heic = attachment('h', {
+      ticketId: null,
+      fileName: 'IMG_1.heic',
+      mimeType: 'image/heic',
+    });
+    const note = "Claude won't get IMG_1.heic: the tracker can't remove its location.";
+    const detail = makeChatDetail();
+    const sent = makeMessage({ id: 'm-3', text: 'Look', attachments: [heic] });
+    setup(
+      { ...detail, messages: [...detail.messages, sent] },
+      {
+        uploadAttachment: vi.fn().mockResolvedValue(heic),
+      },
+    );
+    const messages = await screen.findByRole('list', { name: 'Messages' });
+    const mine = within(messages).getAllByRole('article', { name: 'You' }).at(-1)!;
+    expect(mine).toHaveTextContent(note);
+    // A Mac sends a dropped HEIC; the picker's list leaves HEIC out for iPhones (§1.4).
+    const user = userEvent.setup({ applyAccept: false });
+    const photo = new File(['heic'], 'IMG_1.heic', { type: 'image/heic' });
+    await user.upload(screen.getByLabelText('Attach files to question'), photo);
+    expect(await screen.findAllByText(note)).toHaveLength(2);
+  });
 });

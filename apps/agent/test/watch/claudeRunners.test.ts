@@ -93,7 +93,7 @@ describe('claudeRunners', () => {
       fetchFile: () => Promise.resolve(new Response('a')),
     });
     const stop = new AbortController();
-    const files = [{ id: 'f1', fileName: 'stop-me.txt' } as Attachment];
+    const files = [{ id: 'f1', fileName: 'stop-me.txt', mimeType: 'text/plain' } as Attachment];
     const inside = (dir: string) =>
       readdirSync(dir)
         .filter((name) => name.startsWith(ASK_FOLDER_PREFIX))
