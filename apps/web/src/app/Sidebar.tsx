@@ -1,6 +1,6 @@
 import type { ProjectSummary } from '@tracker/shared';
 import clsx from 'clsx';
-import { LayoutGrid, Plus } from 'lucide-react';
+import { Activity, LayoutGrid, Plus } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { useProjects, useReadyForYou } from '../api';
 import { Icon, IconButton, LogoGlyph } from '../components';
@@ -43,6 +43,7 @@ interface ProjectItemsProps {
 
 const NO_COUNTS: ReadonlyMap<string, number> = new Map();
 const PROJECTS: Route = { name: 'projects' };
+const ACTIVITY: Route = { name: 'activity' };
 
 function ProjectItems({ projects, ready }: ProjectItemsProps) {
   const { route } = useNavigation();
@@ -93,6 +94,14 @@ export function Sidebar() {
         >
           <Icon icon={LayoutGrid} className={styles.navIcon} />
           <span className={styles.allProjects}>All projects</span>
+        </SidebarItem>
+        <SidebarItem
+          route={ACTIVITY}
+          active={route.name === 'activity'}
+          onClick={() => push(ACTIVITY)}
+        >
+          <Icon icon={Activity} className={styles.navIcon} />
+          <span className={styles.allProjects}>Activity</span>
         </SidebarItem>
       </nav>
       <div className={styles.group}>

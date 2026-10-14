@@ -1,0 +1,18 @@
+.strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: 12px clamp(16px, 4.2vw, 32px) 0;
+}
+
+.counts {
+  min-width: 0;
+  color: var(--muted-2);
+  font: var(--text-mono);
+}
+
+.button {
+  flex: none;
+}

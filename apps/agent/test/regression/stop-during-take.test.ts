@@ -12,6 +12,7 @@ describe('regression: stopping while a run is being taken', () => {
     const job: RunJob = {
       prompt: 'Go',
       resumeSessionId: null,
+      ticketKeys: [],
       run: {
         id: 'r-1',
         kind: 'ticket',
@@ -27,6 +28,7 @@ describe('regression: stopping while a run is being taken', () => {
         startedAt: 2,
         endedAt: null,
         stepCount: 0,
+        batchId: null,
       },
     };
     const finishRun = vi.fn(() => Promise.resolve({} as Run));

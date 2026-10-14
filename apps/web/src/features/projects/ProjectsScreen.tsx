@@ -8,6 +8,7 @@ import { ErrorBoundary } from '../../lib/ErrorBoundary';
 import { useIsPhone } from '../../lib/media';
 import { LargeTitle, NavBar, NavBarButton, useScreen } from '../../navigation';
 import { AccountButton } from '../account';
+import { HomeTabs } from '../activity/HomeTabs';
 import { CaptureBar, CaptureButton, canCapture, WaitingToSync } from '../capture';
 import { readyCounts, readyItems, ReadySection } from '../ready';
 import { ProjectList } from './ProjectList';
@@ -43,6 +44,7 @@ export function ProjectsScreen() {
               <LargeTitle aside={projects.data?.length}>Projects</LargeTitle>
               {capture && !isPhone && <CaptureButton onClick={openCapture} />}
             </div>
+            <HomeTabs />
             <WaitingToSync />
             {/* A ready list it can't read only leaves out the Ready card and the counts; they are
                 tried again once the list changes. Projects that fail fail the fallback too, and

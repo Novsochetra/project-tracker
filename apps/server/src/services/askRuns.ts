@@ -48,6 +48,7 @@ export async function queueAsk(trx: Db, request: AskRequest) {
     text: question,
     ticketId: null,
     runId: null,
+    batchRunId: null,
     createdAt: queued.now,
   });
   // The chat keeps the last choice, so the next question starts with it.

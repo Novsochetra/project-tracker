@@ -2,6 +2,7 @@ import { INVITE_PATH, RESET_PATH } from '@tracker/shared';
 
 export type Route =
   | { name: 'projects' }
+  | { name: 'activity' }
   | { name: 'project'; key: string }
   | { name: 'ticket'; key: string; num: number }
   | { name: 'chats'; key: string }
@@ -13,6 +14,7 @@ export type NavigationKind = 'POP' | 'PUSH' | 'REPLACE';
 export type Transition = 'push' | 'pop' | 'replace' | 'none';
 
 const PROJECTS: Route = { name: 'projects' };
+const ACTIVITY_SEGMENT = 'activity';
 
 function decodeSegment(segment: string): string | null {
   try {
@@ -41,6 +43,7 @@ function parseAskRoute(key: string, chatSegment: string | undefined): Route {
 
 export function parseRoute(pathname: string): Route {
   const segments = pathname.split('/').filter((segment) => segment !== '');
+  if (segments.length === 1 && segments[0] === ACTIVITY_SEGMENT) return { name: 'activity' };
   if (segments[0] !== 'p' || segments.length < 2 || segments.length > 4) return PROJECTS;
   const key = decodeSegment(segments[1] ?? '');
   if (key === null) return PROJECTS;
@@ -55,6 +58,8 @@ export function routePath(route: Route): string {
   switch (route.name) {
     case 'projects':
       return '/';
+    case 'activity':
+      return `/${ACTIVITY_SEGMENT}`;
     case 'project':
       return `/p/${encodeURIComponent(route.key)}`;
     case 'ticket':
@@ -77,6 +82,7 @@ export function canonicalPath(pathname: string): string | null {
 export function parentRoute(route: Route): Route | null {
   switch (route.name) {
     case 'projects':
+    case 'activity':
       return null;
     case 'project':
       return PROJECTS;

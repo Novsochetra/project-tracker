@@ -9,6 +9,7 @@ import { Hono, type Context } from 'hono';
 import { createMiddleware } from 'hono/factory';
 import { requireScope } from '../../auth/scope';
 import type { ServiceContext } from '../../services/context';
+import { listRunActivity } from '../../services/runActivity';
 import { takeNextRun } from '../../services/runQueue';
 import { listRunners, registerRunner, removeRunner } from '../../services/runners';
 import { cancelRun, endRun, getRun, listTicketRuns, startRun } from '../../services/runs';
@@ -32,6 +33,7 @@ const ticketRunRoutes = (ctx: ServiceContext) =>
     .get('/tickets/:key/runs', async (c) =>
       c.json(await listTicketRuns(ctx, scope(c), c.req.param('key'))),
     )
+    .get('/run-activity', async (c) => c.json(await listRunActivity(ctx, scope(c))))
     .get('/runs/:id', async (c) => c.json(await getRun(ctx, scope(c), c.req.param('id'))))
     .post('/runs/:id/cancel', async (c) =>
       c.json(await cancelRun(ctx, scope(c), c.req.param('id'))),
@@ -51,8 +53,9 @@ const runnerRoutes = (ctx: ServiceContext) =>
       return c.body(null, 204);
     })
     .post('/runners/:id/next', helperOnly, queryParams(takeRunQuery), async (c) => {
-      const { kind } = c.req.valid('query');
-      const job = await takeNextRun(ctx, scope(c), c.req.param('id'), kind);
+      const { kind, batches } = c.req.valid('query');
+      const take = { lane: kind, batches: batches === '1' };
+      const job = await takeNextRun(ctx, scope(c), c.req.param('id'), take);
       return job ? c.json(job) : c.body(null, 204);
     });
 

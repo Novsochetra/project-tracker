@@ -13,6 +13,7 @@ const ticket: TicketRow = {
   priority: 'medium',
   assignee: 'Dara',
   due: '2026-10-09',
+  needsDevice: 0,
   createdAt: 1,
   updatedAt: 1,
   clientId: null,

@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import {
+  DEFAULT_MAX_PARALLEL_RUNS,
   DEFAULT_STATUSES,
   PROJECT_COLORS,
   resolvePrefix,
@@ -14,6 +15,7 @@ import type { z } from 'zod';
 import type { ProjectRow, StatusRow } from '../db/schema';
 import {
   deleteProjectRow,
+  holdProjectRuns,
   insertProject,
   listProjectKeys,
   listProjectRows,
@@ -77,6 +79,7 @@ export async function createProject(
       description: input.description ?? '',
       repo: input.repo ?? '',
       color: PROJECT_COLORS[existing.length % PROJECT_COLORS.length] ?? PROJECT_COLORS[0],
+      maxParallelRuns: DEFAULT_MAX_PARALLEL_RUNS,
       nextNum: 1,
       createdAt: at,
       updatedAt: at,
@@ -118,6 +121,8 @@ export async function deleteProject(ctx: UserContext, key: string): Promise<void
   const removed = await inTransaction(ctx, async (trx) => {
     const project = await requireProject(trx, ctx.scope, key);
     const files = await storageKeysOfProject(trx, project.id);
+    // The project's row before its runs' rows, in the order a take locks them (takeNextRun).
+    await holdProjectRuns(trx, project.id);
     // Tickets go first: their status foreign key restricts deleting statuses that are in use.
     await deleteProjectTickets(trx, project.id);
     await deleteProjectRow(trx, project.id);

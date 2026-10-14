@@ -20,6 +20,8 @@ export interface Ticket {
   priority: Priority;
   assignee: string;
   due: string;
+  // Work only a person at a real phone or device can do, so Run all skips it.
+  needsDevice: boolean;
   createdAt: number;
   updatedAt: number;
 }

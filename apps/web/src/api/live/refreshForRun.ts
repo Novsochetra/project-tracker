@@ -2,6 +2,7 @@ import type { QueryClient } from '@tanstack/react-query';
 import type { RunEvent, RunRequestEvent } from '@tracker/shared';
 import { queryKeys } from '../queryKeys';
 import { changeScope } from './changeScope';
+import { refreshBatches } from './refreshBatches';
 import { cachedEntries } from './refreshForChange';
 import { refreshRunSteps } from './refreshRunSteps';
 import { endsRun, refreshWaiting } from './refreshWaiting';
@@ -34,6 +35,7 @@ export function refreshForRunRequest(queryClient: QueryClient, event: RunRequest
 
 // A helper that takes or ends a run has just been seen, so its online state may have changed too.
 export function refreshForRun(queryClient: QueryClient, event: RunEvent): void {
+  refreshBatches(queryClient);
   if (event.ticketId) refreshTicketRuns(queryClient, event.ticketId, event.projectId);
   if (event.ticketId && endsRun(event.status)) {
     refreshWaiting(queryClient, event.projectId, event.ticketId);

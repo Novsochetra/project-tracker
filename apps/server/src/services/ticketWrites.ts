@@ -10,6 +10,8 @@ import type { Clock } from '../clock';
 import type { ActivityRow, Db, StatusRow, TicketRow } from '../db/schema';
 import { conflict, forbidden, staleEdit } from '../errors';
 import { insertActivity } from '../repositories/activities';
+import { advanceBatchTicket } from '../repositories/batchRuns';
+import { findStatusById } from '../repositories/statuses';
 import {
   listGroupRanks,
   updateTicketInStatus,
@@ -84,6 +86,13 @@ async function saveChanges(db: Db, write: TicketWrite, changes: TicketChanges): 
   if (!saved) throw conflict('Someone else changed this ticket at the same time. Try again.');
 }
 
+// Every status change passes here, a person's drag as much as a sub agent's claim or submit.
+async function followStatus(db: Db, write: TicketWrite, changes: TicketChanges, at: number) {
+  if (!changes.statusId || changes.statusId === write.ticket.statusId) return;
+  const status = await findStatusById(db, changes.statusId);
+  if (status) await advanceBatchTicket(db, write.ticket.id, status.category, at);
+}
+
 export interface WrittenTicket {
   ticket: TicketRow;
   activities: ActivityRow[];
@@ -98,6 +107,7 @@ export async function writeTicket(
   const at = clock(entries.length);
   const changes = { ...write.changes, updatedAt: at };
   await saveChanges(db, write, changes);
+  await followStatus(db, write, changes, at);
   const activities = entries.map((entry, index) =>
     activityRow({ ...entry, ticketId: write.ticket.id, actor: write.actor, at: at + index }),
   );

@@ -1,4 +1,5 @@
 import { isDoneCategory, isOverdue, type Priority, type TicketDetail } from '@tracker/shared';
+import type { DeviceChoice } from '../side/detailOptions';
 import { useFieldDraft, type FieldDraftState } from '../fields/useFieldDraft';
 import { useStatusMove } from '../useStatusMove';
 import { useTicketUpdate } from '../useTicketUpdate';
@@ -9,6 +10,7 @@ export interface DetailFields {
   setStatus: (statusId: string) => void;
   setPriority: (priority: Priority) => void;
   setDue: (due: string) => void;
+  setDevice: (choice: DeviceChoice) => void;
 }
 
 // Status, Priority, Assignee and Due date, for the desktop Details card and the phone chips.
@@ -29,6 +31,9 @@ export function useDetailFields(detail: TicketDetail): DetailFields {
     },
     setDue: (due) => {
       if (due !== ticket.due) void update({ due });
+    },
+    setDevice: (choice) => {
+      if ((choice === 'yes') !== ticket.needsDevice) void update({ needsDevice: choice === 'yes' });
     },
   };
 }

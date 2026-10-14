@@ -1,4 +1,4 @@
-import type { RunKind } from './run';
+import type { RunKind, RunLane } from './run';
 
 export const ASK_MODELS = ['default', 'opus', 'sonnet', 'haiku'] as const;
 export type AskModel = (typeof ASK_MODELS)[number];
@@ -34,5 +34,8 @@ export const changesFolder = (mode: unknown): boolean => mode === 'edit' || mode
 
 // A question that changes the folder waits in the ticket lane: two Claudes must never change one
 // folder at once.
-export const laneOf = (kind: RunKind, askOptions: AskOptions | null): RunKind =>
-  kind === 'ask' && changesFolder(askOptions?.mode) ? 'ticket' : kind;
+export function laneOf(kind: RunKind, askOptions: AskOptions | null): RunLane {
+  if (kind === 'ask') return changesFolder(askOptions?.mode) ? 'ticket' : 'ask';
+  // A kind from a newer tracker stays a lane of its own, so no lane of this helper takes it.
+  return kind === 'batch' ? 'ticket' : kind;
+}

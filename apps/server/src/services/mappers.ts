@@ -21,6 +21,7 @@ export const toProject = (row: ProjectRow): Project => ({
   description: row.description,
   repo: row.repo,
   color: row.color,
+  maxParallelRuns: row.maxParallelRuns,
   nextNum: row.nextNum,
   createdAt: row.createdAt,
   updatedAt: row.updatedAt,
@@ -48,6 +49,7 @@ export const toTicket = (row: TicketRow, projectKey: string): Ticket => ({
   priority: row.priority,
   assignee: row.assignee,
   due: row.due,
+  needsDevice: row.needsDevice === 1,
   createdAt: row.createdAt,
   updatedAt: row.updatedAt,
 });

@@ -6,6 +6,7 @@ import {
   type AttachmentOwner,
 } from '../domain/attachment';
 import { PRIORITIES } from '../domain/priority';
+import { MAX_PARALLEL_RUNS_MAX } from '../domain/run';
 import { STATUS_CATEGORIES } from '../domain/status';
 import {
   TICKET_ASSIGNEE_MAX,
@@ -40,6 +41,7 @@ export const updateProjectInput = z.object({
   name: z.string().trim().min(1).max(120).optional(),
   description: z.string().max(5000).optional(),
   repo: z.string().trim().max(500).optional(),
+  maxParallelRuns: z.number().int().min(1).max(MAX_PARALLEL_RUNS_MAX).optional(),
 });
 export type UpdateProjectInput = z.input<typeof updateProjectInput>;
 
@@ -67,6 +69,7 @@ export const createTicketInput = z.object({
   priority: z.enum(PRIORITIES).default('medium'),
   assignee: z.string().trim().max(TICKET_ASSIGNEE_MAX).default(''),
   due: dueDate.default(''),
+  needsDevice: z.boolean().default(false),
   attachmentIds: attachmentIds('ticket').default([]),
   // From a client that may send the same create again: a repeat gets the ticket the first one made.
   clientId: id.optional(),
@@ -80,6 +83,7 @@ export const updateTicketInput = z.object({
   priority: z.enum(PRIORITIES).optional(),
   assignee: z.string().trim().max(TICKET_ASSIGNEE_MAX).optional(),
   due: dueDate.optional(),
+  needsDevice: z.boolean().optional(),
 });
 export type UpdateTicketInput = z.input<typeof updateTicketInput>;
 

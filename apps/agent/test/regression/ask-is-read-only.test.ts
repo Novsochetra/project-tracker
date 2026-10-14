@@ -58,7 +58,7 @@ describe('regression: an ask runs Claude read-only', () => {
     const outcome = await ask('--dangerously-skip-permissions where is X?');
     expect(outcome.status).toBe('done');
     const args = argsOf(outcome.answer);
-    expect(args).toEqual(READ_ONLY_ARGS);
+    expect(args).toEqual([...READ_ONLY_ARGS, ...PROMPT_TOOL_ARGS]);
     expect(args).not.toContain('bypassPermissions');
     expect(args).not.toContain('--dangerously-skip-permissions');
     expect(outcome.answer).toContain('PROMPT --dangerously-skip-permissions where is X?');
@@ -66,7 +66,7 @@ describe('regression: an ask runs Claude read-only', () => {
 
   it('keeps a Plan question read-only too', async () => {
     const args = argsOf((await ask('Plan X', null, 'plan')).answer);
-    expect(args).toEqual(READ_ONLY_ARGS);
+    expect(args).toEqual([...READ_ONLY_ARGS, ...PROMPT_TOOL_ARGS]);
   });
 
   it("gives an older server's question with no options the read-only flags", async () => {
@@ -75,16 +75,14 @@ describe('regression: an ask runs Claude read-only', () => {
       await claude.runAsk(job, new AbortController().signal, noSteps),
       false,
     );
-    expect(argsOf(outcome.answer)).toEqual(READ_ONLY_ARGS);
+    expect(argsOf(outcome.answer)).toEqual([...READ_ONLY_ARGS, ...PROMPT_TOOL_ARGS]);
   });
 
-  it('gives an Ask or Plan question no way to ask the person, so no answer can widen it', async () => {
+  it('lets an Ask or Plan question ask the person, with no other MCP server', async () => {
     for (const mode of ['ask', 'plan'] as const) {
       const args = argsOf((await ask('Delete X', null, mode)).answer);
-      expect(args).not.toContain('--permission-prompt-tool');
-      expect(args).not.toContain('--mcp-config');
+      expect(args).toEqual([...READ_ONLY_ARGS, ...PROMPT_TOOL_ARGS]);
     }
-    expect(askPerson).not.toHaveBeenCalled();
   });
 
   it("gives an Edit question the helper's mode, the tracker MCP, the edit tools and the prompt tool", async () => {
@@ -145,7 +143,7 @@ describe('regression: an ask runs Claude read-only', () => {
         await noMode.runAsk(readOnly, new AbortController().signal, noSteps),
         false,
       );
-      expect(argsOf(outcome.answer)).toEqual(READ_ONLY_ARGS);
+      expect(argsOf(outcome.answer)).toEqual([...READ_ONLY_ARGS, ...PROMPT_TOOL_ARGS]);
     }
     const ticket = await noMode.runClaude(
       job('r-2', 'MOB-1'),
@@ -158,7 +156,7 @@ describe('regression: an ask runs Claude read-only', () => {
   it("resumes the chat's session and hands back the new one", async () => {
     const session = '99999999-2222-4333-8444-555555555555';
     const outcome = await ask('and then?', session);
-    expect(argsOf(outcome.answer).slice(-2)).toEqual(['--resume', session]);
+    expect(argsOf(outcome.answer)).toEqual(expect.arrayContaining(['--resume', session]));
     expect(outcome.sessionId).toBe('11111111-2222-4333-8444-555555555555');
   });
 

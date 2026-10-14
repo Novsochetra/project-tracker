@@ -19,6 +19,7 @@ export const makeMessage = (overrides: Partial<ChatMessage> = {}): ChatMessage =
   text: 'How does sync work?',
   ticketKey: null,
   runId: null,
+  batchRunId: null,
   stepCount: 0,
   createdAt: Date.now() - 60_000,
   ...overrides,

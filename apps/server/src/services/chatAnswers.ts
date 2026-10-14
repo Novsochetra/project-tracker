@@ -18,6 +18,7 @@ export async function saveAnswer(
     text: answer.text,
     ticketId: null,
     runId: run.id,
+    batchRunId: null,
     createdAt: answer.at,
   });
   const session = answer.sessionId

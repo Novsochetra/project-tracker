@@ -2,7 +2,8 @@ import { z } from 'zod';
 import { CHAT_ANSWER_MAX } from '../domain/chat';
 import {
   ENDED_RUN_STATUSES,
-  RUN_KINDS,
+  MAX_PARALLEL_RUNS_MAX,
+  RUN_LANES,
   RUN_ERROR_MAX,
   RUN_PROMPT_MAX,
   RUNNER_NAME_MAX,
@@ -22,6 +23,11 @@ export const startRunInput = z.object({
 });
 export type StartRunInput = z.input<typeof startRunInput>;
 
+export const runAllInput = z.object({
+  runnerId,
+  maxParallel: z.number().int().min(1).max(MAX_PARALLEL_RUNS_MAX).optional(),
+});
+
 export const registerRunnerInput = z.object({
   name: z
     .string()
@@ -35,8 +41,12 @@ export const registerRunnerInput = z.object({
 });
 export type RegisterRunnerInput = z.input<typeof registerRunnerInput>;
 
-// A helper runs one run of each kind at a time. One that names no kind predates asks.
-export const takeRunQuery = z.object({ kind: z.enum(RUN_KINDS).optional() });
+// A helper runs one run of each kind at a time. One that names no kind predates asks, and one that
+// doesn't say batches=1 predates batches.
+export const takeRunQuery = z.object({
+  kind: z.enum(RUN_LANES).optional(),
+  batches: z.literal('1').optional(),
+});
 export type TakeRunQuery = z.input<typeof takeRunQuery>;
 
 export const finishRunInput = z.object({

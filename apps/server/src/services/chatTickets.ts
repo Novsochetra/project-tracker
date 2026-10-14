@@ -33,6 +33,7 @@ export async function createCardTicket(
     ...input,
     assignee: '',
     due: '',
+    needsDevice: false,
     attachmentIds: [],
     clientId: message.id,
   });

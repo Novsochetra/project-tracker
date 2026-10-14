@@ -1,10 +1,4 @@
-import {
-  createStepReader,
-  laneOf,
-  type Run,
-  type RunJob,
-  type RunStepInput,
-} from '@tracker/shared';
+import { createStepReader, type Run, type RunJob, type RunStepInput } from '@tracker/shared';
 import { askArgs } from './ask/askArgs';
 import { claudeArgs, runClaude } from './claude';
 import type { ClaudeExit } from './outcome';
@@ -19,7 +13,7 @@ export interface ClaudeSetup {
   permissionMode?: string | undefined;
   write: (text: string) => void;
   readSteps?: ((folder: string) => StepReader) | undefined;
-  prompts?: PromptTool | undefined;
+  prompts: PromptTool;
 }
 
 // Runs inside stdout's listener, where a throw would end the helper mid-run; steps only show what
@@ -41,13 +35,10 @@ export function claudeRunners(setup: ClaudeSetup) {
   const { command, cwd, permissionMode, write, readSteps = createStepReader, prompts } = setup;
   // A reader a run: it remembers that run's open tool calls.
   const onEvent = (onSteps: OnSteps) => stepsOf(readSteps(cwd), onSteps);
-  // Only runs of the ticket lane, the ones that may change the folder, may ask the person: ticket
-  // runs and Edit questions. An Ask or Plan question gets no prompt tool, so no answer can widen
-  // what it may do.
+  // Every run may ask the person. An Ask or Plan question stays read-only: its --strict-mcp-config
+  // still loads the prompt tool, which --mcp-config adds, and nothing else from the folder.
   const asking = (run: Run, start: (promptArgs: string[]) => Promise<ClaudeExit>) =>
-    prompts && laneOf(run.kind, run.askOptions) === 'ticket'
-      ? withPromptTool(prompts, run, start)
-      : start([]);
+    withPromptTool(prompts, run, start);
   return {
     runClaude: (job: RunJob, stop: AbortSignal, onSteps: OnSteps) =>
       asking(job.run, (promptArgs) =>

@@ -1,0 +1,20 @@
+.batch {
+  display: flex;
+  align-items: center;
+  background: var(--surface);
+}
+
+.open {
+  flex: 1;
+  min-width: 0;
+}
+
+.failedKeys {
+  color: var(--danger);
+  font-size: var(--size-caption);
+}
+
+.stop {
+  flex: none;
+  margin-right: 16px;
+}

@@ -43,6 +43,8 @@ export interface RunRow {
   askMode: AskMode | null;
   askEffort: AskEffort | null;
   stepCount: number;
+  // The batch run that holds this ticket's run: the batch's Claude works on it, no helper takes it.
+  batchId: string | null;
 }
 
 export interface RunStepRow {

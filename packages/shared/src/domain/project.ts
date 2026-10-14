@@ -14,6 +14,7 @@ export interface Project {
   description: string;
   repo: string;
   color: string;
+  maxParallelRuns: number;
   nextNum: number;
   createdAt: number;
   updatedAt: number;

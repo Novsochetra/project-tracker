@@ -17,6 +17,7 @@ export interface ProjectRow {
   description: string;
   repo: string;
   color: string;
+  maxParallelRuns: number;
   nextNum: number;
   createdAt: number;
   updatedAt: number;
@@ -45,6 +46,8 @@ export interface TicketRow {
   priority: Priority;
   assignee: string;
   due: string;
+  // 0 or 1: no booleans.
+  needsDevice: number;
   createdAt: number;
   updatedAt: number;
   clientId: string | null;

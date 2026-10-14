@@ -150,6 +150,7 @@ describe('Edit project sheet', () => {
       name: 'Marketing site',
       description: 'Docs',
       repo: '~/code/web',
+      maxParallelRuns: 5,
     });
     expect(await screen.findByText('Project updated')).toBeInTheDocument();
     await waitFor(() => expect(onClose).toHaveBeenCalled());

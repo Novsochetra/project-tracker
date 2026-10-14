@@ -18,6 +18,10 @@ const CARD_EXAMPLE = [
   '````',
 ].join('\n');
 
+const RUN_ALL_EXAMPLE = ['````run-all', 'limit: <how many at once, 1 to 5>', '````'].join('\n');
+
+const RUN_ALL_RULE = `Only when they ask you to run or do all their To do tickets, end your answer with one Run all card exactly like this (four backticks). Put in the limit only when they say how many at once, like "3 at a time"; leave the line out otherwise. You don't start the runs: they check the tickets on the card and tap Confirm.\n\n${RUN_ALL_EXAMPLE}`;
+
 const READ_ONLY =
   "You are in the project's folder in read-only mode: read and search the code, never change files, never run commands that change things.";
 const NO_WORK = "You can't create tickets or start work. They tap Create and then Run on the card.";
@@ -50,6 +54,7 @@ const rules = (project: AskPromptInput['project'], mode: AskMode) =>
     MODE_RULES[mode].folder,
     'Answer plainly and briefly. They read it on a phone.',
     `Only when they ask for a ticket, or to change the ticket you drafted, end your answer with one ticket card exactly like this (four backticks):\n\n${CARD_EXAMPLE}`,
+    RUN_ALL_RULE,
     ...MODE_RULES[mode].last,
   ].join('\n');
 

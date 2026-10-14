@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query';
-import type { Run, Runner, StartRunInput } from '@tracker/shared';
+import type { Run, RunAllInput, RunAllResult, Runner, StartRunInput } from '@tracker/shared';
 import { useApi } from '../context';
+import { refreshBatches } from '../live/refreshBatches';
 import { queryKeys } from '../queryKeys';
 import type { TrackerMutation, TrackerQuery } from '../types';
 import { runsRefreshMs } from '../workingRun';
@@ -68,5 +69,23 @@ export function useCancelRun(): TrackerMutation<Run, Run> {
     mutationFn: (run: Run) => client.cancelRun(run.id),
     onSuccess: (run) => showRun(queryClient, run),
     onSettled: (_run, _error, run) => invalidateRuns(queryClient, run.ticketKey),
+  });
+}
+
+export interface RunAllVariables {
+  projectKey: string;
+  input: RunAllInput;
+}
+
+export function useRunAllTodo(): TrackerMutation<RunAllResult, RunAllVariables> {
+  const client = useApi();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ projectKey, input }: RunAllVariables) => client.runAllTodo(projectKey, input),
+    // Each ticket's own run list refreshes when its run event arrives.
+    onSettled: (_result, _error, { projectKey }) => {
+      refreshBatches(queryClient);
+      void queryClient.invalidateQueries({ queryKey: queryKeys.runAllPreview(projectKey) });
+    },
   });
 }

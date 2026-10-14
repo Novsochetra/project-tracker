@@ -1,4 +1,4 @@
-import type { FinishRunInput, RunJob, RunKind } from '@tracker/shared';
+import type { FinishRunInput, RunJob, RunLane } from '@tracker/shared';
 import { askOutcomeOf } from './ask/askOutcome';
 import type { OnSteps } from './claudeRunners';
 import type { ProblemSource } from './problems';
@@ -26,13 +26,19 @@ export interface RunLoopDeps {
 export interface RunLoopSettings {
   runnerId: string;
   projectKey: string;
-  kind: RunKind;
+  kind: RunLane;
 }
 
 const ENDINGS: Record<FinishRunInput['status'], string> = {
   done: 'Claude Code finished',
   failed: 'Claude Code stopped with an error',
   cancelled: 'Cancelled',
+};
+
+const AGAIN: Record<RunJob['run']['kind'], string> = {
+  ask: '',
+  ticket: '\nThe run ended. Press Send to Claude to start it again.',
+  batch: '\nThe run ended. Press Run all Todo to start it again.',
 };
 
 // Every turn's result: the report can be in an earlier one than the last (background work).
@@ -67,7 +73,9 @@ const runSafely: Runner = async (deps, job, stop, onSteps) => {
     if (stop.aborted) return { status: 'cancelled' };
     const why = `Claude Code could not start: ${deps.describe(error)}`;
     deps.log(`${runName(job.run)}: ${why}`);
-    return { status: 'failed', error: lastLines(why) };
+    // The ticket shows this, and nothing starts the run again until the person starts it again.
+    const next = AGAIN[job.run.kind];
+    return { status: 'failed', error: lastLines(why + next) };
   }
 };
 

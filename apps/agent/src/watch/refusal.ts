@@ -1,14 +1,18 @@
-import { laneOf, type RunJob, type RunKind } from '@tracker/shared';
+import { laneOf, type RunJob, type RunLane } from '@tracker/shared';
 
 export interface Lane {
   projectKey: string;
-  kind: RunKind;
+  kind: RunLane;
 }
 
 const projectRefusal = ({ run }: RunJob, projectKey: string): string | undefined => {
   if (run.kind === 'ask') {
     if (run.projectKey === projectKey) return undefined;
     return `This helper only answers about ${projectKey}, not ${run.projectKey}.`;
+  }
+  if (run.kind === 'batch') {
+    if (run.projectKey === projectKey) return undefined;
+    return `This helper only runs ${projectKey} tickets, not a ${run.projectKey} batch.`;
   }
   if (!run.ticketKey) return 'This ticket run has no ticket.';
   if (run.ticketKey.startsWith(`${projectKey}-`)) return undefined;

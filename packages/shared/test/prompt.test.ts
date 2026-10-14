@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  buildBatchPrompt,
   buildProjectPrompt,
   buildTicketPrompt,
   ticketBlock,
@@ -328,5 +329,40 @@ describe('buildProjectPrompt', () => {
     expect(buildProjectPrompt(project, [reviewed], NOW)).toContain(
       lines('Last review: Approved · 4/5', 'Fine.', '', '---'),
     );
+  });
+});
+
+describe('buildBatchPrompt', () => {
+  const tickets = [crash, plain];
+
+  it('lists the tickets and caps the sub agents at the limit', () => {
+    const text = buildBatchPrompt(project, tickets, 5);
+    expect(text).toContain('Please work on these 2 tickets from my "Mobile app" project');
+    expect(text).toContain('Repository / folder: ~/code/mobile-app');
+    expect(text).toContain('- MOB-3 · High · Crash when rotating the profile screen');
+    expect(text).toContain('- MOB-4 · Medium · Dark mode colors for Settings');
+    expect(text).toContain('Run at most 5 sub agents at once.');
+    expect(text).toContain('As soon as a sub agent ends, give the next ticket to a new one');
+  });
+
+  it('puts the limit it is given in the prompt', () => {
+    expect(buildBatchPrompt(project, tickets, 2)).toContain('Run at most 2 sub agents at once.');
+  });
+
+  it('has each sub agent claim, report and never finish its ticket', () => {
+    const text = buildBatchPrompt(project, tickets, 5);
+    expect(text).toContain('claim_ticket');
+    expect(text).toContain('submit_for_review');
+    expect(text).toContain('Never move a ticket to Done.');
+    expect(text).toContain('When a ticket fails, go on with the others.');
+  });
+
+  it('leaves out ticket descriptions, which each sub agent reads itself', () => {
+    expect(buildBatchPrompt(project, tickets, 5)).not.toContain(crash.description);
+  });
+
+  it('ends with the report block for each ticket', () => {
+    expect(buildBatchPrompt(noRepo, tickets, 5)).toMatch(/TICKET: MOB-<number>\n/);
+    expect(buildBatchPrompt(noRepo, tickets, 5)).not.toContain('Repository / folder');
   });
 });

@@ -368,6 +368,7 @@ describe('regression: New project and Edit project threw typed text away', () =>
       name: 'Marketing site',
       description: 'Docs',
       repo: '~/code/web',
+      maxParallelRuns: 5,
     });
   });
 });

@@ -41,6 +41,7 @@ export const toMessage = (row: MessageWithKey): ChatMessage => ({
       ? null
       : formatTicketKey(row.projectKey, row.ticketNum),
   runId: row.runId,
+  batchRunId: row.batchRunId,
   stepCount: shownStepCount(row),
   createdAt: row.createdAt,
 });

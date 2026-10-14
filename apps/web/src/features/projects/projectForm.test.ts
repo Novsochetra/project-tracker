@@ -90,15 +90,19 @@ describe('inputs', () => {
       name: 'Mobile app',
       description: 'iOS and Android',
       repo: '~/code/mobile',
+      maxParallelRuns: 5,
     });
   });
 
   it('starts an edit from the project values', () => {
-    expect(formValuesOf({ name: 'Website', description: 'Docs', repo: '~/web' })).toEqual({
+    expect(
+      formValuesOf({ name: 'Website', description: 'Docs', repo: '~/web', maxParallelRuns: 5 }),
+    ).toEqual({
       name: 'Website',
       description: 'Docs',
       repo: '~/web',
       prefix: '',
+      maxParallelRuns: '5',
     });
   });
 });
@@ -116,7 +120,12 @@ describe('projectFormChanged', () => {
   });
 
   it('compares an edit with the project it loaded', () => {
-    const loaded = formValuesOf({ name: 'Website', description: 'Docs', repo: '~/code/web' });
+    const loaded = formValuesOf({
+      name: 'Website',
+      description: 'Docs',
+      repo: '~/code/web',
+      maxParallelRuns: 5,
+    });
     const changed = (patch: Partial<ProjectFormValues>) =>
       projectFormChanged({ ...loaded, ...patch }, loaded);
     expect(changed({})).toBe(false);

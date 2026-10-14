@@ -74,7 +74,7 @@ export const slashCommand = (name: SlashCommand, projectKey: string | null): str
 
 // The sheet opens from a project's options, so the screen behind it names the project.
 export const routeProjectKey = (route: Route | undefined): string | null =>
-  route && route.name !== 'projects' ? route.key.toUpperCase() : null;
+  route && route.name !== 'projects' && route.name !== 'activity' ? route.key.toUpperCase() : null;
 
 const LEAVE_KEY_OUT = 'Leave it out and the agent finds the project by its repository.';
 

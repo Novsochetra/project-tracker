@@ -9,6 +9,7 @@ export interface FieldInput {
   priority?: Priority;
   assignee?: string;
   due?: string;
+  needsDevice?: boolean;
 }
 
 export interface PlannedChange {
@@ -42,6 +43,13 @@ function dueChange(ticket: TicketRow, due: string | undefined, today: Date): Pla
   return { changes: { due }, entries: [eventEntry(text)] };
 }
 
+function deviceChange(ticket: TicketRow, needsDevice: boolean | undefined): PlannedChange {
+  const next = needsDevice === undefined ? undefined : Number(needsDevice);
+  if (!differs(next, ticket.needsDevice)) return NO_CHANGE;
+  const text = needsDevice ? 'marked the ticket as needing a device' : 'cleared the device mark';
+  return { changes: { needsDevice: next }, entries: [eventEntry(text)] };
+}
+
 function textChanges(ticket: TicketRow, input: FieldInput): TicketChanges {
   const changes: TicketChanges = {};
   if (differs(input.title, ticket.title)) changes.title = input.title;
@@ -62,5 +70,6 @@ export function fieldChanges(ticket: TicketRow, input: FieldInput, today: Date):
     priorityChange(ticket, input.priority),
     assigneeChange(ticket, input.assignee),
     dueChange(ticket, input.due, today),
+    deviceChange(ticket, input.needsDevice),
   ]);
 }

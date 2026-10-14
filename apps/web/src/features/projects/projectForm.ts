@@ -1,4 +1,6 @@
 import {
+  DEFAULT_MAX_PARALLEL_RUNS,
+  MAX_PARALLEL_RUNS_MAX,
   derivePrefix,
   resolvePrefix,
   type CreateProjectInput,
@@ -13,6 +15,7 @@ export interface ProjectFormValues {
   description: string;
   repo: string;
   prefix: string;
+  maxParallelRuns: string;
 }
 
 export const EMPTY_PROJECT_FORM: ProjectFormValues = {
@@ -20,22 +23,32 @@ export const EMPTY_PROJECT_FORM: ProjectFormValues = {
   description: '',
   repo: '',
   prefix: '',
+  maxParallelRuns: String(DEFAULT_MAX_PARALLEL_RUNS),
 };
 
 export const NAME_REQUIRED = 'Add a name to create the project.';
 
 const REPO_HINT = 'The repository is added to every Claude Code prompt.';
 
-export const formValuesOf = (project: Pick<Project, 'name' | 'description' | 'repo'>) => ({
+export const formValuesOf = (
+  project: Pick<Project, 'name' | 'description' | 'repo' | 'maxParallelRuns'>,
+) => ({
   ...EMPTY_PROJECT_FORM,
   name: project.name,
   description: project.description,
   repo: project.repo,
+  maxParallelRuns: String(project.maxParallelRuns),
 });
 
 export const hasName = (values: ProjectFormValues): boolean => values.name.trim() !== '';
 
-const FORM_FIELDS: readonly (keyof ProjectFormValues)[] = ['name', 'description', 'repo', 'prefix'];
+const FORM_FIELDS: readonly (keyof ProjectFormValues)[] = [
+  'name',
+  'description',
+  'repo',
+  'prefix',
+  'maxParallelRuns',
+];
 
 // Trimmed like Create and Save send them, so a stray space doesn't make the sheet ask.
 export const projectFormChanged = (
@@ -66,7 +79,14 @@ export const updateProjectInput = (values: ProjectFormValues): UpdateProjectInpu
   name: values.name.trim(),
   description: values.description.trim(),
   repo: values.repo.trim(),
+  maxParallelRuns: parallelRunsOf(values),
 });
+
+export const parallelRunsOf = (values: ProjectFormValues): number => {
+  const count = Math.round(Number(values.maxParallelRuns));
+  if (!Number.isFinite(count)) return DEFAULT_MAX_PARALLEL_RUNS;
+  return Math.min(MAX_PARALLEL_RUNS_MAX, Math.max(1, count));
+};
 
 export const createdToast = (name: string): string => `“${name}” created`;
 

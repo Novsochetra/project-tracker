@@ -5,6 +5,7 @@ import { refusalOf } from '../../src/watch/refusal';
 const job = (run: Partial<Run>): RunJob => ({
   prompt: 'Go',
   resumeSessionId: null,
+  ticketKeys: [],
   run: {
     id: 'r-1',
     kind: 'ticket',
@@ -20,6 +21,7 @@ const job = (run: Partial<Run>): RunJob => ({
     startedAt: 2,
     endedAt: null,
     stepCount: 0,
+    batchId: null,
     ...run,
   },
 });
@@ -52,6 +54,17 @@ describe('refusalOf', () => {
       'This helper\'s ticket lane does not take runs of the "later" lane.',
     );
     expect(refusalOf(job({ ticketKey: null }), ticketLane)).toBe('This ticket run has no ticket.');
+  });
+
+  it("takes a batch of this helper's project in the ticket lane only", () => {
+    const batch = { kind: 'batch' as const, ticketKey: null };
+    expect(refusalOf(job(batch), ticketLane)).toBeUndefined();
+    expect(refusalOf(job({ ...batch, projectKey: 'WEB' }), ticketLane)).toBe(
+      'This helper only runs MOB tickets, not a WEB batch.',
+    );
+    expect(refusalOf(job(batch), askLane)).toBe(
+      'This helper\'s ask lane does not take runs of the "ticket" lane.',
+    );
   });
 
   it('keeps ticket runs out of the read-only lane', () => {

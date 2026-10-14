@@ -214,7 +214,11 @@ describe.each(DIALECTS)('every migration up and down (%s)', (dialect) => {
         db,
       );
 
-      await expectRan(createMigrator(db).migrateTo('0011_user_projects'), ['0012_password_resets']);
+      await expectRan(createMigrator(db).migrateTo('0011_user_projects'), [
+        '0014_batch_runs',
+        '0013_run_all',
+        '0012_password_resets',
+      ]);
       const kept = await sql<{ id: string }>`select id from invites`.execute(db);
       expect(kept.rows).toEqual([{ id: 'i' }]);
 
@@ -240,6 +244,7 @@ const DATA_MODEL: SchemaShape = {
       'created_at bigint not null',
       'updated_at bigint not null',
       'owner_id text',
+      'max_parallel_runs integer not null default 5',
     ],
     indexes: ['index (owner_id)', 'unique (key)'],
     foreignKeys: [],
@@ -272,6 +277,7 @@ const DATA_MODEL: SchemaShape = {
       'created_at bigint not null',
       'updated_at bigint not null',
       'client_id text',
+      'needs_device integer not null default 0',
     ],
     indexes: [
       'index (project_id, status_id, rank)',
@@ -408,8 +414,10 @@ const DATA_MODEL: SchemaShape = {
       'ask_mode text',
       'step_count integer not null default 0',
       'ask_effort text',
+      'batch_id text',
     ],
     indexes: [
+      'index (batch_id)',
       'index (chat_id, created_at)',
       'index (runner_id, status)',
       'index (status, created_at)',
@@ -484,6 +492,7 @@ const DATA_MODEL: SchemaShape = {
       'ticket_id text',
       'created_at bigint not null',
       'run_id text',
+      'batch_run_id text',
     ],
     indexes: ['index (chat_id, created_at)'],
     foreignKeys: [
