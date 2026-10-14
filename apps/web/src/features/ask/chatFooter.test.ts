@@ -22,10 +22,16 @@ describe('chatFooter', () => {
     for (const status of ['queued', 'running'] as const) {
       const run = ask({ status });
       const footer = chatFooter({ ...input, runners: undefined, run });
-      expect(footer).toEqual({ kind: 'thinking', run });
+      expect(footer).toEqual({ kind: 'thinking', run, helper: null });
       expect(stoppableRunOf(footer)).toBe(run);
     }
     expect(thinkingText(ask())).toBe(`Claude is thinking on ${DARA}…`);
+  });
+
+  it('queues a message sent while Claude thinks on the helper that answers', () => {
+    const run = ask({ status: 'running', runnerId: studio.id });
+    const footer = chatFooter({ ...input, runners: [dara, studio], run });
+    expect(helperOf(footer)).toBe(studio);
   });
 
   it('waits for the helpers before offering Send or the setup line', () => {

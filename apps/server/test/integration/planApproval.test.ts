@@ -94,6 +94,26 @@ describe.each(DIALECTS)('approving a plan in a chat (%s)', (dialect) => {
     expect(job?.prompt).toContain('The plan they approved:\n\n> # Plan\n> \n> 1. Add the queue');
   });
 
+  it('carries the plan out before messages sent while Claude planned', async () => {
+    const { chatId, runId } = await chatIn('plan');
+    await answer((await plan(runId)).id, { decision: 'allow', answers: ['edit'] });
+    const later = { runnerId: runner, text: 'Also rename the store' };
+    expect((await person('POST', `/api/chats/${chatId}/messages`, later)).status).toBe(200);
+    expect((await chat(chatId)).queued ?? []).toHaveLength(1);
+    clock.advance(1_000);
+    await finish(runId);
+
+    const after = await chat(chatId);
+    expect(after.run).toMatchObject({ status: 'queued', askOptions: { mode: 'edit' } });
+    expect((after.queued ?? []).map((message) => message.text)).toEqual(['Also rename the store']);
+    const followUp = (await next('ticket')).body;
+    expect(followUp?.prompt).toContain('The plan they approved:');
+    clock.advance(1_000);
+    await finish(followUp?.run.id ?? '');
+    expect((await chat(chatId)).queued ?? []).toHaveLength(0);
+    expect((await next('ask')).body?.prompt).toContain('Also rename the store');
+  });
+
   it('says in the chat why an approved plan could not start, and still ends the run', async () => {
     const { chatId, runId } = await chatIn('plan');
     await answer((await plan(runId)).id, { decision: 'allow', answers: ['edit'] });
