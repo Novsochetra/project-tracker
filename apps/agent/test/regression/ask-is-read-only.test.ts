@@ -48,7 +48,13 @@ const ask = async (prompt: string, resume: string | null = null, mode: AskMode =
 
 const STREAM = ['-p', '--output-format', 'stream-json', '--verbose'];
 // A chat's claude stays open and reads each message as a JSON line (PT-238).
-const ASK_STREAM = ['-p', '--input-format', 'stream-json', ...STREAM.slice(1)];
+const ASK_STREAM = [
+  '-p',
+  '--input-format',
+  'stream-json',
+  '--replay-user-messages',
+  ...STREAM.slice(1),
+];
 // The open claude's own folder, where each question's files go.
 const ADD_DIR = ['--add-dir', expect.stringContaining('tracker-ask-')];
 
@@ -249,7 +255,7 @@ describe('regression: an ask runs Claude read-only', () => {
   it('reports why Claude could not answer', async () => {
     expect(await ask('ASK FAIL')).toEqual({
       status: 'failed',
-      error: 'Claude Code answered with an error.\nCredit balance is too low',
+      error: 'Claude Code exited with 1.\nCredit balance is too low',
     });
   });
 });

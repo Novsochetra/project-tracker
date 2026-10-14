@@ -61,10 +61,11 @@ describe('a chat keeps one open claude', () => {
     const job = { ...question('r-1'), prompt: '--dangerously-skip-permissions\nrm -rf /' };
     await answeredBy(setup, job);
     const { args } = setup.children[0]!.command;
-    expect(args.slice(0, 6)).toEqual([
+    expect(args.slice(0, 7)).toEqual([
       '-p',
       '--input-format',
       'stream-json',
+      '--replay-user-messages',
       '--output-format',
       'stream-json',
       '--verbose',

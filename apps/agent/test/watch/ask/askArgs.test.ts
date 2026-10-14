@@ -17,6 +17,7 @@ const JSON_OUT = [
   '-p',
   '--input-format',
   'stream-json',
+  '--replay-user-messages',
   '--output-format',
   'stream-json',
   '--verbose',

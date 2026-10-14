@@ -10,6 +10,7 @@ import { claudeEnv } from '../claudeEnv';
 import { runPermissions } from '../permissionTool/runPermissions';
 import { openPromptTool, type PromptTool } from '../permissionTool/withPromptTool';
 import { startChatProcess, type ChatChild, type ChatProcess } from './chatProcess';
+import { STATE_EVENTS_ENV } from './turnEvents';
 
 export type SpawnChat = (command: ClaudeCommand) => ChatChild;
 
@@ -25,7 +26,11 @@ export interface ChatSetup {
 export type OpenChat = ChatProcess & { folder: string };
 
 const spawnClaude: SpawnChat = ({ command, args, cwd }) =>
-  spawn(command, [...args], { cwd, stdio: 'pipe', env: claudeEnv(process.env) });
+  spawn(command, [...args], {
+    cwd,
+    stdio: 'pipe',
+    env: { ...claudeEnv(process.env), ...STATE_EVENTS_ENV },
+  });
 
 // Claude Code's file tools reach only the folders it was started with, so the process gets one
 // folder of its own and each question's files go in it (withAskFiles).

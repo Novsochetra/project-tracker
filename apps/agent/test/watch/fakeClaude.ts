@@ -41,6 +41,10 @@ const say = (text, is_error = false) => {
 };
 // A chat's claude reads one JSON message a line and stays open; a crash ends it with a code.
 const streamInput = process.argv.includes('--input-format');
+// Claude Code 2.1.299 says when a turn is over only when asked to (chat/turnEvents.ts).
+const state = (value) =>
+  process.env.CLAUDE_CODE_EMIT_SESSION_STATE_EVENTS === '1' &&
+  emit({ type: 'system', subtype: 'session_state_changed', state: value });
 function handle(prompt, exit) {
   if (stream) {
     emit({ type: 'system', subtype: 'init', cwd: process.cwd(), tools: ['Read', 'Bash'] });
@@ -149,7 +153,12 @@ process.stdin.on('data', (chunk) => {
   const lines = input.split('\\n');
   input = lines.pop();
   for (const line of lines.filter(Boolean)) {
-    handle(JSON.parse(line).message.content, (code) => code !== 0 && process.exit(code));
+    const sent = JSON.parse(line);
+    state('running');
+    if (process.argv.includes('--replay-user-messages')) {
+      emit({ type: 'user', isReplay: true, uuid: sent.uuid, message: sent.message });
+    }
+    handle(sent.message.content, (code) => (code === 0 ? state('idle') : process.exit(code)));
   }
 });
 process.stdin.on('end', () => (streamInput ? process.exit(0) : handle(input, process.exit)));

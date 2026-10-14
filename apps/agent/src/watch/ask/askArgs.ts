@@ -6,8 +6,10 @@ import { askModelArgs } from './askModelArgs';
 
 const SESSION_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-// A chat's Claude stays open and reads each message as a JSON line on stdin (PT-238).
-const STREAM_INPUT = ['--input-format', 'stream-json'] as const;
+// A chat's Claude stays open and reads each message as a JSON line on stdin (PT-238). It echoes
+// each message, with its uuid, as the message's turn starts, so output from background work of an
+// earlier turn is never taken for this one (chatProcess).
+const STREAM_INPUT = ['--input-format', 'stream-json', '--replay-user-messages'] as const;
 
 export const isSessionId = (value: unknown): value is string =>
   typeof value === 'string' && SESSION_ID.test(value);
@@ -16,7 +18,6 @@ export const isSessionId = (value: unknown): value is string =>
 const resumeArgs = (sessionId: string | null): string[] =>
   isSessionId(sessionId) ? ['--resume', sessionId] : [];
 
-// What the person chose for the question; a chat's open Claude keeps them until one changes.
 export function askChoiceArgs(run: RunJob['run'], permissionMode?: string): string[] {
   // An older server sends no askOptions at all.
   const options = run.askOptions as Partial<Record<keyof AskOptions, unknown>> | null | undefined;

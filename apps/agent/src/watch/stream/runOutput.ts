@@ -9,7 +9,6 @@ export interface ClaudeListeners {
   onEvent: (event: unknown) => void;
 }
 
-// What one run, or one turn of a chat's process, showed and answered.
 export function createRunOutput({ onOutput, onEvent }: ClaudeListeners) {
   let output = '';
   const results: ClaudeResult[] = [];

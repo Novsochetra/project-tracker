@@ -1,10 +1,12 @@
 import type { ChildProcessWithoutNullStreams } from 'node:child_process';
+import { randomUUID } from 'node:crypto';
 import type { Run } from '@tracker/shared';
 import { isSessionId } from '../ask/askArgs';
 import type { ClaudeExit } from '../outcome';
 import { createJsonLines } from '../stream/jsonLines';
 import { createRunOutput, type ClaudeListeners, type RunOutput } from '../stream/runOutput';
 import { CHAT_BUSY } from './chatPool';
+import { isIdle, isStateEvent, replayOf } from './turnEvents';
 import { userMessageLine } from './userMessage';
 
 export type ChatChild = Pick<
@@ -28,7 +30,10 @@ type Ending = Pick<ClaudeExit, 'code' | 'signal' | 'turnEnded'>;
 
 interface OpenTurn {
   run: Run;
+  uuid: string;
   output: RunOutput;
+  started: boolean;
+  results: number;
   done: (exit: ClaudeExit) => void;
 }
 
@@ -37,21 +42,35 @@ const sessionOf = (event: unknown): string | undefined => {
   return isSessionId(id) ? id : undefined;
 };
 
-// One claude -p a chat, open across its messages: each message is a turn that ends on its result.
+// One claude -p a chat, open across its messages: each message is a turn that ends when Claude
+// Code goes idle. One too old to say so gets stdin closed at its first result and ends the turn
+// by exiting, as before PT-238.
 export function startChatProcess(child: ChatChild, onClose: () => void) {
   let turn: OpenTurn | undefined;
   let session: string | undefined;
+  let saysState = false;
   let open = true;
   const finish = (ending: Ending) => {
     const ended = turn;
     turn = undefined;
     ended?.done(ended.output.exit(ending));
   };
+  const read = (event: unknown, now: OpenTurn) => {
+    if (replayOf(event) === now.uuid) now.started = true;
+    else if (saysState && !now.started) return;
+    else if (isStateEvent(event)) {
+      if (isIdle(event) && now.results > 0) finish({ code: null, signal: null, turnEnded: true });
+    } else if (now.output.event(event)) {
+      now.results += 1;
+      if (!saysState) child.stdin.end();
+    }
+  };
   const lines = createJsonLines({
     onText: (line) => turn?.output.say(`${line}\n`),
     onEvent: (event) => {
       session = sessionOf(event) ?? session;
-      if (turn?.output.event(event)) finish({ code: null, signal: null, turnEnded: true });
+      saysState ||= isStateEvent(event);
+      if (turn) read(event, turn);
     },
   });
   const closed = (code: number | null, signal: NodeJS.Signals | null) => {
@@ -84,9 +103,10 @@ export function startChatProcess(child: ChatChild, onClose: () => void) {
         stop.removeEventListener('abort', kill);
         resolve(exit);
       };
-      turn = { run, output: createRunOutput(listeners), done };
+      const uuid = randomUUID();
+      turn = { run, uuid, output: createRunOutput(listeners), started: false, results: 0, done };
       if (stop.aborted) kill();
-      else child.stdin.write(userMessageLine(prompt));
+      else child.stdin.write(userMessageLine(prompt, uuid));
     });
   }
 
