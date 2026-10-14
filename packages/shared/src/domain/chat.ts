@@ -11,6 +11,9 @@ export const CHAT_QUESTION_MAX = 10_000;
 export const CHAT_ANSWER_MAX = 100_000;
 export const CHAT_TITLE_MAX = 80;
 export const CHAT_NO_ANSWER = 'Claude Code gave no answer.';
+// Messages a chat holds while Claude answers (PT-234); each runs as its own turn, in order.
+export const CHAT_QUEUE_MAX = 5;
+export const CHAT_QUEUE_FULL = `You can queue up to ${CHAT_QUEUE_MAX} messages. Wait for Claude or remove one.`;
 
 // Pictures Claude shows in one answer (PT-225), each named by an image card.
 export const CHAT_ANSWER_IMAGES_MAX = 10;
@@ -67,6 +70,15 @@ export interface ChatMessage {
   createdAt: number;
 }
 
+// A person's message sent while Claude answered, waiting for its own turn.
+export interface QueuedMessage {
+  id: string;
+  text: string;
+  attachments: Attachment[];
+  options: AskOptions;
+  createdAt: number;
+}
+
 export interface ChatDetail {
   chat: Chat;
   messages: ChatMessage[];
@@ -75,6 +87,9 @@ export interface ChatDetail {
   // The questions that failed or were stopped after Claude took steps, oldest first. They add no
   // message, so this is how what Claude did keeps its place in the thread.
   stoppedRuns: Run[];
+  // Oldest first: the next starts when an answer ends done; a stopped or failed one holds them.
+  // An older tracker sends none.
+  queued?: QueuedMessage[];
 }
 
 // Tells the person's other tabs and devices to leave a chat deleted elsewhere (PT-159).

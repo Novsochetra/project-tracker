@@ -3,6 +3,7 @@ import type { ExpressionBuilder } from 'kysely';
 import type { UserScope } from '../auth/scope';
 import type { ChatMessageRow, ChatRow } from '../db/chatTables';
 import type { Database, Db } from '../db/schema';
+import { notQueued } from './chatQueue';
 
 export interface ChatWithKey extends ChatRow {
   projectKey: string;
@@ -86,6 +87,8 @@ export const listMessageRows = (db: Db, chatId: string) =>
     ])
     .select(['runs.costMicros', 'runs.turns', 'runs.durationMs'])
     .where('chatMessages.chatId', '=', chatId)
+    // A queued message joins the thread when its own run starts.
+    .where(notQueued)
     .orderBy('chatMessages.createdAt')
     .orderBy('chatMessages.id')
     .execute();

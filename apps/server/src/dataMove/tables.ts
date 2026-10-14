@@ -43,6 +43,7 @@ export const SKIPPED_TABLES: Readonly<Record<string, string>> = {
   chats: "chats with Claude Code on this tracker's helpers",
   chat_messages: "chats with Claude Code on this tracker's helpers",
   chat_card_tickets: "chats with Claude Code on this tracker's helpers",
+  chat_queue: "chats with Claude Code on this tracker's helpers",
   push_subscriptions: "this computer's devices with notifications on; turn them on again online",
   push_keys: "this tracker's own push keys; the online tracker has its own",
 };

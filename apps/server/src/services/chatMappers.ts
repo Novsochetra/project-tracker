@@ -6,9 +6,11 @@ import {
   type Chat,
   type ChatMessage,
   type ChatTicket,
+  type QueuedMessage,
 } from '@tracker/shared';
 import type { AttachmentRow } from '../db/schema';
 import type { CardTicketRow } from '../repositories/chatCardTickets';
+import type { QueuedRow } from '../repositories/chatQueue';
 import type { ChatWithKey, MessageWithSteps } from '../repositories/chats';
 import { toAttachment } from './mappers';
 import { usageOfRow } from './runUsage';
@@ -64,6 +66,17 @@ export const toMessage = (
   stepCount: shownStepCount(row),
   attachments: files.map(toAttachment),
   usage: usageOfRow(row),
+  createdAt: row.createdAt,
+});
+
+export const toQueuedMessage = (
+  row: QueuedRow,
+  files: readonly AttachmentRow[],
+): QueuedMessage => ({
+  id: row.messageId,
+  text: row.text,
+  attachments: files.map(toAttachment),
+  options: { model: row.askModel, mode: row.askMode, effort: row.askEffort },
   createdAt: row.createdAt,
 });
 

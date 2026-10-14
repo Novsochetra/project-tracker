@@ -1,8 +1,9 @@
-import { askInput, cardTicketInput, startChatInput } from '@tracker/shared';
+import { askInput, cardTicketInput, queuedEditInput, startChatInput } from '@tracker/shared';
 import { Hono, type Context } from 'hono';
 import { requireScope } from '../../auth/scope';
 import { askInChat, getChat, listChats, startChat } from '../../services/chats';
 import { deleteChat } from '../../services/chatDeletion';
+import { editQueued, removeQueued, sendQueuedNow } from '../../services/chatQueue/queuedActions';
 import { createCardTicket } from '../../services/chatTickets';
 import type { ServiceContext } from '../../services/context';
 import type { AppEnv } from '../env';
@@ -10,6 +11,10 @@ import { personDeletesChats, personOnly } from '../personOnly';
 import { jsonBody } from '../validation';
 
 const scope = (c: Context<AppEnv>) => requireScope(c.get('access'));
+const queuedRef = (c: Context<AppEnv>) => ({
+  chatId: c.req.param('id') ?? '',
+  messageId: c.req.param('messageId') ?? '',
+});
 
 export const chatRoutes = (ctx: ServiceContext) =>
   new Hono<AppEnv>()
@@ -26,6 +31,15 @@ export const chatRoutes = (ctx: ServiceContext) =>
     })
     .post('/chats/:id/messages', personOnly, jsonBody(askInput), async (c) =>
       c.json(await askInChat(ctx, scope(c), c.req.param('id'), c.req.valid('json'))),
+    )
+    .patch('/chats/:id/queue/:messageId', personOnly, jsonBody(queuedEditInput), async (c) =>
+      c.json(await editQueued(ctx, scope(c), queuedRef(c), c.req.valid('json').text)),
+    )
+    .delete('/chats/:id/queue/:messageId', personOnly, async (c) =>
+      c.json(await removeQueued(ctx, scope(c), queuedRef(c))),
+    )
+    .post('/chats/:id/queue/:messageId/send', personOnly, async (c) =>
+      c.json(await sendQueuedNow(ctx, scope(c), queuedRef(c))),
     )
     .post(
       '/chats/:id/messages/:messageId/ticket',

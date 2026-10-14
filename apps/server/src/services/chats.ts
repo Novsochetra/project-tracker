@@ -1,7 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import {
   chosenAskOptions,
-  type AskHistoryMessage,
   type askInput,
   type Chat,
   type ChatDetail,
@@ -10,7 +9,7 @@ import {
 import type { z } from 'zod';
 import type { UserScope } from '../auth/scope';
 import type { ChatRow } from '../db/chatTables';
-import type { Db, ProjectRow } from '../db/schema';
+import type { ProjectRow } from '../db/schema';
 import { notFound } from '../errors';
 import { listCardTicketRows } from '../repositories/chatCardTickets';
 import {
@@ -20,10 +19,14 @@ import {
   listProjectChatRows,
   type ChatWithKey,
 } from '../repositories/chats';
+import { listQueuedRows } from '../repositories/chatQueue';
 import { latestChatRunRow, listStoppedChatRunRows } from '../repositories/runs';
+import { askHistory } from './askHistory';
 import { queueAsk } from './askRuns';
+import { chatIsBusy, queueMessage } from './chatQueue/queueMessage';
+import { startNextQueued } from './chatQueue/startQueued';
 import { chatFilesByMessage } from './chatFiles';
-import { chatTitle, toCardTicket, toChat, toMessage } from './chatMappers';
+import { chatTitle, toChat, toMessage, toQueuedMessage } from './chatMappers';
 import { chatPromptTicket, requireChatTicket } from './chatTicket';
 import { inTransaction, type ServiceContext } from './context';
 import { requireProject } from './lookups';
@@ -72,25 +75,15 @@ export async function getChat(
   const cards = await listCardTicketRows(ctx.db, chat.id);
   const run = await latestChatRunRow(ctx.db, scope, chat.id);
   const stopped = await listStoppedChatRunRows(ctx.db, scope, chat.id);
+  const queued = await listQueuedRows(ctx.db, chat.id);
+  const filesOf = (id: string) => files.get(id) ?? [];
   return {
     chat: toChat(chat),
-    messages: messages.map((message) => toMessage(message, cards, files.get(message.id) ?? [])),
+    messages: messages.map((message) => toMessage(message, cards, filesOf(message.id))),
     run: run ? toRun(run) : null,
     stoppedRuns: stopped.map(toRun),
+    queued: queued.map((row) => toQueuedMessage(row, filesOf(row.messageId))),
   };
-}
-
-// So the prompt can say which cards are tickets now, and which files each question had.
-async function askHistory(db: Db, chatId: string): Promise<AskHistoryMessage[]> {
-  const cards = await listCardTicketRows(db, chatId);
-  const files = await chatFilesByMessage(db, chatId);
-  const messages = await listMessageRows(db, chatId);
-  return messages.map(({ id, role, text }) => ({
-    role,
-    text,
-    cardTickets: cards.filter((card) => card.messageId === id).map(toCardTicket),
-    files: (files.get(id) ?? []).map((file) => file.fileName),
-  }));
 }
 
 interface AskIn {
@@ -110,15 +103,19 @@ async function askIn(
   const history = isNew ? [] : await askHistory(ctx.db, chat.id);
   const ticket = await chatPromptTicket(ctx.db, chat, project.key);
   const queued = { scope, runner, projectId: project.id, now: ctx.now() };
+  // While Claude answers, the message waits for its own turn (PT-234).
+  const busy = !isNew && (await chatIsBusy(ctx.db, scope, chat.id));
   const run = await inTransaction(ctx, async (trx) => {
     if (isNew) await insertChat(trx, chat);
     const saved = { model: chat.askModel, mode: chat.askMode, effort: chat.askEffort };
     const options = chosenAskOptions(input, saved);
     const { text: question, attachmentIds } = input;
     const request = { queued, project, chat, history, ticket, question, attachmentIds, options };
-    return queueAsk(trx, request);
+    return busy ? queueMessage(trx, request) : queueAsk(trx, request);
   });
-  notifyRun(ctx, scope, run);
+  if (run) notifyRun(ctx, scope, run);
+  // The answer may have ended done between the look and the save, with no queue to go on to.
+  else await startNextQueued(ctx, scope, chat.id);
   return getChat(ctx, scope, chat.id);
 }
 

@@ -590,6 +590,21 @@ const DATA_MODEL: SchemaShape = {
       'ticket_id -> tickets.id on delete cascade',
     ],
   },
+  chat_queue: {
+    columns: [
+      'message_id text primary key',
+      'chat_id text not null',
+      'runner_id text not null',
+      'ask_model text not null',
+      'ask_mode text not null',
+      'ask_effort text not null',
+    ],
+    indexes: ['index (chat_id)'],
+    foreignKeys: [
+      'chat_id -> chats.id on delete cascade',
+      'message_id -> chat_messages.id on delete cascade',
+    ],
+  },
   push_subscriptions: {
     columns: [
       'id text primary key',
