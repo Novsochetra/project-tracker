@@ -85,5 +85,7 @@ export const finishRunInput = z.object({
   usage: runUsageInput.optional(),
   // The helper's latest word from Claude Code on the person's plan limits, if the run gave one.
   planLimits: planLimitsInput.optional(),
+  // Names the helper sending the limits, so a late end keeps them only from the run's own helper.
+  runnerId: runnerId.optional(),
 });
 export type FinishRunInput = z.input<typeof finishRunInput>;

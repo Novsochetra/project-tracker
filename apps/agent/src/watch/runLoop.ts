@@ -133,8 +133,9 @@ export function createRunLoop(deps: RunLoopDeps, settings: RunLoopSettings) {
       if (stopped) stillReporting();
       else log(`Couldn't tell the tracker how ${label} ended yet. Trying again.`);
     };
+    const body = outcome.planLimits ? { ...outcome, runnerId: settings.runnerId } : outcome;
     try {
-      await retryUntilAnswered(() => api.finishRun(run.id, outcome), {
+      await retryUntilAnswered(() => api.finishRun(run.id, body), {
         delay: deps.retryDelay,
         onWait,
       });

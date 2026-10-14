@@ -22,7 +22,7 @@ import { saveAnswer } from './chatAnswers';
 import { startNextQueued } from './chatQueue/startNext';
 import { inTransaction, type ServiceContext } from './context';
 import { loadTicketScope, requireTicket, ticketKeyOf, type TicketRef } from './lookups';
-import { notePlanLimits } from './planUsage';
+import { keepsPlanLimits, notePlanLimits } from './planUsage';
 import { continueChain } from './reviewChain/continueChain';
 import { endingOf } from './runEnding';
 import { pushRunEnd } from './runEndPush';
@@ -136,9 +136,10 @@ export async function endRun(
   if (!ended.marked && after.status !== status) {
     throw conflict(`This run already ended (${after.status}).`);
   }
-  // Also when the person stopped the run first: the limits are still the helper's latest word.
-  const seen = { runnerId: before.runnerId, limits: input.planLimits, seenAt: endedAt };
-  await notePlanLimits(ctx.db, scope, seen);
+  if (keepsPlanLimits({ marked: ended.marked, before, after, input })) {
+    const seen = { runnerId: before.runnerId, limits: input.planLimits, seenAt: endedAt };
+    await notePlanLimits(ctx.db, scope, seen);
+  }
   if (ended.marked) {
     notifyRun(ctx, scope, after);
     // A chain that went on or stopped says so itself; "Claude finished" between its runs is noise.

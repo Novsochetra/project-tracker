@@ -80,9 +80,28 @@ describe.each(DIALECTS)("each helper's Claude plan usage (%s)", (dialect) => {
     const job = await startRun('MOB-1');
     await person('POST', `/api/runs/${job.run.id}/cancel`);
     clock.advance(1_000);
-    const late = { status: 'cancelled', planLimits: LIMITS };
+    const late = { status: 'cancelled', planLimits: LIMITS, runnerId: runner };
     expect((await helper('POST', `/api/runs/${job.run.id}/finish`, late)).status).toBe(200);
     expect((await usage())[0]).toMatchObject({ limits: LIMITS, seenAt: 1_001_000 });
+  });
+
+  it('keeps nothing from a late cancel that names no runner or another one', async () => {
+    const job = await startRun('MOB-1');
+    await person('POST', `/api/runs/${job.run.id}/cancel`);
+    const end = (body: object) =>
+      helper('POST', `/api/runs/${job.run.id}/finish`, { status: 'cancelled', ...body });
+    expect((await end({ planLimits: LIMITS })).status).toBe(200);
+    expect((await end({ planLimits: LIMITS, runnerId: randomUUID() })).status).toBe(200);
+    expect((await usage())[0]?.limits).toBeNull();
+  });
+
+  it("keeps nothing from a repeat of an old run's end, so newer figures stay", async () => {
+    const old = await startRun('MOB-1');
+    await helper('POST', `/api/runs/${old.run.id}/finish`, { status: 'done' });
+    expect((await finish('MOB-2', LIMITS)).status).toBe(200);
+    const stale = { status: 'done', planLimits: { status: 'rejected' }, runnerId: runner };
+    expect((await helper('POST', `/api/runs/${old.run.id}/finish`, stale)).status).toBe(200);
+    expect((await usage())[0]?.limits).toEqual(LIMITS);
   });
 
   it('keeps nothing from an end the tracker refused', async () => {

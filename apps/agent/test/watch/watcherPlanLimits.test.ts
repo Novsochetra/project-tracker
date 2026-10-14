@@ -23,6 +23,18 @@ describe('plan limits at a run end', () => {
     expect(exit.planLimits).toEqual({ status: 'allowed', usedPercent: 45 });
   });
 
+  it('sends no runner id with an end that has no limits', async () => {
+    const tracker = fakeTracker([job('r-1', 'MOB-1')]);
+    const exit: ClaudeExit = { code: 0, signal: null, output: '', results: [] };
+    const runClaude = vi.fn().mockResolvedValue(exit);
+    const watcher = createWatcher(
+      { api: tracker.api, runClaude, runAsk: vi.fn(), log: () => undefined },
+      SETTINGS,
+    );
+    await watcher.lookForWork();
+    expect(tracker.ended).toEqual([{ id: 'r-1', status: 'done' }]);
+  });
+
   it('has none when Claude Code printed none, as with an API key', () => {
     const output = createRunOutput({ onOutput: () => undefined, onEvent: () => undefined });
     expect(output.exit({ code: 0, signal: null })).not.toHaveProperty('planLimits');
@@ -42,10 +54,10 @@ describe('plan limits at a run end', () => {
     );
     await watcher.lookForWork();
     // The two lanes run side by side, so either may end first.
-    expect(tracker.ended.map(({ id, planLimits }) => [id, planLimits])).toEqual(
+    expect(tracker.ended.map(({ id, planLimits, runnerId }) => [id, planLimits, runnerId])).toEqual(
       expect.arrayContaining([
-        ['r-1', LIMITS],
-        ['r-2', LIMITS],
+        ['r-1', LIMITS, RUNNER],
+        ['r-2', LIMITS, RUNNER],
       ]),
     );
     expect(tracker.ended).toHaveLength(2);

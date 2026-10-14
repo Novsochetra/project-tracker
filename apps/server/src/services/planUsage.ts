@@ -1,7 +1,12 @@
-import { planLimitsInput, type HelperPlanUsage, type PlanLimitsInput } from '@tracker/shared';
+import {
+  planLimitsInput,
+  type FinishRunInput,
+  type HelperPlanUsage,
+  type PlanLimitsInput,
+} from '@tracker/shared';
 import { z } from 'zod';
 import type { UserScope } from '../auth/scope';
-import type { RunnerRow } from '../db/runTables';
+import type { RunnerRow, RunRow } from '../db/runTables';
 import type { Db } from '../db/schema';
 import { listRunnerRows, updateRunnerRow } from '../repositories/runners';
 import type { ServiceContext } from './context';
@@ -33,6 +38,23 @@ export interface SeenPlanLimits {
   // The tracker's own clock, since the helper's may be off.
   seenAt: number;
 }
+
+export interface FinishSeen {
+  // Whether this finish is the one that ended the run.
+  marked: boolean;
+  before: Pick<RunRow, 'runnerId'>;
+  after: Pick<RunRow, 'status'>;
+  input: Pick<FinishRunInput, 'status' | 'runnerId'>;
+}
+
+// A repeat end is kept only as the run's own helper reporting after the person stopped the run;
+// any other repeat could be an old retry or another token's figures.
+export const keepsPlanLimits = ({ marked, before, after, input }: FinishSeen): boolean =>
+  marked ||
+  (input.runnerId !== undefined &&
+    input.runnerId === before.runnerId &&
+    input.status === 'cancelled' &&
+    after.status === 'cancelled');
 
 export async function notePlanLimits(
   db: Db,
