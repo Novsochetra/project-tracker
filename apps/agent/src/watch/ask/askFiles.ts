@@ -35,13 +35,20 @@ async function downloadAll(
 // ends: answered, failed, stopped or a download that failed.
 export async function withAskFiles<T>(
   fetchFile: FetchFile | undefined,
-  { job, ...options }: DownloadOptions & { job: Pick<RunJob, 'files'> },
+  {
+    job,
+    root = tmpdir(),
+    ...options
+  }: DownloadOptions & {
+    job: Pick<RunJob, 'files'>;
+    root?: string;
+  },
   work: (folder: AskFolder | null) => Promise<T>,
 ): Promise<T> {
   const files = job.files ?? [];
   if (files.length === 0) return work(null);
   if (!fetchFile) throw new Error("This helper can't download the question's files.");
-  const dir = await mkdtemp(join(tmpdir(), ASK_FOLDER_PREFIX));
+  const dir = await mkdtemp(join(root, ASK_FOLDER_PREFIX));
   try {
     const paths = await downloadAll(fetchFile, files, dir, options);
     return await work({ dir, paths });

@@ -13,7 +13,14 @@ const READ_ONLY = [
   'Write',
   'NotebookEdit',
 ];
-const JSON_OUT = ['-p', '--output-format', 'stream-json', '--verbose'];
+const JSON_OUT = [
+  '-p',
+  '--input-format',
+  'stream-json',
+  '--output-format',
+  'stream-json',
+  '--verbose',
+];
 
 const argsFor = (options: unknown, resume: string | null = null, permissionMode?: string) =>
   askArgs(askJob('r-1', 'c-1', resume, options as AskOptions | null), permissionMode);

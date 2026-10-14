@@ -14,7 +14,7 @@ export function askOutcomeOf(exit: ClaudeExit, cancelled: boolean): FinishRunInp
   if (cancelled) return { status: 'cancelled' };
   const result = finalResult(exit.results);
   const answer = result?.text ?? '';
-  if (exit.code === 0 && result && !result.isError && answer) {
+  if ((exit.code === 0 || exit.turnEnded) && result && !result.isError && answer) {
     const sessionId = isSessionId(result.sessionId) ? result.sessionId : undefined;
     return { status: 'done', answer: fitted(answer), ...(sessionId ? { sessionId } : {}) };
   }
