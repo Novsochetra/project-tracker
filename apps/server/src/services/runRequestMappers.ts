@@ -16,9 +16,10 @@ function parsed<T>(text: string | null): T | null {
 
 function inputOf({ kind, label, labelCut, questions }: RunRequestRow): RunRequestInput {
   const cut = labelCut === 1;
-  return kind === 'question'
-    ? { kind, label, labelCut: cut, questions: parsed<RunQuestion[]>(questions) ?? [] }
-    : { kind, label, labelCut: cut, questions: null };
+  if (kind === 'question') {
+    return { kind, label, labelCut: cut, questions: parsed<RunQuestion[]>(questions) ?? [] };
+  }
+  return { kind, label, labelCut: cut, questions: null };
 }
 
 export const toRunRequest = (row: RunRequestRow): RunRequest => ({

@@ -3,7 +3,6 @@ import {
   RUN_REQUEST_WAIT_MS,
   labelHead,
   requestIsOverdue,
-  requestOfCall,
   type Run,
   type RunRequest,
 } from '@tracker/shared';
@@ -12,6 +11,7 @@ import { runName } from '../runName';
 import { wait } from '../wait';
 import type { WatchApi } from '../watchApi';
 import { decisionOf, NO_ANSWER, RUN_ENDED, UNSHOWN } from './decisionOf';
+import { requestOfRun } from './planCall';
 import { deny, type PromptCall, type PromptDecision } from './promptCall';
 import { CALL_CLOSED } from './promptSocket';
 import { refusalOf, UNREACHABLE } from './trackerRefusal';
@@ -108,7 +108,7 @@ const ENDINGS: Readonly<Record<RunRequest['status'], string>> = {
 };
 
 async function ask(deps: AskPersonDeps, run: Run, call: PromptCall, signal: AbortSignal) {
-  const input = requestOfCall(call.toolName, call.input, deps.folder);
+  const input = requestOfRun(run, call, deps.folder);
   if (!input) return deny(UNSHOWN);
   let request: RunRequest;
   try {

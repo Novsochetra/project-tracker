@@ -65,6 +65,7 @@ const MODE_RULES: Record<AskMode, { folder: string; image: string; last: readonl
     image: imageRule(false),
     last: [
       'Make a plan for what they ask: the steps, the files and the risks. Change nothing yet.',
+      'When the plan is ready, call ExitPlanMode with it. They approve it on their phone, and it is carried out right after.',
       NO_WORK,
     ],
   },

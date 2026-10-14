@@ -21,6 +21,7 @@ import {
 import { saveAnswer } from './chatAnswers';
 import { inTransaction, type ServiceContext } from './context';
 import { loadTicketScope, requireTicket, ticketKeyOf, type TicketRef } from './lookups';
+import { carryOutApprovedPlan } from './planFollowUp';
 import { continueChain } from './reviewChain/continueChain';
 import { endingOf } from './runEnding';
 import { pushRunEnd } from './runEndPush';
@@ -136,6 +137,7 @@ export async function endRun(
   }
   if (ended.marked) {
     notifyRun(ctx, scope, after);
+    await carryOutApprovedPlan(ctx, scope, after);
     // A chain that went on or stopped says so itself; "Claude finished" between its runs is noise.
     if (!(await continueChain(ctx, after))) pushRunEnd(ctx, scope, after);
   }

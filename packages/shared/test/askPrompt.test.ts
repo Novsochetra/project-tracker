@@ -137,6 +137,7 @@ describe('buildAskPrompt', () => {
     const plan = buildAskPrompt({ project, mode: 'plan', question: 'q', history: [] });
     expect(plan).toContain('read-only');
     expect(plan).toContain('Make a plan');
+    expect(plan).toContain('When the plan is ready, call ExitPlanMode with it.');
   });
 
   it('never says read-only in Edit and points to the tracker workflow', () => {
