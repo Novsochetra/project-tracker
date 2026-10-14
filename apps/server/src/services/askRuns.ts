@@ -72,7 +72,6 @@ export async function queueAsk(trx: Db, request: AskRequest) {
     questionId,
   });
   await insertQueuedRun(trx, run, CHAT_BUSY);
-
   // The chat keeps the last choice, so the next question starts with it.
   await updateChatRow(trx, chat.id, {
     updatedAt: queued.now,

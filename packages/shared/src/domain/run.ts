@@ -19,6 +19,7 @@ export type RunRole = (typeof RUN_ROLES)[number];
 
 export const roleForCategory = (category: StatusCategory): RunRole =>
   category === 'in_review' ? 'review' : 'work';
+
 // A helper runs one run of each lane at a time; a batch runs in the ticket lane.
 export const RUN_LANES = ['ticket', 'ask'] as const;
 export type RunLane = (typeof RUN_LANES)[number];

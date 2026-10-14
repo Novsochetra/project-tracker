@@ -19,6 +19,13 @@ describe('trackerAllowedArgs', () => {
     ]);
   });
 
+  it('lets a batch claim and submit each of its tickets, never review them', () => {
+    expect(trackerAllowedArgs({ kind: 'batch', role: 'work' })).toEqual([
+      '--allowedTools',
+      `${COMMON},mcp__tracker__claim_ticket,mcp__tracker__submit_for_review`,
+    ]);
+  });
+
   it('makes an Edit question ask before it submits or reviews', () => {
     expect(trackerAllowedArgs({ kind: 'ask', role: 'work' })).toEqual(['--allowedTools', COMMON]);
   });
