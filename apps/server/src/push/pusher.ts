@@ -1,8 +1,9 @@
-import type { PushMessage } from '@tracker/shared';
+import { chatOfTag, type PushMessage } from '@tracker/shared';
 import type { UserScope } from '../auth/scope';
 import type { Clock } from '../clock';
 import type { Db } from '../db/schema';
 import { listUserSubscriptions } from '../repositories/pushSubscriptions';
+import { createChatViewers, type ChatViewers } from './chatViewers';
 import { deliver, type SendRequest } from './deliver';
 import type { Sender } from './pushRequest';
 import { loadSender, type SenderSettings } from './senderKeys';
@@ -14,6 +15,7 @@ export interface PushOptions extends SenderSettings {
 export interface Pusher {
   publicKey: () => Promise<string>;
   send: (userId: UserScope, message: PushMessage) => Promise<void>;
+  viewChat: ChatViewers['view'];
 }
 
 const logFailure = (result: PromiseSettledResult<void>) => {
@@ -22,6 +24,13 @@ const logFailure = (result: PromiseSettledResult<void>) => {
 
 export function createPusher(db: Db, now: Clock, options: PushOptions): Pusher {
   const send = options.send ?? fetch;
+  const viewers = createChatViewers(now);
+  // The device already shows what the push would say.
+  const targetsOf = async (userId: UserScope, message: PushMessage) => {
+    const chatId = chatOfTag(message.tag);
+    const all = await listUserSubscriptions(db, userId);
+    return all.filter((target) => !viewers.shows(target.sessionId, chatId));
+  };
   let loading: Promise<Sender> | null = null;
   // Loaded once; a failed load is tried again next time instead of failing every push after it.
   const sender = () => {
@@ -34,7 +43,7 @@ export function createPusher(db: Db, now: Clock, options: PushOptions): Pusher {
   return {
     publicKey: async () => (await sender()).publicKey,
     send: async (userId, message) => {
-      const targets = await listUserSubscriptions(db, userId);
+      const targets = await targetsOf(userId, message);
       if (targets.length === 0) return;
       const delivery = { db, sender: await sender(), send, now: now() };
       const results = await Promise.allSettled(
@@ -42,5 +51,6 @@ export function createPusher(db: Db, now: Clock, options: PushOptions): Pusher {
       );
       results.forEach(logFailure);
     },
+    viewChat: viewers.view,
   };
 }

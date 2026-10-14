@@ -5,6 +5,7 @@ import { findChatInScope } from '../repositories/chats';
 import { findRunRequestRow } from '../repositories/runRequests';
 import type { RunWithKey } from '../repositories/runs';
 import { findTicketById } from '../repositories/tickets';
+import { pushChatOf } from './chatEndPush';
 import type { ServiceContext } from './context';
 import { pushToUser } from './push';
 
@@ -19,9 +20,7 @@ async function placeOfRun(
     return ticket ? { ticket: { projectKey, num: ticketNum, title: ticket.title } } : null;
   }
   const chat = chatId ? await findChatInScope(ctx.db, scope, chatId, ctx.now()) : undefined;
-  return chat
-    ? { chat: { projectKey: chat.projectKey, chatId: chat.id, title: chat.title } }
-    : null;
+  return chat ? { chat: pushChatOf(chat) } : null;
 }
 
 // Read when it goes out, so a request answered or ended in between sends nothing.
