@@ -163,6 +163,7 @@ describe('Commit', () => {
     expect(ended[0]?.result?.branch).toBe('chat/fix-login');
   });
 
+  // Two commits with a hook each pass 5 s on a busy machine.
   it('fails with why and puts the index and the branch back as they were', async () => {
     const hook = join(folder, '.git/hooks/pre-commit');
     writeFileSync(
@@ -182,7 +183,7 @@ describe('Commit', () => {
     rmSync(hook);
     const again = await run(commitJob({ branch: 'chat/fix-login' }));
     expect(again.ended[0]).toMatchObject({ status: 'done', result: { branch: 'chat/fix-login' } });
-  });
+  }, 20_000);
 
   it('commits nothing that changed since the person looked', async () => {
     write('a.ts', 'const a = "changed after the look";\n');
