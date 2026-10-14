@@ -15,11 +15,12 @@ export async function up(db: SchemaDb): Promise<void> {
     .addColumn('ask_model', 'text', (col) => col.notNull())
     .addColumn('ask_mode', 'text', (col) => col.notNull())
     .addColumn('ask_effort', 'text', (col) => col.notNull())
+    // The queue's order; unique, so two sends that race can't take one place.
+    .addColumn('position', 'integer', (col) => col.notNull())
+    .addUniqueConstraint('chat_queue_position_key', ['chat_id', 'position'])
     .execute();
-  await db.schema.createIndex('chat_queue_chat_idx').on('chat_queue').column('chat_id').execute();
 }
 
 export async function down(db: SchemaDb): Promise<void> {
-  await db.schema.dropIndex('chat_queue_chat_idx').execute();
   await db.schema.dropTable('chat_queue').execute();
 }

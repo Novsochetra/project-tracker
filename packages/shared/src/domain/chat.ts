@@ -79,6 +79,8 @@ export interface QueuedMessage {
   text: string;
   attachments: Attachment[];
   options: AskOptions;
+  // An answer stopped or failed after it was queued, so it starts only with Send now.
+  held: boolean;
   createdAt: number;
 }
 
@@ -90,7 +92,8 @@ export interface ChatDetail {
   // The questions that failed or were stopped after Claude took steps, oldest first. They add no
   // message, so this is how what Claude did keeps its place in the thread.
   stoppedRuns: Run[];
-  // Oldest first: the next starts when an answer ends done; a stopped or failed one holds them.
+  // In order: the next not held starts when the chat is free; a stopped or failed answer holds
+  // the ones queued before it ended.
   // An older tracker sends none.
   queued?: QueuedMessage[];
 }

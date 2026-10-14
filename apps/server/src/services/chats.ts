@@ -19,12 +19,11 @@ import {
   listProjectChatRows,
   type ChatWithKey,
 } from '../repositories/chats';
-import { listQueuedRows } from '../repositories/chatQueue';
+import { listQueuedRows, lockChat } from '../repositories/chatQueue';
 import { latestChatRunRow, listStoppedChatRunRows } from '../repositories/runs';
 import { askHistory } from './askHistory';
 import { queueAsk } from './askRuns';
-import { chatIsBusy, queueMessage } from './chatQueue/queueMessage';
-import { startNextQueued } from './chatQueue/startQueued';
+import { sendOrQueue } from './chatQueue/sendOrQueue';
 import { chatFilesByMessage } from './chatFiles';
 import { chatTitle, toChat, toMessage, toQueuedMessage } from './chatMappers';
 import { chatPromptTicket, requireChatTicket } from './chatTicket';
@@ -92,31 +91,37 @@ interface AskIn {
   isNew: boolean;
 }
 
+// Under the chat's lock, so the session and the chat so far are as the answer before left them.
+async function askRequestIn(trx: ServiceContext, scope: UserScope, at: AskIn, input: AskValues) {
+  const { project, isNew } = at;
+  const chat = isNew ? at.chat : await requireChat(trx, scope, at.chat.id);
+  const runner = await requireRunnerFor(trx, scope, input.runnerId, project);
+  const history = isNew ? [] : await askHistory(trx.db, chat.id);
+  const ticket = await chatPromptTicket(trx.db, chat, project.key);
+  const queued = { scope, runner, projectId: project.id, now: trx.now() };
+  const saved = { model: chat.askModel, mode: chat.askMode, effort: chat.askEffort };
+  const options = chosenAskOptions(input, saved);
+  const { text: question, attachmentIds } = input;
+  return { queued, project, chat, history, ticket, question, attachmentIds, options };
+}
+
 async function askIn(
   ctx: ServiceContext,
   scope: UserScope,
-  { project, chat, isNew }: AskIn,
+  at: AskIn,
   input: AskValues,
 ): Promise<ChatDetail> {
-  const runner = await requireRunnerFor(ctx, scope, input.runnerId, project);
+  await requireRunnerFor(ctx, scope, input.runnerId, at.project);
   await expireSilentRuns(ctx);
-  const history = isNew ? [] : await askHistory(ctx.db, chat.id);
-  const ticket = await chatPromptTicket(ctx.db, chat, project.key);
-  const queued = { scope, runner, projectId: project.id, now: ctx.now() };
-  // While Claude answers, the message waits for its own turn (PT-234).
-  const busy = !isNew && (await chatIsBusy(ctx.db, scope, chat.id));
-  const run = await inTransaction(ctx, async (trx) => {
-    if (isNew) await insertChat(trx, chat);
-    const saved = { model: chat.askModel, mode: chat.askMode, effort: chat.askEffort };
-    const options = chosenAskOptions(input, saved);
-    const { text: question, attachmentIds } = input;
-    const request = { queued, project, chat, history, ticket, question, attachmentIds, options };
-    return busy ? queueMessage(trx, request) : queueAsk(trx, request);
+  const runs = await inTransaction(ctx, async (db) => {
+    if (at.isNew) await insertChat(db, at.chat);
+    else await lockChat(db, at.chat.id);
+    const trx = { ...ctx, db };
+    const request = await askRequestIn(trx, scope, at, input);
+    return at.isNew ? [await queueAsk(db, request)] : sendOrQueue(trx, scope, request);
   });
-  if (run) notifyRun(ctx, scope, run);
-  // The answer may have ended done between the look and the save, with no queue to go on to.
-  else await startNextQueued(ctx, scope, chat.id);
-  return getChat(ctx, scope, chat.id);
+  for (const run of runs) notifyRun(ctx, scope, run);
+  return getChat(ctx, scope, at.chat.id);
 }
 
 export async function startChat(

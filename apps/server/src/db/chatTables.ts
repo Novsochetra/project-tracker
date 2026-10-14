@@ -45,6 +45,7 @@ export interface ChatQueueRow {
   askModel: AskModel;
   askMode: AskMode;
   askEffort: AskEffort;
+  position: number;
 }
 
 export interface ChatTables {

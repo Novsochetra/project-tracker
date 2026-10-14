@@ -10,7 +10,7 @@ import {
 } from '@tracker/shared';
 import type { AttachmentRow } from '../db/schema';
 import type { CardTicketRow } from '../repositories/chatCardTickets';
-import type { QueuedRow } from '../repositories/chatQueue';
+import { isHeld, type QueuedRow } from '../repositories/chatQueue';
 import type { ChatWithKey, MessageWithSteps } from '../repositories/chats';
 import { toAttachment } from './mappers';
 import { todosOfColumn } from './runTodos';
@@ -84,6 +84,7 @@ export const toQueuedMessage = (
   text: row.text,
   attachments: files.map(toAttachment),
   options: { model: row.askModel, mode: row.askMode, effort: row.askEffort },
+  held: isHeld(row),
   createdAt: row.createdAt,
 });
 

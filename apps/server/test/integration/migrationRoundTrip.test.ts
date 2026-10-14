@@ -629,8 +629,9 @@ const DATA_MODEL: SchemaShape = {
       'ask_model text not null',
       'ask_mode text not null',
       'ask_effort text not null',
+      'position integer not null',
     ],
-    indexes: ['index (chat_id)'],
+    indexes: ['unique (chat_id, position)'],
     foreignKeys: [
       'chat_id -> chats.id on delete cascade',
       'message_id -> chat_messages.id on delete cascade',

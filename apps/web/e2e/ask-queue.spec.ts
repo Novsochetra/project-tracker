@@ -51,6 +51,7 @@ test('queues a message while Claude answers, runs it when the answer ends, and h
   await page.getByRole('button', { name: 'Stop', exact: true }).click();
   await expect(page.getByText('Stopped.', { exact: true })).toBeVisible();
   const held = queued(page, 'And the docs?');
+  await expect(held.getByText('Not sent', { exact: true })).toBeVisible();
   await expect(held.getByRole('button', { name: 'Send now' })).toBeVisible();
   expect(await fitsWidth(page)).toBe(true);
   await held.getByRole('button', { name: 'Send now' }).click();

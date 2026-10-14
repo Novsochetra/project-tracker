@@ -19,7 +19,7 @@ import {
   type RunWithKey,
 } from '../repositories/runs';
 import { saveAnswer } from './chatAnswers';
-import { startNextQueued } from './chatQueue/startQueued';
+import { startNextQueued } from './chatQueue/startNext';
 import { inTransaction, type ServiceContext } from './context';
 import { loadTicketScope, requireTicket, ticketKeyOf, type TicketRef } from './lookups';
 import { continueChain } from './reviewChain/continueChain';
@@ -139,10 +139,15 @@ export async function endRun(
     notifyRun(ctx, scope, after);
     // A chain that went on or stopped says so itself; "Claude finished" between its runs is noise.
     if (!(await continueChain(ctx, after))) pushRunEnd(ctx, scope, after);
-    if (after.chatId) await startNextQueued(ctx, scope, after.chatId);
+    if (after.chatId) await startNextQueued(ctx, scope, after.chatId).catch(logQueueError);
   }
   for (const row of ended.held) notifyRun(ctx, scope, row);
   return toRun(after);
+}
+
+// The run has ended either way, so the helper's report must not fail; the message waits for Send now.
+function logQueueError(error: unknown): void {
+  console.error('Could not start the next queued chat message:', error);
 }
 
 // What the batch's Claude did not finish ends with it; a cancel ends it as cancelled.

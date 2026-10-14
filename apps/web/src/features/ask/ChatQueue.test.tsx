@@ -11,6 +11,7 @@ const queuedMessage = (overrides: Partial<QueuedMessage> = {}): QueuedMessage =>
   text: 'And the tests?',
   attachments: [],
   options: DEFAULT_ASK_OPTIONS,
+  held: false,
   createdAt: Date.now(),
   ...overrides,
 });
@@ -100,7 +101,10 @@ describe('Ask: messages queued while Claude answers', () => {
 
   it('offers Send now once Claude stopped, which starts that message', async () => {
     const sendQueuedNow = vi.fn().mockResolvedValue(makeChatDetail({ run: running, queued: [] }));
-    setup(makeChatDetail({ run: stopped, queued: [queuedMessage()] }), { sendQueuedNow });
+    setup(makeChatDetail({ run: stopped, queued: [queuedMessage({ held: true })] }), {
+      sendQueuedNow,
+    });
+    expect(within(await queuedItem('And the tests?')).getByText('Not sent')).toBeVisible();
     await userEvent
       .setup()
       .click(within(await queuedItem('And the tests?')).getByRole('button', { name: 'Send now' }));
