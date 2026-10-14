@@ -6,7 +6,6 @@ import {
 } from '../domain/chatContext';
 import { isJson, type Json } from './json';
 
-// What a turn's stream-json says so far about Claude's context.
 export interface ContextReading {
   used?: number;
   model?: string;
@@ -21,11 +20,18 @@ const promptTokens = (usage: Json): number =>
   count(usage.cache_read_input_tokens) +
   count(usage.cache_creation_input_tokens);
 
+// Claude Code makes up an assistant message for an API error or "No response requested.", with no
+// call behind it and a usage of zeros.
+const isSynthetic = (event: Json, message: Json): boolean =>
+  message.model === '<synthetic>' || event.error !== undefined;
+
 // A sub agent's messages have a parent tool use and a context of their own.
-const mainMessageOf = (event: Json): Json | undefined =>
-  event.type === 'assistant' && !event.parent_tool_use_id && isJson(event.message)
-    ? event.message
-    : undefined;
+function mainMessageOf(event: Json): Json | undefined {
+  if (event.type !== 'assistant' || event.parent_tool_use_id || !isJson(event.message)) {
+    return undefined;
+  }
+  return isSynthetic(event, event.message) ? undefined : event.message;
+}
 
 const isCompaction = (event: Json): boolean =>
   event.type === 'system' && event.subtype === 'compact_boundary';

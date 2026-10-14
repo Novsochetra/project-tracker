@@ -10,7 +10,6 @@ export interface ClaudeExit {
   results: ClaudeResult[];
   // The tokens this run's own calls read, to tell a resumed session's earlier figures apart.
   readTokens?: number;
-  // How full Claude's context was at the run's last message.
   context?: ContextUse;
   // A chat's turn ends on its result while Claude Code stays open for the next message, so there
   // is no exit code.

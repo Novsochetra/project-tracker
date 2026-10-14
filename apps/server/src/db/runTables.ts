@@ -52,7 +52,6 @@ export interface RunRow {
   costMicros: number | null;
   turns: number | null;
   durationMs: number | null;
-  // How full Claude's context was at the run's end, and the tokens it read and wrote (PT-239).
   contextTokens: number | null;
   contextWindow: number | null;
   tokens: number | null;

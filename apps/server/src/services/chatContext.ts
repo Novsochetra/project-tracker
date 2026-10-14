@@ -20,7 +20,6 @@ export function toChatContext(
   };
 }
 
-// The chat's latest answer that says how full the context is; older helpers say nothing.
 export async function chatContextOf(db: Db, chatId: string): Promise<ChatContext | undefined> {
   const latest = await latestContextRow(db, chatId);
   if (!latest) return undefined;

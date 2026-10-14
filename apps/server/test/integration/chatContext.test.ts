@@ -79,7 +79,7 @@ describe.each(DIALECTS)("a chat's context (%s)", (dialect) => {
     expect((await chatOf(await chatWith({ turns: 2 }))).context).toBeUndefined();
   });
 
-  it('refuses a window of 0 and context that is not a whole number', async () => {
+  it('refuses a window of 0, context past 100 million and figures that are not whole', async () => {
     await person('POST', '/api/projects/MOB/chats', { runnerId: runner, text: 'Hi' });
     const job = (await helper<RunJob>('POST', `/api/runners/${runner}/next?kind=ask`)).body;
     const finish = (usage: unknown) =>
@@ -87,5 +87,7 @@ describe.each(DIALECTS)("a chat's context (%s)", (dialect) => {
     expect((await finish({ contextWindow: 0 })).status).toBe(400);
     expect((await finish({ contextTokens: 1.5 })).status).toBe(400);
     expect((await finish({ tokens: -1 })).status).toBe(400);
+    expect((await finish({ contextWindow: 100_000_001 })).status).toBe(400);
+    expect((await finish({ contextTokens: 100_000_001 })).status).toBe(400);
   });
 });

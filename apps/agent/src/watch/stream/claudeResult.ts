@@ -8,7 +8,6 @@ export interface ResultUsage {
   turns: number | undefined;
   durationMs: number | undefined;
   readTokens: number | undefined;
-  // What this turn read and wrote, Claude's main conversation only.
   tokens?: number | undefined;
 }
 
