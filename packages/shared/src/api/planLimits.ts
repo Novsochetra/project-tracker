@@ -12,7 +12,7 @@ const percent = z.number().int().min(0).max(PLAN_PERCENT_MAX);
 export const planWindowInput = z.object({ usedPercent: percent, resetsAt: time });
 
 export const planLimitsInput = z.object({
-  status: z.enum(PLAN_LIMIT_STATUSES),
+  status: z.enum(PLAN_LIMIT_STATUSES).optional(),
   rateLimitType: z.enum(PLAN_LIMIT_TYPES).optional(),
   usedPercent: percent.optional(),
   resetsAt: time.optional(),
@@ -20,7 +20,6 @@ export const planLimitsInput = z.object({
     .object({
       five_hour: planWindowInput.optional(),
       seven_day: planWindowInput.optional(),
-      seven_day_overage_included: planWindowInput.optional(),
     })
     .optional(),
   overageStatus: z.enum(PLAN_LIMIT_STATUSES).optional(),

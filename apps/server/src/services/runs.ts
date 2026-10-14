@@ -129,8 +129,6 @@ export async function endRun(
     const changes = { status, error, endedAt, ...usageOfFinish(input) };
     const marked = await markRunEnded(trx, scope, before.id, changes);
     if (marked && answer) await saveAnswer(trx, scope, before, { ...answer, at: endedAt });
-    const seen = { runnerId: before.runnerId, limits: input.planLimits, seenAt: endedAt };
-    if (marked) await notePlanLimits(trx, scope, seen);
     const held = marked ? await endHeldTickets(trx, before, status, endedAt) : [];
     return { marked, held };
   });
@@ -138,6 +136,9 @@ export async function endRun(
   if (!ended.marked && after.status !== status) {
     throw conflict(`This run already ended (${after.status}).`);
   }
+  // Also when the person stopped the run first: the limits are still the helper's latest word.
+  const seen = { runnerId: before.runnerId, limits: input.planLimits, seenAt: endedAt };
+  await notePlanLimits(ctx.db, scope, seen);
   if (ended.marked) {
     notifyRun(ctx, scope, after);
     // A chain that went on or stopped says so itself; "Claude finished" between its runs is noise.

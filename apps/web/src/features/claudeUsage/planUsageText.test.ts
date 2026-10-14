@@ -1,6 +1,12 @@
 import type { HelperPlanUsage, PlanLimits } from '@tracker/shared';
 import { describe, expect, it } from 'vitest';
-import { formatResetTime, planUsageView, UNKNOWN, WITHIN_LIMITS } from './planUsageText';
+import {
+  formatResetTime,
+  NO_FIGURES,
+  planUsageView,
+  UNKNOWN,
+  WITHIN_LIMITS,
+} from './planUsageText';
 
 const NOW = new Date(2026, 9, 14, 12, 0).getTime();
 const AT_3_40 = new Date(2026, 9, 14, 15, 40).getTime();
@@ -69,6 +75,28 @@ describe('planUsageView', () => {
     expect(planUsageView(helper(overage), NOW).status).toBe('Limited · Using extra usage');
   });
 
+  it('drops a warning and extra usage once their reset time passed', () => {
+    const limits: PlanLimits = {
+      status: 'allowed_warning',
+      rateLimitType: 'five_hour',
+      usedPercent: 91,
+      resetsAt: AT_3_40,
+      isUsingOverage: true,
+      overageResetsAt: AT_3_40,
+    };
+    expect(planUsageView(helper(limits), NOW).status).toBe(
+      'Close to the 5-hour limit · Using extra usage',
+    );
+    const later = planUsageView(helper(limits), AT_3_40 + HOUR);
+    expect(later.status).toBeNull();
+    expect(later.meters[0]?.detail).toBe('Reset 3:40 PM; the next run updates it');
+  });
+
+  it('keeps extra usage on when Claude Code gave no end for it', () => {
+    const limits: PlanLimits = { status: 'allowed', isUsingOverage: true };
+    expect(planUsageView(helper(limits), NOW + 30 * 24 * HOUR).status).toBe('Using extra usage');
+  });
+
   it('hides a figure from before its window reset', () => {
     const limits: PlanLimits = {
       status: 'allowed',
@@ -86,5 +114,6 @@ describe('planUsageView', () => {
       seen: null,
     });
     expect(planUsageView(helper({ status: 'allowed' }), NOW).status).toBe(WITHIN_LIMITS);
+    expect(planUsageView(helper({ rateLimitType: 'five_hour' }), NOW).status).toBe(NO_FIGURES);
   });
 });

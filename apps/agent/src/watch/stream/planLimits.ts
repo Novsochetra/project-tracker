@@ -43,5 +43,6 @@ export function planLimitsOf(event: unknown): PlanLimitsInput | null {
     ...fitting('overageResetsAt', msOf(info.overageResetsAt)),
     ...fitting('isUsingOverage', info.isUsingOverage),
   };
+  if (Object.keys(limits).length === 0) return null;
   return planLimitsInput.safeParse(limits).data ?? null;
 }

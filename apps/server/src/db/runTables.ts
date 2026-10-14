@@ -20,7 +20,7 @@ export interface RunnerRow {
   projectIds: string;
   // RunnerTools as JSON text (§2); null from a helper that sends none.
   tools: string | null;
-  // StoredPlanLimits as JSON text (PT-224); null until a run end carries them.
+  // { limits: PlanLimits, seenAt } as JSON text (PT-224); null until a run end carries them.
   planLimits: string | null;
   createdAt: number;
   lastSeenAt: number;

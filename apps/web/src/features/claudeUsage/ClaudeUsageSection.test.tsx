@@ -2,7 +2,7 @@ import { screen, within } from '@testing-library/react';
 import type { HelperPlanUsage } from '@tracker/shared';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { renderWithApi } from '../claude/test/renderWithApi';
-import { ClaudeUsageSection } from './ClaudeUsageSection';
+import { ClaudeUsageSection, LOAD_FAILED } from './ClaudeUsageSection';
 import { UNKNOWN } from './planUsageText';
 
 const NOW = new Date(2026, 9, 14, 12, 0).getTime();
@@ -51,6 +51,14 @@ describe('ClaudeUsageSection', () => {
     const server = screen.getByRole('listitem', { name: 'Server' });
     expect(within(server).getByText(UNKNOWN)).toBeInTheDocument();
     expect(within(server).queryByRole('meter')).toBeNull();
+  });
+
+  it('says so when the usage could not be loaded', async () => {
+    renderWithApi(<ClaudeUsageSection />, {
+      listPlanUsage: vi.fn().mockRejectedValue(new Error('offline')),
+    });
+    expect(await screen.findByText(LOAD_FAILED)).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Claude usage' })).toBeInTheDocument();
   });
 
   it('shows nothing without a computer', async () => {

@@ -13,7 +13,7 @@ const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 const LIMIT_NAMES: Record<PlanLimitType, string> = {
   five_hour: '5-hour',
   seven_day: 'Weekly',
-  seven_day_overage_included: 'Weekly (extra usage)',
+  seven_day_overage_included: 'Weekly, one model',
   seven_day_opus: 'Weekly Opus',
   seven_day_sonnet: 'Weekly Sonnet',
   overage: 'Extra usage',
@@ -36,6 +36,7 @@ export const UNKNOWN =
   'Unknown: Claude Code hasn’t said yet. It says while it works, after a run’s first reply; with an API key it never does.';
 
 export const WITHIN_LIMITS = 'Within your limits; Claude Code gave no figures.';
+export const NO_FIGURES = 'Claude Code gave no figures.';
 
 const sameDay = (a: Date, b: Date) => a.toDateString() === b.toDateString();
 
@@ -84,21 +85,37 @@ function limitedText(limits: PlanLimits, now: number): string {
   return resetsAt > now ? `Limited until ${at}` : `Was limited until ${at}`;
 }
 
+// A state that ended at its reset time says nothing about now.
+const stillOn = (until: number | undefined, now: number) => until === undefined || until > now;
+
+const warningText = (limits: PlanLimits, now: number) =>
+  limits.status === 'allowed_warning' && stillOn(limits.resetsAt, now)
+    ? `Close to ${limitName(limits)}`
+    : null;
+
+const overageText = (limits: PlanLimits, now: number) =>
+  limits.isUsingOverage && stillOn(limits.overageResetsAt, now) ? 'Using extra usage' : null;
+
 // What the plan's state says beyond the meters; nothing while all is well.
 function planStatusText(limits: PlanLimits, now: number): string | null {
   const parts = [
     limits.status === 'rejected' ? limitedText(limits, now) : null,
-    limits.status === 'allowed_warning' ? `Close to ${limitName(limits)}` : null,
-    limits.isUsingOverage ? 'Using extra usage' : null,
+    warningText(limits, now),
+    overageText(limits, now),
   ];
   const said = parts.filter((part) => part !== null);
   return said.length > 0 ? said.join(' · ') : null;
 }
 
+const quietText = (limits: PlanLimits, meters: readonly UsageMeter[]) => {
+  if (meters.length > 0) return null;
+  return limits.status === 'allowed' ? WITHIN_LIMITS : NO_FIGURES;
+};
+
 export function planUsageView({ limits, seenAt }: HelperPlanUsage, now: number): PlanUsageView {
   if (!limits) return { status: UNKNOWN, meters: [], seen: null };
   const meters = usageMeters(limits, now);
-  const status = planStatusText(limits, now) ?? (meters.length > 0 ? null : WITHIN_LIMITS);
+  const status = planStatusText(limits, now) ?? quietText(limits, meters);
   const seen = seenAt === null ? null : `As of a run that ended ${formatRelative(seenAt, now)}`;
   return { status, meters, seen };
 }

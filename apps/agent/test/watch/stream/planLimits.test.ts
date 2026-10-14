@@ -41,6 +41,14 @@ describe('planLimitsOf', () => {
     });
   });
 
+  it("leaves out the per-model weekly bucket, which Claude Code doesn't explain", () => {
+    const info = {
+      status: 'allowed',
+      unifiedWindows: { seven_day_overage_included: { utilization: 0.4, resetsAt: 1_800_000_000 } },
+    };
+    expect(planLimitsOf(event(info))).toEqual({ status: 'allowed' });
+  });
+
   it('reads a bare status, as before the first response with the plan headers', () => {
     expect(planLimitsOf(event({ status: 'allowed' }))).toEqual({ status: 'allowed' });
   });
@@ -67,8 +75,18 @@ describe('planLimitsOf', () => {
     expect(planLimitsOf(event(info))).toEqual({ status: 'allowed' });
   });
 
-  it('reads nothing without a known status or from other events', () => {
-    expect(planLimitsOf(event({ status: 'maybe', utilization: 0.5 }))).toBeNull();
+  it('keeps the windows when a newer Claude Code sends a status it does not know', () => {
+    const info = {
+      status: 'throttled',
+      unifiedWindows: { five_hour: { utilization: 0.5, resetsAt: 1_800_000_000 } },
+    };
+    expect(planLimitsOf(event(info))).toEqual({
+      windows: { five_hour: { usedPercent: 50, resetsAt: 1_800_000_000_000 } },
+    });
+  });
+
+  it('reads nothing from an event with nothing it knows, or from other events', () => {
+    expect(planLimitsOf(event({ status: 'maybe', rateLimitType: 'hourly' }))).toBeNull();
     expect(planLimitsOf(event('allowed'))).toBeNull();
     expect(planLimitsOf({ type: 'result', rate_limit_info: { status: 'allowed' } })).toBeNull();
     expect(planLimitsOf(null)).toBeNull();

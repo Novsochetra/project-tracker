@@ -76,6 +76,29 @@ describe.each(DIALECTS)("each helper's Claude plan usage (%s)", (dialect) => {
     });
   });
 
+  it('keeps the limits of a helper that reports after the person stopped the run', async () => {
+    const job = await startRun('MOB-1');
+    await person('POST', `/api/runs/${job.run.id}/cancel`);
+    clock.advance(1_000);
+    const late = { status: 'cancelled', planLimits: LIMITS };
+    expect((await helper('POST', `/api/runs/${job.run.id}/finish`, late)).status).toBe(200);
+    expect((await usage())[0]).toMatchObject({ limits: LIMITS, seenAt: 1_001_000 });
+  });
+
+  it('keeps nothing from an end the tracker refused', async () => {
+    const job = await startRun('MOB-1');
+    await person('POST', `/api/runs/${job.run.id}/cancel`);
+    const refused = { status: 'done', planLimits: LIMITS };
+    expect((await helper('POST', `/api/runs/${job.run.id}/finish`, refused)).status).toBe(409);
+    expect((await usage())[0]?.limits).toBeNull();
+  });
+
+  it('keeps the windows without a status', async () => {
+    const windows = { seven_day: { usedPercent: 40, resetsAt: 1_800_000_000_000 } };
+    expect((await finish('MOB-1', { windows })).status).toBe(200);
+    expect((await usage())[0]?.limits).toEqual({ windows });
+  });
+
   it('refuses limits out of bounds or of an unknown kind', async () => {
     const job = await startRun('MOB-1');
     const end = (planLimits: unknown) =>
