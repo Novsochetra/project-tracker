@@ -58,14 +58,14 @@ describe.each(DIALECTS)('push when a Run all batch ends (%s)', (dialect) => {
     expect(service.forDevice(device)).toHaveLength(1);
   });
 
-  it('says why a batch stopped', async () => {
+  it('says a batch stopped and what it left, without its error', async () => {
     await submit('MOB-2');
-    await finish('failed', 'Claude exited with code 1.');
+    await finish('failed', 'fatal: password=hunter2pass rejected by db.internal');
 
     expect(await service.messagesFor(device)).toEqual([
       {
         title: 'MOB: Run all stopped: 1 of 4 done',
-        body: 'Claude exited with code 1. · Not finished: MOB-1, MOB-3, MOB-4',
+        body: 'Not finished: MOB-1, MOB-3, MOB-4',
         url: '/activity',
         tag: `batch:${batchId}`,
       },

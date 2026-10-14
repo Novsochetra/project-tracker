@@ -7,6 +7,8 @@ import { addUser, caller, helperName, type Caller } from '../helpers/runs';
 import { DIALECTS, useTestServer } from '../helpers/server';
 
 const SUBSCRIPTION = '/api/push/subscription';
+// A failed run's error is the end of the helper's stderr, which can hold a secret.
+const TOKEN = 'ghp_8Zq3RkT0wXy7LmNp2VbC4dEfGhIjKlMnOpQr';
 
 describe.each(DIALECTS)('push notifications (%s)', (dialect) => {
   const clock = testClock();
@@ -104,12 +106,17 @@ describe.each(DIALECTS)('push notifications (%s)', (dialect) => {
       expect(service.sent[0]?.init.redirect).toBe('error');
     });
 
-    it('says why a run stopped, and nothing for a run the person cancelled', async () => {
+    it('says a run stopped without its error, and nothing for a run the person cancelled', async () => {
       const { device } = await subscribe(person);
-      await runEnds({ status: 'failed', error: 'Claude Code exited with code 1.' });
-      expect((await service.messagesFor(device))[0]?.title).toBe(
-        'MOB-1: Claude stopped: Claude Code exited with code 1.',
-      );
+      await runEnds({ status: 'failed', error: `remote: token ${TOKEN} has expired` });
+      expect(await service.messagesFor(device)).toEqual([
+        {
+          title: 'MOB-1: Claude stopped',
+          body: 'Fix the login button · Open the ticket to see why.',
+          url: '/p/MOB/1',
+          tag: 'ticket:MOB-1',
+        },
+      ]);
       await person('POST', '/api/tickets/MOB-1/runs', { runnerId: runner, prompt: 'Again' });
       const runs = await person<Run[]>('GET', '/api/tickets/MOB-1/runs');
       await person('POST', `/api/runs/${runs.body[0]?.id}/cancel`);

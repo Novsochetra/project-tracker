@@ -17,7 +17,9 @@ import { fakePushService, newDevice, type Device } from '../helpers/push';
 import { addUser, caller, helperName, type Caller } from '../helpers/runs';
 import { DIALECTS, useTestServer } from '../helpers/server';
 
-const QUESTION = { question: 'Which name should the setting have?', choices: ['Dark', 'Night'] };
+// Claude's question can quote a secret it found, and a push shows on the lock screen.
+const SECRET = 'postgres://admin:hunter2pass@db.internal:5432/app';
+const QUESTION = { question: `Should I keep DATABASE_URL=${SECRET}?`, choices: ['Yes', 'No'] };
 
 const settle = () => new Promise((resolve) => setTimeout(resolve, 50));
 
@@ -77,13 +79,13 @@ describe.each(DIALECTS)('push when Claude waits on the person (%s)', (dialect) =
   });
 
   describe('a question on the ticket (ask_person)', () => {
-    it('tells only the ticket’s user, with the question, opening the ticket', async () => {
+    it('tells only the ticket’s user, without the question, opening the ticket', async () => {
       const asked = await agent<TicketQuestion>('POST', '/api/tickets/MOB-3/questions', QUESTION);
       expect(asked.status).toBe(201);
       expect(await service.messagesFor(phone)).toEqual([
         {
           title: 'MOB-3: Claude has a question',
-          body: QUESTION.question,
+          body: 'Ticket 3 · Open the ticket to answer.',
           url: '/p/MOB/3',
           tag: 'ticket:MOB-3',
         },
@@ -115,13 +117,13 @@ describe.each(DIALECTS)('push when Claude waits on the person (%s)', (dialect) =
       expect(finished).toMatchObject({ title: 'MOB-12: Claude finished', tag: asks.tag });
     });
 
-    it('says Claude has a question for a question in the run', async () => {
+    it('says Claude has a question for a question in the run, without the question', async () => {
       const runId = await ticketRun();
-      await request(runId, 'Which color should the button be?', 'question');
+      await request(runId, QUESTION.question, 'question');
       expect(await service.messagesFor(phone)).toEqual([
         {
           title: 'MOB-12: Claude has a question',
-          body: 'Which color should the button be?',
+          body: 'Ticket 12 · Open the ticket to answer.',
           url: '/p/MOB/12',
           tag: 'ticket:MOB-12',
         },

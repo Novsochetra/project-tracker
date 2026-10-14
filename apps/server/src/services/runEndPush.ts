@@ -9,13 +9,12 @@ import { pushToUser } from './push';
 
 // A cancel is the person's own doing, so it tells them nothing new.
 function pushTicketRunEnd(ctx: ServiceContext, scope: UserScope, run: RunWithKey): void {
-  const { ticketId, ticketNum, projectKey, status, error } = run;
+  const { ticketId, ticketNum, projectKey, status } = run;
   if (!ticketId || ticketNum === null || (status !== 'done' && status !== 'failed')) return;
   pushToUser(ctx, scope, async () => {
     const ticket = await findTicketById(ctx.db, ticketId);
     if (!ticket) return null;
-    const reason = status === 'done' ? null : (error ?? 'no reason given');
-    return runEndedPush({ projectKey, num: ticketNum, title: ticket.title }, reason);
+    return runEndedPush({ projectKey, num: ticketNum, title: ticket.title }, status);
   });
 }
 
