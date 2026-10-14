@@ -8,11 +8,16 @@ import { useFoldLeaving } from './useFoldLeaving';
 import { useLeavingRows } from './useLeavingRows';
 import { visibleSteps } from './visibleSteps';
 
-export function LiveSteps({ rows }: { rows: StepRow[] }) {
+export interface LiveStepsProps {
+  rows: StepRow[];
+  hideTodos?: boolean;
+}
+
+export function LiveSteps({ rows, hideTodos = false }: LiveStepsProps) {
   const [expanded, setExpanded] = useState(false);
   const id = useId();
   const ref = useRef<HTMLDivElement>(null);
-  const visible = visibleSteps(rows, expanded);
+  const visible = visibleSteps(rows, expanded, { hideTodos });
   const { leaving, onLeft } = useLeavingRows(visible.shown);
   useFoldLeaving(ref, leaving, onLeft);
   return (

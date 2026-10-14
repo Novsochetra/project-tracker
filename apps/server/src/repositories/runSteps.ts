@@ -22,6 +22,21 @@ export async function insertRunSteps(db: Db, rows: readonly RunStepRow[]): Promi
   await db.insertInto('runSteps').values(rows).execute();
 }
 
+// Each TodoWrite call sends the whole list, so a run keeps only its latest; an earlier call's step
+// keeps '[]', which still says it was one.
+export async function keepLatestTodos(db: Db, rows: readonly RunStepRow[]): Promise<void> {
+  const latest = rows.findLast((row) => row.todos !== null);
+  if (!latest) return;
+  await db
+    .updateTable('runSteps')
+    .set({ todos: '[]' })
+    .where('runId', '=', latest.runId)
+    .where('seq', '<', latest.seq)
+    .where('todos', 'is not', null)
+    .where('todos', '<>', '[]')
+    .execute();
+}
+
 export async function dropOldSteps(db: Db, runId: string, count: number): Promise<void> {
   await db
     .deleteFrom('runSteps')

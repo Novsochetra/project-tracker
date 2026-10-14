@@ -1,7 +1,8 @@
 import type { RunStepInput } from '../../domain/runStep';
 import { answeredToolIds, deniedToolIds } from './denials';
 import { isJson, type Json } from '../json';
-import { stepLabel, messageSteps } from './messageSteps';
+import { stepLabel } from './label';
+import { messageSteps } from './messageSteps';
 
 // Reads one run's claude -p --output-format stream-json --verbose, an event at a time. Only what
 // Claude says, the tools it asks for and the calls that were not allowed become steps: tool

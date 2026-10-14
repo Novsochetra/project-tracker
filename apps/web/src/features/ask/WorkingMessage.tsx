@@ -3,6 +3,8 @@ import { RequestCards } from '../requests/RequestCards';
 import type { RunRequests } from '../requests/useRequests';
 import { LiveSteps } from '../steps/LiveSteps';
 import type { StepRow } from '../steps/stepRows';
+import { latestTodos, withoutTodoSteps } from '../todos/latestTodos';
+import { TodoList } from '../todos/TodoList';
 import { ClaudeFrom } from './ClaudeFrom';
 import styles from './ChatScreen.module.css';
 import { WORKING_LABEL } from './copy';
@@ -25,11 +27,14 @@ export function WorkingMessage({ runId, rows, requests }: WorkingMessageProps) {
       if (message?.contains(document.activeElement)) handStepsFocus(runId);
     };
   }, [runId]);
+  const todos = latestTodos(rows);
+  const listed = todos ? withoutTodoSteps(rows) : rows;
   return (
     <li className={`${styles.item} rise`}>
       <article ref={ref} className={styles.claude} aria-label={WORKING_LABEL}>
         <ClaudeFrom />
-        {rows.length > 0 && <LiveSteps rows={rows} />}
+        {todos && <TodoList todos={todos} />}
+        {listed.length > 0 && <LiveSteps rows={rows} hideTodos={todos !== null} />}
         <RequestCards requests={requests.shown} now={requests.now} />
       </article>
     </li>

@@ -3,6 +3,8 @@ import {
   RUN_STEP_LABEL_MAX,
   RUN_STEP_TEXT_MAX,
   RUN_STEPS_BATCH_MAX,
+  RUN_TODO_STATUSES,
+  RUN_TODOS_MAX,
   type RunStepKind,
 } from '../domain/runStep';
 import { runnerId } from './runs';
@@ -23,8 +25,18 @@ const stepOf = <K extends RunStepKind>(kind: K, max: number) =>
     toolId: z.string().trim().min(1).max(TOOL_ID_MAX).nullable().default(null),
   });
 
+const runTodo = z.object({
+  text: z.string().trim().min(1).max(RUN_STEP_LABEL_MAX),
+  status: z.enum(RUN_TODO_STATUSES),
+});
+
 export const runStepInput = z.discriminatedUnion('kind', [
-  stepOf('tool', RUN_STEP_LABEL_MAX),
+  stepOf('tool', RUN_STEP_LABEL_MAX).extend({
+    todos: z
+      .array(runTodo)
+      .max(RUN_TODOS_MAX, `Send at most ${RUN_TODOS_MAX} to-do items a step.`)
+      .optional(),
+  }),
   stepOf('agent', RUN_STEP_LABEL_MAX),
   stepOf('text', RUN_STEP_TEXT_MAX),
   stepOf('denied', RUN_STEP_LABEL_MAX),

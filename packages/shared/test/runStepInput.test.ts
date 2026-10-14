@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { addRunStepsInput, runStepsQuery } from '../src/api/runSteps';
-import { RUN_STEP_LABEL_MAX, RUN_STEP_TEXT_MAX } from '../src/domain/runStep';
+import { RUN_STEP_LABEL_MAX, RUN_STEP_TEXT_MAX, RUN_TODOS_MAX } from '../src/domain/runStep';
 
 const RUNNER = '11111111-2222-4333-8444-555555555555';
 const parse = (steps: unknown) => addRunStepsInput.safeParse({ runnerId: RUNNER, steps });
@@ -24,6 +24,16 @@ describe('addRunStepsInput', () => {
     expect(parse([{ kind: 'agent', label: line }]).success).toBe(false);
     expect(parse([{ kind: 'text', label: line }]).success).toBe(true);
     expect(parse([{ kind: 'text', label: 'x'.repeat(RUN_STEP_TEXT_MAX + 1) }]).success).toBe(false);
+  });
+
+  it("takes a tool step's to-do list within its limits", () => {
+    const item = { text: 'Fix the bug', status: 'in_progress' };
+    const todo = (todos: unknown) =>
+      parse([{ kind: 'tool', label: 'Update the to-do list', todos }]);
+    expect(todo([item]).data?.steps[0]).toMatchObject({ todos: [item] });
+    expect(todo(Array.from({ length: RUN_TODOS_MAX + 1 }, () => item)).success).toBe(false);
+    expect(todo([{ ...item, status: 'done' }]).success).toBe(false);
+    expect(todo([{ ...item, text: 'x'.repeat(RUN_STEP_LABEL_MAX + 1) }]).success).toBe(false);
   });
 
   it('refuses a step of another kind, an empty label and a helper id that is no UUID', () => {

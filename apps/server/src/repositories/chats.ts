@@ -17,6 +17,7 @@ export interface MessageWithSteps extends ChatMessageRow {
   lastStepKind: RunStepKind | null;
   lastStepLabel: string | null;
   lastStepSubAgent: number | null;
+  todos: string | null;
   costMicros: number | null;
   turns: number | null;
   durationMs: number | null;
@@ -84,6 +85,16 @@ export const listMessageRows = (db: Db, chatId: string) =>
       'lastStep.label as lastStepLabel',
       'lastStep.subAgent as lastStepSubAgent',
     ])
+    .select((eb) =>
+      eb
+        .selectFrom('runSteps as todoStep')
+        .select('todoStep.todos')
+        .whereRef('todoStep.runId', '=', 'runs.id')
+        .where('todoStep.todos', 'is not', null)
+        .orderBy('todoStep.seq', 'desc')
+        .limit(1)
+        .as('todos'),
+    )
     .select(['runs.costMicros', 'runs.turns', 'runs.durationMs'])
     .where('chatMessages.chatId', '=', chatId)
     .orderBy('chatMessages.createdAt')
