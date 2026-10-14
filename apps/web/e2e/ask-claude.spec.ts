@@ -155,7 +155,7 @@ test('says an Edit question Claude had started stopped part way, and keeps its s
   await expect(stopped.getByRole('button', { name: '2 steps' })).toBeVisible();
 });
 
-test('picks the model, effort and mode on one row above the box, and sends them', async ({
+test('picks the model, effort and mode above the box, and sends them', async ({
   page,
   api,
 }, info) => {
@@ -183,9 +183,15 @@ test('picks the model, effort and mode on one row above the box, and sends them'
   ]);
   const width = page.viewportSize()!.width;
   const middle = (box: typeof chip) => box!.y + box!.height / 2;
-  expect(Math.abs(middle(chip) - middle(group))).toBeLessThan(1);
-  expect(Math.abs(middle(gauge) - middle(group))).toBeLessThan(1);
-  expect(gauge!.x + gauge!.width).toBeLessThanOrEqual(group!.x);
+  expect(Math.abs(middle(chip) - middle(gauge))).toBeLessThan(1);
+  // PT-251: below 440px the four Mode segments don't fit beside the chips, so they take a line.
+  if (width < 440) {
+    expect(group!.y).toBeGreaterThanOrEqual(gauge!.y + gauge!.height);
+    expect(group!.x).toBeCloseTo(chip!.x, 0);
+  } else {
+    expect(Math.abs(middle(chip) - middle(group))).toBeLessThan(1);
+    expect(gauge!.x + gauge!.width).toBeLessThanOrEqual(group!.x);
+  }
   expect(
     await modes
       .getByRole('button', { name: 'Plan' })
