@@ -1,5 +1,13 @@
 import { execFileSync } from 'node:child_process';
-import { chmodSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import {
+  chmodSync,
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import {
@@ -10,6 +18,7 @@ import {
 } from '@tracker/shared';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { snapshotTree } from '../../src/watch/changes/snapshot';
+import { NO_DEFAULT_BRANCH } from '../../src/watch/gitActions/openPullRequest';
 import { createGitActions } from '../../src/watch/gitActions/takeGitActions';
 import { createWatcher } from '../../src/watch/watcher';
 import { fakeTracker, noAsks, RUNNER } from './fakeTracker';
@@ -36,7 +45,7 @@ const FAKE_GH = `#!/bin/sh
 { echo ---; printf '%s\\n' "$@"; } >> "$FAKE_GH_LOG"
 case "$1 $2" in
   "auth status") exit "\${FAKE_GH_AUTH:-0}";;
-  "repo view") echo main;;
+  "repo view") test -z "$FAKE_GH_REPO_FAILS" || exit 1; echo main;;
   "pr create") echo "Creating pull request"; echo "https://github.com/o/r/pull/7";;
 esac
 `;
@@ -54,6 +63,7 @@ beforeEach(() => {
   process.env.GIT_AUTHOR_NAME = process.env.GIT_COMMITTER_NAME = 'T';
   process.env.GIT_AUTHOR_EMAIL = process.env.GIT_COMMITTER_EMAIL = 't@example.com';
   delete process.env.FAKE_GH_AUTH;
+  delete process.env.FAKE_GH_REPO_FAILS;
   gitIn(root, 'init', '-q', '--bare', '-b', 'main', 'origin.git');
   git('init', '-q', '-b', 'main');
   git('remote', 'add', 'origin', join(root, 'origin.git'));
@@ -68,7 +78,7 @@ afterEach(() => {
   rmSync(root, { recursive: true, force: true });
 });
 
-async function run(job: GitActionJob) {
+async function run(job: GitActionJob, deadlineMs?: number) {
   const tracker = fakeTracker([], [job]);
   const log: string[] = [];
   const deps = {
@@ -77,6 +87,7 @@ async function run(job: GitActionJob) {
     runnerId: RUNNER,
     log: (text: string) => log.push(text),
     describe: String,
+    deadlineMs,
   };
   await createGitActions(deps)();
   return { ended: tracker.gitEnded, log };
@@ -185,6 +196,19 @@ describe('Commit', () => {
     expect(again.ended[0]).toMatchObject({ status: 'done', result: { branch: 'chat/fix-login' } });
   }, 20_000);
 
+  // The hook outlives the deadline by seconds, and git gets its grace to clean up.
+  it('stopped at its deadline, leaves no lock and the branch and index as they were', async () => {
+    const hook = join(folder, '.git/hooks/pre-commit');
+    writeFileSync(hook, '#!/bin/sh\nsleep 5\n');
+    chmodSync(hook, 0o755);
+    const before = git('status', '--porcelain');
+    const { ended } = await run(commitJob({ branch: 'chat/slow' }), 1_500);
+    expect(ended[0]).toMatchObject({ status: 'failed' });
+    expect(existsSync(join(folder, '.git/index.lock'))).toBe(false);
+    expect(git('branch', '--show-current').trim()).toBe('main');
+    expect(git('status', '--porcelain')).toBe(before);
+  }, 20_000);
+
   it('commits nothing that changed since the person looked', async () => {
     write('a.ts', 'const a = "changed after the look";\n');
     const head = git('rev-parse', 'HEAD');
@@ -218,6 +242,14 @@ describe('Open PR', () => {
       '--body=Opened from a chat in the project tracker.',
       '--base=main',
     ]);
+  });
+
+  it('refuses the push when nobody can name the default branch', async () => {
+    git('switch', '-q', '-c', 'develop');
+    process.env.FAKE_GH_REPO_FAILS = '1';
+    const { ended } = await run(prJob);
+    expect(ended[0]).toMatchObject({ status: 'failed', error: NO_DEFAULT_BRANCH });
+    expect(gitIn(join(root, 'origin.git'), 'branch', '--list').trim()).toBe('');
   });
 
   it('never pushes main, and says when gh is not set up', async () => {

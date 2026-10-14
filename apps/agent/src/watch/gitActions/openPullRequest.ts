@@ -15,12 +15,15 @@ type PullRequestJob = Extract<GitActionJob, { kind: 'pull_request' }>;
 const BODY = 'Opened from a chat in the project tracker.';
 const URL = /^https:\/\/\S+$/;
 
-async function branchToPush(
-  context: StepContext,
-): Promise<{ branch: string; base: string | null }> {
+export const NO_DEFAULT_BRANCH =
+  "Couldn't tell the repository's default branch from GitHub or origin, so nothing was pushed.";
+
+// A default branch nobody can name could be the one pushed, so the push waits until it can be.
+async function branchToPush(context: StepContext): Promise<{ branch: string; base: string }> {
   const branch = await currentBranch(context.cwd, context.signal);
   if (!branch) throw new GitActionError('Check out a branch first: HEAD is detached.');
   const base = await defaultBranch(context.cwd, context.signal, true);
+  if (!base) throw new GitActionError(NO_DEFAULT_BRANCH);
   if (isProtectedBranch(branch, base)) throw new GitActionError(PROTECTED_BRANCH);
   const problem = branchNameProblem(branch);
   if (problem) throw new GitActionError(problem);
@@ -50,7 +53,7 @@ export async function openPullRequest(
   const out = await step(
     context,
     'gh',
-    base ? [...args, `--base=${base}`] : args,
+    [...args, `--base=${base}`],
     "Couldn't open the pull request.",
   );
   const url = urlOf(out);

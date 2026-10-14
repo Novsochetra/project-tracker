@@ -51,7 +51,7 @@ export async function commitChat(context: StepContext, job: CommitJob): Promise<
   try {
     return await commitPicked(context, job);
   } catch (error) {
-    await restoreRepo(context.cwd, saved, job.branch);
+    await restoreRepo(context.cwd, saved, { created: job.branch, paths: job.paths });
     throw error;
   } finally {
     await forgetRepo(saved);
