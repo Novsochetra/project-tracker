@@ -12,7 +12,11 @@ describe('riseDelay', () => {
 
 describe('descriptionText', () => {
   it('falls back to "No description"', () => {
-    expect(descriptionText('Marketing site')).toBe('Marketing site');
-    expect(descriptionText('  ')).toBe('No description');
+    expect(descriptionText({ description: 'Marketing site' })).toBe('Marketing site');
+    expect(descriptionText({ description: '  ', hideName: false })).toBe('No description');
+  });
+
+  it('hides the description of a project that hides its name', () => {
+    expect(descriptionText({ description: 'Secret launch site', hideName: true })).toBe('Hidden');
   });
 });

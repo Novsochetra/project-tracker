@@ -97,6 +97,7 @@ describe('inputs', () => {
       repo: '~/code/mobile',
       instructions: 'Run the tests first.',
       autoReview: true,
+      hideName: false,
       maxParallelRuns: 5,
       maxSubAgents: 3,
     });
@@ -113,6 +114,7 @@ describe('inputs', () => {
       instructions: '',
       template: 'software',
       autoReview: false,
+      hideName: false,
       maxParallelRuns: '5',
       maxSubAgents: '3',
     });
@@ -123,6 +125,7 @@ describe('inputs', () => {
     expect(formValuesOf(instructed).instructions).toBe('Plain voice.');
     const on = { name: 'Website', description: '', repo: '', autoReview: true };
     expect(formValuesOf(on).autoReview).toBe(true);
+    expect(formValuesOf({ ...on, hideName: true }).hideName).toBe(true);
   });
 });
 
@@ -157,6 +160,7 @@ describe('projectFormChanged', () => {
     expect(changed({ description: '' })).toBe(true);
     expect(changed({ repo: '~/code/site' })).toBe(true);
     expect(changed({ autoReview: true })).toBe(true);
+    expect(changed({ hideName: true })).toBe(true);
     expect(changed({ instructions: 'Cite two sources.' })).toBe(true);
     expect(changed({ maxSubAgents: ' 3 ' })).toBe(false);
     expect(changed({ maxSubAgents: '5' })).toBe(true);

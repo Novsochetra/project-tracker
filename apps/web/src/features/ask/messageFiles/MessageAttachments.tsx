@@ -5,6 +5,7 @@ import { thumbnailLabels } from '../../attachments/thumbnailLabels';
 import { useAttachmentViewer } from '../../attachments/viewerContext';
 import { AnswerImage } from './AnswerImage';
 import styles from './MessageAttachments.module.css';
+import { WithheldNote } from './WithheldNote';
 
 type Open = (files: readonly Attachment[], index: number) => void;
 
@@ -37,12 +38,15 @@ function Files({ files, from }: { files: Attachment[]; from: ChatRole }) {
   const { open } = useAttachmentViewer();
   if (from === 'claude') return <AnswerFiles files={files} open={open} />;
   return (
-    <ThumbnailGrid
-      size="sm"
-      attachments={files}
-      onOpen={(index) => open(files, index)}
-      className={styles.sent}
-    />
+    <>
+      <ThumbnailGrid
+        size="sm"
+        attachments={files}
+        onOpen={(index) => open(files, index)}
+        className={styles.sent}
+      />
+      <WithheldNote files={files} />
+    </>
   );
 }
 

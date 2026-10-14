@@ -3,6 +3,7 @@ import { otherProject } from '../../api/test/fixtures';
 import { projectSummary } from '../../app/test/harness';
 import {
   canCapture,
+  choiceOf,
   defaultProjectKey,
   LAST_PROJECT_STORAGE_KEY,
   projectChoices,
@@ -23,13 +24,19 @@ afterEach(() => {
 });
 
 describe('last project used', () => {
-  it('is remembered on this device', () => {
+  it('is remembered on this device by key and color, never by name', () => {
     expect(readLastProject()).toBeNull();
     rememberProject({ ...remembered, extra: 'dropped' } as typeof remembered);
-    expect(readLastProject()).toEqual(remembered);
-    expect(JSON.parse(window.localStorage.getItem(LAST_PROJECT_STORAGE_KEY) ?? '')).toEqual(
-      remembered,
-    );
+    expect(readLastProject()).toEqual({ key: 'MOB', name: 'MOB', color: '#5B5BD6' });
+    expect(JSON.parse(window.localStorage.getItem(LAST_PROJECT_STORAGE_KEY) ?? '')).toEqual({
+      key: 'MOB',
+      color: '#5B5BD6',
+    });
+  });
+
+  it('drops a name kept by an older version', () => {
+    window.localStorage.setItem(LAST_PROJECT_STORAGE_KEY, JSON.stringify(remembered));
+    expect(readLastProject()?.name).toBe('MOB');
   });
 
   it('is forgotten when what was stored is not a project', () => {
@@ -62,6 +69,13 @@ describe('canCapture', () => {
     expect(canCapture(undefined)).toBe(false);
     rememberProject(remembered);
     expect(canCapture(undefined)).toBe(true);
+  });
+});
+
+describe('choiceOf', () => {
+  it('names a project as its screens do', () => {
+    expect(choiceOf(mobile)).toEqual({ key: 'MOB', name: 'Mobile app', color: mobile.color });
+    expect(choiceOf({ ...mobile, hideName: true }).name).toBe('Project MOB');
   });
 });
 

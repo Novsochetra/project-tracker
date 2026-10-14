@@ -1,7 +1,5 @@
-import { skipToken, useQuery } from '@tanstack/react-query';
-import type { ChatDetail } from '@tracker/shared';
 import { Plus, SquarePen } from 'lucide-react';
-import { queryKeys } from '../api';
+import { useChat } from '../api/hooks/chats';
 import { Button } from '../components';
 import { ChatOptionsMenu } from '../features/ask/ChatOptionsMenu';
 import { ProjectOptionsButton } from '../features/projects/ProjectOptionsButton';
@@ -13,14 +11,10 @@ import { breadcrumbFor, NEW_CHAT_LABEL, projectKeyOf } from './crumbs';
 import styles from './DesktopHeader.module.css';
 import { useSheets } from './sheets/context';
 
-// Read from the chat screen's own query, so the header never asks for the chat itself.
+// The chat screen's own options: a header with other options took over the shared query (PT-250).
 function useChatTitle(route: Route): string | undefined {
-  const chatId = route.name === 'chat' ? route.chatId : null;
-  const chat = useQuery<ChatDetail>({
-    queryKey: queryKeys.chat(chatId ?? ''),
-    queryFn: skipToken,
-  });
-  return chatId ? chat.data?.chat.title : undefined;
+  const chat = useChat(route.name === 'chat' ? route.chatId : null);
+  return chat.data?.chat.title;
 }
 
 function HeaderActions({ route, projectKey }: { route: Route; projectKey: string }) {

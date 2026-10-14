@@ -31,6 +31,7 @@ export const toProject = (row: ProjectRow): Project => ({
   createdAt: row.createdAt,
   updatedAt: row.updatedAt,
   autoReview: row.autoReview === 1,
+  hideName: row.hideName === 1,
 });
 
 export const toStatus = (row: StatusRow): Status => ({

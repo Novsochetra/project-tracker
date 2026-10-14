@@ -1,4 +1,9 @@
-import { chatAnsweredPush, chatFailedPush, type PushChat } from '@tracker/shared';
+import {
+  chatAnsweredPush,
+  chatFailedPush,
+  projectDisplayName,
+  type PushChat,
+} from '@tracker/shared';
 import type { UserScope } from '../auth/scope';
 import { findChatInScope, type ChatWithKey } from '../repositories/chats';
 import type { RunWithKey } from '../repositories/runs';
@@ -7,7 +12,12 @@ import { pushToUser } from './push';
 
 export const pushChatOf = (chat: ChatWithKey): PushChat => ({
   projectKey: chat.projectKey,
-  projectName: chat.projectName,
+  // A lock screen is a screen too.
+  projectName: projectDisplayName({
+    name: chat.projectName,
+    key: chat.projectKey,
+    hideName: chat.projectHideName === 1,
+  }),
   chatId: chat.id,
   title: chat.title,
 });

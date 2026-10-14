@@ -11,6 +11,13 @@ import type { SendChanges } from './changes/runChanges';
 import type { StepBatcher } from './steps/stepBatcher';
 import type { WatchApi } from './watchApi';
 
+// The mode is the ask's own: Ask and Plan show pictures from the project folder only.
+export type AnswerImages = (
+  outcome: FinishRunInput,
+  stop: AbortSignal,
+  mode: unknown,
+) => Promise<FinishRunInput>;
+
 export interface RunLoopDeps {
   api: WatchApi;
   runClaude: (job: RunJob, signal: AbortSignal, onSteps: OnSteps) => Promise<ClaudeExit>;
@@ -24,8 +31,7 @@ export interface RunLoopDeps {
   stepsFor: (runId: string) => StepBatcher;
   usageOf: (job: RunJob, exit: ClaudeExit) => RunUsageInput | undefined;
   // Uploads the pictures the answer's image cards name (PT-225).
-  answerImages?:
-    ((outcome: FinishRunInput, stop: AbortSignal) => Promise<FinishRunInput>) | undefined;
+  answerImages?: AnswerImages | undefined;
   // Sends what the run changed in its folder once Claude exits; none in tests that don't ask.
   trackChanges?: ((job: RunJob) => Promise<SendChanges>) | undefined;
   // Work the lane does before it takes each run, as the commits the person asked for (PT-237).
@@ -88,7 +94,8 @@ const runTicket: Runner = async (deps, job, stop, onSteps) => {
 const runAsk: Runner = async (deps, job, stop, onSteps) => {
   const exit = await deps.runAsk(job, stop, onSteps);
   const outcome = askOutcomeOf(exit, stop.aborted);
-  const shown = deps.answerImages ? await deps.answerImages(outcome, stop) : outcome;
+  const mode = job.run.askOptions?.mode;
+  const shown = deps.answerImages ? await deps.answerImages(outcome, stop, mode) : outcome;
   return withUsage(shown, deps.usageOf(job, exit));
 };
 

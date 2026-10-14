@@ -1,3 +1,4 @@
+import { projectDisplayName } from '@tracker/shared';
 import { CircleAlert, MessageCircle, SquarePen } from 'lucide-react';
 import { useEffect } from 'react';
 import { errorMessage, isNotFound, useProject } from '../../api';
@@ -62,7 +63,7 @@ export function ChatsScreen({ projectKey }: { projectKey: string }) {
     <>
       <NavBar
         title={ASK_LABEL}
-        backLabel={project?.name ?? projectKey.toUpperCase()}
+        backLabel={project ? projectDisplayName(project) : projectKey.toUpperCase()}
         right={<NavBarSpacer />}
       />
       <div className={styles.page}>

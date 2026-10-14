@@ -63,6 +63,7 @@ export const updateProjectInput = z.object({
   repo: z.string().trim().max(500).optional(),
   instructions: projectInstructions,
   autoReview: z.boolean().optional(),
+  hideName: z.boolean().optional(),
   maxParallelRuns: z.number().int().min(1).max(MAX_PARALLEL_RUNS_MAX).optional(),
   maxSubAgents: z.number().int().min(1).max(MAX_SUB_AGENTS_MAX).optional(),
 });

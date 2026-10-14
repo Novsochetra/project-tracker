@@ -22,6 +22,7 @@ export interface ProjectFormValues {
   instructions: string;
   template: ProjectTemplateName;
   autoReview: boolean;
+  hideName: boolean;
   maxParallelRuns: string;
   maxSubAgents: string;
 }
@@ -34,6 +35,7 @@ export const EMPTY_PROJECT_FORM: ProjectFormValues = {
   instructions: '',
   template: DEFAULT_PROJECT_TEMPLATE,
   autoReview: false,
+  hideName: false,
   maxParallelRuns: String(DEFAULT_MAX_PARALLEL_RUNS),
   maxSubAgents: String(DEFAULT_MAX_SUB_AGENTS),
 };
@@ -43,7 +45,10 @@ export const NAME_REQUIRED = 'Add a name to create the project.';
 const REPO_HINT = 'The repository is added to every Claude Code prompt.';
 
 export const formValuesOf = (
-  project: Pick<Project, 'name' | 'description' | 'repo' | 'instructions' | 'autoReview'> &
+  project: Pick<
+    Project,
+    'name' | 'description' | 'repo' | 'instructions' | 'autoReview' | 'hideName'
+  > &
     Partial<Pick<Project, 'maxParallelRuns' | 'maxSubAgents'>>,
 ): ProjectFormValues => ({
   ...EMPTY_PROJECT_FORM,
@@ -52,11 +57,15 @@ export const formValuesOf = (
   repo: project.repo,
   instructions: project.instructions ?? '',
   autoReview: project.autoReview ?? false,
+  hideName: project.hideName ?? false,
   maxParallelRuns: String(project.maxParallelRuns ?? DEFAULT_MAX_PARALLEL_RUNS),
   maxSubAgents: String(project.maxSubAgents ?? DEFAULT_MAX_SUB_AGENTS),
 });
 
 export const hasName = (values: ProjectFormValues): boolean => values.name.trim() !== '';
+
+export const PROJECT_SWITCHES = ['autoReview', 'hideName'] as const;
+export type ProjectSwitch = (typeof PROJECT_SWITCHES)[number];
 
 const TEXT_FIELDS = [
   'name',
@@ -74,7 +83,7 @@ export const projectFormChanged = (
   values: ProjectFormValues,
   baseline: ProjectFormValues,
 ): boolean =>
-  values.autoReview !== baseline.autoReview ||
+  PROJECT_SWITCHES.some((field) => values[field] !== baseline[field]) ||
   TEXT_FIELDS.some((field) => values[field].trim() !== baseline[field].trim());
 
 export const prefixPlaceholder = (values: ProjectFormValues): string => derivePrefix(values.name);
@@ -104,6 +113,7 @@ export const updateProjectInput = (values: ProjectFormValues): UpdateProjectInpu
   repo: values.repo.trim(),
   instructions: values.instructions.trim(),
   autoReview: values.autoReview,
+  hideName: values.hideName,
   maxParallelRuns: parallelRunsOf(values),
   maxSubAgents: subAgentsOf(values),
 });

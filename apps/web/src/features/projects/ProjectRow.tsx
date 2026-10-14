@@ -1,4 +1,4 @@
-import { openNotReviewed, type ProjectSummary } from '@tracker/shared';
+import { openNotReviewed, projectDisplayName, type ProjectSummary } from '@tracker/shared';
 import clsx from 'clsx';
 import { ChevronRight } from 'lucide-react';
 import { Icon, ListRow } from '../../components';
@@ -26,10 +26,10 @@ export function ProjectRow({ project, readyCount, index, onOpen }: ProjectRowPro
         <span className={styles.square} style={{ background: project.color }} aria-hidden="true" />
         <span className={styles.text}>
           <span className={styles.titleLine}>
-            <span className={styles.name}>{project.name}</span>{' '}
-            <span className={styles.key}>{project.key}</span>
+            <span className={styles.name}>{projectDisplayName(project)}</span>{' '}
+            {!project.hideName && <span className={styles.key}>{project.key}</span>}
           </span>{' '}
-          <span className={styles.description}>{descriptionText(project.description)}</span>
+          <span className={styles.description}>{descriptionText(project)}</span>
         </span>
       </span>{' '}
       <span className={styles.counts}>

@@ -73,6 +73,7 @@ async function addOtherProject(db: Db, key: string): Promise<void> {
       color: '#5B5BD6',
       maxParallelRuns: 5,
       maxSubAgents: 3,
+      hideName: 0,
       nextNum: 2,
       createdAt: 1,
       updatedAt: 1,

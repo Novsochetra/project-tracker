@@ -31,8 +31,7 @@ afterAll(() => {
 
 const refusal = (path: string, folder: string) =>
   `Can't attach ${path}: Claude Code runs in ${folder}, a dot-folder of your home folder where ` +
-  'keys and settings are kept, so only files in a temp folder can be attached. Start it in a ' +
-  'project folder instead.';
+  'keys and settings are kept, so no file can be attached. Start it in a project folder instead.';
 
 const attach = async (path: string, folders: string[]): Promise<string> => {
   const file = await checkLocalFile(path, folders);

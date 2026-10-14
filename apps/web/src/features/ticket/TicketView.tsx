@@ -1,4 +1,4 @@
-import type { TicketDetail } from '@tracker/shared';
+import { projectDisplayName, type TicketDetail } from '@tracker/shared';
 import { useRef } from 'react';
 import { useIsPhone } from '../../lib/media';
 import { NavBar, NavBarSpacer } from '../../navigation';
@@ -31,7 +31,12 @@ export function TicketView({ detail }: { detail: TicketDetail }) {
   const changes = useChangesTab(ticket.key);
   return (
     <AttachmentViewerProvider>
-      <NavBar title={ticket.key} mono backLabel={project.name} right={<NavBarSpacer />} />
+      <NavBar
+        title={ticket.key}
+        mono
+        backLabel={projectDisplayName(project)}
+        right={<NavBarSpacer />}
+      />
       <div ref={gridRef} className={styles.grid}>
         {changes.changes && (
           <TicketTabs

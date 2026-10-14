@@ -2,6 +2,7 @@ import {
   BATCH_NEEDS_NEW_HELPER,
   formatTicketKey,
   RUN_RESTARTED,
+  withWithheldFiles,
   type RunJob,
   type RunLane,
 } from '@tracker/shared';
@@ -76,10 +77,11 @@ export async function takeNextRun(
   if (!marked) return null;
   const started = await requireRun(ctx, scope, next.id);
   notifyRun(ctx, scope, started);
-  const files = await runFiles(ctx.db, started);
-  const { prompt, resumeSessionId } = started;
+  const { files, withheld } = await runFiles(ctx.db, started);
+  const prompt = withWithheldFiles(started.prompt, withheld);
   const ticketKeys = await batchTicketKeys(ctx, started);
   const chatFiles = await chatFilesFor(ctx.db, started);
+  const { resumeSessionId } = started;
   const job = { run: toRun(started), prompt, resumeSessionId, files, ticketKeys };
   return chatFiles ? { ...job, chatFiles } : job;
 }

@@ -88,6 +88,13 @@ describe.each(DIALECTS)('push when a chat answer ends (%s)', (dialect) => {
     for (const secret of SECRETS) expect(JSON.stringify(message)).not.toContain(secret);
   });
 
+  it('names a project that hides its name by its key', async () => {
+    await person('PATCH', '/api/projects/MOB', { hideName: true });
+    await chatEnds({ status: 'done', answer: 'Yes' });
+    const [message] = await service.messagesFor(phone);
+    expect(message?.body).toBe('Project MOB · Open the chat to read it.');
+  });
+
   it('says a failed answer stopped, without the error the helper sent', async () => {
     const error = 'Command failed: mysql -u root -phunter2\nDATABASE_URL is not set';
     const chat = await chatEnds({ status: 'failed', error });

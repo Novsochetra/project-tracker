@@ -8,8 +8,8 @@ import {
   UPDATED_TOAST,
   updateProjectInput,
 } from './projectForm';
-import { AutoReviewSwitch } from './AutoReviewSwitch';
 import { ProjectFormSheet } from './ProjectFormSheet';
+import { ProjectSwitchField } from './ProjectSwitchField';
 import { useProjectForm } from './useProjectForm';
 import { useProjectSummary } from './useProjectSummary';
 
@@ -49,7 +49,8 @@ export function EditProjectSheet({
       pending={update.isPending}
       onSubmit={submit}
     >
-      <AutoReviewSwitch form={form} />
+      <ProjectSwitchField form={form} field="hideName" />
+      <ProjectSwitchField form={form} field="autoReview" />
     </ProjectFormSheet>
   );
 }

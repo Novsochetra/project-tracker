@@ -8,7 +8,8 @@ import { insertMessage, updateChatRow } from '../repositories/chats';
 import type { Answer } from './runEnding';
 
 // Pictures that can't be linked (another user's, or already sent) are left out rather than lose
-// the answer, which a refused end would. Only types stored without metadata show (PT-225).
+// the answer, which a refused end would. Only images the tracker read and stored without
+// metadata show (PT-225).
 const linkPictures = (trx: Db, uploader: UserScope, messageId: string, ids: readonly string[]) =>
   linkChatAttachments(trx, [...new Set(ids)], { messageId, uploader }, CHAT_ANSWER_IMAGE_TYPES);
 

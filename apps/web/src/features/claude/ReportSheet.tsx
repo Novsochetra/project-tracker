@@ -1,3 +1,4 @@
+import { projectDisplayName } from '@tracker/shared';
 import clsx from 'clsx';
 import { ClipboardCheck } from 'lucide-react';
 import { useMemo, useState, type FormEvent } from 'react';
@@ -81,7 +82,9 @@ export function ReportSheet(props: ReportSheetProps) {
       dirty={form.dirty}
       left={<SheetCancelButton />}
       title="Paste report"
-      subtitle={reportSubtitle(scope, project.data?.project.name) || undefined}
+      subtitle={
+        reportSubtitle(scope, project.data && projectDisplayName(project.data.project)) || undefined
+      }
       right={
         <SheetActionButton type="submit" disabled={!form.canApply}>
           Apply
