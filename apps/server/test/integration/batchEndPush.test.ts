@@ -65,7 +65,7 @@ describe.each(DIALECTS)('push when a Run all batch ends (%s)', (dialect) => {
     expect(await service.messagesFor(device)).toEqual([
       {
         title: 'MOB: Run all stopped: 1 of 4 done',
-        body: 'Not finished: MOB-1, MOB-3, MOB-4 · Claude exited with code 1.',
+        body: 'Claude exited with code 1. · Not finished: MOB-1, MOB-3, MOB-4',
         url: '/activity',
         tag: `batch:${batchId}`,
       },

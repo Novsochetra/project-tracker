@@ -26,7 +26,7 @@ export interface BatchEnding {
 }
 
 // A sub agent claims its ticket (In progress) and submits it (Need review), so the ticket's run
-// follows the ticket: that is all the tracker sees of a sub agent. Answers the runs it ended done.
+// follows the ticket: that is all the tracker sees of a sub agent.
 export async function advanceBatchTicket(
   db: Db,
   ticketId: string,

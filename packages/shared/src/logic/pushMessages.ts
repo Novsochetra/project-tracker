@@ -71,7 +71,8 @@ export function batchEndedPush(batch: PushBatch, error: string | null): PushMess
   const notDone = batch.notDoneKeys.length
     ? `Not finished: ${batch.notDoneKeys.join(', ')}`
     : 'Every ticket is done.';
-  const body = error === null ? notDone : `${notDone} · ${error}`;
+  // The reason goes first so the body's length cap cuts the ticket list, not the reason.
+  const body = error === null ? notDone : `${error} · ${notDone}`;
   return message(
     `${batch.projectKey}: ${ended}: ${done}`,
     body,

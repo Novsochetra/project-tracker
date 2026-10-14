@@ -45,7 +45,7 @@ describe('push messages', () => {
     expect(batchEndedPush(batch, null).body).toBe('Every ticket is done.');
     const stopped = batchEndedPush({ ...batch, notDoneKeys: ['MOB-2'] }, 'Claude exited.');
     expect(stopped.title).toBe('MOB: Run all stopped: 1 of 2 done');
-    expect(stopped.body).toBe('Not finished: MOB-2 · Claude exited.');
+    expect(stopped.body).toBe('Claude exited. · Not finished: MOB-2');
   });
 
   it('says the automatic review stopped and why, under the ticket’s tag', () => {
