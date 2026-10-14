@@ -9,6 +9,8 @@ import { useStopAsk } from './useStopAsk';
 
 export interface SendButtonProps {
   stoppableRun: Run | null;
+  // While Claude answers, a typed message is sent to wait for its turn, so Send shows for it.
+  hasDraft: boolean;
   canSend: boolean;
   onSend: (event: MouseEvent<HTMLButtonElement>) => void;
 }
@@ -27,21 +29,23 @@ function Labels({ shown }: { shown: string }) {
 }
 
 // One button that turns between Send and Stop, so it stays the same element and keeps focus.
-export function SendButton({ stoppableRun, canSend, onSend }: SendButtonProps) {
+export function SendButton({ stoppableRun, hasDraft, canSend, onSend }: SendButtonProps) {
   const { stop, stopping } = useStopAsk();
-  const action = stoppableRun
-    ? {
-        icon: Square,
-        label: STOP_LABEL,
-        disabled: stopping,
-        onClick: (event: MouseEvent<HTMLButtonElement>) => stop(event, stoppableRun),
-      }
-    : { icon: ArrowUp, label: SEND_LABEL, disabled: !canSend, onClick: onSend };
+  const stops = stoppableRun !== null && !hasDraft;
+  const action =
+    stoppableRun && stops
+      ? {
+          icon: Square,
+          label: STOP_LABEL,
+          disabled: stopping,
+          onClick: (event: MouseEvent<HTMLButtonElement>) => stop(event, stoppableRun),
+        }
+      : { icon: ArrowUp, label: SEND_LABEL, disabled: !canSend, onClick: onSend };
   return (
     <Button
       variant="primary"
       icon={action.icon}
-      className={clsx(styles.send, stoppableRun && styles.stop)}
+      className={clsx(styles.send, stops && styles.stop)}
       disabled={action.disabled}
       onClick={action.onClick}
     >

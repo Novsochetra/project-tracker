@@ -1,5 +1,6 @@
 import type { AskOptions } from './askOptions';
 import type { Attachment } from './attachment';
+import type { ChatContext } from './chatContext';
 import type { Run } from './run';
 import type { RunTodo } from './runStep';
 import type { RunUsage } from './runUsage';
@@ -12,6 +13,9 @@ export const CHAT_QUESTION_MAX = 10_000;
 export const CHAT_ANSWER_MAX = 100_000;
 export const CHAT_TITLE_MAX = 80;
 export const CHAT_NO_ANSWER = 'Claude Code gave no answer.';
+// Messages a chat holds while Claude answers (PT-234); each runs as its own turn, in order.
+export const CHAT_QUEUE_MAX = 5;
+export const CHAT_QUEUE_FULL = `You can queue up to ${CHAT_QUEUE_MAX} messages. Wait for Claude or remove one.`;
 
 // Pictures Claude shows in one answer (PT-225), each named by an image card.
 export const CHAT_ANSWER_IMAGES_MAX = 10;
@@ -70,6 +74,17 @@ export interface ChatMessage {
   createdAt: number;
 }
 
+// A person's message sent while Claude answered, waiting for its own turn.
+export interface QueuedMessage {
+  id: string;
+  text: string;
+  attachments: Attachment[];
+  options: AskOptions;
+  // An answer stopped or failed after it was queued, so it starts only with Send now.
+  held: boolean;
+  createdAt: number;
+}
+
 export interface ChatDetail {
   chat: Chat;
   messages: ChatMessage[];
@@ -78,6 +93,12 @@ export interface ChatDetail {
   // The questions that failed or were stopped after Claude took steps, oldest first. They add no
   // message, so this is how what Claude did keeps its place in the thread.
   stoppedRuns: Run[];
+  // Left out until an answer comes from a helper that sends it (PT-239), so older chats show none.
+  context?: ChatContext;
+  // In order: the next not held starts when the chat is free; a stopped or failed answer holds
+  // the ones queued before it ended.
+  // An older tracker sends none.
+  queued?: QueuedMessage[];
 }
 
 // Tells the person's other tabs and devices to leave a chat deleted elsewhere (PT-159).

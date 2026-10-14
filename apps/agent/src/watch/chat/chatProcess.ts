@@ -6,7 +6,7 @@ import type { ClaudeExit } from '../outcome';
 import { createJsonLines } from '../stream/jsonLines';
 import { createRunOutput, type ClaudeListeners, type RunOutput } from '../stream/runOutput';
 import { CHAT_BUSY } from './chatPool';
-import { isIdle, isStateEvent, replayOf } from './turnEvents';
+import { isIdle, isStateEvent, replayOf, taskEndedOf, taskStartedOf } from './turnEvents';
 import { userMessageLine } from './userMessage';
 
 export type ChatChild = Pick<
@@ -50,6 +50,12 @@ export function startChatProcess(child: ChatChild, onClose: () => void) {
   let session: string | undefined;
   let saysState = false;
   let open = true;
+  const tasks = new Set<string>();
+  const track = (event: unknown) => {
+    const started = taskStartedOf(event);
+    if (started) tasks.add(started);
+    tasks.delete(taskEndedOf(event) ?? '');
+  };
   const finish = (ending: Ending) => {
     const ended = turn;
     turn = undefined;
@@ -59,7 +65,7 @@ export function startChatProcess(child: ChatChild, onClose: () => void) {
     if (replayOf(event) === now.uuid) now.started = true;
     else if (saysState && !now.started) return;
     else if (isStateEvent(event)) {
-      if (isIdle(event) && now.results > 0) finish({ code: null, signal: null, turnEnded: true });
+      if (isIdle(event)) finish({ code: null, signal: null, turnEnded: true });
     } else if (now.output.event(event)) {
       now.results += 1;
       if (!saysState) child.stdin.end();
@@ -70,6 +76,7 @@ export function startChatProcess(child: ChatChild, onClose: () => void) {
     onEvent: (event) => {
       session = sessionOf(event) ?? session;
       saysState ||= isStateEvent(event);
+      track(event);
       if (turn) read(event, turn);
     },
   });
@@ -114,6 +121,7 @@ export function startChatProcess(child: ChatChild, onClose: () => void) {
     send,
     sessionId: () => session,
     runNow: () => turn?.run,
+    tasksRunning: () => tasks.size,
     close: () => {
       if (open) child.stdin.end();
       setTimeout(kill, CLOSE_GRACE_MS).unref();

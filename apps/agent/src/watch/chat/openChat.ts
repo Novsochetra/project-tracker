@@ -2,7 +2,7 @@ import { spawn } from 'node:child_process';
 import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import type { RunJob } from '@tracker/shared';
+import { changesFolder, type RunJob } from '@tracker/shared';
 import { askArgs } from '../ask/askArgs';
 import { ASK_FOLDER_PREFIX } from '../ask/askFiles';
 import type { ClaudeCommand } from '../claude';
@@ -23,7 +23,7 @@ export interface ChatSetup {
   spawn?: SpawnChat | undefined;
 }
 
-export type OpenChat = ChatProcess & { folder: string };
+export type OpenChat = ChatProcess & { folder: string; reusable: () => boolean };
 
 const spawnClaude: SpawnChat = ({ command, args, cwd }) =>
   spawn(command, [...args], {
@@ -64,5 +64,8 @@ export async function openChat(
     onClose();
   });
   live.chat = chat;
-  return { ...chat, folder };
+  // A background shell still running may start a turn after idle that nobody watches; in a chat
+  // that changes the folder it could do so while a ticket run holds the lane. The next resumes.
+  const leavesWork = () => changesFolder(job.run.askOptions?.mode) && chat.tasksRunning() > 0;
+  return { ...chat, folder, reusable: () => !leavesWork() };
 }

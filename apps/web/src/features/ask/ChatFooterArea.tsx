@@ -1,4 +1,4 @@
-import { helperLabel, type AskOptions, type Run } from '@tracker/shared';
+import { helperLabel, type AskOptions, type ChatDetail, type Run } from '@tracker/shared';
 import clsx from 'clsx';
 import { Laptop, MessageCircleQuestion } from 'lucide-react';
 import { GroupedCard, Icon, SelectRow, Spinner } from '../../components';
@@ -9,6 +9,7 @@ import { helperOptions } from '../claude/helperOptions';
 import { SetupLine } from '../claude/SetupLine';
 import { WAITING_TEXT } from '../requests/copy';
 import { AskComposer } from './AskComposer';
+import { ContextMeter } from './context/ContextMeter';
 import { helperOf, stoppableRunOf, thinkingText } from './chatFooter';
 import styles from './ChatScreen.module.css';
 import type { AskHelper } from './useAskHelper';
@@ -20,6 +21,7 @@ export interface ChatFooterAreaProps {
   waiting: boolean;
   savedOptions: AskOptions;
   placeholder: string;
+  detail: ChatDetail | null;
 }
 
 function Thinking({ run, waiting }: { run: Run; waiting: boolean }) {
@@ -59,7 +61,7 @@ function RunOn({ helper }: { helper: AskHelper }) {
 }
 
 export function ChatFooterArea(props: ChatFooterAreaProps) {
-  const { projectKey, chatId, helper, waiting, savedOptions, placeholder } = props;
+  const { projectKey, chatId, helper, waiting, savedOptions, placeholder, detail } = props;
   const { footer } = helper;
   const isPhone = useIsPhone();
   const isTop = useOptionalScreen()?.isTop ?? true;
@@ -69,6 +71,7 @@ export function ChatFooterArea(props: ChatFooterAreaProps) {
   return (
     <div className={styles.footer} data-bottom-cover="">
       <div className={styles.footerInner}>
+        {detail?.context && <ContextMeter context={detail.context} />}
         {footer.kind === 'thinking' && <Thinking run={footer.run} waiting={waiting} />}
         {stopped && <p className={clsx(styles[stopped.kind], 'fade-in')}>{stopped.text}</p>}
         {footer.kind === 'setup' && <SetupLine />}

@@ -1,5 +1,11 @@
+import {
+  contextUseOf,
+  readContext,
+  type ContextReading,
+  type ContextUse,
+  type PlanLimitsInput,
+} from '@tracker/shared';
 import type { ClaudeExit } from '../outcome';
-import type { PlanLimitsInput } from '@tracker/shared';
 import { resultOf, type ClaudeResult } from './claudeResult';
 import { planLimitsOf } from './planLimits';
 import { createReadTokenCount } from './readTokens';
@@ -11,10 +17,13 @@ export interface ClaudeListeners {
   onEvent: (event: unknown) => void;
 }
 
+const withContext = (context: ContextUse | undefined) => (context ? { context } : {});
+
 export function createRunOutput({ onOutput, onEvent }: ClaudeListeners) {
   let output = '';
   const results: ClaudeResult[] = [];
   const tokens = createReadTokenCount();
+  let context: ContextReading = {};
   let planLimits: PlanLimitsInput | null = null;
   const say = (text: string) => {
     output = (output + text).slice(-KEPT_OUTPUT);
@@ -25,6 +34,7 @@ export function createRunOutput({ onOutput, onEvent }: ClaudeListeners) {
     event(event: unknown): ClaudeResult | null {
       onEvent(event);
       tokens.add(event);
+      context = readContext(context, event);
       planLimits = planLimitsOf(event) ?? planLimits;
       const found = resultOf(event);
       if (!found) return null;
@@ -40,6 +50,7 @@ export function createRunOutput({ onOutput, onEvent }: ClaudeListeners) {
       output,
       results,
       readTokens: tokens.total(),
+      ...withContext(contextUseOf(context)),
       ...(planLimits && { planLimits }),
     }),
   };

@@ -1,6 +1,7 @@
 export interface PooledChat {
   sessionId: () => string | undefined;
   close: () => void;
+  reusable?: () => boolean;
 }
 
 export interface ChatWant<T> {
@@ -101,6 +102,7 @@ export function createChatPool<T extends PooledChat>(options: ChatPoolOptions = 
     entry.using = false;
     entry.usedAt = now();
     if (open.get(chatId) !== entry) return;
+    if (entry.chat?.reusable?.() === false) return close(chatId);
     entry.idle = setTimeout(() => close(chatId), idleMs);
     entry.idle.unref();
   }

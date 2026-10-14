@@ -475,6 +475,9 @@ const DATA_MODEL: SchemaShape = {
       'chain_stop text',
       'question_id text',
       'batch_id text',
+      'context_tokens bigint',
+      'context_window bigint',
+      'tokens bigint',
     ],
     indexes: [
       'index (batch_id)',
@@ -620,6 +623,22 @@ const DATA_MODEL: SchemaShape = {
     foreignKeys: [
       'message_id -> chat_messages.id on delete cascade',
       'ticket_id -> tickets.id on delete cascade',
+    ],
+  },
+  chat_queue: {
+    columns: [
+      'message_id text primary key',
+      'chat_id text not null',
+      'runner_id text not null',
+      'ask_model text not null',
+      'ask_mode text not null',
+      'ask_effort text not null',
+      'position integer not null',
+    ],
+    indexes: ['unique (chat_id, position)'],
+    foreignKeys: [
+      'chat_id -> chats.id on delete cascade',
+      'message_id -> chat_messages.id on delete cascade',
     ],
   },
   push_subscriptions: {

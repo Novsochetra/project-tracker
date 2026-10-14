@@ -65,12 +65,12 @@ export function useChat(chatId: string | null): TrackerQuery<ChatDetail> {
   });
 }
 
-function showChat(queryClient: QueryClient, detail: ChatDetail): void {
+export function showChat(queryClient: QueryClient, detail: ChatDetail): void {
   queryClient.setQueryData(queryKeys.chat(detail.chat.id), detail);
   void queryClient.invalidateQueries({ queryKey: queryKeys.chats(detail.chat.projectKey) });
 }
 
-const refreshChat = (queryClient: QueryClient, chatId: string) =>
+export const refreshChat = (queryClient: QueryClient, chatId: string) =>
   void queryClient.invalidateQueries({ queryKey: queryKeys.chat(chatId), exact: true });
 
 export function useStartChat(): TrackerMutation<ChatDetail, StartChatVariables> {

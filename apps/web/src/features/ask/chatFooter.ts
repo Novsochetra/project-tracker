@@ -10,7 +10,8 @@ export interface StoppedNote {
 
 export type ChatFooter =
   | { kind: 'loading' }
-  | { kind: 'thinking'; run: Run }
+  // The helper answering takes a message sent meanwhile, which waits for its own turn (PT-234).
+  | { kind: 'thinking'; run: Run; helper: Runner | null }
   | { kind: 'setup'; stopped: StoppedNote | null }
   | { kind: 'ask'; helpers: Runner[]; helper: Runner; stopped: StoppedNote | null };
 
@@ -47,7 +48,13 @@ export function runHelper({
 }
 
 export function chatFooter({ runners, run, projectKey, lastUsedId }: ChatFooterInput): ChatFooter {
-  if (run && isWorking(run)) return { kind: 'thinking', run };
+  if (run && isWorking(run)) {
+    return {
+      kind: 'thinking',
+      run,
+      helper: runners?.find(({ id }) => id === run.runnerId) ?? null,
+    };
+  }
   if (!runners) return { kind: 'loading' };
   const stopped = stoppedOf(run);
   const helpers = helpersFor(runners, projectKey);
@@ -56,7 +63,7 @@ export function chatFooter({ runners, run, projectKey, lastUsedId }: ChatFooterI
 }
 
 export const helperOf = (footer: ChatFooter): Runner | null =>
-  footer.kind === 'ask' ? footer.helper : null;
+  footer.kind === 'ask' || footer.kind === 'thinking' ? footer.helper : null;
 
 export const stoppableRunOf = (footer: ChatFooter): Run | null =>
   footer.kind === 'thinking' ? footer.run : null;
