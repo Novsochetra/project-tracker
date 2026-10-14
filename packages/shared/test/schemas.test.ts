@@ -5,6 +5,7 @@ import {
   createStatusInput,
   createTicketInput,
   reviewInput,
+  updateProjectInput,
 } from '../src/api/schemas';
 
 const messages = (result: { success: boolean; error?: { issues: { message: string }[] } }) =>
@@ -179,5 +180,19 @@ describe('createStatusInput', () => {
     expect(createStatusInput.safeParse({ name: 'Blocked', category: 'blocked' }).success).toBe(
       false,
     );
+  });
+});
+
+describe('updateProjectInput', () => {
+  it.each([1, 3, 5])('takes %i sub agents per ticket', (maxSubAgents) => {
+    expect(updateProjectInput.parse({ maxSubAgents })).toEqual({ maxSubAgents });
+  });
+
+  it.each([0, 6, 2.5, '3', null])('refuses %j sub agents per ticket', (maxSubAgents) => {
+    expect(updateProjectInput.safeParse({ maxSubAgents }).success).toBe(false);
+  });
+
+  it('leaves the sub agents out of an edit that does not change them', () => {
+    expect(updateProjectInput.parse({ name: 'Mobile' })).toEqual({ name: 'Mobile' });
   });
 });

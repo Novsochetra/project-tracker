@@ -20,6 +20,8 @@ export interface Project {
   instructions?: string;
   color: string;
   maxParallelRuns: number;
+  // Optional: trackers from before PT-243 don't send it.
+  maxSubAgents?: number;
   nextNum: number;
   createdAt: number;
   updatedAt: number;

@@ -7,6 +7,7 @@ import { hasName, projectHint, type ProjectFormMode } from './projectForm';
 import { ProjectInstructionsField } from './ProjectInstructionsField';
 import { ProjectPathFields } from './ProjectPathFields';
 import { ProjectTemplateField } from './ProjectTemplateField';
+import { SubAgentsField } from './SubAgentsField';
 import styles from './ProjectSheet.module.css';
 import type { ProjectForm } from './useProjectForm';
 
@@ -92,6 +93,7 @@ export function ProjectFormSheet({
       <div className={styles.details}>
         <ProjectPathFields mode={mode} form={form} onEnter={explainBlankName} />
         <p className={styles.hint}>{projectHint(mode, form.values)}</p>
+        {mode === 'edit' && <SubAgentsField form={form} onEnter={explainBlankName} />}
         {mode === 'new' && <ProjectTemplateField form={form} />}
         <ProjectInstructionsField form={form} />
         {children}

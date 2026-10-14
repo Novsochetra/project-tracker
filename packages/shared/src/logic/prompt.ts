@@ -7,11 +7,13 @@ import {
   type PromptInstructions,
   type PromptLabel,
 } from './instructions';
+import { ticketSubAgentLines } from './ticketSubAgents';
 
 export interface PromptProject extends PromptInstructions {
   name: string;
   key: string;
   repo: string;
+  maxSubAgents?: number;
 }
 
 export interface PromptReview {
@@ -101,6 +103,7 @@ export function buildTicketPrompt(
     ...instructionLines(project, ticket.labels),
     '',
     ticketBlock(ticket, '##', now),
+    ...ticketSubAgentLines(project.maxSubAgents),
     '',
     ASK_PERSON_LINE,
     '',

@@ -25,6 +25,7 @@ export const toProject = (row: ProjectRow): Project => ({
   instructions: row.instructions,
   color: row.color,
   maxParallelRuns: row.maxParallelRuns,
+  maxSubAgents: row.maxSubAgents,
   nextNum: row.nextNum,
   createdAt: row.createdAt,
   updatedAt: row.updatedAt,

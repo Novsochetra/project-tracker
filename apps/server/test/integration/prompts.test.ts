@@ -18,7 +18,7 @@ describe.each(DIALECTS)('prompts and sending (%s)', (dialect) => {
     project = await api.client().createProject({ name: 'Mobile app', repo: '~/code/mobile' });
   });
 
-  const promptProject = { name: 'Mobile app', key: 'MA', repo: '~/code/mobile' };
+  const promptProject = { name: 'Mobile app', key: 'MA', repo: '~/code/mobile', maxSubAgents: 3 };
 
   describe('ticket prompt', () => {
     it('includes notes, the last report and the last review', async () => {
