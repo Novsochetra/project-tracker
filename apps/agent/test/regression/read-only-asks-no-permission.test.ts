@@ -36,6 +36,10 @@ describe('regression: a read-only question asks only questions', () => {
 
 const handed = vi.hoisted(() => [] as PromptTool[]);
 vi.mock('../../src/watch/permissionTool/withPromptTool', () => ({
+  openPromptTool: (tool: PromptTool) => {
+    handed.push(tool);
+    return Promise.resolve({ args: [], close: () => undefined });
+  },
   withPromptTool: (
     tool: PromptTool,
     _run: unknown,
@@ -64,6 +68,7 @@ describe('regression: claudeRunners hands a read-only question the questions-onl
       prompt: 'X',
     };
     await claude.runAsk(question, signal(), () => undefined);
+    claude.closeChats();
     const tool = handed[0];
     expect(await tool?.ask(question.run, bash, signal())).toEqual({
       behavior: 'deny',
@@ -86,6 +91,7 @@ describe('regression: claudeRunners hands a read-only question the questions-onl
       prompt: 'X',
     };
     await claude.runAsk(edit, signal(), () => undefined);
+    claude.closeChats();
     await handed[0]?.ask(edit.run, bash, signal());
     expect(ask).toHaveBeenCalledOnce();
   });

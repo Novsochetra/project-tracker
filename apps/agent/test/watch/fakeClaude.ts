@@ -39,9 +39,13 @@ const say = (text, is_error = false) => {
   emit({ type: 'assistant', message: { role: 'assistant', content }, parent_tool_use_id: null });
   emit({ type: 'result', subtype: 'success', is_error, result: text });
 };
-let prompt = '';
-process.stdin.on('data', (chunk) => { prompt += chunk; });
-process.stdin.on('end', () => {
+// A chat's claude reads one JSON message a line and stays open; a crash ends it with a code.
+const streamInput = process.argv.includes('--input-format');
+// Claude Code 2.1.299 says when a turn is over only when asked to (chat/turnEvents.ts).
+const state = (value) =>
+  process.env.CLAUDE_CODE_EMIT_SESSION_STATE_EVENTS === '1' &&
+  emit({ type: 'system', subtype: 'session_state_changed', state: value });
+function handle(prompt, exit) {
   if (stream) {
     emit({ type: 'system', subtype: 'init', cwd: process.cwd(), tools: ['Read', 'Bash'] });
     toolUse('Read', { file_path: join(process.cwd(), 'src', 'app.ts') });
@@ -56,7 +60,7 @@ process.stdin.on('end', () => {
   if (prompt.includes('TWO RESULTS')) {
     say('I started the sub agent.');
     say('It found the report: TICKET MOB-9.');
-    process.exit(0);
+    exit(0);
   }
   // Calls the permission prompt tool from --mcp-config the way Claude Code 2.1.296 does, then
   // says what it got back.
@@ -83,13 +87,13 @@ process.stdin.on('end', () => {
           if (prompt.includes('GIVE UP')) {
             setTimeout(() => send({ method: 'notifications/cancelled', params: { requestId: 1 } }), 300);
             const go = join(dirname(process.argv[1]), 'gave-up');
-            setInterval(() => existsSync(go) && (say('GAVE UP'), process.exit(0)), 20);
+            const timer = setInterval(() => existsSync(go) && (clearInterval(timer), say('GAVE UP'), exit(0)), 20);
           }
         }
         if (message.id === 1) {
           say('DECISION ' + message.result.content[0].text);
           child.kill();
-          process.exit(0);
+          exit(0);
         }
       }
     });
@@ -101,11 +105,14 @@ process.stdin.on('end', () => {
   if (prompt.includes('SHOW FILES')) {
     const { readdirSync, readFileSync } = require('node:fs');
     const dir = process.argv[process.argv.indexOf('--add-dir') + 1];
-    const files = readdirSync(dir).map((name) => name + '=' + readFileSync(join(dir, name), 'utf8'));
+    const { statSync } = require('node:fs');
+    const { basename } = require('node:path');
+    const paths = readdirSync(dir, { recursive: true }).map((name) => join(dir, name));
+    const files = paths.filter((path) => statSync(path).isFile()).map((path) => basename(path) + '=' + readFileSync(path, 'utf8'));
     say('FILES ' + files.join(',') + '\\nARGS ' + JSON.stringify(process.argv.slice(2)) + '\\nPROMPT ' + prompt);
-    process.exit(0);
+    exit(0);
   }
-  if (prompt.includes('ASK FAIL')) { say('Credit balance is too low', true); process.exit(1); }
+  if (prompt.includes('ASK FAIL')) { say('Credit balance is too low', true); exit(1); }
   // Waits for the test's go file, so a test can look at the steps while Claude still works.
   if (prompt.includes('SLOW STEPS')) {
     const go = join(dirname(process.argv[1]), 'go');
@@ -114,31 +121,47 @@ process.stdin.on('end', () => {
       clearInterval(timer);
       toolUse('Bash', { command: 'npm test' });
       say('Done slowly.');
-      process.exit(0);
+      exit(0);
     }, 20);
     return;
   }
   if (prompt.includes('SPLIT')) {
     const bytes = Buffer.from('café ✓');
     process.stderr.write(bytes.subarray(0, 4));
-    setTimeout(() => { process.stderr.write(bytes.subarray(4)); process.exit(5); }, 100);
+    setTimeout(() => { process.stderr.write(bytes.subarray(4)); exit(5); }, 100);
     return;
   }
   if (prompt.includes('TWO LINES')) {
     process.stderr.write('first line\\n');
-    setTimeout(() => { process.stderr.write('second line\\n'); process.exit(4); }, 100);
+    setTimeout(() => { process.stderr.write('second line\\n'); exit(4); }, 100);
     return;
   }
   if (prompt.includes('REPORT')) {
     say('Did the work.\\n\\n\u0060\u0060\u0060\\nTICKET: ' + /\\b[A-Z]+-\\d+/.exec(prompt)[0]
       + '\\nSTATUS: done\\nSUMMARY: Fixed it.\\nFILES: a.ts\\nNEXT: none\\n\u0060\u0060\u0060');
-    process.exit(0);
+    exit(0);
   }
-  if (prompt.includes('FAIL')) { console.error('boom'); process.exit(3); }
-  if (prompt.includes('WAIT')) { setTimeout(() => process.exit(0), 60000); return; }
+  if (prompt.includes('FAIL')) { console.error('boom'); exit(3); }
+  if (prompt.includes('WAIT')) { setTimeout(() => exit(0), 60000); return; }
   say('ARGS ' + JSON.stringify(process.argv.slice(2)) + '\\nCWD ' + process.cwd() + '\\nPROMPT ' + prompt);
-  process.exit(0);
+  exit(0);
+}
+let input = '';
+process.stdin.on('data', (chunk) => {
+  input += chunk;
+  if (!streamInput) return;
+  const lines = input.split('\\n');
+  input = lines.pop();
+  for (const line of lines.filter(Boolean)) {
+    const sent = JSON.parse(line);
+    state('running');
+    if (process.argv.includes('--replay-user-messages')) {
+      emit({ type: 'user', isReplay: true, uuid: sent.uuid, message: sent.message });
+    }
+    handle(sent.message.content, (code) => (code === 0 ? state('idle') : process.exit(code)));
+  }
 });
+process.stdin.on('end', () => (streamInput ? process.exit(0) : handle(input, process.exit)));
 `;
 
 export function installFakeClaude(): { command: string; dir: string; remove: () => void } {

@@ -9,7 +9,10 @@ import { askJob, job } from '../watch/fakeTracker';
 import { installFakeClaude } from '../watch/fakeClaude';
 
 const fake = installFakeClaude();
-afterAll(() => fake.remove());
+afterAll(() => {
+  claude.closeChats();
+  fake.remove();
+});
 
 const claude = claudeRunners({
   command: fake.command,

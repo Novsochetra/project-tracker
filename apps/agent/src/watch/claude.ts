@@ -1,11 +1,10 @@
 import { spawn } from 'node:child_process';
 import { claudeEnv } from './claudeEnv';
 import type { ClaudeExit } from './outcome';
-import { resultOf, type ClaudeResult } from './stream/claudeResult';
 import { createJsonLines } from './stream/jsonLines';
-import { createReadTokenCount } from './stream/readTokens';
+import { createRunOutput, type ClaudeListeners } from './stream/runOutput';
 
-const KEPT_OUTPUT = 20_000;
+export type { ClaudeListeners } from './stream/runOutput';
 
 export const CLAUDE = 'claude';
 
@@ -19,45 +18,27 @@ export interface ClaudeCommand {
   cwd: string;
 }
 
-export interface ClaudeListeners {
-  onOutput: (text: string) => void;
-  onEvent: (event: unknown) => void;
-}
-
 export const claudeArgs = (permissionMode?: string): string[] => [
   '-p',
   ...STREAM_JSON,
   ...(permissionMode ? ['--permission-mode', permissionMode] : []),
 ];
 
-function collect({ onOutput, onEvent }: ClaudeListeners) {
-  let output = '';
-  const results: ClaudeResult[] = [];
-  const tokens = createReadTokenCount();
-  const say = (text: string) => {
-    output = (output + text).slice(-KEPT_OUTPUT);
-    onOutput(text);
-  };
+function collect(listeners: ClaudeListeners) {
+  const seen = createRunOutput(listeners);
   const lines = createJsonLines({
-    onText: (line) => say(`${line}\n`),
+    onText: (line) => seen.say(`${line}\n`),
     onEvent: (event) => {
-      onEvent(event);
-      tokens.add(event);
-      const found = resultOf(event);
-      if (!found) return;
-      results.push(found);
-      if (found.text) say(`${found.text}\n`);
+      seen.event(event);
     },
   });
   return {
-    say,
+    say: seen.say,
     push: (chunk: string) => lines.push(chunk),
-    noteError: (message: string) => {
-      output = `${output}\n${message}`;
-    },
+    noteError: seen.noteError,
     exit: (code: number | null, signal: NodeJS.Signals | null): ClaudeExit => {
       lines.end();
-      return { code, signal, output, results, readTokens: tokens.total() };
+      return seen.exit({ code, signal });
     },
   };
 }

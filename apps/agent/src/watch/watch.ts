@@ -85,6 +85,7 @@ async function keepWatching(setup: Setup, args: WatchArgs, io: WatchIo, signal: 
   clearInterval(timer);
   io.stdout('Stopping…');
   await Promise.all([watcher.stop(), stream]);
+  claude.closeChats();
 }
 
 export async function watch(global: GlobalValues, args: WatchArgs, io: WatchIo): Promise<void> {

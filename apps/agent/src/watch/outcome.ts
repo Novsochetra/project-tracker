@@ -10,6 +10,9 @@ export interface ClaudeExit {
   results: ClaudeResult[];
   // The tokens this run's own calls read, to tell a resumed session's earlier figures apart.
   readTokens?: number;
+  // A chat's turn ends on its result while Claude Code stays open for the next message, so there
+  // is no exit code.
+  turnEnded?: boolean;
 }
 
 export function lastLines(text: string, max = RUN_ERROR_MAX): string {
@@ -20,7 +23,12 @@ export function lastLines(text: string, max = RUN_ERROR_MAX): string {
   return lineStart === -1 ? tail : tail.slice(lineStart + 1);
 }
 
-export function reasonOf({ code, signal }: Pick<ClaudeExit, 'code' | 'signal'>): string {
+export function reasonOf({
+  code,
+  signal,
+  turnEnded,
+}: Pick<ClaudeExit, 'code' | 'signal' | 'turnEnded'>): string {
+  if (turnEnded) return 'Claude Code answered with an error.';
   if (code !== null) return `Claude Code exited with ${code}.`;
   return signal ? `Claude Code was stopped (${signal}).` : 'Claude Code did not start.';
 }

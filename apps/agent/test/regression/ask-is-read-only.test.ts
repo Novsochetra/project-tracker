@@ -1,5 +1,6 @@
 import { existsSync, realpathSync } from 'node:fs';
 import { tmpdir } from 'node:os';
+import { dirname } from 'node:path';
 import { DEFAULT_ASK_OPTIONS, type AskMode, type Attachment } from '@tracker/shared';
 import { afterAll, describe, expect, it, vi } from 'vitest';
 import { runPermissionMode } from '../../src/watch/approvals';
@@ -10,7 +11,10 @@ import { askJob, job } from '../watch/fakeTracker';
 import { installFakeClaude } from '../watch/fakeClaude';
 
 const fake = installFakeClaude();
-afterAll(() => fake.remove());
+afterAll(() => {
+  claude.closeChats();
+  fake.remove();
+});
 
 // The runners tracker watch builds, for a helper started with --permission-mode bypassPermissions,
 // with the prompt tool that lets Claude ask the person.
@@ -43,9 +47,19 @@ const ask = async (prompt: string, resume: string | null = null, mode: AskMode =
 };
 
 const STREAM = ['-p', '--output-format', 'stream-json', '--verbose'];
+// A chat's claude stays open and reads each message as a JSON line (PT-238).
+const ASK_STREAM = [
+  '-p',
+  '--input-format',
+  'stream-json',
+  '--replay-user-messages',
+  ...STREAM.slice(1),
+];
+// The open claude's own folder, where each question's files go.
+const ADD_DIR = ['--add-dir', expect.stringContaining('tracker-ask-')];
 
 const READ_ONLY_ARGS = [
-  ...STREAM,
+  ...ASK_STREAM,
   '--permission-mode',
   'plan',
   '--strict-mcp-config',
@@ -64,7 +78,7 @@ describe('regression: an ask runs Claude read-only', () => {
     const outcome = await ask('--dangerously-skip-permissions where is X?');
     expect(outcome.status).toBe('done');
     const args = argsOf(outcome.answer);
-    expect(args).toEqual([...READ_ONLY_ARGS, ...PROMPT_TOOL_ARGS]);
+    expect(args).toEqual([...READ_ONLY_ARGS, ...PROMPT_TOOL_ARGS, ...ADD_DIR]);
     expect(args).not.toContain('bypassPermissions');
     expect(args).not.toContain('--dangerously-skip-permissions');
     expect(outcome.answer).toContain('PROMPT --dangerously-skip-permissions where is X?');
@@ -72,7 +86,7 @@ describe('regression: an ask runs Claude read-only', () => {
 
   it('keeps a Plan question read-only too', async () => {
     const args = argsOf((await ask('Plan X', null, 'plan')).answer);
-    expect(args).toEqual([...READ_ONLY_ARGS, ...PROMPT_TOOL_ARGS]);
+    expect(args).toEqual([...READ_ONLY_ARGS, ...PROMPT_TOOL_ARGS, ...ADD_DIR]);
   });
 
   it("gives an older server's question with no options the read-only flags", async () => {
@@ -81,27 +95,25 @@ describe('regression: an ask runs Claude read-only', () => {
       await claude.runAsk(job, new AbortController().signal, noSteps),
       false,
     );
-    expect(argsOf(outcome.answer)).toEqual([...READ_ONLY_ARGS, ...PROMPT_TOOL_ARGS]);
+    expect(argsOf(outcome.answer)).toEqual([...READ_ONLY_ARGS, ...PROMPT_TOOL_ARGS, ...ADD_DIR]);
   });
 
   it('lets an Ask or Plan question ask the person, with no other MCP server', async () => {
     for (const mode of ['ask', 'plan'] as const) {
       const args = argsOf((await ask('Delete X', null, mode)).answer);
-      expect(args).toEqual([...READ_ONLY_ARGS, ...PROMPT_TOOL_ARGS]);
+      expect(args).toEqual([...READ_ONLY_ARGS, ...PROMPT_TOOL_ARGS, ...ADD_DIR]);
     }
   });
 
   it("gives an Edit question the helper's mode, the tracker MCP, the edit tools and the prompt tool", async () => {
     const args = argsOf((await ask('Rename X', null, 'edit')).answer);
     expect(args).toEqual([
-      '-p',
-      '--output-format',
-      'stream-json',
-      '--verbose',
+      ...ASK_STREAM,
       '--permission-mode',
       'bypassPermissions',
       ...EDIT_TOOLS,
       ...PROMPT_TOOL_ARGS,
+      ...ADD_DIR,
     ]);
     expect(args).not.toContain('--strict-mcp-config');
     expect(args).not.toContain('--disallowedTools');
@@ -137,11 +149,12 @@ describe('regression: an ask runs Claude read-only', () => {
       false,
     );
     expect(argsOf(edit.answer)).toEqual([
-      ...STREAM,
+      ...ASK_STREAM,
       '--permission-mode',
       'default',
       ...EDIT_TOOLS,
       ...PROMPT_TOOL_ARGS,
+      ...ADD_DIR,
     ]);
     for (const mode of ['ask', 'plan'] as const) {
       const readOnly = {
@@ -152,7 +165,7 @@ describe('regression: an ask runs Claude read-only', () => {
         await noMode.runAsk(readOnly, new AbortController().signal, noSteps),
         false,
       );
-      expect(argsOf(outcome.answer)).toEqual([...READ_ONLY_ARGS, ...PROMPT_TOOL_ARGS]);
+      expect(argsOf(outcome.answer)).toEqual([...READ_ONLY_ARGS, ...PROMPT_TOOL_ARGS, ...ADD_DIR]);
     }
     const ticket = await noMode.runClaude(
       job('r-2', 'MOB-1'),
@@ -164,6 +177,7 @@ describe('regression: an ask runs Claude read-only', () => {
       ...WORK_TOOLS,
       ...PROMPT_TOOL_ARGS,
     ]);
+    noMode.closeChats();
   });
 
   it('with --approvals asks in a ticket run too, and keeps Ask and Plan read-only', async () => {
@@ -195,9 +209,10 @@ describe('regression: an ask runs Claude read-only', () => {
         await approving.runAsk(readOnly, new AbortController().signal, noSteps),
         false,
       );
-      expect(argsOf(outcome.answer)).toEqual([...READ_ONLY_ARGS, ...PROMPT_TOOL_ARGS]);
+      expect(argsOf(outcome.answer)).toEqual([...READ_ONLY_ARGS, ...PROMPT_TOOL_ARGS, ...ADD_DIR]);
     }
     expect(askPerson).not.toHaveBeenCalled();
+    approving.closeChats();
   });
 
   it("resumes the chat's session and hands back the new one", async () => {
@@ -228,9 +243,13 @@ describe('regression: an ask runs Claude read-only', () => {
       const args = argsOf(answer);
       const dir = args.at(-1) ?? '';
       expect(args).toEqual([...READ_ONLY_ARGS, ...PROMPT_TOOL_ARGS, '--add-dir', dir]);
-      expect(answer).toContain(`- ${dir}/board.jpg`);
-      expect(existsSync(dir)).toBe(false);
+      const sent = answer
+        .split('\n')
+        .find((line) => line.startsWith(`- ${dir}/tracker-ask-`) && line.endsWith('/board.jpg'));
+      expect(sent).toBeDefined();
+      expect(existsSync(dirname(sent!.slice(2)))).toBe(false);
     }
+    withFiles.closeChats();
   });
 
   it('reports why Claude could not answer', async () => {
