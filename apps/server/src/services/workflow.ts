@@ -31,7 +31,7 @@ type ReviewValues = z.output<typeof reviewInput>;
 
 const CLAIMABLE: ReadonlySet<StatusCategory> = new Set(['todo', 'in_progress']);
 
-async function transition(
+export async function transition(
   trx: Db,
   actor: Actor,
   scope: TicketScope,

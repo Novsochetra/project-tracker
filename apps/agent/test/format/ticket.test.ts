@@ -171,4 +171,12 @@ describe('formatActivity', () => {
       '### Comment · User · 2026-10-02 14:05\nAttachments:\n- screenshot.png · 1 KB · 1170×2532',
     );
   });
+
+  it('names the file and line of a line comment', () => {
+    const line = { runId: 'r1', path: 'src/a.ts', side: 'new' as const, line: 12 };
+    const comment = activity({ type: 'comment', text: 'Rename this.', line });
+    expect(formatActivity([comment])).toBe(
+      '### Comment on src/a.ts line 12 · User · 2026-10-02 14:05\nRename this.',
+    );
+  });
 });

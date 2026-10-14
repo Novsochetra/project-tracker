@@ -8,6 +8,9 @@ export const WORKFLOW_VERBS = {
   submit: 'submitted the work',
   approve: 'approved the work',
   requestChanges: 'requested changes',
+  // A person's verdict on the Changes tab (PT-229).
+  approveChanges: 'approved the changes',
+  askForChanges: 'asked for changes',
 } as const;
 
 export type WorkflowVerb = (typeof WORKFLOW_VERBS)[keyof typeof WORKFLOW_VERBS];

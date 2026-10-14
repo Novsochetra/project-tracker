@@ -3,6 +3,7 @@ import {
   type Activity,
   type Attachment,
   type Label,
+  type LineRef,
   type Project,
   type Review,
   type ReviewVerdict,
@@ -99,6 +100,14 @@ export const toAttachment = (row: AttachmentRow): Attachment => ({
   createdAt: row.createdAt,
 });
 
+// Absent, not null, on entries that aren't line comments, so they read as before.
+function lineOf(row: ActivityRow): { line?: LineRef } {
+  const { lineRunId, linePath, lineSide, lineNumber } = row;
+  if (lineRunId === null || linePath === null || lineSide === null || lineNumber === null)
+    return {};
+  return { line: { runId: lineRunId, path: linePath, side: lineSide, line: lineNumber } };
+}
+
 export const toActivity = (row: ActivityRow, attachments: readonly AttachmentRow[]): Activity => ({
   id: row.id,
   ticketId: row.ticketId,
@@ -109,4 +118,5 @@ export const toActivity = (row: ActivityRow, attachments: readonly AttachmentRow
   attachments: attachments.map(toAttachment),
   createdAt: row.createdAt,
   editedAt: row.editedAt,
+  ...lineOf(row),
 });

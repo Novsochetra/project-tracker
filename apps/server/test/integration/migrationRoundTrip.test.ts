@@ -345,6 +345,10 @@ const DATA_MODEL: SchemaShape = {
       'review_rating integer',
       'created_at bigint not null',
       'edited_at bigint',
+      'line_run_id text',
+      'line_path text',
+      'line_side text',
+      'line_number integer',
     ],
     indexes: ['index (ticket_id, created_at)'],
     foreignKeys: ['ticket_id -> tickets.id on delete cascade'],
@@ -518,6 +522,31 @@ const DATA_MODEL: SchemaShape = {
     ],
     indexes: ['index (run_id, created_at)', 'index (status, expires_at)'],
     foreignKeys: ['run_id -> runs.id on delete cascade'],
+  },
+  run_changes: {
+    columns: [
+      'run_id text primary key',
+      'ticket_id text not null',
+      'diff text not null',
+      'cut integer not null',
+      'verdict text',
+      'created_at bigint not null',
+    ],
+    indexes: ['index (ticket_id, created_at)'],
+    foreignKeys: [
+      'run_id -> runs.id on delete cascade',
+      'ticket_id -> tickets.id on delete cascade',
+    ],
+  },
+  ticket_viewed_files: {
+    columns: [
+      'ticket_id text primary key',
+      'path text primary key',
+      'digest text not null',
+      'created_at bigint not null',
+    ],
+    indexes: [],
+    foreignKeys: ['ticket_id -> tickets.id on delete cascade'],
   },
   questions: {
     columns: [

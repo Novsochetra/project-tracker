@@ -23,6 +23,7 @@ import {
   TICKET_TITLE_MAX,
 } from '../domain/ticket';
 import { toYmd } from '../logic/format';
+import { lineRefInput } from './changes';
 
 const hexColor = z.string().regex(/^#[0-9A-Fa-f]{6}$/, 'Use a hex color like #5B5BD6');
 const isRealDay = (ymd: string): boolean => toYmd(new Date(`${ymd}T00:00:00`)) === ymd;
@@ -177,9 +178,14 @@ export const createCommentInput = z
   .object({
     text: z.string().max(COMMENT_TEXT_MAX).default(''),
     attachmentIds: attachmentIds('comment').default([]),
+    // A comment on one line of a run's changes (the Changes tab).
+    line: lineRefInput.optional(),
   })
   .refine((v) => v.text.trim().length > 0 || v.attachmentIds.length > 0, {
     message: 'Write a comment or add a file.',
+  })
+  .refine((v) => !v.line || v.text.trim().length > 0, {
+    message: 'Write a comment on the line.',
   });
 export type CreateCommentInput = z.input<typeof createCommentInput>;
 

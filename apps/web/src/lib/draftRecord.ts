@@ -1,5 +1,6 @@
 // comment-send: a comment on its way, kept until it lands; comment-back: one that came back to
-// the comment box (activity/sentComments.ts).
+// the comment box (activity/sentComments.ts); line-comment: the box under a line of a run's
+// changes (features/ticket/changes).
 export type DraftField =
   | 'title'
   | 'description'
@@ -7,12 +8,13 @@ export type DraftField =
   | 'comment'
   | 'comment-edit'
   | 'comment-send'
-  | 'comment-back';
+  | 'comment-back'
+  | 'line-comment';
 
 export interface DraftTarget {
   ticketKey: string;
   field: DraftField;
-  // The edited comment's id, or a comment send's own id.
+  // The edited comment's id, a comment send's own id, or a line comment's line.
   activityId?: string;
 }
 
@@ -45,7 +47,10 @@ export interface Held {
 }
 
 const ofActivity = (field: DraftField): boolean =>
-  field === 'comment-edit' || field === 'comment-send' || field === 'comment-back';
+  field === 'comment-edit' ||
+  field === 'comment-send' ||
+  field === 'comment-back' ||
+  field === 'line-comment';
 
 export const draftIdOf = ({ ticketKey, field, activityId }: DraftTarget): string =>
   ofActivity(field) ? `${field}:${activityId ?? ''}` : `${field}:${ticketKey}`;
@@ -58,6 +63,7 @@ const FIELDS: ReadonlySet<unknown> = new Set<DraftField>([
   'comment-edit',
   'comment-send',
   'comment-back',
+  'line-comment',
 ]);
 
 const isText = (value: unknown): value is string => typeof value === 'string';

@@ -1,4 +1,5 @@
-import { formatFullDate } from '@tracker/shared';
+import { formatFullDate, lineLabel } from '@tracker/shared';
+import { commentLine } from '../changes/lineComments';
 import type { ActivityItem } from './activityItems';
 import { ActivityCard, ActorAvatar, CardAttachments, type RiseProps } from './ActivityCard';
 import styles from './ActivityCard.module.css';
@@ -27,6 +28,7 @@ export function CommentCard({ item, edit, now, actions, rise }: CommentCardProps
       )}
     </>
   );
+  const line = commentLine(item.source);
   return (
     <ActivityCard
       avatar={<ActorAvatar actor={item.actor} />}
@@ -36,6 +38,7 @@ export function CommentCard({ item, edit, now, actions, rise }: CommentCardProps
       dimmed={item.draft}
       {...rise}
     >
+      {line && <p className={styles.lineRef}>On {lineLabel(line)}</p>}
       {edit.open ? (
         <CommentEditor edit={edit} />
       ) : (

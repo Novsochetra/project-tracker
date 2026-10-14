@@ -4,6 +4,7 @@ import {
   topRank,
   type ActivityType,
   type Actor,
+  type LineRef,
   type Review,
 } from '@tracker/shared';
 import type { Clock } from '../clock';
@@ -25,6 +26,7 @@ export interface ActivityEntry {
   type: ActivityType;
   text: string;
   review?: Review;
+  line?: LineRef;
 }
 
 export interface NewActivity extends ActivityEntry {
@@ -47,6 +49,10 @@ export function activityRow(input: NewActivity): ActivityRow {
     reviewRating: input.review?.rating ?? null,
     createdAt: input.at,
     editedAt: null,
+    lineRunId: input.line?.runId ?? null,
+    linePath: input.line?.path ?? null,
+    lineSide: input.line?.side ?? null,
+    lineNumber: input.line?.line ?? null,
   };
 }
 

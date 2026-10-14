@@ -65,7 +65,7 @@ async function keepWatching(setup: Setup, args: WatchArgs, io: WatchIo, signal: 
   });
   const answerImages = answerImagesOf(setup);
   const watcher = createWatcher(
-    { api, log: io.stdout, tools: tools.current, ...claude, answerImages },
+    { api, log: io.stdout, tools: tools.current, changesIn: folder, ...claude, answerImages },
     settings,
   );
   io.stdout(

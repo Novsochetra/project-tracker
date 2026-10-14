@@ -7,6 +7,7 @@ import { lastLines, ticketOutcomeOf } from './outcome';
 import { refusalOf } from './refusal';
 import { runName } from './runName';
 import { retryUntilAnswered } from './retry';
+import type { SendChanges } from './changes/runChanges';
 import type { StepBatcher } from './steps/stepBatcher';
 import type { WatchApi } from './watchApi';
 
@@ -25,6 +26,8 @@ export interface RunLoopDeps {
   // Uploads the pictures the answer's image cards name (PT-225).
   answerImages?:
     ((outcome: FinishRunInput, stop: AbortSignal) => Promise<FinishRunInput>) | undefined;
+  // Sends what the run changed in its folder once Claude exits; none in tests that don't ask.
+  trackChanges?: ((job: RunJob) => Promise<SendChanges>) | undefined;
   retryDelay?: ((attempt: number) => number) | undefined;
 }
 
@@ -156,9 +159,11 @@ export function createRunLoop(deps: RunLoopDeps, settings: RunLoopSettings) {
     current = { runId: job.run.id, stop };
     const quiet = deps.signOfLife(label);
     const steps = deps.stepsFor(job.run.id);
+    const sendChanges = await deps.trackChanges?.(job);
     const outcome = await runSafely(deps, job, stop.signal, steps.add);
     quiet();
     await steps.end();
+    await sendChanges?.(outcome);
     current = undefined;
     await end(job, outcome);
   }

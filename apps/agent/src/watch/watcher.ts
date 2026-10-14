@@ -1,5 +1,6 @@
 import type { RunEvent, RunnerTools } from '@tracker/shared';
 import { describeError } from '../errors';
+import { trackRunChanges } from './changes/runChanges';
 import { createProblemLog, type ProblemSource } from './problems';
 import { handBackReport } from './report/handBack';
 import { reviewOutcome } from './report/reviewCheck';
@@ -27,6 +28,8 @@ export type WatcherDeps = Omit<
   aliveEvery?: number | undefined;
   stepEvery?: number | undefined;
   tools?: (() => RunnerTools) | undefined;
+  // The folder ticket runs work in, whose changes go to the tracker; none in tests that don't ask.
+  changesIn?: string | undefined;
 };
 
 export function createWatcher(deps: WatcherDeps, settings: WatcherSettings) {
@@ -36,6 +39,8 @@ export function createWatcher(deps: WatcherDeps, settings: WatcherSettings) {
     noteProblem(source, error === undefined ? undefined : describe(error));
   // Both lanes: an Edit question resumes its chat's session in the ticket lane.
   const sessions = createSessionMarks();
+  const { changesIn } = deps;
+  const changeDeps = { api: deps.api, runnerId: settings.runnerId, log: deps.log, describe };
   const runs = createLanes(
     {
       ...deps,
@@ -60,6 +65,9 @@ export function createWatcher(deps: WatcherDeps, settings: WatcherSettings) {
           every: deps.stepEvery,
         }),
       usageOf: (job, exit) => runUsageOf(job, exit, sessions),
+      trackChanges: changesIn
+        ? (job) => trackRunChanges({ ...changeDeps, cwd: changesIn }, job)
+        : undefined,
     },
     settings,
   );

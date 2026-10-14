@@ -227,7 +227,7 @@ describe('summary', () => {
       '  labels            2',
       '  ticket_labels    40',
       '  files             3 (266 KB)',
-      'Not copied: users, sessions, api_tokens, invites, runners, runs, run_steps, run_requests, questions, chats, chat_messages, chat_card_tickets, ' +
+      'Not copied: users, sessions, api_tokens, invites, runners, runs, run_steps, run_requests, run_changes, ticket_viewed_files, questions, chats, chat_messages, chat_card_tickets, ' +
         'push_subscriptions, push_keys (sign-in, helpers, chats and notifications stay with each ' +
         'tracker: set the online owner with owner-set, make new API tokens online, start tracker ' +
         'watch against it and turn notifications on there).',

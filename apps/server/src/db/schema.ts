@@ -1,12 +1,14 @@
 import type {
   ActivityType,
   ActorKind,
+  DiffSide,
   Priority,
   ReviewVerdict,
   StatusCategory,
 } from '@tracker/shared';
 import type { Kysely } from 'kysely';
 import type { AuthTables } from './authTables';
+import type { ChangeTables } from './changeTables';
 import type { ChatTables } from './chatTables';
 import type { LabelTables } from './labelTables';
 import type { PushTables } from './pushTables';
@@ -71,6 +73,11 @@ export interface ActivityRow {
   reviewRating: number | null;
   createdAt: number;
   editedAt: number | null;
+  // The line of a run's changes a comment is on; null on every other entry.
+  lineRunId: string | null;
+  linePath: string | null;
+  lineSide: DiffSide | null;
+  lineNumber: number | null;
 }
 
 export interface AttachmentRow {
@@ -93,7 +100,7 @@ export interface AttachmentRow {
 }
 
 export interface Database
-  extends AuthTables, ChatTables, LabelTables, PushTables, QuestionTables, RunTables {
+  extends AuthTables, ChangeTables, ChatTables, LabelTables, PushTables, QuestionTables, RunTables {
   projects: ProjectRow;
   statuses: StatusRow;
   tickets: TicketRow;
