@@ -3,10 +3,9 @@ import type { UserScope } from '../auth/scope';
 import type { RunWithKey } from '../repositories/runs';
 import { findTicketById } from '../repositories/tickets';
 import { pushBatchEnd } from './batchEndPush';
-import { pushAnswer } from './chatAnswers';
+import { pushChatEnd } from './chatEndPush';
 import type { ServiceContext } from './context';
 import { pushToUser } from './push';
-import type { RunEnding } from './runEnding';
 
 // A cancel is the person's own doing, so it tells them nothing new.
 function pushTicketRunEnd(ctx: ServiceContext, scope: UserScope, run: RunWithKey): void {
@@ -20,13 +19,8 @@ function pushTicketRunEnd(ctx: ServiceContext, scope: UserScope, run: RunWithKey
   });
 }
 
-export function pushRunEnd(
-  ctx: ServiceContext,
-  scope: UserScope,
-  run: RunWithKey,
-  { answer }: Pick<RunEnding, 'answer'>,
-): void {
+export function pushRunEnd(ctx: ServiceContext, scope: UserScope, run: RunWithKey): void {
   if (run.kind === 'ticket') pushTicketRunEnd(ctx, scope, run);
   else if (run.kind === 'batch') pushBatchEnd(ctx, scope, run);
-  else if (answer) pushAnswer(ctx, scope, run, answer);
+  else if (run.kind === 'ask') pushChatEnd(ctx, scope, run);
 }

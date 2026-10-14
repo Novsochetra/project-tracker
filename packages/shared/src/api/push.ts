@@ -20,3 +20,7 @@ export type PushSubscriptionInput = z.input<typeof pushSubscriptionInput>;
 
 export const removePushSubscriptionInput = z.object({ endpoint });
 export type RemovePushSubscriptionInput = z.input<typeof removePushSubscriptionInput>;
+
+// The chat on this device's screen now, or null when none is; its pushes skip this device.
+export const viewingChatInput = z.object({ chatId: z.string().min(1).max(100).nullable() });
+export type ViewingChatInput = z.input<typeof viewingChatInput>;

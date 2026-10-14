@@ -5,7 +5,7 @@ import { isAbsolute, parse, relative, resolve, sep } from 'node:path';
 // Text in a ticket can ask Claude to attach any file, so only what it made for the work, here or
 // in a temp folder, may leave this computer: never ~/.ssh. /tmp too, since on a Mac it isn't
 // tmpdir() and Claude Code keeps its scratch files there.
-export const attachFolders = (): string[] => [process.cwd(), tmpdir(), '/tmp'];
+export const attachFolders = (cwd = process.cwd()): string[] => [cwd, tmpdir(), '/tmp'];
 
 const realOrNull = (path: string): Promise<string | null> => realpath(path).catch(() => null);
 

@@ -273,6 +273,9 @@ export class TrackerClient extends RunsClient {
   removePushSubscription = (endpoint: string) =>
     this.http.request<void>('DELETE', '/api/push/subscription', { body: { endpoint } });
 
+  viewChat = (chatId: string | null) =>
+    this.http.request<void>('PUT', '/api/push/viewing', { body: { chatId } });
+
   addRunSteps = (
     runId: string,
     input: AddRunStepsInput,

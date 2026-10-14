@@ -126,7 +126,7 @@ export async function endRun(
   const ended = await inTransaction(ctx, async (trx) => {
     const changes = { status, error, endedAt, ...usageOfFinish(input) };
     const marked = await markRunEnded(trx, scope, before.id, changes);
-    if (marked && answer) await saveAnswer(trx, before, { ...answer, at: endedAt });
+    if (marked && answer) await saveAnswer(trx, scope, before, { ...answer, at: endedAt });
     const held = marked ? await endHeldTickets(trx, before, status, endedAt) : [];
     return { marked, held };
   });
@@ -137,7 +137,7 @@ export async function endRun(
   if (ended.marked) {
     notifyRun(ctx, scope, after);
     // A chain that went on or stopped says so itself; "Claude finished" between its runs is noise.
-    if (!(await continueChain(ctx, after))) pushRunEnd(ctx, scope, after, { answer });
+    if (!(await continueChain(ctx, after))) pushRunEnd(ctx, scope, after);
   }
   for (const row of ended.held) notifyRun(ctx, scope, row);
   return toRun(after);

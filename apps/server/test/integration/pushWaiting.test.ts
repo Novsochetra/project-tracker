@@ -142,7 +142,7 @@ describe.each(DIALECTS)('push when Claude waits on the person (%s)', (dialect) =
     expect(await service.messagesFor(phone)).toEqual([
       {
         title: 'Claude wants to edit src/settings.ts',
-        body: chat.title,
+        body: `Mobile · ${chat.title}`,
         url: `/p/MOB/ask/${chat.id}`,
         tag: `chat:${chat.id}`,
       },

@@ -38,7 +38,7 @@ export async function deleteSubscriptionAt(db: Db, endpoint: string): Promise<vo
 export const listUserSubscriptions = (db: Db, userId: UserScope) =>
   db
     .selectFrom('pushSubscriptions')
-    .select(['endpoint', 'p256dh', 'auth'])
+    .select(['endpoint', 'p256dh', 'auth', 'sessionId'])
     .where(ownedBy(userId))
     .execute();
 

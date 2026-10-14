@@ -2,15 +2,15 @@ import type { ChatMessage, Run, Runner } from '@tracker/shared';
 import { useMemo, type ReactNode } from 'react';
 import { UsageLine } from '../claude/UsageLine';
 import { AnswerSteps } from './AnswerSteps';
+import { AnswerText } from './AnswerText';
 import { CardThread } from './CardThread';
 import { messageCards, type MessageCards } from './cards';
 import { messageRunAllCards, type RunAllMessageCard } from './runAllCard';
 import { RunAllCardView } from './RunAllCardView';
 import styles from './ChatScreen.module.css';
 import { ClaudeFrom } from './ClaudeFrom';
-import { Markdown } from './markdown/Markdown';
 import { MessageText as Text } from './MessageText';
-import { SentFiles } from './SentFiles';
+import { MessageAttachments } from './messageFiles/MessageAttachments';
 import { StoppedSteps } from './StoppedSteps';
 import { threadItems } from './thread';
 
@@ -37,7 +37,7 @@ function MessageBody({ chatId, projectKey, message, cards, runAll, helper }: Cla
   if (runAll) {
     return (
       <>
-        <Markdown className={styles.text} text={runAll.split.before} />
+        <AnswerText text={runAll.split.before} />
         <RunAllCardView
           key={message.id}
           chatId={chatId}
@@ -46,14 +46,14 @@ function MessageBody({ chatId, projectKey, message, cards, runAll, helper }: Cla
           card={runAll}
           helper={helper}
         />
-        <Markdown className={styles.text} text={runAll.split.after} />
+        <AnswerText text={runAll.split.after} />
       </>
     );
   }
   return cards ? (
     <CardThread chatId={chatId} message={message} cards={cards} helper={helper} />
   ) : (
-    <Markdown className={styles.text} text={message.text} />
+    <AnswerText text={message.text} />
   );
 }
 
@@ -66,6 +66,7 @@ function ClaudeMessage(props: ClaudeMessageProps) {
         <AnswerSteps runId={message.runId} count={message.stepCount} answer={message.text} />
       )}
       <MessageBody {...props} />
+      <MessageAttachments attachments={message.attachments} from="claude" />
       <UsageLine usage={message.usage} />
     </article>
   );
@@ -91,7 +92,7 @@ export function MessageList({
           <li key={message.id} className={`${styles.item} rise`}>
             {message.role === 'person' ? (
               <article className={styles.personMessage} aria-label="You">
-                <SentFiles attachments={message.attachments} />
+                <MessageAttachments attachments={message.attachments} from="person" />
                 <div className={styles.person}>
                   <Text text={message.text} />
                 </div>

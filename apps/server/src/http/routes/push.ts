@@ -1,8 +1,12 @@
-import { pushSubscriptionInput, removePushSubscriptionInput } from '@tracker/shared';
+import {
+  pushSubscriptionInput,
+  removePushSubscriptionInput,
+  viewingChatInput,
+} from '@tracker/shared';
 import { Hono } from 'hono';
 import { requireScope } from '../../auth/scope';
 import type { ServiceContext } from '../../services/context';
-import { removePushSubscription, savePushSubscription } from '../../services/push';
+import { removePushSubscription, savePushSubscription, viewChat } from '../../services/push';
 import type { AppEnv } from '../env';
 import { personPushes } from '../personOnly';
 import { jsonBody } from '../validation';
@@ -23,4 +27,8 @@ export const pushRoutes = (ctx: ServiceContext) =>
         await removePushSubscription(ctx, requireScope(c.get('access')), endpoint);
         return c.body(null, 204);
       },
-    );
+    )
+    .put('/push/viewing', personPushes, jsonBody(viewingChatInput), (c) => {
+      viewChat(ctx, c.get('access'), c.req.valid('json').chatId);
+      return c.body(null, 204);
+    });

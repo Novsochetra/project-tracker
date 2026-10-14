@@ -1,0 +1,51 @@
+.sent {
+  justify-content: flex-end;
+  max-width: 85%;
+}
+
+.answerFiles {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+/* Its own size up to the answer's width and a height that leaves the thread in view, so a tall
+   screenshot never fills a phone's screen; the viewer shows it whole. */
+.answerImage {
+  position: relative;
+  display: block;
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-container);
+  background: var(--fill);
+  cursor: zoom-in;
+  transition: transform var(--duration-press) ease-out;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.answerImage:active {
+  transform: scale(0.97);
+}
+
+.answerImage img {
+  display: block;
+  width: auto;
+  max-width: 100%;
+  height: auto;
+  max-height: min(360px, 60vh);
+}
+
+.failed {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  color: var(--muted);
+  font-size: var(--size-secondary);
+  overflow-wrap: anywhere;
+}

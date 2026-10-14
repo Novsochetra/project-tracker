@@ -5,7 +5,7 @@ import { isSessionId } from './askArgs';
 
 const CUT_NOTE = '\n\n… (cut: the answer was too long for the tracker)';
 
-const fitted = (answer: string) =>
+export const fittedAnswer = (answer: string): string =>
   answer.length <= CHAT_ANSWER_MAX
     ? answer
     : `${answer.slice(0, CHAT_ANSWER_MAX - CUT_NOTE.length)}${CUT_NOTE}`;
@@ -16,7 +16,7 @@ export function askOutcomeOf(exit: ClaudeExit, cancelled: boolean): FinishRunInp
   const answer = result?.text ?? '';
   if (exit.code === 0 && result && !result.isError && answer) {
     const sessionId = isSessionId(result.sessionId) ? result.sessionId : undefined;
-    return { status: 'done', answer: fitted(answer), ...(sessionId ? { sessionId } : {}) };
+    return { status: 'done', answer: fittedAnswer(answer), ...(sessionId ? { sessionId } : {}) };
   }
   return failureOf(exit);
 }

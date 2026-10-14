@@ -3,6 +3,8 @@ import {
   batchEndedPush,
   chainStoppedPush,
   chatAnsweredPush,
+  chatFailedPush,
+  chatOfTag,
   chatPath,
   permissionPush,
   questionPush,
@@ -12,7 +14,7 @@ import {
 } from '../src/logic/pushMessages';
 
 const TICKET = { projectKey: 'MOB', num: 3, title: 'Fix the login button' };
-const CHAT = { projectKey: 'MOB', chatId: 'c-1', title: 'Login bug' };
+const CHAT = { projectKey: 'MOB', projectName: 'Mobile', chatId: 'c-1', title: 'Login bug' };
 
 describe('push messages', () => {
   it('says a ticket run finished and opens the ticket', () => {
@@ -66,15 +68,25 @@ describe('push messages', () => {
     });
   });
 
-  it('shows the start of a chat answer on one line and opens the chat', () => {
-    const chat = { projectKey: 'MOB', chatId: 'c-1', title: 'Login bug' };
-    expect(chatAnsweredPush(chat, 'It is in\n\n  `auth.ts`.')).toEqual({
+  it('says a chat answer ended or failed, with the project, and opens the chat', () => {
+    expect(chatAnsweredPush(CHAT)).toEqual({
       title: 'Claude answered: Login bug',
-      body: 'It is in `auth.ts`.',
+      body: 'Mobile · Open the chat to read it.',
       url: '/p/MOB/ask/c-1',
       tag: 'chat:c-1',
     });
-    expect(chatAnsweredPush({ ...chat, title: ' ' }, 'Yes').title).toBe('Claude answered');
+    expect(chatFailedPush(CHAT)).toEqual({
+      title: 'Claude stopped: Login bug',
+      body: 'Mobile · Open the chat to see why.',
+      url: '/p/MOB/ask/c-1',
+      tag: 'chat:c-1',
+    });
+    expect(chatAnsweredPush({ ...CHAT, title: ' ' }).title).toBe('Claude answered');
+  });
+
+  it('reads the chat back from a chat push’s tag only', () => {
+    expect(chatOfTag(chatAnsweredPush(CHAT).tag)).toBe('c-1');
+    expect(chatOfTag(runEndedPush(TICKET, null).tag)).toBeNull();
   });
 
   it('says Claude has a question on a ticket, with the question, under the ticket’s tag', () => {
@@ -89,7 +101,7 @@ describe('push messages', () => {
   it('says Claude has a question in a chat, under the tag its answer will replace', () => {
     expect(questionPush({ chat: CHAT }, 'Plan or edit?')).toEqual({
       title: 'Claude has a question: Login bug',
-      body: 'Plan or edit?',
+      body: 'Mobile · Open the chat to answer.',
       url: '/p/MOB/ask/c-1',
       tag: 'chat:c-1',
     });
@@ -108,7 +120,7 @@ describe('push messages', () => {
     const edit = 'Edit src/auth.ts\n- old line\n+ new line';
     expect(permissionPush({ chat: CHAT }, edit)).toEqual({
       title: 'Claude wants to edit src/auth.ts',
-      body: 'Login bug',
+      body: 'Mobile · Login bug',
       url: '/p/MOB/ask/c-1',
       tag: 'chat:c-1',
     });
