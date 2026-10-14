@@ -1,0 +1,9 @@
+.answerTodos {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.toggle {
+  align-self: flex-start;
+}

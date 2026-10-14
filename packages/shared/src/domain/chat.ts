@@ -1,6 +1,7 @@
 import type { AskOptions } from './askOptions';
 import type { Attachment } from './attachment';
 import type { Run } from './run';
+import type { RunTodo } from './runStep';
 import type { RunUsage } from './runUsage';
 
 export const CHAT_ROLES = ['person', 'claude'] as const;
@@ -50,6 +51,8 @@ export interface ChatMessage {
   // The steps its open list shows, so an older answer can say "23 steps" before they are read:
   // the run's, less Claude's last words when they are the answer itself. 0 on the person's.
   stepCount: number;
+  // Claude's last to-do list in the run, kept under the answer; left out when it wrote none.
+  todos?: RunTodo[];
   attachments: Attachment[];
   // What the answer's run took; null on the person's and on answers from older helpers.
   usage: RunUsage | null;

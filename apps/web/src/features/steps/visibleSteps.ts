@@ -1,3 +1,4 @@
+import { withoutTodoSteps } from '../todos/latestTodos';
 import type { StepRow } from './stepRows';
 
 // Enough to see what Claude is doing now without a long run filling the chat.
@@ -14,13 +15,20 @@ export interface VisibleSteps {
 
 const notKeptBefore = (rows: readonly StepRow[]): number => Math.max((rows[0]?.seq ?? 1) - 1, 0);
 
+export interface VisibleOptions {
+  limit?: number;
+  // The to-do list shows above the steps, so the calls that wrote it would only repeat it.
+  hideTodos?: boolean;
+}
+
 export function visibleSteps(
   rows: StepRow[],
   expanded: boolean,
-  limit = LIVE_STEPS_SHOWN,
+  { limit = LIVE_STEPS_SHOWN, hideTodos = false }: VisibleOptions = {},
 ): VisibleSteps {
   const notKept = notKeptBefore(rows);
-  const canExpand = rows.length > limit;
-  const shown = expanded || !canExpand ? rows : rows.slice(-limit);
-  return { shown, earlier: notKeptBefore(shown), canExpand, notKept };
+  const listed = hideTodos ? withoutTodoSteps(rows) : rows;
+  const canExpand = listed.length > limit;
+  const shown = expanded || !canExpand ? listed : listed.slice(-limit);
+  return { shown, earlier: notKept + listed.length - shown.length, canExpand, notKept };
 }

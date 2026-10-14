@@ -1,6 +1,7 @@
 import type { ChatMessage, Run, Runner } from '@tracker/shared';
 import { useMemo, type ReactNode } from 'react';
 import { UsageLine } from '../claude/UsageLine';
+import { AnswerTodos } from '../todos/AnswerTodos';
 import { AnswerSteps } from './AnswerSteps';
 import { CardThread } from './CardThread';
 import { messageCards, type MessageCards } from './cards';
@@ -65,6 +66,7 @@ function ClaudeMessage(props: ClaudeMessageProps) {
       {message.runId && message.stepCount > 0 && (
         <AnswerSteps runId={message.runId} count={message.stepCount} answer={message.text} />
       )}
+      {message.todos && <AnswerTodos todos={message.todos} />}
       <MessageBody {...props} />
       <UsageLine usage={message.usage} />
     </article>

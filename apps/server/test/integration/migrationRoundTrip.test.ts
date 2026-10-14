@@ -496,6 +496,7 @@ const DATA_MODEL: SchemaShape = {
       'sub_agent integer not null',
       'tool_id text',
       'created_at bigint not null',
+      'todos text',
     ],
     indexes: [],
     foreignKeys: ['run_id -> runs.id on delete cascade'],

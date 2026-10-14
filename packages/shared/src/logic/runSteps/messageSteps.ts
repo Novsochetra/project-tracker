@@ -1,30 +1,35 @@
-import { RUN_STEP_LABEL_MAX, RUN_STEP_TEXT_MAX, type RunStepInput } from '../../domain/runStep';
-import { cutTo, oneLine } from './cut';
+import { RUN_STEP_TEXT_MAX, type RunStepInput } from '../../domain/runStep';
+import { cutTo } from './cut';
 import { isJson, type Json } from '../json';
-import { maskSecrets } from './secrets';
+import { masked, stepLabel } from './label';
+import { todosOf } from './todos';
 import { toolLabel } from './toolLabel';
 
 type Step = Omit<RunStepInput, 'subAgent'>;
 
+interface Source {
+  folder: string;
+  subAgent: boolean;
+}
+
 // Claude Code has called the sub agent tool both Task and Agent.
 const SUB_AGENT_TOOLS = new Set(['Agent', 'Task']);
 
-// Masking runs in stdout's listener, so a line of megabytes is cut first; far past anything shown,
-// so the cut never splits a secret in the part a step keeps.
-const SAFETY_CUT = 65_536;
-const masked = (text: string): string => maskSecrets(text.slice(0, SAFETY_CUT));
-
-export const stepLabel = (text: string): string => cutTo(oneLine(masked(text)), RUN_STEP_LABEL_MAX);
-
-function toolStep(name: string, toolId: string | null, input: Json, folder: string): Step {
+// A sub agent keeps a to-do list of its own; the phone shows only the main conversation's.
+function toolStep(name: string, toolId: string | null, input: Json, from: Source): Step {
   if (!SUB_AGENT_TOOLS.has(name)) {
-    return { kind: 'tool', label: stepLabel(toolLabel(name, input, folder)), toolId };
+    const step: Step = {
+      kind: 'tool',
+      label: stepLabel(toolLabel(name, input, from.folder)),
+      toolId,
+    };
+    return name === 'TodoWrite' && !from.subAgent ? { ...step, todos: todosOf(input) } : step;
   }
   const description = typeof input.description === 'string' ? input.description : '';
   return { kind: 'agent', label: stepLabel(`Start sub agent: ${description}`), toolId };
 }
 
-function stepOfBlock(block: unknown, folder: string): Step[] {
+function stepOfBlock(block: unknown, from: Source): Step[] {
   if (!isJson(block)) return [];
   if (block.type === 'text' && typeof block.text === 'string') {
     const text = block.text.trim();
@@ -34,7 +39,7 @@ function stepOfBlock(block: unknown, folder: string): Step[] {
   }
   if (block.type !== 'tool_use' || typeof block.name !== 'string') return [];
   const toolId = typeof block.id === 'string' ? block.id : null;
-  return [toolStep(block.name, toolId, isJson(block.input) ? block.input : {}, folder)];
+  return [toolStep(block.name, toolId, isJson(block.input) ? block.input : {}, from)];
 }
 
 export function messageSteps(event: Json, folder: string): RunStepInput[] {
@@ -42,6 +47,6 @@ export function messageSteps(event: Json, folder: string): RunStepInput[] {
   if (!Array.isArray(content)) return [];
   const subAgent = typeof event.parent_tool_use_id === 'string';
   return content
-    .flatMap((block) => stepOfBlock(block, folder))
+    .flatMap((block) => stepOfBlock(block, { folder, subAgent }))
     .map((step) => ({ ...step, subAgent }));
 }
