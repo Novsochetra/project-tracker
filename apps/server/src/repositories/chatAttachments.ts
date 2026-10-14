@@ -13,16 +13,18 @@ export async function linkChatAttachments(
   db: Db,
   ids: readonly string[],
   { messageId, uploader }: ChatFileTarget,
+  types?: readonly string[],
 ): Promise<number> {
   let linked = 0;
   for (const [position, id] of ids.entries()) {
-    const result = await db
+    let update = db
       .updateTable('attachments')
       .set({ chatMessageId: messageId, position })
       .where('id', '=', id)
       .where('activityId', 'is', null)
-      .where(pendingOf(uploader))
-      .executeTakeFirst();
+      .where(pendingOf(uploader));
+    if (types) update = update.where('mimeType', 'in', [...types]);
+    const result = await update.executeTakeFirst();
     linked += Number(result.numUpdatedRows);
   }
   return linked;

@@ -1,5 +1,5 @@
 import type { AskMode } from '../domain/askOptions';
-import type { ChatRole } from '../domain/chat';
+import { CHAT_ANSWER_IMAGES_MAX, type ChatRole } from '../domain/chat';
 import { madeCardLines, markedText, type AskHistoryMessage } from './askCards';
 import { instructionsBlock, type PromptInstructions } from './instructions';
 import { ticketBlock, type PromptTicket } from './prompt';
@@ -33,6 +33,17 @@ const RUN_ALL_EXAMPLE = ['````run-all', 'limit: <how many at once, 1 to 5>', '``
 
 const RUN_ALL_RULE = `Only when they ask you to run or do all their To do tickets, end your answer with one Run all card exactly like this (four backticks). Put in the limit only when they say how many at once, like "3 at a time"; leave the line out otherwise. You don't start the runs: they check the tickets on the card and tap Confirm.\n\n${RUN_ALL_EXAMPLE}`;
 
+const IMAGE_EXAMPLE = ['````image', 'path: <path of the image file>', '````'].join('\n');
+
+// Ask and Plan can't write files, so they show only pictures the folder has; the helper uploads
+// each file a card names, so the card is the only way, never a web address (PT-225).
+const imageRule = (making: boolean) =>
+  `To show them a picture, such as a screenshot, a diagram or a mockup, ${
+    making
+      ? 'save it as a PNG, JPEG, GIF or WebP file in the project folder or a temp folder, then put'
+      : 'pick a PNG, JPEG, GIF or WebP file in the project folder and put'
+  } one image card like this in your answer for each, up to ${CHAT_ANSWER_IMAGES_MAX} (four backticks). The phone shows the pictures under your answer. Other files, SVG and web links don't show.\n\n${IMAGE_EXAMPLE}`;
+
 const READ_ONLY =
   "You are in the project's folder in read-only mode: read and search the code, never change files, never run commands that change things.";
 const NO_WORK = "You can't create tickets or start work. They tap Create and then Run on the card.";
@@ -40,16 +51,18 @@ const NO_WORK = "You can't create tickets or start work. They tap Create and the
 const EDIT_RULES = {
   folder:
     "You are in the project's folder and may change files, run commands and use the tracker tools to do what they ask.",
+  image: imageRule(true),
   last: [
     'When you work on tickets, follow the tracker workflow: claim each ticket, do the work, then submit it for review. Never move a ticket to Done.',
     'When you finish, say briefly what you did.',
   ],
 };
 
-const MODE_RULES: Record<AskMode, { folder: string; last: readonly string[] }> = {
-  ask: { folder: READ_ONLY, last: [NO_WORK] },
+const MODE_RULES: Record<AskMode, { folder: string; image: string; last: readonly string[] }> = {
+  ask: { folder: READ_ONLY, image: imageRule(false), last: [NO_WORK] },
   plan: {
     folder: READ_ONLY,
+    image: imageRule(false),
     last: [
       'Make a plan for what they ask: the steps, the files and the risks. Change nothing yet.',
       NO_WORK,
@@ -67,6 +80,7 @@ const rules = (project: AskPromptInput['project'], mode: AskMode) =>
     `Only when they ask for a ticket, or to change the ticket you drafted, end your answer with one ticket card exactly like this (four backticks):\n\n${CARD_EXAMPLE}`,
     SPLIT_RULE,
     RUN_ALL_RULE,
+    MODE_RULES[mode].image,
     ...MODE_RULES[mode].last,
   ].join('\n');
 

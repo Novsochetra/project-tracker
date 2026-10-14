@@ -117,7 +117,7 @@ describe.each(DIALECTS)('push notifications (%s)', (dialect) => {
       expect(service.forDevice(device)).toHaveLength(1);
     });
 
-    it('tells the person a chat question got its answer', async () => {
+    it('tells the person a chat question got its answer, without its image cards', async () => {
       const { device } = await subscribe(person);
       const started = await person<ChatDetail>('POST', '/api/projects/MOB/chats', {
         runnerId: runner,
@@ -126,7 +126,7 @@ describe.each(DIALECTS)('push notifications (%s)', (dialect) => {
       const job = await helper<RunJob>('POST', `/api/runners/${runner}/next?kind=ask`);
       await helper('POST', `/api/runs/${job.body.run.id}/finish`, {
         status: 'done',
-        answer: 'Every minute,\nover SSE.',
+        answer: 'Every minute,\nover SSE.\n\n````image\npath: docs/sync.png\n````',
       });
       const chatId = started.body.chat.id;
       expect(await service.messagesFor(device)).toEqual([

@@ -22,6 +22,9 @@ export interface RunLoopDeps {
   signOfLife: (ticketKey: string) => () => void;
   stepsFor: (runId: string) => StepBatcher;
   usageOf: (job: RunJob, exit: ClaudeExit) => RunUsageInput | undefined;
+  // Uploads the pictures the answer's image cards name (PT-225).
+  answerImages?:
+    ((outcome: FinishRunInput, stop: AbortSignal) => Promise<FinishRunInput>) | undefined;
   retryDelay?: ((attempt: number) => number) | undefined;
 }
 
@@ -79,7 +82,9 @@ const runTicket: Runner = async (deps, job, stop, onSteps) => {
 
 const runAsk: Runner = async (deps, job, stop, onSteps) => {
   const exit = await deps.runAsk(job, stop, onSteps);
-  return withUsage(askOutcomeOf(exit, stop.aborted), deps.usageOf(job, exit));
+  const outcome = askOutcomeOf(exit, stop.aborted);
+  const shown = deps.answerImages ? await deps.answerImages(outcome, stop) : outcome;
+  return withUsage(shown, deps.usageOf(job, exit));
 };
 
 // Claude never ran, as when the prompt tool's socket can't open, so the run ends with why rather

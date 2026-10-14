@@ -15,4 +15,5 @@ export type WatchApi = Pick<
   | 'applyReport'
   | 'eventsUrl'
   | 'fetchAttachment'
+  | 'uploadAttachment'
 >;

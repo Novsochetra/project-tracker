@@ -50,11 +50,6 @@
   background: var(--fill-2);
 }
 
-.sentFiles {
-  justify-content: flex-end;
-  max-width: 85%;
-}
-
 .claude {
   display: flex;
   flex-direction: column;

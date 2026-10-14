@@ -1,8 +1,10 @@
 import { realpathSync } from 'node:fs';
 import { dirname } from 'node:path';
+import type { FinishRunInput } from '@tracker/shared';
 import type { GlobalValues } from '../cli/options';
 import { describeError } from '../errors';
 import { runPermissionMode } from './approvals';
+import { withAnswerImages } from './ask/answerImages';
 import { sweepAskFolders } from './ask/askFolderSweep';
 import { CLAUDE } from './claude';
 import { claudeRunners } from './claudeRunners';
@@ -40,6 +42,16 @@ function promptTool({ api, folder, settings }: Setup, io: WatchIo): PromptTool {
   return { command: promptToolCommand(process.execPath, process.execArgv, script), ask };
 }
 
+function answerImagesOf({ api, folder, settings }: Setup) {
+  const deps = {
+    cwd: folder,
+    describe: (error: unknown) => describeError(error, { trackerUrl: settings.trackerUrl }),
+    upload: (file: Blob, name: string, signal: AbortSignal) =>
+      api.uploadAttachment(file, name, undefined, { signal }),
+  };
+  return (outcome: FinishRunInput, stop: AbortSignal) => withAnswerImages(deps, outcome, stop);
+}
+
 async function keepWatching(setup: Setup, args: WatchArgs, io: WatchIo, signal: AbortSignal) {
   const { api, config, folder, settings, tools } = setup;
   const claude = claudeRunners({
@@ -51,7 +63,11 @@ async function keepWatching(setup: Setup, args: WatchArgs, io: WatchIo, signal: 
     prompts: promptTool(setup, io),
     fetchFile: (attachmentId, options) => api.fetchAttachment(attachmentId, options),
   });
-  const watcher = createWatcher({ api, log: io.stdout, tools: tools.current, ...claude }, settings);
+  const answerImages = answerImagesOf(setup);
+  const watcher = createWatcher(
+    { api, log: io.stdout, tools: tools.current, ...claude, answerImages },
+    settings,
+  );
   io.stdout(
     `Watching ${settings.projectKey} on ${config.url} as "${settings.name}". ` +
       `Runs started from the app open Claude Code in ${folder}. Leave this open; Ctrl-C stops.`,

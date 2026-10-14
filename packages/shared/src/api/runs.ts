@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { CHAT_ANSWER_MAX } from '../domain/chat';
+import { CHAT_ANSWER_IMAGES_MAX, CHAT_ANSWER_MAX } from '../domain/chat';
 import {
   BATCH_TICKETS_MAX,
   ENDED_RUN_STATUSES,
@@ -79,6 +79,8 @@ export const finishRunInput = z.object({
   // An ask run's answer and the Claude Code session that gave it.
   answer: z.string().trim().max(CHAT_ANSWER_MAX).optional(),
   sessionId: z.uuid().optional(),
+  // The pictures the answer shows: the helper's own pending uploads, in the answer's order.
+  attachmentIds: z.array(z.string().min(1).max(64)).max(CHAT_ANSWER_IMAGES_MAX).optional(),
   usage: runUsageInput.optional(),
 });
 export type FinishRunInput = z.input<typeof finishRunInput>;
