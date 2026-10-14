@@ -6,13 +6,15 @@ import { TICKET_DESCRIPTION_MAX, TICKET_TITLE_MAX } from '../domain/ticket';
 import { MAX_NEW_ATTACHMENTS, tooManyFilesMessage } from '../domain/attachment';
 import { runnerId } from './runs';
 
+const questionText = z
+  .string()
+  .trim()
+  .min(1, 'Write a question for Claude.')
+  .max(CHAT_QUESTION_MAX, `Use at most ${CHAT_QUESTION_MAX} characters for the question.`);
+
 export const askInput = z.object({
   runnerId,
-  text: z
-    .string()
-    .trim()
-    .min(1, 'Write a question for Claude.')
-    .max(CHAT_QUESTION_MAX, `Use at most ${CHAT_QUESTION_MAX} characters for the question.`),
+  text: questionText,
   // Names only: the helper turns each into its own fixed flags. No default, since a missing one
   // keeps the chat's saved choice (chosenAskOptions).
   model: z.enum(ASK_MODELS).optional(),
@@ -24,6 +26,9 @@ export const askInput = z.object({
     .default([]),
 });
 export type AskInput = z.input<typeof askInput>;
+
+export const queuedEditInput = z.object({ text: questionText });
+export type QueuedEditInput = z.input<typeof queuedEditInput>;
 
 // A chat started from a ticket screen is about that ticket for good.
 export const startChatInput = askInput.extend({

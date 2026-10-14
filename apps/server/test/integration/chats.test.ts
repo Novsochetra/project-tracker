@@ -183,11 +183,12 @@ describe.each(DIALECTS)('chats with Claude Code (%s)', (dialect) => {
     expect(detail.run?.id).toBe(fourth);
   });
 
-  it('allows one question at a time in a chat, without blocking a ticket run', async () => {
+  it('runs one question at a time in a chat, queueing the next, without blocking a ticket run', async () => {
     const chatId = (await startChat('First?')).body.chat.id;
     const busy = await ask(chatId, 'Second?');
-    expect(busy.status).toBe(409);
-    expect((await chat(chatId)).body.messages).toHaveLength(1);
+    expect(busy.status).toBe(200);
+    expect(busy.body.messages).toHaveLength(1);
+    expect(busy.body.queued?.map(({ text }) => text)).toEqual(['Second?']);
     await person('POST', '/api/projects/MOB/tickets', { title: 'Crash' });
     const ticketRun = await person('POST', '/api/tickets/MOB-1/runs', {
       runnerId: runner,

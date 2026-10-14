@@ -72,20 +72,26 @@ describe('Ask: Stop', () => {
     expect(await screen.findByText(STOPPED_PART_WAY_TEXT)).toBeVisible();
   });
 
-  it('does not send the draft on the second tap of a double tap on Stop', async () => {
-    const ask = vi.fn().mockResolvedValue(makeChatDetail({ run: running() }));
-    const { client } = stoppable(running(), { ask });
+  // PT-234: a message typed while Claude answers is sent to wait for its turn, so Send shows for
+  // it; Stop is back once the box is empty.
+  it('turns Stop into Send while a draft is typed, and a double tap on it never stops', async () => {
+    const run = running();
+    const ask = vi.fn().mockResolvedValue(makeChatDetail({ run }));
+    const cancelRun = vi.fn().mockResolvedValue(cancelledOf(run));
+    setup([makeChatDetail({ run })], { ask, cancelRun });
     const user = userEvent.setup();
+    const stop = await button('Stop');
     await user.type(await question(), 'Try another way');
+    expect(await button('Send')).toBe(stop);
     restore.push(stillClock());
-    await tap(user, await button('Stop'));
     await tap(user, await button('Send'));
-    expect(ask).not.toHaveBeenCalled();
-    expect(client.cancelRun).toHaveBeenCalledTimes(1);
+    await tap(user, await button('Stop'));
+    expect(ask).toHaveBeenCalledTimes(1);
+    expect(cancelRun).not.toHaveBeenCalled();
 
     await advance(CLICK_SHIELD_MS);
-    await tap(user, await button('Send'));
-    expect(ask).toHaveBeenCalledTimes(1);
+    await tap(user, await button('Stop'));
+    expect(cancelRun).toHaveBeenCalledTimes(1);
   });
 
   it('does not stop the question on the second tap of a double tap on Send', async () => {

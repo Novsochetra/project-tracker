@@ -1,7 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import {
   chosenAskOptions,
-  type AskHistoryMessage,
   type askInput,
   type Chat,
   type ChatDetail,
@@ -10,7 +9,7 @@ import {
 import type { z } from 'zod';
 import type { UserScope } from '../auth/scope';
 import type { ChatRow } from '../db/chatTables';
-import type { Db, ProjectRow } from '../db/schema';
+import type { ProjectRow } from '../db/schema';
 import { notFound } from '../errors';
 import { listCardTicketRows } from '../repositories/chatCardTickets';
 import {
@@ -20,11 +19,14 @@ import {
   listProjectChatRows,
   type ChatWithKey,
 } from '../repositories/chats';
+import { listQueuedRows, lockChat } from '../repositories/chatQueue';
 import { latestChatRunRow, listStoppedChatRunRows } from '../repositories/runs';
+import { askHistory } from './askHistory';
 import { queueAsk } from './askRuns';
 import { chatContextOf } from './chatContext';
+import { sendOrQueue } from './chatQueue/sendOrQueue';
 import { chatFilesByMessage } from './chatFiles';
-import { chatTitle, toCardTicket, toChat, toMessage } from './chatMappers';
+import { chatTitle, toChat, toMessage, toQueuedMessage } from './chatMappers';
 import { chatPromptTicket, requireChatTicket } from './chatTicket';
 import { inTransaction, type ServiceContext } from './context';
 import { requireProject } from './lookups';
@@ -74,26 +76,16 @@ export async function getChat(
   const run = await latestChatRunRow(ctx.db, scope, chat.id);
   const stopped = await listStoppedChatRunRows(ctx.db, scope, chat.id);
   const context = await chatContextOf(ctx.db, chat.id);
+  const queued = await listQueuedRows(ctx.db, chat.id);
+  const filesOf = (id: string) => files.get(id) ?? [];
   return {
     chat: toChat(chat),
-    messages: messages.map((message) => toMessage(message, cards, files.get(message.id) ?? [])),
+    messages: messages.map((message) => toMessage(message, cards, filesOf(message.id))),
     run: run ? toRun(run) : null,
     stoppedRuns: stopped.map(toRun),
     ...(context ? { context } : {}),
+    queued: queued.map((row) => toQueuedMessage(row, filesOf(row.messageId))),
   };
-}
-
-// So the prompt can say which cards are tickets now, and which files each question had.
-async function askHistory(db: Db, chatId: string): Promise<AskHistoryMessage[]> {
-  const cards = await listCardTicketRows(db, chatId);
-  const files = await chatFilesByMessage(db, chatId);
-  const messages = await listMessageRows(db, chatId);
-  return messages.map(({ id, role, text }) => ({
-    role,
-    text,
-    cardTickets: cards.filter((card) => card.messageId === id).map(toCardTicket),
-    files: (files.get(id) ?? []).map((file) => file.fileName),
-  }));
 }
 
 interface AskIn {
@@ -102,27 +94,37 @@ interface AskIn {
   isNew: boolean;
 }
 
+// Under the chat's lock, so the session and the chat so far are as the answer before left them.
+async function askRequestIn(trx: ServiceContext, scope: UserScope, at: AskIn, input: AskValues) {
+  const { project, isNew } = at;
+  const chat = isNew ? at.chat : await requireChat(trx, scope, at.chat.id);
+  const runner = await requireRunnerFor(trx, scope, input.runnerId, project);
+  const history = isNew ? [] : await askHistory(trx.db, chat.id);
+  const ticket = await chatPromptTicket(trx.db, chat, project.key);
+  const queued = { scope, runner, projectId: project.id, now: trx.now() };
+  const saved = { model: chat.askModel, mode: chat.askMode, effort: chat.askEffort };
+  const options = chosenAskOptions(input, saved);
+  const { text: question, attachmentIds } = input;
+  return { queued, project, chat, history, ticket, question, attachmentIds, options };
+}
+
 async function askIn(
   ctx: ServiceContext,
   scope: UserScope,
-  { project, chat, isNew }: AskIn,
+  at: AskIn,
   input: AskValues,
 ): Promise<ChatDetail> {
-  const runner = await requireRunnerFor(ctx, scope, input.runnerId, project);
+  await requireRunnerFor(ctx, scope, input.runnerId, at.project);
   await expireSilentRuns(ctx);
-  const history = isNew ? [] : await askHistory(ctx.db, chat.id);
-  const ticket = await chatPromptTicket(ctx.db, chat, project.key);
-  const queued = { scope, runner, projectId: project.id, now: ctx.now() };
-  const run = await inTransaction(ctx, async (trx) => {
-    if (isNew) await insertChat(trx, chat);
-    const saved = { model: chat.askModel, mode: chat.askMode, effort: chat.askEffort };
-    const options = chosenAskOptions(input, saved);
-    const { text: question, attachmentIds } = input;
-    const request = { queued, project, chat, history, ticket, question, attachmentIds, options };
-    return queueAsk(trx, request);
+  const runs = await inTransaction(ctx, async (db) => {
+    if (at.isNew) await insertChat(db, at.chat);
+    else await lockChat(db, at.chat.id);
+    const trx = { ...ctx, db };
+    const request = await askRequestIn(trx, scope, at, input);
+    return at.isNew ? [await queueAsk(db, request)] : sendOrQueue(trx, scope, request);
   });
-  notifyRun(ctx, scope, run);
-  return getChat(ctx, scope, chat.id);
+  for (const run of runs) notifyRun(ctx, scope, run);
+  return getChat(ctx, scope, at.chat.id);
 }
 
 export async function startChat(
