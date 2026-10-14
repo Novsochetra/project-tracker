@@ -3,6 +3,7 @@ import type {
   RegisterRunnerInput,
   Run,
   RunActivity,
+  RunAllCardInput,
   RunAllInput,
   RunAllPreview,
   RunAllResult,
@@ -59,7 +60,7 @@ export class RunsClient extends LabelingClient {
   finishRun = (runId: string, input: FinishRunInput) =>
     this.http.request<Run>('POST', `/api/runs/${segment(runId)}/finish`, { body: input });
 
-  runAllFromCard = (chatId: string, messageId: string, input: RunAllInput) =>
+  runAllFromCard = (chatId: string, messageId: string, input: RunAllCardInput) =>
     this.http.request<RunAllResult>(
       'POST',
       `/api/chats/${segment(chatId)}/messages/${segment(messageId)}/run-all`,

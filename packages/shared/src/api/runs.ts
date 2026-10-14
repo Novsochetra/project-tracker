@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { CHAT_ANSWER_MAX } from '../domain/chat';
 import {
+  BATCH_TICKETS_MAX,
   ENDED_RUN_STATUSES,
   RUN_ROLES,
   MAX_PARALLEL_RUNS_MAX,
@@ -43,6 +44,10 @@ export const runnerTools = z.object({
 export const runAllInput = z.object({
   runnerId,
   maxParallel: z.number().int().min(1).max(MAX_PARALLEL_RUNS_MAX).optional(),
+});
+
+export const runAllCardInput = runAllInput.extend({
+  ticketKeys: z.array(z.string().trim().min(1).max(40)).max(BATCH_TICKETS_MAX),
 });
 
 export const registerRunnerInput = z.object({

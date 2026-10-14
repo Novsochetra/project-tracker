@@ -3,6 +3,7 @@ import {
   buildBatchPrompt,
   formatTicketKey,
   MAX_PARALLEL_RUNS_MAX,
+  sameTicketKeys,
   workableTickets,
   type RunAllInput,
   type RunAllPreview,
@@ -25,6 +26,7 @@ import { queuedRunRow, type QueuedRun } from './runRows';
 import { expireSilentRuns } from './runs';
 
 const RACED = 'Some of these tickets just started. Try Run all again.';
+const CHANGED = 'The To do list changed. Check the card again.';
 
 interface RunAllPick {
   tickets: TicketRow[];
@@ -138,12 +140,19 @@ export interface RunAllRequest {
   input: RunAllInput;
   // Runs in the batch's transaction, so whatever it records goes or stays with the batch.
   onQueued?: ((trx: Db, batchId: string) => Promise<void>) | undefined;
+  // The ticket keys a card showed; the batch runs exactly these or nothing.
+  shown?: readonly string[] | undefined;
+}
+
+function requireShown(project: ProjectRow, pick: RunAllPick, shown: readonly string[]): void {
+  const picked = pick.tickets.map((ticket) => formatTicketKey(project.key, ticket.num));
+  if (!sameTicketKeys(shown, picked)) throw conflict(CHANGED);
 }
 
 export async function runAllTodo(
   ctx: ServiceContext,
   scope: UserScope,
-  { projectKey, input, onQueued }: RunAllRequest,
+  { projectKey, input, onQueued, shown }: RunAllRequest,
 ): Promise<RunAllResult> {
   const project = await requireProject(ctx.db, scope, projectKey);
   const runner = await requireRunnerFor(ctx, scope, input.runnerId, project);
@@ -152,6 +161,7 @@ export async function runAllTodo(
   const queued = { scope, runner, projectId: project.id, now: ctx.now() };
   const outcome = await inTransaction(ctx, async (trx) => {
     const pick = await pickTodo(trx, project);
+    if (shown) requireShown(project, pick, shown);
     if (pick.tickets.length === 0) return { pick, rows: null };
     const rows = batchRows(queued, project, pick.tickets, maxParallel);
     await insertBatch(trx, rows);

@@ -31,13 +31,17 @@ export function RunAllConfirm({
   const shown = preview.data;
   const empty = shown?.tickets.length === 0;
   const confirm = () => {
-    if (!helper || start.isPending) return;
+    if (!shown || !helper || start.isPending) return;
     start.mutate(
       {
         chatId,
         projectKey,
         messageId,
-        input: { runnerId: helper.id, maxParallel: limit ?? undefined },
+        input: {
+          runnerId: helper.id,
+          maxParallel: limit ?? undefined,
+          ticketKeys: shown.tickets.map(({ ticketKey }) => ticketKey),
+        },
       },
       {
         onSuccess: (result) => {

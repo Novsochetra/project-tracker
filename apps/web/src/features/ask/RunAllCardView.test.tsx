@@ -107,6 +107,7 @@ describe('Ask: Run all card', () => {
     expect(client.runAllFromCard).toHaveBeenCalledWith('c-1', 'm-1', {
       runnerId: dara.id,
       maxParallel: 3,
+      ticketKeys: ['MOB-3', 'MOB-4'],
     });
     const progress = await screen.findByRole('region', { name: 'Run all progress' });
     expect(
@@ -163,5 +164,38 @@ describe('Ask: Run all card', () => {
     await waitFor(() => expect(confirm).toBeEnabled());
     await user.click(confirm);
     expect(await screen.findByText('Already started.')).toBeInTheDocument();
+  });
+
+  it('reloads its list when the To do list changed, and confirms what it shows then', async () => {
+    const added: RunAllPreview = {
+      ...preview,
+      tickets: [...preview.tickets, { ticketKey: 'MOB-5', ticketTitle: 'Made in between' }],
+    };
+    const previewRunAll = vi.fn().mockResolvedValueOnce(preview).mockResolvedValue(added);
+    const changed = new ApiError(409, 'conflict', 'The To do list changed. Check the card again.');
+    const runAllFromCard = vi.fn().mockRejectedValueOnce(changed).mockResolvedValue({
+      runId: null,
+      queued: 0,
+      skippedActive: 0,
+      skippedDevice: 0,
+      leftOver: 0,
+      maxParallel: 3,
+    });
+    const { client } = setup(withCards(cardText()), { previewRunAll, runAllFromCard });
+    const user = userEvent.setup();
+    const card = await runAllCard();
+    const confirm = within(card).getByRole('button', { name: 'Confirm' });
+    await waitFor(() => expect(confirm).toBeEnabled());
+    await user.click(confirm);
+
+    expect(await screen.findByText(changed.message)).toBeInTheDocument();
+    expect(await within(card).findByText('Made in between')).toBeInTheDocument();
+    await waitFor(() => expect(confirm).toBeEnabled());
+    await user.click(confirm);
+    expect(client.runAllFromCard).toHaveBeenLastCalledWith('c-1', 'm-1', {
+      runnerId: dara.id,
+      maxParallel: 3,
+      ticketKeys: ['MOB-3', 'MOB-4', 'MOB-5'],
+    });
   });
 });
