@@ -35,6 +35,17 @@ const QUIET_ENV = {
   NO_COLOR: '1',
 };
 
+// Stopped at its deadline. killedAt: it outlived SIGTERM and got SIGKILL, so a lock it held is
+// still there, made after startedAt.
+export class ToolStopped extends Error {
+  constructor(
+    readonly startedAt: number,
+    readonly killedAt: number | null,
+  ) {
+    super('Stopped at its deadline.');
+  }
+}
+
 const keepEnd = (text: string, max: number) => (text.length > max ? text.slice(-max) : text);
 
 // A group of its own, so a deadline stops the hooks and helpers git starts too.
@@ -58,15 +69,18 @@ export function runTool(command: string, args: readonly string[], options: ToolO
       stdio: 'pipe',
       detached: true,
     });
+    const startedAt = Date.now();
     let stopped = false;
+    let killedAt: number | null = null;
     let force: NodeJS.Timeout | undefined;
+    const kill = () => {
+      killedAt = Date.now();
+      signalGroup(child.pid, 'SIGKILL');
+    };
     const stop = () => {
       stopped = true;
       signalGroup(child.pid, 'SIGTERM');
-      force = setTimeout(
-        () => signalGroup(child.pid, 'SIGKILL'),
-        options.killGraceMs ?? KILL_GRACE_MS,
-      );
+      force = setTimeout(kill, options.killGraceMs ?? KILL_GRACE_MS);
     };
     options.signal.addEventListener('abort', stop, { once: true });
     let out = '';
@@ -85,7 +99,7 @@ export function runTool(command: string, args: readonly string[], options: ToolO
     child.on('close', (code) => {
       clearTimeout(force);
       options.signal.removeEventListener('abort', stop);
-      if (stopped) reject(new Error('Stopped at its deadline.'));
+      if (stopped) reject(new ToolStopped(startedAt, killedAt));
       else resolve({ code, out, err });
     });
   });

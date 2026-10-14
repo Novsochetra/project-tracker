@@ -7,7 +7,8 @@ import {
 import { changedPaths } from '../changes/changedPaths';
 import { snapshotTree } from '../changes/snapshot';
 import { GitActionError, step, type StepContext } from './gitStep';
-import { forgetRepo, restoreRepo, saveRepo } from './savedRepo';
+import { ToolStopped } from '../git/runTool';
+import { forgetRepo, GIT_BUSY, restoreRepo, saveRepo } from './savedRepo';
 
 type CommitJob = Extract<GitActionJob, { kind: 'commit' }>;
 
@@ -51,7 +52,9 @@ export async function commitChat(context: StepContext, job: CommitJob): Promise<
   try {
     return await commitPicked(context, job);
   } catch (error) {
-    await restoreRepo(context.cwd, saved, { created: job.branch, paths: job.paths });
+    const stopped = error instanceof ToolStopped ? error : null;
+    const change = { created: job.branch, paths: job.paths, stopped };
+    if (!(await restoreRepo(context.cwd, saved, change))) throw new GitActionError(GIT_BUSY);
     throw error;
   } finally {
     await forgetRepo(saved);

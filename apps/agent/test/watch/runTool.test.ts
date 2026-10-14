@@ -2,7 +2,7 @@ import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { runTool } from '../../src/watch/git/runTool';
+import { runTool, ToolStopped } from '../../src/watch/git/runTool';
 
 const folder = mkdtempSync(join(tmpdir(), 'tracker-run-tool-'));
 
@@ -32,5 +32,21 @@ describe('runTool', () => {
     await expect(run).rejects.toThrow('Stopped at its deadline.');
     const pid = Number(readFileSync(join(folder, 'pid'), 'utf8'));
     await vi.waitFor(() => expect(alive(pid)).toBe(false));
+  });
+
+  it('says when the program outlived SIGTERM and had to be killed', async () => {
+    const stubborn = runTool('sh', ['-c', 'trap "" TERM; sleep 30 & wait'], {
+      cwd: folder,
+      signal: AbortSignal.timeout(200),
+      killGraceMs: 200,
+    });
+    const killed = await stubborn.catch((error: unknown) => error);
+    expect(killed).toBeInstanceOf(ToolStopped);
+    expect((killed as ToolStopped).killedAt).not.toBeNull();
+    const polite = await runTool('sleep', ['30'], {
+      cwd: folder,
+      signal: AbortSignal.timeout(200),
+    }).catch((error: unknown) => error);
+    expect((polite as ToolStopped).killedAt).toBeNull();
   });
 });
