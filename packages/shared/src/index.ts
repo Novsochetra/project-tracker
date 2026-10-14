@@ -50,6 +50,7 @@ export * from './logic/listView';
 export * from './logic/loopback';
 export * from './logic/prefix';
 export * from './logic/projectCounts';
+export * from './logic/projectDisplayName';
 export * from './logic/prompt';
 export * from './logic/reviewChain';
 export * from './logic/reviewPrompt';

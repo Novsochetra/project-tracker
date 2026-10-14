@@ -1,4 +1,4 @@
-import { sortStatuses, type ProjectBoard, type Status } from '@tracker/shared';
+import { projectDisplayName, sortStatuses, type ProjectBoard, type Status } from '@tracker/shared';
 import { Plus } from 'lucide-react';
 import { useState } from 'react';
 import { flushSync } from 'react-dom';
@@ -29,7 +29,7 @@ export function StatusManagerSheet({ open, onClose, projectKey }: StatusManagerS
       onClose={onClose}
       label="Statuses"
       title="Statuses"
-      subtitle={board.data?.project.name}
+      subtitle={board.data && projectDisplayName(board.data.project)}
       left={<SheetCancelButton>Close</SheetCancelButton>}
       dirty={unsavedEdit}
     >

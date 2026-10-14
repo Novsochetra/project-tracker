@@ -1,3 +1,4 @@
+import { projectDisplayName } from '@tracker/shared';
 import { errorMessage, useDeleteProject } from '../../api';
 import { useSheets } from '../../app/sheets/context';
 import { useToast } from '../../components';
@@ -30,7 +31,7 @@ export function useProjectOptions(projectKey: string): ProjectOptions {
   const navigation = useNavigation();
   const remove = useDeleteProject();
   const key = project?.key ?? projectKey;
-  const name = project?.name ?? key;
+  const name = project ? projectDisplayName(project) : key;
   const deleteProject = (onDeleted: () => void) => {
     if (remove.isPending) return;
     remove.mutate(

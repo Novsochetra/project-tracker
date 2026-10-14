@@ -26,6 +26,7 @@ import * as runAll from './0024_run_all';
 import * as batchRuns from './0025_batch_runs';
 import * as subAgents from './0026_sub_agents';
 import * as runChanges from './0027_run_changes';
+import * as hideName from './0028_hide_name';
 import * as runStepTodos from './0029_run_step_todos';
 
 // Keyed by file name; they run in name order, so the four-digit number decides. The bundled server
@@ -58,5 +59,6 @@ export const MIGRATIONS: Record<string, Migration> = {
   '0025_batch_runs': batchRuns,
   '0026_sub_agents': subAgents,
   '0027_run_changes': runChanges,
+  '0028_hide_name': hideName,
   '0029_run_step_todos': runStepTodos,
 };

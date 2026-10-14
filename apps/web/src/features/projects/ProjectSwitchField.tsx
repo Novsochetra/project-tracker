@@ -1,30 +1,38 @@
 import clsx from 'clsx';
-import { AUTO_REVIEW_ROUNDS } from '@tracker/shared';
 import { useId } from 'react';
 import { GroupedCard } from '../../components';
 import { Switch } from '../../components/Switch';
+import type { ProjectSwitch } from './projectForm';
+import { PROJECT_SWITCH_TEXT } from './projectSwitches';
 import styles from './ProjectSheet.module.css';
 import type { ProjectForm } from './useProjectForm';
 
-export const AUTO_REVIEW_HINT = `When Claude finishes a ticket, Claude reviews it on the same computer. Changes it asks for go back to Claude, up to ${AUTO_REVIEW_ROUNDS} rounds.`;
+interface ProjectSwitchFieldProps {
+  form: ProjectForm;
+  field: ProjectSwitch;
+}
 
-export function AutoReviewSwitch({ form: { values, setAutoReview } }: { form: ProjectForm }) {
+export function ProjectSwitchField({
+  form: { values, setSwitch },
+  field,
+}: ProjectSwitchFieldProps) {
   const hintId = useId();
+  const { label, hint } = PROJECT_SWITCH_TEXT[field];
   return (
     <>
       <GroupedCard>
         <div className={clsx('ring-inside', styles.switchRow)}>
-          <span className={styles.switchLabel}>Review automatically</span>
+          <span className={styles.switchLabel}>{label}</span>
           <Switch
-            checked={values.autoReview}
-            onChange={setAutoReview}
-            aria-label="Review automatically"
+            checked={values[field]}
+            onChange={(on) => setSwitch(field, on)}
+            aria-label={label}
             aria-describedby={hintId}
           />
         </div>
       </GroupedCard>
       <p id={hintId} className={styles.hint}>
-        {AUTO_REVIEW_HINT}
+        {hint}
       </p>
     </>
   );

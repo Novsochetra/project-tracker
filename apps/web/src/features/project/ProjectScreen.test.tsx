@@ -306,6 +306,15 @@ describe('ProjectScreen', () => {
     });
   });
 
+  it('leaves out the repository and the name of a project that hides its name', async () => {
+    const board = { ...makeBoard(), project: { ...makeBoard().project, hideName: true } };
+    renderProject({ board });
+    expect(await screen.findByRole('button', { name: 'Paste report' })).toBeInTheDocument();
+    expect(screen.queryByText('~/code/mobile-app')).not.toBeInTheDocument();
+    expect(document.querySelector('[title="~/code/mobile-app"]')).toBeNull();
+    expect(document.body).not.toHaveTextContent('Mobile app');
+  });
+
   it('opens Ask Claude from the toolbar on desktop', async () => {
     const user = userEvent.setup();
     renderProject();

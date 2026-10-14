@@ -2,6 +2,7 @@ import {
   DEFAULT_MAX_PARALLEL_RUNS,
   FAILED_RUN_SHOWN_MS,
   formatTicketKey,
+  projectDisplayName,
   type ActivityBatch,
   type ActivityRun,
   type RunActivity,
@@ -21,11 +22,19 @@ import { expireSilentRuns } from './runs';
 const stateOf = (status: RunStatus): ActivityRun['state'] =>
   status === 'queued' ? 'waiting' : status === 'running' ? 'running' : 'failed';
 
+// Activity is only the person's screen, so it gets the stand-in like every other screen.
+const shownName = (row: { projectKey: string; projectName: string; projectHideName: number }) =>
+  projectDisplayName({
+    name: row.projectName,
+    key: row.projectKey,
+    hideName: row.projectHideName === 1,
+  });
+
 const toActivityRun = (row: ActivityRunRow): ActivityRun => ({
   runId: row.runId,
   batchId: row.batchId,
   projectKey: row.projectKey,
-  projectName: row.projectName,
+  projectName: shownName(row),
   ticketKey: formatTicketKey(row.projectKey, row.ticketNum),
   ticketTitle: row.ticketTitle,
   state: stateOf(row.status),
@@ -45,7 +54,7 @@ async function listBatches(db: Db, scope: UserScope, since: number): Promise<Act
     return {
       runId: row.runId,
       projectKey: row.projectKey,
-      projectName: row.projectName,
+      projectName: shownName(row),
       state: stateOf(row.status),
       total: tickets.length,
       done: tickets.filter(({ status }) => status === 'done').length,

@@ -1,4 +1,4 @@
-import { openNotReviewed, type ProjectSummary } from '@tracker/shared';
+import { openNotReviewed, projectDisplayName, type ProjectSummary } from '@tracker/shared';
 import clsx from 'clsx';
 import { Activity, LayoutGrid, Plus } from 'lucide-react';
 import type { ReactNode } from 'react';
@@ -57,7 +57,7 @@ function ProjectItems({ projects, ready }: ProjectItemsProps) {
       onClick={() => openProject(project.key)}
     >
       <span className={styles.square} style={{ background: project.color }} />
-      <span className={styles.name}>{project.name}</span>{' '}
+      <span className={styles.name}>{projectDisplayName(project)}</span>{' '}
       {ready.has(project.id) && (
         <>
           <span className={styles.ready}>{ready.get(project.id)} ready</span>{' '}
