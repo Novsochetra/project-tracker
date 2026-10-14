@@ -29,6 +29,7 @@ test('approves a plan from the chat and Claude carries it out in the picked mode
   await page.getByRole('group', { name: 'Mode' }).getByRole('button', { name: 'Plan' }).click();
   await page.getByRole('textbox', { name: 'Question for Claude' }).fill('Plan a faster sync');
   await page.getByRole('button', { name: 'Send', exact: true }).click();
+  await expect(page.getByText(`Claude is thinking on ${HELPER}…`)).toBeVisible();
   const job = await api.takeNextRun(runnerId, 'ask');
   const runId = job!.run.id;
   // The helper's side (apps/agent/src/watch/permissionTool): post the plan, wait for the person.
@@ -66,10 +67,13 @@ test('approves a plan from the chat and Claude carries it out in the picked mode
   await expect(card).toContainText('Retry a failed batch once');
 
   const approved = asks();
-  await expect(card.getByRole('button', { name: 'Approve and auto' })).toBeVisible();
-  await card.getByRole('button', { name: 'Approve and auto' }).click();
+  // The kept plan stays shown, settled, above the new one.
+  const auto = page.getByRole('button', { name: 'Approve and auto' });
+  const again = card.filter({ has: auto });
+  await expect(again).toBeVisible();
+  await again.getByRole('button', { name: 'Approve and auto' }).click();
   expect(await approved).toMatchObject({ decision: 'allow', answers: ['auto'] });
-  await expect(card).toContainText('Approved: carried out in Auto');
+  await expect(page.getByText('Approved: carried out in Auto')).toBeVisible();
 
   const sessionId = randomUUID();
   await api.finishRun(runId, { status: 'done', answer: 'The plan is approved.', sessionId });
