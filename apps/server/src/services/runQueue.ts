@@ -14,6 +14,7 @@ import {
 } from '../repositories/batchRuns';
 import { holdProjectRuns } from '../repositories/projects';
 import { failRunsOf, markRunStarted, nextQueuedRun, type RunWithKey } from '../repositories/runs';
+import { chatFilesFor } from './chatChanges/turnFiles';
 import { runFiles } from './chatFiles';
 import { inTransaction, type ServiceContext } from './context';
 import { notifyRun, parseProjectIds, toRun } from './runMappers';
@@ -78,7 +79,9 @@ export async function takeNextRun(
   const files = await runFiles(ctx.db, started);
   const { prompt, resumeSessionId } = started;
   const ticketKeys = await batchTicketKeys(ctx, started);
-  return { run: toRun(started), prompt, resumeSessionId, files, ticketKeys };
+  const chatFiles = await chatFilesFor(ctx.db, started);
+  const job = { run: toRun(started), prompt, resumeSessionId, files, ticketKeys };
+  return chatFiles ? { ...job, chatFiles } : job;
 }
 
 async function batchTicketKeys(ctx: ServiceContext, run: RunWithKey): Promise<string[]> {

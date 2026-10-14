@@ -6,10 +6,10 @@ import type {
   ViewedFileInput,
 } from '@tracker/shared';
 import { segment } from './asking';
-import { RunsClient } from './runsClient';
+import { ChatChangesClient } from './chatChangesClient';
 
 // A ticket run's code changes (the Changes tab), apart so neither file grows past its limit.
-export class ChangesClient extends RunsClient {
+export class ChangesClient extends ChatChangesClient {
   addRunChanges = (
     runId: string,
     input: AddRunChangesInput,

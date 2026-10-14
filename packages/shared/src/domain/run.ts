@@ -1,5 +1,6 @@
 import type { AskOptions } from './askOptions';
 import type { Attachment } from './attachment';
+import type { ChatChangedFile } from './chatChanges';
 import type { ChainStop } from './autoReview';
 import type { RunUsage } from './runUsage';
 import type { StatusCategory } from './status';
@@ -122,6 +123,9 @@ export interface RunJob {
   // A batch's tickets, so the helper can put each one's report on it; empty for other runs. An
   // older tracker sends none.
   ticketKeys?: string[];
+  // An Edit or Auto question's chat's files changed so far on this helper, which this turn's
+  // changes add to (PT-237). An older tracker sends none.
+  chatFiles?: ChatChangedFile[];
 }
 
 export interface RunEvent {

@@ -44,3 +44,7 @@ export const personEditsLabels = refuseAgents('Only a person changes labels.');
 
 // Approve and Ask for changes decide where the ticket goes, so an agent can't approve its own work.
 export const personReviewsChanges = refuseAgents('Only a person reviews the changes.');
+
+// A commit or a pull request puts code in the repository and on GitHub under the person's name, so
+// an agent can't commit or push its own work.
+export const personCommits = refuseAgents('Only a person commits or opens a pull request.');

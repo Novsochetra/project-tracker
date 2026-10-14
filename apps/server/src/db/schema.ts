@@ -9,6 +9,7 @@ import type {
 import type { Kysely } from 'kysely';
 import type { AuthTables } from './authTables';
 import type { ChangeTables } from './changeTables';
+import type { ChatChangeTables } from './chatChangeTables';
 import type { ChatTables } from './chatTables';
 import type { LabelTables } from './labelTables';
 import type { PushTables } from './pushTables';
@@ -100,7 +101,15 @@ export interface AttachmentRow {
 }
 
 export interface Database
-  extends AuthTables, ChangeTables, ChatTables, LabelTables, PushTables, QuestionTables, RunTables {
+  extends
+    AuthTables,
+    ChangeTables,
+    ChatChangeTables,
+    ChatTables,
+    LabelTables,
+    PushTables,
+    QuestionTables,
+    RunTables {
   projects: ProjectRow;
   statuses: StatusRow;
   tickets: TicketRow;
