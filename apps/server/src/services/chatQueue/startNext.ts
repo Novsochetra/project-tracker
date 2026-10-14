@@ -7,7 +7,8 @@ import { notifyRun } from '../runMappers';
 import { chatIsBusy } from './queueMessage';
 import { startQueuedIn, usableRunner } from './startQueued';
 
-// The oldest message not held by a stopped or failed answer, while the chat is free.
+// The oldest message not held by a stopped or failed answer, while the chat is free. One whose
+// helper left is passed over, so it can't stall the messages behind it; Send now still moves it.
 export async function startWaitingIn(
   trx: ServiceContext,
   scope: UserScope,
@@ -15,9 +16,13 @@ export async function startWaitingIn(
 ): Promise<RunRow | null> {
   if (await chatIsBusy(trx.db, scope, chatId)) return null;
   const chat = await findChatInScope(trx.db, scope, chatId, trx.now());
-  const row = chat && (await listQueuedRows(trx.db, chatId)).find((queued) => !isHeld(queued));
-  const runner = chat && row ? await usableRunner(trx, scope, chat, row) : null;
-  return chat && row && runner ? startQueuedIn(trx, scope, chat, { row, runner }) : null;
+  if (!chat) return null;
+  for (const row of await listQueuedRows(trx.db, chatId)) {
+    if (isHeld(row)) continue;
+    const runner = await usableRunner(trx, scope, chat, row);
+    if (runner) return startQueuedIn(trx, scope, chat, { row, runner });
+  }
+  return null;
 }
 
 export async function startNextQueued(
