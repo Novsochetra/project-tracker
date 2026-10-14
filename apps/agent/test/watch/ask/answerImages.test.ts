@@ -8,8 +8,11 @@ import { withAnswerImages, type AnswerImageDeps } from '../../../src/watch/ask/a
 const work = realpathSync(mkdtempSync(join(tmpdir(), 'answer-images-')));
 mkdirSync(join(work, 'docs'));
 mkdirSync(join(work, '.secret'));
-writeFileSync(join(work, 'docs', 'home.png'), 'png');
-writeFileSync(join(work, 'docs', 'board.jpg'), 'jpg');
+writeFileSync(
+  join(work, 'docs', 'home.png'),
+  Buffer.from([0x89, 0x50, 0x4e, 0x47, 13, 10, 26, 10]),
+);
+writeFileSync(join(work, 'docs', 'board.jpg'), Buffer.from([0xff, 0xd8, 0xff, 0xe0]));
 writeFileSync(join(work, 'docs', 'photo.heic'), 'heic');
 writeFileSync(join(work, 'docs', 'notes.md'), '# Notes');
 writeFileSync(join(work, '.secret', 'key.png'), 'png');
@@ -35,7 +38,12 @@ describe('withAnswerImages', () => {
   it('uploads each picture a card names, in order, and keeps the answer as it is', async () => {
     const { deps, upload } = setup();
     const answer = `Two screens:\n${card('docs/home.png')}\n${card(join(work, 'docs/board.jpg'))}`;
-    const outcome = await withAnswerImages(deps, done(answer), new AbortController().signal);
+    const outcome = await withAnswerImages(
+      deps,
+      done(answer),
+      new AbortController().signal,
+      'edit',
+    );
     expect(outcome).toEqual({ ...done(answer), attachmentIds: ['a-home.png', 'a-board.jpg'] });
     expect(upload.mock.calls.map(([file, name]) => [file.type, name])).toEqual([
       ['image/png', 'home.png'],
@@ -55,7 +63,12 @@ describe('withAnswerImages', () => {
       'https://example.com/a.png',
     ];
     const answer = paths.map(card).join('\n');
-    const outcome = await withAnswerImages(deps, done(answer), new AbortController().signal);
+    const outcome = await withAnswerImages(
+      deps,
+      done(answer),
+      new AbortController().signal,
+      'edit',
+    );
     expect(upload).not.toHaveBeenCalled();
     expect(outcome.attachmentIds).toBeUndefined();
     const notes = outcome.answer?.slice(answer.length).trim().split('\n') ?? [];
@@ -75,7 +88,12 @@ describe('withAnswerImages', () => {
       .mockRejectedValueOnce(new Error('The tracker is down.'));
     const { deps } = setup(upload);
     const answer = `${'x'.repeat(CHAT_ANSWER_MAX - 100)}\n${card('docs/home.png')}\n${card('docs/board.jpg')}`;
-    const outcome = await withAnswerImages(deps, done(answer), new AbortController().signal);
+    const outcome = await withAnswerImages(
+      deps,
+      done(answer),
+      new AbortController().signal,
+      'edit',
+    );
     expect(outcome.attachmentIds).toEqual(['a-1']);
     expect(outcome.answer?.length).toBeLessThanOrEqual(CHAT_ANSWER_MAX);
   });
@@ -83,12 +101,12 @@ describe('withAnswerImages', () => {
   it('leaves an answer with no cards, a failed run and a stopped one alone', async () => {
     const { deps, upload } = setup();
     const signal = new AbortController().signal;
-    expect(await withAnswerImages(deps, done('Plain.'), signal)).toEqual(done('Plain.'));
+    expect(await withAnswerImages(deps, done('Plain.'), signal, 'edit')).toEqual(done('Plain.'));
     const failed: FinishRunInput = { status: 'failed', error: 'x' };
-    expect(await withAnswerImages(deps, failed, signal)).toBe(failed);
+    expect(await withAnswerImages(deps, failed, signal, 'edit')).toBe(failed);
     const stop = new AbortController();
     stop.abort();
-    const stopped = await withAnswerImages(deps, done(card('docs/home.png')), stop.signal);
+    const stopped = await withAnswerImages(deps, done(card('docs/home.png')), stop.signal, 'edit');
     expect(stopped).toEqual({ status: 'cancelled' });
     expect(upload).not.toHaveBeenCalled();
   });

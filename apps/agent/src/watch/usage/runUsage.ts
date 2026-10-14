@@ -10,7 +10,10 @@ const MICROS = 1_000_000;
 type Field = keyof RunUsageInput;
 
 // Background work gets a turn of its own, each with its own turns and time.
-function sumOf(usages: readonly ResultUsage[], key: 'turns' | 'durationMs'): number | undefined {
+function sumOf(
+  usages: readonly ResultUsage[],
+  key: 'turns' | 'durationMs' | 'tokens',
+): number | undefined {
   const values = usages.flatMap((usage) => (usage[key] === undefined ? [] : [usage[key]]));
   return values.length === 0 ? undefined : values.reduce((total, value) => total + value, 0);
 }
@@ -38,6 +41,9 @@ export function runUsageOf(
     ...fitting('costMicros', costUsd === undefined ? undefined : Math.round(costUsd * MICROS)),
     ...fitting('turns', sumOf(usages, 'turns')),
     ...fitting('durationMs', sumOf(usages, 'durationMs')),
+    ...fitting('contextTokens', exit.context?.used),
+    ...fitting('contextWindow', exit.context?.window),
+    ...fitting('tokens', sumOf(usages, 'tokens')),
   };
   return Object.keys(usage).length > 0 ? usage : undefined;
 }

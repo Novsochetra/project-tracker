@@ -231,7 +231,7 @@ describe('regression: an ask runs Claude read-only', () => {
       prompts: { command: ['node', 'promptTool.js'], ask: askPerson },
       fetchFile: () => Promise.resolve(new Response('whiteboard')),
     });
-    const board = { id: 'f1', fileName: 'board.jpg' } as Attachment;
+    const board = { id: 'f1', fileName: 'board.jpg', mimeType: 'image/jpeg' } as Attachment;
     for (const mode of ['ask', 'plan'] as const) {
       const question = { ...askJob('r-5', 'c-1', null, { ...DEFAULT_ASK_OPTIONS, mode }) };
       const job = { ...question, prompt: 'SHOW FILES', files: [board] };

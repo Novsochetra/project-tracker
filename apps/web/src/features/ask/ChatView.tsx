@@ -76,6 +76,7 @@ export function ChatView({ projectKey, chatId, detail, ticketNum }: ChatViewProp
         waiting={requests.waiting}
         savedOptions={savedAskOptions(detail?.chat)}
         placeholder={askPlaceholder(detail, ticketNum)}
+        detail={detail}
       />
     </div>
   );

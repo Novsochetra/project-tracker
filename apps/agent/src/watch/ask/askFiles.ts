@@ -1,7 +1,7 @@
 import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import type { Attachment, RunJob } from '@tracker/shared';
+import { keepsLocation, type Attachment, type RunJob } from '@tracker/shared';
 import { downloadFile, type DownloadOptions, type FetchFile } from './askFileDownload';
 import { localNames } from './askFileNames';
 
@@ -45,7 +45,8 @@ export async function withAskFiles<T>(
   },
   work: (folder: AskFolder | null) => Promise<T>,
 ): Promise<T> {
-  const files = job.files ?? [];
+  // A newer tracker leaves these out itself; an older one still sends them.
+  const files = (job.files ?? []).filter((file) => !keepsLocation(file.mimeType));
   if (files.length === 0) return work(null);
   if (!fetchFile) throw new Error("This helper can't download the question's files.");
   const dir = await mkdtemp(join(root, ASK_FOLDER_PREFIX));

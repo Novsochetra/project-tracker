@@ -4,11 +4,10 @@ import {
   type EndedRunStatus,
   type RunLane,
   type RunStatus,
-  type RunUsage,
 } from '@tracker/shared';
 import type { ExpressionBuilder } from 'kysely';
 import type { UserScope } from '../auth/scope';
-import type { RunRow } from '../db/runTables';
+import type { RunRow, RunUsageColumns } from '../db/runTables';
 import type { Database, Db } from '../db/schema';
 
 export interface RunWithKey extends RunRow {
@@ -164,7 +163,8 @@ export async function markRunEnded(
   db: Db,
   userId: UserScope,
   id: string,
-  changes: Pick<RunRow, 'error' | 'endedAt'> & Partial<RunUsage> & { status: EndedRunStatus },
+  changes: Pick<RunRow, 'error' | 'endedAt'> &
+    Partial<RunUsageColumns> & { status: EndedRunStatus },
 ): Promise<boolean> {
   const result = await db
     .updateTable('runs')
