@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  batchEndedPush,
   chainStoppedPush,
   chatAnsweredPush,
   chatPath,
@@ -27,6 +28,24 @@ describe('push messages', () => {
     expect(runEndedPush(TICKET, 'That computer was removed.').title).toBe(
       'MOB-3: Claude stopped: That computer was removed.',
     );
+  });
+
+  it('says how many tickets a batch did and which it left, and opens Activity', () => {
+    const batch = { runId: 'r-1', projectKey: 'MOB', total: 10, notDoneKeys: ['MOB-3', 'MOB-7'] };
+    expect(batchEndedPush(batch, null)).toEqual({
+      title: 'MOB: Run all finished: 8 of 10 done',
+      body: 'Not finished: MOB-3, MOB-7',
+      url: '/activity',
+      tag: 'batch:r-1',
+    });
+  });
+
+  it('says a batch did every ticket, or why it stopped', () => {
+    const batch = { runId: 'r-1', projectKey: 'MOB', total: 2, notDoneKeys: [] };
+    expect(batchEndedPush(batch, null).body).toBe('Every ticket is done.');
+    const stopped = batchEndedPush({ ...batch, notDoneKeys: ['MOB-2'] }, 'Claude exited.');
+    expect(stopped.title).toBe('MOB: Run all stopped: 1 of 2 done');
+    expect(stopped.body).toBe('Not finished: MOB-2 · Claude exited.');
   });
 
   it('says the automatic review stopped and why, under the ticket’s tag', () => {
