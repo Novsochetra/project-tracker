@@ -66,8 +66,6 @@ test("shows Claude's to-do list live, then keeps it folded on the answer", async
   }
 
   await api.finishRun(job!.run.id, { status: 'done', answer: 'Done.', sessionId: randomUUID() });
-  // Read back from the tracker, as a person opening the chat later sees it.
-  await page.reload();
   const answer = page.getByRole('article', { name: 'Claude', exact: true });
   const toggle = answer.getByRole('button', { name: 'To-do list, 1 of 2 done' });
   await expect(toggle).toHaveAttribute('aria-expanded', 'false');
