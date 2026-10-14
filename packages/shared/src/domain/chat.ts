@@ -1,5 +1,6 @@
 import type { AskOptions } from './askOptions';
 import type { Attachment } from './attachment';
+import type { ChatContext } from './chatContext';
 import type { Run } from './run';
 import type { RunTodo } from './runStep';
 import type { RunUsage } from './runUsage';
@@ -78,6 +79,8 @@ export interface ChatDetail {
   // The questions that failed or were stopped after Claude took steps, oldest first. They add no
   // message, so this is how what Claude did keeps its place in the thread.
   stoppedRuns: Run[];
+  // Left out until an answer comes from a helper that sends it (PT-239), so older chats show none.
+  context?: ChatContext;
 }
 
 // Tells the person's other tabs and devices to leave a chat deleted elsewhere (PT-159).

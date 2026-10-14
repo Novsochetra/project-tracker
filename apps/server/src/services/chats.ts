@@ -22,6 +22,7 @@ import {
 } from '../repositories/chats';
 import { latestChatRunRow, listStoppedChatRunRows } from '../repositories/runs';
 import { queueAsk } from './askRuns';
+import { chatContextOf } from './chatContext';
 import { chatFilesByMessage } from './chatFiles';
 import { chatTitle, toCardTicket, toChat, toMessage } from './chatMappers';
 import { chatPromptTicket, requireChatTicket } from './chatTicket';
@@ -72,11 +73,13 @@ export async function getChat(
   const cards = await listCardTicketRows(ctx.db, chat.id);
   const run = await latestChatRunRow(ctx.db, scope, chat.id);
   const stopped = await listStoppedChatRunRows(ctx.db, scope, chat.id);
+  const context = await chatContextOf(ctx.db, chat.id);
   return {
     chat: toChat(chat),
     messages: messages.map((message) => toMessage(message, cards, files.get(message.id) ?? [])),
     run: run ? toRun(run) : null,
     stoppedRuns: stopped.map(toRun),
+    ...(context ? { context } : {}),
   };
 }
 

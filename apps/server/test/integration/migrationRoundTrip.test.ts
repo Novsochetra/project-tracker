@@ -474,6 +474,9 @@ const DATA_MODEL: SchemaShape = {
       'chain_stop text',
       'question_id text',
       'batch_id text',
+      'context_tokens bigint',
+      'context_window bigint',
+      'tokens bigint',
     ],
     indexes: [
       'index (batch_id)',
