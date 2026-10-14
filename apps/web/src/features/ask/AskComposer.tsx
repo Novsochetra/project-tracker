@@ -19,7 +19,7 @@ import { useQuestionFiles } from './useQuestionFiles';
 export interface AskComposerProps {
   projectKey: string;
   chatId: string | null;
-  // The helper that answers; null while none can (thinking, unknown or none online).
+  // The helper that answers; null while none can (unknown or none online).
   helper: Runner | null;
   stoppableRun: Run | null;
   offersSend: boolean;
@@ -90,7 +90,14 @@ export function AskComposer({
             send();
           }}
         />
-        {offersSend && <SendButton stoppableRun={stoppableRun} canSend={canSend} onSend={onSend} />}
+        {offersSend && (
+          <SendButton
+            stoppableRun={stoppableRun}
+            hasDraft={text.trim() !== ''}
+            canSend={canSend}
+            onSend={onSend}
+          />
+        )}
       </div>
     </form>
   );
