@@ -94,8 +94,11 @@ interface AskIn {
   isNew: boolean;
 }
 
+// Only the server adds a plan (planFollowUp.ts): the route's zod input has no such field.
+export type AskWithPlan = AskValues & { plan?: string };
+
 // Under the chat's lock, so the session and the chat so far are as the answer before left them.
-async function askRequestIn(trx: ServiceContext, scope: UserScope, at: AskIn, input: AskValues) {
+async function askRequestIn(trx: ServiceContext, scope: UserScope, at: AskIn, input: AskWithPlan) {
   const { project, isNew } = at;
   const chat = isNew ? at.chat : await requireChat(trx, scope, at.chat.id);
   const runner = await requireRunnerFor(trx, scope, input.runnerId, project);
@@ -104,15 +107,15 @@ async function askRequestIn(trx: ServiceContext, scope: UserScope, at: AskIn, in
   const queued = { scope, runner, projectId: project.id, now: trx.now() };
   const saved = { model: chat.askModel, mode: chat.askMode, effort: chat.askEffort };
   const options = chosenAskOptions(input, saved);
-  const { text: question, attachmentIds } = input;
-  return { queued, project, chat, history, ticket, question, attachmentIds, options };
+  const { text: question, attachmentIds, plan } = input;
+  return { queued, project, chat, history, ticket, question, attachmentIds, options, plan };
 }
 
 async function askIn(
   ctx: ServiceContext,
   scope: UserScope,
   at: AskIn,
-  input: AskValues,
+  input: AskWithPlan,
 ): Promise<ChatDetail> {
   await requireRunnerFor(ctx, scope, input.runnerId, at.project);
   await expireSilentRuns(ctx);
@@ -121,7 +124,9 @@ async function askIn(
     else await lockChat(db, at.chat.id);
     const trx = { ...ctx, db };
     const request = await askRequestIn(trx, scope, at, input);
-    return at.isNew ? [await queueAsk(db, request)] : sendOrQueue(trx, scope, request);
+    // An approved plan goes ahead of messages sent while Claude planned: the queue keeps no plan.
+    const goesNow = at.isNew || request.plan !== undefined;
+    return goesNow ? [await queueAsk(db, request)] : sendOrQueue(trx, scope, request);
   });
   for (const run of runs) notifyRun(ctx, scope, run);
   return getChat(ctx, scope, at.chat.id);
@@ -158,7 +163,7 @@ export async function askInChat(
   ctx: ServiceContext,
   scope: UserScope,
   chatId: string,
-  input: AskValues,
+  input: AskWithPlan,
 ): Promise<ChatDetail> {
   const chat = await requireChat(ctx, scope, chatId);
   const project = await requireProject(ctx.db, scope, chat.projectKey);

@@ -1,4 +1,10 @@
-import { permissionPush, questionPush, type PushPlace } from '@tracker/shared';
+import {
+  permissionPush,
+  planPush,
+  questionPush,
+  type PushMessage,
+  type PushPlace,
+} from '@tracker/shared';
 import type { UserScope } from '../auth/scope';
 import type { RunRequestRow } from '../db/runTables';
 import { findChatInScope } from '../repositories/chats';
@@ -23,6 +29,11 @@ async function placeOfRun(
   return chat ? { chat: pushChatOf(chat) } : null;
 }
 
+function pushOf(row: RunRequestRow, place: PushPlace): PushMessage {
+  if (row.kind === 'question') return questionPush(place);
+  return row.kind === 'plan' ? planPush(place) : permissionPush(place, row.label);
+}
+
 // Read when it goes out, so a request answered or ended in between sends nothing.
 export function pushRunRequest(
   ctx: ServiceContext,
@@ -34,6 +45,6 @@ export function pushRunRequest(
     const now = await findRunRequestRow(ctx.db, row.id);
     const place = now?.status === 'open' ? await placeOfRun(ctx, scope, run) : null;
     if (!place) return null;
-    return row.kind === 'question' ? questionPush(place) : permissionPush(place, row.label);
+    return pushOf(row, place);
   });
 }

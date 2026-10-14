@@ -21,6 +21,7 @@ export interface AskRunRequest {
   ticket: PromptTicket | null;
   question: string;
   options: AskOptions;
+  plan?: string | undefined;
 }
 
 export interface AskRequest extends AskRunRequest {
@@ -72,6 +73,7 @@ export async function queueAskRun(trx: Db, request: AskRunRequest, saved: SavedQ
     history: request.history,
     resumed: resumeSessionId !== null,
     ticket: request.ticket,
+    plan: request.plan,
   });
   const run = queuedRunRow(queued, {
     prompt,

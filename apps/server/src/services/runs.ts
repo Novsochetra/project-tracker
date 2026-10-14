@@ -22,6 +22,7 @@ import { saveAnswer } from './chatAnswers';
 import { startNextQueued } from './chatQueue/startNext';
 import { inTransaction, type ServiceContext } from './context';
 import { loadTicketScope, requireTicket, ticketKeyOf, type TicketRef } from './lookups';
+import { carryOutApprovedPlan } from './planFollowUp';
 import { keepsPlanLimits, notePlanLimits } from './planUsage';
 import { continueChain } from './reviewChain/continueChain';
 import { endingOf } from './runEnding';
@@ -141,6 +142,8 @@ export async function endRun(
     await notePlanLimits(ctx.db, scope, seen);
   }
   if (ended.marked) {
+    // First, so the chat read on this event shows why an approved plan didn't start.
+    await carryOutApprovedPlan(ctx, scope, after);
     notifyRun(ctx, scope, after);
     // A chain that went on or stopped says so itself; "Claude finished" between its runs is noise.
     if (!(await continueChain(ctx, after))) pushRunEnd(ctx, scope, after);
