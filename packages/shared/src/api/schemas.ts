@@ -14,6 +14,7 @@ import {
 import { PRIORITIES } from '../domain/priority';
 import { PROJECT_INSTRUCTIONS_MAX } from '../domain/project';
 import { DEFAULT_PROJECT_TEMPLATE, PROJECT_TEMPLATE_NAMES } from '../domain/projectTemplates';
+import { MAX_PARALLEL_RUNS_MAX } from '../domain/run';
 import { STATUS_CATEGORIES } from '../domain/status';
 import {
   TICKET_ASSIGNEE_MAX,
@@ -61,6 +62,7 @@ export const updateProjectInput = z.object({
   repo: z.string().trim().max(500).optional(),
   instructions: projectInstructions,
   autoReview: z.boolean().optional(),
+  maxParallelRuns: z.number().int().min(1).max(MAX_PARALLEL_RUNS_MAX).optional(),
 });
 export type UpdateProjectInput = z.input<typeof updateProjectInput>;
 
@@ -126,6 +128,7 @@ export const createTicketInput = z.object({
   priority: z.enum(PRIORITIES).default('medium'),
   assignee: z.string().trim().max(TICKET_ASSIGNEE_MAX).default(''),
   due: dueDate.default(''),
+  needsDevice: z.boolean().default(false),
   attachmentIds: attachmentIds('ticket').default([]),
   labelIds: labelIds.default([]),
   // From a client that may send the same create again: a repeat gets the ticket the first one made.
@@ -141,6 +144,7 @@ export const updateTicketInput = z.object({
   assignee: z.string().trim().max(TICKET_ASSIGNEE_MAX).optional(),
   due: dueDate.optional(),
   labelIds: changedLabelIds.optional(),
+  needsDevice: z.boolean().optional(),
 });
 export type UpdateTicketInput = z.input<typeof updateTicketInput>;
 

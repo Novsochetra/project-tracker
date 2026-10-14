@@ -100,3 +100,14 @@ export async function ticketStatsByProject(
     lastUpdatedAt: Number(row.lastUpdatedAt),
   }));
 }
+
+// An update that changes nothing still holds the row until the transaction ends, in both
+// databases' SQL, where "select ... for update" is Postgres only. So takes of one project's runs
+// start one at a time, and each one's count sees the runs the others started.
+export async function holdProjectRuns(db: Db, projectId: string): Promise<void> {
+  await db
+    .updateTable('projects')
+    .set((eb) => ({ maxParallelRuns: eb.ref('maxParallelRuns') }))
+    .where('id', '=', projectId)
+    .execute();
+}

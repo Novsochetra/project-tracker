@@ -11,6 +11,7 @@ import {
 } from './routes';
 
 const projects: Route = { name: 'projects' };
+const activity: Route = { name: 'activity' };
 const mob: Route = { name: 'project', key: 'MOB' };
 const mob3: Route = { name: 'ticket', key: 'MOB', num: 3 };
 const mob4: Route = { name: 'ticket', key: 'MOB', num: 4 };
@@ -30,6 +31,8 @@ describe('parseRoute', () => {
     ['/p/MOB/3', mob3],
     ['/p/MOB/3/', mob3],
     ['/p/MOB2/12', { name: 'ticket', key: 'MOB2', num: 12 }],
+    ['/activity', activity],
+    ['/activity/', activity],
     ['/p/MOB/ask', ask],
     ['/p/MOB/ask/', ask],
     ['/p/MOB/ask/c-1', chat],
@@ -68,7 +71,17 @@ describe('parseRoute', () => {
 
 describe('routePath', () => {
   it('builds paths that parse back to the same route', () => {
-    for (const route of [projects, mob, mob3, ask, chat, newChat, ticketChat, newTicketChat]) {
+    for (const route of [
+      projects,
+      activity,
+      mob,
+      mob3,
+      ask,
+      chat,
+      newChat,
+      ticketChat,
+      newTicketChat,
+    ]) {
       expect(parseRoute(routePath(route))).toEqual(route);
     }
     for (const route of [{ name: 'project', key: 'A B' } as Route]) {

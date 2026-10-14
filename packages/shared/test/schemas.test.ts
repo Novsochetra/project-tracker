@@ -18,6 +18,7 @@ describe('createTicketInput', () => {
       priority: 'medium',
       assignee: '',
       due: '',
+      needsDevice: false,
       attachmentIds: [],
       labelIds: [],
     });

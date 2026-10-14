@@ -52,6 +52,7 @@ export * from './logic/reviewPrompt';
 export * from './logic/pushMessages';
 export * from './logic/pushServices';
 export * from './logic/rank';
+export * from './logic/runAllCard';
 export * from './logic/runRequests';
 export * from './logic/runnerTools';
 export * from './logic/runSteps';

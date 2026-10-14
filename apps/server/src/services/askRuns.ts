@@ -37,6 +37,7 @@ async function insertQuestion(trx: Db, request: AskRequest, id: string): Promise
     text: question,
     ticketId: null,
     runId: null,
+    batchRunId: null,
     createdAt: queued.now,
   });
   return sendChatFiles(trx, request.attachmentIds, { messageId: id, uploader: queued.scope });
@@ -71,6 +72,7 @@ export async function queueAsk(trx: Db, request: AskRequest) {
     questionId,
   });
   await insertQueuedRun(trx, run, CHAT_BUSY);
+
   // The chat keeps the last choice, so the next question starts with it.
   await updateChatRow(trx, chat.id, {
     updatedAt: queued.now,

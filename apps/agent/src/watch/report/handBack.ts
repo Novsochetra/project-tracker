@@ -28,14 +28,24 @@ const lastBlock = (texts: readonly string[], ticketKey: string): string | null =
 
 // claude -p can only reach the tracker through its MCP tools. When those are missing or Claude
 // just prints the report, the helper puts it on the ticket the way "Paste report" does (PT-155).
+// A batch's Claude ends with a block for each of its tickets.
 export async function handBackReport(
-  { api, log, describe }: HandBackDeps,
+  deps: HandBackDeps,
   job: RunJob,
   texts: readonly string[],
 ): Promise<void> {
-  const { ticketKey } = job.run;
-  const text = ticketKey ? lastBlock(texts, ticketKey) : null;
-  if (!ticketKey || !text) return;
+  const keys = job.run.ticketKey ? [job.run.ticketKey] : (job.ticketKeys ?? []);
+  for (const ticketKey of keys) await handBackOne(deps, job, texts, ticketKey);
+}
+
+async function handBackOne(
+  { api, log, describe }: HandBackDeps,
+  job: RunJob,
+  texts: readonly string[],
+  ticketKey: string,
+): Promise<void> {
+  const text = lastBlock(texts, ticketKey);
+  if (!text) return;
   try {
     if (await alreadyOnTheTicket(api, job, ticketKey)) return;
     const { updatedTicketKeys } = await api.applyReport({ text, ticketKey });

@@ -55,6 +55,7 @@ function HeaderActions({ route, projectKey }: { route: Route; projectKey: string
     case 'chat':
       return route.chatId && <ChatOptionsMenu projectKey={projectKey} chatId={route.chatId} />;
     case 'ticket':
+    case 'activity':
       return null;
   }
 }

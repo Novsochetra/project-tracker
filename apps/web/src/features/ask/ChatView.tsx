@@ -57,6 +57,7 @@ export function ChatView({ projectKey, chatId, detail, ticketNum }: ChatViewProp
         ) : (
           <MessageList
             chatId={chatId ?? ''}
+            projectKey={projectKey}
             messages={messages}
             helper={helper.cardHelper}
             stoppedRuns={stoppedRuns}

@@ -18,7 +18,7 @@ export const NEW_CHAT_LABEL = 'New chat';
 
 const PROJECTS: Route = { name: 'projects' };
 
-type ProjectRoute = Exclude<Route, { name: 'projects' }>;
+type ProjectRoute = Exclude<Route, { name: 'projects' | 'activity' }>;
 
 // A chat opened from a ticket sits under that ticket, as on phones.
 function chatParentCrumb(route: Extract<Route, { name: 'chat' }>, key: string): Crumb {
@@ -51,6 +51,7 @@ export function breadcrumbFor(
   chatTitle?: string,
 ): Crumb[] {
   if (route.name === 'projects') return [{ level: 'projects', label: 'Projects', target: null }];
+  if (route.name === 'activity') return [{ level: 'activity', label: 'Activity', target: null }];
   const key = project?.key ?? route.key.toUpperCase();
   const projectCrumb: Crumb = {
     level: 'project',
@@ -66,4 +67,4 @@ export function breadcrumbFor(
 }
 
 export const projectKeyOf = (route: Route): string | null =>
-  route.name === 'projects' ? null : route.key;
+  route.name === 'projects' || route.name === 'activity' ? null : route.key;

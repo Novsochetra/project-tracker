@@ -60,6 +60,7 @@ export const toMessage = (
   text: row.text,
   cardTickets: cards.filter((card) => card.messageId === row.id).map(toCardTicket),
   runId: row.runId,
+  batchRunId: row.batchRunId,
   stepCount: shownStepCount(row),
   attachments: files.map(toAttachment),
   usage: usageOfRow(row),

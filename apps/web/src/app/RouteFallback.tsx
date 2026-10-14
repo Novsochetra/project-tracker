@@ -29,6 +29,7 @@ export function RouteFallback() {
   switch (route.name) {
     // The chat screens leave a missing chat or project themselves, step by step up the stack.
     case 'projects':
+    case 'activity':
     case 'chats':
     case 'chat':
       return null;

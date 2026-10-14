@@ -11,6 +11,7 @@ import { addDirArgs, withAskFiles, type FetchFile } from './ask/askFiles';
 import { claudeArgs, runClaude } from './claude';
 import { trackerAllowedArgs } from './mcp/trackerAllowedTools';
 import type { ClaudeExit } from './outcome';
+import { questionsOnly } from './permissionTool/questionsOnly';
 import { withPromptTool, type PromptTool } from './permissionTool/withPromptTool';
 
 export type OnSteps = (steps: RunStepInput[]) => void;
@@ -49,15 +50,15 @@ export function claudeRunners(setup: ClaudeSetup) {
   const limit = setup.maxTurns ? ['--max-turns', setup.maxTurns] : [];
   // A reader a run: it remembers that run's open tool calls.
   const onEvent = (onSteps: OnSteps) => stepsOf(readSteps(cwd), onSteps);
-  // Only runs of the ticket lane, the ones that may change the folder, may ask the person: ticket
-  // runs and Edit questions. An Ask or Plan question gets no prompt tool and no tracker tools, so
-  // no answer can widen what it may do.
+  // Every run may ask the person (PT-230). Only runs of the ticket lane, the ones that may change
+  // the folder, get the tracker tools and may ask for a permission; an Ask or Plan question may only
+  // ask questions, so no answer can widen what it may do.
   const asking = (run: Run, start: (laneArgs: string[]) => Promise<ClaudeExit>) => {
-    if (laneOf(run.kind, run.askOptions) !== 'ticket') return start([]);
-    const allowed = trackerAllowedArgs(run);
-    return prompts
-      ? withPromptTool(prompts, run, (promptArgs) => start([...allowed, ...promptArgs]))
-      : start(allowed);
+    const changesFolder = laneOf(run.kind, run.askOptions) === 'ticket';
+    const allowed = changesFolder ? trackerAllowedArgs(run) : [];
+    if (!prompts) return start(allowed);
+    const tool = changesFolder ? prompts : questionsOnly(prompts);
+    return withPromptTool(tool, run, (promptArgs) => start([...allowed, ...promptArgs]));
   };
   return {
     runClaude: (job: RunJob, stop: AbortSignal, onSteps: OnSteps) =>

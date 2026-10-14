@@ -7,6 +7,7 @@ import { refreshProjectList } from '../projectListRefresh';
 import { isRefreshable } from '../refresh';
 import { changeScope, EVERYTHING, isAffected, type CachedEntry } from './changeScope';
 import { refreshLive } from './refreshLive';
+import { refreshBatches } from './refreshBatches';
 
 // The service worker's copy can't hold the change that caused a refresh, so the tickets it
 // refetches are read fresh.
@@ -36,6 +37,7 @@ export function refreshForChange(
     isAffected(queryKey, scope) && isRefreshable(queryClient, queryKey, busy);
   const keys = entries.map(({ queryKey }) => queryKey).filter(refreshed);
   readFresh(queryClient, keys);
+  if (!event || event.ticketId) refreshBatches(queryClient);
   if (keys.some(isProjectList)) refreshProjectList(queryClient);
   void refreshLive(queryClient, {
     predicate: ({ queryKey }) => !isProjectList(queryKey) && refreshed(queryKey),

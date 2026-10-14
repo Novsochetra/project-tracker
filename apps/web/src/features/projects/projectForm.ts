@@ -1,5 +1,7 @@
 import {
   DEFAULT_PROJECT_TEMPLATE,
+  DEFAULT_MAX_PARALLEL_RUNS,
+  MAX_PARALLEL_RUNS_MAX,
   derivePrefix,
   resolvePrefix,
   type CreateProjectInput,
@@ -18,6 +20,7 @@ export interface ProjectFormValues {
   instructions: string;
   template: ProjectTemplateName;
   autoReview: boolean;
+  maxParallelRuns: string;
 }
 
 export const EMPTY_PROJECT_FORM: ProjectFormValues = {
@@ -28,6 +31,7 @@ export const EMPTY_PROJECT_FORM: ProjectFormValues = {
   instructions: '',
   template: DEFAULT_PROJECT_TEMPLATE,
   autoReview: false,
+  maxParallelRuns: String(DEFAULT_MAX_PARALLEL_RUNS),
 };
 
 export const NAME_REQUIRED = 'Add a name to create the project.';
@@ -35,7 +39,8 @@ export const NAME_REQUIRED = 'Add a name to create the project.';
 const REPO_HINT = 'The repository is added to every Claude Code prompt.';
 
 export const formValuesOf = (
-  project: Pick<Project, 'name' | 'description' | 'repo' | 'instructions' | 'autoReview'>,
+  project: Pick<Project, 'name' | 'description' | 'repo' | 'instructions' | 'autoReview'> &
+    Partial<Pick<Project, 'maxParallelRuns'>>,
 ): ProjectFormValues => ({
   ...EMPTY_PROJECT_FORM,
   name: project.name,
@@ -43,11 +48,20 @@ export const formValuesOf = (
   repo: project.repo,
   instructions: project.instructions ?? '',
   autoReview: project.autoReview ?? false,
+  maxParallelRuns: String(project.maxParallelRuns ?? DEFAULT_MAX_PARALLEL_RUNS),
 });
 
 export const hasName = (values: ProjectFormValues): boolean => values.name.trim() !== '';
 
-const TEXT_FIELDS = ['name', 'description', 'repo', 'prefix', 'instructions', 'template'] as const;
+const TEXT_FIELDS = [
+  'name',
+  'description',
+  'repo',
+  'prefix',
+  'instructions',
+  'template',
+  'maxParallelRuns',
+] as const;
 
 // Trimmed like Create and Save send them, so a stray space doesn't make the sheet ask.
 export const projectFormChanged = (
@@ -84,7 +98,14 @@ export const updateProjectInput = (values: ProjectFormValues): UpdateProjectInpu
   repo: values.repo.trim(),
   instructions: values.instructions.trim(),
   autoReview: values.autoReview,
+  maxParallelRuns: parallelRunsOf(values),
 });
+
+export const parallelRunsOf = (values: ProjectFormValues): number => {
+  const count = Math.round(Number(values.maxParallelRuns));
+  if (!Number.isFinite(count)) return DEFAULT_MAX_PARALLEL_RUNS;
+  return Math.min(MAX_PARALLEL_RUNS_MAX, Math.max(1, count));
+};
 
 export const INSTRUCTIONS_HINT =
   'Claude gets these with every ticket and question in this project.';

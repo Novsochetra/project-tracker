@@ -1,6 +1,9 @@
 import { lazyWithPreload } from '../lib/lazyWithPreload';
 import { routeStack, type Route } from '../navigation';
 
+export const ActivityScreen = lazyWithPreload(() =>
+  import('../features/activity/ActivityScreen').then((module) => module.ActivityScreen),
+);
 export const ProjectScreen = lazyWithPreload(() =>
   import('../features/project/projectScreens').then((module) => module.ProjectScreen),
 );
@@ -56,6 +59,7 @@ interface Part {
 
 const SCREENS: Record<Route['name'], Part | null> = {
   projects: null,
+  activity: ActivityScreen,
   project: ProjectScreen,
   ticket: TicketScreen,
   chats: ChatsScreen,

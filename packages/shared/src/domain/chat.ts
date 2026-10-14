@@ -45,6 +45,8 @@ export interface ChatMessage {
   cardTickets: CardTicketLink[];
   // The run that gave Claude's answer, so its steps can fold under it; null on the person's.
   runId: string | null;
+  // The batch this message's Run all card started, once the person taps Confirm.
+  batchRunId: string | null;
   // The steps its open list shows, so an older answer can say "23 steps" before they are read:
   // the run's, less Claude's last words when they are the answer itself. 0 on the person's.
   stepCount: number;

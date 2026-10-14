@@ -22,7 +22,6 @@ import type {
   CreateTicketInput,
   ExpectedComment,
   ExpectedFields,
-  FinishRunInput,
   Invite,
   InvitedUser,
   ListTicketsQuery,
@@ -37,22 +36,16 @@ import type {
   PromptResult,
   PushKey,
   PushSubscriptionInput,
-  RegisterRunnerInput,
   ReportInput,
   ReportPreview,
   ReportResult,
   ResetLinkCheck,
   ResetPasswordInput,
   ReviewInput,
-  Run,
-  RunJob,
-  RunKind,
-  Runner,
   RunStep,
   ServerMeta,
   SessionState,
   StartChatInput,
-  StartRunInput,
   Status,
   SubmitWorkInput,
   Ticket,
@@ -65,8 +58,8 @@ import type {
   UpdateTicketInput,
 } from '@tracker/shared';
 import { segment } from './asking';
-import { LabelingClient } from './labeling';
 import type { ReadOptions } from './http';
+import { RunsClient } from './runsClient';
 import type { UploadOptions } from './upload';
 
 const attachmentFilePath = (attachmentId: string): string =>
@@ -79,7 +72,7 @@ const listQuery = (query: ListTicketsQuery) => ({
   label: query.label,
 });
 
-export class TrackerClient extends LabelingClient {
+export class TrackerClient extends RunsClient {
   listProjects = () => this.http.request<ProjectSummary[]>('GET', '/api/projects');
 
   createProject = (input: CreateProjectInput) =>
@@ -279,37 +272,6 @@ export class TrackerClient extends LabelingClient {
 
   removePushSubscription = (endpoint: string) =>
     this.http.request<void>('DELETE', '/api/push/subscription', { body: { endpoint } });
-
-  startRun = (ticketKey: string, input: StartRunInput) =>
-    this.http.request<Run>('POST', `/api/tickets/${segment(ticketKey)}/runs`, { body: input });
-
-  listTicketRuns = (ticketKey: string) =>
-    this.http.request<Run[]>('GET', `/api/tickets/${segment(ticketKey)}/runs`);
-
-  getRun = (runId: string) => this.http.request<Run>('GET', `/api/runs/${segment(runId)}`);
-
-  cancelRun = (runId: string) =>
-    this.http.request<Run>('POST', `/api/runs/${segment(runId)}/cancel`);
-
-  listRunners = () => this.http.request<Runner[]>('GET', '/api/runners');
-
-  removeRunner = (runnerId: string) =>
-    this.http.request<void>('DELETE', `/api/runners/${segment(runnerId)}`);
-
-  registerRunner = (runnerId: string, input: RegisterRunnerInput) =>
-    this.http.request<Runner>('PUT', `/api/runners/${segment(runnerId)}`, { body: input });
-
-  takeNextRun = (runnerId: string, kind: RunKind) =>
-    this.http.request<RunJob | null>(
-      'POST',
-      `/api/runners/${segment(runnerId)}/next?kind=${kind}`,
-      {
-        allowEmpty: true,
-      },
-    );
-
-  finishRun = (runId: string, input: FinishRunInput) =>
-    this.http.request<Run>('POST', `/api/runs/${segment(runId)}/finish`, { body: input });
 
   addRunSteps = (
     runId: string,

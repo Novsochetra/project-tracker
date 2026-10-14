@@ -374,6 +374,7 @@ describe('regression: New project and Edit project threw typed text away', () =>
       repo: '~/code/web',
       instructions: '',
       autoReview: false,
+      maxParallelRuns: 5,
     });
   });
 });

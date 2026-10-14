@@ -72,7 +72,11 @@ describe('regression: the prompt socket under a long TMPDIR', () => {
     );
     await lane.lookForWork();
     expect(tracker.ended).toEqual([
-      { id: 'r-1', status: 'failed', error: `Claude Code could not start: ${reason}` },
+      {
+        id: 'r-1',
+        status: 'failed',
+        error: `Claude Code could not start: ${reason}\nThe run ended. Press Send to Claude to start it again.`,
+      },
       { id: 'r-2', status: 'done' },
     ]);
     expect(log.slice(0, 3)).toEqual([

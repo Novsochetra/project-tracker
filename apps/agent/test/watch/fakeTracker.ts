@@ -43,12 +43,14 @@ export const runOf = (id: string, ticketKey: string): Run => ({
   endedAt: null,
   stepCount: 0,
   usage: null,
+  batchId: null,
 });
 
 export const job = (id: string, ticketKey: string, prompt = `Work on ${ticketKey}`): RunJob => ({
   run: runOf(id, ticketKey),
   prompt,
   resumeSessionId: null,
+  ticketKeys: [],
 });
 
 export const reviewJob = (id: string, ticketKey: string): RunJob => ({
@@ -66,6 +68,7 @@ export const askJob = (
   run: { ...runOf(id, 'MOB-0'), kind: 'ask', ticketKey: null, chatId, askOptions },
   prompt: `Question in ${chatId}`,
   resumeSessionId,
+  ticketKeys: [],
 });
 
 export const reportEntry = (createdAt: number): Activity =>

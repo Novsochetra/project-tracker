@@ -39,6 +39,7 @@ export async function createCardTicket(
     ...fields,
     assignee: '',
     due: '',
+    needsDevice: false,
     attachmentIds: [],
     labelIds: [],
     clientId: cardClientId(message.id, index),

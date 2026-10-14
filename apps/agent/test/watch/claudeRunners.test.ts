@@ -14,11 +14,16 @@ const fake = installFakeClaude();
 const cwd = realpathSync(tmpdir());
 afterAll(() => fake.remove());
 
+const prompts = {
+  command: ['node', 'promptTool.js'],
+  ask: () => Promise.reject(new Error('unused')),
+};
+
 const ask = () => ({ ...askJob('r-1', 'c-1'), prompt: 'Where is X?' });
 
 describe('claudeRunners', () => {
   it("turns Claude's events into steps, never what a tool gave back", async () => {
-    const claude = claudeRunners({ command: fake.command, cwd, write: () => undefined });
+    const claude = claudeRunners({ command: fake.command, cwd, write: () => undefined, prompts });
     const steps: RunStepInput[] = [];
     await claude.runClaude(job('r-1', 'MOB-1'), new AbortController().signal, (more) =>
       steps.push(...more),
@@ -58,6 +63,7 @@ describe('claudeRunners', () => {
       command: fake.command,
       cwd,
       write: () => undefined,
+      prompts,
       readSteps: () => () => {
         throw new Error('unreadable event');
       },

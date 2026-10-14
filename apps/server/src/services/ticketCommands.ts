@@ -81,6 +81,7 @@ async function insertNewTicket(trx: Db, ctx: UserContext, request: NewTicket): P
     priority: input.priority,
     assignee: input.assignee,
     due: input.due,
+    needsDevice: input.needsDevice ? 1 : 0,
     createdAt: at,
     updatedAt: at,
     clientId: input.clientId ?? null,
@@ -212,8 +213,10 @@ export async function deleteTicket(ctx: UserContext, key: string): Promise<void>
   const removed = await inTransaction(ctx, async (trx) => {
     const ref = await requireTicket(trx, ctx.scope, key);
     const files = await storageKeysOfTicket(trx, ref.ticket.id);
-    await deleteTicketRow(trx, ref.ticket.id);
+    // The project's row before its runs' rows (the delete cascades to them), in the order a take
+    // locks them (takeNextRun), or the two can deadlock on Postgres.
     await updateProjectRow(trx, ref.project.id, { updatedAt: ctx.now() });
+    await deleteTicketRow(trx, ref.ticket.id);
     return { ref, files };
   });
   await removeFiles(ctx.storage, removed.files);

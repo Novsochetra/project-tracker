@@ -111,6 +111,48 @@ export function buildTicketPrompt(
   ].join('\n');
 }
 
+export type BatchPromptTicket = Pick<PromptTicket, 'key' | 'title' | 'priority'>;
+
+const subAgentRules = (limit: number): string[] => [
+  `- Give each ticket to a sub agent of its own (the Agent tool). Run at most ${limit} sub agents at once.`,
+  '- As soon as a sub agent ends, give the next ticket to a new one, until every ticket is done.',
+  '- Each sub agent works on its one ticket with the tracker tools, as a single ticket run does:',
+  '  1. claim_ticket to move it to In progress and read it in full.',
+  '  2. Do the work. Record decisions and blockers with add_comment.',
+  '  3. When the work is done and checked, submit_for_review with a summary, the files and what I still need to do. When it is blocked, say why with add_comment and leave it In progress.',
+  '  Never move a ticket to Done.',
+  '- The sub agents share this folder. Each one changes only what its own ticket needs and leaves all other changes alone.',
+  '- When a ticket fails, go on with the others.',
+];
+
+// The tickets are listed, not written out: each sub agent reads its own with claim_ticket, so the
+// prompt stays small however many tickets the batch holds.
+export function buildBatchPrompt(
+  project: PromptProject,
+  tickets: readonly BatchPromptTicket[],
+  limit: number,
+): string {
+  return [
+    `Please work on these ${tickets.length} tickets from my "${project.name}" project with sub agents.`,
+    ...repoLine(project),
+    '',
+    '## Tickets',
+    ...tickets.map(
+      (ticket) =>
+        `- ${ticket.key} · ${PRIORITY_LABELS[ticket.priority]} · ${ticket.title || 'Untitled'}`,
+    ),
+    '',
+    '## How to work',
+    ...subAgentRules(limit),
+    '',
+    '## When you finish',
+    'List every ticket with how it ended: done, blocked or failed, and why for each that did not finish.',
+    'Then, for each ticket, end your reply with one block like this, filled in, so I can paste it back into my tracker:',
+    '',
+    replyFormat(`${project.key}-<number>`),
+  ].join('\n');
+}
+
 export function buildProjectPrompt(
   project: PromptProject,
   tickets: readonly PromptTicket[],

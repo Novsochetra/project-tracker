@@ -25,6 +25,7 @@ const message = (
     cardTickets,
     runId: null,
     attachments: [],
+    batchRunId: null,
     stepCount: 0,
     usage: null,
     createdAt: next,

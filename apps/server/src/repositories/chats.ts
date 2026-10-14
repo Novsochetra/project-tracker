@@ -118,6 +118,17 @@ export async function updateChatRow(
   await db.updateTable('chats').set(changes).where('id', '=', id).execute();
 }
 
+// Only a card that has no batch yet takes one, so two taps on Confirm that race start one batch.
+export async function claimMessageBatch(db: Db, id: string, batchRunId: string): Promise<boolean> {
+  const result = await db
+    .updateTable('chatMessages')
+    .set({ batchRunId })
+    .where('id', '=', id)
+    .where('batchRunId', 'is', null)
+    .executeTakeFirst();
+  return Number(result.numUpdatedRows) > 0;
+}
+
 export const assignOwnerlessChats = (db: Db, userId: string) =>
   db.updateTable('chats').set({ userId }).where('userId', 'is', null).execute();
 

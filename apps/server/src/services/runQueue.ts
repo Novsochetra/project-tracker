@@ -1,9 +1,21 @@
-import { RUN_RESTARTED, type RunJob, type RunKind } from '@tracker/shared';
+import {
+  BATCH_NEEDS_NEW_HELPER,
+  formatTicketKey,
+  RUN_RESTARTED,
+  type RunJob,
+  type RunLane,
+} from '@tracker/shared';
 import type { UserScope } from '../auth/scope';
 import type { RunnerRow } from '../db/runTables';
-import { failRunsOf, markRunStarted, nextQueuedRun } from '../repositories/runs';
+import {
+  endOrphanBatchTickets,
+  failQueuedBatchesOf,
+  listBatchTicketRows,
+} from '../repositories/batchRuns';
+import { holdProjectRuns } from '../repositories/projects';
+import { failRunsOf, markRunStarted, nextQueuedRun, type RunWithKey } from '../repositories/runs';
 import { runFiles } from './chatFiles';
-import type { ServiceContext } from './context';
+import { inTransaction, type ServiceContext } from './context';
 import { notifyRun, parseProjectIds, toRun } from './runMappers';
 import { requireRunner, touchRunner } from './runners';
 import { expireSilentRuns, requireRun } from './runs';
@@ -14,7 +26,7 @@ async function endLostRuns(
   ctx: ServiceContext,
   scope: UserScope,
   runner: RunnerRow,
-  lane: RunKind,
+  lane: RunLane,
 ) {
   const lost = await failRunsOf(
     ctx.db,
@@ -28,22 +40,49 @@ async function endLostRuns(
   for (const run of lost) notifyRun(ctx, scope, run);
 }
 
+// A helper that can't run a batch would leave it waiting with no word why, so it ends with one.
+async function endBatchesFor(ctx: ServiceContext, scope: UserScope, runner: RunnerRow) {
+  const ending = { error: BATCH_NEEDS_NEW_HELPER, endedAt: ctx.now() };
+  const failed = await failQueuedBatchesOf(ctx.db, runner.id, ending);
+  if (failed.length === 0) return;
+  const held = await endOrphanBatchTickets(ctx.db, ending);
+  for (const run of [...failed, ...held]) notifyRun(ctx, scope, run);
+}
+
+export interface Take {
+  lane: RunLane | undefined;
+  batches: boolean;
+}
+
 export async function takeNextRun(
   ctx: ServiceContext,
   scope: UserScope,
   runnerId: string,
-  lane: RunKind | undefined,
+  { lane, batches }: Take,
 ): Promise<RunJob | null> {
   const runner = await requireRunner(ctx, scope, runnerId);
   await touchRunner(ctx, scope, runner);
   await expireSilentRuns(ctx);
   await endLostRuns(ctx, scope, runner, lane ?? 'ticket');
-  const slot = { runnerId: runner.id, lane, projectIds: parseProjectIds(runner) };
+  if (lane !== 'ask' && !batches) await endBatchesFor(ctx, scope, runner);
+  const slot = { runnerId: runner.id, lane, batches, projectIds: parseProjectIds(runner) };
   const next = await nextQueuedRun(ctx.db, scope, slot);
-  if (!next || !(await markRunStarted(ctx.db, scope, next.id, ctx.now()))) return null;
+  if (!next) return null;
+  const marked = await inTransaction(ctx, async (trx) => {
+    await holdProjectRuns(trx, next.projectId);
+    return markRunStarted(trx, scope, next.id, ctx.now());
+  });
+  if (!marked) return null;
   const started = await requireRun(ctx, scope, next.id);
   notifyRun(ctx, scope, started);
   const files = await runFiles(ctx.db, started);
   const { prompt, resumeSessionId } = started;
-  return { run: toRun(started), prompt, resumeSessionId, files };
+  const ticketKeys = await batchTicketKeys(ctx, started);
+  return { run: toRun(started), prompt, resumeSessionId, files, ticketKeys };
+}
+
+async function batchTicketKeys(ctx: ServiceContext, run: RunWithKey): Promise<string[]> {
+  if (run.kind !== 'batch') return [];
+  const rows = await listBatchTicketRows(ctx.db, [run.id]);
+  return rows.map((row) => formatTicketKey(run.projectKey, row.ticketNum));
 }

@@ -8,7 +8,9 @@ import {
   type StartRunInput,
 } from '@tracker/shared';
 import type { UserScope } from '../auth/scope';
+import type { Db } from '../db/schema';
 import { conflict, notFound } from '../errors';
+import { endBatchTickets, endOrphanBatchTickets } from '../repositories/batchRuns';
 import {
   failRunsOfSilentHelpers,
   findRunInScope,
@@ -28,6 +30,7 @@ import { usageOfFinish } from './runUsage';
 import { insertQueuedRun, queuedRunRow } from './runRows';
 
 const TICKET_RUNS_SHOWN = 20;
+const BATCH_ENDED = 'The batch ended before this ticket was done.';
 
 export async function expireSilentRuns(ctx: ServiceContext): Promise<void> {
   const endedAt = ctx.now();
@@ -41,6 +44,7 @@ export async function expireSilentRuns(ctx: ServiceContext): Promise<void> {
       error: RUN_LOST,
       endedAt,
     })),
+    ...(await endOrphanBatchTickets(ctx.db, { error: BATCH_ENDED, endedAt })),
   ];
   for (const row of expired) notifyRun(ctx, row.userId, row);
 }
@@ -123,19 +127,37 @@ export async function endRun(
     const changes = { status, error, endedAt, ...usageOfFinish(input) };
     const marked = await markRunEnded(trx, scope, before.id, changes);
     if (marked && answer) await saveAnswer(trx, before, { ...answer, at: endedAt });
-    return marked;
+    const held = marked ? await endHeldTickets(trx, before, status, endedAt) : [];
+    return { marked, held };
   });
   const after = await requireRun(ctx, scope, id);
-  if (!ended && after.status !== status) {
+  if (!ended.marked && after.status !== status) {
     throw conflict(`This run already ended (${after.status}).`);
   }
-  if (ended) {
+  if (ended.marked) {
     notifyRun(ctx, scope, after);
     // A chain that went on or stopped says so itself; "Claude finished" between its runs is noise.
     if (!(await continueChain(ctx, after))) pushRunEnd(ctx, scope, after, { answer });
   }
+  for (const row of ended.held) notifyRun(ctx, scope, row);
   return toRun(after);
 }
 
-export const cancelRun = (ctx: ServiceContext, scope: UserScope, id: string): Promise<Run> =>
-  endRun(ctx, scope, id, { status: 'cancelled' });
+// What the batch's Claude did not finish ends with it; a cancel ends it as cancelled.
+const endHeldTickets = (trx: Db, batch: RunWithKey, status: RunWithKey['status'], at: number) =>
+  batch.kind !== 'batch'
+    ? Promise.resolve([])
+    : endBatchTickets(trx, batch.id, {
+        status: status === 'cancelled' ? 'cancelled' : 'failed',
+        error: status === 'cancelled' ? null : BATCH_ENDED,
+        endedAt: at,
+      });
+
+// A batch's sub agent is not a process of its own, so only the whole batch can be stopped.
+export async function cancelRun(ctx: ServiceContext, scope: UserScope, id: string): Promise<Run> {
+  const run = await requireRun(ctx, scope, id);
+  if (run.batchId) {
+    throw conflict('This ticket runs in a batch. Stop the batch on the Activity screen.');
+  }
+  return endRun(ctx, scope, id, { status: 'cancelled' });
+}

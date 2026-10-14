@@ -287,6 +287,7 @@ const DATA_MODEL: SchemaShape = {
       'owner_id text',
       "instructions text not null default ''",
       'auto_review integer',
+      'max_parallel_runs integer not null default 5',
     ],
     indexes: ['index (owner_id)', 'unique (key)'],
     foreignKeys: [],
@@ -319,6 +320,7 @@ const DATA_MODEL: SchemaShape = {
       'created_at bigint not null',
       'updated_at bigint not null',
       'client_id text',
+      'needs_device integer not null default 0',
     ],
     indexes: [
       'index (project_id, status_id, rank)',
@@ -465,8 +467,10 @@ const DATA_MODEL: SchemaShape = {
       'round integer',
       'chain_stop text',
       'question_id text',
+      'batch_id text',
     ],
     indexes: [
+      'index (batch_id)',
       'index (chat_id, created_at)',
       'index (project_id, ended_at)',
       'index (runner_id, status)',
@@ -565,6 +569,7 @@ const DATA_MODEL: SchemaShape = {
       'ticket_id text',
       'created_at bigint not null',
       'run_id text',
+      'batch_run_id text',
     ],
     indexes: ['index (chat_id, created_at)'],
     foreignKeys: [

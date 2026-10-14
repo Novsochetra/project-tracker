@@ -7,9 +7,12 @@ const canonical = (key: string): string => key.toUpperCase();
 export const queryKeys = {
   projects: () => ['projects'] as const,
   ready: () => ['ready'] as const,
+  runActivity: () => ['runActivity'] as const,
+  runBatch: (runId: string) => ['runBatch', runId] as const,
   project: (projectKey: string) => ['project', canonical(projectKey)] as const,
   board: (projectKey: string) => ['project', canonical(projectKey), 'board'] as const,
   projectPrompt: (projectKey: string) => ['project', canonical(projectKey), 'prompt'] as const,
+  runAllPreview: (projectKey: string) => ['project', canonical(projectKey), 'runAll'] as const,
   ticket: (ticketKey: string) => ['ticket', canonical(ticketKey)] as const,
   ticketPrompt: (ticketKey: string) => ['ticket', canonical(ticketKey), 'prompt'] as const,
   ticketRuns: (ticketKey: string) => ['ticket', canonical(ticketKey), 'runs'] as const,

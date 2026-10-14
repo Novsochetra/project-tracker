@@ -96,11 +96,14 @@ describe('inputs', () => {
       repo: '~/code/mobile',
       instructions: 'Run the tests first.',
       autoReview: true,
+      maxParallelRuns: 5,
     });
   });
 
   it('starts an edit from the project values', () => {
-    expect(formValuesOf({ name: 'Website', description: 'Docs', repo: '~/web' })).toEqual({
+    expect(
+      formValuesOf({ name: 'Website', description: 'Docs', repo: '~/web', maxParallelRuns: 5 }),
+    ).toEqual({
       name: 'Website',
       description: 'Docs',
       repo: '~/web',
@@ -108,6 +111,7 @@ describe('inputs', () => {
       instructions: '',
       template: 'software',
       autoReview: false,
+      maxParallelRuns: '5',
     });
     const instructed = { name: 'Blog', description: '', repo: '', instructions: 'Plain voice.' };
     expect(formValuesOf(instructed).instructions).toBe('Plain voice.');
@@ -132,7 +136,12 @@ describe('projectFormChanged', () => {
   });
 
   it('compares an edit with the project it loaded', () => {
-    const loaded = formValuesOf({ name: 'Website', description: 'Docs', repo: '~/code/web' });
+    const loaded = formValuesOf({
+      name: 'Website',
+      description: 'Docs',
+      repo: '~/code/web',
+      maxParallelRuns: 5,
+    });
     const changed = (patch: Partial<ProjectFormValues>) =>
       projectFormChanged({ ...loaded, ...patch }, loaded);
     expect(changed({})).toBe(false);

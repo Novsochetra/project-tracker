@@ -4,6 +4,8 @@ import { UsageLine } from '../claude/UsageLine';
 import { AnswerSteps } from './AnswerSteps';
 import { CardThread } from './CardThread';
 import { messageCards, type MessageCards } from './cards';
+import { messageRunAllCards, type RunAllMessageCard } from './runAllCard';
+import { RunAllCardView } from './RunAllCardView';
 import styles from './ChatScreen.module.css';
 import { ClaudeFrom } from './ClaudeFrom';
 import { Markdown } from './markdown/Markdown';
@@ -14,6 +16,7 @@ import { threadItems } from './thread';
 
 export interface MessageListProps {
   chatId: string;
+  projectKey: string;
   messages: ChatMessage[];
   // The helper a created card's Run starts on.
   helper: Runner | null;
@@ -23,23 +26,46 @@ export interface MessageListProps {
 
 interface ClaudeMessageProps {
   chatId: string;
+  projectKey: string;
   message: ChatMessage;
   cards: MessageCards | undefined;
+  runAll: RunAllMessageCard | undefined;
   helper: Runner | null;
 }
 
-function ClaudeMessage({ chatId, message, cards, helper }: ClaudeMessageProps) {
+function MessageBody({ chatId, projectKey, message, cards, runAll, helper }: ClaudeMessageProps) {
+  if (runAll) {
+    return (
+      <>
+        <Markdown className={styles.text} text={runAll.split.before} />
+        <RunAllCardView
+          key={message.id}
+          chatId={chatId}
+          projectKey={projectKey}
+          message={message}
+          card={runAll}
+          helper={helper}
+        />
+        <Markdown className={styles.text} text={runAll.split.after} />
+      </>
+    );
+  }
+  return cards ? (
+    <CardThread chatId={chatId} message={message} cards={cards} helper={helper} />
+  ) : (
+    <Markdown className={styles.text} text={message.text} />
+  );
+}
+
+function ClaudeMessage(props: ClaudeMessageProps) {
+  const { message } = props;
   return (
     <article className={styles.claude} aria-label="Claude">
       <ClaudeFrom />
       {message.runId && message.stepCount > 0 && (
         <AnswerSteps runId={message.runId} count={message.stepCount} answer={message.text} />
       )}
-      {cards ? (
-        <CardThread chatId={chatId} message={message} cards={cards} helper={helper} />
-      ) : (
-        <Markdown className={styles.text} text={message.text} />
-      )}
+      <MessageBody {...props} />
       <UsageLine usage={message.usage} />
     </article>
   );
@@ -47,12 +73,14 @@ function ClaudeMessage({ chatId, message, cards, helper }: ClaudeMessageProps) {
 
 export function MessageList({
   chatId,
+  projectKey,
   messages,
   helper,
   stoppedRuns = [],
   latestRun,
 }: MessageListProps) {
   const cards = useMemo(() => messageCards(messages), [messages]);
+  const runAllCards = useMemo(() => messageRunAllCards(messages), [messages]);
   const items = useMemo(() => threadItems(messages, stoppedRuns), [messages, stoppedRuns]);
   return (
     <ol className={styles.messages} aria-label="Messages">
@@ -71,8 +99,10 @@ export function MessageList({
             ) : (
               <ClaudeMessage
                 chatId={chatId}
+                projectKey={projectKey}
                 message={message}
                 cards={cards.get(message.id)}
+                runAll={runAllCards.get(message.id)}
                 helper={helper}
               />
             )}

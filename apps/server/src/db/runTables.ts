@@ -57,6 +57,8 @@ export interface RunRow {
   chainStop: ChainStop | null;
   // So the helper is given the files of the question it answers.
   questionId: string | null;
+  // The batch run that holds this ticket's run: the batch's Claude works on it, no helper takes it.
+  batchId: string | null;
 }
 
 export interface RunStepRow {

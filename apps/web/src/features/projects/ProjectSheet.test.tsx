@@ -192,6 +192,7 @@ describe('Edit project sheet', () => {
       repo: '~/code/web',
       instructions: 'Plain voice.',
       autoReview: false,
+      maxParallelRuns: 5,
     });
     expect(await screen.findByText('Project updated')).toBeInTheDocument();
     await waitFor(() => expect(onClose).toHaveBeenCalled());

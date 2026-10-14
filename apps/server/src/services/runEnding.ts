@@ -16,7 +16,7 @@ export interface RunEnding {
 export function endingOf(run: Pick<RunRow, 'kind'>, input: FinishRunInput): RunEnding {
   const error = input.error?.trim() || null;
   if (input.status !== 'done') return { status: input.status, error, answer: null };
-  if (run.kind === 'ticket') return { status: 'done', error: null, answer: null };
+  if (run.kind !== 'ask') return { status: 'done', error: null, answer: null };
   const text = input.answer?.trim();
   if (!text) return { status: 'failed', error: CHAT_NO_ANSWER, answer: null };
   return { status: 'done', error: null, answer: { text, sessionId: input.sessionId ?? null } };

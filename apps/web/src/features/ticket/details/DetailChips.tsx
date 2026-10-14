@@ -1,7 +1,7 @@
 import type { TicketDetail } from '@tracker/shared';
 import { useId } from 'react';
 import { FieldNote } from '../fields/FieldNote';
-import { PRIORITY_OPTIONS, statusOptions } from '../side/detailOptions';
+import { DEVICE_OPTIONS, PRIORITY_OPTIONS, statusOptions } from '../side/detailOptions';
 import { AssigneeChip } from './AssigneeChip';
 import styles from './DetailChips.module.css';
 import { DueChip } from './DueChip';
@@ -31,6 +31,12 @@ export function DetailChips({ detail }: { detail: TicketDetail }) {
           options={PRIORITY_OPTIONS}
           value={ticket.priority}
           onChange={fields.setPriority}
+        />
+        <SelectChip
+          label="Device"
+          options={DEVICE_OPTIONS}
+          value={ticket.needsDevice ? 'yes' : 'no'}
+          onChange={fields.setDevice}
         />
         <AssigneeChip draft={assignee} describedBy={assignee.failed ? noteId : undefined} />
         <DueChip value={ticket.due} overdue={fields.overdue} onChange={fields.setDue} />

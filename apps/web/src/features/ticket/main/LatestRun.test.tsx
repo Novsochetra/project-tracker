@@ -96,6 +96,15 @@ describe('Claude Code run on the ticket screen', () => {
     expect(await runCard()).toHaveTextContent(`Claude is working on ${DARA}…`);
   });
 
+  it('says a ticket in a Run all batch is stopped from Activity, with no Cancel', async () => {
+    setup([makeRun({ status: 'running', startedAt: Date.now(), batchId: 'b-1' })]);
+    const card = await runCard();
+
+    expect(card).toHaveTextContent(`Claude is working on ${DARA}…`);
+    expect(card).toHaveTextContent('Part of a Run all batch. Stop it from Activity.');
+    expect(within(card).queryByRole('button', { name: 'Cancel' })).not.toBeInTheDocument();
+  });
+
   it('says why Claude stopped and opens the prompt sheet to try again', async () => {
     const failed = makeRun({ status: 'failed', error: LOST, endedAt: Date.now() - 60_000 });
     const getTicketPrompt = vi.fn().mockResolvedValue({ text: 'Please work', ticketCount: 1 });

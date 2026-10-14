@@ -63,6 +63,7 @@ describe.each(DIALECTS)('Claude Code runs (%s)', (dialect) => {
       stepCount: 0,
       usage: null,
       chainStop: null,
+      batchId: null,
     });
 
     clock.advance(5_000);
@@ -73,6 +74,7 @@ describe.each(DIALECTS)('Claude Code runs (%s)', (dialect) => {
       prompt: 'Fix the crash on MOB-1',
       resumeSessionId: null,
       files: [],
+      ticketKeys: [],
     });
     clock.advance(60_000);
     const done = await finish(started.body.id, { status: 'done', error: 'ignored' });

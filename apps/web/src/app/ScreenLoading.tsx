@@ -17,6 +17,7 @@ export interface ScreenLoadingProps {
 function LoadingBar({ route }: { route: Route }) {
   switch (route.name) {
     case 'projects':
+    case 'activity':
       return null;
     case 'project':
       return <ProjectLoadingBar />;

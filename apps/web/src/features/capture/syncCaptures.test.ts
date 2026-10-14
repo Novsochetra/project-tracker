@@ -29,6 +29,7 @@ const ticketFor = (item: QueuedCapture, overrides: Partial<Ticket> = {}): Ticket
   priority: item.priority,
   assignee: '',
   due: '',
+  needsDevice: false,
   createdAt: item.capturedAt,
   updatedAt: item.capturedAt,
   ...overrides,

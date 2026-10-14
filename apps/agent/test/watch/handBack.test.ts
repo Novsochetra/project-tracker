@@ -13,6 +13,26 @@ function handBack(tracker: ReturnType<typeof fakeTracker>, output: string) {
 }
 
 describe('putting Claude’s report on the ticket', () => {
+  it("puts each of a batch's blocks on its own ticket", async () => {
+    const tracker = fakeTracker([]);
+    const deps = { api: tracker.api, log: () => undefined, describe: String };
+    const second = REPORT.replace('MOB-1', 'MOB-2');
+    const batch = {
+      ...job('r-1', 'MOB-1'),
+      ticketKeys: ['MOB-1', 'MOB-2', 'MOB-3'],
+    };
+    const output = `\`\`\`\n${REPORT}\n\`\`\`\n\n\`\`\`\n${second}\n\`\`\`\n`;
+    await handBackReport(
+      deps,
+      { ...batch, run: { ...batch.run, kind: 'batch', ticketKey: null } },
+      [output],
+    );
+    expect(tracker.reports).toEqual([
+      { text: REPORT, ticketKey: 'MOB-1' },
+      { text: second, ticketKey: 'MOB-2' },
+    ]);
+  });
+
   it('sends the block the way “Paste report” does', async () => {
     const tracker = fakeTracker([]);
     const { log, done } = handBack(tracker, OUTPUT);

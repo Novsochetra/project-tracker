@@ -40,6 +40,7 @@ const PROTECTED: readonly (readonly [string, string])[] = [
   ['POST', '/api/tickets/MOB-1/claim'],
   ['POST', '/api/tickets/MOB-1/submit'],
   ['POST', '/api/tickets/MOB-1/review'],
+  ['GET', '/api/run-activity'],
   ['GET', '/api/people'],
   ['GET', '/api/meta'],
   ['GET', '/api/events'],

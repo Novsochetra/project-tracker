@@ -34,6 +34,7 @@ export const toRun = (row: RunWithKey): Run => ({
   stepCount: row.stepCount,
   usage: usageOfRow(row),
   chainStop: row.chainStop,
+  batchId: row.batchId,
 });
 
 export function parseProjectIds(row: RunnerRow): string[] {

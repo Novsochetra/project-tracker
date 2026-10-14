@@ -30,5 +30,6 @@ export const makeRun = (overrides: Partial<Run> = {}): Run => ({
   endedAt: null,
   stepCount: 0,
   usage: null,
+  batchId: null,
   ...overrides,
 });

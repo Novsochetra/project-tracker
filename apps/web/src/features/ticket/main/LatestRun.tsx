@@ -6,7 +6,7 @@ import { useSheets } from '../../../app/sheets/context';
 import { AgentAvatar, Button, useToast } from '../../../components';
 import { holdPresses } from '../../../lib/holdPresses';
 import { useNow } from '../../../lib/useNow';
-import { runTime, shownRun } from '../../claude/runs';
+import { runTime, shownRun, type ShownRun } from '../../claude/runs';
 import { UsageLine } from '../../claude/UsageLine';
 import { WAITING_TEXT } from '../../requests/copy';
 import { RequestCards } from '../../requests/RequestCards';
@@ -17,6 +17,7 @@ import { PhoneFold } from '../activity/PhoneFold';
 import { TimeAgo } from '../activity/TimeAgo';
 import { promptSheet } from '../ticketSheets';
 import styles from './LatestReview.module.css';
+import runStyles from './LatestRun.module.css';
 import { RunStepsLine } from './RunStepsLine';
 import { useRevealWaiting } from './useRevealWaiting';
 
@@ -45,11 +46,24 @@ export function LatestRun({ ticketKey, onCancelled }: LatestRunProps) {
         <UsageLine usage={shown.run.usage} />
         <RunStepsLine run={shown.run} ticketKey={ticketKey} />
         <RequestCards ref={cardsRef} requests={requests.shown} now={requests.now} />
-        {shown.state === 'working' && <CancelButton run={shown.run} onCancelled={onCancelled} />}
-        {shown.state === 'stopped' && <TryAgainButton ticketKey={ticketKey} />}
+        <RunAction shown={shown} ticketKey={ticketKey} onCancelled={onCancelled} />
       </ActivityCard>
     </section>
   );
+}
+
+interface RunActionProps extends LatestRunProps {
+  shown: ShownRun;
+}
+
+// Only the whole batch can be stopped, so a ticket in one has no Cancel of its own.
+function RunAction({ shown, ticketKey, onCancelled }: RunActionProps) {
+  if (shown.state === 'stopped') return <TryAgainButton ticketKey={ticketKey} />;
+  if (shown.state !== 'working') return null;
+  if (shown.run.batchId !== null) {
+    return <p className={runStyles.batchNote}>Part of a Run all batch. Stop it from Activity.</p>;
+  }
+  return <CancelButton run={shown.run} onCancelled={onCancelled} />;
 }
 
 function CancelButton({ run, onCancelled }: { run: Run; onCancelled: () => void }) {

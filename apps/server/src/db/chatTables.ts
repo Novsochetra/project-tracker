@@ -26,6 +26,8 @@ export interface ChatMessageRow {
   ticketId: string | null;
   // The ask run that answered, on Claude's messages; null on the person's and older ones.
   runId: string | null;
+  // The batch its Run all card started, so the card can't start another.
+  batchRunId: string | null;
   createdAt: number;
 }
 

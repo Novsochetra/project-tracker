@@ -7,6 +7,7 @@ import { PullToRefresh } from '../../gestures';
 import { ErrorBoundary } from '../../lib/ErrorBoundary';
 import { LargeTitle, NavBar, NavBarButton, useScreen } from '../../navigation';
 import { AccountButton } from '../account';
+import { HomeTabs } from '../activity/HomeTabs';
 import { CaptureBar, canCapture, WaitingToSync } from '../capture';
 import { readyItems, ReadySection, type ReadyItem } from '../ready';
 import { ProjectList } from './ProjectList';
@@ -38,6 +39,7 @@ export function ProjectsScreen() {
         <div className={styles.page}>
           <div className={styles.content}>
             <LargeTitle aside={projects.data?.length}>Projects</LargeTitle>
+            <HomeTabs />
             <WaitingToSync />
             {/* A ready list it can't read only leaves out the Ready card and the counts; they are
                 tried again once the list changes. Projects that fail fail the fallback too, and

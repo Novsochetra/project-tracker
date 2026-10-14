@@ -10,6 +10,7 @@ import { TicketBoard } from './board/TicketBoard';
 import { FilterRow } from './FilterRow';
 import { resetListView } from './listViewStore';
 import { ProjectBottomBar, ProjectNavBar, ProjectToolbar } from './ProjectBars';
+import { RunAllStrip } from './RunAllStrip';
 import { ProjectLoadingBar } from './ProjectLoadingBar';
 import styles from './ProjectScreen.module.css';
 import { TicketList } from './TicketList';
@@ -32,6 +33,7 @@ function ProjectView({ board, onRefresh }: ProjectViewProps) {
       <PullToRefresh onRefresh={onRefresh} scrollRef={scrollRef}>
         <div className={styles.page} data-view={viewMode}>
           <ProjectToolbar project={project} />
+          <RunAllStrip project={project} />
           <FilterRow board={board} />
           {viewMode === 'board' ? <TicketBoard board={board} /> : <TicketList board={board} />}
         </div>

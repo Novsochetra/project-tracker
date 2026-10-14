@@ -20,6 +20,7 @@ export const makeMessage = (overrides: Partial<ChatMessage> = {}): ChatMessage =
   text: 'How does sync work?',
   cardTickets: [],
   runId: null,
+  batchRunId: null,
   stepCount: 0,
   attachments: [],
   usage: null,
