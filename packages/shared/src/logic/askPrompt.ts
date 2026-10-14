@@ -22,6 +22,15 @@ const READ_ONLY =
   "You are in the project's folder in read-only mode: read and search the code, never change files, never run commands that change things.";
 const NO_WORK = "You can't create tickets or start work. They tap Create and then Run on the card.";
 
+const EDIT_RULES = {
+  folder:
+    "You are in the project's folder and may change files, run commands and use the tracker tools to do what they ask.",
+  last: [
+    'When you work on tickets, follow the tracker workflow: claim each ticket, do the work, then submit it for review. Never move a ticket to Done.',
+    'When you finish, say briefly what you did.',
+  ],
+};
+
 const MODE_RULES: Record<AskMode, { folder: string; last: readonly string[] }> = {
   ask: { folder: READ_ONLY, last: [NO_WORK] },
   plan: {
@@ -31,14 +40,8 @@ const MODE_RULES: Record<AskMode, { folder: string; last: readonly string[] }> =
       NO_WORK,
     ],
   },
-  edit: {
-    folder:
-      "You are in the project's folder and may change files, run commands and use the tracker tools to do what they ask.",
-    last: [
-      'When you work on tickets, follow the tracker workflow: claim each ticket, do the work, then submit it for review. Never move a ticket to Done.',
-      'When you finish, say briefly what you did.',
-    ],
-  },
+  edit: EDIT_RULES,
+  auto: EDIT_RULES,
 };
 
 const rules = (project: AskPromptInput['project'], mode: AskMode) =>

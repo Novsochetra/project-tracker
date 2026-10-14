@@ -19,8 +19,13 @@ const editArgs = (permissionMode?: string): string[] => [
   permissionMode ?? 'default',
 ];
 
+// Auto is Edit that never stops to ask: Claude's own auto mode approves safe steps and blocks risky
+// ones, whatever the helper was started with.
+const AUTO = ['--permission-mode', 'auto'];
+
 // Plan is read-only like Ask; only its prompt differs. Anything else, an older server's missing
 // mode or a name this helper doesn't know, falls back to read-only.
 export function askModeArgs(mode: unknown, permissionMode?: string): string[] {
+  if (mode === 'auto') return [...AUTO];
   return mode === 'edit' ? editArgs(permissionMode) : [...READ_ONLY];
 }

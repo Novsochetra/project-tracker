@@ -1,7 +1,7 @@
 import { DEFAULT_ASK_OPTIONS } from '@tracker/shared';
 import { describe, expect, it } from 'vitest';
 import { askInputOf, askOptionsHint, savedAskOptions } from './askOptions';
-import { EDIT_HINT } from './copy';
+import { AUTO_HINT, EDIT_HINT } from './copy';
 
 describe('savedAskOptions', () => {
   it('starts a new chat from the defaults', () => {
@@ -40,8 +40,9 @@ describe('askInputOf', () => {
 });
 
 describe('askOptionsHint', () => {
-  it('warns only when Edit is picked', () => {
+  it('warns only when Edit or Auto is picked', () => {
     expect(askOptionsHint({ ...DEFAULT_ASK_OPTIONS, mode: 'edit' })).toBe(EDIT_HINT);
+    expect(askOptionsHint({ ...DEFAULT_ASK_OPTIONS, mode: 'auto' })).toBe(AUTO_HINT);
     expect(askOptionsHint(DEFAULT_ASK_OPTIONS)).toBeNull();
     expect(askOptionsHint({ model: 'opus', mode: 'plan', effort: 'low' })).toBeNull();
   });

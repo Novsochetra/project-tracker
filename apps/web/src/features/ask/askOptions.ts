@@ -7,7 +7,7 @@ import {
   type AskOptions,
   type Chat,
 } from '@tracker/shared';
-import { EDIT_HINT } from './copy';
+import { AUTO_HINT, EDIT_HINT } from './copy';
 
 export const MODEL_OPTIONS: readonly { value: AskModel; label: string }[] = [
   { value: 'default', label: 'Default' },
@@ -29,6 +29,7 @@ export const MODE_OPTIONS: readonly { value: AskMode; label: string }[] = [
   { value: 'ask', label: 'Ask' },
   { value: 'plan', label: 'Plan' },
   { value: 'edit', label: 'Edit' },
+  { value: 'auto', label: 'Auto' },
 ];
 
 // A chat from a server without options, or without an effort, starts from the defaults.
@@ -46,4 +47,4 @@ export const askInputOf = (runnerId: string, text: string, options: AskOptions):
 });
 
 export const askOptionsHint = ({ mode }: AskOptions): string | null =>
-  mode === 'edit' ? EDIT_HINT : null;
+  mode === 'edit' ? EDIT_HINT : mode === 'auto' ? AUTO_HINT : null;

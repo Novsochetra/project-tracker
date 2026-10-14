@@ -6,6 +6,8 @@ export const MODE_LABEL = 'Mode';
 export const EFFORT_LABEL = 'Effort';
 export const EDIT_HINT =
   'Claude can change files and tickets. It waits for any ticket run on this computer.';
+export const AUTO_HINT =
+  'Like Edit, but Claude does not ask you first. Its own safety check blocks risky steps.';
 export const SEND_LABEL = 'Send';
 export const STOP_LABEL = 'Stop';
 export const WORKING_LABEL = 'Claude, working';

@@ -87,6 +87,12 @@ describe('cancelledText', () => {
     expect(cancelledText({ askOptions: edit, startedAt: 2 })).toBe(STOPPED_PART_WAY_TEXT);
   });
 
+  it('warns that an Auto question Claude had started may have changed files or tickets', () => {
+    const auto = { model: 'default', mode: 'auto', effort: 'default' } as const;
+    expect(cancelledText({ askOptions: auto, startedAt: 2 })).toBe(STOPPED_PART_WAY_TEXT);
+    expect(cancelledText({ askOptions: auto, startedAt: null })).toBe(STOPPED_TEXT);
+  });
+
   it('says only that it stopped for Ask, Plan, or an Edit question still waiting', () => {
     for (const mode of ['ask', 'plan'] as const) {
       expect(

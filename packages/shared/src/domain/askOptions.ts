@@ -3,7 +3,7 @@ import type { RunKind } from './run';
 export const ASK_MODELS = ['default', 'opus', 'sonnet', 'haiku'] as const;
 export type AskModel = (typeof ASK_MODELS)[number];
 
-export const ASK_MODES = ['ask', 'plan', 'edit'] as const;
+export const ASK_MODES = ['ask', 'plan', 'edit', 'auto'] as const;
 export type AskMode = (typeof ASK_MODES)[number];
 
 export const ASK_EFFORTS = ['default', 'low', 'medium', 'high', 'xhigh', 'max'] as const;
@@ -29,7 +29,10 @@ export const chosenAskOptions = (
   effort: chosen.effort ?? saved.effort,
 });
 
-// An Edit question changes the folder, so it waits in the ticket lane: two Claudes must never
-// change one folder at once.
+// Edit and Auto change the folder. Auto is Edit that never stops to ask the person first.
+export const changesFolder = (mode: unknown): boolean => mode === 'edit' || mode === 'auto';
+
+// A question that changes the folder waits in the ticket lane: two Claudes must never change one
+// folder at once.
 export const laneOf = (kind: RunKind, askOptions: AskOptions | null): RunKind =>
-  kind === 'ask' && askOptions?.mode === 'edit' ? 'ticket' : kind;
+  kind === 'ask' && changesFolder(askOptions?.mode) ? 'ticket' : kind;
