@@ -68,8 +68,11 @@ type Runner = (
   onSteps: OnSteps,
 ) => Promise<FinishRunInput>;
 
-const withUsage = (outcome: FinishRunInput, usage: RunUsageInput | undefined): FinishRunInput =>
-  usage ? { ...outcome, usage } : outcome;
+const withUsage = (
+  outcome: FinishRunInput,
+  usage: RunUsageInput | undefined,
+  { planLimits }: ClaudeExit,
+): FinishRunInput => ({ ...outcome, ...(usage && { usage }), ...(planLimits && { planLimits }) });
 
 async function ticketEnding(
   deps: RunLoopDeps,
@@ -88,7 +91,7 @@ async function ticketEnding(
 const runTicket: Runner = async (deps, job, stop, onSteps) => {
   const exit = await deps.runClaude(job, stop, onSteps);
   const outcome = await ticketEnding(deps, job, exit, ticketOutcomeOf(exit, stop.aborted));
-  return withUsage(outcome, deps.usageOf(job, exit));
+  return withUsage(outcome, deps.usageOf(job, exit), exit);
 };
 
 const runAsk: Runner = async (deps, job, stop, onSteps) => {
@@ -96,7 +99,7 @@ const runAsk: Runner = async (deps, job, stop, onSteps) => {
   const outcome = askOutcomeOf(exit, stop.aborted);
   const mode = job.run.askOptions?.mode;
   const shown = deps.answerImages ? await deps.answerImages(outcome, stop, mode) : outcome;
-  return withUsage(shown, deps.usageOf(job, exit));
+  return withUsage(shown, deps.usageOf(job, exit), exit);
 };
 
 // Claude never ran, as when the prompt tool's socket can't open, so the run ends with why rather
@@ -132,8 +135,9 @@ export function createRunLoop(deps: RunLoopDeps, settings: RunLoopSettings) {
       if (stopped) stillReporting();
       else log(`Couldn't tell the tracker how ${label} ended yet. Trying again.`);
     };
+    const body = outcome.planLimits ? { ...outcome, runnerId: settings.runnerId } : outcome;
     try {
-      await retryUntilAnswered(() => api.finishRun(run.id, outcome), {
+      await retryUntilAnswered(() => api.finishRun(run.id, body), {
         delay: deps.retryDelay,
         onWait,
       });

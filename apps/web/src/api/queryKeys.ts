@@ -29,6 +29,7 @@ export const queryKeys = {
   invitedUsers: () => ['invitedUsers'] as const,
   resetCheck: (secret: string) => ['resetCheck', secret] as const,
   runners: () => ['runners'] as const,
+  planUsage: () => ['planUsage'] as const,
   chats: (projectKey: string) => ['chats', canonical(projectKey)] as const,
   allChats: () => ['chats'] as const,
   chat: (chatId: string) => ['chat', chatId] as const,

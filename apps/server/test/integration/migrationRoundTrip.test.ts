@@ -441,6 +441,7 @@ const DATA_MODEL: SchemaShape = {
       'created_at bigint not null',
       'last_seen_at bigint not null',
       'tools text',
+      'plan_limits text',
     ],
     indexes: ['index (user_id)'],
     foreignKeys: ['user_id -> users.id on delete cascade'],

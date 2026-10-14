@@ -1,0 +1,100 @@
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.heading {
+  margin: 0;
+  color: var(--muted);
+  font: var(--text-caption);
+}
+
+.note {
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--size-caption);
+  line-height: 1.55;
+  text-wrap: pretty;
+}
+
+.rows {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.row {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-height: var(--row-height);
+  padding: 10px 14px;
+}
+
+.row + .row {
+  border-top: 1px solid var(--line);
+}
+
+.name {
+  color: var(--ink);
+  font-size: var(--size-body);
+  font-weight: var(--weight-medium);
+  overflow-wrap: anywhere;
+}
+
+.status {
+  color: var(--ink);
+  font-size: var(--size-secondary);
+  line-height: 1.45;
+}
+
+.seen {
+  color: var(--muted);
+  font-size: var(--size-caption);
+  line-height: 1.45;
+}
+
+.meter {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.meterText {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  column-gap: var(--space-3);
+  font-size: var(--size-caption);
+  line-height: 1.45;
+}
+
+.meterName {
+  color: var(--ink);
+  font-weight: var(--weight-medium);
+}
+
+.meterDetail {
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.track {
+  display: block;
+  height: 6px;
+  border-radius: var(--radius-full);
+  background: var(--line);
+  overflow: hidden;
+}
+
+.fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--accent);
+}
+
+.full {
+  background: var(--danger);
+}

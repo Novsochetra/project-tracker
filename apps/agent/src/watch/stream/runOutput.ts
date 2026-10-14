@@ -1,6 +1,13 @@
-import { contextUseOf, readContext, type ContextReading, type ContextUse } from '@tracker/shared';
+import {
+  contextUseOf,
+  readContext,
+  type ContextReading,
+  type ContextUse,
+  type PlanLimitsInput,
+} from '@tracker/shared';
 import type { ClaudeExit } from '../outcome';
 import { resultOf, type ClaudeResult } from './claudeResult';
+import { planLimitsOf } from './planLimits';
 import { createReadTokenCount } from './readTokens';
 
 const KEPT_OUTPUT = 20_000;
@@ -17,6 +24,7 @@ export function createRunOutput({ onOutput, onEvent }: ClaudeListeners) {
   const results: ClaudeResult[] = [];
   const tokens = createReadTokenCount();
   let context: ContextReading = {};
+  let planLimits: PlanLimitsInput | null = null;
   const say = (text: string) => {
     output = (output + text).slice(-KEPT_OUTPUT);
     onOutput(text);
@@ -27,6 +35,7 @@ export function createRunOutput({ onOutput, onEvent }: ClaudeListeners) {
       onEvent(event);
       tokens.add(event);
       context = readContext(context, event);
+      planLimits = planLimitsOf(event) ?? planLimits;
       const found = resultOf(event);
       if (!found) return null;
       results.push(found);
@@ -42,6 +51,7 @@ export function createRunOutput({ onOutput, onEvent }: ClaudeListeners) {
       results,
       readTokens: tokens.total(),
       ...withContext(contextUseOf(context)),
+      ...(planLimits && { planLimits }),
     }),
   };
 }

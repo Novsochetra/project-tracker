@@ -10,6 +10,7 @@ const runner = (projectIds: string, lastSeenAt = 1_000): RunnerRow => ({
   name: 'Mac',
   projectIds,
   tools: null,
+  planLimits: null,
   createdAt: 500,
   lastSeenAt,
 });

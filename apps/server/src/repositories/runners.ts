@@ -27,7 +27,7 @@ export async function updateRunnerRow(
   db: Db,
   userId: UserScope,
   id: string,
-  changes: Partial<Pick<RunnerRow, 'name' | 'projectIds' | 'tools' | 'lastSeenAt'>>,
+  changes: Partial<Pick<RunnerRow, 'name' | 'projectIds' | 'tools' | 'planLimits' | 'lastSeenAt'>>,
 ): Promise<void> {
   await db
     .updateTable('runners')

@@ -23,6 +23,7 @@ import { startNextQueued } from './chatQueue/startNext';
 import { inTransaction, type ServiceContext } from './context';
 import { loadTicketScope, requireTicket, ticketKeyOf, type TicketRef } from './lookups';
 import { carryOutApprovedPlan } from './planFollowUp';
+import { keepsPlanLimits, notePlanLimits } from './planUsage';
 import { continueChain } from './reviewChain/continueChain';
 import { endingOf } from './runEnding';
 import { pushRunEnd } from './runEndPush';
@@ -135,6 +136,10 @@ export async function endRun(
   const after = await requireRun(ctx, scope, id);
   if (!ended.marked && after.status !== status) {
     throw conflict(`This run already ended (${after.status}).`);
+  }
+  if (keepsPlanLimits({ marked: ended.marked, before, after, input })) {
+    const seen = { runnerId: before.runnerId, limits: input.planLimits, seenAt: endedAt };
+    await notePlanLimits(ctx.db, scope, seen);
   }
   if (ended.marked) {
     // First, so the chat read on this event shows why an approved plan didn't start.

@@ -58,6 +58,7 @@ describe('helperCanTake', () => {
     name: 'Mac',
     projectIds: '["p-1"]',
     tools: null,
+    planLimits: null,
     createdAt: 0,
     lastSeenAt: 10_000,
   };
