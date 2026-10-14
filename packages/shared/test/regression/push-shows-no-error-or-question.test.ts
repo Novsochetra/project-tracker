@@ -1,10 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { batchEndedPush, questionPush, runEndedPush } from '../../src/logic/pushMessages';
 
-// A lock screen shows a push without unlocking, and a failed run's error (the end of the helper's
-// stderr) and Claude's question can hold command output or secrets. These pushes put them in
-// (PT-249), so the builders take none of that text now; test/integration in apps/server sends
-// real secrets through the API and checks no push holds them.
+// A lock screen shows pushes unlocked, and stderr or a question can hold secrets (PT-249).
 const TICKET = { projectKey: 'MOB', num: 3, title: 'Fix the login button' };
 
 describe('a ticket push on the lock screen', () => {
