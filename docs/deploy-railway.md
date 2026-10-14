@@ -4,7 +4,7 @@ The tracker runs on [Railway](https://railway.com) as one service built from you
 
 ## How a deploy runs
 
-`railway.json` at the repo root tells Railway everything, so the service needs no build settings in the dashboard:
+`.railway/railway.ts` holds the service's settings, so the dashboard needs none of them. Railway does not read it during a deploy: `railway config apply` sends it to the service once (step 5), and again after any change to it. It names the project (`Project Tracker Staging`) and the GitHub repo, so change those two if yours differ. It leaves the variables to the dashboard (`variables: { managed: false }`), so secrets never go in the repo. (`railway.json` did this before; Railway stops reading those files on 2026-12-01.)
 
 | Step       | What runs                                                      | Why                                                                                                                                                                                               |
 | ---------- | -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -77,12 +77,21 @@ Tracker service → **Settings** → **Networking** → **Generate Domain**. If 
 
 ## 5. Deploy
 
-1. Click **Deploy** on the staged changes (or push a commit).
-2. Watch **Deployments** → the new one:
+1. Send the settings to the service, from the repo folder on your Mac (needs the [Railway CLI](https://docs.railway.com/cli), `brew install railway`, and `npm ci` for the `railway` package the file imports). `plan` only shows the changes: it must list build, pre-deploy, start, health check, restart and draining, with nothing to destroy and `variables: unmanaged`.
+
+   ```bash
+   railway login
+   railway link
+   railway config plan
+   railway config apply
+   ```
+
+2. Click **Deploy** on the staged changes (or push a commit).
+3. Watch **Deployments** → the new one:
    - Build logs end with `npm prune` and no errors.
    - Pre-deploy logs: `Applied 0001_initial` … `Up to date.`
    - Deploy logs: `Files in S3 bucket <your bucket> (<region>)`, `Tracker API on http://0.0.0.0:4100 (database: Postgres railway on postgres.railway.internal:5432)`, `Agents connect at https://<name>.up.railway.app`.
-3. It turns **Active** once `/api/health` answers. Open `https://<name>.up.railway.app/api/health`: `{"ok":true}`.
+4. It turns **Active** once `/api/health` answers. Open `https://<name>.up.railway.app/api/health`: `{"ok":true}`.
 
 ## 6. Set the owner password
 

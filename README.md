@@ -78,12 +78,12 @@ A deploy runs `node apps/server/dist/db.js migrate` before starting the new serv
 
 ## Deploy to Railway
 
-To use the tracker from anywhere, deploy it to [Railway](https://railway.com) from a private GitHub repo; each push to `main` deploys again. `railway.json` holds the build (`npm run build`, then dev dependencies pruned), the pre-deploy migration, the start command and the health check (`/api/health`). In short:
+To use the tracker from anywhere, deploy it to [Railway](https://railway.com) from a private GitHub repo; each push to `main` deploys again. `.railway/railway.ts` holds the build (`npm run build`, then dev dependencies pruned), the pre-deploy migration, the start command and the health check (`/api/health`); `railway config apply` sends it to the service. In short:
 
 1. Push the repo to a private GitHub repo.
 2. In Railway: a new project with PostgreSQL, then add the GitHub repo as a service (one replica).
 3. Set the service's variables: `DATABASE_URL=${{Postgres.DATABASE_URL}}`, `NODE_ENV=production`, `HOST=0.0.0.0`, `TRUST_PROXY=1`, and the S3 bucket and keys (`docs/s3-storage.md`). Every variable: `.env.example`.
-4. Generate a domain, deploy, then set the owner once inside the service: `railway ssh`, `node apps/server/dist/owner-set.js --email you@example.com`.
+4. Generate a domain, send the settings (`railway link`, `railway config plan`, `railway config apply`), deploy, then set the owner once inside the service: `railway ssh`, `node apps/server/dist/owner-set.js --email you@example.com`.
 5. Once, right after setting the owner and before using it: build the server on the commit Railway deployed (`npm run build -w @tracker/server`; an older build lacks the move's checks), then move your local tracker in with `DATABASE_URL="$DB" PGSSLMODE=require node --env-file=.env apps/server/dist/data-move.js --from data/tracker.db --uploads data/uploads`, where `DB` holds the Postgres service's public URL (try `--dry-run` first; `docs/deploy-railway.md` step 7).
 6. Open the address on your phone and add it to the home screen.
 
