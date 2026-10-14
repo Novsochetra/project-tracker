@@ -1,4 +1,4 @@
-import { RUN_ERROR_MAX, type FinishRunInput } from '@tracker/shared';
+import { RUN_ERROR_MAX, type FinishRunInput, type PlanLimitsInput } from '@tracker/shared';
 import { finalResult, type ClaudeResult } from './stream/claudeResult';
 
 export interface ClaudeExit {
@@ -10,6 +10,8 @@ export interface ClaudeExit {
   results: ClaudeResult[];
   // The tokens this run's own calls read, to tell a resumed session's earlier figures apart.
   readTokens?: number;
+  // The last plan limits Claude Code printed, as it prints them only when they change.
+  planLimits?: PlanLimitsInput;
   // A chat's turn ends on its result while Claude Code stays open for the next message, so there
   // is no exit code.
   turnEnded?: boolean;

@@ -44,3 +44,6 @@ export const personEditsLabels = refuseAgents('Only a person changes labels.');
 
 // Approve and Ask for changes decide where the ticket goes, so an agent can't approve its own work.
 export const personReviewsChanges = refuseAgents('Only a person reviews the changes.');
+
+// What the person's Claude plan has left is theirs; an agent needs none of it to work.
+export const personReadsPlanUsage = refuseAgents("Only a person reads their Claude plan's usage.");

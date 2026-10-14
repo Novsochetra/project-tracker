@@ -21,6 +21,7 @@ import {
 import { saveAnswer } from './chatAnswers';
 import { inTransaction, type ServiceContext } from './context';
 import { loadTicketScope, requireTicket, ticketKeyOf, type TicketRef } from './lookups';
+import { notePlanLimits } from './planUsage';
 import { continueChain } from './reviewChain/continueChain';
 import { endingOf } from './runEnding';
 import { pushRunEnd } from './runEndPush';
@@ -127,6 +128,8 @@ export async function endRun(
     const changes = { status, error, endedAt, ...usageOfFinish(input) };
     const marked = await markRunEnded(trx, scope, before.id, changes);
     if (marked && answer) await saveAnswer(trx, scope, before, { ...answer, at: endedAt });
+    const seen = { runnerId: before.runnerId, limits: input.planLimits, seenAt: endedAt };
+    if (marked) await notePlanLimits(trx, scope, seen);
     const held = marked ? await endHeldTickets(trx, before, status, endedAt) : [];
     return { marked, held };
   });

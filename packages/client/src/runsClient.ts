@@ -1,5 +1,6 @@
 import type {
   FinishRunInput,
+  HelperPlanUsage,
   RegisterRunnerInput,
   Run,
   RunActivity,
@@ -43,6 +44,8 @@ export class RunsClient extends LabelingClient {
     this.http.request<Run>('POST', `/api/runs/${segment(runId)}/cancel`);
 
   listRunners = () => this.http.request<Runner[]>('GET', '/api/runners');
+
+  listPlanUsage = () => this.http.request<HelperPlanUsage[]>('GET', '/api/claude-usage');
 
   removeRunner = (runnerId: string) =>
     this.http.request<void>('DELETE', `/api/runners/${segment(runnerId)}`);

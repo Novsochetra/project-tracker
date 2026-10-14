@@ -13,6 +13,7 @@ import {
   RUNNER_TOOL_NAME_MAX,
   RUNNER_TOOLS_MAX,
 } from '../domain/run';
+import { planLimitsInput } from './planLimits';
 import { runUsageInput } from './runUsage';
 
 // A helper picks its own id once and keeps it, so runs queued while it restarts still find it.
@@ -82,5 +83,7 @@ export const finishRunInput = z.object({
   // The pictures the answer shows: the helper's own pending uploads, in the answer's order.
   attachmentIds: z.array(z.string().min(1).max(64)).max(CHAT_ANSWER_IMAGES_MAX).optional(),
   usage: runUsageInput.optional(),
+  // The helper's latest word from Claude Code on the person's plan limits, if the run gave one.
+  planLimits: planLimitsInput.optional(),
 });
 export type FinishRunInput = z.input<typeof finishRunInput>;

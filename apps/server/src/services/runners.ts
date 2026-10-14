@@ -92,6 +92,7 @@ export async function registerRunner(
     name: input.name.trim(),
     projectIds: JSON.stringify(projectIds),
     tools: input.tools ? JSON.stringify(input.tools) : null,
+    planLimits: null,
     createdAt: now,
     lastSeenAt: now,
   };
