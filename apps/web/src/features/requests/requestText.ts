@@ -1,5 +1,11 @@
-import { labelHead, type RunQuestion, type RunRequest } from '@tracker/shared';
-import { OUTCOME_TEXT, PERMISSION_HEAD, QUESTION_HEAD } from './copy';
+import {
+  labelHead,
+  planModeOf,
+  type RunQuestion,
+  type RunRequest,
+  type RunRequestKind,
+} from '@tracker/shared';
+import { approvedText, OUTCOME_TEXT, PERMISSION_HEAD, PLAN_HEAD, QUESTION_HEAD } from './copy';
 import { showHidden } from './hiddenChars';
 import { requestState } from './requestState';
 
@@ -22,19 +28,27 @@ export function labelParts(label: string): LabelParts {
   return { verb: head, detail: rest.join('\n') };
 }
 
+// A plan's first line names it, most often as a Markdown heading.
+const planTitle = (label: string): string =>
+  labelHead((label.split('\n')[0] ?? '').replace(/^#{1,6}\s+/, ''));
+
+function subjectText(request: RunRequest): string {
+  if (request.kind === 'question') return request.questions[0]?.question ?? request.label;
+  return request.kind === 'plan' ? planTitle(request.label) : labelHead(request.label);
+}
+
 // One line: a permission's command may run over many.
-export const subjectOf = (request: RunRequest): string =>
-  showHidden(
-    request.kind === 'question'
-      ? (request.questions[0]?.question ?? request.label)
-      : labelHead(request.label),
-  );
+export const subjectOf = (request: RunRequest): string => showHidden(subjectText(request));
+
+const ANSWERED: Readonly<Record<RunRequestKind, { allow: Outcome; deny: Outcome }>> = {
+  permission: { allow: 'allowed', deny: 'denied' },
+  question: { allow: 'answered', deny: 'skipped' },
+  plan: { allow: 'approved', deny: 'planning' },
+};
 
 export function requestOutcome(request: RunRequest, now: number): Outcome {
-  const state = requestState(request, now);
-  if (state === 'ended') return 'none';
-  if (request.decision === 'deny') return request.kind === 'question' ? 'skipped' : 'denied';
-  return request.kind === 'question' ? 'answered' : 'allowed';
+  if (requestState(request, now) === 'ended') return 'none';
+  return ANSWERED[request.kind][request.decision === 'deny' ? 'deny' : 'allow'];
 }
 
 const nameOf = (question: RunQuestion): string => question.header || question.question;
@@ -49,12 +63,25 @@ export function answerLines(request: RunRequest): string[] {
   });
 }
 
+function approvedLines(request: RunRequest): string[] {
+  const mode = planModeOf(request.answers);
+  return [mode ? approvedText(mode) : OUTCOME_TEXT.approved];
+}
+
 export const outcomeLines = (request: RunRequest, now: number): string[] => {
   const outcome = requestOutcome(request, now);
-  return outcome === 'answered' ? answerLines(request) : [OUTCOME_TEXT[outcome]];
+  if (outcome === 'answered') return answerLines(request);
+  if (outcome === 'approved') return approvedLines(request);
+  if (outcome === 'planning')
+    return [OUTCOME_TEXT.planning, ...(request.answers ?? []).slice(0, 1)];
+  return [OUTCOME_TEXT[outcome]];
 };
 
-export function announcementOf(request: RunRequest): string {
-  const head = request.kind === 'question' ? QUESTION_HEAD : PERMISSION_HEAD;
-  return `${head}: ${subjectOf(request)}`;
-}
+const HEADS: Readonly<Record<RunRequestKind, string>> = {
+  permission: PERMISSION_HEAD,
+  question: QUESTION_HEAD,
+  plan: PLAN_HEAD,
+};
+
+export const announcementOf = (request: RunRequest): string =>
+  `${HEADS[request.kind]}: ${subjectOf(request)}`;

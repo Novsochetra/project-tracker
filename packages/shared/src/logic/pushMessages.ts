@@ -144,6 +144,20 @@ export function questionPush(place: PushPlace): PushMessage {
   );
 }
 
+// The plan's text stays off the lock screen, like a chat's answer.
+export function planPush(place: PushPlace): PushMessage {
+  const ready = 'Claude has a plan for you';
+  if ('chat' in place) {
+    return chatMessage(named(ready, place.chat), place.chat, 'Open the chat to approve it.');
+  }
+  const { ticket } = place;
+  return ticketMessage(
+    `${keyOf(ticket)}: ${ready}`,
+    ticket,
+    opened(ticket, 'Open the ticket to approve it.'),
+  );
+}
+
 // A lock screen shows text as it is, so a bidi override or a zero-width character could make a
 // path read as another one; the card on the phone shows them marked.
 const HIDDEN = /[\p{Cc}\p{Cf}\p{Zl}\p{Zp}\p{Default_Ignorable_Code_Point}]/gu;

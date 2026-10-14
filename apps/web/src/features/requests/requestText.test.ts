@@ -89,3 +89,24 @@ describe('what is read out', () => {
     expect(announcementOf(question)).toBe('Claude asks you: Which color?');
   });
 });
+
+describe('a plan', () => {
+  const plan = (more = {}) =>
+    makeRequest({ kind: 'plan', label: '## Rename the queue\n\n1. Rename it', ...more });
+
+  it('is named by its first line, without the heading marks', () => {
+    expect(subjectOf(plan())).toBe('Rename the queue');
+    expect(announcementOf(plan())).toBe('Claude has a plan: Rename the queue');
+  });
+
+  it('says the mode it was approved in, or that Claude keeps planning with the note', () => {
+    const approved = plan({ status: 'answered', decision: 'allow', answers: ['auto'] });
+    expect(outcomeLines(approved, NOW)).toEqual(['Approved: carried out in Auto']);
+    const kept = plan({ status: 'answered', decision: 'deny', answers: ['Add tests'] });
+    expect(outcomeLines(kept, NOW)).toEqual(['Keep planning', 'Add tests']);
+    expect(outcomeLines(plan({ status: 'answered', decision: 'deny' }), NOW)).toEqual([
+      'Keep planning',
+    ]);
+    expect(outcomeLines(plan({ status: 'expired', endedAt: NOW }), NOW)).toEqual(['No answer']);
+  });
+});
