@@ -24,6 +24,7 @@ export interface ProjectRow {
   instructions: string;
   color: string;
   maxParallelRuns: number;
+  maxSubAgents: number;
   nextNum: number;
   createdAt: number;
   updatedAt: number;

@@ -36,6 +36,9 @@ export type EndedRunStatus = (typeof ENDED_RUN_STATUSES)[number];
 // project can set its own within the maximum.
 export const DEFAULT_MAX_PARALLEL_RUNS = 5;
 export const MAX_PARALLEL_RUNS_MAX = 5;
+// 1 keeps the ticket prompt exactly as it was before sub agents.
+export const DEFAULT_MAX_SUB_AGENTS = 3;
+export const MAX_SUB_AGENTS_MAX = 5;
 // One Claude session hands out every ticket of its batch and gets every sub agent's result, so a
 // batch holds no more than its context can take; the rest wait for the next Run all.
 export const BATCH_TICKETS_MAX = 30;
@@ -186,6 +189,11 @@ export interface RunAllInput {
   runnerId: string;
   // Sub agents at once for this batch; the project's setting when left out.
   maxParallel?: number | undefined;
+}
+
+// A chat card's Confirm runs exactly the tickets the card showed, or none.
+export interface RunAllCardInput extends RunAllInput {
+  ticketKeys: string[];
 }
 
 // Run all Todo: the batch it queued, and why it left tickets out.

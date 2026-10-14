@@ -14,6 +14,7 @@ import type { Db, StatusRow } from '../db/schema';
 import { conflict } from '../errors';
 import { listStatusRows } from '../repositories/statuses';
 import { listTicketRows } from '../repositories/tickets';
+import { chainHeldTickets } from './batchChain';
 import { inTransaction, notify, type UserContext } from './context';
 import { requireProject, requireTicketScope, ticketKeyOf, type TicketScope } from './lookups';
 import { WORKFLOW_VERBS, workflowMoveText, type WorkflowVerb } from './statusEvents';
@@ -45,6 +46,7 @@ export async function transition(
 
 async function finishDetail(ctx: UserContext, written: WrittenTicket): Promise<TicketDetail> {
   notify(ctx, written.ticket.projectId, written.ticket.id);
+  await chainHeldTickets(ctx, ctx.scope, written.heldDone);
   return getTicketDetailById(ctx.db, ctx.scope, written.ticket.id);
 }
 

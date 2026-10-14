@@ -26,6 +26,7 @@ import {
 import { removeFiles } from '../storage/fileStorage';
 import { isEmpty } from '../util';
 import { attachLaterUploads, attachUploads } from './attachmentLinks';
+import { chainHeldTickets } from './batchChain';
 import { inTransaction, notify, type UserContext } from './context';
 import { expectedMatch, type ExpectedValues } from './expectedFields';
 import {
@@ -49,10 +50,12 @@ type MoveTicketValues = z.output<typeof moveTicketInput>;
 interface Outcome<T extends Ticket = Ticket> {
   ticket: T;
   changed: boolean;
+  heldDone?: string[];
 }
 
-function finish<T extends Ticket>(ctx: UserContext, outcome: Outcome<T>): T {
+async function finish<T extends Ticket>(ctx: UserContext, outcome: Outcome<T>): Promise<T> {
   if (outcome.changed) notify(ctx, outcome.ticket.projectId, outcome.ticket.id);
+  await chainHeldTickets(ctx, ctx.scope, outcome.heldDone ?? []);
   return outcome.ticket;
 }
 
@@ -204,7 +207,8 @@ export async function updateTicket(ctx: UserContext, update: TicketUpdate): Prom
     });
     if (labels)
       await setTicketLabels(trx, scope.ticket.id, labels.labelIds, written.ticket.updatedAt);
-    return { ticket: await ticketOut(trx, written.ticket, scope.project.key), changed: true };
+    const ticket = await ticketOut(trx, written.ticket, scope.project.key);
+    return { ticket, changed: true, heldDone: written.heldDone };
   });
   return finish(ctx, outcome);
 }
@@ -247,7 +251,8 @@ export async function moveTicket(
       changes: { statusId: status.id, rank: plan.ranks.get(scope.ticket.id) ?? scope.ticket.rank },
       entries: plan.statusChanged ? [eventEntry(statusChangedText(status.name))] : [],
     });
-    return { ticket: await ticketOut(trx, written.ticket, scope.project.key), changed: true };
+    const ticket = await ticketOut(trx, written.ticket, scope.project.key);
+    return { ticket, changed: true, heldDone: written.heldDone };
   });
   return finish(ctx, outcome);
 }

@@ -1,7 +1,9 @@
 import {
   DEFAULT_PROJECT_TEMPLATE,
   DEFAULT_MAX_PARALLEL_RUNS,
+  DEFAULT_MAX_SUB_AGENTS,
   MAX_PARALLEL_RUNS_MAX,
+  MAX_SUB_AGENTS_MAX,
   derivePrefix,
   resolvePrefix,
   type CreateProjectInput,
@@ -21,6 +23,7 @@ export interface ProjectFormValues {
   template: ProjectTemplateName;
   autoReview: boolean;
   maxParallelRuns: string;
+  maxSubAgents: string;
 }
 
 export const EMPTY_PROJECT_FORM: ProjectFormValues = {
@@ -32,6 +35,7 @@ export const EMPTY_PROJECT_FORM: ProjectFormValues = {
   template: DEFAULT_PROJECT_TEMPLATE,
   autoReview: false,
   maxParallelRuns: String(DEFAULT_MAX_PARALLEL_RUNS),
+  maxSubAgents: String(DEFAULT_MAX_SUB_AGENTS),
 };
 
 export const NAME_REQUIRED = 'Add a name to create the project.';
@@ -40,7 +44,7 @@ const REPO_HINT = 'The repository is added to every Claude Code prompt.';
 
 export const formValuesOf = (
   project: Pick<Project, 'name' | 'description' | 'repo' | 'instructions' | 'autoReview'> &
-    Partial<Pick<Project, 'maxParallelRuns'>>,
+    Partial<Pick<Project, 'maxParallelRuns' | 'maxSubAgents'>>,
 ): ProjectFormValues => ({
   ...EMPTY_PROJECT_FORM,
   name: project.name,
@@ -49,6 +53,7 @@ export const formValuesOf = (
   instructions: project.instructions ?? '',
   autoReview: project.autoReview ?? false,
   maxParallelRuns: String(project.maxParallelRuns ?? DEFAULT_MAX_PARALLEL_RUNS),
+  maxSubAgents: String(project.maxSubAgents ?? DEFAULT_MAX_SUB_AGENTS),
 });
 
 export const hasName = (values: ProjectFormValues): boolean => values.name.trim() !== '';
@@ -61,6 +66,7 @@ const TEXT_FIELDS = [
   'instructions',
   'template',
   'maxParallelRuns',
+  'maxSubAgents',
 ] as const;
 
 // Trimmed like Create and Save send them, so a stray space doesn't make the sheet ask.
@@ -99,13 +105,22 @@ export const updateProjectInput = (values: ProjectFormValues): UpdateProjectInpu
   instructions: values.instructions.trim(),
   autoReview: values.autoReview,
   maxParallelRuns: parallelRunsOf(values),
+  maxSubAgents: subAgentsOf(values),
 });
 
-export const parallelRunsOf = (values: ProjectFormValues): number => {
-  const count = Math.round(Number(values.maxParallelRuns));
-  if (!Number.isFinite(count)) return DEFAULT_MAX_PARALLEL_RUNS;
-  return Math.min(MAX_PARALLEL_RUNS_MAX, Math.max(1, count));
+const countIn = (text: string, most: number, fallback: number): number => {
+  const count = Math.round(Number(text));
+  if (!Number.isFinite(count)) return fallback;
+  return Math.min(most, Math.max(1, count));
 };
+
+export const parallelRunsOf = (values: ProjectFormValues): number =>
+  countIn(values.maxParallelRuns, MAX_PARALLEL_RUNS_MAX, DEFAULT_MAX_PARALLEL_RUNS);
+
+export const subAgentsOf = (values: ProjectFormValues): number =>
+  countIn(values.maxSubAgents, MAX_SUB_AGENTS_MAX, DEFAULT_MAX_SUB_AGENTS);
+
+export const SUB_AGENTS_HINT = 'Claude decides when to use sub agents. This is the most at once.';
 
 export const INSTRUCTIONS_HINT =
   'Claude gets these with every ticket and question in this project.';

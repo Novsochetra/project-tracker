@@ -13,6 +13,7 @@ import {
 import type { UserScope } from '../auth/scope';
 import type { Db, StatusRow } from '../db/schema';
 import { AppError } from '../errors';
+import { chainHeldTickets } from './batchChain';
 import { inTransaction, notify, type UserContext } from './context';
 import {
   findTicketRef,
@@ -64,12 +65,17 @@ export async function previewReport(ctx: UserContext, input: ReportInput): Promi
   return { items, matchedCount: items.filter((item) => item.matched).length };
 }
 
+interface AppliedBlock {
+  ref: TicketRef;
+  heldDone: string[];
+}
+
 async function applyBlock(
   trx: Db,
   ctx: UserContext,
   actor: Actor,
   { block, scope, target }: ResolvedBlock & { scope: TicketScope },
-): Promise<TicketRef> {
+): Promise<AppliedBlock> {
   const entries: ActivityEntry[] = [{ type: 'report', text: block.text }];
   if (target) entries.push(eventEntry(reportMoveText(target.name)));
   const changes = target ? await enterStatus(trx, actor, target) : {};
@@ -79,7 +85,7 @@ async function applyBlock(
     changes,
     entries,
   });
-  return { ticket: written.ticket, project: scope.project };
+  return { ref: { ticket: written.ticket, project: scope.project }, heldDone: written.heldDone };
 }
 
 function noMatch(ticketKey: string | undefined): AppError {
@@ -95,18 +101,23 @@ export async function applyReport(
   actor: Actor,
   input: ReportInput,
 ): Promise<ReportResult> {
-  const updated = await inTransaction(ctx, async (trx) => {
-    const refs: TicketRef[] = [];
+  const applied = await inTransaction(ctx, async (trx) => {
+    const blocks: AppliedBlock[] = [];
     for (const block of parseReport(input.text)) {
       // Resolved one at a time so a ticket named twice sees its own earlier change.
       const resolved = await resolveBlock(trx, ctx.scope, block, input.ticketKey);
       if (resolved.scope)
-        refs.push(await applyBlock(trx, ctx, actor, { ...resolved, scope: resolved.scope }));
+        blocks.push(await applyBlock(trx, ctx, actor, { ...resolved, scope: resolved.scope }));
     }
-    if (refs.length === 0) throw noMatch(input.ticketKey);
-    return refs;
+    if (blocks.length === 0) throw noMatch(input.ticketKey);
+    return blocks;
   });
-  const unique = new Map(updated.map((ref) => [ref.ticket.id, ref]));
+  const unique = new Map(applied.map(({ ref }) => [ref.ticket.id, ref]));
   for (const ref of unique.values()) notify(ctx, ref.project.id, ref.ticket.id);
+  await chainHeldTickets(
+    ctx,
+    ctx.scope,
+    applied.flatMap(({ heldDone }) => heldDone),
+  );
   return { updatedTicketKeys: [...unique.values()].map(ticketKeyOf) };
 }

@@ -1,4 +1,4 @@
-import { runAllInput } from '@tracker/shared';
+import { runAllCardInput, runAllInput } from '@tracker/shared';
 import { Hono, type Context } from 'hono';
 import { requireScope } from '../../auth/scope';
 import { previewRunAll, runAllTodo } from '../../services/batchRuns';
@@ -28,7 +28,7 @@ export const batchRunRoutes = (ctx: ServiceContext) =>
     .post(
       '/chats/:id/messages/:messageId/run-all',
       personOnly,
-      jsonBody(runAllInput),
+      jsonBody(runAllCardInput),
       async (c) => {
         const ref = { chatId: c.req.param('id'), messageId: c.req.param('messageId') };
         return c.json(await runAllFromCard(ctx, scope(c), ref, c.req.valid('json')), 201);

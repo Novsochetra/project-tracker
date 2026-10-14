@@ -97,6 +97,21 @@ export const findMessage = (db: Db, chatId: string, id: string) =>
     .where('id', '=', id)
     .executeTakeFirst();
 
+// The chat lists its messages by createdAt then id, so later means later in that order.
+export const listLaterClaudeTexts = (db: Db, message: ChatMessageRow) =>
+  db
+    .selectFrom('chatMessages')
+    .select('text')
+    .where('chatId', '=', message.chatId)
+    .where('role', '=', 'claude')
+    .where((eb) =>
+      eb.or([
+        eb('createdAt', '>', message.createdAt),
+        eb.and([eb('createdAt', '=', message.createdAt), eb('id', '>', message.id)]),
+      ]),
+    )
+    .execute();
+
 export async function insertChat(db: Db, row: ChatRow): Promise<void> {
   await db.insertInto('chats').values(row).execute();
 }

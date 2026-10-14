@@ -24,7 +24,8 @@ import * as chatAttachments from './0022_chat_attachments';
 import * as labels from './0023_labels';
 import * as runAll from './0024_run_all';
 import * as batchRuns from './0025_batch_runs';
-import * as runChanges from './0026_run_changes';
+import * as subAgents from './0026_sub_agents';
+import * as runChanges from './0027_run_changes';
 
 // Keyed by file name; they run in name order, so the four-digit number decides. The bundled server
 // can't list a folder, so a new file is added here too (test/unit/migrationFiles checks it is).
@@ -54,5 +55,6 @@ export const MIGRATIONS: Record<string, Migration> = {
   '0023_labels': labels,
   '0024_run_all': runAll,
   '0025_batch_runs': batchRuns,
-  '0026_run_changes': runChanges,
+  '0026_sub_agents': subAgents,
+  '0027_run_changes': runChanges,
 };

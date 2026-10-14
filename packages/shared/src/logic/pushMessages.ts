@@ -55,6 +55,32 @@ export function reviewedPush(ticket: PushTicket, rating: number): PushMessage {
   return message(title, ticket.title, ticketPath(ticket.projectKey, ticket.num), ticketTag(ticket));
 }
 
+export const ACTIVITY_PATH = '/activity';
+
+export interface PushBatch {
+  runId: string;
+  projectKey: string;
+  total: number;
+  notDoneKeys: readonly string[];
+}
+
+// One push for the whole batch rather than one a ticket, so its keys name what was left.
+export function batchEndedPush(batch: PushBatch, error: string | null): PushMessage {
+  const done = `${batch.total - batch.notDoneKeys.length} of ${batch.total} done`;
+  const ended = error === null ? 'Run all finished' : 'Run all stopped';
+  const notDone = batch.notDoneKeys.length
+    ? `Not finished: ${batch.notDoneKeys.join(', ')}`
+    : 'Every ticket is done.';
+  // The reason goes first so the body's length cap cuts the ticket list, not the reason.
+  const body = error === null ? notDone : `${error} · ${notDone}`;
+  return message(
+    `${batch.projectKey}: ${ended}: ${done}`,
+    body,
+    ACTIVITY_PATH,
+    `batch:${batch.runId}`,
+  );
+}
+
 export interface PushChat {
   projectKey: string;
   chatId: string;
