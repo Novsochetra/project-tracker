@@ -26,13 +26,13 @@ export interface BatchEnding {
 }
 
 // A sub agent claims its ticket (In progress) and submits it (Need review), so the ticket's run
-// follows the ticket: that is all the tracker sees of a sub agent.
+// follows the ticket: that is all the tracker sees of a sub agent. Answers the runs it ended done.
 export async function advanceBatchTicket(
   db: Db,
   ticketId: string,
   category: StatusCategory,
   at: number,
-): Promise<void> {
+): Promise<string[]> {
   // Only while the batch runs: a ticket moved before the helper takes it is still in its prompt.
   const ofTicket = db
     .updateTable('runs')
@@ -49,13 +49,15 @@ export async function advanceBatchTicket(
       .set({ status: 'running', startedAt: at })
       .where('status', '=', 'queued')
       .execute();
-    return;
+    return [];
   }
-  if (category === 'todo') return;
-  await ofTicket
+  if (category === 'todo') return [];
+  const ended = await ofTicket
     .set({ status: 'done', error: null, endedAt: at })
     .where('status', 'in', ACTIVE_RUN_STATUSES)
+    .returning('id')
     .execute();
+  return ended.map(({ id }) => id);
 }
 
 export const endBatchTickets = (db: Db, batchId: string, ending: BatchEnding) =>

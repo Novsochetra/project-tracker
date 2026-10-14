@@ -88,14 +88,16 @@ async function saveChanges(db: Db, write: TicketWrite, changes: TicketChanges): 
 
 // Every status change passes here, a person's drag as much as a sub agent's claim or submit.
 async function followStatus(db: Db, write: TicketWrite, changes: TicketChanges, at: number) {
-  if (!changes.statusId || changes.statusId === write.ticket.statusId) return;
+  if (!changes.statusId || changes.statusId === write.ticket.statusId) return [];
   const status = await findStatusById(db, changes.statusId);
-  if (status) await advanceBatchTicket(db, write.ticket.id, status.category, at);
+  return status ? advanceBatchTicket(db, write.ticket.id, status.category, at) : [];
 }
 
 export interface WrittenTicket {
   ticket: TicketRow;
   activities: ActivityRow[];
+  // A batch's ticket runs an agent's write ended done, to chain once the write is committed.
+  heldDone: string[];
 }
 
 export async function writeTicket(
@@ -107,10 +109,12 @@ export async function writeTicket(
   const at = clock(entries.length);
   const changes = { ...write.changes, updatedAt: at };
   await saveChanges(db, write, changes);
-  await followStatus(db, write, changes, at);
+  const ended = await followStatus(db, write, changes, at);
+  // A person's own move would only stop the chain and tell them what they just did.
+  const heldDone = write.actor.kind === 'agent' ? ended : [];
   const activities = entries.map((entry, index) =>
     activityRow({ ...entry, ticketId: write.ticket.id, actor: write.actor, at: at + index }),
   );
   for (const row of activities) await insertActivity(db, row);
-  return { ticket: { ...write.ticket, ...changes }, activities };
+  return { ticket: { ...write.ticket, ...changes }, activities, heldDone };
 }
