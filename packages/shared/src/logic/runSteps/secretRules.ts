@@ -17,9 +17,14 @@ export const MASK = '***';
 const quoted = (value: string): boolean => /^["']/.test(value);
 // `$TOKEN`, `$(gh auth token)`, a backtick or a `{expression}` names a secret without holding it.
 const reference = (value: string): boolean => /^["']?[$\x60{]/.test(value);
+// fetch's `credentials: 'include'` names a mode, not a secret.
+const fetchMode = (value: string): boolean =>
+  /^["']?(?:include|omit|same-origin)["']?$/.test(value);
 // A word after `Bearer` or `--token ` in prose ("a Bearer token in the header") stays.
 const looksSecret = (value: string): boolean =>
-  !reference(value) && (quoted(value) || /\d/.test(value) || value.length >= 12);
+  !reference(value) &&
+  !fetchMode(value) &&
+  (quoted(value) || /\d/.test(value) || value.length >= 12);
 
 type Replace = (match: string, ...groups: string[]) => string;
 
@@ -71,7 +76,8 @@ export const SECRET_RULES: readonly SecretRule[] = [
     // can't start with a space or a quote: that quote closes a search (`rg '"token":' src`).
     String.raw`(\\?["'](${NAME})\\?["']\s{0,4}:\s{0,4}\\?(["']))(?![\s"'])(?:(?!\3)[^\\\n]|\\(?!\3))+`,
     'g',
-    (m, head = '', name = '') => (secretName(name) ? masked(head) : m),
+    (m, head = '', name = '') =>
+      secretName(name) && !fetchMode(m.slice(head.length)) ? masked(head) : m,
   ),
   // A numeric user is a uid (docker run -u 1000:1000), not a login.
   rule(

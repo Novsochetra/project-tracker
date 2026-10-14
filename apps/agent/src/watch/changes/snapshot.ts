@@ -17,7 +17,8 @@ async function gitLine(
 
 // The folder's files as git would commit them now, untracked ones too and ignored ones not, as a
 // tree. It goes through an index file of its own, so the real index, which the person or Claude
-// may be using, is never written; git only adds the files' objects. Null outside a repository.
+// may be using, is never written; git only adds the files' objects. Null outside a repository;
+// a git that fails inside one throws.
 export async function snapshotTree(cwd: string, signal: AbortSignal): Promise<string | null> {
   const realIndex = await gitLine(cwd, ['rev-parse', '--git-path', 'index'], { signal });
   if (!realIndex) return null;
@@ -31,8 +32,10 @@ export async function snapshotTree(cwd: string, signal: AbortSignal): Promise<st
       () => undefined,
     );
     const added = await gitOutput(cwd, ['add', '-A', '--', '.'], { maxChars: SMALL, signal, env });
-    if (added.code !== 0) return null;
-    return await gitLine(cwd, ['write-tree'], { signal, env });
+    if (added.code !== 0) throw new Error('git add failed.');
+    const tree = await gitLine(cwd, ['write-tree'], { signal, env });
+    if (!tree) throw new Error('git write-tree failed.');
+    return tree;
   } finally {
     await rm(folder, { recursive: true, force: true });
   }
