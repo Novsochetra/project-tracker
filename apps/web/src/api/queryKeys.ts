@@ -32,6 +32,7 @@ export const queryKeys = {
   chats: (projectKey: string) => ['chats', canonical(projectKey)] as const,
   allChats: () => ['chats'] as const,
   chat: (chatId: string) => ['chat', chatId] as const,
+  chatChanges: (chatId: string) => ['chat', chatId, 'changes'] as const,
   // A mutation key: a chat-deleted event leaves alone the chat this tab is deleting itself.
   deletingChat: () => ['deletingChat'] as const,
   runSteps: (runId: string) => ['runSteps', runId] as const,

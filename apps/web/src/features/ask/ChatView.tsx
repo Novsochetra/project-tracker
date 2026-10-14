@@ -4,6 +4,7 @@ import { NEW_CHAT_LABEL } from '../../app/crumbs';
 import { NavBar, NavBarSpacer } from '../../navigation';
 import { savedAskOptions } from './askOptions';
 import { askPlaceholder } from './askPlaceholder';
+import { ChatChangesArea } from './changes/ChatChangesButton';
 import { ChatFooterArea } from './ChatFooterArea';
 import { ChatOptionsSheet } from './ChatOptionsSheet';
 import styles from './ChatScreen.module.css';
@@ -68,6 +69,7 @@ export function ChatView({ projectKey, chatId, detail, ticketNum }: ChatViewProp
           />
         )}
         <DoIt projectKey={projectKey} detail={detail} />
+        <ChatChangesArea detail={detail} />
       </div>
       <ChatFooterArea
         projectKey={projectKey}
