@@ -1,5 +1,6 @@
 import {
   ACTIVE_RUN_STATUSES,
+  type AskMode,
   type EndedRunStatus,
   type RunKind,
   type RunStatus,
@@ -61,14 +62,16 @@ export const latestChatRunRow = (db: Db, userId: UserScope, chatId: string) =>
 export const listStoppedChatRunRows = (db: Db, userId: UserScope, chatId: string) =>
   stoppedChatRunsQuery(db, userId, chatId).execute();
 
-// The helper's lane, not the run's kind: an Edit question changes the folder, so it waits in the
+const FOLDER_MODES: AskMode[] = ['edit', 'auto'];
+
+// The helper's lane, not the run's kind: an Edit or Auto question changes the folder, so it waits in the
 // ticket lane, as laneOf in shared says. Older asks have no mode and stay in the ask lane.
 const inLane = (lane: RunKind) => (eb: ExpressionBuilder<Database, 'runs'>) =>
   lane === 'ticket'
-    ? eb.or([eb('runs.kind', '=', 'ticket'), eb('runs.askMode', '=', 'edit')])
+    ? eb.or([eb('runs.kind', '=', 'ticket'), eb('runs.askMode', 'in', FOLDER_MODES)])
     : eb.and([
         eb('runs.kind', '=', 'ask'),
-        eb.or([eb('runs.askMode', 'is', null), eb('runs.askMode', '!=', 'edit')]),
+        eb.or([eb('runs.askMode', 'is', null), eb('runs.askMode', 'not in', FOLDER_MODES)]),
       ]);
 
 // A take that names no lane comes from a helper built before asks. It throws on a question, which

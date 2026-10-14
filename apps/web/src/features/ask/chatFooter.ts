@@ -1,4 +1,4 @@
-import type { Run, Runner } from '@tracker/shared';
+import { changesFolder, type Run, type Runner } from '@tracker/shared';
 import { isWorking } from '../../api/workingRun';
 import { helpersFor, pickHelper, stoppedText } from '../claude/runs';
 import { STOPPED_PART_WAY_TEXT, STOPPED_TEXT } from './copy';
@@ -26,7 +26,9 @@ export const thinkingText = (run: Pick<Run, 'runnerName'>): string =>
 
 // Only an Edit question that Claude had started may have changed something before it stopped.
 export const cancelledText = (run: Pick<Run, 'askOptions' | 'startedAt'>): string =>
-  run.askOptions?.mode === 'edit' && run.startedAt !== null ? STOPPED_PART_WAY_TEXT : STOPPED_TEXT;
+  changesFolder(run.askOptions?.mode) && run.startedAt !== null
+    ? STOPPED_PART_WAY_TEXT
+    : STOPPED_TEXT;
 
 // The latest ask's end stays until the next question, which is how the person tries again.
 function stoppedOf(run: Run | null | undefined): StoppedNote | null {

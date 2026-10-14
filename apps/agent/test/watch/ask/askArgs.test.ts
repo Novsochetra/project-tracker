@@ -46,6 +46,14 @@ describe('askArgs', () => {
     ]);
   });
 
+  it("gives Auto Claude's own auto permission mode, whatever the helper was started with", () => {
+    expect(argsFor({ model: 'default', mode: 'auto' }, null, 'default')).toEqual([
+      ...JSON_OUT,
+      '--permission-mode',
+      'auto',
+    ]);
+  });
+
   it.each(['opus', 'sonnet', 'haiku'])('picks the %s model by its fixed name', (model) => {
     expect(argsFor({ model, mode: 'ask' })).toEqual([...JSON_OUT, ...READ_ONLY, '--model', model]);
   });

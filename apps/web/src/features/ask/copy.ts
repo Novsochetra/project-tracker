@@ -10,6 +10,7 @@ export const EFFORT_LABEL = 'Effort';
 export const ASK_HINT = 'Reads and answers. Changes nothing.';
 export const PLAN_HINT = 'Reads and plans. Changes nothing.';
 export const EDIT_HINT = 'Edits files and tickets. Waits if Claude is busy.';
+export const AUTO_HINT = 'Edits without asking. Risky steps are blocked.';
 export const SEND_LABEL = 'Send';
 export const STOP_LABEL = 'Stop';
 export const WORKING_LABEL = 'Claude, working';
