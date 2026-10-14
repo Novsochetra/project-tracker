@@ -192,6 +192,7 @@ describe('Edit project sheet', () => {
       repo: '~/code/web',
       instructions: 'Plain voice.',
       autoReview: false,
+      hideName: false,
       maxParallelRuns: 5,
       maxSubAgents: 3,
     });
@@ -214,6 +215,23 @@ describe('Edit project sheet', () => {
     expect(updateProject).toHaveBeenLastCalledWith(
       'WEB',
       expect.objectContaining({ autoReview: true }),
+    );
+  });
+
+  it('hides the name with a switch that Save sends, and keeps the real name here', async () => {
+    const user = userEvent.setup();
+    const { dialog } = renderEditSheet();
+    const toggle = within(dialog).getByRole('switch', { name: 'Hide name' });
+    expect(toggle).toHaveAttribute('aria-checked', 'false');
+    expect(toggle).toHaveAccessibleDescription(
+      "Shows the project's key instead of its name, and hides its description, everywhere but here. Claude still gets the name.",
+    );
+    await user.click(toggle);
+    expect(within(dialog).getByLabelText('Project name')).toHaveValue('Website');
+    await user.click(within(dialog).getByRole('button', { name: 'Save' }));
+    expect(updateProject).toHaveBeenLastCalledWith(
+      'WEB',
+      expect.objectContaining({ hideName: true }),
     );
   });
 

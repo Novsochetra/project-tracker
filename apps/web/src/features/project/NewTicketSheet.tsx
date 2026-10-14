@@ -1,4 +1,4 @@
-import type { Label, Project, Status } from '@tracker/shared';
+import { projectDisplayName, type Label, type Project, type Status } from '@tracker/shared';
 import { useRef, useState } from 'react';
 import { useBoard } from '../../api';
 import type { SheetProps } from '../../app/sheets/types';
@@ -33,7 +33,7 @@ function ProjectSubtitle({ project }: { project: Project }) {
   return (
     <>
       <span className={styles.square} style={{ background: project.color }} aria-hidden="true" />
-      <span className={styles.projectName}>{project.name}</span>
+      <span className={styles.projectName}>{projectDisplayName(project)}</span>
     </>
   );
 }

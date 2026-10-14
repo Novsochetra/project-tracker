@@ -1,4 +1,4 @@
-import { formatRelative, type ProjectSummary } from '@tracker/shared';
+import { formatRelative, projectDisplayName, type ProjectSummary } from '@tracker/shared';
 import clsx from 'clsx';
 import { useIsOpening } from '../../navigation';
 import styles from './ProjectCard.module.css';
@@ -29,14 +29,14 @@ export function ProjectCard(props: ProjectCardProps) {
     >
       <span className={styles.head}>
         <span className={styles.square} style={{ background: project.color }} aria-hidden="true" />
-        <span className={styles.name}>{project.name}</span>{' '}
-        <span className={styles.key}>{project.key}</span>{' '}
+        <span className={styles.name}>{projectDisplayName(project)}</span>{' '}
+        {!project.hideName && <span className={styles.key}>{project.key}</span>}{' '}
         <span className={styles.updated}>
           <span className="visually-hidden">Updated</span>{' '}
           {formatRelative(project.lastActivityAt, now)}
         </span>
       </span>{' '}
-      <span className={styles.description}>{descriptionText(project.description)}</span>{' '}
+      <span className={styles.description}>{descriptionText(project)}</span>{' '}
       <ProjectProgressBar progress={progress} readyColor={readyColor} />{' '}
       <ProjectProgressParts progress={progress} readyColor={readyColor} />
     </button>

@@ -234,6 +234,7 @@ export interface ActivityRunRow {
   startedAt: number | null;
   projectKey: string;
   projectName: string;
+  projectHideName: number;
   ticketNum: number;
   ticketTitle: string;
 }
@@ -257,6 +258,7 @@ export const listActivityRunRows = (
       'runs.startedAt',
       'projects.key as projectKey',
       'projects.name as projectName',
+      'projects.hideName as projectHideName',
       'tickets.num as ticketNum',
       'tickets.title as ticketTitle',
     ])
@@ -287,6 +289,7 @@ export const listActivityBatchRows = (db: Db, userId: UserScope, since: number) 
       'runs.startedAt',
       'projects.key as projectKey',
       'projects.name as projectName',
+      'projects.hideName as projectHideName',
     ])
     .where(ownedBy(userId))
     .where((eb) =>

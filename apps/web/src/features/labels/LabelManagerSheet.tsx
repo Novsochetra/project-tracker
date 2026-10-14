@@ -1,4 +1,4 @@
-import { sortLabels, type Label, type ProjectBoard } from '@tracker/shared';
+import { projectDisplayName, sortLabels, type Label, type ProjectBoard } from '@tracker/shared';
 import { Plus } from 'lucide-react';
 import { useState } from 'react';
 import { flushSync } from 'react-dom';
@@ -27,7 +27,7 @@ export function LabelManagerSheet({ open, onClose, projectKey }: LabelManagerShe
       onClose={onClose}
       label="Labels"
       title="Labels"
-      subtitle={board.data?.project.name}
+      subtitle={board.data && projectDisplayName(board.data.project)}
       left={<SheetCancelButton>Close</SheetCancelButton>}
       dirty={unsavedEdit}
     >

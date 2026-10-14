@@ -30,6 +30,8 @@ export interface ProjectRow {
   ownerId: string | null;
   // 1 when on; 0 or null (projects from before it) when off. No booleans (§2).
   autoReview: number | null;
+  // 1 when screens show projectDisplayName instead of the name.
+  hideName: number;
 }
 
 export interface StatusRow {

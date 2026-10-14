@@ -1,4 +1,4 @@
-import type { ProjectSummary } from '@tracker/shared';
+import { projectDisplayName, type ProjectSummary } from '@tracker/shared';
 import { findProject } from '../projects/projectLookup';
 
 export interface ProjectChoice {
@@ -10,6 +10,13 @@ export interface ProjectChoice {
 export const LAST_PROJECT_STORAGE_KEY = 'tracker.capture.project';
 
 const toChoice = ({ key, name, color }: ProjectChoice): ProjectChoice => ({ key, name, color });
+
+// What it shows, so the last project kept in storage is masked too.
+const choiceOf = (project: ProjectSummary): ProjectChoice => ({
+  key: project.key,
+  name: projectDisplayName(project),
+  color: project.color,
+});
 
 function parseChoice(text: string | null): ProjectChoice | null {
   if (!text) return null;
@@ -49,7 +56,7 @@ export function projectChoices(
   projects: readonly ProjectSummary[] | undefined,
   remembered: ProjectChoice | null,
 ): ProjectChoice[] {
-  if (projects) return projects.map(toChoice);
+  if (projects) return projects.map(choiceOf);
   return remembered ? [remembered] : [];
 }
 

@@ -1,4 +1,4 @@
-import type { Project } from '@tracker/shared';
+import { projectDisplayName, type Project } from '@tracker/shared';
 import { ClipboardCheck, Folder, MessageCircle, Plus, Terminal } from 'lucide-react';
 import { ASK_LABEL } from '../../app/crumbs';
 import { useSheets } from '../../app/sheets/context';
@@ -14,7 +14,7 @@ export function ProjectNavBar({ project }: { project: Project }) {
   const sheets = useSheets();
   return (
     <NavBar
-      title={project.name}
+      title={projectDisplayName(project)}
       backLabel="Projects"
       right={
         <>

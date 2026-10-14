@@ -1,3 +1,4 @@
+import { projectDisplayName } from '@tracker/shared';
 import { useState } from 'react';
 import { useProject, useTicket } from '../../api';
 import { useProjectPrompt, useTicketPrompt } from '../../api/hooks/prompts';
@@ -51,7 +52,7 @@ function TicketPromptSheet({ open, onClose, ticketKey }: SheetProps & { ticketKe
     <PromptView
       open={open}
       onClose={onClose}
-      subtitle={joinSubtitle(key, ticket.data?.project.name)}
+      subtitle={joinSubtitle(key, ticket.data && projectDisplayName(ticket.data.project))}
       query={query}
       draft={draft}
       onSent={() => mark(movesOnSend(target, switchOn))}
@@ -81,7 +82,7 @@ function ProjectPromptSheet({ open, onClose, projectKey }: SheetProps & { projec
       onClose={onClose}
       subtitle={joinSubtitle(
         count === undefined ? undefined : openTicketsLabel(count),
-        project.data?.project.name,
+        project.data && projectDisplayName(project.data.project),
       )}
       query={query}
       draft={draft}

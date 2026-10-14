@@ -1,4 +1,9 @@
-import { formatFullDate, formatRelative, type TicketDetail } from '@tracker/shared';
+import {
+  formatFullDate,
+  formatRelative,
+  projectDisplayName,
+  type TicketDetail,
+} from '@tracker/shared';
 import { GroupedCard, InfoRow } from '../../../components';
 import styles from './SidePanel.module.css';
 
@@ -9,7 +14,7 @@ export function InfoCard({ detail, now }: { detail: TicketDetail; now: number })
       <InfoRow label="Project">
         <span className={styles.project}>
           <span className={styles.square} style={{ background: project.color }} />
-          <span className={styles.projectName}>{project.name}</span>
+          <span className={styles.projectName}>{projectDisplayName(project)}</span>
         </span>
       </InfoRow>
       <InfoRow label="Created">{formatFullDate(ticket.createdAt)}</InfoRow>
