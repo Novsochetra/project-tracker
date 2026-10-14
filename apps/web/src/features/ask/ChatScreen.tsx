@@ -5,6 +5,7 @@ import { errorMessage, isNotFound } from '../../api';
 import { useChat } from '../../api/hooks/chats';
 import { Button, EmptyState, Spinner } from '../../components';
 import { useNavigation } from '../../navigation';
+import { useViewingChat } from '../push/useViewingChat';
 import { ChatLoadingBar } from './AskLoadingBars';
 import styles from './ChatScreen.module.css';
 import { ChatView } from './ChatView';
@@ -26,6 +27,7 @@ function useLeaveMissingChat(error: Error | null, projectKey: string): void {
 
 export function ChatScreen({ projectKey, chatId, ticketNum }: ChatScreenProps) {
   const query = useChat(chatId);
+  useViewingChat(chatId);
   useLeaveMissingChat(query.error, projectKey);
   if (chatId === null || query.data) {
     const detail = query.data ?? null;

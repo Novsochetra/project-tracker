@@ -38,21 +38,24 @@ export interface PushTicket {
 const ticketTag = (ticket: PushTicket) =>
   `ticket:${formatTicketKey(ticket.projectKey, ticket.num)}`;
 
+const ticketMessage = (title: string, ticket: PushTicket, body = ticket.title) =>
+  message(title, body, ticketPath(ticket.projectKey, ticket.num), ticketTag(ticket));
+
 export function runEndedPush(ticket: PushTicket, error: string | null): PushMessage {
   const key = formatTicketKey(ticket.projectKey, ticket.num);
   const title = error === null ? `${key}: Claude finished` : `${key}: Claude stopped: ${error}`;
-  return message(title, ticket.title, ticketPath(ticket.projectKey, ticket.num), ticketTag(ticket));
+  return ticketMessage(title, ticket);
 }
 
 export function chainStoppedPush(ticket: PushTicket, reason: string): PushMessage {
   const title = `${formatTicketKey(ticket.projectKey, ticket.num)}: ${AUTO_REVIEW_STOPPED}`;
-  return message(title, reason, ticketPath(ticket.projectKey, ticket.num), ticketTag(ticket));
+  return ticketMessage(title, ticket, reason);
 }
 
 export function reviewedPush(ticket: PushTicket, rating: number): PushMessage {
   const key = formatTicketKey(ticket.projectKey, ticket.num);
   const title = `${key} is ready for you · ${rating}/5`;
-  return message(title, ticket.title, ticketPath(ticket.projectKey, ticket.num), ticketTag(ticket));
+  return ticketMessage(title, ticket);
 }
 
 export const ACTIVITY_PATH = '/activity';
@@ -83,41 +86,49 @@ export function batchEndedPush(batch: PushBatch, error: string | null): PushMess
 
 export interface PushChat {
   projectKey: string;
+  projectName: string;
   chatId: string;
   title: string;
 }
 
+const CHAT_TAG = 'chat:';
+
 // One tag per chat, so the answer replaces "Claude has a question" in the same chat.
-const chatTag = (chat: PushChat) => `chat:${chat.chatId}`;
+const chatTag = (chat: PushChat) => `${CHAT_TAG}${chat.chatId}`;
+
+export const chatOfTag = (tag: string): string | null =>
+  tag.startsWith(CHAT_TAG) ? tag.slice(CHAT_TAG.length) : null;
 
 const named = (text: string, chat: PushChat) =>
   chat.title.trim() ? `${text}: ${chat.title}` : text;
 
-export function chatAnsweredPush(chat: PushChat, answer: string): PushMessage {
-  const title = named('Claude answered', chat);
-  return message(title, answer, chatPath(chat.projectKey, chat.chatId), chatTag(chat));
-}
+// A lock screen shows a push without unlocking, and Claude's text in a chat can hold file content,
+// commands or secrets, so a chat push says only what happened, in which chat and project.
+const chatMessage = (title: string, chat: PushChat, line: string) =>
+  message(
+    title,
+    `${chat.projectName} · ${line}`,
+    chatPath(chat.projectKey, chat.chatId),
+    chatTag(chat),
+  );
+
+const ANSWER_IT = 'Open the chat to answer.';
+
+export const chatAnsweredPush = (chat: PushChat): PushMessage =>
+  chatMessage(named('Claude answered', chat), chat, 'Open the chat to read it.');
+
+export const chatFailedPush = (chat: PushChat): PushMessage =>
+  chatMessage(named('Claude stopped', chat), chat, 'Open the chat to see why.');
 
 // Where Claude waits: a ticket (its run or ask_person) or a chat (an Edit question).
 export type PushPlace = { ticket: PushTicket } | { chat: PushChat };
 
 const keyOf = (ticket: PushTicket) => formatTicketKey(ticket.projectKey, ticket.num);
 
-function placeOf(place: PushPlace): Pick<PushMessage, 'body' | 'url' | 'tag'> {
-  if ('ticket' in place) {
-    const { ticket } = place;
-    const url = ticketPath(ticket.projectKey, ticket.num);
-    return { body: ticket.title, url, tag: ticketTag(ticket) };
-  }
-  const { chat } = place;
-  return { body: chat.title, url: chatPath(chat.projectKey, chat.chatId), tag: chatTag(chat) };
-}
-
 export function questionPush(place: PushPlace, question: string): PushMessage {
-  const { url, tag } = placeOf(place);
   const asks = 'Claude has a question';
-  const title = 'ticket' in place ? `${keyOf(place.ticket)}: ${asks}` : named(asks, place.chat);
-  return message(title, question, url, tag);
+  if ('chat' in place) return chatMessage(named(asks, place.chat), place.chat, ANSWER_IT);
+  return ticketMessage(`${keyOf(place.ticket)}: ${asks}`, place.ticket, question);
 }
 
 // A lock screen shows text as it is, so a bidi override or a zero-width character could make a
@@ -131,8 +142,7 @@ function wanted(label: string): string {
 }
 
 export function permissionPush(place: PushPlace, label: string): PushMessage {
-  const { body, url, tag } = placeOf(place);
   const wants = wanted(label);
-  const title = 'ticket' in place ? `${keyOf(place.ticket)}: ${wants}` : wants;
-  return message(title, body, url, tag);
+  if ('chat' in place) return chatMessage(wants, place.chat, place.chat.title.trim() || ANSWER_IT);
+  return ticketMessage(`${keyOf(place.ticket)}: ${wants}`, place.ticket);
 }

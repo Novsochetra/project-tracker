@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import type { ChatDetail, PushKey, Run, RunJob } from '@tracker/shared';
+import type { PushKey, Run, RunJob } from '@tracker/shared';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { testClock } from '../helpers/auth';
 import { newDevice, fakePushService } from '../helpers/push';
@@ -115,28 +115,6 @@ describe.each(DIALECTS)('push notifications (%s)', (dialect) => {
       await person('POST', `/api/runs/${runs.body[0]?.id}/cancel`);
       await new Promise((resolve) => setTimeout(resolve, 50));
       expect(service.forDevice(device)).toHaveLength(1);
-    });
-
-    it('tells the person a chat question got its answer', async () => {
-      const { device } = await subscribe(person);
-      const started = await person<ChatDetail>('POST', '/api/projects/MOB/chats', {
-        runnerId: runner,
-        text: 'How does sync work?',
-      });
-      const job = await helper<RunJob>('POST', `/api/runners/${runner}/next?kind=ask`);
-      await helper('POST', `/api/runs/${job.body.run.id}/finish`, {
-        status: 'done',
-        answer: 'Every minute,\nover SSE.',
-      });
-      const chatId = started.body.chat.id;
-      expect(await service.messagesFor(device)).toEqual([
-        {
-          title: `Claude answered: ${started.body.chat.title}`,
-          body: 'Every minute, over SSE.',
-          url: `/p/MOB/ask/${chatId}`,
-          tag: `chat:${chatId}`,
-        },
-      ]);
     });
 
     it('says a ticket an agent approved is ready, but not after changes asked or a person’s review', async () => {

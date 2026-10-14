@@ -37,3 +37,8 @@ export async function savePushSubscription(
 
 export const removePushSubscription = (ctx: ServiceContext, userId: UserScope, endpoint: string) =>
   deleteUserSubscription(ctx.db, userId, endpoint);
+
+// A device is its sign-in: the subscription keeps the session that saved it.
+export function viewChat(ctx: ServiceContext, access: Access | null, chatId: string | null): void {
+  if (access?.kind === 'session') ctx.push.viewChat(access.sessionId, chatId);
+}
