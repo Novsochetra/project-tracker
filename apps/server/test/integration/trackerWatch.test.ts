@@ -152,6 +152,7 @@ describe('tracker watch against a real tracker', () => {
     close = async () => {
       stop.abort();
       await Promise.all([watcher.stop(), stream]);
+      claude.closeChats();
       link.close();
       await tracker.close();
       fake.remove();
@@ -211,7 +212,7 @@ describe('tracker watch against a real tracker', () => {
     expect((await person.getRun(runId)).stepCount).toBe(3);
   });
 
-  it('answers a chat question read-only and continues the session on the next one', async () => {
+  it('answers a chat question read-only and sends the next one to the same open claude', async () => {
     const started = await person.startChat('MOB', { runnerId, text: 'Where are runs queued?' });
     const chatId = started.chat.id;
     const answers = async () =>
@@ -230,7 +231,11 @@ describe('tracker watch against a real tracker', () => {
     await person.ask(chatId, { runnerId, text: 'And who takes them?' });
     await vi.waitFor(async () => expect(await answers()).toHaveLength(2), settle);
     const second = (await answers())[1];
-    expect(second?.text).toContain('"--resume","11111111-2222-4333-8444-555555555555"');
+    // PT-238: the chat's claude stayed open, so it got the follow-up on stdin, not a new --resume.
+    const argsOf = (text = '') => /^ARGS .*$/m.exec(text)?.[0];
+    expect(argsOf(second?.text)).toBe(argsOf(first?.text));
+    expect(second?.text).not.toContain('--resume');
+    expect(second?.text).toContain('And who takes them?');
   });
 
   const openRequest = async (runId: string) => {
