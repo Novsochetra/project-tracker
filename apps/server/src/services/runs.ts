@@ -136,8 +136,9 @@ export async function endRun(
     throw conflict(`This run already ended (${after.status}).`);
   }
   if (ended.marked) {
-    notifyRun(ctx, scope, after);
+    // First, so the chat read on this event shows why an approved plan didn't start.
     await carryOutApprovedPlan(ctx, scope, after);
+    notifyRun(ctx, scope, after);
     // A chain that went on or stopped says so itself; "Claude finished" between its runs is noise.
     if (!(await continueChain(ctx, after))) pushRunEnd(ctx, scope, after);
   }

@@ -40,11 +40,11 @@ describe.each(DIALECTS)('approving a plan in a chat (%s)', (dialect) => {
     ).body;
   const answer = (id: string, body: unknown, as = person) =>
     as<RunRequest>('POST', `/api/requests/${id}/answer`, body);
-  const finish = (runId: string) =>
+  const finish = (runId: string, withSession = true) =>
     helper('POST', `/api/runs/${runId}/finish`, {
       status: 'done',
       answer: 'The plan is approved.',
-      sessionId: SESSION,
+      ...(withSession ? { sessionId: SESSION } : {}),
     });
   const chat = async (chatId: string) =>
     (await person<ChatDetail>('GET', `/api/chats/${chatId}`)).body;
@@ -83,6 +83,46 @@ describe.each(DIALECTS)('approving a plan in a chat (%s)', (dialect) => {
       expect(job?.prompt).toContain(PLAN_FOLLOW_UP);
     },
   );
+
+  it('puts the plan in the prompt, so it is carried out without the session too', async () => {
+    const { chatId, runId } = await chatIn('plan');
+    await answer((await plan(runId)).id, { decision: 'allow', answers: ['auto'] });
+    expect((await finish(runId, false)).status).toBe(200);
+    expect((await chat(chatId)).messages.at(-1)?.text).toBe(PLAN_FOLLOW_UP);
+    const job = (await next('ticket')).body;
+    expect(job?.resumeSessionId).toBeNull();
+    expect(job?.prompt).toContain('The plan they approved:\n\n> # Plan\n> \n> 1. Add the queue');
+  });
+
+  it('says in the chat why an approved plan could not start, and still ends the run', async () => {
+    const { chatId, runId } = await chatIn('plan');
+    await answer((await plan(runId)).id, { decision: 'allow', answers: ['edit'] });
+    await person('POST', '/api/projects', { name: 'Web', key: 'WEB' });
+    await helper('PUT', `/api/runners/${runner}`, { name: 'Mac', projectKeys: ['WEB'] });
+    expect((await finish(runId)).status).toBe(200);
+    const after = await chat(chatId);
+    expect(after.run?.status).toBe('done');
+    expect(after.messages.at(-1)).toMatchObject({
+      role: 'claude',
+      text: expect.stringMatching(/^Couldn't start the approved plan: Mac doesn't run MOB/),
+    });
+    expect((await next('ticket')).body).toBeNull();
+  });
+
+  it('refuses an Auto approval of a plan cut at its limit', async () => {
+    const { runId } = await chatIn('plan');
+    const cut = (
+      await helper<RunRequest>('POST', `/api/runs/${runId}/requests`, {
+        runnerId: runner,
+        kind: 'plan',
+        label: '# Plan…',
+        labelCut: true,
+        questions: null,
+      })
+    ).body;
+    expect((await answer(cut.id, { decision: 'allow', answers: ['auto'] })).status).toBe(400);
+    expect((await answer(cut.id, { decision: 'allow', answers: ['edit'] })).status).toBe(200);
+  });
 
   it('keeps planning with the note and starts nothing', async () => {
     const { chatId, runId } = await chatIn('plan');

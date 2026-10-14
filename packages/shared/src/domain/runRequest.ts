@@ -27,7 +27,6 @@ export const RUN_REQUEST_ANSWER_MAX = 1000;
 // A plan is Claude's own Markdown, read whole before the person approves it.
 export const RUN_PLAN_MAX = 20_000;
 
-// The modes a plan may be carried out in, picked by the person on its card.
 export const PLAN_MODES = ['edit', 'auto'] as const;
 export type PlanMode = (typeof PLAN_MODES)[number];
 

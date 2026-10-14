@@ -102,11 +102,14 @@ interface AskIn {
   isNew: boolean;
 }
 
+// Only the server adds a plan (planFollowUp.ts): the route's zod input has no such field.
+export type AskWithPlan = AskValues & { plan?: string };
+
 async function askIn(
   ctx: ServiceContext,
   scope: UserScope,
   { project, chat, isNew }: AskIn,
-  input: AskValues,
+  input: AskWithPlan,
 ): Promise<ChatDetail> {
   const runner = await requireRunnerFor(ctx, scope, input.runnerId, project);
   await expireSilentRuns(ctx);
@@ -117,9 +120,9 @@ async function askIn(
     if (isNew) await insertChat(trx, chat);
     const saved = { model: chat.askModel, mode: chat.askMode, effort: chat.askEffort };
     const options = chosenAskOptions(input, saved);
-    const { text: question, attachmentIds } = input;
+    const { text: question, attachmentIds, plan } = input;
     const request = { queued, project, chat, history, ticket, question, attachmentIds, options };
-    return queueAsk(trx, request);
+    return queueAsk(trx, { ...request, plan });
   });
   notifyRun(ctx, scope, run);
   return getChat(ctx, scope, chat.id);
@@ -156,7 +159,7 @@ export async function askInChat(
   ctx: ServiceContext,
   scope: UserScope,
   chatId: string,
-  input: AskValues,
+  input: AskWithPlan,
 ): Promise<ChatDetail> {
   const chat = await requireChat(ctx, scope, chatId);
   const project = await requireProject(ctx.db, scope, chat.projectKey);

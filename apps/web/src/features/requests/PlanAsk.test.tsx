@@ -95,8 +95,13 @@ describe('a plan request', () => {
     expect(answerRunRequest).toHaveBeenCalledWith('q-1', { decision: 'deny' });
   });
 
-  it('says when the plan was cut', async () => {
+  it('approves a plan cut at its limit in Edit only, and says why', async () => {
     setup([plan({ labelCut: true })]);
-    expect(within(await card()).getByText('The plan goes on past what is shown.')).toBeVisible();
+    const shown = await card();
+    expect(
+      within(shown).getByText(/goes on past what is shown, so it can be approved in Edit only/),
+    ).toBeVisible();
+    expect(within(shown).getByRole('button', { name: 'Approve and auto' })).toBeDisabled();
+    expect(within(shown).getByRole('button', { name: 'Approve and edit' })).toBeEnabled();
   });
 });

@@ -10,7 +10,8 @@ export const APPROVE_AUTO_LABEL = 'Approve and auto';
 export const KEEP_PLANNING_LABEL = 'Keep planning';
 export const PLAN_NOTE_PLACEHOLDER = 'What to change (optional)';
 export const PLAN_NOTE_LABEL = 'Note for Claude when you keep planning';
-export const PLAN_CUT_TEXT = 'The plan goes on past what is shown.';
+export const PLAN_CUT_TEXT =
+  'The plan goes on past what is shown, so it can be approved in Edit only, which asks before each step.';
 export const OTHER_PLACEHOLDER = 'Something else…';
 export const LABEL_CUT_TEXT = 'It goes on past what is shown. Deny it if you are not sure.';
 export const HIDDEN_CHARS_TEXT =

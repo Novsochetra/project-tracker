@@ -73,7 +73,6 @@ export const choiceAnswer = (label: string): AnswerRunRequestInput => ({
   answers: [label],
 });
 
-// The mode goes to the tracker as the person picked it; it starts the plan's run in it.
 export const approvePlan = (mode: PlanMode): AnswerRunRequestInput => ({
   decision: 'allow',
   answers: [mode],

@@ -26,6 +26,14 @@ export function planRequestOf(input: unknown): RunRequestInput {
   return { kind: 'plan', label, labelCut: label !== text, questions: null };
 }
 
+// Quoted, so no line of the plan reads as the prompt's own; it is in the prompt so the plan is
+// carried out even when the session that made it can't be resumed.
+export const approvedPlanBlock = (plan: string): string =>
+  `The plan they approved:\n\n${plan
+    .split('\n')
+    .map((line) => `> ${line}`)
+    .join('\n')}`;
+
 const isPlanMode = (value: unknown): value is PlanMode => PLAN_MODES.some((mode) => mode === value);
 
 export function planModeOf(answers: readonly string[] | null | undefined): PlanMode | null {

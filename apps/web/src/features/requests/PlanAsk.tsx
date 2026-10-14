@@ -40,7 +40,7 @@ export function PlanAsk({ request, answer }: { request: RunRequest; answer: Answ
         <Button variant="primary" size="lg" disabled={answer.pending} onClick={approve('edit')}>
           {APPROVE_EDIT_LABEL}
         </Button>
-        <Button size="lg" disabled={answer.pending} onClick={approve('auto')}>
+        <Button size="lg" disabled={answer.pending || request.labelCut} onClick={approve('auto')}>
           {APPROVE_AUTO_LABEL}
         </Button>
       </div>

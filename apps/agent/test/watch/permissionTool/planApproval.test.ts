@@ -39,8 +39,9 @@ describe('a Plan question asks the person to approve its plan', () => {
     expect(ask).toHaveBeenCalledOnce();
   });
 
-  it('sends the plan text as a plan request', async () => {
+  it('sends the plan text as a plan request, and logs none of it', async () => {
     const asked: AddRunRequestInput[] = [];
+    const log: string[] = [];
     const ask = createAskPerson({
       api: {
         addRunRequest: vi.fn((_id: string, input: AddRunRequestInput) => {
@@ -56,7 +57,7 @@ describe('a Plan question asks the person to approve its plan', () => {
       },
       runnerId: RUNNER,
       folder: '/Users/dara/app',
-      log: () => undefined,
+      log: (text) => log.push(text),
       describe: String,
     });
     expect(await ask(runIn('plan'), exitPlan, signal())).toEqual({
@@ -72,6 +73,8 @@ describe('a Plan question asks the person to approve its plan', () => {
         questions: null,
       },
     ]);
+    expect(log[0]).toBe('chat c-1: Claude posted a plan on the phone.');
+    expect(log.join('\n')).not.toContain('Plan');
   });
 
   it('asks an Edit question to leave plan mode like any permission', async () => {

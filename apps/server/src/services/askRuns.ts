@@ -22,6 +22,7 @@ export interface AskRequest {
   question: string;
   attachmentIds: readonly string[];
   options: AskOptions;
+  plan?: string | undefined;
 }
 
 // A helper can resume only a session it made; any other gets the chat so far in the prompt.
@@ -58,6 +59,7 @@ export async function queueAsk(trx: Db, request: AskRequest) {
     history: request.history,
     resumed: resumeSessionId !== null,
     ticket: request.ticket,
+    plan: request.plan,
   });
   const run = queuedRunRow(queued, {
     prompt,

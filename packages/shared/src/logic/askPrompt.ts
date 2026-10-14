@@ -3,6 +3,7 @@ import { CHAT_ANSWER_IMAGES_MAX, type ChatRole } from '../domain/chat';
 import { madeCardLines, markedText, type AskHistoryMessage } from './askCards';
 import { instructionsBlock, type PromptInstructions } from './instructions';
 import { ticketBlock, type PromptTicket } from './prompt';
+import { approvedPlanBlock } from './runRequests/planRequest';
 
 export interface AskPromptInput {
   project: { key: string; name: string } & PromptInstructions;
@@ -15,6 +16,8 @@ export interface AskPromptInput {
   resumed?: boolean;
   // The ticket the chat is about, read again for each question so it is never stale.
   ticket?: PromptTicket | null;
+  // The plan the person approved, for the question that carries it out (PT-235).
+  plan?: string | undefined;
 }
 
 const CARD_EXAMPLE = [
@@ -114,6 +117,7 @@ export function buildAskPrompt({
   history,
   resumed = false,
   ticket,
+  plan,
 }: AskPromptInput): string {
   const parts = [rules(project, mode)];
   const instructions = instructionsBlock(project, '##', ticket?.labels);
@@ -121,6 +125,7 @@ export function buildAskPrompt({
   if (ticket) parts.push(`This chat is about this ticket:\n\n${ticketBlock(ticket, '##')}`);
   parts.push(...historyBlocks(history, resumed));
   parts.push(`Question:\n${question}${sentWith(files)}`);
+  if (plan) parts.push(approvedPlanBlock(plan));
   return parts.join(PART);
 }
 

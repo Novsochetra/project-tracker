@@ -60,7 +60,8 @@ export const addRunRequestInput = z.discriminatedUnion('kind', [
 export type AddRunRequestInput = z.input<typeof addRunRequestInput>;
 
 // A question is answered with one answer per question, or declined with deny; a permission
-// takes a decision alone; a plan is approved with its mode, or kept with an optional note. answerProblem in logic checks the answer fits its request.
+// takes a decision alone; a plan is approved with its mode, or kept with an optional note.
+// answerProblem in logic checks the answer fits its request.
 export const answerRunRequestInput = z.object({
   decision: z.enum(RUN_REQUEST_DECISIONS),
   answers: z.array(text(RUN_REQUEST_ANSWER_MAX, 1)).min(1).max(RUN_QUESTIONS_MAX).optional(),

@@ -107,6 +107,12 @@ const ENDINGS: Readonly<Record<RunRequest['status'], string>> = {
   open: 'the run stopped before an answer',
 };
 
+// A plan is Claude's whole text and can hold anything it read, so the log only says one waits.
+const askedText = (request: RunRequest): string =>
+  request.kind === 'plan'
+    ? 'Claude posted a plan on the phone.'
+    : `Claude asks on the phone: ${labelHead(request.label)}`;
+
 async function ask(deps: AskPersonDeps, run: Run, call: PromptCall, signal: AbortSignal) {
   const input = requestOfRun(run, call, deps.folder);
   if (!input) return deny(UNSHOWN);
@@ -117,7 +123,7 @@ async function ask(deps: AskPersonDeps, run: Run, call: PromptCall, signal: Abor
     deps.log(`Couldn't ask on the phone for ${runName(run)}: ${deps.describe(error)}`);
     return deny(refusalOf(error) ?? UNREACHABLE);
   }
-  deps.log(`${runName(run)}: Claude asks on the phone: ${labelHead(request.label)}`);
+  deps.log(`${runName(run)}: ${askedText(request)}`);
   const ending = await untilEnded(deps, request, signal);
   if ('request' in ending) {
     deps.log(`${runName(run)}: ${ENDINGS[ending.request.status]}.`);

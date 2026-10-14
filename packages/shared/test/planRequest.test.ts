@@ -3,7 +3,9 @@ import { addRunRequestInput } from '../src/api/runRequests';
 import { RUN_PLAN_MAX } from '../src/domain/runRequest';
 import { planPush } from '../src/logic/pushMessages';
 import { answerProblem } from '../src/logic/runRequests/answerProblem';
+import { buildAskPrompt } from '../src/logic/askPrompt';
 import {
+  approvedPlanBlock,
   NO_PLAN_TEXT,
   planModeOf,
   planRequestOf,
@@ -11,7 +13,7 @@ import {
 } from '../src/logic/runRequests/planRequest';
 
 const runnerId = '0b8f8f7e-6a35-4a9b-9a4f-2f3c4d5e6f70';
-const plan = { kind: 'plan' as const, questions: null };
+const plan = { kind: 'plan' as const, questions: null, labelCut: false };
 
 describe('planRequestOf', () => {
   // The shape Claude Code 2.1.299 sends to the permission prompt tool: its plan file's text.
@@ -63,6 +65,12 @@ describe('answerProblem for a plan', () => {
     expect(answerProblem(plan, { decision: 'allow', answers: ['ask'] })).toMatch(/edit or auto/);
   });
 
+  it('approves a plan cut at its limit in Edit only', () => {
+    const cut = { ...plan, labelCut: true };
+    expect(answerProblem(cut, { decision: 'allow', answers: ['edit'] })).toBeUndefined();
+    expect(answerProblem(cut, { decision: 'allow', answers: ['auto'] })).toMatch(/Edit only/);
+  });
+
   it('keeps planning with one note or none', () => {
     expect(answerProblem(plan, { decision: 'deny' })).toBeUndefined();
     expect(answerProblem(plan, { decision: 'deny', answers: ['Add tests'] })).toBeUndefined();
@@ -91,5 +99,29 @@ describe('planPush', () => {
     });
     const ticket = { projectKey: 'MOB', num: 3, title: 'Fix login' };
     expect(planPush({ ticket }).title).toBe('MOB-3: Claude has a plan for you');
+  });
+});
+
+describe('the approved plan in the prompt', () => {
+  it('quotes every line of the plan after the question', () => {
+    expect(approvedPlanBlock('# Plan\n\n1. Add it')).toBe(
+      'The plan they approved:\n\n> # Plan\n> \n> 1. Add it',
+    );
+    const project = { key: 'MOB', name: 'Mobile', instructions: '' };
+    const prompt = buildAskPrompt({
+      project,
+      mode: 'auto',
+      question: 'Carry out the approved plan.',
+      history: [],
+      plan: '1. Add it',
+    });
+    expect(
+      prompt.endsWith(
+        'Question:\nCarry out the approved plan.\n\n---\n\nThe plan they approved:\n\n> 1. Add it',
+      ),
+    ).toBe(true);
+    expect(buildAskPrompt({ project, mode: 'auto', question: 'q', history: [] })).not.toContain(
+      'The plan they approved',
+    );
   });
 });
