@@ -59,7 +59,7 @@ import type {
 } from '@tracker/shared';
 import { segment } from './asking';
 import type { ReadOptions } from './http';
-import { RunsClient } from './runsClient';
+import { ChangesClient } from './changesClient';
 import type { UploadOptions } from './upload';
 
 const attachmentFilePath = (attachmentId: string): string =>
@@ -72,7 +72,7 @@ const listQuery = (query: ListTicketsQuery) => ({
   label: query.label,
 });
 
-export class TrackerClient extends RunsClient {
+export class TrackerClient extends ChangesClient {
   listProjects = () => this.http.request<ProjectSummary[]>('GET', '/api/projects');
 
   createProject = (input: CreateProjectInput) =>

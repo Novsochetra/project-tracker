@@ -7,6 +7,7 @@ export type WatchApi = Pick<
   | 'takeNextRun'
   | 'finishRun'
   | 'addRunSteps'
+  | 'addRunChanges'
   | 'addRunRequest'
   | 'waitForRunRequest'
   | 'cancelRunRequest'

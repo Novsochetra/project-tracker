@@ -1,5 +1,6 @@
 import type { Actor } from './actor';
 import type { Attachment } from './attachment';
+import type { LineRef } from './changes';
 
 export const ACTIVITY_TYPES = ['event', 'comment', 'report', 'review'] as const;
 
@@ -32,4 +33,6 @@ export interface Activity {
   attachments: Attachment[];
   createdAt: number;
   editedAt: number | null;
+  // A comment on one line of a run's changes; absent on every other entry.
+  line?: LineRef;
 }

@@ -51,7 +51,10 @@ async function keepWatching(setup: Setup, args: WatchArgs, io: WatchIo, signal: 
     prompts: promptTool(setup, io),
     fetchFile: (attachmentId, options) => api.fetchAttachment(attachmentId, options),
   });
-  const watcher = createWatcher({ api, log: io.stdout, tools: tools.current, ...claude }, settings);
+  const watcher = createWatcher(
+    { api, log: io.stdout, tools: tools.current, changesIn: folder, ...claude },
+    settings,
+  );
   io.stdout(
     `Watching ${settings.projectKey} on ${config.url} as "${settings.name}". ` +
       `Runs started from the app open Claude Code in ${folder}. Leave this open; Ctrl-C stops.`,

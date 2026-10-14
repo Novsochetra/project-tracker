@@ -39,6 +39,8 @@ export const SKIPPED_TABLES: Readonly<Record<string, string>> = {
   runs: 'Claude Code runs started from this tracker',
   run_steps: 'what Claude Code did in those runs',
   run_requests: 'what Claude Code asked in those runs',
+  run_changes: 'what Claude Code changed in those runs',
+  ticket_viewed_files: 'the changed files of those runs ticked as viewed',
   questions: 'what Claude Code asked on tickets, tied to those runs',
   chats: "chats with Claude Code on this tracker's helpers",
   chat_messages: "chats with Claude Code on this tracker's helpers",

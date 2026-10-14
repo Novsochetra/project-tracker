@@ -1,0 +1,132 @@
+.tabs {
+  max-width: 300px;
+}
+
+.panel {
+  min-width: 0;
+  padding: var(--space-5) var(--space-10) 56px;
+}
+
+/* Code reads better wide, so the changes take more of a desktop screen than the ticket's text. */
+.inner {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  max-width: 960px;
+}
+
+.header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+}
+
+.summary {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.count {
+  color: var(--muted);
+  font-size: var(--size-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.note {
+  flex-basis: 100%;
+  order: 3;
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--size-secondary);
+}
+
+.actions {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.cut {
+  margin: 0;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--report-line);
+  border-radius: var(--radius-control);
+  background: var(--report-bg);
+  color: var(--ink-2);
+  font-size: var(--size-secondary);
+}
+
+.thread {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  background: var(--panel);
+  font-family: var(--font-sans);
+}
+
+.thread .comment {
+  margin: 0;
+}
+
+.box {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--control-line);
+  border-radius: var(--radius-group);
+  background: var(--surface);
+  transition:
+    border-color var(--duration-fast) var(--ease-out),
+    box-shadow var(--duration-fast) var(--ease-out);
+}
+
+.box:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
+}
+
+.box .input {
+  min-height: 56px;
+  padding: var(--space-2) var(--space-3) var(--space-1);
+  border-radius: var(--radius-group);
+  color: var(--ink);
+  font-size: var(--size-body);
+  line-height: 1.55;
+}
+
+.boxFooter {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-2) var(--space-2);
+}
+
+@media (width < 768px),
+  (pointer: coarse) and (device-width < 600px),
+  (pointer: coarse) and (device-height < 600px) {
+  .tabs {
+    max-width: none;
+  }
+
+  .panel {
+    padding: var(--space-4) var(--space-4) var(--space-6);
+  }
+
+  .actions {
+    flex-basis: 100%;
+    order: 4;
+  }
+
+  .actions > * {
+    flex: 1 1 0;
+  }
+
+  .box .input {
+    font-size: var(--size-input);
+  }
+}
