@@ -24,8 +24,8 @@ const batch: RunBatch = {
   projectKey: 'MOB',
   status: 'running',
   tickets: [
-    { ticketKey: 'MOB-3', ticketTitle: 'Faster sync', state: 'running' },
-    { ticketKey: 'MOB-4', ticketTitle: 'Dark mode', state: 'failed' },
+    { runId: 'r-3', ticketKey: 'MOB-3', ticketTitle: 'Faster sync', state: 'running' },
+    { runId: 'r-4', ticketKey: 'MOB-4', ticketTitle: 'Dark mode', state: 'failed' },
   ],
 };
 

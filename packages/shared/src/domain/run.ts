@@ -158,6 +158,8 @@ export const BATCH_TICKET_STATES = ['waiting', 'running', 'done', 'failed', 'can
 export type BatchTicketState = (typeof BATCH_TICKET_STATES)[number];
 
 export interface BatchTicket {
+  // The ticket's own run, which shows its sub agent's steps.
+  runId: string;
   ticketKey: string;
   ticketTitle: string;
   state: BatchTicketState;

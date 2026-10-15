@@ -13,6 +13,8 @@ const SEQ_MAX = 2_147_483_647;
 // Claude Code's are about 30 characters (toolu_ and 24 more).
 const TOOL_ID_MAX = 100;
 
+const toolId = z.string().trim().min(1).max(TOOL_ID_MAX).nullable().default(null);
+
 const stepOf = <K extends RunStepKind>(kind: K, max: number) =>
   z.object({
     kind: z.literal(kind),
@@ -22,7 +24,8 @@ const stepOf = <K extends RunStepKind>(kind: K, max: number) =>
       .min(1, 'Give every step a label.')
       .max(max, `Use at most ${max} characters for a ${kind} step.`),
     subAgent: z.boolean().default(false),
-    toolId: z.string().trim().min(1).max(TOOL_ID_MAX).nullable().default(null),
+    parentToolId: toolId,
+    toolId,
   });
 
 const runTodo = z.object({

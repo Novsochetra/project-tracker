@@ -8,13 +8,21 @@ const parse = (steps: unknown) => addRunStepsInput.safeParse({ runnerId: RUNNER,
 describe('addRunStepsInput', () => {
   it('trims labels and takes a step as from the main conversation unless it says otherwise', () => {
     expect(parse([{ kind: 'tool', label: ' Read a.ts ' }]).data?.steps).toEqual([
-      { kind: 'tool', label: 'Read a.ts', subAgent: false, toolId: null },
+      { kind: 'tool', label: 'Read a.ts', subAgent: false, parentToolId: null, toolId: null },
     ]);
+  });
+
+  it("keeps the call that started a sub agent's step", () => {
+    const step = { kind: 'tool', label: 'Read a.ts', subAgent: true, parentToolId: 'toolu_a' };
+    expect(parse([step]).data?.steps).toEqual([{ ...step, toolId: null }]);
+    expect(parse([{ ...step, parentToolId: 'x'.repeat(101) }]).success).toBe(false);
   });
 
   it('takes a refused call with the id of the call it refuses', () => {
     const denied = { kind: 'denied', label: 'Not allowed: Run ls', toolId: 'toolu_01' };
-    expect(parse([denied]).data?.steps).toEqual([{ ...denied, subAgent: false }]);
+    expect(parse([denied]).data?.steps).toEqual([
+      { ...denied, subAgent: false, parentToolId: null },
+    ]);
     expect(parse([{ ...denied, toolId: 'x'.repeat(101) }]).success).toBe(false);
   });
 

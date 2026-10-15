@@ -17,7 +17,8 @@ export function createStepReader(folder: string): (event: unknown) => RunStepInp
       open.delete(toolId);
       if (!asked) return [];
       const label = stepLabel(`Not allowed: ${asked.label}`);
-      return [{ kind: 'denied', label, subAgent: asked.subAgent, toolId }];
+      const { subAgent, parentToolId } = asked;
+      return [{ kind: 'denied', label, subAgent, ...(parentToolId && { parentToolId }), toolId }];
     });
   }
 

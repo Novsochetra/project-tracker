@@ -10,6 +10,7 @@ export const listBatchTicketRows = (db: Db, batchIds: readonly string[]) =>
         .select([
           'runs.id as runId',
           'runs.batchId',
+          'runs.ticketId',
           'runs.status',
           'tickets.num as ticketNum',
           'tickets.title as ticketTitle',

@@ -18,3 +18,11 @@
   flex: none;
   margin-right: 16px;
 }
+
+.turn {
+  transition: transform var(--duration-fast) ease-out;
+}
+
+.turned {
+  transform: rotate(90deg);
+}

@@ -5,7 +5,7 @@ import { masked, stepLabel } from './label';
 import { todosOf } from './todos';
 import { toolLabel } from './toolLabel';
 
-type Step = Omit<RunStepInput, 'subAgent'>;
+type Step = Omit<RunStepInput, 'subAgent' | 'parentToolId'>;
 
 interface Source {
   folder: string;
@@ -45,8 +45,10 @@ function stepOfBlock(block: unknown, from: Source): Step[] {
 export function messageSteps(event: Json, folder: string): RunStepInput[] {
   const content = isJson(event.message) ? event.message.content : undefined;
   if (!Array.isArray(content)) return [];
-  const subAgent = typeof event.parent_tool_use_id === 'string';
+  const parentToolId =
+    typeof event.parent_tool_use_id === 'string' ? event.parent_tool_use_id : null;
+  const subAgent = parentToolId !== null;
   return content
     .flatMap((block) => stepOfBlock(block, { folder, subAgent }))
-    .map((step) => ({ ...step, subAgent }));
+    .map((step) => (subAgent ? { ...step, subAgent, parentToolId } : { ...step, subAgent }));
 }

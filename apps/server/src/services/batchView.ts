@@ -34,6 +34,7 @@ export async function getRunBatch(
     projectKey: batch.projectKey,
     status: batch.status,
     tickets: rows.map((row) => ({
+      runId: row.runId,
       ticketKey: formatTicketKey(batch.projectKey, row.ticketNum),
       ticketTitle: row.ticketTitle,
       state: batchTicketState(row.status),

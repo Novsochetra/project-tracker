@@ -59,7 +59,13 @@ describe('to-do list steps', () => {
   it("leaves a sub agent's list out, since only the main conversation's shows", () => {
     const todos = [{ content: 'Review it', status: 'pending' }];
     expect(read(todoWrite(todos, 'toolu_agent'))).toEqual([
-      { kind: 'tool', label: 'Update the to-do list', subAgent: true, toolId: 'toolu_t' },
+      {
+        kind: 'tool',
+        label: 'Update the to-do list',
+        subAgent: true,
+        parentToolId: 'toolu_agent',
+        toolId: 'toolu_t',
+      },
     ]);
   });
 });

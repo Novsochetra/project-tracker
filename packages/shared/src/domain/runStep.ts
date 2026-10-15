@@ -26,6 +26,8 @@ export interface RunStepInput {
   label: string;
   // Sent by a sub agent rather than the main conversation, so the phone can indent it.
   subAgent: boolean;
+  // A sub agent's steps name the call that started it, so a Run all can give them to its ticket.
+  parentToolId?: string | null;
   // Claude Code's id for the tool call, which ties a call to what became of it; null for text.
   toolId: string | null;
   // Claude's to-do list as its TodoWrite call wrote it. The tracker keeps only a run's latest one,

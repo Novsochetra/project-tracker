@@ -11,7 +11,9 @@ import {
 } from '../repositories/runSteps';
 import { inTransaction, type ServiceContext } from './context';
 import { requireRun } from './runs';
-import { todosColumn, todosOfColumn } from './runTodos';
+import { addBatchTicketSteps } from './batchSteps';
+import { asRunStep, rowsOf } from './runStepRows';
+import { todosOfColumn } from './runTodos';
 
 function toStep(row: RunStepRow): RunStep {
   const todos = todosOfColumn(row.todos);
@@ -26,21 +28,9 @@ function toStep(row: RunStepRow): RunStep {
   };
 }
 
-type Steps = AddRunStepsInput['steps'];
+type StepRun = Pick<RunRow, 'id' | 'projectId' | 'ticketId' | 'chatId'>;
 
-const rowsOf = (runId: string, steps: Steps, count: number, at: number) =>
-  steps.map((step, index): RunStepRow => ({
-    runId,
-    seq: count - steps.length + index + 1,
-    kind: step.kind,
-    label: step.label,
-    subAgent: step.subAgent ? 1 : 0,
-    toolId: step.toolId ?? null,
-    todos: 'todos' in step ? todosColumn(step) : null,
-    createdAt: at,
-  }));
-
-function notifyRunStep(ctx: ServiceContext, scope: UserScope, run: RunRow, count: number): void {
+function notifyRunStep(ctx: ServiceContext, scope: UserScope, run: StepRun, count: number): void {
   ctx.runEvents.publish({
     userId: scope,
     event: {
@@ -71,19 +61,21 @@ export async function addRunSteps(
   if (run.runnerId !== input.runnerId) {
     throw forbidden('Only the helper that took this run sends its steps.');
   }
-  const { steps } = input;
+  const steps = input.steps.map(asRunStep);
   const at = ctx.now();
-  const count = await inTransaction(ctx, async (trx) => {
+  const added = await inTransaction(ctx, async (trx) => {
     const counted = await countMoreSteps(trx, run.id, steps.length);
     if (counted === undefined) return undefined;
     const rows = rowsOf(run.id, steps, counted, at);
     await insertRunSteps(trx, rows);
     await keepLatestTodos(trx, rows);
     await dropOldSteps(trx, run.id, counted);
-    return counted;
+    const tickets = await addBatchTicketSteps(trx, run, steps, at);
+    return { count: counted, tickets };
   });
-  if (count === undefined) throw notRunning(await requireRun(ctx, scope, id));
-  notifyRunStep(ctx, scope, run, count);
+  if (added === undefined) throw notRunning(await requireRun(ctx, scope, id));
+  notifyRunStep(ctx, scope, run, added.count);
+  for (const ticket of added.tickets) notifyRunStep(ctx, scope, ticket.run, ticket.count);
 }
 
 // Kept after the run ends: they are what it did.

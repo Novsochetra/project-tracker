@@ -17,6 +17,7 @@ const message = (role: ChatMessage['role'], text: string, batchRunId: string | n
 };
 const preview = { tickets: [], skippedActive: 0, skippedDevice: 0, leftOver: 0, maxParallel: 5 };
 const ticket = (state: BatchTicket['state'], num: number): BatchTicket => ({
+  runId: `r-${num}`,
   ticketKey: `MOB-${num}`,
   ticketTitle: 'Sync',
   state,

@@ -144,7 +144,13 @@ describe('createStepReader', () => {
     read(toolUse('Bash', { command: 'rm -rf build' }, 'toolu_9', 'toolu_agent'));
     const event = { type: 'system', subtype: 'permission_denied', tool_use_id: 'toolu_9' };
     expect(read(event)).toEqual([
-      { kind: 'denied', label: 'Not allowed: Run rm -rf build', subAgent: true, toolId: 'toolu_9' },
+      {
+        kind: 'denied',
+        label: 'Not allowed: Run rm -rf build',
+        subAgent: true,
+        parentToolId: 'toolu_agent',
+        toolId: 'toolu_9',
+      },
     ]);
     const result = {
       type: 'user',
@@ -174,7 +180,7 @@ describe('createStepReader', () => {
       { kind: 'agent', label: 'Start sub agent: Review it', subAgent: false, toolId: 'toolu_1' },
     ]);
     expect(read(toolUse('Read', 'not an object', 'toolu_2', 'toolu_1'))).toEqual([
-      { kind: 'tool', label: 'Read', subAgent: true, toolId: 'toolu_2' },
+      { kind: 'tool', label: 'Read', subAgent: true, parentToolId: 'toolu_1', toolId: 'toolu_2' },
     ]);
   });
 

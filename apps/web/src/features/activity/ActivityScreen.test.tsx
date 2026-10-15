@@ -1,6 +1,6 @@
 import { ApiError } from '@tracker/client';
-import type { ActivityBatch, ActivityRun, RunActivity } from '@tracker/shared';
-import { screen } from '@testing-library/react';
+import type { ActivityBatch, ActivityRun, RunActivity, RunBatch, RunStep } from '@tracker/shared';
+import { screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { currentPath, renderWithApp } from '../../app/test/harness';
@@ -202,11 +202,62 @@ describe('ActivityScreen', () => {
       expect(await screen.findByText('Already ended')).toBeInTheDocument();
     });
 
-    it('opens its project when tapped', async () => {
-      const user = userEvent.setup();
-      renderActivity(() => Promise.resolve(activity([], 5, [batch({})])));
-      await user.click(await batchRow());
-      expect(currentPath()).toBe('/p/MOB');
+    describe('opened', () => {
+      const runBatch: RunBatch = {
+        runId: 'b-1',
+        projectKey: 'MOB',
+        status: 'running',
+        tickets: [
+          { runId: 't-3', ticketKey: 'MOB-3', ticketTitle: 'Crash on login', state: 'running' },
+          { runId: 't-4', ticketKey: 'MOB-4', ticketTitle: 'Sync', state: 'waiting' },
+        ],
+      };
+      const step: RunStep = {
+        seq: 1,
+        kind: 'tool',
+        label: 'Read src/login.ts',
+        subAgent: false,
+        toolId: 'toolu_1',
+        at: Date.now(),
+      };
+      const openBatch = async () => {
+        const user = userEvent.setup();
+        renderActivity(() => Promise.resolve(activity([], 5, [batch({})])), {
+          getRunBatch: vi.fn().mockResolvedValue(runBatch),
+          listRunSteps: vi.fn((runId: string) => Promise.resolve(runId === 't-3' ? [step] : [])),
+        });
+        const row = await batchRow();
+        await user.click(row);
+        return { user, row };
+      };
+      const ticketList = () => screen.findByRole('list', { name: 'Run all tickets in Mobile app' });
+
+      it('lists its tickets under it, with each state and what a working one does now', async () => {
+        const { user, row } = await openBatch();
+        expect(row).toHaveAttribute('aria-expanded', 'true');
+        const list = await ticketList();
+        const [working, waiting] = within(list).getAllByRole('button');
+        expect(working).toHaveTextContent('MOB-3 Crash on login');
+        expect(working).toHaveTextContent('Running');
+        expect(await within(list).findByText('Read src/login.ts')).toBeInTheDocument();
+        expect(waiting).toHaveTextContent('Waiting');
+        await user.click(row);
+        expect(row).toHaveAttribute('aria-expanded', 'false');
+        expect(screen.queryByRole('list', { name: /^Run all tickets/ })).not.toBeInTheDocument();
+      });
+
+      it('opens a ticket from the list', async () => {
+        const { user } = await openBatch();
+        const list = await ticketList();
+        await user.click(within(list).getByRole('button', { name: /MOB-4/ }));
+        expect(currentPath()).toBe(routePath({ name: 'ticket', key: 'MOB', num: 4 }));
+      });
+
+      it('still opens its project', async () => {
+        const { user } = await openBatch();
+        await user.click(await screen.findByRole('button', { name: 'Open Mobile app' }));
+        expect(currentPath()).toBe('/p/MOB');
+      });
     });
   });
 });
