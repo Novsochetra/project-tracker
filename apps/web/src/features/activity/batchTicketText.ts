@@ -1,11 +1,10 @@
 import { parseTicketKey } from '@tracker/shared';
 import type { Route } from '../../navigation';
 
-export const ticketRoute = (projectKey: string, ticketKey: string): Route => ({
-  name: 'ticket',
-  key: projectKey,
-  num: parseTicketKey(ticketKey)?.num ?? 0,
-});
+export const ticketRoute = (projectKey: string, ticketKey: string): Route => {
+  const num = parseTicketKey(ticketKey)?.num;
+  return num ? { name: 'ticket', key: projectKey, num } : { name: 'project', key: projectKey };
+};
 
 export const ticketsLabel = (projectName: string): string => `Run all tickets in ${projectName}`;
 

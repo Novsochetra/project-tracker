@@ -2,8 +2,13 @@ import { batchTicketSteps, formatTicketKey, type RunStepInput } from '@tracker/s
 import type { RunRow, RunStepRow } from '../db/runTables';
 import type { Db } from '../db/schema';
 import { listBatchTicketRows } from '../repositories/batchRuns';
-import { countMoreTicketSteps, listBatchStarts, listStepOwners } from '../repositories/batchSteps';
-import { dropOldSteps, insertRunSteps } from '../repositories/runSteps';
+import {
+  countMoreTicketSteps,
+  dropOldTicketSteps,
+  listBatchStarts,
+  listStepOwners,
+} from '../repositories/batchSteps';
+import { insertRunSteps } from '../repositories/runSteps';
 import type { RunWithKey } from '../repositories/runs';
 import { rowsOf } from './runStepRows';
 
@@ -53,7 +58,7 @@ export async function addBatchTicketSteps(
     const row = rows.find((ticket) => ticket.runId === runId);
     if (count === undefined || !row) continue;
     await insertRunSteps(trx, rowsOf(runId, routed, count, at));
-    await dropOldSteps(trx, runId, count);
+    await dropOldTicketSteps(trx, runId, count);
     const run = { id: runId, projectId: batch.projectId, ticketId: row.ticketId, chatId: null };
     counts.push({ run, count });
   }

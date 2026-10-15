@@ -12,7 +12,8 @@ export interface BatchStepsSoFar {
   starts: ReadonlyMap<string, RunStepInput>;
 }
 
-const KEY = /[A-Za-z0-9]+-\d+/g;
+// Bounded on both sides, so a label that is one long word costs linear time, not quadratic.
+const KEY = /(?<![A-Za-z0-9])[A-Za-z0-9]{1,20}-\d{1,10}(?!\d)/g;
 const CLAIM = /\bclaim/i;
 
 // Only a key of this batch's tickets counts, and only when the label names just one of them.
@@ -33,7 +34,9 @@ const isStart = (step: RunStepInput): boolean =>
   step.kind === 'agent' && !step.subAgent && step.toolId !== null;
 
 // A Run all is one Claude with a sub agent per ticket. Each sub agent's steps also go to its
-// ticket's run, tied by the Start step's description or the sub agent's claim of its ticket.
+// ticket's run, tied by the Start step's description or, when that names no single ticket, the
+// sub agent's claim. The description comes first because it arrives first: the ticket shows its
+// sub agent from the start, and Claude writes it from the batch's own ticket list.
 export function batchTicketSteps(
   steps: readonly RunStepInput[],
   tickets: readonly BatchTicketRun[],
@@ -44,10 +47,13 @@ export function batchTicketSteps(
   const routed = new Map<string, RunStepInput[]>();
   const give = (runId: string, step: RunStepInput) =>
     routed.set(runId, [...(routed.get(runId) ?? []), asTicketStep(step)]);
+  // The Start step goes first on the ticket, since its toolId is how later requests find the owner.
   const own = (toolId: string, runId: string) => {
     owners.set(toolId, runId);
-    const start = starts.get(toolId);
-    if (start) give(runId, start);
+    give(
+      runId,
+      starts.get(toolId) ?? { kind: 'agent', label: 'Start sub agent', subAgent: false, toolId },
+    );
   };
   for (const step of steps) {
     if (isStart(step) && step.toolId) {
@@ -58,7 +64,9 @@ export function batchTicketSteps(
     }
     const parent = step.parentToolId;
     if (!parent) continue;
-    const claimed = CLAIM.test(step.label) ? ticketRunIn(step.label, tickets) : null;
+    // Only a call claims: Claude's words may name a ticket it chose not to take.
+    const claims = step.kind === 'tool' && CLAIM.test(step.label);
+    const claimed = claims ? ticketRunIn(step.label, tickets) : null;
     if (!owners.has(parent) && claimed) own(parent, claimed);
     const owner = owners.get(parent);
     if (owner) give(owner, step);

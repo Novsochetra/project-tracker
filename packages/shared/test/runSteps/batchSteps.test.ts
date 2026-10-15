@@ -36,6 +36,7 @@ describe('ticketRunIn', () => {
     expect(ticketRunIn('Start sub agent: PT-12 and PT-13', tickets)).toBeNull();
     expect(ticketRunIn('Run npm test', tickets)).toBeNull();
     expect(ticketRunIn('Read PT-120.md', tickets)).toBeNull();
+    expect(ticketRunIn('Read xPT-12', tickets)).toBeNull();
   });
 });
 
@@ -83,6 +84,36 @@ describe('batchTicketSteps', () => {
     expect(routed.get('run-12')?.map(({ label }) => label)).toEqual([
       'Start sub agent: PT-12',
       'Use tracker: get_ticket PT-13',
+    ]);
+  });
+
+  it("ties a sub agent only by a call, never by Claude's words or a refused call", () => {
+    const a = start('toolu_a', 'Next ticket');
+    const words: RunStepInput = {
+      kind: 'text',
+      label: "I won't claim PT-13, another agent has it.",
+      subAgent: true,
+      parentToolId: 'toolu_a',
+      toolId: null,
+    };
+    const refused: RunStepInput = {
+      ...sub('toolu_a', 'Not allowed: Use tracker: claim_ticket PT-13'),
+      kind: 'denied',
+    };
+    expect(batchTicketSteps([a, words, refused], tickets, none).size).toBe(0);
+  });
+
+  it('starts the ticket with a Start step even when the batch no longer has its own', () => {
+    const claim = sub('toolu_a', 'Use tracker: claim_ticket PT-12');
+    expect(batchTicketSteps([claim], tickets, none).get('run-12')).toEqual([
+      {
+        kind: 'agent',
+        label: 'Start sub agent',
+        subAgent: false,
+        parentToolId: null,
+        toolId: 'toolu_a',
+      },
+      onTicket(claim),
     ]);
   });
 });

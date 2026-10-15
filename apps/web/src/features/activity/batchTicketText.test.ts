@@ -4,6 +4,7 @@ import { openProjectText, ticketRoute, ticketsLabel } from './batchTicketText';
 describe('batch tickets', () => {
   it("opens a ticket's own screen", () => {
     expect(ticketRoute('MOB', 'MOB-12')).toEqual({ name: 'ticket', key: 'MOB', num: 12 });
+    expect(ticketRoute('MOB', 'not a key')).toEqual({ name: 'project', key: 'MOB' });
   });
 
   it('names the list and the way to the project', () => {

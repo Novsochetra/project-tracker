@@ -45,12 +45,15 @@ export async function dropOldSteps(db: Db, runId: string, count: number): Promis
     .execute();
 }
 
-export const listRunStepRows = (db: Db, runId: string, after: number) =>
-  db
+// The newest ones: a batch's ticket run keeps its Start steps past the RUN_STEPS_KEPT it trims to.
+export async function listRunStepRows(db: Db, runId: string, after: number) {
+  const rows = await db
     .selectFrom('runSteps')
     .selectAll()
     .where('runId', '=', runId)
     .where('seq', '>', after)
-    .orderBy('seq')
+    .orderBy('seq', 'desc')
     .limit(RUN_STEPS_KEPT)
     .execute();
+  return rows.reverse();
+}

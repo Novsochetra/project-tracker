@@ -1,4 +1,4 @@
-import { ACTIVE_RUN_STATUSES } from '@tracker/shared';
+import { ACTIVE_RUN_STATUSES, RUN_STEPS_KEPT } from '@tracker/shared';
 import type { Db } from '../db/schema';
 
 // A batch's ticket run is queued until its sub agent claims the ticket, and its Start step comes
@@ -38,3 +38,13 @@ export const listStepOwners = (
 
 export const listBatchStarts = (db: Db, batchId: string, toolIds: readonly string[]) =>
   toolIds.length === 0 ? Promise.resolve([]) : startSteps(db, [batchId], toolIds).execute();
+
+// A ticket's Start steps say which sub agent is its own, so they outlive the oldest steps.
+export async function dropOldTicketSteps(db: Db, runId: string, count: number): Promise<void> {
+  await db
+    .deleteFrom('runSteps')
+    .where('runId', '=', runId)
+    .where('seq', '<=', count - RUN_STEPS_KEPT)
+    .where('kind', '<>', 'agent')
+    .execute();
+}
