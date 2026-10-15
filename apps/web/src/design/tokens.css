@@ -148,8 +148,6 @@
   /* The phone's nav bar, its 1px line included (one more than --sticky-top), so a page below it
      can reach the screen's bottom edge without scrolling by that 1px. */
   --nav-bar-height: 0px;
-  /* The phone's bottom bar: its buttons, 10px above and below them and its 1px line. */
-  --bottom-bar-height: calc(var(--bar-button) + 21px + var(--safe-bottom));
   /* A stuck group header: 40px, or on phones its 44px buttons and its 1px line. */
   --sticky-header-height: 40px;
 
@@ -188,6 +186,5 @@
     --bar-button: var(--touch-target);
     --sticky-top: calc(var(--touch-target) + var(--safe-top));
     --nav-bar-height: calc(var(--touch-target) + var(--safe-top) + 1px);
-    --bottom-bar-height: calc(var(--bar-button) + 7px + max(6px, var(--safe-bottom)));
   }
 }

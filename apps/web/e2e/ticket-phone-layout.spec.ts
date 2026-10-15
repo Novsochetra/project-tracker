@@ -155,7 +155,9 @@ test.describe('ticket screen on a phone', () => {
     const less = first.getByRole('button', { name: 'Show less' });
     await expect(less).toHaveAttribute('aria-expanded', 'true');
     expect((await first.boundingBox())!.height).toBeGreaterThan(folded + 200);
-    await less.scrollIntoViewIfNeeded();
+    // Clear of the bottom bar and the comment jump, which cover the end of the screen: under them
+    // the click scrolled the page itself before pressing (PT-252).
+    await less.evaluate((button) => button.scrollIntoView({ block: 'center' }));
     await settle(page);
     const before = (await less.boundingBox())!.y;
     await less.click();
