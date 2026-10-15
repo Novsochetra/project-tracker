@@ -116,4 +116,13 @@ describe('batchTicketSteps', () => {
       onTicket(claim),
     ]);
   });
+
+  it('keeps an agent the sub agent starts itself as a sub agent on the ticket', () => {
+    const nested: RunStepInput = {
+      ...sub('toolu_a', 'Start sub agent: check tests'),
+      kind: 'agent',
+    };
+    const routed = batchTicketSteps([start('toolu_a', 'PT-12'), nested], tickets, none);
+    expect(routed.get('run-12')?.map(({ subAgent }) => subAgent)).toEqual([false, true]);
+  });
 });

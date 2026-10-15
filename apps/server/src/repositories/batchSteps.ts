@@ -45,6 +45,6 @@ export async function dropOldTicketSteps(db: Db, runId: string, count: number): 
     .deleteFrom('runSteps')
     .where('runId', '=', runId)
     .where('seq', '<=', count - RUN_STEPS_KEPT)
-    .where('kind', '<>', 'agent')
+    .where((eb) => eb.or([eb('kind', '<>', 'agent'), eb('subAgent', '=', 1)]))
     .execute();
 }

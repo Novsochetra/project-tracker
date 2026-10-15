@@ -23,10 +23,11 @@ export function ticketRunIn(label: string, tickets: readonly BatchTicketRun[]): 
   return named.length === 1 && named[0] ? named[0].runId : null;
 }
 
-// On its ticket the sub agent is the whole run, so its steps show unindented there.
+// On its ticket the sub agent is the whole run, so its steps show unindented there. One it starts
+// itself stays a sub agent, so only the ticket's own Start steps outlive the trim (dropOldTicketSteps).
 const asTicketStep = (step: RunStepInput): RunStepInput => ({
   ...step,
-  subAgent: false,
+  subAgent: step.kind === 'agent' && step.subAgent,
   parentToolId: null,
 });
 
