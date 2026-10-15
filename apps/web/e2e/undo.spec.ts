@@ -160,6 +160,9 @@ test.describe('a double tap on Undo runs it once and opens nothing behind the to
         await settled(undo);
         const box = (await undo.boundingBox())!;
         const [x, y] = [box.x + box.width / 2, second.y(box)];
+        // What sits above the list (PT-227's Run all strip) moves the rows, and a group's header
+        // behind the toast would open nothing either way (PT-252).
+        await rowAt(page, y);
 
         await page.touchscreen.tap(x, onTarget(box, y));
         await page.waitForTimeout(150);

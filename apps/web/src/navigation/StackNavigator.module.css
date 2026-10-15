@@ -24,6 +24,12 @@
   touch-action: pan-y pinch-zoom;
 }
 
+/* What scrolls into view (a focused control, a Show less pressed near the bottom) stops above the
+   bottom bar instead of under it (PT-252). */
+.scroller:has([data-bottom-bar]:not([data-hidden])) {
+  scroll-padding-bottom: var(--bottom-bar-height);
+}
+
 .dim,
 .shadow {
   position: absolute;

@@ -1,12 +1,13 @@
 .strip {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: var(--space-2);
   padding: 12px clamp(16px, 4.2vw, 32px) 0;
 }
 
+/* The counts wrap beside the button rather than pushing it to a row of its own: on a phone that
+   row moved every ticket down (PT-252). */
 .counts {
   min-width: 0;
   color: var(--muted-2);
@@ -15,4 +16,13 @@
 
 .button {
   flex: none;
+}
+
+/* Sideways a phone has about 300px under Safari's bars, and the strip's row left no ticket in
+   sight (PT-252). Run all stays upright and in chat. */
+@media (pointer: coarse) and (device-width < 600px) and (width >= 600px),
+  (pointer: coarse) and (device-height < 600px) and (width >= 600px) {
+  .strip {
+    display: none;
+  }
 }
