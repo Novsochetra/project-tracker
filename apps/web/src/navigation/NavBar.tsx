@@ -2,6 +2,7 @@ import clsx from 'clsx';
 import { ChevronLeft } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { useIsPhone } from '../lib/media';
+import { usePainted } from '../lib/usePainted';
 import styles from './NavBar.module.css';
 import { useLargeTitleState } from './useLargeTitle';
 import { useOptionalNavigation } from './useNavigation';
@@ -22,6 +23,7 @@ export function NavBar({ title, mono = false, backLabel, onBack, left, right }: 
   const navigation = useOptionalNavigation();
   const largeTitle = useLargeTitleState();
   const tapToTopRef = useTapToTop();
+  const painted = usePainted();
   if (!isPhone) return null;
 
   const handleBack = onBack ?? navigation?.back;
@@ -32,6 +34,7 @@ export function NavBar({ title, mono = false, backLabel, onBack, left, right }: 
       className={styles.bar}
       data-navbar=""
       data-expanded={expanded || undefined}
+      data-painted={painted || undefined}
     >
       <div className={clsx(styles.side, styles.lead)}>
         {backLabel === undefined && left}

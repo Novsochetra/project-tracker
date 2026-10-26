@@ -18,6 +18,12 @@
   -webkit-backdrop-filter: var(--glass-filter);
   backdrop-filter: var(--glass-filter);
   border-bottom: 1px solid var(--line);
+}
+
+/* A new bar's style is first worked out before its screen's large title marks it expanded, so
+   these fades only start once it has painted: before, every Projects/Activity switch faded the
+   line out and ghosted the small title in (PT-254). */
+.bar[data-painted] {
   transition: border-color var(--duration-fast) var(--ease-out);
 }
 
@@ -43,6 +49,9 @@
   min-width: 0;
   display: flex;
   justify-content: center;
+}
+
+.bar[data-painted] .titleSlot {
   transition: opacity var(--duration-fast) var(--ease-out);
 }
 
