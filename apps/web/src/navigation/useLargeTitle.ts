@@ -1,4 +1,4 @@
-import { useEffect, useRef, useSyncExternalStore, type RefObject } from 'react';
+import { useLayoutEffect, useRef, useSyncExternalStore, type RefObject } from 'react';
 import { useIsPhone } from '../lib/media';
 import { NO_LARGE_TITLE, type LargeTitleSnapshot } from './largeTitleStore';
 import { useOptionalScreen } from './ScreenContext';
@@ -32,7 +32,8 @@ export function useLargeTitle<T extends HTMLElement>(): RefObject<T | null> {
   const ref = useRef<T>(null);
   const screen = useOptionalScreen();
   const isPhone = useIsPhone();
-  useEffect(() => {
+  // Before paint, so a new screen's nav bar never shows its small title for a frame.
+  useLayoutEffect(() => {
     const store = screen?.largeTitle;
     const title = ref.current;
     if (!store || !title || !isPhone) return;
