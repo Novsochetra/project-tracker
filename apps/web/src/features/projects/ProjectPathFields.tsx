@@ -1,5 +1,4 @@
-import { MAX_PARALLEL_RUNS_MAX } from '@tracker/shared';
-import { Folder, Hash, Layers } from 'lucide-react';
+import { Folder, Hash } from 'lucide-react';
 import type { KeyboardEvent } from 'react';
 import { GroupedCard, Icon, InputRow } from '../../components';
 import { prefixPlaceholder, type ProjectFormMode } from './projectForm';
@@ -33,20 +32,6 @@ export function ProjectPathFields({
         onChange={(event) => setField('repo', event.currentTarget.value)}
         onKeyDown={onEnter}
       />
-      {mode === 'edit' && (
-        <InputRow
-          icon={<Icon icon={Layers} className={styles.fieldIcon} />}
-          label="Parallel runs"
-          aria-label="Most runs at once"
-          type="number"
-          inputMode="numeric"
-          min={1}
-          max={MAX_PARALLEL_RUNS_MAX}
-          value={values.maxParallelRuns}
-          onChange={(event) => setField('maxParallelRuns', event.currentTarget.value)}
-          onKeyDown={onEnter}
-        />
-      )}
       {mode === 'new' && (
         <InputRow
           {...CODE_INPUT}

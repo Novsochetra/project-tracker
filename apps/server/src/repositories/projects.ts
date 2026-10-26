@@ -107,7 +107,7 @@ export async function ticketStatsByProject(
 export async function holdProjectRuns(db: Db, projectId: string): Promise<void> {
   await db
     .updateTable('projects')
-    .set((eb) => ({ maxParallelRuns: eb.ref('maxParallelRuns') }))
+    .set((eb) => ({ updatedAt: eb.ref('updatedAt') }))
     .where('id', '=', projectId)
     .execute();
 }

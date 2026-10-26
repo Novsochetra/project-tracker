@@ -20,7 +20,6 @@ export const projectSummary = (overrides: Partial<ProjectSummary> = {}): Project
   description: '',
   repo: '',
   color: '#5B5BD6',
-  maxParallelRuns: 5,
   nextNum: 4,
   createdAt: T0,
   updatedAt: T0,

@@ -193,8 +193,6 @@ describe('Edit project sheet', () => {
       instructions: 'Plain voice.',
       autoReview: false,
       hideName: false,
-      maxParallelRuns: 5,
-      maxSubAgents: 3,
     });
     expect(await screen.findByText('Project updated')).toBeInTheDocument();
     await waitFor(() => expect(onClose).toHaveBeenCalled());
@@ -248,20 +246,9 @@ describe('Edit project sheet', () => {
     );
   });
 
-  it('saves the most sub agents per ticket, with its hint', async () => {
-    const user = userEvent.setup();
+  it('has no parallel runs or sub agents field', () => {
     const { dialog } = renderEditSheet();
-    const field = within(dialog).getByLabelText('Max sub agents per ticket');
-    expect(field).toHaveValue(3);
-    expect(field).toHaveAccessibleDescription(
-      'Claude decides when to use sub agents. This is the most at once.',
-    );
-    await user.clear(field);
-    await user.type(field, '5');
-    await user.click(within(dialog).getByRole('button', { name: 'Save' }));
-    expect(updateProject).toHaveBeenLastCalledWith(
-      'WEB',
-      expect.objectContaining({ maxSubAgents: 5 }),
-    );
+    expect(within(dialog).queryByLabelText(/most runs at once/i)).toBeNull();
+    expect(within(dialog).queryByLabelText(/sub agents/i)).toBeNull();
   });
 });

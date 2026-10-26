@@ -60,11 +60,11 @@ async function pickTodo(db: Db, project: ProjectRow): Promise<RunAllPick> {
   };
 }
 
-// The project's setting is the most a batch may run at once; a person may ask for fewer.
-const maxParallelOf = (project: ProjectRow, input: Pick<RunAllInput, 'maxParallel'>): number => {
-  const most = Math.min(MAX_PARALLEL_RUNS_MAX, project.maxParallelRuns);
-  return Math.max(1, Math.min(most, input.maxParallel ?? most));
-};
+// Only a person's number sets the sub agents at once; without one Claude decides.
+const maxParallelOf = (input: Pick<RunAllInput, 'maxParallel'>): number | null =>
+  input.maxParallel === undefined
+    ? null
+    : Math.max(1, Math.min(MAX_PARALLEL_RUNS_MAX, input.maxParallel));
 
 export async function previewRunAll(
   ctx: ServiceContext,
@@ -82,11 +82,16 @@ export async function previewRunAll(
     skippedActive: pick.skippedActive,
     skippedDevice: pick.skippedDevice,
     leftOver: pick.leftOver,
-    maxParallel: maxParallelOf(project, {}),
+    maxParallel: null,
   };
 }
 
-function batchRows(queued: QueuedRun, project: ProjectRow, tickets: TicketRow[], limit: number) {
+function batchRows(
+  queued: QueuedRun,
+  project: ProjectRow,
+  tickets: TicketRow[],
+  limit: number | null,
+) {
   const batchId = randomUUID();
   const prompt = buildBatchPrompt(
     project,
@@ -157,7 +162,7 @@ export async function runAllTodo(
   const project = await requireProject(ctx.db, scope, projectKey);
   const runner = await requireRunnerFor(ctx, scope, input.runnerId, project);
   await expireSilentRuns(ctx);
-  const maxParallel = maxParallelOf(project, input);
+  const maxParallel = maxParallelOf(input);
   const queued = { scope, runner, projectId: project.id, now: ctx.now() };
   const outcome = await inTransaction(ctx, async (trx) => {
     const pick = await pickTodo(trx, project);

@@ -14,7 +14,6 @@ import {
 import { PRIORITIES } from '../domain/priority';
 import { PROJECT_INSTRUCTIONS_MAX } from '../domain/project';
 import { DEFAULT_PROJECT_TEMPLATE, PROJECT_TEMPLATE_NAMES } from '../domain/projectTemplates';
-import { MAX_PARALLEL_RUNS_MAX, MAX_SUB_AGENTS_MAX } from '../domain/run';
 import { STATUS_CATEGORIES } from '../domain/status';
 import {
   TICKET_ASSIGNEE_MAX,
@@ -64,8 +63,6 @@ export const updateProjectInput = z.object({
   instructions: projectInstructions,
   autoReview: z.boolean().optional(),
   hideName: z.boolean().optional(),
-  maxParallelRuns: z.number().int().min(1).max(MAX_PARALLEL_RUNS_MAX).optional(),
-  maxSubAgents: z.number().int().min(1).max(MAX_SUB_AGENTS_MAX).optional(),
 });
 export type UpdateProjectInput = z.input<typeof updateProjectInput>;
 

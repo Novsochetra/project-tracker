@@ -36,13 +36,8 @@ export function messageRunAllCards(
   );
 }
 
-// The card's own limit wins; without one the batch takes the project's setting.
-// The project's setting is the most at once, as the server counts it.
-export const limitText = (cardLimit: number | null, preview: RunAllPreview | undefined) => {
-  const most = preview?.maxParallel;
-  const limit = cardLimit === null ? most : Math.min(cardLimit, most ?? cardLimit);
-  return limit === undefined ? '' : `${limit} at a time`;
-};
+export const limitText = (cardLimit: number | null) =>
+  cardLimit === null ? 'Claude decides how many at a time' : `${cardLimit} at a time`;
 
 export function skippedLines({ skippedActive, skippedDevice, leftOver }: RunAllPreview): string[] {
   return [

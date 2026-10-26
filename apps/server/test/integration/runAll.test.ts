@@ -52,7 +52,7 @@ describe.each(DIALECTS)('run all todo (%s)', (dialect) => {
         skippedActive: 0,
         skippedDevice: 0,
         leftOver: 0,
-        maxParallel: 5,
+        maxParallel: null,
       });
       const batch = (await batchOf(body.runId)).body;
       expect(batch.tickets.map(({ ticketKey, state }) => [ticketKey, state])).toEqual([
@@ -65,13 +65,13 @@ describe.each(DIALECTS)('run all todo (%s)', (dialect) => {
       expect(held.map(({ status: s, batchId }) => [s, batchId])).toEqual([['queued', body.runId]]);
     });
 
-    it('gives the helper one run with the tickets and the sub agent limit', async () => {
-      await person('PATCH', '/api/projects/MOB', { maxParallelRuns: 2 });
+    it('gives the helper one run with the tickets and no fixed sub agent number', async () => {
       const { body } = await runAll();
       const job = (await take(runner)).body as RunJob;
       expect(job.run).toMatchObject({ id: body.runId, kind: 'batch', ticketKey: null });
       expect(job.ticketKeys).toEqual(['MOB-1', 'MOB-2', 'MOB-3', 'MOB-4']);
-      expect(job.prompt).toContain('Run at most 2 sub agents at once.');
+      expect(job.prompt).toContain('Decide how many sub agents to run at once');
+      expect(job.prompt).not.toMatch(/at most \d/);
       expect(job.prompt).toContain('- MOB-3 · Medium · Search');
     });
 
@@ -84,13 +84,10 @@ describe.each(DIALECTS)('run all todo (%s)', (dialect) => {
       expect(((await take(runner)).body as RunJob).prompt).toContain('Run at most 3 sub agents');
     });
 
-    it("never runs more at once than the project's setting", async () => {
-      await person('PATCH', '/api/projects/MOB', { maxParallelRuns: 2 });
-      const { body } = await person<RunAllResult>('POST', '/api/projects/MOB/run-all', {
-        runnerId: runner,
-        maxParallel: 5,
-      });
-      expect(body.maxParallel).toBe(2);
+    it('ignores the old project limit fields an older client sends', async () => {
+      const old = { maxParallelRuns: 2, maxSubAgents: 1 };
+      expect((await person('PATCH', '/api/projects/MOB', old)).status).toBe(200);
+      expect((await runAll()).body.maxParallel).toBeNull();
     });
 
     it('holds at most 30 tickets and leaves the rest for the next Run all', async () => {
@@ -260,7 +257,6 @@ describe.each(DIALECTS)('run all todo (%s)', (dialect) => {
     });
 
     it('counts the batch once toward the project limit, not its sub agents', async () => {
-      await person('PATCH', '/api/projects/MOB', { maxParallelRuns: 2 });
       await helper('POST', '/api/tickets/MOB-1/claim');
       await helper('POST', '/api/tickets/MOB-2/claim');
       await person('POST', '/api/projects/MOB/tickets', { title: 'Later' });
@@ -277,39 +273,27 @@ describe.each(DIALECTS)('run all todo (%s)', (dialect) => {
     });
   });
 
-  it('gives a new project the default limit of 5', async () => {
-    const { body } = await person<{ project: { maxParallelRuns: number } }>(
-      'GET',
-      '/api/projects/MOB',
-    );
-    expect(body.project.maxParallelRuns).toBe(5);
-  });
-
   describe('parallel limit', () => {
-    const runners = [randomUUID(), randomUUID(), randomUUID()];
+    const runners = Array.from({ length: 6 }, () => randomUUID());
 
     beforeEach(async () => {
       for (const id of runners) await register(id);
-      await person('PATCH', '/api/projects/MOB', { maxParallelRuns: 2 });
+      await person('POST', '/api/projects/MOB/tickets', { title: 'Five' });
+      await person('POST', '/api/projects/MOB/tickets', { title: 'Six' });
       for (const [index, id] of runners.entries()) await start(`MOB-${index + 1}`, id);
     });
 
-    it('gives out runs only while fewer than the limit are running', async () => {
-      expect((await take(runners[0] as string)).status).toBe(200);
-      expect((await take(runners[1] as string)).status).toBe(200);
-      expect((await take(runners[2] as string)).status).toBe(204);
+    it('gives out runs only while fewer than the limit of 5 are running', async () => {
+      for (const id of runners.slice(0, 5)) expect((await take(id)).status).toBe(200);
+      expect((await take(runners[5] as string)).status).toBe(204);
     });
 
     it('starts a waiting run when a running one ends', async () => {
       const first = (await take(runners[0] as string)).body;
-      await take(runners[1] as string);
-      expect((await take(runners[2] as string)).status).toBe(204);
+      for (const id of runners.slice(1, 5)) await take(id);
+      expect((await take(runners[5] as string)).status).toBe(204);
       await helper('POST', `/api/runs/${first?.run.id}/finish`, { status: 'done' });
-      expect((await take(runners[2] as string)).status).toBe(200);
-    });
-
-    it('refuses a limit below 1', async () => {
-      expect((await person('PATCH', '/api/projects/MOB', { maxParallelRuns: 0 })).status).toBe(400);
+      expect((await take(runners[5] as string)).status).toBe(200);
     });
   });
 });

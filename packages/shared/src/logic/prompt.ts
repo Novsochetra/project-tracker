@@ -13,7 +13,6 @@ export interface PromptProject extends PromptInstructions {
   name: string;
   key: string;
   repo: string;
-  maxSubAgents?: number;
 }
 
 export interface PromptReview {
@@ -103,7 +102,7 @@ export function buildTicketPrompt(
     ...instructionLines(project, ticket.labels),
     '',
     ticketBlock(ticket, '##', now),
-    ...ticketSubAgentLines(project.maxSubAgents),
+    ...ticketSubAgentLines(),
     '',
     ASK_PERSON_LINE,
     '',
@@ -116,8 +115,14 @@ export function buildTicketPrompt(
 
 export type BatchPromptTicket = Pick<PromptTicket, 'key' | 'title' | 'priority'>;
 
-const subAgentRules = (limit: number): string[] => [
-  `- Give each ticket to a sub agent of its own (the Agent tool). Run at most ${limit} sub agents at once.`,
+const limitRule = (limit: number | null): string =>
+  limit === null
+    ? "- Decide how many sub agents to run at once, and follow the repo's CLAUDE.md for any limit."
+    : `- Run at most ${limit} sub agents at once.`;
+
+const subAgentRules = (limit: number | null): string[] => [
+  '- Give each ticket to a sub agent of its own (the Agent tool).',
+  limitRule(limit),
   '- As soon as a sub agent ends, give the next ticket to a new one, until every ticket is done.',
   '- Each sub agent works on its one ticket with the tracker tools, as a single ticket run does:',
   '  1. claim_ticket to move it to In progress and read it in full.',
@@ -133,7 +138,7 @@ const subAgentRules = (limit: number): string[] => [
 export function buildBatchPrompt(
   project: PromptProject,
   tickets: readonly BatchPromptTicket[],
-  limit: number,
+  limit: number | null = null,
 ): string {
   return [
     `Please work on these ${tickets.length} tickets from my "${project.name}" project with sub agents.`,

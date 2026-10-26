@@ -15,7 +15,7 @@ const message = (role: ChatMessage['role'], text: string, batchRunId: string | n
   next += 1;
   return makeMessage({ id: `m-${next}`, role, text, batchRunId });
 };
-const preview = { tickets: [], skippedActive: 0, skippedDevice: 0, leftOver: 0, maxParallel: 5 };
+const preview = { tickets: [], skippedActive: 0, skippedDevice: 0, leftOver: 0, maxParallel: null };
 const ticket = (state: BatchTicket['state'], num: number): BatchTicket => ({
   runId: `r-${num}`,
   ticketKey: `MOB-${num}`,
@@ -48,14 +48,9 @@ describe('messageRunAllCards', () => {
 });
 
 describe('Run all card text', () => {
-  it('takes the card limit, else the project setting from the preview', () => {
-    expect(limitText(3, preview)).toBe('3 at a time');
-    expect(limitText(null, preview)).toBe('5 at a time');
-    expect(limitText(null, undefined)).toBe('');
-  });
-
-  it('never shows more at once than the project allows', () => {
-    expect(limitText(5, { ...preview, maxParallel: 2 })).toBe('2 at a time');
+  it('shows the card limit, else that Claude decides', () => {
+    expect(limitText(3)).toBe('3 at a time');
+    expect(limitText(null)).toBe('Claude decides how many at a time');
   });
 
   it('names what Run all leaves out', () => {

@@ -24,7 +24,7 @@ const tickets = (count: number): string => (count === 1 ? '1 ticket' : `${count}
 const startedText = ({ queued, maxParallel }: RunAllResult): string =>
   queued === 0
     ? 'No tickets to run'
-    : `Started 1 run for ${tickets(queued)}, up to ${maxParallel} at once`;
+    : `Started 1 run for ${tickets(queued)}${maxParallel === null ? '' : `, up to ${maxParallel} at once`}`;
 
 export function runAllToast(result: RunAllResult): string {
   const { skippedActive, skippedDevice } = result;

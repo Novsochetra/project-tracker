@@ -1,5 +1,6 @@
 import {
   ACTIVE_RUN_STATUSES,
+  DEFAULT_MAX_PARALLEL_RUNS,
   type AskMode,
   type EndedRunStatus,
   type RunLane,
@@ -82,7 +83,7 @@ const takenBy = ({ lane, batches }: Pick<QueueSlot, 'lane' | 'batches'>) =>
     : (eb: ExpressionBuilder<Database, 'runs'>) =>
         batches ? inLane(lane)(eb) : eb.and([inLane(lane)(eb), eb('runs.kind', '!=', 'batch')]);
 
-// The project's setting caps its runs that are running; asks count too, since each is a process on
+// A fixed cap on a project's runs that are running; asks count too, since each is a process on
 // the machine. A batch counts once: its tickets' runs are its sub agents, which it caps itself.
 // Also in markRunStarted, which a take runs while it holds the project (holdProjectRuns), so two
 // takes that race can't both pass.
@@ -95,10 +96,7 @@ const underLimit = (eb: ExpressionBuilder<Database, 'runs'>) =>
       .where('active.status', '=', 'running')
       .where('active.batchId', 'is', null),
     '<',
-    eb
-      .selectFrom('projects as limited')
-      .select('limited.maxParallelRuns')
-      .whereRef('limited.id', '=', 'runs.projectId'),
+    DEFAULT_MAX_PARALLEL_RUNS,
   );
 
 export interface QueueSlot {

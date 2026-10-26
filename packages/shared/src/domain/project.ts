@@ -19,9 +19,6 @@ export interface Project {
   // Optional: trackers from before PT-200 don't send it, and agents can be newer than their tracker.
   instructions?: string;
   color: string;
-  maxParallelRuns: number;
-  // Optional: trackers from before PT-243 don't send it.
-  maxSubAgents?: number;
   nextNum: number;
   createdAt: number;
   updatedAt: number;

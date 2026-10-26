@@ -184,12 +184,10 @@ describe('createStatusInput', () => {
 });
 
 describe('updateProjectInput', () => {
-  it.each([1, 3, 5])('takes %i sub agents per ticket', (maxSubAgents) => {
-    expect(updateProjectInput.parse({ maxSubAgents })).toEqual({ maxSubAgents });
-  });
-
-  it.each([0, 6, 2.5, '3', null])('refuses %j sub agents per ticket', (maxSubAgents) => {
-    expect(updateProjectInput.safeParse({ maxSubAgents }).success).toBe(false);
+  it('accepts the old limit fields from older clients and drops them', () => {
+    expect(
+      updateProjectInput.parse({ name: 'Mobile', maxParallelRuns: 9, maxSubAgents: 0 }),
+    ).toEqual({ name: 'Mobile' });
   });
 
   it('leaves the sub agents out of an edit that does not change them', () => {

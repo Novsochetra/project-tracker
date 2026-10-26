@@ -55,7 +55,7 @@ export function RunAllConfirm({
   return (
     <section className={styles.card} aria-label="Run all card">
       <RunAllHead />
-      <p className={styles.limit}>{limitText(limit, shown)}</p>
+      <p className={styles.limit}>{limitText(limit)}</p>
       {shown && <RunAllTickets tickets={shown.tickets} />}
       {empty && <p className={styles.note}>{NOTHING_TO_RUN}</p>}
       {shown &&

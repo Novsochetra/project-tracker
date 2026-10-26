@@ -1,7 +1,5 @@
 import { randomUUID } from 'node:crypto';
 import {
-  DEFAULT_MAX_PARALLEL_RUNS,
-  DEFAULT_MAX_SUB_AGENTS,
   PROJECT_COLORS,
   PROJECT_TEMPLATES,
   resolvePrefix,
@@ -103,8 +101,6 @@ export async function createProject(
       repo: input.repo ?? '',
       instructions: input.instructions ?? template.instructions,
       color: PROJECT_COLORS[existing.length % PROJECT_COLORS.length] ?? PROJECT_COLORS[0],
-      maxParallelRuns: DEFAULT_MAX_PARALLEL_RUNS,
-      maxSubAgents: DEFAULT_MAX_SUB_AGENTS,
       nextNum: 1,
       createdAt: at,
       updatedAt: at,

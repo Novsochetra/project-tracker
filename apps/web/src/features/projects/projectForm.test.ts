@@ -8,7 +8,6 @@ import {
   prefixPlaceholder,
   projectFormChanged,
   projectHint,
-  subAgentsOf,
   updateProjectInput,
   type ProjectFormValues,
 } from './projectForm';
@@ -98,15 +97,11 @@ describe('inputs', () => {
       instructions: 'Run the tests first.',
       autoReview: true,
       hideName: false,
-      maxParallelRuns: 5,
-      maxSubAgents: 3,
     });
   });
 
   it('starts an edit from the project values', () => {
-    expect(
-      formValuesOf({ name: 'Website', description: 'Docs', repo: '~/web', maxParallelRuns: 5 }),
-    ).toEqual({
+    expect(formValuesOf({ name: 'Website', description: 'Docs', repo: '~/web' })).toEqual({
       name: 'Website',
       description: 'Docs',
       repo: '~/web',
@@ -115,12 +110,7 @@ describe('inputs', () => {
       template: 'software',
       autoReview: false,
       hideName: false,
-      maxParallelRuns: '5',
-      maxSubAgents: '3',
     });
-    expect(formValuesOf({ name: 'Blog', description: '', repo: '', maxSubAgents: 1 })).toEqual(
-      expect.objectContaining({ maxSubAgents: '1' }),
-    );
     const instructed = { name: 'Blog', description: '', repo: '', instructions: 'Plain voice.' };
     expect(formValuesOf(instructed).instructions).toBe('Plain voice.');
     const on = { name: 'Website', description: '', repo: '', autoReview: true };
@@ -149,7 +139,6 @@ describe('projectFormChanged', () => {
       name: 'Website',
       description: 'Docs',
       repo: '~/code/web',
-      maxParallelRuns: 5,
     });
     const changed = (patch: Partial<ProjectFormValues>) =>
       projectFormChanged({ ...loaded, ...patch }, loaded);
@@ -162,8 +151,6 @@ describe('projectFormChanged', () => {
     expect(changed({ autoReview: true })).toBe(true);
     expect(changed({ hideName: true })).toBe(true);
     expect(changed({ instructions: 'Cite two sources.' })).toBe(true);
-    expect(changed({ maxSubAgents: ' 3 ' })).toBe(false);
-    expect(changed({ maxSubAgents: '5' })).toBe(true);
   });
 
   it('counts a changed or cleared instruction on a project that has some', () => {
@@ -184,23 +171,5 @@ describe('projectFormChanged', () => {
 describe('createdToast', () => {
   it('quotes the name', () => {
     expect(createdToast('Mobile app')).toBe('“Mobile app” created');
-  });
-});
-
-describe('subAgentsOf', () => {
-  it.each([
-    ['3', 3],
-    ['1', 1],
-    ['5', 5],
-    ['2.6', 3],
-    ['0', 1],
-    ['9', 5],
-    ['many', 3],
-  ])('sends %j as %i', (maxSubAgents, sent) => {
-    expect(subAgentsOf(form({ maxSubAgents }))).toBe(sent);
-  });
-
-  it('starts a form at 3', () => {
-    expect(EMPTY_PROJECT_FORM.maxSubAgents).toBe('3');
   });
 });

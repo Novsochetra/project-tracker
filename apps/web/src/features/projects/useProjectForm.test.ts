@@ -7,7 +7,6 @@ const website = formValuesOf({
   name: 'Website',
   description: 'Docs',
   repo: '~/code/web',
-  maxParallelRuns: 5,
 });
 
 function renderForm(initial: ProjectFormValues | undefined) {

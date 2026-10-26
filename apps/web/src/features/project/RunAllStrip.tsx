@@ -1,4 +1,4 @@
-import type { Project } from '@tracker/shared';
+import { DEFAULT_MAX_PARALLEL_RUNS, type Project } from '@tracker/shared';
 import { Play } from 'lucide-react';
 import { errorMessage } from '../../api';
 import { useRunActivity } from '../../api/hooks/runActivity';
@@ -31,7 +31,10 @@ export function RunAllStrip({ project }: { project: Project }) {
   return (
     <div className={styles.strip}>
       <span className={styles.counts}>
-        {runCountsText(projectRunCounts(activity.data, project.key), project.maxParallelRuns)}
+        {runCountsText(
+          projectRunCounts(activity.data, project.key),
+          activity.data?.limit ?? DEFAULT_MAX_PARALLEL_RUNS,
+        )}
       </span>
       <Button
         size="sm"

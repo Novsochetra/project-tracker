@@ -1,9 +1,5 @@
 import {
   DEFAULT_PROJECT_TEMPLATE,
-  DEFAULT_MAX_PARALLEL_RUNS,
-  DEFAULT_MAX_SUB_AGENTS,
-  MAX_PARALLEL_RUNS_MAX,
-  MAX_SUB_AGENTS_MAX,
   derivePrefix,
   resolvePrefix,
   type CreateProjectInput,
@@ -23,8 +19,6 @@ export interface ProjectFormValues {
   template: ProjectTemplateName;
   autoReview: boolean;
   hideName: boolean;
-  maxParallelRuns: string;
-  maxSubAgents: string;
 }
 
 export const EMPTY_PROJECT_FORM: ProjectFormValues = {
@@ -36,8 +30,6 @@ export const EMPTY_PROJECT_FORM: ProjectFormValues = {
   template: DEFAULT_PROJECT_TEMPLATE,
   autoReview: false,
   hideName: false,
-  maxParallelRuns: String(DEFAULT_MAX_PARALLEL_RUNS),
-  maxSubAgents: String(DEFAULT_MAX_SUB_AGENTS),
 };
 
 export const NAME_REQUIRED = 'Add a name to create the project.';
@@ -48,8 +40,7 @@ export const formValuesOf = (
   project: Pick<
     Project,
     'name' | 'description' | 'repo' | 'instructions' | 'autoReview' | 'hideName'
-  > &
-    Partial<Pick<Project, 'maxParallelRuns' | 'maxSubAgents'>>,
+  >,
 ): ProjectFormValues => ({
   ...EMPTY_PROJECT_FORM,
   name: project.name,
@@ -58,8 +49,6 @@ export const formValuesOf = (
   instructions: project.instructions ?? '',
   autoReview: project.autoReview ?? false,
   hideName: project.hideName ?? false,
-  maxParallelRuns: String(project.maxParallelRuns ?? DEFAULT_MAX_PARALLEL_RUNS),
-  maxSubAgents: String(project.maxSubAgents ?? DEFAULT_MAX_SUB_AGENTS),
 });
 
 export const hasName = (values: ProjectFormValues): boolean => values.name.trim() !== '';
@@ -67,16 +56,7 @@ export const hasName = (values: ProjectFormValues): boolean => values.name.trim(
 export const PROJECT_SWITCHES = ['autoReview', 'hideName'] as const;
 export type ProjectSwitch = (typeof PROJECT_SWITCHES)[number];
 
-const TEXT_FIELDS = [
-  'name',
-  'description',
-  'repo',
-  'prefix',
-  'instructions',
-  'template',
-  'maxParallelRuns',
-  'maxSubAgents',
-] as const;
+const TEXT_FIELDS = ['name', 'description', 'repo', 'prefix', 'instructions', 'template'] as const;
 
 // Trimmed like Create and Save send them, so a stray space doesn't make the sheet ask.
 export const projectFormChanged = (
@@ -114,23 +94,7 @@ export const updateProjectInput = (values: ProjectFormValues): UpdateProjectInpu
   instructions: values.instructions.trim(),
   autoReview: values.autoReview,
   hideName: values.hideName,
-  maxParallelRuns: parallelRunsOf(values),
-  maxSubAgents: subAgentsOf(values),
 });
-
-const countIn = (text: string, most: number, fallback: number): number => {
-  const count = Math.round(Number(text));
-  if (!Number.isFinite(count)) return fallback;
-  return Math.min(most, Math.max(1, count));
-};
-
-export const parallelRunsOf = (values: ProjectFormValues): number =>
-  countIn(values.maxParallelRuns, MAX_PARALLEL_RUNS_MAX, DEFAULT_MAX_PARALLEL_RUNS);
-
-export const subAgentsOf = (values: ProjectFormValues): number =>
-  countIn(values.maxSubAgents, MAX_SUB_AGENTS_MAX, DEFAULT_MAX_SUB_AGENTS);
-
-export const SUB_AGENTS_HINT = 'Claude decides when to use sub agents. This is the most at once.';
 
 export const INSTRUCTIONS_HINT =
   'Claude gets these with every ticket and question in this project.';

@@ -18,7 +18,6 @@ export const project: Project = {
   description: '',
   repo: '~/code/mobile-app',
   color: '#5B5BD6',
-  maxParallelRuns: 5,
   nextNum: 5,
   createdAt: 1,
   updatedAt: 1,

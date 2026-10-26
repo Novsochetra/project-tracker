@@ -24,42 +24,40 @@ const ticket: PromptTicket = {
   lastReview: null,
 };
 
-const promptWith = (maxSubAgents: number) =>
-  buildTicketPrompt({ ...project, maxSubAgents }, ticket, NOW);
-
-const rules = (most: number) =>
-  [
-    'Every screen of Settings.',
-    '',
-    '## Sub agents',
-    '- You may use sub agents (the Agent tool) when parts of this ticket can be done at the same time.',
-    `- Use at most ${most} sub agents at once.`,
-    '- For a small ticket, work alone.',
-    '- Give each sub agent its own files. Two sub agents never change the same file.',
-    '- When all sub agents end, check the full result yourself and run the tests before you report.',
-    '',
-    ASK_PERSON_LINE,
-  ].join('\n');
+const tickets = [{ key: 'MOB-4', title: 'Dark mode', priority: 'medium' as const }];
 
 describe('buildTicketPrompt with sub agents', () => {
-  it('keeps the prompt of a project without sub agents exactly as it was', () => {
-    expect(promptWith(1)).toBe(buildTicketPrompt(project, ticket, NOW));
-    expect(promptWith(1)).not.toContain('sub agent');
-  });
-
-  it('lets Claude use up to 3 sub agents, each with its own files', () => {
-    expect(promptWith(3)).toContain(rules(3));
-  });
-
-  it('names the most at once', () => {
-    expect(promptWith(5)).toContain(rules(5));
-    expect(promptWith(5)).not.toContain('at most 3');
-  });
-
-  it('leaves a batch prompt as it was', () => {
-    const tickets = [{ key: 'MOB-4', title: 'Dark mode', priority: 'medium' as const }];
-    expect(buildBatchPrompt({ ...project, maxSubAgents: 5 }, tickets, 2)).toBe(
-      buildBatchPrompt(project, tickets, 2),
+  it('lets Claude decide, with no fixed number', () => {
+    const prompt = buildTicketPrompt(project, ticket, NOW);
+    expect(prompt).toContain(
+      [
+        '## Sub agents',
+        '- You may use sub agents (the Agent tool) when parts of this ticket can be done at the same time.',
+        "- Decide how many to use, and follow the repo's CLAUDE.md for any limit.",
+        '- For a small ticket, work alone.',
+        '- Give each sub agent its own files. Two sub agents never change the same file.',
+        '- When all sub agents end, check the full result yourself and run the tests before you report.',
+        '',
+        ASK_PERSON_LINE,
+      ].join('\n'),
     );
+    expect(prompt).not.toMatch(/at most \d/);
+  });
+});
+
+describe('buildBatchPrompt sub agent limit', () => {
+  it('keeps "at most N at once" when the picker has a number', () => {
+    const prompt = buildBatchPrompt(project, tickets, 2);
+    expect(prompt).toContain('- Run at most 2 sub agents at once.');
+    expect(prompt).not.toContain('Decide how many');
+  });
+
+  it("lets Claude decide and follow the repo's CLAUDE.md when the picker has none", () => {
+    const prompt = buildBatchPrompt(project, tickets, null);
+    expect(prompt).toContain(
+      "- Decide how many sub agents to run at once, and follow the repo's CLAUDE.md for any limit.",
+    );
+    expect(prompt).not.toMatch(/at most \d/);
+    expect(buildBatchPrompt(project, tickets)).toBe(prompt);
   });
 });

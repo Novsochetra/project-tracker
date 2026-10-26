@@ -2,7 +2,7 @@ import { MAX_PARALLEL_RUNS_MAX } from '../domain/run';
 
 export interface RunAllCardSplit {
   before: string;
-  // How many sub agents at once the person asked for; null leaves it to the project's setting.
+  // How many sub agents at once the person asked for; null leaves it to Claude.
   limit: number | null;
   after: string;
 }
