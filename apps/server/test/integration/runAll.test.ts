@@ -173,7 +173,7 @@ describe.each(DIALECTS)('run all todo (%s)', (dialect) => {
         skippedActive: 1,
         skippedDevice: 1,
         leftOver: 0,
-        maxParallel: 5,
+        maxParallel: null,
       });
       expect(await ticketRuns('MOB-1')).toEqual([]);
     });

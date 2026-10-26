@@ -83,9 +83,11 @@ describe('Ask: Run all card', () => {
     expect(client.runAllFromCard).not.toHaveBeenCalled();
   });
 
-  it("shows the project's limit when the card names none", async () => {
+  it('says Claude decides when the card names no limit', async () => {
     setup(withCards(cardText('')));
-    expect(await within(await runAllCard()).findByText('5 at a time')).toBeInTheDocument();
+    expect(
+      await within(await runAllCard()).findByText('Claude decides how many at a time'),
+    ).toBeInTheDocument();
   });
 
   it('starts the batch only on Confirm, with the card limit, then shows progress', async () => {

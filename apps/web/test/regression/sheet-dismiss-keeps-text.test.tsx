@@ -375,7 +375,6 @@ describe('regression: New project and Edit project threw typed text away', () =>
       instructions: '',
       autoReview: false,
       hideName: false,
-      maxSubAgents: 3,
     });
   });
 });
