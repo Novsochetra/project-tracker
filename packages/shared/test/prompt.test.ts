@@ -178,6 +178,16 @@ describe('ticketBlock', () => {
   });
 });
 
+const SUB_AGENTS_SECTION = [
+  '',
+  '## Sub agents',
+  '- You may use sub agents (the Agent tool) when parts of this ticket can be done at the same time.',
+  "- Decide how many to use, and follow the repo's CLAUDE.md for any limit.",
+  '- For a small ticket, work alone.',
+  '- Give each sub agent its own files. Two sub agents never change the same file.',
+  '- When all sub agents end, check the full result yourself and run the tests before you report.',
+];
+
 describe('buildTicketPrompt', () => {
   it('builds the SPEC example prompt', () => {
     expect(buildTicketPrompt(project, crash, NOW)).toBe(
@@ -197,6 +207,7 @@ describe('buildTicketPrompt', () => {
         'TICKET: MOB-3',
         'STATUS: in progress',
         '…',
+        ...SUB_AGENTS_SECTION,
         '',
         ASK_PERSON_LINE,
         '',
@@ -224,6 +235,7 @@ describe('buildTicketPrompt', () => {
         'Priority: Medium · Status: To do',
         '',
         '(No description.)',
+        ...SUB_AGENTS_SECTION,
         '',
         ASK_PERSON_LINE,
         '',
@@ -254,6 +266,7 @@ describe('buildTicketPrompt', () => {
         '',
         'Last review: Changes requested · 2/5',
         'Colors are too dark.',
+        ...SUB_AGENTS_SECTION,
         '',
         ASK_PERSON_LINE,
         '',
