@@ -107,7 +107,6 @@ describe.each(DIALECTS.flatMap((dialect) => STORAGES.map((kind) => [dialect, kin
           position: 2,
           createdAt: 1150,
           userId: null,
-          chatMessageId: null,
         },
         expect.objectContaining({ id: 'f-notes', storageKey: 'f-notes.txt', activityId: 'a2' }),
         expect.objectContaining({ id: 'f-tiny', storageKey: 'f-tiny.png', ticketId: 't3' }),

@@ -67,8 +67,6 @@ export interface ActivityRow {
   reviewRating: number | null;
   createdAt: number;
   editedAt: number | null;
-  // line_run_id, line_path, line_side and line_number, the line of a run's changes a comment was
-  // on, stay in the table, unread, until a later release drops them (§2.1).
 }
 
 export interface AttachmentRow {
@@ -88,8 +86,6 @@ export interface AttachmentRow {
   userId: string | null;
 }
 
-// The tables of the features that ran Claude Code (runs, chats and the rest) and the columns only
-// they read stay in the database, unread, until a later release drops them (§2.1).
 export interface Database extends AuthTables, LabelTables, PushTables, QuestionTables {
   projects: ProjectRow;
   statuses: StatusRow;
