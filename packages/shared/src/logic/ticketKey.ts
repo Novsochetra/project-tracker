@@ -1,4 +1,4 @@
-const MAX_TICKET_NUMBER = 2_147_483_647;
+export const MAX_TICKET_NUMBER = 2_147_483_647;
 
 export const formatTicketKey = (projectKey: string, num: number): string => `${projectKey}-${num}`;
 
