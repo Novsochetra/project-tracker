@@ -28,6 +28,28 @@
   text-overflow: ellipsis;
 }
 
+/* A phone row's second line is the key's 18px, so its chips fit inside it. */
+.compact {
+  gap: 3px;
+}
+
+.compact .chip {
+  gap: 4px;
+  height: var(--label-chip-compact);
+  min-height: 0;
+  padding: 0 6px 0 5px;
+  line-height: var(--label-chip-compact);
+}
+
+.compact .chipDot {
+  width: 6px;
+  height: 6px;
+}
+
+.compact .name {
+  max-width: 96px;
+}
+
 .dots {
   display: inline-flex;
   align-items: center;

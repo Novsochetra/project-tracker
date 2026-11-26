@@ -154,7 +154,7 @@
   overflow: hidden;
 }
 
-.main .dots {
+.main .dueLabels {
   display: none;
 }
 
@@ -247,26 +247,31 @@
     grid-area: due;
   }
 
+  /* The date never wraps: a chip after it that takes all but a hair of the room would otherwise
+     push "2027" onto a line of its own. */
   .main .due {
     container: due / inline-size;
+    white-space: nowrap;
   }
 
   .main .labels {
     display: none;
   }
 
-  /* Phone rows show a ticket's labels as dots after the due date, only as many as fit: they
-     give way first, so the date keeps its line and the row its height. */
+  /* Phone rows show a ticket's labels as small chips after the due date, so a release's label
+     reads in the list (PT-261), only as many as fit: they give way first, the last one left
+     cut short, and chips that wrap fall out of sight, so the date keeps its line and the row
+     its height. */
   .main .due[data-no-date] {
     display: inline-flex;
   }
 
-  .main .dots {
+  .main .dueLabels {
     display: inline-flex;
     flex: 0 1000 auto;
     flex-wrap: wrap;
     min-width: 0;
-    height: 8px;
+    height: var(--label-chip-compact);
     overflow: hidden;
   }
 

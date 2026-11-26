@@ -18,6 +18,7 @@ import { TITLE_MAX_LENGTH, type NewTicketForm } from './newTicketForm';
 import { withLabels } from './newTicketLabels';
 
 export interface NewTicketFieldsProps {
+  projectKey: string;
   form: NewTicketForm;
   statuses: readonly Status[];
   labels: readonly Label[];
@@ -88,13 +89,12 @@ export function NewTicketFields(props: NewTicketFieldsProps) {
             overdue={isOverdue(form.due, isDone)}
             mutedIcon
           />
-          {props.labels.length > 0 && (
-            <LabelsRow
-              labels={props.labels}
-              value={form.labelIds}
-              onChange={(ids) => onChange(withLabels(form, ids, props.labels))}
-            />
-          )}
+          <LabelsRow
+            projectKey={props.projectKey}
+            labels={props.labels}
+            value={form.labelIds}
+            onChange={(ids) => onChange(withLabels(form, ids, props.labels))}
+          />
         </GroupedCard>
         {error && (
           <p role="alert" className={styles.error}>

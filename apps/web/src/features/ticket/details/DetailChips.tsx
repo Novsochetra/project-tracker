@@ -40,9 +40,14 @@ export function DetailChips({ detail }: { detail: TicketDetail }) {
         />
         <AssigneeChip draft={assignee} describedBy={assignee.failed ? noteId : undefined} />
         <DueChip value={ticket.due} overdue={fields.overdue} onChange={fields.setDue} />
-        {labels.length > 0 && (
-          <LabelsChip labels={labels} value={ticket.labelIds ?? []} onChange={fields.setLabels} />
-        )}
+        <LabelsChip
+          projectKey={detail.project.key}
+          labels={labels}
+          value={ticket.labelIds ?? []}
+          subtitle={ticket.key}
+          manageable
+          onChange={fields.setLabels}
+        />
       </div>
       <FieldNote draft={assignee} subject="Assignee" id={noteId} />
     </>

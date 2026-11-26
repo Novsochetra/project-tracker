@@ -11,5 +11,6 @@ export interface CardCallbacks {
 export interface RowCallbacks extends CardCallbacks {
   advance: (ticket: TicketListItem, status: Status) => void;
   chooseStatus: (ticket: TicketListItem) => void;
+  chooseLabels: (ticket: TicketListItem) => void;
   confirmDelete: (ticket: TicketListItem) => void;
 }

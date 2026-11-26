@@ -47,6 +47,7 @@ export function useRowCallbacks({
       handleKeyDown,
       advance: changeStatus,
       chooseStatus: (ticket) => showSheet('status', ticket),
+      chooseLabels: (ticket) => showSheet('labels', ticket),
       confirmDelete: (ticket) => showSheet('delete', ticket),
     }),
     [open, startDrag, handleKeyDown, changeStatus, showSheet],

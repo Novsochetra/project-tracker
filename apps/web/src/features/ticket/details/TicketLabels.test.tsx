@@ -1,9 +1,10 @@
-import { screen, within } from '@testing-library/react';
+import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { Label } from '@tracker/shared';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { listItem, makeTicketDetail, STATUS } from '../../../api/test/fixtures';
 import { skipAnimations } from '../../../overlays/testing';
+import { PICKER_FIELD_LABEL } from '../../labels/LabelPicker';
 import { renderTicket } from '../test/renderTicket';
 
 const label = (id: string, name: string, position: number): Label => ({
@@ -28,15 +29,18 @@ beforeEach(() => {
 
 afterEach(() => cleanups.forEach((undo) => undo()));
 
+const RELEASE = { ...label('l-new', 'v1.4', 2), color: '#3E63DD' };
+
 function setup(phone: boolean, labels: Label[] = LABELS, labelIds = ['l-ui']) {
   const updateTicket = vi.fn().mockReturnValue(new Promise(() => undefined));
+  const createLabel = vi.fn().mockResolvedValue(RELEASE);
   const rendered = renderTicket({
     detail: makeTicketDetail(listItem(3, STATUS.progress, 0, { labelIds }), { labels }),
     phone,
-    client: { updateTicket },
+    client: { updateTicket, createLabel },
   });
   cleanups.push(rendered.restorePhone);
-  return { ...rendered, updateTicket, user: userEvent.setup() };
+  return { ...rendered, updateTicket, createLabel, user: userEvent.setup() };
 }
 
 describe('a ticket’s labels', () => {
@@ -71,8 +75,80 @@ describe('a ticket’s labels', () => {
     expect(updateTicket).toHaveBeenCalledWith('MOB-3', { labelIds: ['l-ui'] });
   });
 
-  it('stay out of the way in a project without labels', () => {
-    setup(true, []);
-    expect(screen.queryByRole('button', { name: /^Labels/ })).toBeNull();
+  it('open as a sheet of chips on phones, where a typed name makes the first label', async () => {
+    const { updateTicket, createLabel, user } = setup(true, [], []);
+    const chip = screen.getByRole('button', { name: 'Labels No labels' });
+    await user.click(chip);
+    const sheet = screen.getByRole('dialog', { name: 'Pick labels' });
+    expect(sheet).toHaveTextContent('No labels yet');
+    await user.type(within(sheet).getByRole('searchbox', { name: PICKER_FIELD_LABEL }), ' v1.4 ');
+    await user.click(within(sheet).getByRole('button', { name: 'Create “v1.4”' }));
+    expect(createLabel).toHaveBeenCalledWith('MOB', { name: 'v1.4', color: expect.any(String) });
+    await waitFor(() =>
+      expect(updateTicket).toHaveBeenLastCalledWith('MOB-3', { labelIds: ['l-new'] }),
+    );
+    expect(within(sheet).getByRole('option', { name: 'v1.4' })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    );
+    expect(chip).toHaveAccessibleName('Labels v1.4');
+  });
+
+  it('narrow to what is typed on desktop, and Enter picks the label named or makes it', async () => {
+    const { updateTicket, createLabel, user } = setup(false, LABELS, []);
+    await user.click(screen.getByRole('button', { name: /^Labels/ }));
+    const field = screen.getByRole('searchbox', { name: PICKER_FIELD_LABEL });
+    expect(field).toHaveFocus();
+    await user.keyboard('bu');
+    const list = screen.getByRole('listbox', { name: 'Labels' });
+    expect(
+      within(list)
+        .getAllByRole('option')
+        .map((option) => option.textContent),
+    ).toEqual(['Bug']);
+    await user.keyboard('g{Enter}');
+    expect(updateTicket).toHaveBeenLastCalledWith('MOB-3', { labelIds: ['l-bug'] });
+    expect(field).toHaveValue('');
+    await user.keyboard('v1.4{Enter}');
+    expect(createLabel).toHaveBeenCalledWith('MOB', { name: 'v1.4', color: expect.any(String) });
+    await waitFor(() => expect(field).toHaveValue(''));
+  });
+
+  it('move between the field and the labels with the arrows', async () => {
+    const { user } = setup(false, LABELS, []);
+    await user.click(screen.getByRole('button', { name: /^Labels/ }));
+    await user.keyboard('{ArrowDown}');
+    expect(screen.getByRole('option', { name: 'Bug' })).toHaveFocus();
+    await user.keyboard('{ArrowDown}{Enter}');
+    expect(screen.getByRole('option', { name: 'UI' })).toHaveAttribute('aria-selected', 'true');
+    await user.keyboard('{ArrowDown}');
+    expect(screen.getByRole('button', { name: 'Edit labels' })).toHaveFocus();
+    await user.keyboard('{ArrowDown}');
+    expect(screen.getByRole('searchbox', { name: PICKER_FIELD_LABEL })).toHaveFocus();
+  });
+
+  it('link to the Labels sheet to rename, recolor or delete them', async () => {
+    const { user } = setup(false, LABELS, []);
+    await user.click(screen.getByRole('button', { name: /^Labels/ }));
+    await user.click(screen.getByRole('button', { name: 'Edit labels' }));
+    expect(screen.queryByRole('dialog', { name: 'Pick labels' })).toBeNull();
+    expect(await screen.findByRole('dialog', { name: 'Labels' })).toBeInTheDocument();
+  });
+
+  it('take no more labels once a ticket has ten', async () => {
+    const many = Array.from({ length: 11 }, (_, index) => label(`l-${index}`, `L${index}`, index));
+    const { updateTicket, user } = setup(
+      false,
+      many,
+      many.slice(0, 10).map((item) => item.id),
+    );
+    await user.click(screen.getByRole('button', { name: /^Labels/ }));
+    const last = screen.getByRole('option', { name: 'L10' });
+    expect(last).toHaveAttribute('aria-disabled', 'true');
+    await user.click(last);
+    expect(updateTicket).not.toHaveBeenCalled();
+    expect(screen.getByText('A ticket can have up to 10 labels.')).toBeInTheDocument();
+    await user.keyboard('v2');
+    expect(screen.queryByRole('button', { name: /^Create/ })).toBeNull();
   });
 });

@@ -73,6 +73,11 @@
   background: var(--muted);
 }
 
+/* Beside a neutral action, so the two read apart at a glance. */
+.dark {
+  background: var(--ink-2);
+}
+
 .danger {
   background: var(--danger);
 }

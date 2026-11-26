@@ -5,16 +5,17 @@ import styles from './LabelChips.module.css';
 
 export interface LabelChipsProps {
   labels: readonly Label[];
+  compact?: boolean;
   className?: string | undefined;
 }
 
-export function LabelChips({ labels, className }: LabelChipsProps) {
+export function LabelChips({ labels, compact = false, className }: LabelChipsProps) {
   if (labels.length === 0) return null;
   return (
-    <span className={clsx(styles.chips, className)}>
+    <span className={clsx(styles.chips, compact && styles.compact, className)}>
       {labels.map((label) => (
         <span key={label.id} className={styles.chip}>
-          <LabelDot color={label.color} />
+          <LabelDot color={label.color} className={styles.chipDot} />
           <span className={styles.name}>{label.name}</span>
         </span>
       ))}
@@ -22,7 +23,7 @@ export function LabelChips({ labels, className }: LabelChipsProps) {
   );
 }
 
-// Rows have no room for the names, but screen readers still need them.
+// The phone's Labels chip has no room for the names, but screen readers still need them.
 export function LabelDots({ labels, className }: LabelChipsProps) {
   if (labels.length === 0) return null;
   return (

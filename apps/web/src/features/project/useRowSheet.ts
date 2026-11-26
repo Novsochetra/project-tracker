@@ -1,7 +1,7 @@
 import type { TicketListItem } from '@tracker/shared';
 import { useCallback, useState } from 'react';
 
-export type RowSheetKind = 'status' | 'delete';
+export type RowSheetKind = 'status' | 'labels' | 'delete';
 
 export interface RowSheet {
   kind: RowSheetKind;

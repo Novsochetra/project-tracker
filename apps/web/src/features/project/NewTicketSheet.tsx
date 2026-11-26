@@ -98,6 +98,7 @@ export function NewTicketSheet({ open, onClose, projectKey, statusId }: NewTicke
     >
       <div className={styles.body} {...drop.handlers}>
         <NewTicketFields
+          projectKey={projectKey}
           form={form}
           statuses={statuses}
           labels={board?.labels ?? NO_LABELS}

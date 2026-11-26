@@ -1,5 +1,5 @@
 import type { Status, TicketListItem } from '@tracker/shared';
-import { ArrowRight, CircleDot, Trash2 } from 'lucide-react';
+import { ArrowRight, CircleDot, Tag, Trash2 } from 'lucide-react';
 import { Icon } from '../../components';
 import type { SwipeAction } from '../../gestures';
 import type { RowCallbacks } from './rowTypes';
@@ -30,6 +30,12 @@ export function rowSwipeActions(
       icon: <Icon icon={CircleDot} size={20} />,
       tone: 'neutral',
       onTrigger: () => callbacks.chooseStatus(ticket),
+    },
+    {
+      label: 'Labels',
+      icon: <Icon icon={Tag} size={20} />,
+      tone: 'dark',
+      onTrigger: () => callbacks.chooseLabels(ticket),
     },
     {
       label: 'Delete',
