@@ -1,8 +1,8 @@
 # A project that isn't code
 
-A project doesn't need code. Claude Code in a folder with MCP servers for Notion, Google Drive, Gmail or Calendar can draft a newsletter, sort an inbox or plan a week. The tracker treats that folder like any other: you capture tickets on your phone, a helper on your computer runs Claude Code there, and the result comes back on the ticket.
+A project doesn't need code. Claude Code in a folder with MCP servers for Notion, Google Drive, Gmail or Calendar can draft a newsletter, sort an inbox or plan a week. The tracker treats that folder like any other: you capture tickets on your phone, Claude Code works on them in the folder through the tracker's MCP server, and the result comes back on the ticket.
 
-This guide goes from an empty folder to a finished run. The example is a weekly newsletter written from notes in Notion.
+This guide goes from an empty folder to a finished ticket. The example is a weekly newsletter written from notes in Notion.
 
 ## 1. Make the folder
 
@@ -69,9 +69,9 @@ EOF
 
 A ticket can then say "Run /weekly-draft for this week".
 
-## 5. Let runs use the tools without asking
+## 5. Let Claude use the tools without asking
 
-Claude Code asks before it uses an MCP tool. A run on your phone can't answer that unless you start the helper with `--approvals`, so allow the tools you trust in `.claude/settings.json`:
+Claude Code asks before it uses an MCP tool. To skip that for the tools you trust, allow them in `.claude/settings.json`:
 
 ```json
 {
@@ -81,32 +81,19 @@ Claude Code asks before it uses an MCP tool. A run on your phone can't answer th
 }
 ```
 
-`mcp__notion` allows every tool of the `notion` server. Leave out what should still ask, and start the helper with `--approvals` so those steps ask on your phone.
+`mcp__notion` allows every tool of the `notion` server. Leave out what should still ask.
 
 ## 6. Make the project in the app
 
 1. Add the tracker's own MCP server to Claude Code once, if you haven't: **Connect Claude Code** in the app has the `claude mcp add tracker` command.
-2. **New project**: name it "Newsletter" and put the folder in **Repository**: `~/work/newsletter`. That is how `tracker watch` finds the project from the folder.
-3. Under **Instructions for Claude**, add what every ticket in this project should know, for example "Attach the finished draft to the ticket with attach_file." Claude gets these with every ticket and question in the project.
+2. **New project**: name it "Newsletter" and put the folder in **Repository**: `~/work/newsletter`. Its key is `NEW`. A tracker slash command run without a key finds the project from the folder it runs in.
+3. Under **Instructions for Claude**, add what every ticket in this project should know, for example "Attach the finished draft to the ticket with attach_file." Claude gets these with every ticket it reads in the project.
 
-## 7. Start the helper there
-
-```bash
-cd ~/work/newsletter
-tracker login --url https://your-tracker.up.railway.app   # once per computer
-tracker watch --name "Dara's MacBook"
-```
-
-`--install` starts it by itself at login (see `apps/agent/README.md`). In the app, **Connect Claude Code** now lists the computer with what it can use: "Notion, Gmail, /weekly-draft". The **Run on** row of the prompt sheet and of Ask Claude shows the same when you have more than one helper. The tracker's own server isn't listed, since every run has it. The helper reads the list again every 5 minutes, so a server you add shows up within that.
-
-If a server you expect is missing, run `claude mcp list` in the folder: only servers that say `✔ Connected` are listed.
-
-## 8. Run a ticket
+## 7. Work on a ticket
 
 1. Capture a ticket on your phone: "Draft this week's newsletter".
-2. Open it, tap **Send to Claude**, then **Run in Claude Code**.
-3. The ticket shows Claude's steps while it works ("Use notion: search", "Write drafts/2026-10-16.md"). A step outside your allow rules asks on the phone when the helper runs with `--approvals`.
-4. When Claude is done it attaches the draft, says what it did in its report, and moves the ticket to **Need review**.
-5. Read the draft on the ticket. Send it back with a comment, or move the ticket to **Done**.
+2. In the folder, start Claude Code (`cd ~/work/newsletter`, then `claude`) and type the tracker's work command, `/mcp__tracker__work NEW`.
 
-**Ask Claude** works in the same folder. Ask and Plan questions are read-only and start Claude without any MCP server, so they answer from the folder's files only; an **Edit** question gets the same tools as a ticket run.
+3. Claude claims the ticket, which moves it to **In progress**, reads it with the project's instructions and does the work with the folder's tools. When a decision only you can make blocks it, it asks you on the ticket (`ask_person`), and your phone shows the question, with a notification when they are on.
+4. When it is done it attaches the draft, says what it did in its report, and moves the ticket to **Need review**.
+5. Read the draft on the ticket. Send it back with a comment, let a reviewer agent check it (`/mcp__tracker__review NEW`), or move the ticket to **Done**.
