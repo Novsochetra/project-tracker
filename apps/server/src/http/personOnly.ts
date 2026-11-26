@@ -60,6 +60,10 @@ export const personEditsActivity = refuseAgents(
   'Only a person edits or deletes comments, reports and reviews.',
 );
 
+// A delete can't be undone and removes the stored file, so an agent, or a prompt hidden in a
+// ticket, could erase what the person attached. Agents still attach files.
+export const personDeletesFiles = refuseAgents('Only a person deletes a file.');
+
 // Approve and Ask for changes decide where the ticket goes, so an agent can't approve its own work.
 export const personReviewsChanges = refuseAgents('Only a person reviews the changes.');
 

@@ -1,5 +1,6 @@
 import { answerQuestionInput, askQuestionInput } from '@tracker/shared';
 import { Hono } from 'hono';
+import { tokenIdOf } from '../../auth/access';
 import { answerQuestion, cancelQuestion } from '../../services/questionAnswers';
 import { askQuestion, listQuestions } from '../../services/questions';
 import { waitForQuestion } from '../../services/questionWait';
@@ -17,7 +18,7 @@ export const questionRoutes = (ctx: ServiceContext) =>
       context.json(
         await askQuestion(
           userContext(ctx, context),
-          context.get('actor'),
+          { actor: context.get('actor'), tokenId: tokenIdOf(context.get('access')) },
           context.req.param('key'),
           context.req.valid('json'),
         ),
@@ -47,5 +48,11 @@ export const questionRoutes = (ctx: ServiceContext) =>
       ),
     )
     .post('/questions/:id/cancel', async (context) =>
-      context.json(await cancelQuestion(userContext(ctx, context), context.req.param('id'))),
+      context.json(
+        await cancelQuestion(
+          userContext(ctx, context),
+          context.req.param('id'),
+          tokenIdOf(context.get('access')),
+        ),
+      ),
     );

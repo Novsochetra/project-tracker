@@ -1,6 +1,6 @@
 import type { Actor, AnswerQuestionInput, TicketQuestion } from '@tracker/shared';
 import type { QuestionRow } from '../db/questionTables';
-import { conflict } from '../errors';
+import { conflict, forbidden } from '../errors';
 import {
   markQuestionCancelled,
   markQuestionEnded,
@@ -59,11 +59,24 @@ export async function answerQuestion(
   return toQuestion(await requireQuestion(ctx, ctx.scope, id));
 }
 
+// Another agent could otherwise end a question one is waiting on. The person, and a question no
+// token asked (from before PT-276, or on a tracker without an owner), are not held to it.
+function assertMayCancel(row: QuestionRow, tokenId: string | null): void {
+  if (tokenId === null || row.askedByTokenId === null || row.askedByTokenId === tokenId) return;
+
+  throw forbidden('Only the API token that asked a question can cancel it.');
+}
+
 // One that already ended stays as it ended: Claude may give up just as the person answers, and
 // the answer then stands.
-export async function cancelQuestion(ctx: UserContext, id: string): Promise<TicketQuestion> {
+export async function cancelQuestion(
+  ctx: UserContext,
+  id: string,
+  tokenId: string | null,
+): Promise<TicketQuestion> {
   await settleQuestions(ctx);
   const row = await requireQuestion(ctx, ctx.scope, id);
+  assertMayCancel(row, tokenId);
   if (await markQuestionCancelled(ctx.db, row.id, ctx.now())) {
     const ref = await requireTicketById(ctx.db, ctx.scope, row.ticketId);
     notifyQuestion(ctx, ctx.scope, ref.project.id, ref.ticket.id);

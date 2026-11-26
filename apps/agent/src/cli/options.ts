@@ -29,6 +29,7 @@ export const COMMAND_OPTIONS = {
   name: { type: 'string' },
   'permission-mode': { type: 'string' },
   'max-turns': { type: 'string' },
+  reopen: { type: 'boolean' },
 } as const satisfies NonNullable<ParseArgsConfig['options']>;
 
 export const WATCH_FLAGS = {
@@ -45,7 +46,11 @@ export type WatchFlags = Partial<Record<WatchFlag, boolean>>;
 
 export type CommandOption = keyof typeof COMMAND_OPTIONS;
 
-export type CommandValues = Partial<Record<CommandOption, string>>;
+type OptionValue<Option> = Option extends { type: 'boolean' } ? boolean : string;
+
+export type CommandValues = {
+  [Name in CommandOption]?: OptionValue<(typeof COMMAND_OPTIONS)[Name]>;
+};
 
 export interface GlobalValues {
   url?: string;

@@ -20,3 +20,13 @@ export function authorName(actor: Actor): string {
 
   return actor.kind === 'agent' ? 'Agent' : 'User';
 }
+
+const longestBacktickRun = (text: string): number =>
+  (text.match(/`+/g) ?? []).reduce((longest, run) => Math.max(longest, run.length), 0);
+
+// A fence longer than any run of backticks inside, so the contents can't close it early.
+export function fenced(text: string): string {
+  const fence = '`'.repeat(Math.max(3, longestBacktickRun(text) + 1));
+
+  return `${fence}\n${text.replace(/\r?\n$/, '')}\n${fence}`;
+}
