@@ -13,7 +13,6 @@ export interface NamedTicket<T> {
 }
 
 export interface NamedTickets<T> {
-  // Each key once, in the order given; one that can't name a ticket stays as it was written.
   order: string[];
   named: NamedTicket<T>[];
 }
@@ -52,14 +51,17 @@ function numsByProject(named: readonly NamedTicket<unknown>[]): Map<string, numb
 }
 
 // One read for each project rather than each key. A project the caller can't reach reads as one
-// that doesn't exist, so its tickets are left out like tickets that were never made.
+// that doesn't exist, so its tickets are left out like tickets that were never made. Projects go in
+// the order of their keys, so two requests at once lock their rows in the same order and can't
+// deadlock on Postgres.
 export async function findNamedTickets(
   db: Db,
   scope: UserScope,
   named: readonly NamedTicket<unknown>[],
 ): Promise<ProjectTickets[]> {
   const found: ProjectTickets[] = [];
-  for (const [projectKey, nums] of numsByProject(named)) {
+  const projects = [...numsByProject(named)].sort(([left], [right]) => (left < right ? -1 : 1));
+  for (const [projectKey, nums] of projects) {
     const project = await findProject(db, scope, projectKey);
     if (!project) continue;
 

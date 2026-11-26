@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { RANK_LIMIT } from '../logic/rank';
 
 // Ready for you holds every reviewed ticket, 259 in PT when this came; the cap only bounds the
 // work one request asks for.
@@ -8,8 +9,7 @@ export const TOO_MANY_DONE_MOVES = `Move up to ${DONE_MOVE_MAX} tickets at a tim
 
 const ticketKey = z.string().trim().min(1).max(40);
 const id = z.string().min(1).max(64);
-// The rank column is a 32-bit integer on Postgres.
-const rank = z.number().int().min(-2_147_483_648).max(2_147_483_647);
+const rank = z.number().int().min(-RANK_LIMIT).max(RANK_LIMIT);
 
 export const moveToDoneInput = z.object({
   keys: z.array(ticketKey).min(1).max(DONE_MOVE_MAX, TOO_MANY_DONE_MOVES),

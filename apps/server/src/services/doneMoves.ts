@@ -14,7 +14,7 @@ import { listGroupRanks } from '../repositories/tickets';
 import { inTransaction, notify, type UserContext } from './context';
 import { findNamedTickets, nameTickets, type ProjectTickets } from './namedTickets';
 import { statusChangedText } from './statusEvents';
-import { eventEntry, writeTicket } from './ticketWrites';
+import { assertMayEnter, eventEntry, writeTicket } from './ticketWrites';
 
 interface Placement {
   ticket: TicketRow;
@@ -28,9 +28,10 @@ interface ProjectMoves {
   moved: MovedTicket[];
 }
 
-// Written as a move from the status menu writes it, so the activity reads the same. Only while the
-// ticket is still in the status it was read in: on Postgres, one someone moved meanwhile refuses
-// the whole request (409) rather than being moved again on top of that.
+// Checked and written as a move from the status menu is, so no caller moves a ticket to Done for
+// an agent and the activity reads the same. Only while the ticket is still in the status it was
+// read in: on Postgres, one someone moved meanwhile refuses the whole request (409) rather than
+// being moved again on top of that.
 async function place(
   trx: Db,
   ctx: UserContext,
@@ -38,6 +39,7 @@ async function place(
   placement: Placement,
 ): Promise<MovedTicket> {
   const { ticket, status, rank } = placement;
+  assertMayEnter(actor, status);
   await writeTicket(trx, ctx.now, {
     ticket,
     actor,
@@ -101,7 +103,6 @@ function answer(order: readonly string[], results: readonly ProjectMoves[]): Tic
   };
 }
 
-// A ticket already in a done status, or in a project without one, stays where it is.
 export async function moveToDone(
   ctx: UserContext,
   actor: Actor,

@@ -149,7 +149,6 @@ export class TrackerClient extends SearchClient {
   moveToDone = (keys: string[]) =>
     this.http.request<TicketMoves>('POST', '/api/tickets/done', { body: { keys } });
 
-  // Each ticket back in the status and place it had: the `moved` that moveToDone answered.
   undoMoveToDone = (tickets: TicketPlaceInput[]) =>
     this.http.request<TicketMoves>('POST', '/api/tickets/done/undo', { body: { tickets } });
 

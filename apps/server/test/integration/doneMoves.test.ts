@@ -9,6 +9,9 @@ import {
   type TicketPlaceInput,
 } from '@tracker/shared';
 import { beforeEach, describe, expect, it } from 'vitest';
+import { createClock } from '../../src/clock';
+import type { UserContext } from '../../src/services/context';
+import { moveToDone as moveTicketsToDone } from '../../src/services/doneMoves';
 import { agent, eventTexts, statusOf } from '../helpers/fixtures';
 import { addUser, caller, type Caller } from '../helpers/runs';
 import { DIALECTS, useTestServer, type RequestOptions } from '../helpers/server';
@@ -194,6 +197,21 @@ describe.each(DIALECTS)('moving tickets to Done in one step (%s)', (dialect) => 
     expect((await api.post('/api/tickets/done/undo', { tickets: 7 }, worker)).status).toBe(403);
     expect((await api.client().getTicket('MOB-1')).status.category).toBe('reviewed');
     expect(api.events).toEqual([]);
+  });
+
+  it('refuses an agent in the service too, so no other caller can move a ticket to Done for one', async () => {
+    await create(mobile, 'Approved work');
+    const ctx = {
+      db: api.db,
+      events: api.broadcaster,
+      now: createClock(),
+      scope: null,
+    } as unknown as UserContext;
+
+    await expect(moveTicketsToDone(ctx, agent('Worker'), ['MOB-1'])).rejects.toMatchObject({
+      code: 'forbidden',
+    });
+    expect((await api.client().getTicket('MOB-1')).status.category).toBe('reviewed');
   });
 
   it('puts every ticket back in its own status and place with one undo', async () => {

@@ -1,5 +1,9 @@
 export const RANK_STEP = 1000;
 
+// A rank the tracker takes from a client, as Undo's put-back: a million tickets put on top of one
+// group stay inside it, and topRank's step past it stays inside Postgres's 32-bit integer.
+export const RANK_LIMIT = 1_000_000_000;
+
 export interface Rankable {
   id: string;
   rank: number;
