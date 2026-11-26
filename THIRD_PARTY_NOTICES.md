@@ -1,62 +1,67 @@
 # Third-party notices
 
-The tracker's own code is under the license in [LICENSE](LICENSE). It uses the third-party software below, which keeps its own license. The versions are the ones in `package-lock.json` when this file was written. Each copyright line is copied from the package's license file, or from its README when the license file names no one. After `npm ci`, each package's folder in `node_modules` holds its full license text.
+The tracker's own code is under the license in [LICENSE](LICENSE). It uses the third-party software below, which keeps its own license. The versions are the ones in `package-lock.json` when this file was written. Each copyright line is copied from the package's license file, or from its README when the license file names no one. After `npm ci`, most packages' folders in `node_modules` hold their license text, in a license file or the README. The exceptions are the entries below that say "No license file" and sharp's libvips packages (see "libvips").
 
 Where the code goes:
 
 - **Web app:** the build puts the code of the packages under "Web app" below into the files that browsers download, and copies the Geist font files next to them.
-- **Server and agent:** the server, the MCP server and the `tracker` CLI are built with tsup, which bundles only the tracker's own packages. Their third-party packages, under "Other production dependencies" below, stay in `node_modules`, each with its license file, and load at run time.
-- **Images:** the server processes images with sharp, which loads the libvips library from a separate package (see "libvips" below).
+- **Server and agent:** the server, the MCP server and the `tracker` CLI are built with tsup, which bundles only the tracker's own packages. Their third-party packages, under "Other production dependencies" below, stay in `node_modules` and load at run time.
+- **Images:** the server processes images with sharp, which uses the libvips library from separate packages (see "libvips" below).
 
 ## libvips (LGPL-3.0-or-later)
 
-`sharp` 0.35.5 (Apache-2.0) processes images with libvips 8.18.7. npm installs sharp's binaries from two optional packages that match the machine's platform:
+`sharp` 0.35.5 (Apache-2.0) processes images with libvips 8.18.7. npm installs sharp's native binaries from two optional packages that match the machine's platform:
 
 - `@img/sharp-<platform>` 0.35.5 (Apache-2.0, Copyright 2013 Lovell Fuller and others.): sharp's compiled module.
-- `@img/sharp-libvips-<platform>` 1.3.4 (LGPL-3.0-or-later): libvips and the libraries it uses, built into one shared library in the package's `lib` folder (on macOS, `libvips-cpp.8.18.7.dylib`).
+- `@img/sharp-libvips-<platform>` 1.3.4 (LGPL-3.0-or-later): libvips and the libraries it uses, built into one shared library in the package's `lib` folder (on macOS, `libvips-cpp.8.18.7.dylib`). The package has no license file, only the README table below.
 
-On Windows there is no separate libvips package: `@img/sharp-win32-<arch>` 0.35.5 holds sharp's module and libvips together, under Apache-2.0 AND LGPL-3.0-or-later. `@img/sharp-wasm32` 0.35.5 holds a WebAssembly build of both, under Apache-2.0 AND LGPL-3.0-or-later AND MIT.
+On Windows there is no separate libvips package: `@img/sharp-win32-<arch>` 0.35.5 holds sharp's module and libvips together, under Apache-2.0 AND LGPL-3.0-or-later.
 
-The README of `@img/sharp-libvips-darwin-arm64` 1.3.4 lists what the shared library contains and the license each part is used under; the versions are from its `versions.json`.
+npm also installs `@img/sharp-wasm32` 0.35.5 (Apache-2.0 AND LGPL-3.0-or-later AND MIT, Copyright 2013 Lovell Fuller and others.) on every platform, with its dependency `@emnapi/runtime` (listed under MIT below), because their lockfile entries name no platform. sharp loads it only when no native binary loads. It is a WebAssembly build of sharp with libvips and its libraries linked statically into one file, `lib/sharp-wasm32-0.35.5.node.wasm`. Its LICENSE file has sharp's Apache-2.0 text only.
 
-| Library       | Version        | License                                                   |
-| ------------- | -------------- | --------------------------------------------------------- |
-| aom           | 3.15.1         | BSD 2-Clause + Alliance for Open Media Patent License 1.0 |
-| cairo         | 1.18.6         | Mozilla Public License 1.1                                |
-| cgif          | 0.5.4          | MIT License                                               |
-| expat         | 2.8.5          | MIT License                                               |
-| fontconfig    | 2.18.3         | fontconfig License (BSD-like)                             |
-| freetype      | 2.14.3         | freetype License (BSD-like)                               |
-| fribidi       | 1.0.17         | LGPLv3                                                    |
-| glib          | 2.90.0         | LGPLv3                                                    |
-| harfbuzz      | 14.5.0         | MIT License                                               |
-| highway       | 1.4.0          | BSD 3-Clause                                              |
-| lcms          | 2.19.1         | MIT License                                               |
-| libarchive    | 3.8.9          | BSD 2-Clause                                              |
-| libexif       | 0.6.26         | LGPLv3                                                    |
-| libffi        | 3.8.0          | MIT License                                               |
-| libheif       | 1.23.5         | LGPLv3                                                    |
-| libimagequant | 2.4.1          | BSD 2-Clause                                              |
-| libnsgif      | not listed     | MIT License                                               |
-| libpng        | 1.6.58         | libpng License                                            |
-| librsvg       | 2.63.2         | LGPLv3                                                    |
-| libtiff       | 4.7.2          | libtiff License (BSD-like)                                |
-| libultrahdr   | 2.0.2          | MIT License                                               |
-| libvips       | 8.18.7         | LGPLv3                                                    |
-| libwebp       | 1.6.0          | New BSD License                                           |
-| libxml2       | 2.15.4         | MIT License                                               |
-| mozjpeg       | commit 0826579 | zlib License, IJG License, BSD 3-Clause                   |
-| pango         | 1.58.2         | LGPLv3                                                    |
-| pixman        | 0.46.4         | MIT License                                               |
-| proxy-libintl | 0.5            | LGPLv3                                                    |
-| zlib-ng       | 2.3.3          | zlib License                                              |
+The READMEs of `@img/sharp-libvips-darwin-arm64` 1.3.4 and `@img/sharp-wasm32` 0.35.5 list what is built into each and the license each part is used under; the versions are from their `versions.json`. In the last column, native means `@img/sharp-libvips-<platform>` and WebAssembly means `@img/sharp-wasm32`.
 
-The README adds that the LGPLv3 libraries are used under the "any later version" clause of their LGPLv2 or LGPLv2.1 license.
+| Library       | Version        | License                                                   | Built into  |
+| ------------- | -------------- | --------------------------------------------------------- | ----------- |
+| aom           | 3.15.1         | BSD 2-Clause + Alliance for Open Media Patent License 1.0 | both        |
+| cairo         | 1.18.6         | Mozilla Public License 1.1                                | native      |
+| cgif          | 0.5.4          | MIT License                                               | both        |
+| emscripten    | 6.0.10         | MIT License                                               | WebAssembly |
+| expat         | 2.8.5          | MIT License                                               | both        |
+| fontconfig    | 2.18.3         | fontconfig License (BSD-like)                             | native      |
+| freetype      | 2.14.3         | freetype License (BSD-like)                               | native      |
+| fribidi       | 1.0.17         | LGPLv3                                                    | native      |
+| glib          | 2.90.0         | LGPLv3                                                    | both        |
+| harfbuzz      | 14.5.0         | MIT License                                               | native      |
+| highway       | 1.4.0          | BSD 3-Clause                                              | both        |
+| lcms          | 2.19.1         | MIT License                                               | both        |
+| libarchive    | 3.8.9          | BSD 2-Clause                                              | native      |
+| libexif       | 0.6.26         | LGPLv3                                                    | both        |
+| libffi        | 3.8.0          | MIT License                                               | both        |
+| libheif       | 1.23.5         | LGPLv3                                                    | both        |
+| libimagequant | 2.4.1          | BSD 2-Clause                                              | both        |
+| libnsgif      | not listed     | MIT License                                               | both        |
+| libpng        | 1.6.58         | libpng License                                            | both        |
+| librsvg       | 2.63.2         | LGPLv3                                                    | native      |
+| libtiff       | 4.7.2          | libtiff License (BSD-like)                                | both        |
+| libultrahdr   | 2.0.2          | MIT License                                               | both        |
+| libvips       | 8.18.7         | LGPLv3                                                    | both        |
+| libwebp       | 1.6.0          | New BSD License                                           | both        |
+| libxml2       | 2.15.4         | MIT License                                               | native      |
+| mozjpeg       | commit 0826579 | zlib License, IJG License, BSD 3-Clause                   | both        |
+| pango         | 1.58.2         | LGPLv3                                                    | native      |
+| pixman        | 0.46.4         | MIT License                                               | native      |
+| proxy-libintl | 0.5            | LGPLv3                                                    | native      |
+| resvg         | 0.48.1         | MIT License                                               | WebAssembly |
+| zlib-ng       | 2.3.3          | zlib License                                              | both        |
+
+The READMEs add that the LGPLv3 libraries are used under the "any later version" clause of their LGPLv2 or LGPLv2.1 license.
 
 ### Getting the source
 
-- The binaries are built by sharp-libvips release v1.3.4: https://github.com/lovell/sharp-libvips/releases/tag/v1.3.4
-- Its build scripts, at https://github.com/lovell/sharp-libvips/tree/v1.3.4, download each library's source from the library's own project at the versions above and compile it.
+- The native libraries are built by sharp-libvips release v1.3.4: https://github.com/lovell/sharp-libvips/releases/tag/v1.3.4
+- Its build scripts, at https://github.com/lovell/sharp-libvips/tree/v1.3.4, download each library's source from the library's own project at the versions above and compile it. Before compiling, `build/posix.sh` applies five downloaded patches (`glib-without-gregex.patch` to glib, commit patches to mozjpeg and librsvg, pull request 383 to libultrahdr, and `libvips-cpp-soversion.patch` to libvips; glib, librsvg and libvips are LGPL) and edits some sources in place, so the source of what ships is each upstream release as that script changes it.
+- The WebAssembly build's libraries come from `build/wasm.sh` at the same tag, which builds libvips and its libraries as static WebAssembly libraries with the wasm-vips project: https://github.com/kleisauke/wasm-vips
 - The libvips 8.18.7 source: https://github.com/libvips/libvips/releases/tag/v8.18.7
 
 ### Replacing the library
@@ -65,6 +70,8 @@ sharp's compiled module links to libvips dynamically: the system loads the libra
 
 - replace that library file with an interface-compatible build of libvips 8.18.7, or
 - install libvips 8.18.7 or later where `pkg-config --modversion vips-cpp` finds it, then rebuild sharp against it with `npm explore sharp -- npm run build`. The build needs a C++17 compiler, node-addon-api 7 or later and node-gyp 9 or later. `SHARP_FORCE_GLOBAL_LIBVIPS=1` makes it use the installed libvips even when the version check fails. sharp does not support an installed libvips on Windows, or on macOS when Node.js runs under Rosetta. sharp's install guide has the details: https://sharp.pixelplumbing.com/install
+
+This does not apply to `@img/sharp-wasm32`: its libvips is linked statically into its `.wasm` file, so using a changed libvips there means rebuilding that file. sharp builds it from its own source with Emscripten (its build runs node-gyp with `--nodedir=emscripten` when `CC` is Emscripten's `emcc`), against the WebAssembly libraries from sharp-libvips' `build/wasm.sh`.
 
 The LGPL 3.0 text is linked under "License texts" below.
 
@@ -131,7 +138,8 @@ These are the other packages in the production dependency tree (`npm ls --omit=d
 
 ### MIT
 
-- `@hono/node-server` 2.1.3 (server, agent): Copyright (c) 2022 - present, Yusuke Wada and Hono contributors
+- `@emnapi/runtime` 1.11.3 (server): Copyright (c) 2021-present Toyobayashi
+- `@hono/node-server` 2.1.11 (server, agent): Copyright (c) 2022 - present, Yusuke Wada and Hono contributors
 - `@hono/zod-validator` 0.9.1 (server): No license file in the package; its README names Yusuke Wada as author
 - `@img/colour` 1.1.0 (server):
   - color: Copyright (c) 2012 Heather Arthur
@@ -153,7 +161,7 @@ These are the other packages in the production dependency tree (`npm ls --omit=d
 - `better-sqlite3` 13.0.3 (server):
   - Copyright (c) 2017 Joshua Wise
   - It includes SQLite 3.53.4, whose source says "The author disclaims copyright to this source code."
-- `body-parser` 2.3.0 (agent):
+- `body-parser` 2.4.0 (agent):
   - Copyright (c) 2014 Jonathan Ong <me@jongleberry.com>
   - Copyright (c) 2014-2015 Douglas Christopher Wilson <doug@somethingdoug.com>
 - `bowser` 2.14.1 (server): Copyright 2015, Dustin Diaz (the "Original Author")
@@ -213,13 +221,13 @@ These are the other packages in the production dependency tree (`npm ls --omit=d
 - `gopd` 1.2.0 (agent): Copyright (c) 2022 Jordan Harband
 - `has-symbols` 1.1.0 (agent): Copyright (c) 2016 Jordan Harband
 - `hasown` 2.0.4 (agent): Copyright (c) Jordan Harband and contributors
-- `hono` 4.13.13 (server, agent): Copyright (c) 2021 - present, Yusuke Wada and Hono contributors
+- `hono` 4.13.22 (server, agent): Copyright (c) 2021 - present, Yusuke Wada and Hono contributors
 - `http-errors` 2.0.1 (agent):
   - Copyright (c) 2014 Jonathan Ong me@jongleberry.com
   - Copyright (c) 2016 Douglas Christopher Wilson doug@somethingdoug.com
 - `iconv-lite` 0.7.3 (agent): Copyright (c) 2011 Alexander Shtuchkin
 - `image-size` 2.0.4 (server): Copyright © 2013-Present Aditya Yadav, http://netroy.in
-- `ip-address` 10.7.3 (agent): Copyright (C) 2011 by Beau Gunderson
+- `ip-address` 10.7.6 (agent): Copyright (C) 2011 by Beau Gunderson
 - `ipaddr.js` 1.9.1 (agent): Copyright (C) 2011-2017 whitequark <whitequark@whitequark.org>
 - `is-promise` 4.0.0 (agent): Copyright (c) 2014 Forbes Lindesay
 - `jose` 6.2.12 (agent): Copyright (c) 2018 Filip Skokan
@@ -310,7 +318,7 @@ These are the other packages in the production dependency tree (`npm ls --omit=d
 - `util-deprecate` 1.0.2 (server): Copyright (c) 2014 Nathan Rajlich <nathan@tootallnate.net>
 - `vary` 1.1.2 (agent): Copyright (c) 2014-2017 Douglas Christopher Wilson
 - `xtend` 4.0.2 (server): Copyright (c) 2012-2014 Raynos.
-- `zod` 4.6.5 (server, agent, web but not bundled): Copyright (c) 2025 Colin McDonnell
+- `zod` 4.6.7 (server, agent, web but not bundled): Copyright (c) 2025 Colin McDonnell
 
 ### ISC
 
@@ -327,11 +335,11 @@ These are the other packages in the production dependency tree (`npm ls --omit=d
 
 ### BSD-3-Clause
 
-- `fast-uri` 3.1.8 (agent):
+- `fast-uri` 3.1.9 (agent):
   - Copyright (c) 2011-2021, Gary Court until https://github.com/garycourt/uri-js/commit/a1acf730b4bba3f1097c9f52e7d9d3aba8cdcaae
   - Copyright (c) 2021-present The Fastify team <https://github.com/fastify/fastify#team>
 - `ieee754` 1.2.1 (server): Copyright 2008 Fair Oaks Labs, Inc.
-- `qs` 6.16.0 (agent): Copyright (c) 2014, Nathan LaFreniere and other [contributors](https://github.com/ljharb/qs/graphs/contributors)
+- `qs` 6.17.1 (agent): Copyright (c) 2014, Nathan LaFreniere and other [contributors](https://github.com/ljharb/qs/graphs/contributors)
 
 ### BSD-2-Clause
 
