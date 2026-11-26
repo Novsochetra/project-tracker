@@ -11,16 +11,10 @@ import {
 } from './routes';
 
 const projects: Route = { name: 'projects' };
-const activity: Route = { name: 'activity' };
 const mob: Route = { name: 'project', key: 'MOB' };
 const mob3: Route = { name: 'ticket', key: 'MOB', num: 3 };
 const mob4: Route = { name: 'ticket', key: 'MOB', num: 4 };
 const web: Route = { name: 'project', key: 'WEB' };
-const ask: Route = { name: 'chats', key: 'MOB' };
-const chat: Route = { name: 'chat', key: 'MOB', chatId: 'c-1' };
-const newChat: Route = { name: 'chat', key: 'MOB', chatId: null };
-const ticketChat: Route = { name: 'chat', key: 'MOB', chatId: 'c-1', ticketNum: 3 };
-const newTicketChat: Route = { name: 'chat', key: 'MOB', chatId: null, ticketNum: 3 };
 
 describe('parseRoute', () => {
   it.each([
@@ -31,15 +25,6 @@ describe('parseRoute', () => {
     ['/p/MOB/3', mob3],
     ['/p/MOB/3/', mob3],
     ['/p/MOB2/12', { name: 'ticket', key: 'MOB2', num: 12 }],
-    ['/activity', activity],
-    ['/activity/', activity],
-    ['/p/MOB/ask', ask],
-    ['/p/MOB/ask/', ask],
-    ['/p/MOB/ask/c-1', chat],
-    ['/p/MOB/ask/new', newChat],
-    ['/p/MOB/3/ask/c-1', ticketChat],
-    ['/p/MOB/3/ask/new/', newTicketChat],
-    ['/p/MOB/3/ask', mob3],
   ])('parses %s', (path, route) => {
     expect(parseRoute(path)).toEqual(route);
   });
@@ -48,22 +33,23 @@ describe('parseRoute', () => {
     expect(parseRoute('/p/A%20B')).toEqual({ name: 'project', key: 'A B' });
   });
 
-  it.each(['/p/MOB/0', '/p/MOB/abc', '/p/MOB/-1', '/p/MOB/1.5'])(
+  it.each(['/p/MOB/0', '/p/MOB/abc', '/p/MOB/-1', '/p/MOB/1.5', '/p/MOB/ask'])(
     'falls back to the project for a bad ticket number in %s',
     (path) => {
       expect(parseRoute(path)).toEqual(mob);
     },
   );
 
+  // The chat and Activity screens are gone, so a saved link to one opens Projects.
   it.each([
     '/x',
     '/p',
     '/p/MOB/3/extra',
     '/p/%E0%A4%A',
     '/projects/MOB',
-    '/p/MOB/ask/c-1/x',
-    '/p/MOB/0/ask/c-1',
-    '/p/MOB/3/ask/c-1/x',
+    '/activity',
+    '/p/MOB/ask/c-1',
+    '/p/MOB/3/ask/c-1',
   ])('falls back to Projects for %s', (path) => {
     expect(parseRoute(path)).toEqual(projects);
   });
@@ -71,21 +57,7 @@ describe('parseRoute', () => {
 
 describe('routePath', () => {
   it('builds paths that parse back to the same route', () => {
-    for (const route of [
-      projects,
-      activity,
-      mob,
-      mob3,
-      ask,
-      chat,
-      newChat,
-      ticketChat,
-      newTicketChat,
-    ]) {
-      expect(parseRoute(routePath(route))).toEqual(route);
-    }
-
-    for (const route of [{ name: 'project', key: 'A B' } as Route]) {
+    for (const route of [projects, mob, mob3, { name: 'project', key: 'A B' } as Route]) {
       expect(parseRoute(routePath(route))).toEqual(route);
     }
   });
@@ -94,11 +66,6 @@ describe('routePath', () => {
     expect(routePath(projects)).toBe('/');
     expect(routePath(mob)).toBe('/p/MOB');
     expect(routePath(mob3)).toBe('/p/MOB/3');
-    expect(routePath(ask)).toBe('/p/MOB/ask');
-    expect(routePath(chat)).toBe('/p/MOB/ask/c-1');
-    expect(routePath(newChat)).toBe('/p/MOB/ask/new');
-    expect(routePath(ticketChat)).toBe('/p/MOB/3/ask/c-1');
-    expect(routePath(newTicketChat)).toBe('/p/MOB/3/ask/new');
   });
 });
 
@@ -112,8 +79,6 @@ describe('stack helpers', () => {
   it('builds the stack from Projects down', () => {
     expect(routeStack(projects)).toEqual([projects]);
     expect(routeStack(mob3)).toEqual([projects, mob, mob3]);
-    expect(routeStack(chat)).toEqual([projects, mob, ask, chat]);
-    expect(routeStack(ticketChat)).toEqual([projects, mob, mob3, ticketChat]);
   });
 
   it('measures depth', () => {

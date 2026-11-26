@@ -28,14 +28,6 @@ interface CacheIndex {
 export const EVERYTHING: ChangeScope = { all: true, projectKeys: new Set(), ticketKeys: new Set() };
 
 const INDEXED_ROOTS = new Set<unknown>(['projects', 'project', 'ticket']);
-const FULL_REFRESH_ONLY = new Set<unknown>([
-  'people',
-  'runners',
-  'chats',
-  'chat',
-  'runSteps',
-  'runRequests',
-]);
 
 function refOf(value: unknown): Ref[] {
   if (!isRecord(value) || typeof value.id !== 'string' || typeof value.key !== 'string') return [];
@@ -73,7 +65,6 @@ const ticketKeysIn = (index: CacheIndex, projectId: string | null): string[] =>
     .filter((ticket) => projectId !== null && ticket.projectId === projectId)
     .map((ticket) => ticket.key);
 
-// A run event names its ticket the same way, so it finds the ticket's cached key too.
 export function changeScope(
   event: Pick<ChangeEvent, 'projectId' | 'ticketId'>,
   entries: readonly CachedEntry[],
@@ -94,10 +85,9 @@ export function changeScope(
 
 export function isAffected(queryKey: QueryKey, scope: ChangeScope): boolean {
   const root = rootOf(queryKey);
-  const anyTicket = root === 'ready' || root === 'reportPreview' || root === 'search';
+  const anyTicket = root === 'ready' || root === 'search';
   if (root === 'projects' || anyTicket) return true;
-  // Chats, steps and requests change only through runs, which have their own events.
-  if (FULL_REFRESH_ONLY.has(root)) return scope.all;
+  if (root === 'people') return scope.all;
   const key = scopeOf(queryKey) ?? '';
   if (root === 'project') return scope.all || scope.projectKeys.has(key);
   if (root === 'ticket') return scope.all || scope.ticketKeys.has(key);

@@ -1,17 +1,11 @@
 .grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr) var(--panel-width);
-  grid-template-rows: auto auto 1fr;
+  grid-template-rows: auto 1fr;
   grid-template-areas:
-    'tabs side'
     'main side'
     'act side';
   min-height: 100%;
-}
-
-.tabs {
-  grid-area: tabs;
-  padding: var(--space-5) var(--space-10) 0;
 }
 
 .main {
@@ -36,14 +30,6 @@
   padding: 64px var(--space-6);
 }
 
-/* Ask Claude and Paste report are squares, as on the Project screen (PT-184), so the primary
-   keeps its whole label at 320px. */
-button.barSquare {
-  flex: none;
-  width: var(--bar-button);
-  padding: 0;
-}
-
 button.barPrimary {
   flex: 1 1 0;
   padding: 0 var(--space-3);
@@ -63,16 +49,11 @@ button.barPrimary {
     grid-template-columns: minmax(0, 1fr);
     grid-template-rows: auto;
     grid-template-areas:
-      'tabs'
       'main'
       'act'
       'foot';
     min-height: 0;
     padding-right: var(--safe-right);
     padding-left: var(--safe-left);
-  }
-
-  .tabs {
-    padding: var(--space-3) var(--space-4) 0;
   }
 }

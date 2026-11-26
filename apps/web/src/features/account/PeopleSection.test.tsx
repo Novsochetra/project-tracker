@@ -2,7 +2,7 @@ import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { InvitedUser } from '@tracker/shared';
 import { describe, expect, it, vi } from 'vitest';
-import { renderWithApi } from '../claude/test/renderWithApi';
+import { renderWithApi } from '../../app/test/renderWithApi';
 import { PeopleSection } from './PeopleSection';
 
 const MADE = new Date(2026, 9, 11, 12).getTime();

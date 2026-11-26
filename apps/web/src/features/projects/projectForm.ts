@@ -17,7 +17,6 @@ export interface ProjectFormValues {
   prefix: string;
   instructions: string;
   template: ProjectTemplateName;
-  autoReview: boolean;
   hideName: boolean;
 }
 
@@ -28,7 +27,6 @@ export const EMPTY_PROJECT_FORM: ProjectFormValues = {
   prefix: '',
   instructions: '',
   template: DEFAULT_PROJECT_TEMPLATE,
-  autoReview: false,
   hideName: false,
 };
 
@@ -37,23 +35,19 @@ export const NAME_REQUIRED = 'Add a name to create the project.';
 const REPO_HINT = 'The repository is added to every Claude Code prompt.';
 
 export const formValuesOf = (
-  project: Pick<
-    Project,
-    'name' | 'description' | 'repo' | 'instructions' | 'autoReview' | 'hideName'
-  >,
+  project: Pick<Project, 'name' | 'description' | 'repo' | 'instructions' | 'hideName'>,
 ): ProjectFormValues => ({
   ...EMPTY_PROJECT_FORM,
   name: project.name,
   description: project.description,
   repo: project.repo,
   instructions: project.instructions ?? '',
-  autoReview: project.autoReview ?? false,
   hideName: project.hideName ?? false,
 });
 
 export const hasName = (values: ProjectFormValues): boolean => values.name.trim() !== '';
 
-export const PROJECT_SWITCHES = ['autoReview', 'hideName'] as const;
+export const PROJECT_SWITCHES = ['hideName'] as const;
 export type ProjectSwitch = (typeof PROJECT_SWITCHES)[number];
 
 const TEXT_FIELDS = ['name', 'description', 'repo', 'prefix', 'instructions', 'template'] as const;
@@ -94,12 +88,10 @@ export const updateProjectInput = (values: ProjectFormValues): UpdateProjectInpu
   description: values.description.trim(),
   repo: values.repo.trim(),
   instructions: values.instructions.trim(),
-  autoReview: values.autoReview,
   hideName: values.hideName,
 });
 
-export const INSTRUCTIONS_HINT =
-  'Claude gets these with every ticket and question in this project.';
+export const INSTRUCTIONS_HINT = 'Claude gets these with every ticket in this project.';
 
 export const createdToast = (name: string): string => `“${name}” created`;
 

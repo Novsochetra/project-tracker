@@ -110,7 +110,7 @@ function renderCommentBox(start = BOX_AT_BOTTOM) {
         <button type="submit">Comment</button>
       </form>
       <BottomBar>
-        <button type="button">Send to Claude</button>
+        <button type="button">Move to Done</button>
       </BottomBar>
     </TicketScreenStub>,
   );

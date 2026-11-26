@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { activity, seedProject, settledScreenshot, toast } from './helpers';
+import { activity, seedProject, settledScreenshot } from './helpers';
 
 const PNG_1X1 = Buffer.from(
   'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
@@ -49,37 +49,7 @@ test.describe('report cards', () => {
     await expect(card.getByRole('listitem')).toHaveText(['launch-post.md', 'header.png']);
   });
 
-  test('a pasted Claude Code report reads the same way and still moves the ticket', async ({
-    page,
-    api,
-  }) => {
-    await seedProject(api, 'Mobile app', 'MOB', [{ title: 'Login error', status: 'In progress' }]);
-    await page.goto('/p/MOB/1');
-    await page.getByRole('button', { name: 'Paste report' }).click();
-    const dialog = page.getByRole('dialog', { name: 'Paste Claude Code report' });
-    await dialog
-      .getByLabel('Report')
-      .fill(
-        [
-          '**TICKET:** MOB-1',
-          '**STATUS:** done',
-          '**SUMMARY:** Added the inline error.',
-          '**FILES:** `src/login/LoginForm.tsx`',
-          '**NEXT:** none',
-        ].join('\n'),
-      );
-    await dialog.getByRole('button', { name: 'Apply' }).click();
-    await expect(toast(page, 'Report applied to 1 ticket')).toBeVisible();
-    await expect(page.getByRole('button', { name: /^Status/ })).toContainText('Need review');
-
-    const card = reportCard(page, 'Claude Code report');
-    await expect(card).toContainText('Submitted for review');
-    await expect(card.getByRole('term')).toHaveText(['Summary', 'Files']);
-    await expect(card.getByRole('listitem')).toHaveText(['src/login/LoginForm.tsx']);
-    await expect(card).not.toContainText('none');
-  });
-
-  test('files Claude attaches show on the ticket, and its OUTPUT reads as Output', async ({
+  test('files Claude attaches show on the ticket, and its output reads as Output', async ({
     page,
     api,
     agent,
@@ -95,16 +65,10 @@ test.describe('report cards', () => {
       await agent.uploadAttachment(new Blob([body], { type }), name, 'MOB-1');
     }
 
-    await agent.applyReport({
-      ticketKey: 'MOB-1',
-      text: [
-        'TICKET: MOB-1',
-        'STATUS: done',
-        'SUMMARY: Wrote the launch plan with its budget and a chart.',
-        'FILES: none',
-        'OUTPUT: plan.md, budget.csv, chart.png',
-        'NEXT: Pick a launch date',
-      ].join('\n'),
+    await agent.submitForReview('MOB-1', {
+      summary: 'Wrote the launch plan with its budget and a chart.',
+      output: 'plan.md, budget.csv, chart.png',
+      next: 'Pick a launch date',
     });
 
     await page.goto('/p/MOB/1');

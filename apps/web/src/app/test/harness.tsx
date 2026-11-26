@@ -14,7 +14,7 @@ import { LocationProbe } from './LocationProbe';
 
 export type FakeSheets = SheetsApi & { open: Mock<(request: SheetRequest) => void> };
 
-export const fakeSheets = (): FakeSheets => ({ open: vi.fn(), close: vi.fn(), current: null });
+const fakeSheets = (): FakeSheets => ({ open: vi.fn(), close: vi.fn(), current: null });
 
 export const projectSummary = (overrides: Partial<ProjectSummary> = {}): ProjectSummary => ({
   ...summaryOf(project),

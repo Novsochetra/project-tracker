@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { hasHidden, hasLookalike, markHidden, showHidden } from './hiddenChars';
+import { markHidden, showHidden, type ShownPart } from './hiddenChars';
+
+const holds = (text: string, kind: ShownPart['kind']): boolean =>
+  markHidden(text).some((part) => part.kind === kind);
+const hasHidden = (text: string) => holds(text, 'hidden');
+const hasLookalike = (text: string) => holds(text, 'lookalike');
 
 describe('markHidden', () => {
   it('marks a bidi override, so the command reads in the order it runs', () => {

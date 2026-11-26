@@ -9,7 +9,7 @@ import { NewTicketSheet } from '../../src/app/lazyParts';
 import { useSheets } from '../../src/app/sheets/context';
 import { SheetsProvider } from '../../src/app/sheets/SheetsProvider';
 import { ToastProvider } from '../../src/components';
-import { sheetTestSetup } from '../../src/features/claude/test/renderWithApi';
+import { sheetTestSetup } from '../../src/app/test/renderWithApi';
 import { readActionSheet } from '../../src/overlays/testing';
 
 // Text typed in the New ticket sheet lived only in the sheet, so an app update, a crash or iOS

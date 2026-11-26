@@ -63,18 +63,17 @@ describe.each([
   });
 });
 
-describe('the desktop side panel', () => {
+describe('the desktop ticket screen', () => {
   it('leaves Move to Done the only primary button of a reviewed ticket', () => {
     renderReviewed(STATUS.reviewed, 'approved', false);
     expect(primaries()).toEqual(['Move to Done']);
-    expect(screen.getByRole('button', { name: 'Send to Claude Code' })).toHaveClass('secondary');
   });
 
   it.each([
     ['a sent-back ticket', STATUS.todo, 'changes_requested', true],
     ['a reviewed ticket without a done status', STATUS.reviewed, 'approved', false],
-  ] as const)('keeps Send to Claude Code primary for %s', (_name, id, verdict, done) => {
+  ] as const)('has no primary button for %s', (_name, id, verdict, done) => {
     renderReviewed(id, verdict, false, done);
-    expect(primaries()).toEqual(['Send to Claude Code']);
+    expect(primaries()).toEqual([]);
   });
 });

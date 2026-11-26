@@ -1,7 +1,7 @@
 import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { renderWithApi } from '../claude/test/renderWithApi';
+import { renderWithApi } from '../../app/test/renderWithApi';
 import { NotificationsSection } from './NotificationsSection';
 import { stubIPhone, stubPush, unstubPush } from './test/fakePush';
 

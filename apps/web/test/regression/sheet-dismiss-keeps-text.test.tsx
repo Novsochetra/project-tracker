@@ -4,7 +4,6 @@ import type {
   CreateProjectInput,
   Project,
   ProjectSummary,
-  ReportPreview,
   UpdateProjectInput,
 } from '@tracker/shared';
 import { useState } from 'react';
@@ -24,8 +23,7 @@ import {
   type HarnessOptions,
 } from '../../src/app/test/harness';
 import { ToastProvider } from '../../src/components';
-import { ReportSheet } from '../../src/features/claude/ReportSheet';
-import { renderWithApi, sheetTestSetup } from '../../src/features/claude/test/renderWithApi';
+import { renderWithApi, sheetTestSetup } from '../../src/app/test/renderWithApi';
 import { NewTicketSheet } from '../../src/features/project/NewTicketSheet';
 import {
   blankForm,
@@ -149,39 +147,6 @@ describe('regression: sheets threw typed text away on swipe-down or tap outside'
     expect(confirm()).not.toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Open sheet' }));
     expect(newTicket()).toBeInTheDocument();
-  });
-
-  it('asks before a Paste report sheet with a pasted report is swiped away', async () => {
-    restore = sheetTestSetup(true);
-    const preview: ReportPreview = { items: [], matchedCount: 0 };
-    function Harness() {
-      const [open, setOpen] = useState(true);
-
-      return (
-        <ReportSheet
-          open={open}
-          onClose={() => setOpen(false)}
-          scope={{ kind: 'project', projectKey: 'MOB' }}
-        />
-      );
-    }
-
-    renderWithApi(<Harness />, {
-      getProject: vi.fn().mockResolvedValue({ project, statuses }),
-      previewReport: vi.fn().mockResolvedValue(preview),
-    });
-    const user = userEvent.setup();
-    const dialog = screen.getByRole('dialog', { name: 'Paste Claude Code report' });
-    await user.click(within(dialog).getByRole('textbox', { name: 'Report' }));
-    await user.paste('TICKET: MOB-1\nSTATUS: done');
-    swipeDown(dialog, 'Paste report');
-
-    expect(await screen.findByRole('dialog', { name: 'Discard changes?' })).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Keep editing' }));
-    await waitFor(() => expect(confirm()).not.toBeInTheDocument());
-    expect(within(dialog).getByRole('textbox', { name: 'Report' })).toHaveValue(
-      'TICKET: MOB-1\nSTATUS: done',
-    );
   });
 
   it('asks before Statuses closes over an unsaved status edit, and not after Cancel', async () => {
@@ -381,7 +346,6 @@ describe('regression: New project and Edit project threw typed text away', () =>
       description: 'Docs',
       repo: '~/code/web',
       instructions: '',
-      autoReview: false,
       hideName: false,
     });
   });

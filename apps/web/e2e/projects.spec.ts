@@ -1,5 +1,6 @@
 import { expect, isPhone, test } from './fixtures';
 import {
+  agentInstructions,
   group,
   pickFromListbox,
   readActionSheet,
@@ -92,7 +93,7 @@ test.describe('projects', () => {
     await expect(page.getByText('No projects yet')).toBeVisible();
   });
 
-  test('instructions saved in Edit project go into the ticket prompt', async ({
+  test('instructions saved in Edit project come with the tickets agents read', async ({
     page,
     api,
   }, info) => {
@@ -109,14 +110,8 @@ test.describe('projects', () => {
     await dialog.getByRole('button', { name: 'Save' }).click();
     await expect(toast(page, 'Project updated')).toBeVisible();
 
-    await page.goto('/p/BLOG/1');
-    const send = isPhone(info.project.name) ? 'Send to Claude' : 'Send to Claude Code';
-    await page.getByRole('button', { name: send, exact: true }).click();
-    const prompt = page
-      .getByRole('dialog', { name: 'Send to Claude Code' })
-      .getByRole('textbox', { name: 'Prompt for Claude Code' });
-    await expect(prompt).toHaveValue(
-      /## Project instructions\nWrite in a warm, plain voice\.\nCheck every fact against two sources\.\n\n## BLOG-1: Spring bulbs/,
+    expect(await agentInstructions(api, 'BLOG-1')).toBe(
+      '## Project instructions\nWrite in a warm, plain voice.\nCheck every fact against two sources.',
     );
   });
 
@@ -142,14 +137,8 @@ test.describe('projects', () => {
     await api.createTicket('BLOG', { title: 'Spring bulbs' });
     await expect(ticketRow(page, 'BLOG-1')).toBeVisible();
     await expect(group(page, 'Ideas')).toContainText('Spring bulbs');
-    await page.goto('/p/BLOG/1');
-    const send = isPhone(info.project.name) ? 'Send to Claude' : 'Send to Claude Code';
-    await page.getByRole('button', { name: send, exact: true }).click();
-    const prompt = page
-      .getByRole('dialog', { name: 'Send to Claude Code' })
-      .getByRole('textbox', { name: 'Prompt for Claude Code' });
-    await expect(prompt).toHaveValue(
-      /## Project instructions\nThis project is writing, not code\. There are no tests or builds\./,
+    expect(await agentInstructions(api, 'BLOG-1')).toMatch(
+      /^## Project instructions\nThis project is writing, not code\. There are no tests or builds\./,
     );
   });
 

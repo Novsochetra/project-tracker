@@ -35,7 +35,7 @@ test.describe('phone nav bar with a long project name', () => {
 
   for (const width of [320, 375]) {
     for (const [key, name] of Object.entries(NAMES)) {
-      test(`${name.length} chars at ${width}px: back, ••• and + stay clear of the title`, async ({
+      test(`${name.length} chars at ${width}px: back and ••• stay clear of the title`, async ({
         page,
         api,
       }, info) => {
@@ -47,7 +47,7 @@ test.describe('phone nav bar with a long project name', () => {
         const title = bar.getByText(name, { exact: true });
         await expect(title).toBeVisible();
         const titleBox = await box(title);
-        for (const label of ['Back to Projects', 'Project options', 'New ticket']) {
+        for (const label of ['Back to Projects', 'Project options']) {
           const button = bar.getByRole('button', { name: label });
           const buttonBox = await box(button);
           expect(buttonBox.width, label).toBeGreaterThanOrEqual(43.5);

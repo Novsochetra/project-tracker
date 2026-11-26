@@ -124,29 +124,34 @@ describe('formatLongDay', () => {
 
 describe('isOverdue', () => {
   it('is overdue when the due date is before today and the ticket is not done', () => {
-    expect(isOverdue('2026-10-06', false, '2026-10-07')).toBe(true);
-    expect(isOverdue('2025-12-31', false, '2026-01-01')).toBe(true);
+    expect(isOverdue('2026-10-06', 'in_progress', '2026-10-07')).toBe(true);
+    expect(isOverdue('2025-12-31', 'todo', '2026-01-01')).toBe(true);
+    expect(isOverdue('2026-10-06', 'reviewed', '2026-10-07')).toBe(true);
   });
 
   it('is not overdue on the due date itself', () => {
-    expect(isOverdue('2026-10-07', false, '2026-10-07')).toBe(false);
+    expect(isOverdue('2026-10-07', 'todo', '2026-10-07')).toBe(false);
   });
 
   it('is not overdue before the due date', () => {
-    expect(isOverdue('2026-10-08', false, '2026-10-07')).toBe(false);
+    expect(isOverdue('2026-10-08', 'todo', '2026-10-07')).toBe(false);
   });
 
   it('is never overdue once done', () => {
-    expect(isOverdue('2026-10-06', true, '2026-10-07')).toBe(false);
+    expect(isOverdue('2026-10-06', 'done', '2026-10-07')).toBe(false);
+  });
+
+  it('is overdue without a status, as a new ticket with none picked', () => {
+    expect(isOverdue('2026-10-06', undefined, '2026-10-07')).toBe(true);
   });
 
   it('is never overdue without a due date', () => {
-    expect(isOverdue('', false, '2026-10-07')).toBe(false);
+    expect(isOverdue('', 'todo', '2026-10-07')).toBe(false);
   });
 
   it('compares with the current local day by default', () => {
-    expect(isOverdue('2000-01-01', false)).toBe(true);
-    expect(isOverdue('2999-01-01', false)).toBe(false);
+    expect(isOverdue('2000-01-01', 'todo')).toBe(true);
+    expect(isOverdue('2999-01-01', 'todo')).toBe(false);
   });
 });
 

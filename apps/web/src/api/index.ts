@@ -15,7 +15,7 @@ export {
 export { readyStatuses } from './cache/ready';
 export { isTemporaryId, matchesActivity } from './cache/ticketDetail';
 export type { TrackerMutation, TrackerQuery } from './types';
-// Not the meta, prompts and reports hooks: only lazy parts use them, which import them directly,
+// Not the meta and API token hooks: only lazy parts use them, which import them directly,
 // and through this barrel, which the first load imports, they would load at start (PT-103).
 export * from './hooks/attachments';
 export * from './hooks/comments';

@@ -1,4 +1,4 @@
-import { isDoneCategory, isOverdue, type Label, type Status } from '@tracker/shared';
+import { isOverdue, type Label, type Status } from '@tracker/shared';
 import type { ClipboardEvent, ReactNode, RefObject } from 'react';
 import { usePeople } from '../../api';
 import {
@@ -36,7 +36,6 @@ export function NewTicketFields(props: NewTicketFieldsProps) {
   const onPaste = (event: ClipboardEvent<HTMLElement>) => pasteFiles(event, onFiles);
   const people = usePeople().data;
   const status = statuses.find((candidate) => candidate.id === statusId);
-  const isDone = status ? isDoneCategory(status.category) : false;
 
   return (
     <>
@@ -87,7 +86,7 @@ export function NewTicketFields(props: NewTicketFieldsProps) {
           <DateRow
             value={form.due}
             onChange={(due) => onChange({ due })}
-            overdue={isOverdue(form.due, isDone)}
+            overdue={isOverdue(form.due, status?.category)}
             mutedIcon
           />
           <LabelsRow

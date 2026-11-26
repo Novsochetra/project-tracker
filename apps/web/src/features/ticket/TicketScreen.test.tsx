@@ -6,7 +6,6 @@ import { attachment, listItem, makeTicketDetail, STATUS } from '../../api/test/f
 import { skipAnimations } from '../../overlays/testing';
 import { renderTicket } from './test/renderTicket';
 
-const DAY = 24 * 60 * 60 * 1000;
 let cleanups: Array<() => void> = [];
 
 beforeEach(() => {
@@ -26,7 +25,6 @@ function setup(options: Parameters<typeof renderTicket>[0] = {}) {
 }
 
 const location = () => screen.getByRole('status', { name: 'Location' }).textContent;
-const sheet = () => screen.getByRole('status', { name: 'Sheet' }).textContent;
 const updated = (detail = makeTicketDetail()) => vi.fn().mockResolvedValue(detail.ticket);
 
 describe('TicketScreen fields', () => {
@@ -235,52 +233,28 @@ describe('TicketScreen navigation', () => {
     expect(await screen.findByLabelText('Title')).toHaveValue('Ticket 1');
   });
 
-  it('on desktop sends the ticket to Claude Code and pastes reports from the side panel', async () => {
-    const user = userEvent.setup();
-    const report = { type: 'report' as const, createdAt: Date.now() - 2 * 3600_000 };
-    setup({
-      detail: makeTicketDetail(undefined, {
-        activity: [{ ...makeComment('r'), ...report }],
-      }),
-    });
-    expect(screen.getByText('Last report 2h ago')).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Send to Claude Code' }));
-    expect(JSON.parse(sheet() ?? '')).toEqual({
-      type: 'prompt',
-      scope: { kind: 'ticket', ticketKey: 'MOB-1' },
-    });
-    await user.click(screen.getByRole('button', { name: 'Paste report' }));
-    expect(JSON.parse(sheet() ?? '')).toEqual({
-      type: 'report',
-      scope: { kind: 'ticket', ticketKey: 'MOB-1', projectKey: 'MOB' },
-    });
-    expect(screen.queryByRole('button', { name: 'Send to Claude' })).not.toBeInTheDocument();
+  it('on desktop keeps the details in the side panel, with no bottom bar', () => {
+    setup();
+    const panel = screen.getByRole('complementary', { name: 'Ticket details' });
+    expect(within(panel).getByRole('button', { name: /^Status/ })).toBeInTheDocument();
+    expect(within(panel).getByRole('button', { name: 'Delete ticket' })).toBeInTheDocument();
+    expect(within(panel).queryByText('Claude Code')).not.toBeInTheDocument();
+    expect(document.querySelector('[data-bottom-bar]')).toBeNull();
   });
 
-  it('on phones has a nav bar and a bottom bar instead of the Claude Code section', async () => {
+  it('on phones has a nav bar, and a bottom bar whose Comment goes to the comment box', async () => {
     const user = userEvent.setup();
+    const scrolled = vi.fn();
+    Element.prototype.scrollIntoView = scrolled;
+    cleanups.push(() => Reflect.deleteProperty(Element.prototype, 'scrollIntoView'));
     setup({ phone: true });
     expect(screen.getByRole('button', { name: 'Back to Mobile app' })).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Send to Claude Code' })).not.toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Send to Claude' }));
-    expect(JSON.parse(sheet() ?? '')).toMatchObject({ type: 'prompt' });
-    await user.click(screen.getByRole('button', { name: 'Paste report' }));
-    expect(JSON.parse(sheet() ?? '')).toMatchObject({ type: 'report' });
+    const bar = document.querySelector<HTMLElement>('[data-bottom-bar]')!;
+    await user.click(within(bar).getByRole('button', { name: 'Go to the comment box' }));
+    const field = screen.getByRole('textbox', { name: 'Comment' });
+    expect(field).toHaveFocus();
+    expect(scrolled.mock.contexts[0]).toBe(field.closest('form'));
     await user.click(screen.getByRole('button', { name: 'Back to Mobile app' }));
     await waitFor(() => expect(location()).toBe('/p/MOB'));
   });
 });
-
-function makeComment(id: string) {
-  return {
-    id,
-    ticketId: 't-1',
-    type: 'comment' as const,
-    actor: { kind: 'agent' as const, name: 'Claude' },
-    text: 'TICKET: MOB-1',
-    review: null,
-    attachments: [],
-    createdAt: Date.now() - DAY,
-    editedAt: null,
-  };
-}

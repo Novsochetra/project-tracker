@@ -2,7 +2,7 @@ import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ApiError } from '@tracker/client';
 import { describe, expect, it, vi } from 'vitest';
-import { renderWithApi } from '../claude/test/renderWithApi';
+import { renderWithApi } from '../../app/test/renderWithApi';
 import { ChangePassword } from './ChangePassword';
 
 const form = () => screen.getByRole('form', { name: 'Change password' });

@@ -1,10 +1,8 @@
-import { Copy } from 'lucide-react';
 import { useRef, useState, type FormEvent } from 'react';
 import { Sheet } from '../../overlays/Sheet';
 import { SheetActionButton, SheetTextButton } from '../../overlays/SheetButtons';
 import styles from './demo.module.css';
 import type { DemoSheet } from './DemoContext';
-import { DEMO_PROMPT } from './demoData';
 
 interface SheetDemoProps {
   open: boolean;
@@ -80,58 +78,15 @@ function CreateSheet({
   );
 }
 
-function PromptSheet({ open, onClose, notify }: SheetDemoProps) {
+function LongSheet({ open, onClose }: SheetDemoProps) {
   return (
     <Sheet
       open={open}
       onClose={onClose}
-      size="prompt"
-      label="Send to Claude Code"
-      title="Send to Claude Code"
-      subtitle="MOB-3 · Crash when rotating"
-      left={<SheetTextButton onClick={onClose}>Close</SheetTextButton>}
-      footer={
-        <button
-          type="button"
-          className={styles.footerButton}
-          onClick={() => notify('Prompt copied')}
-        >
-          <Copy size={16} strokeWidth={1.75} /> Copy prompt
-        </button>
-      }
-    >
-      <div className={styles.sheetBody}>
-        <p className={styles.help}>Paste this into Claude Code. Drag the header down to dismiss.</p>
-        <textarea
-          className={styles.prompt}
-          aria-label="Prompt for Claude Code"
-          rows={12}
-          readOnly
-          value={DEMO_PROMPT}
-        />
-      </div>
-    </Sheet>
-  );
-}
-
-function ReportSheet({ open, onClose, notify }: SheetDemoProps) {
-  const apply = (event: FormEvent) => {
-    event.preventDefault();
-    notify('Report applied to 2 tickets');
-    onClose();
-  };
-
-  return (
-    <Sheet
-      open={open}
-      onClose={onClose}
-      size="report"
-      label="Paste Claude Code report"
-      title="Paste report"
+      label="Long sheet"
+      title="Long sheet"
       subtitle="Mobile app"
-      left={<SheetTextButton onClick={onClose}>Cancel</SheetTextButton>}
-      right={<SheetActionButton type="submit">Apply</SheetActionButton>}
-      onSubmit={apply}
+      left={<SheetTextButton onClick={onClose}>Close</SheetTextButton>}
     >
       <div className={styles.sheetBody}>
         <p className={styles.help}>
@@ -140,7 +95,7 @@ function ReportSheet({ open, onClose, notify }: SheetDemoProps) {
         <div className={styles.card}>
           {Array.from({ length: 24 }, (_, i) => (
             <div key={i} className={styles.prop}>
-              MOB-{i + 1} <span>{i % 3 === 0 ? 'Skipped' : 'In progress → Done'}</span>
+              MOB-{i + 1} <span>{i % 3 === 0 ? 'To do' : 'In progress → Done'}</span>
             </div>
           ))}
         </div>
@@ -160,8 +115,7 @@ export function DemoSheets({
     <>
       <CreateSheet kind="ticket" open={sheet === 'ticket'} {...shared} />
       <CreateSheet kind="project" open={sheet === 'project'} {...shared} />
-      <PromptSheet open={sheet === 'prompt'} {...shared} />
-      <ReportSheet open={sheet === 'report'} {...shared} />
+      <LongSheet open={sheet === 'long'} {...shared} />
     </>
   );
 }

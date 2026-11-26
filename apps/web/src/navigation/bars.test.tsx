@@ -79,12 +79,12 @@ describe('BottomBar', () => {
     const { unmount } = render(
       <>
         <BottomBar>
-          <button type="button">Paste report</button>
+          <button type="button">New ticket</button>
         </BottomBar>
         <BarProbe />
       </>,
     );
-    expect(screen.getByRole('button', { name: 'Paste report' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'New ticket' })).toBeInTheDocument();
     expect(screen.getByRole('status', { name: 'Bar' })).toHaveTextContent('raised');
     unmount();
     render(<BarProbe />);
@@ -96,12 +96,12 @@ describe('BottomBar', () => {
     render(
       <>
         <BottomBar>
-          <button type="button">Paste report</button>
+          <button type="button">New ticket</button>
         </BottomBar>
         <BarProbe />
       </>,
     );
-    expect(screen.queryByRole('button', { name: 'Paste report' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'New ticket' })).not.toBeInTheDocument();
     expect(screen.getByRole('status', { name: 'Bar' })).toHaveTextContent('flat');
   });
 });

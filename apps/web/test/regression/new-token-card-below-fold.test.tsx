@@ -2,7 +2,7 @@ import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { CreatedApiToken } from '@tracker/shared';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { renderWithApi, sheetTestSetup } from '../../src/features/claude/test/renderWithApi';
+import { renderWithApi, sheetTestSetup } from '../../src/app/test/renderWithApi';
 import { TokensSection } from '../../src/features/connect/TokensSection';
 import { PHONE_QUERY, REDUCED_MOTION_QUERY } from '../../src/lib/media';
 

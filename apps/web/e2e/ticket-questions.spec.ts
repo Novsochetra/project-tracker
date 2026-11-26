@@ -14,7 +14,7 @@ async function expectNoSidewaysScroll(page: Page): Promise<void> {
 }
 
 test.describe('Claude asks a question on the ticket', () => {
-  test('shows it under the run card, and the answer reaches Claude', async ({
+  test('shows it on the ticket, and the answer reaches Claude', async ({
     page,
     api,
     agent,

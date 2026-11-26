@@ -1,10 +1,10 @@
 import { ArrowDown } from 'lucide-react';
 import { useEffect, useState, type RefObject } from 'react';
 import { Icon, useToastShowing } from '../../../components';
-import { prefersReducedMotionNow } from '../../../lib/media';
 import { useEditingText, useOptionalScreen } from '../../../navigation';
 import styles from './CommentJump.module.css';
 import { isFarBelow, NEAR_MARGIN } from './farBelow';
+import { jumpToComment } from './jumpToComment';
 import { isScrolledDown } from './scrolledDown';
 
 type BoxRef = RefObject<HTMLFormElement | null>;
@@ -50,22 +50,11 @@ function useScrolledDown(scroller: ScrollerRef): boolean {
   return down;
 }
 
-// Focus comes first, inside the tap: iOS opens the keyboard only for a focus the tap itself made.
-// The bar then slides away as for any field (docs/architecture.md §1.5).
-function jumpTo(box: HTMLFormElement | null): void {
-  const field = box?.querySelector('textarea');
-  if (!box || !field) return;
-  field.focus({ preventScroll: true });
-  box.scrollIntoView({
-    block: 'center',
-    behavior: prefersReducedMotionNow() ? 'instant' : 'smooth',
-  });
-}
-
-// Sits above the phone's bottom bar while the comment box is far below, as on a ticket with long
-// comments, once the reader has scrolled down a little: on the first screen it covered the ends
-// of the description's lines. It leaves the spot to a toast, which shows there, and goes with the
-// bar while a field is edited: sliding the bar away would only bring it down to where the bar was.
+// Sits above the phone's bottom bar while Move to Done takes the bar and the comment box is far
+// below, as on a ticket with long comments, once the reader has scrolled down a little: on the
+// first screen it covered the ends of the description's lines. It leaves the spot to a toast,
+// which shows there, and goes with the bar while a field is edited: sliding the bar away would
+// only bring it down to where the bar was.
 export function CommentJump({ boxRef }: { boxRef: BoxRef }) {
   const screen = useOptionalScreen();
   const far = useFarBelow(boxRef, screen?.scrollRef);
@@ -79,7 +68,7 @@ export function CommentJump({ boxRef }: { boxRef: BoxRef }) {
       type="button"
       className={styles.jump}
       aria-label="Go to the comment box"
-      onClick={() => jumpTo(boxRef.current)}
+      onClick={() => jumpToComment(boxRef.current)}
     >
       <Icon icon={ArrowDown} size={14} className={styles.arrow} />
       Comment

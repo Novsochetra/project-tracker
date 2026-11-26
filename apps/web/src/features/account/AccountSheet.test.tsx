@@ -2,7 +2,7 @@ import { act, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { queryKeys } from '../../api';
-import { renderWithApi, sheetTestSetup } from '../claude/test/renderWithApi';
+import { renderWithApi, sheetTestSetup } from '../../app/test/renderWithApi';
 import { stubPush, unstubPush } from '../push/test/fakePush';
 import { AccountSheet } from './AccountSheet';
 

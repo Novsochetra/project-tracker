@@ -12,7 +12,6 @@ import { setupApi } from '../test/render';
 import { useMeta } from './meta';
 import { usePeople } from './people';
 import { useBoard, useProject, useProjects } from './projects';
-import { useProjectPrompt, useTicketPrompt } from './prompts';
 import { useTicket } from './tickets';
 
 describe('ApiProvider', () => {
@@ -82,23 +81,5 @@ describe('query hooks', () => {
     await waitFor(() => expect(result.current.ticket.data).toEqual(detail));
     await waitFor(() => expect(result.current.people.data).toEqual(['Dara', 'Sophea']));
     await waitFor(() => expect(result.current.meta.data).toEqual(meta));
-  });
-
-  it('fetches prompts only while enabled', async () => {
-    const getTicketPrompt = vi.fn().mockResolvedValue({ text: 'Fix it', ticketCount: 1 });
-    const getProjectPrompt = vi.fn().mockResolvedValue({ text: 'All of it', ticketCount: 3 });
-    const { wrapper } = setupApi({ getTicketPrompt, getProjectPrompt });
-    const { result, rerender } = renderHook(
-      ({ enabled }) => ({
-        ticket: useTicketPrompt('MOB-1', { enabled }),
-        project: useProjectPrompt('MOB', { enabled }),
-      }),
-      { wrapper, initialProps: { enabled: false } },
-    );
-    expect(getTicketPrompt).not.toHaveBeenCalled();
-    expect(getProjectPrompt).not.toHaveBeenCalled();
-    rerender({ enabled: true });
-    await waitFor(() => expect(result.current.ticket.data?.text).toBe('Fix it'));
-    await waitFor(() => expect(result.current.project.data?.ticketCount).toBe(3));
   });
 });

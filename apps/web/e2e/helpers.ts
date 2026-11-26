@@ -1,6 +1,6 @@
 import type { Locator, Page } from '@playwright/test';
 import type { TrackerClient } from '@tracker/client';
-import type { Priority } from '@tracker/shared';
+import { instructionsBlock, labelsOf, type Priority } from '@tracker/shared';
 import { expect } from './fixtures';
 
 export interface TicketSeed {
@@ -29,6 +29,14 @@ export async function seedProject(
       statusId: statuses.find((status) => status.name === (ticket.status ?? 'To do'))?.id,
     });
   }
+}
+
+// What get_ticket tells an agent before the ticket (apps/agent's formatTicket).
+export async function agentInstructions(api: TrackerClient, ticketKey: string): Promise<string> {
+  const detail = await api.getTicket(ticketKey);
+  const labels = labelsOf(detail.labels ?? [], detail.ticket.labelIds);
+
+  return instructionsBlock(detail.project, '##', labels).join('\n');
 }
 
 export const group = (page: Page, statusName: string) =>

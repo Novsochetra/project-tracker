@@ -49,8 +49,11 @@ it('shows a reviewed ticket’s review under the details and makes Move to Done 
   expect(within(latest).getByRole('img', { name: 'Rated 4 out of 5' })).toBeInTheDocument();
   expect(latest).toHaveTextContent('Works.');
   expect(within(latest).queryByRole('button', { name: 'Move to Done' })).not.toBeInTheDocument();
-  expect(within(bar).getByRole('button', { name: 'Move to Done' })).toBeInTheDocument();
-  expect(within(bar).queryByRole('button', { name: 'Send to Claude' })).not.toBeInTheDocument();
+  expect(
+    within(bar)
+      .getAllByRole('button')
+      .map((button) => button.textContent),
+  ).toEqual(['Move to Done']);
 });
 
 it('shows why a sent-back ticket came back under the details', () => {

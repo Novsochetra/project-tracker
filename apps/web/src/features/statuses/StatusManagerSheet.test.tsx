@@ -6,7 +6,7 @@ import { useState } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { makeBoard, project, STATUS, statuses } from '../../api/test/fixtures';
 import { CLICK_SHIELD_MS } from '../../lib/clickShield';
-import { renderWithApi, sheetTestSetup } from '../claude/test/renderWithApi';
+import { renderWithApi, sheetTestSetup } from '../../app/test/renderWithApi';
 import { StatusManagerSheet } from './StatusManagerSheet';
 
 function fakeStatusServer(initial: ProjectBoard = makeBoard()) {
