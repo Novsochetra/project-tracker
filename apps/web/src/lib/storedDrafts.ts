@@ -1,13 +1,11 @@
 import {
   draftIdOf,
-  isStoredDraft,
   latestOf,
   type DraftRecord,
   type DraftTarget,
   type Held,
   type StoredDraft,
 } from './draftRecord';
-import { parseMap } from './storedMap';
 import {
   clearRecords,
   dropRecord,
@@ -19,9 +17,6 @@ import {
 
 export { draftIdOf, type DraftField, type DraftTarget, type StoredDraft } from './draftRecord';
 export { DRAFTS_STORAGE_KEY } from './tabRecords';
-
-// The map versions before PT-111 kept (tabRecords.ts).
-export const parseDrafts = (raw: string | null) => parseMap(raw, isStoredDraft);
 
 // Every tab's records of a draft. Its text is the one typed last: each tab keeps what it types,
 // and one that outdates others removes them.

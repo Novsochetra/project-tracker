@@ -33,11 +33,6 @@ export function rubberBandClamp(
   return value;
 }
 
-// Apple's momentum projection: decide by where a flick would land, not where it was released.
-export function projectDistance(velocity: number, decelerationRate = 0.998): number {
-  return ((velocity / 1000) * decelerationRate) / (1 - decelerationRate);
-}
-
 export function lockAxis(dx: number, dy: number, slop = 8): Axis | null {
   const ax = Math.abs(dx);
   const ay = Math.abs(dy);

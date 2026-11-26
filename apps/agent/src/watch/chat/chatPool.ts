@@ -123,5 +123,3 @@ export function createChatPool<T extends PooledChat>(options: ChatPoolOptions = 
     openCount: () => open.size,
   };
 }
-
-export type ChatPool<T extends PooledChat> = ReturnType<typeof createChatPool<T>>;

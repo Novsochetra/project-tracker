@@ -8,7 +8,6 @@ import {
   forgetTicketDrafts,
   hasStoredDrafts,
   keepDraft,
-  parseDrafts,
   rebaseDraft,
   storedDraft,
   storedDrafts,
@@ -96,20 +95,6 @@ describe('stored drafts', () => {
       JSON.stringify({ [TITLE_ID]: { ...TITLE, base: '', text: 'From another tab' } }),
     );
     expect(storedDraft(TITLE_ID)?.text).toBe('From another tab');
-  });
-
-  it('skip what they cannot read', () => {
-    expect(parseDrafts('not json')).toEqual({});
-    expect(parseDrafts('[1]')).toEqual({});
-    expect(
-      parseDrafts(
-        JSON.stringify({
-          good: { ...TITLE, base: '', text: 'Fine' },
-          noText: { ...TITLE, base: '' },
-          oddField: { ...TITLE, field: 'priority', base: '', text: 'x' },
-        }),
-      ),
-    ).toEqual({ good: { ...TITLE, base: '', text: 'Fine' } });
   });
 });
 

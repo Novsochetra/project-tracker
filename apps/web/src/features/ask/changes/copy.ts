@@ -16,8 +16,6 @@ export const GH_NOTE =
   'Open PR needs the GitHub CLI on your computer: install gh and run gh auth login there.';
 export const MAIN_NOTE =
   'Commit to a new branch to open a pull request. Nothing is pushed to the main branch.';
-export const DETACHED_NOTE =
-  'Your computer has no branch checked out, so a commit needs a new one.';
 
 export const fileCount = (count: number): string => (count === 1 ? '1 file' : `${count} files`);
 

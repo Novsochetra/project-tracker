@@ -178,21 +178,6 @@ export function withPngChunkAtEnd(png: Uint8Array, chunk: Buffer): Uint8Array {
   return Buffer.concat([png.subarray(0, end), chunk, png.subarray(end)]);
 }
 
-// Rewrites the size (and interlacing) a PNG's header claims, keeping its checksum right.
-export function claimingPngSize(
-  png: Uint8Array,
-  width: number,
-  height: number,
-  interlaced = false,
-): Uint8Array {
-  const bytes = Buffer.from(png);
-  bytes.writeUInt32BE(width, 16);
-  bytes.writeUInt32BE(height, 20);
-  bytes[28] = interlaced ? 1 : 0;
-  bytes.writeUInt32BE(crc32(bytes.subarray(12, 29)), 29);
-  return bytes;
-}
-
 export async function animatedWebp(camera: boolean): Promise<Uint8Array> {
   const frame = (background: string) =>
     sharp({ create: { width: 32, height: 24, channels: 3, background } })

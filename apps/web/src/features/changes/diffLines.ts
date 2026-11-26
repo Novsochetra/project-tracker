@@ -11,8 +11,6 @@ export const lineAt = (line: DiffLine): LineAt =>
     ? { side: 'old', line: line.oldLine ?? 0 }
     : { side: 'new', line: line.newLine ?? 0 };
 
-export const sameLine = (a: LineAt, b: LineAt): boolean => a.side === b.side && a.line === b.line;
-
 // Viewed holds the digest of the file's change when it was ticked: a file that changed since
 // reads as not viewed.
 export const isViewed = (file: DiffFile, viewed: Readonly<Record<string, string>>): boolean =>

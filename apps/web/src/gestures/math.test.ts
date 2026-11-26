@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { momentumDuration } from './animation';
 import { haptic, HAPTIC_PATTERNS } from './haptics';
-import { clamp, lerp, lockAxis, projectDistance, rubberBand, rubberBandClamp } from './math';
+import { clamp, lerp, lockAxis, rubberBand, rubberBandClamp } from './math';
 import { canScrollUpWithin, decidePull } from './topPull';
 import { VelocityTracker } from './velocity';
 
@@ -48,12 +48,6 @@ describe('small helpers', () => {
     expect(clamp(5, 0, 3)).toBe(3);
     expect(clamp(-1, 0, 3)).toBe(0);
     expect(lerp(10, 20, 0.25)).toBe(12.5);
-  });
-
-  it('projects a flick forward in its direction', () => {
-    expect(projectDistance(1000)).toBeCloseTo(499, 0);
-    expect(projectDistance(-1000)).toBeLessThan(0);
-    expect(projectDistance(0)).toBe(0);
   });
 
   it('locks the axis after the slop', () => {

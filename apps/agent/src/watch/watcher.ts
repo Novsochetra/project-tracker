@@ -113,5 +113,3 @@ export function createWatcher(deps: WatcherDeps, settings: WatcherSettings) {
 
   return { checkIn, onRunEvent, onGitEvent, lookForWork: runs.lookForWork, stop: runs.stop };
 }
-
-export type Watcher = ReturnType<typeof createWatcher>;
