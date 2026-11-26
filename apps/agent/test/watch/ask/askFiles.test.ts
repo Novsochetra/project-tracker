@@ -3,12 +3,7 @@ import { tmpdir } from 'node:os';
 import { basename, dirname, join } from 'node:path';
 import type { Attachment } from '@tracker/shared';
 import { describe, expect, it, vi } from 'vitest';
-import {
-  addDirArgs,
-  ASK_FOLDER_PREFIX,
-  withAskFiles,
-  type FetchFile,
-} from '../../../src/watch/ask/askFiles';
+import { ASK_FOLDER_PREFIX, withAskFiles, type FetchFile } from '../../../src/watch/ask/askFiles';
 
 const file = (id: string, fileName: string): Attachment => ({
   id,
@@ -47,7 +42,6 @@ describe('withAskFiles', () => {
       Promise.resolve(got),
     );
     expect(folder).toBeNull();
-    expect(addDirArgs(null)).toEqual([]);
   });
 
   it('puts the files in a folder of their own while Claude runs, then removes it', async () => {
@@ -62,7 +56,6 @@ describe('withAskFiles', () => {
           names: got!.paths.map((path) => basename(path)),
         };
         expect(got!.paths.every((path) => dirname(path) === got!.dir)).toBe(true);
-        expect(addDirArgs(got)).toEqual(['--add-dir', got!.dir]);
         return Promise.resolve('Two tickets.');
       },
     );

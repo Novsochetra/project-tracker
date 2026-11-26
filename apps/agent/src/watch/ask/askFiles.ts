@@ -57,8 +57,3 @@ export async function withAskFiles<T>(
     await rm(dir, { recursive: true, force: true });
   }
 }
-
-// Claude Code's file tools reach only its working folders, so the question's folder is added.
-// In Ask and Plan the read-only flags still hold there: Claude can read the files, not change them.
-export const addDirArgs = (folder: AskFolder | null): string[] =>
-  folder ? ['--add-dir', folder.dir] : [];

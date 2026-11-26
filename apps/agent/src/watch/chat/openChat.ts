@@ -55,6 +55,8 @@ export async function openChat(
     ...setup.limit,
     ...allowed,
     ...(prompt?.args ?? []),
+    // Claude Code's file tools reach only its working folders, so the chat's files folder is
+    // added. In Ask and Plan the read-only flags still hold there: Claude reads the files only.
     '--add-dir',
     folder,
   ];
