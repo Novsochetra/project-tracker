@@ -17,8 +17,10 @@ function sameProjects(rows: readonly ProjectRow[], ids: readonly string[]): bool
   );
 }
 
-// Positions are written in id order whatever order was sent, so two reorders at once on Postgres
-// take the rows' locks in the same order and wait for each other instead of deadlocking.
+// Every position is written, in id order whatever order was sent: two reorders at once on Postgres
+// then take the rows' locks in the same order, so the second waits for the first and writes its
+// whole order over it, instead of deadlocking or skipping rows it read before the first committed
+// and ending in an order neither asked for. SQLite runs one write transaction at a time.
 const byId = (a: [string, number], b: [string, number]) => (a[0] < b[0] ? -1 : 1);
 
 export async function reorderProjects(
@@ -28,11 +30,8 @@ export async function reorderProjects(
   await inTransaction(ctx, async (trx) => {
     const rows = await listProjectRows(trx, ctx.scope);
     if (!sameProjects(rows, ids)) throw conflict(PROJECTS_CHANGED);
-    const current = new Map(rows.map((row) => [row.id, row.position]));
     const wanted = ids.map((id, position): [string, number] => [id, position]).sort(byId);
-    for (const [id, position] of wanted) {
-      if (current.get(id) !== position) await updateProjectRow(trx, id, { position });
-    }
+    for (const [id, position] of wanted) await updateProjectRow(trx, id, { position });
   });
   // Every change event refreshes the project list; naming one project keeps the other screens
   // from reading everything again.

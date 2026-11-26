@@ -1,4 +1,6 @@
 export const REORDER_ROW_ATTRIBUTE = 'data-reorder-row';
+// A row with it moves at once; its lift, shadow and background still animate (Sidebar.module.css).
+const STILL_ATTRIBUTE = 'data-still';
 
 export type RowElements = Map<string, HTMLElement>;
 
@@ -29,7 +31,7 @@ const applyStyles = (rows: RowElements): void => {
 // are read once, take the offset back from where they were shown, and then glide to none.
 export function settleRows(rows: RowElements, shown: ReadonlyMap<string, number>, glide: boolean) {
   for (const row of rows.values()) {
-    row.style.transition = 'none';
+    row.setAttribute(STILL_ATTRIBUTE, '');
     moveRow(row, 0);
   }
   applyStyles(rows);
@@ -41,6 +43,6 @@ export function settleRows(rows: RowElements, shown: ReadonlyMap<string, number>
     : [];
   for (const { row, offset } of moved) moveRow(row, offset);
   applyStyles(rows);
-  for (const row of rows.values()) row.style.transition = '';
+  for (const row of rows.values()) row.removeAttribute(STILL_ATTRIBUTE);
   for (const { row } of moved) moveRow(row, 0);
 }

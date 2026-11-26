@@ -1,4 +1,4 @@
-import type { ErrorBody, ProjectSummary } from '@tracker/shared';
+import { PROJECT_ORDER_MAX, type ErrorBody, type ProjectSummary } from '@tracker/shared';
 import { describe, expect, it } from 'vitest';
 import { PROJECTS_CHANGED } from '../../src/services/projectOrder';
 import { invitePerson, ownerCookie, sender } from '../helpers/accounts';
@@ -65,6 +65,29 @@ describe.each(DIALECTS)('PUT /api/projects/order (%s)', (dialect) => {
     expect((await api.put('/api/projects/order', {})).status).toBe(400);
     expect(await listed()).toEqual(['ALP', 'BET', 'GAM']);
     expect(api.events).toEqual([]);
+  });
+
+  it('refuses a list longer than the cap before reading any project', async () => {
+    await makeProjects('Alpha');
+    const ids = Array.from({ length: PROJECT_ORDER_MAX + 1 }, (_, index) => `p-${index}`);
+    expect(PROJECT_ORDER_MAX).toBe(1_000);
+    const res = await api.put<ErrorBody>('/api/projects/order', { ids });
+    expect(res.status).toBe(400);
+    expect(res.body.error.code).toBe('invalid_input');
+    expect(await listed()).toEqual(['ALP']);
+    expect(api.events).toEqual([]);
+  });
+
+  it('ends in one of two reorders sent at once, never a mix of them', async () => {
+    const [alpha, beta, gamma] = await makeProjects('Alpha', 'Beta', 'Gamma');
+    const first = [gamma ?? '', beta ?? '', alpha ?? ''];
+    const second = [beta ?? '', alpha ?? '', gamma ?? ''];
+    await api.client().reorderProjects([alpha ?? '', gamma ?? '', beta ?? '']);
+    await Promise.all([api.client().reorderProjects(first), api.client().reorderProjects(second)]);
+    expect([
+      ['GAM', 'BET', 'ALP'],
+      ['BET', 'ALP', 'GAM'],
+    ]).toContainEqual(await listed());
   });
 
   it('is for a person only', async () => {

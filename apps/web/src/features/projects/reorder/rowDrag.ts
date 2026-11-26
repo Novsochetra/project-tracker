@@ -81,9 +81,7 @@ export function rowDrag(input: RowDragInput): {
       measured = measure(input);
       listTop = measured.listTop;
       setDocumentDragging(true);
-      const row = measured.rows.get(input.id);
-      row?.setAttribute('data-dragging', '');
-      if (row) row.style.transition = 'none';
+      measured.rows.get(input.id)?.setAttribute('data-dragging', '');
     },
     onFrame: ({ dy, target }) => {
       if (!measured) return;

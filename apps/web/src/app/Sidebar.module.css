@@ -132,13 +132,26 @@
   transition:
     background-color var(--duration-fast) ease-out,
     transform var(--duration-base) var(--ease-out),
-    box-shadow var(--duration-fast) ease-out;
+    box-shadow var(--duration-fast) var(--ease-out),
+    scale var(--duration-fast) var(--ease-out);
+}
+
+/* The dragged row follows the pointer and a settling row starts from where it was shown, so their
+   transforms change at once; the lift (SPEC: 1.02 and the lifted shadow over 160ms) still animates.
+   Scale is its own property, so it adds to the transform that moves the row. */
+.projects .item[data-dragging],
+.projects .item[data-still] {
+  transition:
+    background-color var(--duration-fast) ease-out,
+    box-shadow var(--duration-fast) var(--ease-out),
+    scale var(--duration-fast) var(--ease-out);
 }
 
 .projects .item[data-dragging] {
   z-index: 1;
   background: var(--surface);
   box-shadow: var(--shadow-lifted);
+  scale: 1.02;
   will-change: transform;
 }
 
