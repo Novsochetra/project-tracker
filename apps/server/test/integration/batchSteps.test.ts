@@ -135,16 +135,4 @@ describe.each(DIALECTS)("a batch's steps on its tickets (%s)", (dialect) => {
     ]);
     expect(await labels(batchId)).toHaveLength(6);
   });
-
-  it('keeps steps on the batch alone once their ticket is submitted', async () => {
-    await send([start('toolu_a', 'MOB-1')]);
-    await helper('POST', '/api/tickets/MOB-1/claim');
-    await helper('POST', '/api/tickets/MOB-1/submit', { summary: 'Fixed', files: '', next: '' });
-    expect((await send([sub('toolu_a', 'Done, MOB-1 is in review.')])).status).toBe(204);
-    expect(await labels(ticketRuns.get('MOB-1'))).toEqual(['Start sub agent: MOB-1']);
-    expect(await labels(batchId)).toEqual([
-      'Start sub agent: MOB-1',
-      '  Done, MOB-1 is in review.',
-    ]);
-  });
 });

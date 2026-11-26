@@ -1,16 +1,11 @@
 import type {
   AcceptInviteInput,
   Activity,
-  AddRunStepsInput,
   ChangePasswordInput,
   ApiToken,
-  AskInput,
   Attachment,
-  CardTicketInput,
   CheckInviteInput,
   CheckResetLinkInput,
-  Chat,
-  ChatDetail,
   CreateApiTokenInput,
   CreatedApiToken,
   CreatedInvite,
@@ -26,26 +21,18 @@ import type {
   InvitedUser,
   ListTicketsQuery,
   LoginInput,
-  MarkSentInput,
   MoveTicketInput,
   Project,
   ProjectBoard,
   ProjectDetail,
   ProjectSummary,
-  ProjectUsage,
-  PromptResult,
   PushKey,
   PushSubscriptionInput,
-  ReportInput,
-  ReportPreview,
-  ReportResult,
   ResetLinkCheck,
   ResetPasswordInput,
   ReviewInput,
-  RunStep,
   ServerMeta,
   SessionState,
-  StartChatInput,
   Status,
   SubmitWorkInput,
   Ticket,
@@ -58,8 +45,8 @@ import type {
   UpdateTicketInput,
 } from '@tracker/shared';
 import { segment } from './asking';
+import { ChatQueueClient } from './chatQueue';
 import type { ReadOptions } from './http';
-import { SearchClient } from './searchClient';
 import type { UploadOptions } from './upload';
 
 const attachmentFilePath = (attachmentId: string): string =>
@@ -72,7 +59,7 @@ const listQuery = (query: ListTicketsQuery) => ({
   label: query.label,
 });
 
-export class TrackerClient extends SearchClient {
+export class TrackerClient extends ChatQueueClient {
   listProjects = () => this.http.request<ProjectSummary[]>('GET', '/api/projects');
 
   createProject = (input: CreateProjectInput) =>
@@ -92,12 +79,6 @@ export class TrackerClient extends SearchClient {
 
   getBoard = (key: string) =>
     this.http.request<ProjectBoard>('GET', `/api/projects/${segment(key)}/board`);
-
-  getProjectPrompt = (key: string) =>
-    this.http.request<PromptResult>('GET', `/api/projects/${segment(key)}/prompt`);
-
-  getProjectUsage = (key: string) =>
-    this.http.request<ProjectUsage>('GET', `/api/projects/${segment(key)}/usage`);
 
   createStatus = (projectKey: string, input: CreateStatusInput) =>
     this.http.request<Status>('POST', `/api/projects/${segment(projectKey)}/statuses`, {
@@ -147,12 +128,6 @@ export class TrackerClient extends SearchClient {
   deleteTicket = (ticketKey: string) =>
     this.http.request<void>('DELETE', `/api/tickets/${segment(ticketKey)}`);
 
-  getTicketPrompt = (ticketKey: string) =>
-    this.http.request<PromptResult>('GET', `/api/tickets/${segment(ticketKey)}/prompt`);
-
-  markSent = (ticketKey: string, input: MarkSentInput) =>
-    this.http.request<Ticket>('POST', `/api/tickets/${segment(ticketKey)}/sent`, { body: input });
-
   addComment = (ticketKey: string, input: CreateCommentInput) =>
     this.http.request<Activity>('POST', `/api/tickets/${segment(ticketKey)}/comments`, {
       body: input,
@@ -189,12 +164,6 @@ export class TrackerClient extends SearchClient {
     (await this.fetchAttachment(attachmentId)).text();
 
   attachmentFileUrl = (attachmentId: string) => this.http.url(attachmentFilePath(attachmentId));
-
-  previewReport = (input: ReportInput) =>
-    this.http.request<ReportPreview>('POST', '/api/reports/preview', { body: input });
-
-  applyReport = (input: ReportInput) =>
-    this.http.request<ReportResult>('POST', '/api/reports/apply', { body: input });
 
   claimNext = (projectKey: string) =>
     this.http.request<TicketDetail | null>('POST', `/api/projects/${segment(projectKey)}/claim`, {
@@ -275,47 +244,6 @@ export class TrackerClient extends SearchClient {
 
   removePushSubscription = (endpoint: string) =>
     this.http.request<void>('DELETE', '/api/push/subscription', { body: { endpoint } });
-
-  viewChat = (chatId: string | null) =>
-    this.http.request<void>('PUT', '/api/push/viewing', { body: { chatId } });
-
-  addRunSteps = (
-    runId: string,
-    input: AddRunStepsInput,
-    { signal }: { signal?: AbortSignal } = {},
-  ) =>
-    this.http.request<void>('POST', `/api/runs/${segment(runId)}/steps`, { body: input, signal });
-
-  listRunSteps = (runId: string, { after }: { after?: number } = {}) =>
-    this.http.request<RunStep[]>('GET', `/api/runs/${segment(runId)}/steps`, {
-      query: { after: after === undefined ? undefined : String(after) },
-    });
-
-  listChats = (projectKey: string) =>
-    this.http.request<Chat[]>('GET', `/api/projects/${segment(projectKey)}/chats`);
-
-  startChat = (projectKey: string, input: StartChatInput) =>
-    this.http.request<ChatDetail>('POST', `/api/projects/${segment(projectKey)}/chats`, {
-      body: input,
-    });
-
-  getChat = (chatId: string) =>
-    this.http.request<ChatDetail>('GET', `/api/chats/${segment(chatId)}`);
-
-  deleteChat = (chatId: string) =>
-    this.http.request<void>('DELETE', `/api/chats/${segment(chatId)}`);
-
-  ask = (chatId: string, input: AskInput) =>
-    this.http.request<ChatDetail>('POST', `/api/chats/${segment(chatId)}/messages`, {
-      body: input,
-    });
-
-  createCardTicket = (chatId: string, messageId: string, input: CardTicketInput) =>
-    this.http.request<ChatDetail>(
-      'POST',
-      `/api/chats/${segment(chatId)}/messages/${segment(messageId)}/ticket`,
-      { body: input },
-    );
 
   eventsUrl = () => this.http.url('/api/events');
 }

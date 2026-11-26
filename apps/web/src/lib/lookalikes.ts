@@ -49,6 +49,7 @@ const inLatinWord =
 // unless its every letter passes for Latin and Latin letters stand beside it (`my-арр`).
 function markOf(word: string, latinToken: boolean): (char: string) => boolean {
   if (LATIN.test(word)) return inLatinWord(amongLatin(word));
+
   const reads = scriptCount(word) > 1 || (latinToken && passesForLatin(word));
 
   return reads ? inScripts : () => false;

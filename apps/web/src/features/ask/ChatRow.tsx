@@ -6,7 +6,7 @@ import { SwipeActions, type SwipeAction } from '../../gestures';
 import { useIsPhone } from '../../lib/media';
 import { useIsOpening, useNavigation } from '../../navigation';
 import { riseDelay } from '../projects/projectRows';
-import { WaitingMark } from '../requests/WaitingMark';
+import { WaitingMark } from '../questions/WaitingMark';
 import { ChatOptionsMenu } from './ChatOptionsMenu';
 import styles from './ChatsScreen.module.css';
 import { chatOptionsLabel, DELETE_LABEL } from './copy';

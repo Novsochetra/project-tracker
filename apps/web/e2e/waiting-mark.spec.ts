@@ -1,27 +1,14 @@
-import { randomUUID } from 'node:crypto';
 import type { Locator, Page } from '@playwright/test';
 import { TrackerClient } from '@tracker/client';
-import { formatShortDay, toYmd, type AddRunRequestInput, type RunQuestion } from '@tracker/shared';
+import { formatShortDay, toYmd } from '@tracker/shared';
 import { expect, isPhone, test } from './fixtures';
 import { group, seedProject, settled, settledScreenshot, ticketRow } from './helpers';
 import { API_URL } from './ports';
 
-const HELPER = "Dara's MacBook";
 const TITLE = 'Crash when rotating the profile screen twice on a small phone in dark mode';
 const DUE = toYmd(new Date());
 const FILES = 'Which files should hold the fix?';
-
-const QUESTION: RunQuestion = {
-  question: FILES,
-  header: 'Files',
-  options: [
-    { label: 'rotate.ts', description: 'Where the screen turns.' },
-    { label: 'layout.ts', description: 'Where the sizes are read.' },
-    { label: 'profile.tsx', description: 'The screen that crashes.' },
-    { label: 'theme.ts', description: 'Where dark mode starts.' },
-  ],
-  multiSelect: false,
-};
+const CHOICES = ['rotate.ts', 'layout.ts', 'profile.tsx', 'theme.ts'];
 
 const reviewer = new TrackerClient({
   baseUrl: API_URL,
@@ -43,30 +30,8 @@ async function showView(page: Page, view: 'List' | 'Board'): Promise<void> {
   await expect(views.getByRole('button', { name: view })).toHaveAttribute('aria-pressed', 'true');
 }
 
-async function startWaitingRun(api: TrackerClient, projectKey = 'MOB') {
-  const runnerId = randomUUID();
-  await api.registerRunner(runnerId, { name: HELPER, projectKeys: [projectKey] });
-  await api.startRun(`${projectKey}-1`, { runnerId, prompt: `Fix ${projectKey}-1, please.` });
-  const job = await api.takeNextRun(runnerId, 'ticket');
-  const runId = job!.run.id;
-  const question: AddRunRequestInput = {
-    runnerId,
-    kind: 'question',
-    label: `Ask: ${FILES}`,
-    labelCut: false,
-    questions: [QUESTION],
-  };
-  const permission: AddRunRequestInput = {
-    runnerId,
-    kind: 'permission',
-    label: 'Run npm test',
-    labelCut: false,
-    questions: null,
-  };
-  const ask = (input: AddRunRequestInput = question) => api.addRunRequest(runId, input);
-
-  return { runnerId, runId, ask, permission };
-}
+const ask = (agent: TrackerClient, ticketKey = 'MOB-1') =>
+  agent.askQuestion(ticketKey, { question: FILES, choices: CHOICES });
 
 // On a phone the mark takes the due date's place on the row's second line, beside the key, clear
 // of the avatar, without making the row taller than a plain one or anything overflow.
@@ -88,6 +53,7 @@ test.describe('Claude waiting for the person', () => {
   test('shows on the row and card, and a tap opens the ticket with the question in sight', async ({
     page,
     api,
+    agent,
   }, info) => {
     // A list, a board and a ticket at two phone widths take most of the default 30 s under load.
     test.slow();
@@ -97,13 +63,12 @@ test.describe('Claude waiting for the person', () => {
       { title: 'Fresh idea', priority: 'high', assignee: 'Dara', due: DUE },
     ]);
     await api.updateTicket('MOB-1', { title: TITLE });
-    const { ask } = await startWaitingRun(api);
     await page.goto('/p/MOB');
     const row = ticketRow(page, 'MOB-1');
     await expect(group(page, 'To do')).toContainText(TITLE);
     await expect(mark(row)).toHaveCount(0);
 
-    await ask();
+    await ask(agent);
     await expect(mark(row)).toBeVisible();
     await expect(row).toHaveAccessibleName(/^MOB-1 .* Claude is waiting for you\b/);
     await expect(mark(ticketRow(page, 'MOB-2'))).toHaveCount(0);
@@ -135,10 +100,6 @@ test.describe('Claude waiting for the person', () => {
     await expect(asked).toBeVisible();
     await settled(asked);
     if (isPhone(info.project.name)) {
-      const scrolled = await asked.evaluate(
-        (element) => element.closest('[data-stack-scroller]')!.scrollTop,
-      );
-      expect(scrolled).toBeGreaterThan(0);
       const shown = await box(asked);
       const navBar = await box(page.locator('[data-navbar]').last());
       const bottomBar = await box(page.locator('[data-bottom-bar]').last());
@@ -150,29 +111,32 @@ test.describe('Claude waiting for the person', () => {
 
     await settledScreenshot(page, info.outputPath(`waiting-ticket-${info.project.name}.png`));
 
-    await asked.getByRole('button', { name: /^layout\.ts/ }).click();
+    await asked.getByRole('button', { name: 'layout.ts' }).click();
     await expect(asked.getByRole('button')).toHaveCount(0);
     await page.goBack();
     await expect(ticketRow(page, 'MOB-1')).toBeVisible();
     await expect(mark(ticketRow(page, 'MOB-1'))).toHaveCount(0);
   });
 
-  test('goes once the request ends, and once the run does', async ({ page, api }) => {
+  test('goes once Claude stops waiting, and once the person answers elsewhere', async ({
+    page,
+    api,
+    agent,
+  }) => {
     await seedProject(api, 'Mobile app', 'MOB', [{ title: 'Crash on rotate', due: DUE }]);
-    const { ask, permission, runnerId, runId } = await startWaitingRun(api);
     await page.goto('/p/MOB');
     const row = ticketRow(page, 'MOB-1');
     await expect(row).toBeVisible();
 
-    const first = await ask(permission);
+    const first = await ask(agent);
     await expect(mark(row)).toBeVisible();
-    await api.cancelRunRequest(first.id, { runnerId });
+    await agent.cancelQuestion(first.id);
     await expect(mark(row)).toHaveCount(0);
 
     await showView(page, 'Board');
-    await ask(permission);
+    const second = await ask(agent);
     await expect(mark(ticketRow(page, 'MOB-1'))).toBeVisible();
-    await api.finishRun(runId, { status: 'failed', error: 'Claude exited with code 1.' });
+    await api.answerQuestion(second.id, { skip: true });
     await expect(mark(ticketRow(page, 'MOB-1'))).toHaveCount(0);
   });
 
@@ -193,8 +157,7 @@ test.describe('Claude waiting for the person', () => {
       rating: 2,
       summary: 'Still crashes.',
     });
-    const { ask } = await startWaitingRun(api, 'TRACK');
-    await ask();
+    await ask(agent, 'TRACK-1');
     await page.setViewportSize({ width: 320, height: 568 });
     await page.goto('/p/TRACK');
     const row = ticketRow(page, 'TRACK-1');

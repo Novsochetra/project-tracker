@@ -1,6 +1,11 @@
 import type {
+  AddRunRequestInput,
+  AddRunStepsInput,
+  AnswerRunRequestInput,
+  CancelRunRequestInput,
   FinishRunInput,
   HelperPlanUsage,
+  ProjectUsage,
   RegisterRunnerInput,
   Run,
   RunActivity,
@@ -12,13 +17,16 @@ import type {
   RunJob,
   RunLane,
   Runner,
+  RunRequest,
+  RunStep,
   StartRunInput,
+  WaitRunRequestQuery,
 } from '@tracker/shared';
 import { segment } from './asking';
-import { LabelingClient } from './labeling';
+import { PromptsClient } from './promptsClient';
 
-// Runs, batches and helpers, apart from the rest so neither file grows past its limit.
-export class RunsClient extends LabelingClient {
+// Runs, batches, helpers and what a run asks, apart from the rest so no file grows past its limit.
+export class RunsClient extends PromptsClient {
   startRun = (ticketKey: string, input: StartRunInput) =>
     this.http.request<Run>('POST', `/api/tickets/${segment(ticketKey)}/runs`, { body: input });
 
@@ -69,4 +77,51 @@ export class RunsClient extends LabelingClient {
       `/api/chats/${segment(chatId)}/messages/${segment(messageId)}/run-all`,
       { body: input },
     );
+
+  getProjectUsage = (key: string) =>
+    this.http.request<ProjectUsage>('GET', `/api/projects/${segment(key)}/usage`);
+
+  addRunSteps = (
+    runId: string,
+    input: AddRunStepsInput,
+    { signal }: { signal?: AbortSignal } = {},
+  ) =>
+    this.http.request<void>('POST', `/api/runs/${segment(runId)}/steps`, { body: input, signal });
+
+  listRunSteps = (runId: string, { after }: { after?: number } = {}) =>
+    this.http.request<RunStep[]>('GET', `/api/runs/${segment(runId)}/steps`, {
+      query: { after: after === undefined ? undefined : String(after) },
+    });
+
+  addRunRequest = (runId: string, input: AddRunRequestInput) =>
+    this.http.request<RunRequest>('POST', `/api/runs/${segment(runId)}/requests`, { body: input });
+
+  listRunRequests = (runId: string) =>
+    this.http.request<RunRequest[]>('GET', `/api/runs/${segment(runId)}/requests`);
+
+  answerRunRequest = (requestId: string, input: AnswerRunRequestInput) =>
+    this.http.request<RunRequest>('POST', `/api/requests/${segment(requestId)}/answer`, {
+      body: input,
+    });
+
+  // A long poll: it may answer with the request still open, and is called again then.
+  waitForRunRequest = (
+    requestId: string,
+    { runnerId }: WaitRunRequestQuery,
+    { signal }: { signal?: AbortSignal } = {},
+  ) =>
+    this.http.request<RunRequest>('GET', `/api/requests/${segment(requestId)}/wait`, {
+      query: { runnerId },
+      signal,
+    });
+
+  cancelRunRequest = (
+    requestId: string,
+    input: CancelRunRequestInput,
+    { signal }: { signal?: AbortSignal } = {},
+  ) =>
+    this.http.request<RunRequest>('POST', `/api/requests/${segment(requestId)}/cancel`, {
+      body: input,
+      signal,
+    });
 }

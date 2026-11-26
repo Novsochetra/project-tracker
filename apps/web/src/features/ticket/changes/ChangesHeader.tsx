@@ -5,14 +5,13 @@ import { useChangesVerdict } from '../../../api/hooks/changes';
 import { Button, useToast, VerdictChip } from '../../../components';
 import { viewedLabel } from '../../changes/copy';
 import { viewedCount } from '../../changes/diffLines';
-import { APPROVED_TOAST, ASKED_TOAST, lineCommentsNote } from './copy';
+import { APPROVED_TOAST, ASKED_TOAST } from './copy';
 import styles from './TicketChanges.module.css';
 
 export interface ChangesHeaderProps {
   detail: TicketDetail;
   changes: TicketChanges;
   files: readonly DiffFile[];
-  commentCount: number;
 }
 
 const TOASTS: Record<ReviewVerdict, string> = {
@@ -20,7 +19,7 @@ const TOASTS: Record<ReviewVerdict, string> = {
   changes_requested: ASKED_TOAST,
 };
 
-export function ChangesHeader({ detail, changes, files, commentCount }: ChangesHeaderProps) {
+export function ChangesHeader({ detail, changes, files }: ChangesHeaderProps) {
   const verdict = useChangesVerdict();
   const { show } = useToast();
   const send = (choice: ReviewVerdict) =>
@@ -47,7 +46,6 @@ export function ChangesHeader({ detail, changes, files, commentCount }: ChangesH
         )}
         {changes.verdict && <VerdictChip verdict={changes.verdict} />}
       </div>
-      {commentCount > 0 && <p className={styles.note}>{lineCommentsNote(commentCount)}</p>}
       <div className={styles.actions}>
         <Button
           icon={RotateCcw}

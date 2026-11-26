@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { revealInSight } from '../../requests/revealActions';
+import { revealInSight } from '../../questions/revealActions';
 import type { RunRequests } from '../../requests/useRequests';
 
 // A ticket opened while Claude waits on it brings the open request into sight (PT-168), but only

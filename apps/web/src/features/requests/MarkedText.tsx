@@ -1,4 +1,4 @@
-import { markHidden } from './hiddenChars';
+import { markHidden } from '../../lib/hiddenChars';
 import styles from './Requests.module.css';
 
 // What runs, shown exactly: a character that would hide or reorder text, or a letter that passes

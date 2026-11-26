@@ -1,4 +1,3 @@
-import { ACTIVE_RUN_STATUSES } from '@tracker/shared';
 import type { ExpressionBuilder } from 'kysely';
 import type { UserScope } from '../auth/scope';
 import type { QuestionRow } from '../db/questionTables';
@@ -30,21 +29,12 @@ export const listTicketQuestionRows = (db: Db, userId: UserScope, ticketId: stri
     .orderBy('id')
     .execute();
 
-export const runningRunOfTicket = (db: Db, userId: UserScope, ticketId: string) =>
-  db
-    .selectFrom('runs')
-    .select('id')
-    .where('ticketId', '=', ticketId)
-    .where('status', '=', 'running')
-    .where((eb) => (userId === null ? eb('userId', 'is', null) : eb('userId', '=', userId)))
-    .executeTakeFirst();
-
 export type QuestionEnd = Pick<QuestionRow, 'answer' | 'endedAt'> & {
   status: 'answered' | 'skipped';
 };
 
-// Only an open question before its deadline, whose run (if any) still runs, takes an answer, so
-// of two answers that race only one lands.
+// Only an open question before its deadline takes an answer, so of two answers that race only one
+// lands.
 export async function markQuestionEnded(db: Db, id: string, end: QuestionEnd): Promise<boolean> {
   const result = await db
     .updateTable('questions')
@@ -52,12 +42,6 @@ export async function markQuestionEnded(db: Db, id: string, end: QuestionEnd): P
     .where('id', '=', id)
     .where('status', '=', 'open')
     .where('expiresAt', '>', end.endedAt ?? 0)
-    .where((eb) =>
-      eb.or([
-        eb('runId', 'is', null),
-        eb('runId', 'in', eb.selectFrom('runs').select('runs.id').where('status', '=', 'running')),
-      ]),
-    )
     .executeTakeFirst();
 
   return Number(result.numUpdatedRows) > 0;
@@ -73,17 +57,6 @@ export async function markQuestionCancelled(db: Db, id: string, endedAt: number)
 
   return Number(result.numUpdatedRows) > 0;
 }
-
-export const cancelQuestionsOfEndedRuns = (db: Db, endedAt: number) =>
-  db
-    .updateTable('questions')
-    .set({ status: 'cancelled', endedAt })
-    .where('status', '=', 'open')
-    .where('runId', 'in', (eb) =>
-      eb.selectFrom('runs').select('runs.id').where('runs.status', 'not in', ACTIVE_RUN_STATUSES),
-    )
-    .returningAll()
-    .execute();
 
 export const expireOverdueQuestions = (db: Db, endedAt: number) =>
   db

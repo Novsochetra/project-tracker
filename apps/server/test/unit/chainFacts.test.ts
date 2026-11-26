@@ -21,10 +21,6 @@ const entry = (changes: Partial<ActivityRow>): ActivityRow => ({
   reviewRating: null,
   createdAt: 2_000,
   editedAt: null,
-  lineRunId: null,
-  linePath: null,
-  lineSide: null,
-  lineNumber: null,
   ...changes,
 });
 

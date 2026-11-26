@@ -32,7 +32,8 @@ export interface TicketListItem extends Ticket {
   commentCount: number;
   attachmentCount: number;
   lastReview: Review | null;
-  // A time, not a flag: a helper that is gone sends no event when its request runs out.
+  // The last deadline of an agent's open questions: a time, not a flag, since nothing sends an
+  // event when a question runs out.
   waitingUntil: number | null;
 }
 

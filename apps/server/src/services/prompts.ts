@@ -3,7 +3,6 @@ import {
   buildReviewPrompt,
   buildTicketPrompt,
   formatTicketKey,
-  lineNote,
   roleForCategory,
   workableTickets,
   type PromptLabel,
@@ -36,12 +35,6 @@ function lastReview(activities: readonly ActivityRow[]): PromptReview | null {
   return { verdict: review.reviewVerdict, rating: review.reviewRating ?? 0, text: review.text };
 }
 
-// A line comment says which line, so the next run fixes that line (the Changes tab).
-const noteOf = (row: ActivityRow): string =>
-  row.linePath !== null && row.lineSide !== null && row.lineNumber !== null
-    ? lineNote({ path: row.linePath, side: row.lineSide, line: row.lineNumber }, row.text)
-    : row.text;
-
 const promptLabels = (labels: readonly LabelRow[], ids: readonly string[]): PromptLabel[] =>
   labels
     .filter((label) => ids.includes(label.id))
@@ -72,7 +65,9 @@ export function promptTicket(
     statusName,
     due: ticket.due,
     assignee: ticket.assignee,
-    notes: activities.filter((row) => row.type === 'comment' && row.text.trim()).map(noteOf),
+    notes: activities
+      .filter((row) => row.type === 'comment' && row.text.trim())
+      .map((row) => row.text),
     lastReport: activities.filter((row) => row.type === 'report').at(-1)?.text ?? null,
     lastReview: lastReview(activities),
     labels,

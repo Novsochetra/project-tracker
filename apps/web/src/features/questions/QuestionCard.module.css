@@ -1,0 +1,182 @@
+/* An open question asks for the person, so it takes the chat's card look (the ticket card's). */
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+  padding: var(--space-3) 14px 14px;
+  border: 1px solid var(--report-line);
+  border-radius: var(--radius-group);
+  background: var(--report-bg);
+}
+
+.settled {
+  padding: var(--space-2) var(--space-3);
+  border-color: var(--line);
+  background: transparent;
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  color: var(--muted);
+  font: var(--text-caption);
+}
+
+.buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-1);
+}
+
+.question {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.questionText {
+  margin: 0;
+  color: var(--ink);
+  font: var(--text-headline);
+  overflow-wrap: anywhere;
+}
+
+.choices {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.choice {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  width: 100%;
+  min-height: var(--control-height);
+  padding: 7px var(--space-3);
+  border: 1px solid var(--control-line);
+  border-radius: var(--radius-control);
+  background: var(--surface);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  text-align: left;
+  cursor: pointer;
+}
+
+.choice:disabled {
+  cursor: default;
+}
+
+.choice:disabled:not(.selected) {
+  opacity: 0.5;
+}
+
+.selected {
+  border-color: var(--accent);
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+
+@media (hover: hover) {
+  .choice:hover:not(:disabled) {
+    background: var(--fill);
+  }
+}
+
+.choiceLabel {
+  min-width: 0;
+  font-size: var(--size-body);
+  font-weight: var(--weight-medium);
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.other {
+  width: 100%;
+  min-height: var(--control-height);
+  padding: 0 var(--space-3);
+  border: 1px solid var(--control-line);
+  border-radius: var(--radius-control);
+  background: var(--surface);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: var(--size-body);
+}
+
+.other::placeholder {
+  color: var(--placeholder);
+}
+
+.settledBody {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.subject,
+.outcome {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  min-width: 0;
+  margin: 0;
+  font-size: var(--size-secondary);
+  line-height: 1.45;
+}
+
+.subject {
+  color: var(--muted);
+}
+
+.outcome {
+  color: var(--ink-2);
+}
+
+.outcome[data-outcome='none'] {
+  color: var(--muted);
+}
+
+.outcome:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: var(--radius-square);
+}
+
+.outcome:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* Centred on the first line: 13px at 1.45 is 19px high. */
+.subjectIcon,
+.outcomeIcon {
+  flex: none;
+  margin-top: 2.5px;
+  color: var(--subtle);
+}
+
+.subjectText {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.outcomeLines {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+@media (width < 768px),
+  (pointer: coarse) and (device-width < 600px),
+  (pointer: coarse) and (device-height < 600px) {
+  .other {
+    font-size: var(--size-input);
+  }
+}

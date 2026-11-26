@@ -1,7 +1,7 @@
-import { RUN_REQUEST_DEADLINE_MS, type TicketQuestion } from '@tracker/shared';
+import { QUESTION_DEADLINE_MS, type TicketQuestion } from '@tracker/shared';
 import type { PollEnd } from './pollUntilEnded';
 
-export const QUESTION_LIMIT_MS = RUN_REQUEST_DEADLINE_MS;
+export const QUESTION_LIMIT_MS = QUESTION_DEADLINE_MS;
 
 export const NO_ANSWER =
   'No answer yet: go on with your best judgment and note the assumption in a comment.';

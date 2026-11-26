@@ -40,6 +40,3 @@ export async function updateRunnerRow(
 export async function deleteRunnerRow(db: Db, userId: UserScope, id: string): Promise<void> {
   await db.deleteFrom('runners').where(ownedBy(userId)).where('id', '=', id).execute();
 }
-
-export const assignOwnerlessRunners = (db: Db, userId: string) =>
-  db.updateTable('runners').set({ userId }).where('userId', 'is', null).execute();
