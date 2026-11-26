@@ -133,10 +133,6 @@
   color: var(--faint);
 }
 
-.editing {
-  display: block;
-}
-
 button.add {
   align-self: flex-start;
 }
