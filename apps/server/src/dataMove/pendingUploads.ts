@@ -25,7 +25,7 @@ export function leftOutLines({ pendingLeftOut }: CopiedRows): string[] {
   if (pendingLeftOut === 0) return [];
 
   return [
-    `Not copied: ${pendingLeftOut} upload(s) on no ticket or comment yet (files picked for a ` +
-      'ticket or comment not created yet, or an upload cut off when the tracker stopped).',
+    `Not copied: ${pendingLeftOut} file(s) on no ticket or comment (picked for a ticket or ` +
+      'comment not created yet, cut off when the tracker stopped, or sent in a chat).',
   ];
 }

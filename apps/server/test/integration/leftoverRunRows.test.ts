@@ -10,9 +10,21 @@ import {
 } from '@tracker/shared';
 import { sql } from 'kysely';
 import { beforeEach, describe, expect, it } from 'vitest';
+import { createApp } from '../../src/app';
+import { MIGRATIONS } from '../../src/db/migrations';
+import { createMigrator, migrateToLatest } from '../../src/db/migrator';
+import type { Db } from '../../src/db/schema';
+import { createBroadcaster } from '../../src/events/broadcaster';
 import { removeStalePendingAttachments } from '../../src/services/attachments';
-import { imageUpload } from '../helpers/fixtures';
-import { DIALECTS, useTestServer, type TestServer } from '../helpers/server';
+import { createMemoryStorage } from '../../src/storage/memoryStorage';
+import { fileUpload, imageUpload } from '../helpers/fixtures';
+import {
+  clientFor,
+  DIALECTS,
+  openEmptyDatabase,
+  useTestServer,
+  type TestServer,
+} from '../helpers/server';
 
 const NOW = Date.now();
 
@@ -106,10 +118,10 @@ async function leaveQuestionOfRun(api: TestServer, ticketId: string, runId: stri
   return id;
 }
 
-async function leaveChatFile(api: TestServer, projectId: string): Promise<Attachment> {
+async function leaveChatMessage(db: Db, projectId: string): Promise<string> {
   const chatId = randomUUID();
   const messageId = randomUUID();
-  await api.db
+  await db
     .insertInto('chats')
     .values({
       id: chatId,
@@ -122,30 +134,23 @@ async function leaveChatFile(api: TestServer, projectId: string): Promise<Attach
       updatedAt: NOW,
     })
     .execute();
-  await api.db
+  await db
     .insertInto('chatMessages')
     .values({ id: messageId, chatId, role: 'person', text: 'Look', createdAt: NOW })
     .execute();
-  const file = (await api.upload(imageUpload())).body;
-  await api.db
-    .updateTable('attachments')
-    .set({ chatMessageId: messageId })
-    .where('id', '=', file.id)
-    .execute();
 
-  return file;
+  return messageId;
 }
 
-const countRows = async (api: TestServer) => ({
-  runs: (await api.db.selectFrom('runs').select('id').execute()).length,
-  runSteps: (await api.db.selectFrom('runSteps').select('runId').execute()).length,
-  runRequests: (await api.db.selectFrom('runRequests').select('id').execute()).length,
-  runChanges: (await api.db.selectFrom('runChanges').select('runId').execute()).length,
-  viewedFiles: (await api.db.selectFrom('ticketViewedFiles').select('path').execute()).length,
-  questions: (await api.db.selectFrom('questions').select('id').execute()).length,
-  chats: (await api.db.selectFrom('chats').select('id').execute()).length,
-  chatMessages: (await api.db.selectFrom('chatMessages').select('id').execute()).length,
-  attachments: (await api.db.selectFrom('attachments').select('id').execute()).length,
+const countRows = async (db: Db) => ({
+  runs: (await db.selectFrom('runs').select('id').execute()).length,
+  runSteps: (await db.selectFrom('runSteps').select('runId').execute()).length,
+  runRequests: (await db.selectFrom('runRequests').select('id').execute()).length,
+  runChanges: (await db.selectFrom('runChanges').select('runId').execute()).length,
+  viewedFiles: (await db.selectFrom('ticketViewedFiles').select('path').execute()).length,
+  questions: (await db.selectFrom('questions').select('id').execute()).length,
+  chats: (await db.selectFrom('chats').select('id').execute()).length,
+  chatMessages: (await db.selectFrom('chatMessages').select('id').execute()).length,
 });
 
 describe.each(DIALECTS)('rows left from runs and chats (%s)', (dialect) => {
@@ -188,7 +193,7 @@ describe.each(DIALECTS)('rows left from runs and chats (%s)', (dialect) => {
     await leaveRunRows(api, { ...place, ticket: other });
 
     expect((await api.delete('/api/tickets/MOB-1')).status).toBe(204);
-    expect(await countRows(api)).toMatchObject({
+    expect(await countRows(api.db)).toMatchObject({
       runs: 1,
       runSteps: 1,
       runRequests: 1,
@@ -204,13 +209,13 @@ describe.each(DIALECTS)('rows left from runs and chats (%s)', (dialect) => {
     expect(activity).toEqual([]);
   });
 
-  it('go with their project, chats and the rows of the files sent in them too', async () => {
+  it('go with their project, and the stored files of its tickets too', async () => {
     await leaveRunRows(api, place);
-    await leaveChatFile(api, place.projectId);
+    await leaveChatMessage(api.db, place.projectId);
     const onTicket = (await api.upload(imageUpload({ ticketKey: 'MOB-2' }))).body;
 
     expect((await api.delete('/api/projects/MOB')).status).toBe(204);
-    expect(await countRows(api)).toEqual({
+    expect(await countRows(api.db)).toEqual({
       runs: 0,
       runSteps: 0,
       runRequests: 0,
@@ -219,20 +224,51 @@ describe.each(DIALECTS)('rows left from runs and chats (%s)', (dialect) => {
       questions: 0,
       chats: 0,
       chatMessages: 0,
-      attachments: 0,
     });
+    expect(await api.db.selectFrom('attachments').select('id').execute()).toEqual([]);
     expect([...api.storage.files.keys()].some((key) => key.startsWith(onTicket.id))).toBe(false);
   });
+});
 
-  it('leave a file sent in a chat to the start-up clean-up once it is a day old', async () => {
-    const sent = await leaveChatFile(api, place.projectId);
-    expect(api.storage.files.size).toBe(1);
+const BEFORE_UNLINK = Object.fromEntries(
+  Object.entries(MIGRATIONS).filter(([name]) => name < '0036_unlink_chat_files'),
+);
 
-    const deps = { db: api.db, storage: api.storage };
-    const dayOld = sent.createdAt + PENDING_ATTACHMENT_TTL_MS + 1;
-    expect(await removeStalePendingAttachments(deps, dayOld - 2)).toBe(0);
-    expect(await removeStalePendingAttachments(deps, dayOld)).toBe(1);
-    expect(await api.db.selectFrom('attachments').select('id').execute()).toEqual([]);
-    expect(api.storage.files.size).toBe(0);
+// A chat's delete cascades to the files linked to its messages, so before 0036 a project's delete
+// took a chat file's row and left its stored file with nothing naming it.
+describe.each(DIALECTS)('a file sent in a chat before 0036_unlink_chat_files (%s)', (dialect) => {
+  it('stays a pending upload when its project goes, which the clean-up then removes', async () => {
+    const db = openEmptyDatabase(dialect);
+    const storage = createMemoryStorage();
+    try {
+      expect((await createMigrator(db, BEFORE_UNLINK).migrateToLatest()).error).toBeUndefined();
+      const app = createApp({ db, storage, events: createBroadcaster() });
+      const upload = async (request: ReturnType<typeof fileUpload>) =>
+        (await (await app.request(request.path, request.init)).json()) as Attachment;
+      const { project } = await clientFor(app).createProject({ name: 'Mobile', key: 'MOB' });
+      await clientFor(app).createTicket('MOB', { title: 'Crash' });
+      const onTicket = await upload(fileUpload({ ticketKey: 'MOB-1' }));
+      const sent = await upload(imageUpload());
+      const messageId = await leaveChatMessage(db, project.id);
+      await sql`update attachments set chat_message_id = ${messageId}
+        where id = ${sent.id}`.execute(db);
+
+      await migrateToLatest(db);
+      const link = db.selectFrom('attachments').select('chatMessageId').where('id', '=', sent.id);
+      expect(await link.executeTakeFirst()).toEqual({ chatMessageId: null });
+      expect((await app.request('/api/projects/MOB', { method: 'DELETE' })).status).toBe(204);
+      const rows = await db.selectFrom('attachments').select(['id', 'ticketId']).execute();
+      expect(rows).toEqual([{ id: sent.id, ticketId: null }]);
+      const stored = [...storage.files.keys()];
+      expect(stored.filter((key) => key.startsWith(sent.id))).toHaveLength(1);
+      expect(stored.filter((key) => key.startsWith(onTicket.id))).toEqual([]);
+
+      const dayOld = sent.createdAt + PENDING_ATTACHMENT_TTL_MS + 1;
+      expect(await removeStalePendingAttachments({ db, storage }, dayOld)).toBe(1);
+      expect(await db.selectFrom('attachments').select('id').execute()).toEqual([]);
+      expect(storage.files.size).toBe(0);
+    } finally {
+      await db.destroy();
+    }
   });
 });

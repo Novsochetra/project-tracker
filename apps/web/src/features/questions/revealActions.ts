@@ -30,6 +30,7 @@ const visibleBottom = (): number => {
 function reveal(target: HTMLElement): void {
   const scroller = scrollParent(target);
   if (!scroller) return;
+
   const tops = [...document.querySelectorAll(COVERS)].map(
     (cover) => cover.getBoundingClientRect().top,
   );
@@ -37,6 +38,7 @@ function reveal(target: HTMLElement): void {
   const roomAbove = box.top - visibleTop(scroller) - GAP;
   const distance = revealDistance(box.bottom, visibleBottom(), tops, roomAbove);
   if (distance <= 0) return;
+
   const behavior = prefersReducedMotionNow() ? 'instant' : 'smooth';
   scroller.scrollTo({ top: scroller.scrollTop + distance, behavior });
 }
@@ -49,9 +51,11 @@ export const revealInSight = (target: HTMLElement): void =>
 // buttons come into sight when the box takes focus and once the keyboard is up.
 export function revealActions(buttons: HTMLElement | null): void {
   if (!buttons) return;
+
   revealInSight(buttons);
   const viewport = window.visualViewport;
   if (!viewport) return;
+
   const onResize = () => reveal(buttons);
   viewport.addEventListener('resize', onResize);
   setTimeout(() => viewport.removeEventListener('resize', onResize), KEYBOARD_WAIT_MS);

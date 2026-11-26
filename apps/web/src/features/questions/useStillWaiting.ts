@@ -8,6 +8,7 @@ export function useStillWaiting(until: number | null): boolean {
   const [ended, setEnded] = useState<number | null>(null);
   useEffect(() => {
     if (until === null) return;
+
     const timer = setTimeout(() => setEnded(until), until - Date.now());
 
     return () => clearTimeout(timer);

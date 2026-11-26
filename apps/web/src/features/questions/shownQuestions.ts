@@ -13,6 +13,7 @@ function lastSettled(
   let last: TicketQuestion | undefined;
   for (const question of questions) {
     if (isOpen(question, now)) continue;
+
     if (!last || settledAt(question) >= settledAt(last)) last = question;
   }
 

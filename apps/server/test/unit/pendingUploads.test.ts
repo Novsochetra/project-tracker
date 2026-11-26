@@ -50,11 +50,11 @@ describe('withoutPendingUploads', () => {
 describe('leftOutLines', () => {
   const copied = (pendingLeftOut: number) => ({ rows: rowsWith([]), pendingLeftOut });
 
-  it('says how many uploads were left out, and nothing when none was', () => {
+  it('says how many files on no ticket or comment were left out, and nothing when none was', () => {
     expect(leftOutLines(copied(0))).toEqual([]);
     expect(leftOutLines(copied(2))).toEqual([
-      'Not copied: 2 upload(s) on no ticket or comment yet (files picked for a ticket or ' +
-        'comment not created yet, or an upload cut off when the tracker stopped).',
+      'Not copied: 2 file(s) on no ticket or comment (picked for a ticket or comment not ' +
+        'created yet, cut off when the tracker stopped, or sent in a chat).',
     ]);
   });
 });

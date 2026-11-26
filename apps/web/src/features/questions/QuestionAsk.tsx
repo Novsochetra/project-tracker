@@ -40,6 +40,7 @@ export function QuestionAsk({ question, answer }: QuestionAskProps) {
 
   const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
     if (event.key !== 'Enter' || event.nativeEvent.isComposing) return;
+
     event.preventDefault();
     sendReady();
   };
