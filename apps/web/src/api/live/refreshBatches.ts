@@ -10,8 +10,6 @@ const isOpenBatch = ({ queryKey, state }: Query): boolean => {
   return status === undefined || status === 'queued' || status === 'running';
 };
 
-// A batch's ticket runs follow their tickets' statuses with no run event of their own, so a
-// ticket's change refreshes the batches and the Activity list too.
 export function refreshBatches(queryClient: QueryClient): void {
   void queryClient.invalidateQueries({ queryKey: queryKeys.runActivity(), exact: true });
   void queryClient.invalidateQueries({ predicate: isOpenBatch });

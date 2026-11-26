@@ -17,7 +17,6 @@ function choicesOf(text: string): string[] {
 export const toQuestion = (row: QuestionRow): TicketQuestion => ({
   id: row.id,
   ticketId: row.ticketId,
-  runId: row.runId,
   text: row.text,
   choices: choicesOf(row.choices),
   status: row.status,

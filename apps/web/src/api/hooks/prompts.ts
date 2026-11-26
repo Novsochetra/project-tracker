@@ -1,8 +1,18 @@
-import { useQuery } from '@tanstack/react-query';
-import type { PromptResult } from '@tracker/shared';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import type { MarkSentInput, PromptResult, Ticket } from '@tracker/shared';
+import { upsertBoardTicket } from '../cache/board';
+import { withTicket } from '../cache/ticketDetail';
+import { boardChanges, ticketChange } from '../cacheChanges';
 import { useApi } from '../context';
+import { patchCaches } from '../optimistic';
 import { queryKeys } from '../queryKeys';
-import type { TrackerQuery } from '../types';
+import { settleMutation } from '../refresh';
+import type { TrackerMutation, TrackerQuery } from '../types';
+
+export interface MarkSentVariables {
+  ticketKey: string;
+  input: MarkSentInput;
+}
 
 export interface PromptOptions {
   enabled?: boolean;
@@ -36,5 +46,20 @@ export function useProjectPrompt(
     queryFn: () => client.getProjectPrompt(projectKey),
     enabled,
     ...FRESH_ONLY,
+  });
+}
+
+export function useMarkSent(): TrackerMutation<Ticket, MarkSentVariables> {
+  const client = useApi();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ ticketKey, input }: MarkSentVariables) => client.markSent(ticketKey, input),
+    onSuccess: (ticket, { ticketKey }) =>
+      patchCaches(queryClient, [
+        ...boardChanges(ticketKey, (board) => upsertBoardTicket(board, ticket)),
+        ticketChange(ticketKey, (detail) => withTicket(detail, ticket)),
+      ]),
+    onSettled: (_ticket, _error, variables) => settleMutation(queryClient, variables),
   });
 }

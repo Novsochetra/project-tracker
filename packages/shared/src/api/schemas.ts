@@ -22,7 +22,6 @@ import {
   TICKET_TITLE_MAX,
 } from '../domain/ticket';
 import { toYmd } from '../logic/format';
-import { lineRefInput } from './changes';
 
 const hexColor = z.string().regex(/^#[0-9A-Fa-f]{6}$/, 'Use a hex color like #5B5BD6');
 const isRealDay = (ymd: string): boolean => toYmd(new Date(`${ymd}T00:00:00`)) === ymd;
@@ -174,21 +173,13 @@ export const moveTicketInput = z.object({
 });
 export type MoveTicketInput = z.input<typeof moveTicketInput>;
 
-export const markSentInput = z.object({ moveToInProgress: z.boolean().default(false) });
-export type MarkSentInput = z.input<typeof markSentInput>;
-
 export const createCommentInput = z
   .object({
     text: z.string().max(COMMENT_TEXT_MAX).default(''),
     attachmentIds: attachmentIds('comment').default([]),
-    // A comment on one line of a run's changes (the Changes tab).
-    line: lineRefInput.optional(),
   })
   .refine((value) => value.text.trim().length > 0 || value.attachmentIds.length > 0, {
     message: 'Write a comment or add a file.',
-  })
-  .refine((value) => !value.line || value.text.trim().length > 0, {
-    message: 'Write a comment on the line.',
   });
 export type CreateCommentInput = z.input<typeof createCommentInput>;
 
@@ -207,12 +198,6 @@ export type ExpectedComment = z.input<typeof expectedComment>;
 export const updateCommentRequest = updateCommentInput.extend({
   expected: expectedComment.optional(),
 });
-
-export const reportInput = z.object({
-  text: z.string().max(100_000),
-  ticketKey: z.string().max(40).optional(),
-});
-export type ReportInput = z.input<typeof reportInput>;
 
 export const submitWorkInput = z.object({
   summary: z.string().trim().min(1).max(REPORT_TEXT_MAX),

@@ -15,11 +15,6 @@ describe.each(DIALECTS)('push when a Run all batch ends (%s)', (dialect) => {
   let batchId: string;
 
   const settle = () => new Promise((resolve) => setTimeout(resolve, 50));
-  const submit = async (key: string) => {
-    await helper('POST', `/api/tickets/${key}/claim`);
-    await helper('POST', `/api/tickets/${key}/submit`, { summary: 'Fixed.' });
-  };
-
   const finish = (status: string, error?: string) =>
     helper('POST', `/api/runs/${batchId}/finish`, { status, error });
 
@@ -44,14 +39,12 @@ describe.each(DIALECTS)('push when a Run all batch ends (%s)', (dialect) => {
   });
 
   it('pushes once, with how many were done and which were not, and opens Activity', async () => {
-    await submit('MOB-1');
-    await submit('MOB-3');
     expect((await finish('done')).status).toBe(200);
 
     expect(await service.messagesFor(device)).toEqual([
       {
-        title: 'MOB: Run all finished: 2 of 4 done',
-        body: 'Not finished: MOB-2, MOB-4',
+        title: 'MOB: Run all finished: 0 of 4 done',
+        body: 'Not finished: MOB-1, MOB-2, MOB-3, MOB-4',
         url: '/activity',
         tag: `batch:${batchId}`,
       },
@@ -61,13 +54,12 @@ describe.each(DIALECTS)('push when a Run all batch ends (%s)', (dialect) => {
   });
 
   it('says a batch stopped and what it left, without its error', async () => {
-    await submit('MOB-2');
     await finish('failed', 'fatal: password=hunter2pass rejected by db.internal');
 
     expect(await service.messagesFor(device)).toEqual([
       {
-        title: 'MOB: Run all stopped: 1 of 4 done',
-        body: 'Not finished: MOB-1, MOB-3, MOB-4',
+        title: 'MOB: Run all stopped: 0 of 4 done',
+        body: 'Not finished: MOB-1, MOB-2, MOB-3, MOB-4',
         url: '/activity',
         tag: `batch:${batchId}`,
       },

@@ -1,15 +1,13 @@
-import { randomUUID } from 'node:crypto';
 import {
-  RUN_REQUEST_DEADLINE_MS,
+  QUESTION_DEADLINE_MS,
   type ProjectBoard,
-  type Run,
-  type RunRequest,
   type TicketListItem,
+  type TicketQuestion,
   type TicketsAcrossProjects,
 } from '@tracker/shared';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { testClock } from '../helpers/auth';
-import { addUser, caller, helperName, type Caller } from '../helpers/runs';
+import { addUser, caller, type Caller } from '../helpers/runs';
 import { DIALECTS, useTestServer } from '../helpers/server';
 
 const waitingKeys = (tickets: TicketListItem[]) =>
@@ -18,11 +16,9 @@ const waitingKeys = (tickets: TicketListItem[]) =>
 describe.each(DIALECTS)('a ticket waiting for the person (%s)', (dialect) => {
   const clock = testClock();
   const api = useTestServer(dialect, { now: clock.now });
-  const runner = randomUUID();
   let person: Caller;
-  let helper: Caller;
+  let agent: Caller;
   let other: Caller;
-  let run: Run;
 
   const waiting = async (as = person) => [
     waitingKeys((await as<ProjectBoard>('GET', '/api/projects/MOB/board')).body.tickets),
@@ -33,12 +29,9 @@ describe.each(DIALECTS)('a ticket waiting for the person (%s)', (dialect) => {
   const onMob1 = [['MOB-1'], ['MOB-1'], ['MOB-1']];
   const asks = async () =>
     (
-      await helper<RunRequest>('POST', `/api/runs/${run.id}/requests`, {
-        runnerId: runner,
-        kind: 'permission',
-        label: 'Run npm test',
-        labelCut: false,
-        questions: null,
+      await agent<TicketQuestion>('POST', '/api/tickets/MOB-1/questions', {
+        question: 'Which name should the setting have?',
+        choices: ['Dark', 'Night'],
       })
     ).body;
 
@@ -47,25 +40,22 @@ describe.each(DIALECTS)('a ticket waiting for the person (%s)', (dialect) => {
     const owner = await addUser(api.db, 'owner@example.com', clock.now());
     const second = await addUser(api.db, 'second@example.com', clock.now());
     person = caller(() => api.app, owner.person);
-    helper = caller(() => api.app, owner.helper);
+    agent = caller(() => api.app, owner.helper);
     other = caller(() => api.app, second.person);
     await person('POST', '/api/projects', { name: 'Mobile', key: 'MOB' });
     await person('POST', '/api/projects/MOB/tickets', { title: 'Crash' });
     await person('POST', '/api/projects/MOB/tickets', { title: 'Rename the queue' });
-    await helper('PUT', `/api/runners/${runner}`, helperName('Dara’s MacBook'));
-    await person('POST', '/api/tickets/MOB-1/runs', { runnerId: runner, prompt: 'Go' });
-    run = (await helper<{ run: Run }>('POST', `/api/runners/${runner}/next?kind=ticket`)).body.run;
   });
 
-  it('says so while Claude asks, and no longer once the person answers', async () => {
+  it('says so while an agent asks, and no longer once the person answers', async () => {
     expect(await waiting()).toEqual(nowhere);
-    const request = await asks();
+    const question = await asks();
     expect(await waiting()).toEqual(onMob1);
-    await person('POST', `/api/requests/${request.id}/answer`, { decision: 'deny' });
+    await person('POST', `/api/questions/${question.id}/answer`, { answer: 'Night' });
     expect(await waiting()).toEqual(nowhere);
   });
 
-  it('says until the last open request runs out', async () => {
+  it('says until the last open question runs out', async () => {
     const first = await asks();
     clock.advance(1_000);
     const second = await asks();
@@ -77,29 +67,28 @@ describe.each(DIALECTS)('a ticket waiting for the person (%s)', (dialect) => {
     expect(second.expiresAt).toBeGreaterThan(first.expiresAt);
   });
 
-  it('says so only to the person whose run asks', async () => {
+  it('says so only to the person whose ticket it is', async () => {
     await asks();
     expect((await other('GET', '/api/projects/MOB/board')).status).toBe(404);
     expect((await other<TicketsAcrossProjects>('GET', '/api/tickets')).body.tickets).toEqual([]);
-    expect(await waiting(helper)).toEqual(onMob1);
+    expect(await waiting(agent)).toEqual(onMob1);
   });
 
-  it('no longer says so past the deadline, before anything settles the request', async () => {
+  it('no longer says so past the deadline, before anything settles the question', async () => {
     await asks();
-    clock.advance(RUN_REQUEST_DEADLINE_MS - 1);
-    await helper('PUT', `/api/runners/${runner}`, helperName('Dara’s MacBook'));
+    clock.advance(QUESTION_DEADLINE_MS - 1);
     expect(await waiting()).toEqual(onMob1);
     clock.advance(1);
     expect(await waiting()).toEqual(nowhere);
   });
 
-  it('no longer says so once the request ends or the run does', async () => {
-    const request = await asks();
-    await helper('POST', `/api/requests/${request.id}/cancel`, { runnerId: runner });
+  it('no longer says so once the person skips it or the agent stops waiting', async () => {
+    const skipped = await asks();
+    await person('POST', `/api/questions/${skipped.id}/answer`, { skip: true });
     expect(await waiting()).toEqual(nowhere);
-    await asks();
+    const cancelled = await asks();
     expect(await waiting()).toEqual(onMob1);
-    await person('POST', `/api/runs/${run.id}/cancel`);
+    await agent('POST', `/api/questions/${cancelled.id}/cancel`);
     expect(await waiting()).toEqual(nowhere);
   });
 });

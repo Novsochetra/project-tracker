@@ -13,7 +13,7 @@ import {
   PLAN_NOTE_PLACEHOLDER,
 } from './copy';
 import { RequestHead } from './RequestHead';
-import { revealActions } from './revealActions';
+import { revealActions } from '../questions/revealActions';
 import { approvePlan, keepPlanning } from './requestAnswers';
 import styles from './Requests.module.css';
 import type { Answer } from './useAnswer';

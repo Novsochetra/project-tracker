@@ -2,7 +2,6 @@ import {
   HUMAN,
   type Activity,
   type Attachment,
-  type LineRef,
   type Ticket,
   type TicketDetail,
   type UpdateTicketInput,
@@ -19,7 +18,6 @@ export interface CommentDraft {
   text: string;
   attachments: Attachment[];
   createdAt: number;
-  line?: LineRef;
 }
 
 export function withTicket(detail: TicketDetail, ticket: Ticket): TicketDetail {

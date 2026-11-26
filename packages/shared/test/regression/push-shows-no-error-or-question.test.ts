@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { batchEndedPush, questionPush, runEndedPush } from '../../src/logic/pushMessages';
+import { questionPush } from '../../src/logic/pushMessages';
+import { batchEndedPush, runEndedPush } from '../../src/logic/runPushMessages';
 
 // A lock screen shows pushes unlocked, and stderr or a question can hold secrets (PT-249).
 const TICKET = { projectKey: 'MOB', num: 3, title: 'Fix the login button' };

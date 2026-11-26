@@ -1,46 +1,44 @@
-import type { RunRequest } from '@tracker/shared';
+import type { AnswerQuestionInput, TicketQuestion } from '@tracker/shared';
 import clsx from 'clsx';
 import { useRef } from 'react';
 import { useAnswerQuestion } from '../../api/hooks/questions';
-import { requestName } from '../requests/copy';
-import { QuestionAsk } from '../requests/QuestionAsk';
-import styles from '../requests/Requests.module.css';
-import { isOpen } from '../requests/requestState';
-import { subjectOf } from '../requests/requestText';
-import { SettledRequest } from '../requests/SettledRequest';
-import { useAnswerWith } from '../requests/useAnswer';
-import { questionAnswer } from './questionRequest';
+import { questionName } from './copy';
+import styles from './QuestionCard.module.css';
+import { QuestionAsk } from './QuestionAsk';
+import { QuestionSettled } from './QuestionSettled';
+import { isOpen } from './questionState';
+import { subjectOf } from './questionText';
+import { useAnswerWith } from './useAnswerWith';
 
 export interface QuestionCardProps {
   ticketKey: string;
-  request: RunRequest;
+  question: TicketQuestion;
   now: number;
 }
 
-export function QuestionCard({ ticketKey, request, now }: QuestionCardProps) {
+export function QuestionCard({ ticketKey, question, now }: QuestionCardProps) {
   const cardRef = useRef<HTMLElement>(null);
   const mutation = useAnswerQuestion(ticketKey);
-  const answer = useAnswerWith(
+  const answer = useAnswerWith<AnswerQuestionInput>(
     {
       pending: mutation.isPending,
-      mutate: (input, onError) =>
-        mutation.mutate({ questionId: request.id, input: questionAnswer(input) }, { onError }),
+      mutate: (input, onError) => mutation.mutate({ questionId: question.id, input }, { onError }),
     },
     cardRef,
   );
-  const open = isOpen(request, now);
+  const open = isOpen(question, now);
 
   return (
     <section
       ref={cardRef}
-      aria-label={requestName(subjectOf(request))}
+      aria-label={questionName(subjectOf(question))}
       className={clsx(styles.card, open ? 'fade-in' : styles.settled)}
       data-open={open || undefined}
     >
-      {open && request.kind === 'question' ? (
-        <QuestionAsk questions={request.questions} answer={answer} />
+      {open ? (
+        <QuestionAsk question={question} answer={answer} />
       ) : (
-        <SettledRequest request={request} now={now} takeFocus={answer.focusAnswer} />
+        <QuestionSettled question={question} now={now} takeFocus={answer.focusAnswer} />
       )}
     </section>
   );

@@ -3,7 +3,7 @@ import type { AnswerQuestionInput, TicketQuestion } from '@tracker/shared';
 import { useApi } from '../context';
 import { isNotFound } from '../errors';
 import { queryKeys } from '../queryKeys';
-import { withRequest } from '../runRequests';
+import { withAnswered } from '../withAnswered';
 import type { TrackerMutation, TrackerQuery } from '../types';
 
 export interface AnswerQuestionVariables {
@@ -11,7 +11,7 @@ export interface AnswerQuestionVariables {
   input: AnswerQuestionInput;
 }
 
-// Read again on the ticket's change events, a ticket run's end and a reconnect (api/live).
+// Read again on the ticket's change events and a reconnect (api/live).
 export function useTicketQuestions(ticketKey: string): TrackerQuery<TicketQuestion[]> {
   const client = useApi();
 
@@ -34,7 +34,7 @@ export function useAnswerQuestion(
     mutationFn: ({ questionId, input }: AnswerQuestionVariables) =>
       client.answerQuestion(questionId, input),
     onSuccess: (answered) =>
-      queryClient.setQueryData<TicketQuestion[]>(queryKey, (have) => withRequest(have, answered)),
+      queryClient.setQueryData<TicketQuestion[]>(queryKey, (have) => withAnswered(have, answered)),
     onError: (error) => {
       if (isNotFound(error)) queryClient.setQueryData<TicketQuestion[]>(queryKey, []);
       else void queryClient.invalidateQueries({ queryKey, exact: true });

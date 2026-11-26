@@ -1,13 +1,11 @@
 import {
   createTicketInput,
   listTicketsQuery,
-  markSentInput,
   moveTicketInput,
   updateTicketRequest,
 } from '@tracker/shared';
 import { Hono } from 'hono';
 import type { ServiceContext } from '../../services/context';
-import { ticketPrompt } from '../../services/prompts';
 import {
   createTicket,
   deleteTicket,
@@ -15,7 +13,6 @@ import {
   updateTicket,
 } from '../../services/ticketCommands';
 import { getTicketDetail, listAllTickets, listTickets } from '../../services/ticketQueries';
-import { markSent } from '../../services/workflow';
 import type { AppEnv } from '../env';
 import { userContext } from '../userContext';
 import { jsonBody, queryParams } from '../validation';
@@ -67,19 +64,6 @@ export const ticketRoutes = (ctx: ServiceContext) =>
     .post('/tickets/:key/move', jsonBody(moveTicketInput), async (context) =>
       context.json(
         await moveTicket(
-          userContext(ctx, context),
-          context.get('actor'),
-          context.req.param('key'),
-          context.req.valid('json'),
-        ),
-      ),
-    )
-    .get('/tickets/:key/prompt', async (context) =>
-      context.json(await ticketPrompt(userContext(ctx, context), context.req.param('key'))),
-    )
-    .post('/tickets/:key/sent', jsonBody(markSentInput), async (context) =>
-      context.json(
-        await markSent(
           userContext(ctx, context),
           context.get('actor'),
           context.req.param('key'),

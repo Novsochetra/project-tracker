@@ -6,8 +6,8 @@ import {
   type TicketListItem,
 } from '@tracker/shared';
 import { Avatar, PriorityBars, VerdictChip } from '../../../components';
-import { useStillWaiting } from '../../requests/useStillWaiting';
-import { WaitingMark } from '../../requests/WaitingMark';
+import { useStillWaiting } from '../../questions/useStillWaiting';
+import { WaitingMark } from '../../questions/WaitingMark';
 import { LabelChips } from '../../labels/LabelChips';
 import { useTicketLabels } from '../../labels/projectLabels';
 import { DueLabel } from '../TicketRowContent';

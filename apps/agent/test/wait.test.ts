@@ -1,6 +1,6 @@
 import { getEventListeners } from 'node:events';
 import { describe, expect, it } from 'vitest';
-import { wait } from '../../src/watch/wait';
+import { wait } from '../src/wait';
 
 describe('wait', () => {
   it('leaves no listener behind, and ends at once on abort', async () => {

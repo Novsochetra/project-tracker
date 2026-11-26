@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { addRunRequestInput } from '../src/api/runRequests';
 import { RUN_PLAN_MAX } from '../src/domain/runRequest';
-import { planPush } from '../src/logic/pushMessages';
+import { planPush } from '../src/logic/runPushMessages';
 import { answerProblem } from '../src/logic/runRequests/answerProblem';
 import { buildAskPrompt } from '../src/logic/askPrompt';
 import {

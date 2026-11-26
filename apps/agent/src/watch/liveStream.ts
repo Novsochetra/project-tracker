@@ -1,6 +1,6 @@
 import { LIVE_STALE_MS, type ChatGitEvent, type RunEvent } from '@tracker/shared';
-import { retryDelay } from './retry';
-import { wait } from './wait';
+import { retryDelay } from '../backoff';
+import { wait } from '../wait';
 import { createSseParser } from './sse';
 
 export interface LiveStreamOptions {

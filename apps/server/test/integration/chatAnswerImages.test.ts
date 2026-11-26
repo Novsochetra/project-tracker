@@ -81,7 +81,7 @@ describe.each(DIALECTS)("pictures in Claude's answer (%s)", (dialect) => {
     expect(message?.attachments.map((file) => file.id)).toEqual([second.id, first.id]);
   });
 
-  it("leaves out another user's upload, a file that isn't a picture and one already shown", async () => {
+  it("leaves out another user's upload and a file that isn't a picture", async () => {
     const { chatId, runId } = await askAndTake();
     const theirs = await upload(board, 'theirs.png', 'image/png', otherHelper);
     const notes = await upload(NOTES, 'notes.txt', 'text/plain');
@@ -89,10 +89,6 @@ describe.each(DIALECTS)("pictures in Claude's answer (%s)", (dialect) => {
     const ids = [theirs.id, notes.id, photo.id, photo.id];
     expect((await finish(runId, ids)).status).toBe(200);
     expect((await claudeMessage(chatId))?.attachments.map((file) => file.id)).toEqual([photo.id]);
-
-    const next = await askAndTake();
-    expect((await finish(next.runId, [photo.id])).status).toBe(200);
-    expect((await claudeMessage(next.chatId))?.attachments).toEqual([]);
   });
 
   it('refuses more pictures than an answer shows', async () => {

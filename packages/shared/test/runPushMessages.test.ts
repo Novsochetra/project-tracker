@@ -1,0 +1,135 @@
+import { describe, expect, it } from 'vitest';
+import {
+  askedPush,
+  batchEndedPush,
+  chainStoppedPush,
+  chatAnsweredPush,
+  chatFailedPush,
+  chatOfTag,
+  chatPath,
+  permissionPush,
+  runEndedPush,
+} from '../src/logic/runPushMessages';
+
+const TICKET = { projectKey: 'MOB', num: 3, title: 'Fix the login button' };
+const CHAT = { projectKey: 'MOB', projectName: 'Mobile', chatId: 'c-1', title: 'Login bug' };
+
+describe('push messages about runs and chats', () => {
+  it('says a ticket run finished and opens the ticket', () => {
+    expect(runEndedPush(TICKET, 'done')).toEqual({
+      title: 'MOB-3: Claude finished',
+      body: 'Fix the login button',
+      url: '/p/MOB/3',
+      tag: 'ticket:MOB-3',
+    });
+  });
+
+  it('says a ticket run stopped and to open the ticket for why', () => {
+    expect(runEndedPush(TICKET, 'failed')).toEqual({
+      title: 'MOB-3: Claude stopped',
+      body: 'Fix the login button · Open the ticket to see why.',
+      url: '/p/MOB/3',
+      tag: 'ticket:MOB-3',
+    });
+  });
+
+  it('says how many tickets a batch did and which it left, and opens Activity', () => {
+    const batch = { runId: 'r-1', projectKey: 'MOB', total: 10, notDoneKeys: ['MOB-3', 'MOB-7'] };
+    expect(batchEndedPush(batch, 'done')).toEqual({
+      title: 'MOB: Run all finished: 8 of 10 done',
+      body: 'Not finished: MOB-3, MOB-7',
+      url: '/activity',
+      tag: 'batch:r-1',
+    });
+  });
+
+  it('says a batch did every ticket, or that it stopped and what it left', () => {
+    const batch = { runId: 'r-1', projectKey: 'MOB', total: 2, notDoneKeys: [] };
+    expect(batchEndedPush(batch, 'done').body).toBe('Every ticket is done.');
+    const stopped = batchEndedPush({ ...batch, notDoneKeys: ['MOB-2'] }, 'failed');
+    expect(stopped.title).toBe('MOB: Run all stopped: 1 of 2 done');
+    expect(stopped.body).toBe('Not finished: MOB-2');
+  });
+
+  it('says the automatic review stopped and why, under the ticket’s tag', () => {
+    expect(chainStoppedPush(TICKET, 'You moved the ticket.')).toEqual({
+      title: 'MOB-3: Automatic review stopped',
+      body: 'You moved the ticket.',
+      url: '/p/MOB/3',
+      tag: 'ticket:MOB-3',
+    });
+  });
+
+  it('says a chat answer ended or failed, with the project, and opens the chat', () => {
+    expect(chatAnsweredPush(CHAT)).toEqual({
+      title: 'Claude answered: Login bug',
+      body: 'Mobile · Open the chat to read it.',
+      url: '/p/MOB/ask/c-1',
+      tag: 'chat:c-1',
+    });
+    expect(chatFailedPush(CHAT)).toEqual({
+      title: 'Claude stopped: Login bug',
+      body: 'Mobile · Open the chat to see why.',
+      url: '/p/MOB/ask/c-1',
+      tag: 'chat:c-1',
+    });
+    expect(chatAnsweredPush({ ...CHAT, title: ' ' }).title).toBe('Claude answered');
+  });
+
+  it('reads the chat back from a chat push’s tag only', () => {
+    expect(chatOfTag(chatAnsweredPush(CHAT).tag)).toBe('c-1');
+    expect(chatOfTag(runEndedPush(TICKET, 'done').tag)).toBeNull();
+  });
+
+  it('says Claude has a question in a chat, under the tag its answer will replace', () => {
+    expect(askedPush({ chat: CHAT })).toEqual({
+      title: 'Claude has a question: Login bug',
+      body: 'Mobile · Open the chat to answer.',
+      url: '/p/MOB/ask/c-1',
+      tag: 'chat:c-1',
+    });
+    expect(askedPush({ chat: { ...CHAT, title: '' } }).title).toBe('Claude has a question');
+  });
+
+  it('says what Claude wants to do after the key, and opens the ticket or the chat', () => {
+    expect(permissionPush({ ticket: { ...TICKET, num: 12 } }, 'Run git push origin main')).toEqual({
+      title: 'MOB-12: Claude wants to run git push',
+      body: 'Fix the login button',
+      url: '/p/MOB/12',
+      tag: 'ticket:MOB-12',
+    });
+    const edit = 'Edit src/auth.ts\n- old line\n+ new line';
+    expect(permissionPush({ chat: CHAT }, edit)).toEqual({
+      title: 'Claude wants to edit src/auth.ts',
+      body: 'Mobile · Login bug',
+      url: '/p/MOB/ask/c-1',
+      tag: 'chat:c-1',
+    });
+  });
+
+  it('cuts a long path so the title stays short', () => {
+    const label = `Write ${'docs/'.repeat(10)}a.md`;
+    const { title } = permissionPush({ ticket: TICKET }, label);
+    expect(title).toBe(`MOB-3: Claude wants to write ${'docs/'.repeat(6)}doc…`);
+    expect([...title.slice('MOB-3: Claude wants to '.length)]).toHaveLength(40);
+  });
+
+  it('shows characters that hide or reorder a path as a replacement mark', () => {
+    expect(permissionPush({ ticket: TICKET }, 'Read \u202Eexe.txt').title).toBe(
+      'MOB-3: Claude wants to read \uFFFDexe.txt',
+    );
+  });
+
+  it('asks for an OK without saying what, when nothing safe can be shown', () => {
+    expect(permissionPush({ ticket: TICKET }, "Search for 'hunter2' in src").title).toBe(
+      'MOB-3: Claude wants your OK',
+    );
+    expect(permissionPush({ chat: CHAT }, 'Run TOKEN=abc123 npm test').title).toBe(
+      'Claude wants your OK',
+    );
+  });
+
+  it('escapes keys and ids in chat paths', () => {
+    expect(chatPath('MOB', 'a/b')).toBe('/p/MOB/ask/a%2Fb');
+  });
+});

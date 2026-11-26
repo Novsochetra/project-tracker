@@ -1,7 +1,6 @@
 import type {
   ActivityType,
   ActorKind,
-  DiffSide,
   Priority,
   ReviewVerdict,
   StatusCategory,
@@ -10,7 +9,7 @@ import type { Kysely } from 'kysely';
 import type { AuthTables } from './authTables';
 import type { ChangeTables } from './changeTables';
 import type { ChatChangeTables } from './chatChangeTables';
-import type { ChatTables } from './chatTables';
+import type { ChatAttachmentColumns, ChatTables } from './chatTables';
 import type { LabelTables } from './labelTables';
 import type { PushTables } from './pushTables';
 import type { QuestionTables } from './questionTables';
@@ -78,11 +77,8 @@ export interface ActivityRow {
   reviewRating: number | null;
   createdAt: number;
   editedAt: number | null;
-  // The line of a run's changes a comment is on; null on every other entry.
-  lineRunId: string | null;
-  linePath: string | null;
-  lineSide: DiffSide | null;
-  lineNumber: number | null;
+  // line_run_id, line_path, line_side and line_number, the line of a run's changes a comment was
+  // on, stay in the table, unread, until a later release drops them (§2.1).
 }
 
 export interface AttachmentRow {
@@ -100,25 +96,21 @@ export interface AttachmentRow {
   createdAt: number;
   // Who uploaded it: a file on no ticket yet is only theirs.
   userId: string | null;
-  // A file sent in a chat is on no ticket, yet it isn't pending (PT-187).
-  chatMessageId: string | null;
 }
 
-export interface Database
-  extends
-    AuthTables,
-    ChangeTables,
-    ChatChangeTables,
-    ChatTables,
-    LabelTables,
-    PushTables,
-    QuestionTables,
-    RunTables {
+// The tables that stay once the features that run Claude Code go, without the columns only those
+// features read.
+export interface CoreTables extends AuthTables, LabelTables, PushTables, QuestionTables {
   projects: ProjectRow;
   statuses: StatusRow;
   tickets: TicketRow;
   activities: ActivityRow;
   attachments: AttachmentRow;
+}
+
+export interface Database
+  extends CoreTables, ChangeTables, ChatChangeTables, ChatTables, RunTables {
+  attachments: AttachmentRow & ChatAttachmentColumns;
 }
 
 export type Db = Kysely<Database>;

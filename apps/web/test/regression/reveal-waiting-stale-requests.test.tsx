@@ -6,12 +6,12 @@ import { deferred } from '../../src/api/test/deferred';
 import { listItem, makeTicketDetail, STATUS } from '../../src/api/test/fixtures';
 import { makeRequest } from '../../src/api/test/requestFixtures';
 import { makeRun } from '../../src/api/test/runFixtures';
-import type * as RevealActions from '../../src/features/requests/revealActions';
-import { revealInSight } from '../../src/features/requests/revealActions';
+import type * as RevealActions from '../../src/features/questions/revealActions';
+import { revealInSight } from '../../src/features/questions/revealActions';
 import { renderTicket } from '../../src/features/ticket/test/renderTicket';
 import { skipAnimations } from '../../src/overlays/testing';
 
-vi.mock('../../src/features/requests/revealActions', async (importOriginal) => ({
+vi.mock('../../src/features/questions/revealActions', async (importOriginal) => ({
   ...(await importOriginal<typeof RevealActions>()),
   revealInSight: vi.fn(),
 }));

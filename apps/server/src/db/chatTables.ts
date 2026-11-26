@@ -48,6 +48,12 @@ export interface ChatQueueRow {
   position: number;
 }
 
+// A file sent in a chat is on no ticket (PT-187). Only chats read it; the core's attachments leave
+// it out.
+export interface ChatAttachmentColumns {
+  chatMessageId: string | null;
+}
+
 export interface ChatTables {
   chats: ChatRow;
   chatMessages: ChatMessageRow;

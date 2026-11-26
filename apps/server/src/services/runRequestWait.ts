@@ -3,7 +3,7 @@ import type { UserScope } from '../auth/scope';
 import { forbidden } from '../errors';
 import type { RunNotice } from '../events/runNotice';
 import type { ServiceContext } from './context';
-import { longPoll } from './longPoll';
+import { longPoll, wakeOn } from './longPoll';
 import { toRunRequest } from './runRequestMappers';
 import { requireRunRequest } from './runRequests';
 import { settleRequests } from './runRequestSweep';
@@ -28,12 +28,15 @@ export async function waitForRunRequest(
     return found;
   };
 
-  const { row } = await longPoll(ctx, {
+  const { row } = await longPoll({
     read,
     isOpen: (seen) => seen.row.status === 'open',
-    wakes: ({ run }) => ({
-      run: ({ event }) => ENDS_WAIT.has(event.type) && 'runId' in event && event.runId === run.id,
-    }),
+    wakes: ({ run }) => [
+      wakeOn(
+        ctx.runEvents,
+        ({ event }) => ENDS_WAIT.has(event.type) && 'runId' in event && event.runId === run.id,
+      ),
+    ],
     waitMs: (seen) => nextWaitMs(seen.row.expiresAt, ctx.now()),
     signal,
   });
