@@ -3,7 +3,7 @@ import type { AnswerRunRequestInput, RunRequest } from '@tracker/shared';
 import { useApi } from '../context';
 import { isNotFound } from '../errors';
 import { queryKeys } from '../queryKeys';
-import { withRequest } from '../runRequests';
+import { withAnswered } from '../withAnswered';
 import type { TrackerMutation, TrackerQuery } from '../types';
 
 export interface AnswerVariables {
@@ -33,7 +33,7 @@ export function useAnswerRunRequest(): TrackerMutation<RunRequest, AnswerVariabl
     mutationFn: ({ request, input }: AnswerVariables) => client.answerRunRequest(request.id, input),
     onSuccess: (answered) =>
       queryClient.setQueryData<RunRequest[]>(queryKeys.runRequests(answered.runId), (have) =>
-        withRequest(have, answered),
+        withAnswered(have, answered),
       ),
     onError: (error, { request }) => {
       const queryKey = queryKeys.runRequests(request.runId);

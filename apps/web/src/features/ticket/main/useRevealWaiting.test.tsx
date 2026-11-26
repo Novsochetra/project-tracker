@@ -7,11 +7,11 @@ import { listItem, makeTicketDetail, STATUS } from '../../../api/test/fixtures';
 import { makeRequest } from '../../../api/test/requestFixtures';
 import { makeRun } from '../../../api/test/runFixtures';
 import { skipAnimations } from '../../../overlays/testing';
-import type * as RevealActions from '../../requests/revealActions';
-import { revealInSight } from '../../requests/revealActions';
+import type * as RevealActions from '../../questions/revealActions';
+import { revealInSight } from '../../questions/revealActions';
 import { renderTicket } from '../test/renderTicket';
 
-vi.mock('../../requests/revealActions', async (importOriginal) => ({
+vi.mock('../../questions/revealActions', async (importOriginal) => ({
   ...(await importOriginal<typeof RevealActions>()),
   revealInSight: vi.fn(),
 }));

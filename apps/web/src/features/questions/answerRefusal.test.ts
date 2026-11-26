@@ -9,7 +9,7 @@ describe('isSettledElsewhere', () => {
     expect(isSettledElsewhere(refusal(409))).toBe(true);
   });
 
-  it('keeps every other failure an error to show, a gone run too', () => {
+  it('keeps every other failure an error to show, a gone ticket too', () => {
     expect(isSettledElsewhere(refusal(404))).toBe(false);
     expect(isSettledElsewhere(refusal(400))).toBe(false);
     expect(isSettledElsewhere(refusal(500))).toBe(false);

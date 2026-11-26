@@ -57,12 +57,10 @@ export const listActivityAttachments = (db: Db, activityId: string) =>
     .orderBy('id')
     .execute();
 
-// A file sent in a chat is on no ticket either, but it is no longer pending (PT-187).
 export const pendingOf =
   (uploader: UserScope) => (eb: ExpressionBuilder<Database, 'attachments'>) =>
     eb.and([
       eb('ticketId', 'is', null),
-      eb('chatMessageId', 'is', null),
       uploader === null ? eb('userId', 'is', null) : eb('userId', '=', uploader),
     ]);
 
@@ -84,11 +82,7 @@ export async function reachableAttachmentIds(
         scope === null ? eb(column, 'is', null) : eb(column, '=', scope);
 
       return eb.or([
-        eb.and([
-          eb('attachments.ticketId', 'is', null),
-          eb('attachments.chatMessageId', 'is', null),
-          mine('attachments.userId'),
-        ]),
+        eb.and([eb('attachments.ticketId', 'is', null), mine('attachments.userId')]),
         eb.and([eb('attachments.ticketId', 'is not', null), mine('projects.ownerId')]),
       ]);
     })
@@ -176,7 +170,6 @@ export const listPendingBefore = (db: Db, before: number) =>
     .select(['id', 'storageKey'])
     .where('ticketId', 'is', null)
     .where('activityId', 'is', null)
-    .where('chatMessageId', 'is', null)
     .where('createdAt', '<', before)
     .execute();
 

@@ -6,7 +6,7 @@ import {
   type RunRequestKind,
 } from '@tracker/shared';
 import { approvedText, OUTCOME_TEXT, PERMISSION_HEAD, PLAN_HEAD, QUESTION_HEAD } from './copy';
-import { showHidden } from './hiddenChars';
+import { showHidden } from '../../lib/hiddenChars';
 import { requestState } from './requestState';
 
 export type Outcome = keyof typeof OUTCOME_TEXT | 'answered';

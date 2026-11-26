@@ -1,4 +1,5 @@
 import { RUN_PROMPT_MAX } from '@tracker/shared';
+import { errorMessage } from './errors';
 
 const count = new Intl.NumberFormat('en-US');
 
@@ -11,3 +12,7 @@ export class PromptTooLongError extends Error {
     );
   }
 }
+
+// errorMessage shows the tracker's own words; this one the app says itself.
+export const runErrorMessage = (error: unknown): string =>
+  error instanceof PromptTooLongError ? error.message : errorMessage(error);

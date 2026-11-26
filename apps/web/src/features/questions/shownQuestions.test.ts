@@ -7,7 +7,6 @@ const NOW = 10_000_000;
 const question = (id: string, more: Partial<TicketQuestion> = {}): TicketQuestion => ({
   id,
   ticketId: 't1',
-  runId: null,
   text: `Question ${id}?`,
   choices: [],
   status: 'open',

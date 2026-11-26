@@ -1,7 +1,7 @@
 import {
+  askedPush,
   permissionPush,
   planPush,
-  questionPush,
   type PushMessage,
   type PushPlace,
 } from '@tracker/shared';
@@ -32,7 +32,7 @@ async function placeOfRun(
 }
 
 function pushOf(row: RunRequestRow, place: PushPlace): PushMessage {
-  if (row.kind === 'question') return questionPush(place);
+  if (row.kind === 'question') return askedPush(place);
 
   return row.kind === 'plan' ? planPush(place) : permissionPush(place, row.label);
 }

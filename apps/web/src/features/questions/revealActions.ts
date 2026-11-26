@@ -1,15 +1,15 @@
 import { prefersReducedMotionNow } from '../../lib/media';
+import { scrollParent } from '../../lib/scrollParent';
 import { visibleTop } from '../../navigation/visibleTop';
-import { scrollParent } from '../steps/followEnd';
 
 const GAP = 8;
 // The keyboard opens after the focus, and shrinks what is seen once more.
 const KEYBOARD_WAIT_MS = 1000;
 const COVERS = '[data-bottom-cover], [data-bottom-bar]';
 
-// The bottom of the screen is covered by the chat's footer or a bar, and by the keyboard, which
-// only the visual viewport's bottom knows of. What is taller than the room left keeps its top in
-// sight, where a card says what Claude asks.
+// The bottom of the screen is covered by a footer or a bar, and by the keyboard, which only the
+// visual viewport's bottom knows of. What is taller than the room left keeps its top in sight,
+// where a card says what Claude asks.
 export function revealDistance(
   bottom: number,
   visibleBottom: number,
@@ -45,9 +45,8 @@ function reveal(target: HTMLElement): void {
 export const revealInSight = (target: HTMLElement): void =>
   void requestAnimationFrame(() => reveal(target));
 
-// Typing an answer in the last question put Send answer under the chat's footer, and under the
-// keyboard on a phone, so the buttons come into sight when the box takes focus and once the
-// keyboard is up.
+// Typing an answer put Send answer under a footer, and under the keyboard on a phone, so the
+// buttons come into sight when the box takes focus and once the keyboard is up.
 export function revealActions(buttons: HTMLElement | null): void {
   if (!buttons) return;
   revealInSight(buttons);

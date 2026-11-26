@@ -9,7 +9,6 @@ import {
   updateProject,
 } from '../../services/projects';
 import { reorderProjects } from '../../services/projectOrder';
-import { projectPrompt } from '../../services/prompts';
 import { getBoard } from '../../services/ticketQueries';
 import type { AppEnv } from '../env';
 import { personCreatesProjects, personEditsProjects, personOrdersProjects } from '../personOnly';
@@ -46,7 +45,4 @@ export const projectRoutes = (ctx: ServiceContext) =>
     })
     .get('/projects/:key/board', async (context) =>
       context.json(await getBoard(userContext(ctx, context), context.req.param('key'))),
-    )
-    .get('/projects/:key/prompt', async (context) =>
-      context.json(await projectPrompt(userContext(ctx, context), context.req.param('key'))),
     );
