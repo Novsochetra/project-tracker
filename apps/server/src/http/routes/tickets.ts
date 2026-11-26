@@ -17,6 +17,7 @@ import {
 import { getTicketDetail, listAllTickets, listTickets } from '../../services/ticketQueries';
 import { markSent } from '../../services/workflow';
 import type { AppEnv } from '../env';
+import { personDeletesTickets } from '../personOnly';
 import { userContext } from '../userContext';
 import { jsonBody, queryParams } from '../validation';
 
@@ -59,7 +60,7 @@ export const ticketRoutes = (ctx: ServiceContext) =>
 
       return context.json(await updateTicket(userContext(ctx, context), update));
     })
-    .delete('/tickets/:key', async (context) => {
+    .delete('/tickets/:key', personDeletesTickets, async (context) => {
       await deleteTicket(userContext(ctx, context), context.req.param('key'));
 
       return context.body(null, 204);
