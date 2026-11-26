@@ -23,20 +23,26 @@ npm run test:e2e     # Playwright at 375x812 and 1280x800
 npm run test:e2e:clean  # the same on a clean copy of HEAD; E2E_API_PORT/E2E_WEB_PORT let two runs share a machine
 ```
 
+## Shared rules
+
+These hold in every project and are copied unchanged from a shared set; the sections below add this project's specifics.
+
+@docs/coding-style.md
+@docs/testing.md
+@docs/versioning.md
+
 ## Code rules
 
-- Simplest solution that works. Small files and functions with one job each. Lint enforces size and complexity limits; split code instead of raising limits.
-- No comments that say what code does. Only write a comment to explain **why** something non-obvious is done.
-- Lint enforces this for `/** */` blocks in app and package source (`local/no-jsdoc-blocks` in `eslint.config.js`): write a why as a short `//` comment.
-- No `TODO`/`FIXME` comments. Put follow-up work in the tracker as a ticket instead.
-- Put logic in plain functions with unit tests. Components and route handlers stay thin.
+- Lint enforces size and complexity limits (`eslint.config.js`). Split code instead of raising limits.
+- `local/no-jsdoc-blocks` rejects `/** */` blocks in app and package source.
 - All colors, type, radii, shadows and motion come from `apps/web/src/design/tokens.css`. No raw hex values in components.
 - Never install packages without asking; concurrent installs corrupt `node_modules`.
 
-## Code Style
+## Versioning
 
-- Write self-explaining code. Keep comments minimal: no comments that restate what the code does, no section-banner comments, no long JSDoc on obvious functions.
-- Only comment non-obvious _why_ (workarounds, protocol quirks, security reasons).
+- The one version is `version` in the root `package.json`. `APP_VERSION` (`packages/shared/src/logic/appVersion.ts`) reads it; users see it with the deploy's commit at the bottom of the Account and Connect Claude Code sheets, in `/api/meta`, in `tracker --version` and as the MCP server version.
+- Raise it with `npm run release -- patch|minor|major` on a clean, up-to-date `main`: it bumps `package.json` and `package-lock.json`, writes the `CHANGELOG.md` entry, commits and tags `vX.Y.Z` (`docs/releasing.md`). Never edit the version by hand.
+- Ticket workers never raise it. The lead raises it once, after the integration branch is merged into `main`, by the most any merged ticket needs.
 
 ## Git & Commits
 
@@ -58,8 +64,9 @@ npm run test:e2e:clean  # the same on a clean copy of HEAD; E2E_API_PORT/E2E_WEB
 ## Tests
 
 - Unit tests for pure logic, integration tests for API routes and data access (SQLite and PGlite), component tests for UI behavior, Playwright for flows.
-- **Bugs:** first write a failing test that reproduces the bug in `<package>/test/regression/<short-name>.test.ts`, then fix it. The test stays forever.
-- Before saying work is done: run `npm run verify`, and for UI changes check both 375px and 1280px.
+- Tests live in each package's `test/` folder (`apps/server/test/{unit,integration,smoke}`); web tests sit next to the code they test (`*.test.tsx`, shared render helpers in a feature's `test/`); Playwright specs are in `apps/web/e2e`.
+- **Bugs:** the failing test goes in `<package>/test/regression/<short-name>.test.ts` and stays forever.
+- The full check is `npm run verify`; for UI changes also look at both 375px and 1280px.
 
 ## Reports
 
