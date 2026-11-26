@@ -90,6 +90,8 @@ for (const height of [800, 700]) {
 
 test('desktop: Page Down scrolls the sheet right after it opens', async ({ page }, info) => {
   test.skip(isPhone(info.project.name), 'Desktop layout');
+  // Short enough that the sheet's body has to scroll: at 800px it fits.
+  await page.setViewportSize({ width: 1280, height: 600 });
   const sheet = await openConnect(page);
   const body = sheet.locator(':focus');
   await expect(body).toContainText('Add the tracker to Claude Code');
