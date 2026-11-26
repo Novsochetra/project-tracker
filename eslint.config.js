@@ -17,10 +17,6 @@ const local = {
   },
 };
 
-// docs/coding-style.md: names longer than one letter, and blank lines after blocks and before a
-// function's final return. Off until PT-262 applies them across the code in one pass.
-const styleSeverity = 'off';
-
 export default tseslint.config(
   {
     ignores: [
@@ -70,16 +66,17 @@ export default tseslint.config(
       'max-params': ['error', 4],
     },
   },
+  // docs/coding-style.md: short names and the blank lines a formatter never adds.
   {
     plugins: { local },
     rules: {
       'padding-line-between-statements': [
-        styleSeverity,
+        'error',
         { blankLine: 'always', prev: 'block-like', next: '*' },
       ],
-      'local/blank-line-before-final-return': styleSeverity,
+      'local/blank-line-before-final-return': 'error',
       'id-length': [
-        styleSeverity,
+        'error',
         { min: 2, exceptions: ['x', 'y', 'i', 'j', '_'], properties: 'never' },
       ],
     },
