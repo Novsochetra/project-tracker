@@ -15,27 +15,49 @@ import { helperOnly } from '../helperOnly';
 import { personAnswers, personReadsRequests } from '../personOnly';
 import { jsonBody, queryParams } from '../validation';
 
-const scope = (c: Context<AppEnv>) => requireScope(c.get('access'));
+const scope = (context: Context<AppEnv>) => requireScope(context.get('access'));
 
 export const runRequestRoutes = (ctx: ServiceContext) =>
   new Hono<AppEnv>()
-    .post('/runs/:id/requests', helperOnly, jsonBody(addRunRequestInput), async (c) =>
-      c.json(await addRunRequest(ctx, scope(c), c.req.param('id'), c.req.valid('json')), 201),
+    .post('/runs/:id/requests', helperOnly, jsonBody(addRunRequestInput), async (context) =>
+      context.json(
+        await addRunRequest(
+          ctx,
+          scope(context),
+          context.req.param('id'),
+          context.req.valid('json'),
+        ),
+        201,
+      ),
     )
-    .get('/runs/:id/requests', personReadsRequests, async (c) =>
-      c.json(await listRunRequests(ctx, scope(c), c.req.param('id'))),
+    .get('/runs/:id/requests', personReadsRequests, async (context) =>
+      context.json(await listRunRequests(ctx, scope(context), context.req.param('id'))),
     )
-    .post('/requests/:id/answer', personAnswers, jsonBody(answerRunRequestInput), async (c) =>
-      c.json(await answerRunRequest(ctx, scope(c), c.req.param('id'), c.req.valid('json'))),
+    .post('/requests/:id/answer', personAnswers, jsonBody(answerRunRequestInput), async (context) =>
+      context.json(
+        await answerRunRequest(
+          ctx,
+          scope(context),
+          context.req.param('id'),
+          context.req.valid('json'),
+        ),
+      ),
     )
-    .get('/requests/:id/wait', helperOnly, queryParams(waitRunRequestQuery), async (c) =>
-      c.json(
-        await waitForRunRequest(ctx, scope(c), c.req.param('id'), {
-          runnerId: c.req.valid('query').runnerId,
-          signal: c.req.raw.signal,
+    .get('/requests/:id/wait', helperOnly, queryParams(waitRunRequestQuery), async (context) =>
+      context.json(
+        await waitForRunRequest(ctx, scope(context), context.req.param('id'), {
+          runnerId: context.req.valid('query').runnerId,
+          signal: context.req.raw.signal,
         }),
       ),
     )
-    .post('/requests/:id/cancel', helperOnly, jsonBody(cancelRunRequestInput), async (c) =>
-      c.json(await cancelRunRequest(ctx, scope(c), c.req.param('id'), c.req.valid('json'))),
+    .post('/requests/:id/cancel', helperOnly, jsonBody(cancelRunRequestInput), async (context) =>
+      context.json(
+        await cancelRunRequest(
+          ctx,
+          scope(context),
+          context.req.param('id'),
+          context.req.valid('json'),
+        ),
+      ),
     );

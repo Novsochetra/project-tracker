@@ -116,9 +116,9 @@ describe('secondary text colors', () => {
   });
 
   it.each(SECONDARY)('%s stays a bluish gray', (token) => {
-    const [r, g, b] = color(token);
-    expect(r).toBe(g);
-    expect(b).toBeGreaterThan(r);
+    const [red, green, blue] = color(token);
+    expect(red).toBe(green);
+    expect(blue).toBeGreaterThan(red);
   });
 });
 

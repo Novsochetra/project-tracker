@@ -13,36 +13,40 @@ import { jsonBody } from '../validation';
 
 export const changesRoutes = (ctx: ServiceContext) =>
   new Hono<AppEnv>()
-    .post('/runs/:id/changes', helperOnly, jsonBody(addRunChangesInput), async (c) => {
-      const scope = requireScope(c.get('access'));
-      await addRunChanges(ctx, scope, c.req.param('id'), c.req.valid('json'));
+    .post('/runs/:id/changes', helperOnly, jsonBody(addRunChangesInput), async (context) => {
+      const scope = requireScope(context.get('access'));
+      await addRunChanges(ctx, scope, context.req.param('id'), context.req.valid('json'));
 
-      return c.body(null, 204);
+      return context.body(null, 204);
     })
-    .get('/tickets/:key/changes', async (c) =>
-      c.json(await readTicketChanges(userContext(ctx, c), c.req.param('key'))),
+    .get('/tickets/:key/changes', async (context) =>
+      context.json(await readTicketChanges(userContext(ctx, context), context.req.param('key'))),
     )
     .put(
       '/tickets/:key/changes/viewed',
       personReviewsChanges,
       jsonBody(viewedFileInput),
-      async (c) => {
-        await setFileViewed(userContext(ctx, c), c.req.param('key'), c.req.valid('json'));
+      async (context) => {
+        await setFileViewed(
+          userContext(ctx, context),
+          context.req.param('key'),
+          context.req.valid('json'),
+        );
 
-        return c.body(null, 204);
+        return context.body(null, 204);
       },
     )
     .post(
       '/tickets/:key/changes/verdict',
       personReviewsChanges,
       jsonBody(changesVerdictInput),
-      async (c) =>
-        c.json(
+      async (context) =>
+        context.json(
           await changesVerdict(
-            userContext(ctx, c),
-            c.get('actor'),
-            c.req.param('key'),
-            c.req.valid('json'),
+            userContext(ctx, context),
+            context.get('actor'),
+            context.req.param('key'),
+            context.req.valid('json'),
           ),
         ),
     );

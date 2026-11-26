@@ -29,7 +29,7 @@ const statuses = [
   status('wontdo', 'done', 5),
 ];
 
-const ids = (list: readonly Status[]) => list.map((s) => s.id);
+const ids = (list: readonly Status[]) => list.map((item) => item.id);
 
 const range = (count: number) => Array.from({ length: count }, (_, index) => index + 1);
 
@@ -51,7 +51,7 @@ describe('visibleStatuses', () => {
   });
 
   it('shows every status again when the picked one was deleted', () => {
-    const left = statuses.filter((s) => s.id !== 'review');
+    const left = statuses.filter((item) => item.id !== 'review');
     expect(ids(visibleStatuses(left, 'review'))).toEqual(ids(visibleStatuses(left, ALL_TICKETS)));
   });
 });

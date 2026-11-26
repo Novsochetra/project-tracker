@@ -53,8 +53,8 @@ interface ParsedHash {
 }
 
 function parseHash(stored: string): ParsedHash | null {
-  const [prefix, n, r, p, salt, key] = stored.split('$');
-  const params = { N: Number(n), r: Number(r), p: Number(p) };
+  const [prefix, cost, blockSize, parallelization, salt, key] = stored.split('$');
+  const params = { N: Number(cost), r: Number(blockSize), p: Number(parallelization) };
   if (prefix !== PREFIX || !salt || !key) return null;
   if (!Object.values(params).every((value) => Number.isInteger(value) && value > 0)) return null;
 

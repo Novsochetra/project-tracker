@@ -6,12 +6,12 @@ import { ImageViewer } from './ImageViewer';
 import { skipAnimations } from './testing';
 import type { ViewerImage } from './viewerTypes';
 
-const images: ViewerImage[] = [1, 2, 3].map((n) => ({
-  id: `img-${n}`,
+const images: ViewerImage[] = [1, 2, 3].map((number) => ({
+  id: `img-${number}`,
   url: `data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="40" height="30"/>`,
   width: 400,
   height: 300,
-  alt: `Screenshot ${n}`,
+  alt: `Screenshot ${number}`,
 }));
 
 let restore: () => void = () => undefined;

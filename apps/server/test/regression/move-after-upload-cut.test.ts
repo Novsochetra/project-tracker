@@ -36,7 +36,7 @@ async function sourceWithCutUpload(writeWhole: boolean) {
   const app = createApp({ db, storage: stopped, events: createBroadcaster() });
   const { path, init } = fileUpload({ name: 'crash.log', ticketKey: 'MOB-1' });
   void app.request(path, init);
-  while (!reached) await new Promise((r) => setTimeout(r, 5));
+  while (!reached) await new Promise((resolve) => setTimeout(resolve, 5));
   await db.destroy();
 
   return source;

@@ -47,12 +47,12 @@ describe.each(DIALECTS)('regression: sends that race an answer’s end (%s)', (d
     const { chatId, job } = await working();
     await ask(chatId, 'A');
     const done = { status: 'done', answer: 'Every minute.', sessionId: SESSION };
-    const [ended, b, c] = await Promise.all([
+    const [ended, askB, askC] = await Promise.all([
       helper<Run>('POST', `/api/runs/${job.run.id}/finish`, done),
       ask(chatId, 'B'),
       ask(chatId, 'C'),
     ]);
-    expect([ended.status, b.status, c.status]).toEqual([200, 200, 200]);
+    expect([ended.status, askB.status, askC.status]).toEqual([200, 200, 200]);
     const after = await chat(chatId);
     expect(after.messages.at(-1)?.text).toBe('A');
     expect(after.queued?.map(({ text }) => text).sort()).toEqual(['B', 'C']);

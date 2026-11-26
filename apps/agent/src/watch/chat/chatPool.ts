@@ -62,7 +62,7 @@ export function createChatPool<T extends PooledChat>(options: ChatPoolOptions = 
   function makeRoom() {
     while (open.size >= max) {
       const idle = [...open].filter(([, entry]) => !entry.using);
-      const oldest = idle.sort(([, a], [, b]) => a.usedAt - b.usedAt)[0];
+      const oldest = idle.sort(([, left], [, right]) => left.usedAt - right.usedAt)[0];
       if (!oldest) return;
       close(oldest[0]);
     }

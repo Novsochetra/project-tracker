@@ -6,7 +6,8 @@ export interface Rankable {
   num: number;
 }
 
-export const byRank = (a: Rankable, b: Rankable): number => a.rank - b.rank || b.num - a.num;
+export const byRank = (left: Rankable, right: Rankable): number =>
+  left.rank - right.rank || right.num - left.num;
 
 export function topRank(group: readonly Rankable[]): number {
   if (group.length === 0) return 0;

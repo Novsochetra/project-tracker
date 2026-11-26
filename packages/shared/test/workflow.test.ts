@@ -30,7 +30,7 @@ const item = (num: number, statusId: string, priority: Priority, rank = 0) => ({
   rank,
 });
 
-const keys = (tickets: { id: string }[]) => tickets.map((t) => t.id);
+const keys = (tickets: { id: string }[]) => tickets.map((ticket) => ticket.id);
 
 describe('pickNextTicket', () => {
   it('only picks tickets in a todo-category status', () => {

@@ -25,7 +25,7 @@ const board: Placeable[] = [
 const ORDER = ['todo', 'doing', 'done'];
 
 const orderOf = (plan: MovePlan | null): string[] | null =>
-  plan && [...plan.ranks.entries()].sort((a, b) => a[1] - b[1]).map(([id]) => id);
+  plan && [...plan.ranks.entries()].sort((left, right) => left[1] - right[1]).map(([id]) => id);
 
 const longGroup = (): Placeable[] =>
   Array.from({ length: 7 }, (_, index) => ticket(`T${index + 1}`, 'todo', index * 1000, index + 1));
@@ -234,7 +234,7 @@ describe('keyboardMoveTarget', () => {
     });
     expect(keyboardMove(board, 'E', 'down')).toEqual({ statusId: 'done', order: ['E'] });
 
-    const noTodo = board.filter((t) => t.statusId !== 'todo');
+    const noTodo = board.filter((item) => item.statusId !== 'todo');
     expect(keyboardMove(noTodo, 'D', 'up')).toEqual({ statusId: 'todo', order: ['D'] });
   });
 

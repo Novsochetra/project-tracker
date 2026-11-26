@@ -9,19 +9,19 @@ describe.each(DIALECTS)("a repeated create naming another user's file (%s)", (di
   const api = useTestServer(dialect);
 
   it('leaves it out like a file that is gone', async () => {
-    const a = await addUser(api.db, 'a@example.com', Date.now(), 'owner');
-    const b = await addUser(api.db, 'b@example.com', Date.now() + 1);
+    const userA = await addUser(api.db, 'a@example.com', Date.now(), 'owner');
+    const userB = await addUser(api.db, 'b@example.com', Date.now() + 1);
     const upload = await api.app.request('/api/attachments', {
       method: 'POST',
       headers: {
-        cookie: a.person.cookie!,
+        cookie: userA.person.cookie!,
         'content-type': 'text/plain',
         [FILE_NAME_HEADER]: 'a.txt',
       },
       body: 'notes of A',
     });
     const aFile = ((await upload.json()) as Attachment).id;
-    const asB = caller(() => api.app, b.person);
+    const asB = caller(() => api.app, userB.person);
     await asB('POST', '/api/projects', { name: 'Web', key: 'WEB' });
     const create = { title: 'Mine', clientId: 'c-1' };
     expect((await asB('POST', '/api/projects/WEB/tickets', create)).status).toBe(201);

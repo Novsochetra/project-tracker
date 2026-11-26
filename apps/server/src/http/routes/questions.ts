@@ -13,33 +13,39 @@ import { jsonBody } from '../validation';
 // its own question.
 export const questionRoutes = (ctx: ServiceContext) =>
   new Hono<AppEnv>()
-    .post('/tickets/:key/questions', jsonBody(askQuestionInput), async (c) =>
-      c.json(
+    .post('/tickets/:key/questions', jsonBody(askQuestionInput), async (context) =>
+      context.json(
         await askQuestion(
-          userContext(ctx, c),
-          c.get('actor'),
-          c.req.param('key'),
-          c.req.valid('json'),
+          userContext(ctx, context),
+          context.get('actor'),
+          context.req.param('key'),
+          context.req.valid('json'),
         ),
         201,
       ),
     )
-    .get('/tickets/:key/questions', async (c) =>
-      c.json(await listQuestions(userContext(ctx, c), c.req.param('key'))),
+    .get('/tickets/:key/questions', async (context) =>
+      context.json(await listQuestions(userContext(ctx, context), context.req.param('key'))),
     )
-    .get('/questions/:id/wait', async (c) =>
-      c.json(await waitForQuestion(userContext(ctx, c), c.req.param('id'), c.req.raw.signal)),
-    )
-    .post('/questions/:id/answer', personAnswers, jsonBody(answerQuestionInput), async (c) =>
-      c.json(
-        await answerQuestion(
-          userContext(ctx, c),
-          c.get('actor'),
-          c.req.param('id'),
-          c.req.valid('json'),
+    .get('/questions/:id/wait', async (context) =>
+      context.json(
+        await waitForQuestion(
+          userContext(ctx, context),
+          context.req.param('id'),
+          context.req.raw.signal,
         ),
       ),
     )
-    .post('/questions/:id/cancel', async (c) =>
-      c.json(await cancelQuestion(userContext(ctx, c), c.req.param('id'))),
+    .post('/questions/:id/answer', personAnswers, jsonBody(answerQuestionInput), async (context) =>
+      context.json(
+        await answerQuestion(
+          userContext(ctx, context),
+          context.get('actor'),
+          context.req.param('id'),
+          context.req.valid('json'),
+        ),
+      ),
+    )
+    .post('/questions/:id/cancel', async (context) =>
+      context.json(await cancelQuestion(userContext(ctx, context), context.req.param('id'))),
     );

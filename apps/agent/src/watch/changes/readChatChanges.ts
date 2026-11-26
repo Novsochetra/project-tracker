@@ -30,7 +30,11 @@ async function diffOf(
   const still = new Set((await changedPaths(cwd, { from, to, paths }, signal)).paths);
   const left = files.filter((file) => still.has(file.path));
   if (left.length === 0) return { files: [], ...NONE };
-  const { raw, cut } = await readDiff(cwd, { from, to, paths: left.map((f) => f.path) }, signal);
+  const { raw, cut } = await readDiff(
+    cwd,
+    { from, to, paths: left.map((file) => file.path) },
+    signal,
+  );
 
   return { files: left, ...prepareDiff(raw, cut) };
 }

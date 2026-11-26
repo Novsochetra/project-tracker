@@ -47,7 +47,7 @@ function jobOf(row: ChatGitActionRow, files: ChatChangedFile[]): GitActionJob {
   const input = JSON.parse(row.input) as CommitInput;
   const taken = new Set(input.paths);
 
-  return { ...base, kind: 'commit', ...input, keep: files.filter((f) => !taken.has(f.path)) };
+  return { ...base, kind: 'commit', ...input, keep: files.filter((file) => !taken.has(file.path)) };
 }
 
 // A helper asks only between runs of its ticket lane, so one of its actions still running was

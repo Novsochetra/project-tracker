@@ -24,7 +24,7 @@ function tagSpans(profile: Buffer): Span[] | null {
     spans.push({ start, end });
   }
 
-  return spans.sort((a, b) => a.start - b.start);
+  return spans.sort((left, right) => left.start - right.start);
 }
 
 // The spec pads each tag with up to 3 zero bytes; anything more is read by no one.

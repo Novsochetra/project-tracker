@@ -90,8 +90,8 @@ export const isDraftRecord = (value: unknown): value is DraftRecord =>
   isStoredDraft(value) && typeof value.at === 'number';
 
 // Text typed later wins; then any fixed order, so every tab picks the same record.
-const isLater = (a: Held, b: Held): boolean =>
-  a.record.at !== b.record.at ? a.record.at > b.record.at : a.key > b.key;
+const isLater = (left: Held, right: Held): boolean =>
+  left.record.at !== right.record.at ? left.record.at > right.record.at : left.key > right.key;
 
 export const latestOf = (held: readonly Held[]): Held | undefined =>
   held.reduce<Held | undefined>(

@@ -35,7 +35,7 @@ export function ticketFiles(detail: TicketDetail): Attachment[] {
   const candidates = [
     ...detail.attachments.filter((file) => file.activityId === null),
     ...[...detail.activity]
-      .sort((a, b) => a.createdAt - b.createdAt)
+      .sort((left, right) => left.createdAt - right.createdAt)
       .flatMap((item) => item.attachments),
     ...detail.attachments,
   ];

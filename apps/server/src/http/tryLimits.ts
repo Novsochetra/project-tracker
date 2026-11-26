@@ -15,13 +15,14 @@ export type TryKey = (c: Context<AppEnv>) => string;
 // start the count again.
 export function limitTries({ now, options }: AuthDeps, what: string, keyOf?: TryKey) {
   const limiter = createRateLimiter(options.loginLimits.perAddress);
-  const key = keyOf ?? ((c: Context<AppEnv>) => clientAddress(c, options.trustedProxies));
+  const key =
+    keyOf ?? ((context: Context<AppEnv>) => clientAddress(context, options.trustedProxies));
 
-  return createMiddleware<AppEnv>(async (c, next) => {
-    const tries = key(c);
+  return createMiddleware<AppEnv>(async (context, next) => {
+    const tries = key(context);
     const at = now();
     const wait = limiter.waitFor(tries, at);
-    if (wait > 0) throw tooManyTries(c, wait, what);
+    if (wait > 0) throw tooManyTries(context, wait, what);
     limiter.fail(tries, at);
     await next();
   });

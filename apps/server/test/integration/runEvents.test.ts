@@ -62,14 +62,17 @@ describe.each(DIALECTS)('run events (%s)', (dialect) => {
 
   it("reach only the run's own user, for every change a run goes through", async () => {
     clock.set(Date.now());
-    const a = await addUser(api.db, 'a@example.com', clock.now());
-    const b = await addUser(api.db, 'b@example.com', clock.now() + 1);
-    const [aPerson, aHelper] = [caller(() => api.app, a.person), caller(() => api.app, a.helper)];
+    const userA = await addUser(api.db, 'a@example.com', clock.now());
+    const userB = await addUser(api.db, 'b@example.com', clock.now() + 1);
+    const [aPerson, aHelper] = [
+      caller(() => api.app, userA.person),
+      caller(() => api.app, userA.helper),
+    ];
     await aPerson('POST', '/api/projects', { name: 'Mobile', key: 'MOB' });
     await aPerson('POST', '/api/projects/MOB/tickets', { title: 'Crash' });
     await aPerson('POST', '/api/projects/MOB/tickets', { title: 'Login' });
-    const aStream = await stream(a.helper);
-    const bStream = await stream(b.person);
+    const aStream = await stream(userA.helper);
+    const bStream = await stream(userB.person);
     const [aRunner, bRunner] = [randomUUID(), randomUUID()];
     const checkIn = () => aHelper('PUT', `/api/runners/${aRunner}`, helperName('A Mac'));
     const start = async () =>
@@ -89,7 +92,7 @@ describe.each(DIALECTS)('run events (%s)', (dialect) => {
     const removed = await start();
     await aPerson('DELETE', `/api/runners/${aRunner}`);
 
-    const bRun = await startOwnRun(b, bRunner);
+    const bRun = await startOwnRun(userB, bRunner);
 
     // Writes keep their order, so B's own event arriving first means none of A's were sent to B.
     const bText = await readUntil(bStream, /^event: run\ndata: .+\n\n/m);
@@ -115,9 +118,12 @@ describe.each(DIALECTS)('run events (%s)', (dialect) => {
 
   it("tells only the run's own user that new steps came, named apart from run events", async () => {
     clock.set(Date.now());
-    const a = await addUser(api.db, 'a@example.com', clock.now());
-    const b = await addUser(api.db, 'b@example.com', clock.now() + 1);
-    const [aPerson, aHelper] = [caller(() => api.app, a.person), caller(() => api.app, a.helper)];
+    const userA = await addUser(api.db, 'a@example.com', clock.now());
+    const userB = await addUser(api.db, 'b@example.com', clock.now() + 1);
+    const [aPerson, aHelper] = [
+      caller(() => api.app, userA.person),
+      caller(() => api.app, userA.helper),
+    ];
     await aPerson('POST', '/api/projects', { name: 'Mobile', key: 'MOB' });
     await aPerson('POST', '/api/projects/MOB/tickets', { title: 'Crash' });
     const runner = randomUUID();
@@ -126,8 +132,8 @@ describe.each(DIALECTS)('run events (%s)', (dialect) => {
       await aPerson<Run>('POST', '/api/tickets/MOB-1/runs', { runnerId: runner, prompt: 'Go' })
     ).body;
     await aHelper('POST', `/api/runners/${runner}/next`);
-    const aStream = await stream(a.person);
-    const bStream = await stream(b.person);
+    const aStream = await stream(userA.person);
+    const bStream = await stream(userB.person);
     const steps = [
       { kind: 'tool', label: 'Read a.ts' },
       { kind: 'text', label: 'Done.' },
@@ -147,7 +153,7 @@ describe.each(DIALECTS)('run events (%s)', (dialect) => {
     expect(runEvents(aText)).toEqual([]);
 
     // Writes keep their order, so B's own run event arriving means A's steps never went to B.
-    await startOwnRun(b, randomUUID());
+    await startOwnRun(userB, randomUUID());
     const bText = await readUntil(bStream, /^event: run\ndata: .+\n\n/m);
     expect(bText).not.toContain(run.id);
     expect(bText).not.toContain('run-step');
@@ -155,9 +161,12 @@ describe.each(DIALECTS)('run events (%s)', (dialect) => {
 
   it("tells only the run's own user what Claude asks and how it ended", async () => {
     clock.set(Date.now());
-    const a = await addUser(api.db, 'a@example.com', clock.now());
-    const b = await addUser(api.db, 'b@example.com', clock.now() + 1);
-    const [aPerson, aHelper] = [caller(() => api.app, a.person), caller(() => api.app, a.helper)];
+    const userA = await addUser(api.db, 'a@example.com', clock.now());
+    const userB = await addUser(api.db, 'b@example.com', clock.now() + 1);
+    const [aPerson, aHelper] = [
+      caller(() => api.app, userA.person),
+      caller(() => api.app, userA.helper),
+    ];
     await aPerson('POST', '/api/projects', { name: 'Mobile', key: 'MOB' });
     await aPerson('POST', '/api/projects/MOB/tickets', { title: 'Crash' });
     const runner = randomUUID();
@@ -166,8 +175,8 @@ describe.each(DIALECTS)('run events (%s)', (dialect) => {
       await aPerson<Run>('POST', '/api/tickets/MOB-1/runs', { runnerId: runner, prompt: 'Go' })
     ).body;
     await aHelper('POST', `/api/runners/${runner}/next`);
-    const aStream = await stream(a.person);
-    const bStream = await stream(b.person);
+    const aStream = await stream(userA.person);
+    const bStream = await stream(userB.person);
     const label = 'Run npm test';
     const request = (
       await aHelper<RunRequest>('POST', `/api/runs/${run.id}/requests`, {
@@ -198,7 +207,7 @@ describe.each(DIALECTS)('run events (%s)', (dialect) => {
     ]);
     expect(aText).not.toContain(label);
 
-    await startOwnRun(b, randomUUID());
+    await startOwnRun(userB, randomUUID());
     const bText = await readUntil(bStream, /^event: run\ndata: .+\n\n/m);
     expect(bText).not.toContain('run-request');
   });

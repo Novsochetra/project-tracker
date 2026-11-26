@@ -11,8 +11,8 @@ export interface LabelChange {
   entry: ActivityEntry;
 }
 
-const sameSet = (a: readonly string[], b: readonly string[]): boolean =>
-  a.length === b.length && a.every((id) => b.includes(id));
+const sameSet = (left: readonly string[], right: readonly string[]): boolean =>
+  left.length === right.length && left.every((id) => right.includes(id));
 
 // In the project's order, so the ticket keeps them that way whatever order they were sent in.
 export async function chosenLabels(

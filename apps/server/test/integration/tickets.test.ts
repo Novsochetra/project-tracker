@@ -21,7 +21,9 @@ describe.each(DIALECTS)('tickets (%s)', (dialect) => {
   const ranks = async (statusId: string) => {
     const board = await api.client().getBoard('MA');
 
-    return board.tickets.filter((t) => t.statusId === statusId).map((t) => t.key);
+    return board.tickets
+      .filter((ticket) => ticket.statusId === statusId)
+      .map((ticket) => ticket.key);
   };
 
   describe('create', () => {
@@ -171,7 +173,7 @@ describe.each(DIALECTS)('tickets (%s)', (dialect) => {
       await client.createTicket('MA', { title: 'Login error' });
       await client.createTicket('MA', { title: 'Profile crash', statusId: doing.id });
       await client.createTicket('MA', { title: 'Login copy', statusId: doing.id });
-      const keys = (items: TicketListItem[]) => items.map((t) => t.key);
+      const keys = (items: TicketListItem[]) => items.map((ticket) => ticket.key);
 
       expect(keys(await client.listTickets('MA'))).toEqual(['MA-1', 'MA-3', 'MA-2']);
       expect(keys(await client.listTickets('MA', { status: 'in PROGRESS' }))).toEqual([
@@ -329,9 +331,9 @@ describe.each(DIALECTS)('tickets (%s)', (dialect) => {
         .moveTicket('MA-3', { statusId: todo, afterId: null, beforeId: null });
       expect(await ranks(todo)).toEqual(['MA-2', 'MA-1', 'MA-3']);
       const board = await api.client().getBoard('MA');
-      expect(board.tickets.filter((t) => t.statusId === todo).map((t) => t.rank)).toEqual([
-        0, 1000, 2000,
-      ]);
+      expect(
+        board.tickets.filter((item) => item.statusId === todo).map((item) => item.rank),
+      ).toEqual([0, 1000, 2000]);
       expect(ticket.rank).toBe(2000);
       expect(eventTexts(await api.client().getTicket('MA-3'))).toEqual(['created the ticket']);
     });

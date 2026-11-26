@@ -38,7 +38,7 @@ export const UNKNOWN =
 export const WITHIN_LIMITS = 'Within your limits; Claude Code gave no figures.';
 export const NO_FIGURES = 'Claude Code gave no figures.';
 
-const sameDay = (a: Date, b: Date) => a.toDateString() === b.toDateString();
+const sameDay = (left: Date, right: Date) => left.toDateString() === right.toDateString();
 
 export function formatResetTime(at: number, now: number): string {
   const date = new Date(at);

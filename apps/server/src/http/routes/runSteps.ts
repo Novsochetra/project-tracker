@@ -10,15 +10,15 @@ import { jsonBody, queryParams } from '../validation';
 
 export const runStepRoutes = (ctx: ServiceContext) =>
   new Hono<AppEnv>()
-    .post('/runs/:id/steps', helperOnly, jsonBody(addRunStepsInput), async (c) => {
-      const scope = requireScope(c.get('access'));
-      await addRunSteps(ctx, scope, c.req.param('id'), c.req.valid('json'));
+    .post('/runs/:id/steps', helperOnly, jsonBody(addRunStepsInput), async (context) => {
+      const scope = requireScope(context.get('access'));
+      await addRunSteps(ctx, scope, context.req.param('id'), context.req.valid('json'));
 
-      return c.body(null, 204);
+      return context.body(null, 204);
     })
-    .get('/runs/:id/steps', personReadsSteps, queryParams(runStepsQuery), async (c) => {
-      const scope = requireScope(c.get('access'));
-      const { after } = c.req.valid('query');
+    .get('/runs/:id/steps', personReadsSteps, queryParams(runStepsQuery), async (context) => {
+      const scope = requireScope(context.get('access'));
+      const { after } = context.req.valid('query');
 
-      return c.json(await listRunSteps(ctx, scope, c.req.param('id'), after));
+      return context.json(await listRunSteps(ctx, scope, context.req.param('id'), after));
     });

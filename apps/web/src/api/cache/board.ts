@@ -16,7 +16,8 @@ export interface ListCounts {
   attachmentCount?: number;
 }
 
-const sameKey = (a: string, b: string): boolean => a.toUpperCase() === b.toUpperCase();
+const sameKey = (left: string, right: string): boolean =>
+  left.toUpperCase() === right.toUpperCase();
 
 const withTickets = (board: ProjectBoard, tickets: TicketListItem[]): ProjectBoard => ({
   ...board,
@@ -32,7 +33,8 @@ const groupTopRank = (
   tickets: readonly TicketListItem[],
   statusId: string,
   exceptId: string,
-): number => topRank(tickets.filter((t) => t.statusId === statusId && t.id !== exceptId));
+): number =>
+  topRank(tickets.filter((ticket) => ticket.statusId === statusId && ticket.id !== exceptId));
 
 export function patchBoardTicket(
   board: ProjectBoard,

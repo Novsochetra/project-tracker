@@ -13,10 +13,10 @@ export function rankTicketHits(
   return hits
     .map((hit, index) => ({ hit, index }))
     .sort(
-      (a, b) =>
-        MATCH_ORDER[a.hit.match] - MATCH_ORDER[b.hit.match] ||
-        here(a.hit) - here(b.hit) ||
-        a.index - b.index,
+      (left, right) =>
+        MATCH_ORDER[left.hit.match] - MATCH_ORDER[right.hit.match] ||
+        here(left.hit) - here(right.hit) ||
+        left.index - right.index,
     )
     .map(({ hit }) => hit);
 }

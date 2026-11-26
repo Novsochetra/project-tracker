@@ -14,10 +14,14 @@ export const signedInState = ({ email, name, role }: SignedInUser): SessionState
   role,
 });
 
-export async function signInAs(c: Context<AppEnv>, deps: AuthDeps, userId: string): Promise<void> {
+export async function signInAs(
+  context: Context<AppEnv>,
+  deps: AuthDeps,
+  userId: string,
+): Promise<void> {
   const at = deps.now();
-  const previous = readSessionCookie(c);
+  const previous = readSessionCookie(context);
   if (previous) await endSession(deps.db, previous);
   const session = await startSession(deps.db, userId, at);
-  setSessionCookie(c, session.secret, session.expiresAt - at, deps.options);
+  setSessionCookie(context, session.secret, session.expiresAt - at, deps.options);
 }

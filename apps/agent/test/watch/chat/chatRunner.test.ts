@@ -93,11 +93,11 @@ describe('a chat keeps one open claude', () => {
     await answeredBy(setup, question('r-2', { chatId: 'b' }));
     await answeredBy(setup, question('r-3', { chatId: 'a', resume: SESSION }));
     await answeredBy(setup, question('r-4', { chatId: 'c' }));
-    const [a, b, c] = setup.children;
+    const [first, second, third] = setup.children;
     expect(setup.children).toHaveLength(3);
-    expect(b?.exited).toBe(true);
-    expect(a?.exited).toBe(false);
-    expect(c?.exited).toBe(false);
+    expect(second?.exited).toBe(true);
+    expect(first?.exited).toBe(false);
+    expect(third?.exited).toBe(false);
   });
 
   it.each([

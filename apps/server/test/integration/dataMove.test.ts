@@ -57,7 +57,16 @@ describe.each(DIALECTS.flatMap((dialect) => STORAGES.map((kind) => [dialect, kin
       const project = await target.db.selectFrom('projects').selectAll().executeTakeFirstOrThrow();
       expect(project).toMatchObject({ id: 'p1', key: 'MOB', nextNum: 4, updatedAt: 5000 });
       const tickets = await target.db.selectFrom('tickets').selectAll().orderBy('num').execute();
-      expect(tickets.map((t) => [t.id, t.num, t.rank, t.statusId, t.clientId, t.due])).toEqual([
+      expect(
+        tickets.map((ticket) => [
+          ticket.id,
+          ticket.num,
+          ticket.rank,
+          ticket.statusId,
+          ticket.clientId,
+          ticket.due,
+        ]),
+      ).toEqual([
         ['t1', 1, 0, 's-todo', 'capture-1', '2026-11-01'],
         ['t3', 3, -2, 's-done', null, ''],
       ]);

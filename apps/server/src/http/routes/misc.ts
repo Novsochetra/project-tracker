@@ -31,13 +31,15 @@ export const serverMeta = (
 
 export const miscRoutes = (ctx: ServiceContext, meta: MetaOptions) =>
   new Hono<AppEnv>()
-    .get('/health', (c) => c.json({ ok: true }))
-    .get('/meta', (c) => c.json(serverMeta(meta, c.req.url, c.get('access')?.kind !== 'open')))
-    .get('/people', async (c) => c.json(await listPeople(userContext(ctx, c))));
+    .get('/health', (context) => context.json({ ok: true }))
+    .get('/meta', (context) =>
+      context.json(serverMeta(meta, context.req.url, context.get('access')?.kind !== 'open')),
+    )
+    .get('/people', async (context) => context.json(await listPeople(userContext(ctx, context))));
 
 export const testResetRoutes = (ctx: ServiceContext) =>
-  new Hono<AppEnv>().post('/test/reset', async (c) => {
+  new Hono<AppEnv>().post('/test/reset', async (context) => {
     await resetAllData(ctx);
 
-    return c.body(null, 204);
+    return context.body(null, 204);
   });

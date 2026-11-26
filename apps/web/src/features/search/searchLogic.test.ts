@@ -50,8 +50,11 @@ describe('isPaletteShortcut', () => {
 });
 
 describe('paletteAction and stepIndex', () => {
-  const key = (k: string, ctrlKey = false, apple = true) =>
-    paletteAction({ key: k, ctrlKey, metaKey: false, altKey: false, isComposing: false }, apple);
+  const key = (keyName: string, ctrlKey = false, apple = true) =>
+    paletteAction(
+      { key: keyName, ctrlKey, metaKey: false, altKey: false, isComposing: false },
+      apple,
+    );
 
   it('moves with the arrows and Control-N/P, opens with Enter', () => {
     expect(key('ArrowDown')).toBe('next');
@@ -106,10 +109,10 @@ describe('matchProjects', () => {
   });
 
   it('matches every word in the name or key, the key itself first', () => {
-    expect(matchProjects(all, 'pt').map((p) => p.key)).toEqual(['PT']);
-    expect(matchProjects(all, 'app mob').map((p) => p.key)).toEqual(['MOB']);
-    expect(matchProjects(all, 'web').map((p) => p.key)).toEqual(['WEB']);
-    expect(matchProjects(all, 'project').map((p) => p.key)).toEqual(['PT', 'SEC']);
+    expect(matchProjects(all, 'pt').map((item) => item.key)).toEqual(['PT']);
+    expect(matchProjects(all, 'app mob').map((item) => item.key)).toEqual(['MOB']);
+    expect(matchProjects(all, 'web').map((item) => item.key)).toEqual(['WEB']);
+    expect(matchProjects(all, 'project').map((item) => item.key)).toEqual(['PT', 'SEC']);
   });
 
   it('never matches a hidden name', () => {

@@ -45,7 +45,7 @@ test.describe('comments', () => {
     const press = ({ x, y }: { x: number; y: number }) =>
       info.project.use.hasTouch ? page.touchscreen.tap(x, y) : page.mouse.click(x, y);
     await seedProject(api, 'Mobile app', 'MOB', [{ title: 'Login error' }]);
-    for (let n = 1; n <= 10; n += 1) await api.addComment('MOB-1', { text: `Thought ${n}` });
+    for (let i = 1; i <= 10; i += 1) await api.addComment('MOB-1', { text: `Thought ${i}` });
     await page.goto('/p/MOB/1');
     const options = page.getByRole('button', { name: 'Comment options' }).last();
     // Placed while the cards still rise, the button would settle lower, partly off the screen.

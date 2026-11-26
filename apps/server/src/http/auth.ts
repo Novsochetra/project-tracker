@@ -39,28 +39,28 @@ export interface AuthDeps {
 export const unauthorized = (): AppError =>
   new AppError('unauthorized', 'Sign in to use this tracker.');
 
-const bearerToken = (c: Context): string | null =>
-  /^Bearer\s+(\S+)\s*$/i.exec(c.req.header('authorization') ?? '')?.[1] ?? null;
+const bearerToken = (context: Context): string | null =>
+  /^Bearer\s+(\S+)\s*$/i.exec(context.req.header('authorization') ?? '')?.[1] ?? null;
 
 // SameSite=Lax already keeps the cookie off other sites' form posts. Browsers also say where a
 // request came from, which covers sites that count as the same site, like another subdomain.
-function rejectCrossSiteWrite(c: Context): void {
-  if (SAFE_METHODS.has(c.req.method)) return;
-  const site = c.req.header('sec-fetch-site');
+function rejectCrossSiteWrite(context: Context): void {
+  if (SAFE_METHODS.has(context.req.method)) return;
+  const site = context.req.header('sec-fetch-site');
   if (site && site !== 'same-origin' && site !== 'none') {
     throw forbidden('This request came from another site.');
   }
 }
 
-async function sessionAccess(c: Context, { db, now, options }: AuthDeps, secret: string) {
+async function sessionAccess(context: Context, { db, now, options }: AuthDeps, secret: string) {
   const at = now();
   const session = await resumeSession(db, secret, at);
   if (!session) {
-    clearSessionCookie(c, options);
+    clearSessionCookie(context, options);
     return null;
   }
 
-  if (session.renewed) setSessionCookie(c, secret, session.expiresAt - at, options);
+  if (session.renewed) setSessionCookie(context, secret, session.expiresAt - at, options);
   const { userId, sessionId, email } = session;
 
   return { kind: 'session', userId, sessionId, email } satisfies Access;
@@ -72,39 +72,41 @@ async function tokenAccess({ db, now }: AuthDeps, secret: string): Promise<Acces
   return owner && { kind: 'token', ...owner };
 }
 
-async function openAccess(c: Context, { db, options }: AuthDeps): Promise<Access | null> {
+async function openAccess(context: Context, { db, options }: AuthDeps): Promise<Access | null> {
   const { openWithoutOwner } = options;
-  const open = openWithoutOwner === 'any' || (openWithoutOwner === 'local' && isLocalRequest(c));
+  const open =
+    openWithoutOwner === 'any' || (openWithoutOwner === 'local' && isLocalRequest(context));
 
   return open && !(await ownerExists(db)) ? OPEN_ACCESS : null;
 }
 
 // A token that isn't known gets no further than no token at all: a local tracker without an owner
 // stays open to agents still configured with an old TRACKER_TOKEN.
-export async function resolveAccess(c: Context, deps: AuthDeps): Promise<Access | null> {
-  const bearer = bearerToken(c);
+export async function resolveAccess(context: Context, deps: AuthDeps): Promise<Access | null> {
+  const bearer = bearerToken(context);
   const token = bearer !== null ? await tokenAccess(deps, bearer) : null;
   if (token) return token;
-  const secret = readSessionCookie(c);
-  const session = secret ? await sessionAccess(c, deps, secret) : null;
+  const secret = readSessionCookie(context);
+  const session = secret ? await sessionAccess(context, deps, secret) : null;
 
-  return session ?? openAccess(c, deps);
+  return session ?? openAccess(context, deps);
 }
 
 export const stillHasAccess = ({ db, now }: AuthDeps, access: Access | null | undefined) =>
   accessStillValid(db, access, now());
 
 export function authMiddleware(deps: AuthDeps) {
-  return createMiddleware<AppEnv>(async (c, next) => {
-    if (c.req.path === HEALTH_PATH) return next();
-    rejectCrossSiteWrite(c);
-    const access = await resolveAccess(c, deps);
-    if (!access && !PUBLIC_ROUTES.has(`${c.req.method} ${c.req.path}`)) throw unauthorized();
-    c.set('access', access);
+  return createMiddleware<AppEnv>(async (context, next) => {
+    if (context.req.path === HEALTH_PATH) return next();
+    rejectCrossSiteWrite(context);
+    const access = await resolveAccess(context, deps);
+    if (!access && !PUBLIC_ROUTES.has(`${context.req.method} ${context.req.path}`))
+      throw unauthorized();
+    context.set('access', access);
     // Only the owner's own session acts as the person; a token is an agent whatever it says, so it
     // can never move a ticket to Done.
-    if (access?.kind === 'token') c.set('actor', asAgent(c.get('actor')));
-    refusePersonName(c.get('actor'));
+    if (access?.kind === 'token') context.set('actor', asAgent(context.get('actor')));
+    refusePersonName(context.get('actor'));
     await next();
   });
 }

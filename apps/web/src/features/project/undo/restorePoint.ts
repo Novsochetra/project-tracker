@@ -9,7 +9,7 @@ export interface RestorePoint {
 }
 
 const othersIn = (tickets: readonly Placeable[], statusId: string, ticketId: string) =>
-  tickets.filter((t) => t.statusId === statusId && t.id !== ticketId).sort(byRank);
+  tickets.filter((ticket) => ticket.statusId === statusId && ticket.id !== ticketId).sort(byRank);
 
 // `ticket` is the ticket as it was; the other tickets of its group keep their ranks when it
 // leaves, so `tickets` may already show the move.

@@ -36,11 +36,14 @@ describe.each(DIALECTS)('questions on a ticket (%s)', (dialect) => {
 
   beforeEach(async () => {
     clock.set(Date.now());
-    const a = await addUser(api.db, 'a@example.com', clock.now());
-    const b = await addUser(api.db, 'b@example.com', clock.now() + 1);
-    person = caller(() => api.app, a.person);
-    agent = caller(() => api.app, a.helper);
-    other = { person: caller(() => api.app, b.person), agent: caller(() => api.app, b.helper) };
+    const userA = await addUser(api.db, 'a@example.com', clock.now());
+    const userB = await addUser(api.db, 'b@example.com', clock.now() + 1);
+    person = caller(() => api.app, userA.person);
+    agent = caller(() => api.app, userA.helper);
+    other = {
+      person: caller(() => api.app, userB.person),
+      agent: caller(() => api.app, userB.helper),
+    };
     await person('POST', '/api/projects', { name: 'Mobile', key: 'MOB' });
     await person('POST', '/api/projects/MOB/tickets', { title: 'Dark mode' });
   });

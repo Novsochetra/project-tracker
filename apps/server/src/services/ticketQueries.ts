@@ -79,7 +79,9 @@ export function sortForBoard<T extends TicketRow>(
   const order = new Map(statuses.map((status, index) => [status.id, index]));
   const position = (ticket: T) => order.get(ticket.statusId) ?? statuses.length;
 
-  return [...tickets].sort((a, b) => position(a) - position(b) || byRank(a, b));
+  return [...tickets].sort(
+    (left, right) => position(left) - position(right) || byRank(left, right),
+  );
 }
 
 const readerOf = (ctx: UserContext) => ({ userId: ctx.scope, now: ctx.now() });

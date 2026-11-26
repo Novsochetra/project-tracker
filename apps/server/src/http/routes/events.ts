@@ -57,10 +57,10 @@ export const eventRoutes = (
   stillAllowed: AccessCheck = alwaysAllowed,
   runs?: RunBroadcaster,
 ) =>
-  new Hono<AppEnv>().get('/events', (c) => {
-    const access = c.get('access');
+  new Hono<AppEnv>().get('/events', (context) => {
+    const access = context.get('access');
 
-    return streamSSE(c, async (stream) => {
+    return streamSSE(context, async (stream) => {
       let end = () => undefined as void;
       const ended = new Promise<void>((resolve) => {
         end = resolve;

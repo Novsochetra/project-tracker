@@ -38,7 +38,12 @@ function fakeStatusServer(initial: ProjectBoard = makeBoard()) {
       return Promise.resolve(status);
     }),
     reorderStatuses: vi.fn((_key: string, ids: string[]) => {
-      save(ids.map((id, position) => ({ ...board.statuses.find((s) => s.id === id)!, position })));
+      save(
+        ids.map((id, position) => ({
+          ...board.statuses.find((status) => status.id === id)!,
+          position,
+        })),
+      );
 
       return Promise.resolve(board.statuses);
     }),

@@ -50,23 +50,23 @@ export const SECRET_RULES: readonly SecretRule[] = [
     'quoted header',
     String.raw`(["'](${NAME}):\s{0,4})[^"'\n]+`,
     'g',
-    (m, head = '', name = '') => (secretName(name) ? masked(head) : m),
+    (match, head = '', name = '') => (secretName(name) ? masked(head) : match),
   ),
   rule(
     'authorization scheme',
     String.raw`\b(authorization:["'\\\s]{0,4}(?:basic|bearer|token)(?:\\?\s){1,4})(${VALUE})`,
     'gi',
-    (m, head = '', value = '') => (looksSecret(value) ? masked(head) : m),
+    (match, head = '', value = '') => (looksSecret(value) ? masked(head) : match),
   ),
   rule(
     'bare header',
     String.raw`((?:^|\s)(${NAME}):)(${VALUE})`,
     'g',
-    (m, head = '', name = '', value = '') =>
-      secretName(name) && looksSecret(value) ? masked(head) : m,
+    (match, head = '', name = '', value = '') =>
+      secretName(name) && looksSecret(value) ? masked(head) : match,
   ),
-  rule('bearer', String.raw`\b(bearer\s{1,4})(${VALUE})`, 'gi', (m, head = '', value = '') =>
-    looksSecret(value) ? masked(head) : m,
+  rule('bearer', String.raw`\b(bearer\s{1,4})(${VALUE})`, 'gi', (match, head = '', value = '') =>
+    looksSecret(value) ? masked(head) : match,
   ),
   rule(
     'json key',
@@ -74,15 +74,15 @@ export const SECRET_RULES: readonly SecretRule[] = [
     // can't start with a space or a quote: that quote closes a search (`rg '"token":' src`).
     String.raw`(\\?["'](${NAME})\\?["']\s{0,4}:\s{0,4}\\?(["']))(?![\s"'])(?:(?!\3)[^\\\n]|\\(?!\3))+`,
     'g',
-    (m, head = '', name = '') =>
-      secretName(name) && !fetchMode(name, m.slice(head.length)) ? masked(head) : m,
+    (match, head = '', name = '') =>
+      secretName(name) && !fetchMode(name, match.slice(head.length)) ? masked(head) : match,
   ),
   // A numeric user is a uid (docker run -u 1000:1000), not a login.
   rule(
     'user password',
     String.raw`(\s(?:-u|--user)(?:=|\s{1,4})["']?([^\s:"']{1,60}):)(${VALUE})`,
     'g',
-    (m, head = '', user = '') => (/^\d+$/.test(user) ? m : masked(head)),
+    (match, head = '', user = '') => (/^\d+$/.test(user) ? match : masked(head)),
   ),
   rule(
     'address password',
@@ -96,10 +96,10 @@ export const SECRET_RULES: readonly SecretRule[] = [
     'flag',
     String.raw`(\s--?(${NAME})(?:=|\s{1,4}))(${VALUE})`,
     'g',
-    (m, head = '', name = '', value = '') => {
-      if (!secretName(name)) return m;
+    (match, head = '', name = '', value = '') => {
+      if (!secretName(name)) return match;
 
-      return (head.endsWith('=') ? !reference(value) : looksSecret(value)) ? masked(head) : m;
+      return (head.endsWith('=') ? !reference(value) : looksSecret(value)) ? masked(head) : match;
     },
   ),
   // YAML, TOML, INI and code put spaces around `:` or `=` (`password: hunter2xx`, `apiKey = '…'`),
@@ -108,17 +108,20 @@ export const SECRET_RULES: readonly SecretRule[] = [
     'assignment',
     String.raw`((?:^|[^\w-])(${NAME})["']?\s{0,4}[:=]\s{1,4})(${VALUE})`,
     'gm',
-    (m, head = '', name = '', value = '') =>
+    (match, head = '', name = '', value = '') =>
       secretName(name) &&
       looksSecret(value) &&
       !fetchMode(name, value) &&
       !value.includes(MASK) &&
       !/^[^"']*[([]/.test(value)
         ? masked(head)
-        : m,
+        : match,
   ),
-  rule('xml element', String.raw`(<(${NAME})>)[^<\n]+(?=<\/\2>)`, 'g', (m, head = '', name = '') =>
-    secretName(name) ? masked(head) : m,
+  rule(
+    'xml element',
+    String.raw`(<(${NAME})>)[^<\n]+(?=<\/\2>)`,
+    'g',
+    (match, head = '', name = '') => (secretName(name) ? masked(head) : match),
   ),
   // A key's body is base64, so each such line after BEGIN is masked. Steps only: in a command such
   // a line can be a path that runs (PT-171 third review); a permission masks only a whole key file
@@ -128,7 +131,8 @@ export const SECRET_RULES: readonly SecretRule[] = [
       'private key',
       String.raw`-----BEGIN [A-Z ]{0,40}PRIVATE KEY-----[\s\S]*?(?:-----END|$)`,
       'g',
-      (m) => m.replace(/^((?:[+-] )?[ \t]*)[A-Za-z0-9+/]{16,}={0,2}(?=[ \t]*$)/gm, `$1${MASK}`),
+      (match) =>
+        match.replace(/^((?:[+-] )?[ \t]*)[A-Za-z0-9+/]{16,}={0,2}(?=[ \t]*$)/gm, `$1${MASK}`),
     ),
     stepsOnly: true,
   },
@@ -138,8 +142,8 @@ export const SECRET_RULES: readonly SecretRule[] = [
     'name=value',
     String.raw`(^|[^\w-])(${KEYED})=(${VALUE})`,
     'gi',
-    (m, pre = '', name = '', value = '') =>
-      secretName(name) && !reference(value) ? `${pre}${name}=${MASK}` : m,
+    (match, pre = '', name = '', value = '') =>
+      secretName(name) && !reference(value) ? `${pre}${name}=${MASK}` : match,
   ),
   rule('known prefix', String.raw`\b(?:${PREFIXED})`, 'g', () => MASK),
   rule('slack webhook', String.raw`(hooks\.slack\.com\/services\/)[^\s"']+`, 'g', (_m, head = '') =>

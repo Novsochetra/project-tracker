@@ -3,10 +3,10 @@ import { entriesOf, isEntry, readableEntries } from './entries';
 
 describe('readableEntries', () => {
   it('keeps the objects in order and leaves out what isn’t one', () => {
-    const a = { id: 'a' };
-    const b = { id: 'b' };
-    const list = [a, null, 7, 'text', undefined, b] as unknown as Array<{ id: string }>;
-    expect(readableEntries(list)).toEqual([a, b]);
+    const itemA = { id: 'a' };
+    const itemB = { id: 'b' };
+    const list = [itemA, null, 7, 'text', undefined, itemB] as unknown as Array<{ id: string }>;
+    expect(readableEntries(list)).toEqual([itemA, itemB]);
   });
 
   it('tells an object entry from anything else', () => {
@@ -19,8 +19,8 @@ describe('readableEntries', () => {
 
 describe('entriesOf', () => {
   it('reads a list field, and gives none for one that is not a list', () => {
-    const a = { id: 'a' };
-    expect(entriesOf([null, a] as Array<{ id: string }>)).toEqual([a]);
+    const itemA = { id: 'a' };
+    expect(entriesOf([null, itemA] as Array<{ id: string }>)).toEqual([itemA]);
     expect(entriesOf(null)).toEqual([]);
     expect(entriesOf({} as unknown as Array<{ id: string }>)).toEqual([]);
   });

@@ -70,7 +70,9 @@ describe.each(DIALECTS)('a ticket waiting for the person (%s)', (dialect) => {
     clock.advance(1_000);
     const second = await asks();
     const board = await person<ProjectBoard>('GET', '/api/projects/MOB/board');
-    const until = Object.fromEntries(board.body.tickets.map((t) => [t.key, t.waitingUntil]));
+    const until = Object.fromEntries(
+      board.body.tickets.map((ticket) => [ticket.key, ticket.waitingUntil]),
+    );
     expect(until).toEqual({ 'MOB-1': second.expiresAt, 'MOB-2': null });
     expect(second.expiresAt).toBeGreaterThan(first.expiresAt);
   });

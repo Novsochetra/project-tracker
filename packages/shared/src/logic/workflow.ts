@@ -15,8 +15,10 @@ const categoryOf = (statuses: readonly Status[]) => {
   return (statusId: string): StatusCategory | undefined => byId.get(statusId);
 };
 
-const byPriorityThenRank = (a: WorkItem, b: WorkItem): number =>
-  PRIORITY_ORDER[a.priority] - PRIORITY_ORDER[b.priority] || a.rank - b.rank || a.num - b.num;
+const byPriorityThenRank = (left: WorkItem, right: WorkItem): number =>
+  PRIORITY_ORDER[left.priority] - PRIORITY_ORDER[right.priority] ||
+  left.rank - right.rank ||
+  left.num - right.num;
 
 export function pickNextTicket<T extends WorkItem>(
   tickets: readonly T[],
@@ -42,10 +44,10 @@ export function workableTickets<T extends WorkItem>(
       return value === 'todo' || value === 'in_progress';
     })
     .sort(
-      (a, b) =>
-        stage(a) - stage(b) ||
-        PRIORITY_ORDER[a.priority] - PRIORITY_ORDER[b.priority] ||
-        a.num - b.num,
+      (left, right) =>
+        stage(left) - stage(right) ||
+        PRIORITY_ORDER[left.priority] - PRIORITY_ORDER[right.priority] ||
+        left.num - right.num,
     );
 }
 

@@ -36,7 +36,7 @@ export function addCapture(queue: CaptureQueue, capture: QueuedCapture): Capture
 export function waitingCaptures(queue: CaptureQueue): QueuedCapture[] {
   return queue.items
     .filter((item) => !queue.created.includes(item.id))
-    .sort((a, b) => a.capturedAt - b.capturedAt);
+    .sort((left, right) => left.capturedAt - right.capturedAt);
 }
 
 export const waitingCount = (queue: CaptureQueue): number => waitingCaptures(queue).length;

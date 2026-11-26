@@ -88,9 +88,9 @@ export function snapTrack(values: ViewerValues, page: number, stride: number, mo
 }
 
 function twoPointers(state: GestureState): [Point, Point] | null {
-  const [a, b] = [...state.pointers.values()];
+  const [first, second] = [...state.pointers.values()];
 
-  return a && b ? [a, b] : null;
+  return first && second ? [first, second] : null;
 }
 
 export function beginPinch(state: GestureState, ctx: ViewerGestureContext): void {

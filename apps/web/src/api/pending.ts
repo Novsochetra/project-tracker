@@ -26,8 +26,8 @@ export function targetsOf(variables: unknown): MutationTargets {
   return { projectKey, ticketKey };
 }
 
-const sameTargets = (a: MutationTargets, b: MutationTargets): boolean =>
-  a.projectKey === b.projectKey && a.ticketKey === b.ticketKey;
+const sameTargets = (left: MutationTargets, right: MutationTargets): boolean =>
+  left.projectKey === right.projectKey && left.ticketKey === right.ticketKey;
 
 // A mutation still counts as pending inside its own callbacks, so a settling mutation passes
 // its variables to leave itself out and only other pending work keeps a key busy.

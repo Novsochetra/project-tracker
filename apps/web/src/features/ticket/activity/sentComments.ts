@@ -29,7 +29,7 @@ export const keptForm = (text: string): string | undefined => (text.trim() ? tex
 function backsOf(ticketKey: string): Array<[string, StoredDraft]> {
   return storedDrafts()
     .filter(([, draft]) => draft.field === 'comment-back' && draft.ticketKey === ticketKey)
-    .sort(([, a], [, b]) => (b.at ?? 0) - (a.at ?? 0));
+    .sort(([, left], [, right]) => (right.at ?? 0) - (left.at ?? 0));
 }
 
 export const backIdsOf = (ticketKey: string): string[] => backsOf(ticketKey).map(([id]) => id);

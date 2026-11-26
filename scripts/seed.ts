@@ -102,7 +102,8 @@ async function seedProject(client: TrackerClient, seed: SeedProject): Promise<vo
     description: seed.description,
     repo: seed.repo,
   });
-  const statusId = (name: string): string | undefined => statuses.find((s) => s.name === name)?.id;
+  const statusId = (name: string): string | undefined =>
+    statuses.find((status) => status.name === name)?.id;
   for (const ticket of [...seed.tickets].reverse()) {
     const created = await client.createTicket(project.key, {
       title: ticket.title,
@@ -119,7 +120,7 @@ async function seedProject(client: TrackerClient, seed: SeedProject): Promise<vo
 async function main(): Promise<void> {
   const url = process.argv[2] ?? process.env.TRACKER_URL ?? 'http://localhost:4100';
   const client = new TrackerClient({ baseUrl: url, token: process.env.TRACKER_TOKEN });
-  const existing = new Set((await client.listProjects()).map((p) => p.key));
+  const existing = new Set((await client.listProjects()).map((project) => project.key));
   for (const seed of PROJECTS) {
     if (existing.has(seed.key)) continue;
     await seedProject(client, seed);

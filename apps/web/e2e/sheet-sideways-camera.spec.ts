@@ -66,7 +66,10 @@ const sidesOf = (sheet: Locator) =>
     const panel = element.getBoundingClientRect();
 
     return {
-      controls: [Math.min(...boxes.map((box) => box.left)), Math.max(...boxes.map((b) => b.right))],
+      controls: [
+        Math.min(...boxes.map((box) => box.left)),
+        Math.max(...boxes.map((box) => box.right)),
+      ],
       sheet: [panel.left, panel.right],
       header: [header.left, header.right],
     };

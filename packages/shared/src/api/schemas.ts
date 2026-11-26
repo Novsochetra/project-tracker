@@ -184,10 +184,10 @@ export const createCommentInput = z
     // A comment on one line of a run's changes (the Changes tab).
     line: lineRefInput.optional(),
   })
-  .refine((v) => v.text.trim().length > 0 || v.attachmentIds.length > 0, {
+  .refine((value) => value.text.trim().length > 0 || value.attachmentIds.length > 0, {
     message: 'Write a comment or add a file.',
   })
-  .refine((v) => !v.line || v.text.trim().length > 0, {
+  .refine((value) => !value.line || value.text.trim().length > 0, {
     message: 'Write a comment on the line.',
   });
 export type CreateCommentInput = z.input<typeof createCommentInput>;

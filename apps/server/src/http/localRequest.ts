@@ -15,12 +15,12 @@ const allLoopback = (header: string | undefined, isLoopback: (entry: string) => 
 // reaching it by DNS rebinding or another device on the network. The dev server (Vite, xfwd in
 // vite.config.ts) passes on requests from every device on the LAN, and says whose they are in
 // X-Forwarded-For and X-Forwarded-Host.
-export function isLocalRequest(c: Context): boolean {
+export function isLocalRequest(context: Context): boolean {
   return (
-    isLoopbackHost(new URL(c.req.url).hostname) &&
-    allLoopback(c.req.header('x-forwarded-host'), (host) =>
+    isLoopbackHost(new URL(context.req.url).hostname) &&
+    allLoopback(context.req.header('x-forwarded-host'), (host) =>
       isLoopbackHost(hostnameOf(host.trim())),
     ) &&
-    allLoopback(c.req.header('x-forwarded-for'), isLoopbackAddress)
+    allLoopback(context.req.header('x-forwarded-for'), isLoopbackAddress)
   );
 }

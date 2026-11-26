@@ -82,8 +82,8 @@ test.describe('ticket list', () => {
     await expect(group(page, 'Done')).toBeVisible();
     const names = await page
       .getByRole('region')
-      .evaluateAll((sections) => sections.map((s) => s.getAttribute('aria-label')));
-    expect(names.filter((n) => ['To do', 'Need review', 'Done'].includes(n ?? ''))).toEqual([
+      .evaluateAll((sections) => sections.map((section) => section.getAttribute('aria-label')));
+    expect(names.filter((name) => ['To do', 'Need review', 'Done'].includes(name ?? ''))).toEqual([
       'To do',
       'Need review',
       'Done',

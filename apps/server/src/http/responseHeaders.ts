@@ -10,9 +10,9 @@ export const securityHeaders = () => secureHeaders();
 // A proxy that buffers or compresses a live-update stream holds the events and pings back, and
 // the web app then reopens a stream that is fine. no-transform asks every proxy not to; nginx-style
 // proxies also read X-Accel-Buffering.
-export const unbufferedStreams = createMiddleware<AppEnv>(async (c, next) => {
+export const unbufferedStreams = createMiddleware<AppEnv>(async (context, next) => {
   await next();
-  if (!c.res.headers.get('Content-Type')?.startsWith('text/event-stream')) return;
-  c.res.headers.set('Cache-Control', 'no-cache, no-transform');
-  c.res.headers.set('X-Accel-Buffering', 'no');
+  if (!context.res.headers.get('Content-Type')?.startsWith('text/event-stream')) return;
+  context.res.headers.set('Cache-Control', 'no-cache, no-transform');
+  context.res.headers.set('X-Accel-Buffering', 'no');
 });

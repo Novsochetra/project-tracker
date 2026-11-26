@@ -7,6 +7,6 @@ import { userContext } from '../userContext';
 import { queryParams } from '../validation';
 
 export const searchRoutes = (ctx: ServiceContext) =>
-  new Hono<AppEnv>().get('/search', queryParams(searchQuery), async (c) =>
-    c.json(await searchTickets(userContext(ctx, c), c.req.valid('query'))),
+  new Hono<AppEnv>().get('/search', queryParams(searchQuery), async (context) =>
+    context.json(await searchTickets(userContext(ctx, context), context.req.valid('query'))),
   );

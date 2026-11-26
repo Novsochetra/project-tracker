@@ -22,7 +22,7 @@ function sameProjects(rows: readonly ProjectRow[], ids: readonly string[]): bool
 // then take the rows' locks in the same order, so the second waits for the first and writes its
 // whole order over it, instead of deadlocking or skipping rows it read before the first committed
 // and ending in an order neither asked for. SQLite runs one write transaction at a time.
-const byId = (a: [string, number], b: [string, number]) => (a[0] < b[0] ? -1 : 1);
+const byId = (left: [string, number], right: [string, number]) => (left[0] < right[0] ? -1 : 1);
 
 export async function reorderProjects(
   ctx: UserContext,

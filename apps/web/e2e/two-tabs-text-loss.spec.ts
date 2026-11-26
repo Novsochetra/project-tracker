@@ -28,28 +28,28 @@ test('a save that hangs past a minute and lands after newer text leaves the newe
   api,
 }) => {
   await seedProject(api, 'Mobile app', 'MOB', [{ title: 'Ticket 1' }]);
-  const a = await open(context, page);
-  const b = await open(context);
-  const release = await holdSaves(a);
+  const tabA = await open(context, page);
+  const tabB = await open(context);
+  const release = await holdSaves(tabA);
 
-  await typeAtEnd(a, ' from A');
-  await expect(titleOf(b)).toHaveValue('Ticket 1 from A');
-  await typeAtEnd(b, ' and B');
-  await expect(note(b)).toHaveText("Title isn't saved yet.");
+  await typeAtEnd(tabA, ' from A');
+  await expect(titleOf(tabB)).toHaveValue('Ticket 1 from A');
+  await typeAtEnd(tabB, ' and B');
+  await expect(note(tabB)).toHaveText("Title isn't saved yet.");
 
-  await marksRunOut(a);
+  await marksRunOut(tabA);
   await expect.poll(() => trackerTitle(api)).toBe('Ticket 1 from A and B');
-  await expect(note(b)).toHaveCount(0);
+  await expect(note(tabB)).toHaveCount(0);
 
   release();
-  await expect(titleOf(a)).toHaveValue('Ticket 1 from A and B');
-  await expect(note(a)).toHaveCount(0);
-  await expect(titleOf(b)).toHaveValue('Ticket 1 from A and B');
-  await expect(note(b)).toHaveCount(0);
+  await expect(titleOf(tabA)).toHaveValue('Ticket 1 from A and B');
+  await expect(note(tabA)).toHaveCount(0);
+  await expect(titleOf(tabB)).toHaveValue('Ticket 1 from A and B');
+  await expect(note(tabB)).toHaveCount(0);
   expect(await trackerTitle(api)).toBe('Ticket 1 from A and B');
-  await b.reload();
-  await expect(titleOf(b)).toHaveValue('Ticket 1 from A and B');
-  await expect(note(b)).toHaveCount(0);
+  await tabB.reload();
+  await expect(titleOf(tabB)).toHaveValue('Ticket 1 from A and B');
+  await expect(note(tabB)).toHaveCount(0);
 });
 
 // The records of B's text that A has heard of, as A's copy of storage holds them.
@@ -66,26 +66,26 @@ test('a failed save keeps its text when another tab dropped it meanwhile', async
   api,
 }) => {
   await seedProject(api, 'Mobile app', 'MOB', [{ title: 'Ticket 1' }]);
-  const a = await open(context, page);
-  const b = await open(context);
-  const release = await hold(b, 'PATCH', (url) => url.pathname === '/api/tickets/MOB-1');
+  const tabA = await open(context, page);
+  const tabB = await open(context);
+  const release = await hold(tabB, 'PATCH', (url) => url.pathname === '/api/tickets/MOB-1');
 
-  await typeAtEnd(b, ' from');
-  await expect(titleOf(a)).toHaveValue('Ticket 1 from');
-  const heard = await recordsHeard(a);
-  await typeAtEnd(b, ' B');
-  await expect(titleOf(a)).toHaveValue('Ticket 1 from B');
-  await a.evaluate((keys) => keys.forEach((key) => localStorage.removeItem(key)), heard);
+  await typeAtEnd(tabB, ' from');
+  await expect(titleOf(tabA)).toHaveValue('Ticket 1 from');
+  const heard = await recordsHeard(tabA);
+  await typeAtEnd(tabB, ' B');
+  await expect(titleOf(tabA)).toHaveValue('Ticket 1 from B');
+  await tabA.evaluate((keys) => keys.forEach((key) => localStorage.removeItem(key)), heard);
   release('fail');
 
-  await expect(note(b)).toHaveText("Title isn't saved yet.");
-  await expect(titleOf(b)).toHaveValue('Ticket 1 from B');
-  await expect(titleOf(a)).toHaveValue('Ticket 1 from B');
-  await b.unrouteAll({ behavior: 'ignoreErrors' });
-  await b.getByRole('button', { name: 'Retry saving title' }).click();
+  await expect(note(tabB)).toHaveText("Title isn't saved yet.");
+  await expect(titleOf(tabB)).toHaveValue('Ticket 1 from B');
+  await expect(titleOf(tabA)).toHaveValue('Ticket 1 from B');
+  await tabB.unrouteAll({ behavior: 'ignoreErrors' });
+  await tabB.getByRole('button', { name: 'Retry saving title' }).click();
   await expect.poll(() => trackerTitle(api)).toBe('Ticket 1 from B');
-  await expect(note(b)).toHaveCount(0);
-  await expect(note(a)).toHaveCount(0);
+  await expect(note(tabB)).toHaveCount(0);
+  await expect(note(tabA)).toHaveCount(0);
 });
 
 async function editComment(page: Page, text: string) {
@@ -109,19 +109,19 @@ test('an older comment edit that lands late does not overwrite a newer one', asy
 }) => {
   await seedProject(api, 'Mobile app', 'MOB', [{ title: 'Ticket 1' }]);
   await api.addComment('MOB-1', { text: 'First' });
-  const a = await open(context, page);
-  const b = await open(context);
-  const release = await hold(a, 'PATCH', (url) => url.pathname.startsWith('/api/activity/'));
+  const tabA = await open(context, page);
+  const tabB = await open(context);
+  const release = await hold(tabA, 'PATCH', (url) => url.pathname.startsWith('/api/activity/'));
 
-  await editComment(a, 'First, edited by A');
-  await editComment(b, 'First, edited by B later');
+  await editComment(tabA, 'First, edited by A');
+  await editComment(tabB, 'First, edited by B later');
   await expect.poll(() => commentText(api)).toBe('First, edited by B later');
 
   release('go');
   await expect(
-    a.getByText("The comment changed elsewhere while your edit wasn't saved."),
+    tabA.getByText("The comment changed elsewhere while your edit wasn't saved."),
   ).toBeVisible();
-  await expect(a.getByLabel('Edit comment', { exact: true })).toHaveValue('First, edited by A');
+  await expect(tabA.getByLabel('Edit comment', { exact: true })).toHaveValue('First, edited by A');
   expect(await commentText(api)).toBe('First, edited by B later');
 });
 
@@ -133,32 +133,32 @@ test('a comment whose tab closes while it is sent comes back in the other tab', 
   api,
 }) => {
   await seedProject(api, 'Mobile app', 'MOB', [{ title: 'Ticket 1' }]);
-  const a = await open(context, page);
-  const b = await open(context);
-  await hold(a, 'POST', (url) => url.pathname === '/api/tickets/MOB-1/comments');
+  const tabA = await open(context, page);
+  const tabB = await open(context);
+  await hold(tabA, 'POST', (url) => url.pathname === '/api/tickets/MOB-1/comments');
 
-  await box(a).fill('Looks good');
-  await a.getByRole('button', { name: 'Comment', exact: true }).click();
-  await expect(box(a)).toHaveValue('');
-  await expect(box(b)).toHaveValue('');
-  await box(b).pressSequentially('Also logout', { delay: 10 });
+  await box(tabA).fill('Looks good');
+  await tabA.getByRole('button', { name: 'Comment', exact: true }).click();
+  await expect(box(tabA)).toHaveValue('');
+  await expect(box(tabB)).toHaveValue('');
+  await box(tabB).pressSequentially('Also logout', { delay: 10 });
   // A person switches to A before closing it, by which time A has heard of B's typing.
-  await expect(box(a)).toHaveValue('Also logout');
+  await expect(box(tabA)).toHaveValue('Also logout');
 
   // Closing asks first. Whether the browser shows the question is its own call (WebKit sometimes
   // doesn't), so the page's answer is read directly.
-  const asks = await a.evaluate(() => {
+  const asks = await tabA.evaluate(() => {
     const event = new Event('beforeunload', { cancelable: true });
     window.dispatchEvent(event);
 
     return event.defaultPrevented;
   });
   expect(asks).toBe(true);
-  a.on('dialog', (dialog) => void dialog.accept());
-  await a.close({ runBeforeUnload: true });
-  await expect(box(b)).toHaveValue('Looks good\nAlso logout');
-  await b.reload();
-  await expect(box(b)).toHaveValue('Looks good\nAlso logout');
+  tabA.on('dialog', (dialog) => void dialog.accept());
+  await tabA.close({ runBeforeUnload: true });
+  await expect(box(tabB)).toHaveValue('Looks good\nAlso logout');
+  await tabB.reload();
+  await expect(box(tabB)).toHaveValue('Looks good\nAlso logout');
   expect((await api.getTicket('MOB-1')).activity.filter((item) => item.type === 'comment')).toEqual(
     [],
   );
@@ -173,19 +173,19 @@ test('a comment whose tab closes comes back though that tab’s last writes are 
   api,
 }) => {
   await seedProject(api, 'Mobile app', 'MOB', [{ title: 'Ticket 1' }]);
-  const a = await open(context, page);
-  const b = await open(context);
-  await hold(a, 'POST', (url) => url.pathname === '/api/tickets/MOB-1/comments');
+  const tabA = await open(context, page);
+  const tabB = await open(context);
+  await hold(tabA, 'POST', (url) => url.pathname === '/api/tickets/MOB-1/comments');
 
-  await box(a).fill('Looks good');
-  await a.getByRole('button', { name: 'Comment', exact: true }).click();
-  await expect(box(a)).toHaveValue('');
-  await a.evaluate(() => {
+  await box(tabA).fill('Looks good');
+  await tabA.getByRole('button', { name: 'Comment', exact: true }).click();
+  await expect(box(tabA)).toHaveValue('');
+  await tabA.evaluate(() => {
     Storage.prototype.setItem = () => undefined;
     Storage.prototype.removeItem = () => undefined;
   });
-  await a.close();
-  await expect(box(b)).toHaveValue('Looks good');
+  await tabA.close();
+  await expect(box(tabB)).toHaveValue('Looks good');
   expect((await api.getTicket('MOB-1')).activity.filter((item) => item.type === 'comment')).toEqual(
     [],
   );

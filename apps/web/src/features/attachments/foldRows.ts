@@ -8,7 +8,9 @@ export interface TileEdges {
 // Where the second row of files ends, from the top of their box, or null while they take two
 // rows or fewer.
 export function rowsHeight(tiles: readonly TileEdges[], rows = FOLDED_ROWS): number | null {
-  const tops = [...new Set(tiles.map((tile) => Math.round(tile.top)))].sort((a, b) => a - b);
+  const tops = [...new Set(tiles.map((tile) => Math.round(tile.top)))].sort(
+    (left, right) => left - right,
+  );
   const lastTop = tops[rows - 1];
   if (tops.length <= rows || lastTop === undefined) return null;
   const shown = tiles.filter((tile) => Math.round(tile.top) <= lastTop);

@@ -36,13 +36,13 @@ describe.each(DIALECTS)('change events (%s)', (dialect) => {
     const person = api.client();
     const worker = api.client(agent());
     const project = await person.createProject({ name: 'Mobile app' });
-    const p = project.project.id;
+    const projectId = project.project.id;
     const ticket = await person.createTicket('MA', { title: 'Crash' });
-    const t = ticket.id;
+    const ticketId = ticket.id;
     const review = statusOf(project, 'in_review').id;
     expect(api.events).toEqual([
-      { type: 'changed', projectId: p, ticketId: null },
-      { type: 'changed', projectId: p, ticketId: t },
+      { type: 'changed', projectId: projectId, ticketId: null },
+      { type: 'changed', projectId: projectId, ticketId: ticketId },
     ]);
 
     const steps: [string, () => Promise<unknown>, string | null][] = [
@@ -58,40 +58,40 @@ describe.each(DIALECTS)('change events (%s)', (dialect) => {
         async () =>
           person.reorderStatuses(
             'MA',
-            (await person.getProject('MA')).statuses.map((s) => s.id),
+            (await person.getProject('MA')).statuses.map((status) => status.id),
           ),
         null,
       ],
-      ['update ticket', () => person.updateTicket('MA-1', { priority: 'high' }), t],
-      ['move ticket', () => person.moveTicket('MA-1', { statusId: review }), t],
-      ['mark sent', () => person.markSent('MA-1', { moveToInProgress: false }), t],
-      ['comment', () => person.addComment('MA-1', { text: 'note' }), t],
+      ['update ticket', () => person.updateTicket('MA-1', { priority: 'high' }), ticketId],
+      ['move ticket', () => person.moveTicket('MA-1', { statusId: review }), ticketId],
+      ['mark sent', () => person.markSent('MA-1', { moveToInProgress: false }), ticketId],
+      ['comment', () => person.addComment('MA-1', { text: 'note' }), ticketId],
       [
         'edit comment',
         async () =>
           person.updateComment((await person.getTicket('MA-1')).activity.at(-1)!.id, {
             text: 'edited',
           }),
-        t,
+        ticketId,
       ],
       [
         'delete comment',
         async () => person.deleteActivity((await person.getTicket('MA-1')).activity.at(-1)!.id),
-        t,
+        ticketId,
       ],
-      ['upload to ticket', () => api.upload(imageUpload({ ticketKey: 'MA-1' })), t],
+      ['upload to ticket', () => api.upload(imageUpload({ ticketKey: 'MA-1' })), ticketId],
       [
         'delete image',
         async () => person.deleteAttachment((await person.getTicket('MA-1')).attachments[0]!.id),
-        t,
+        ticketId,
       ],
-      ['apply report', () => person.applyReport({ text: 'TICKET: MA-1\nSTATUS: wip' }), t],
-      ['claim', () => worker.claimTicket('MA-1'), t],
-      ['submit', () => worker.submitForReview('MA-1', { summary: 'done' }), t],
+      ['apply report', () => person.applyReport({ text: 'TICKET: MA-1\nSTATUS: wip' }), ticketId],
+      ['claim', () => worker.claimTicket('MA-1'), ticketId],
+      ['submit', () => worker.submitForReview('MA-1', { summary: 'done' }), ticketId],
       [
         'review',
         () => worker.reviewTicket('MA-1', { verdict: 'approved', rating: 5, summary: 'ok' }),
-        t,
+        ticketId,
       ],
       [
         'claim next',
@@ -107,11 +107,12 @@ describe.each(DIALECTS)('change events (%s)', (dialect) => {
         'delete status',
         async () =>
           person.deleteStatus(
-            (await person.getProject('MA')).statuses.find((s) => s.name === 'Blocked')!.id,
+            (await person.getProject('MA')).statuses.find((status) => status.name === 'Blocked')!
+              .id,
           ),
         null,
       ],
-      ['delete ticket', () => person.deleteTicket('MA-1'), t],
+      ['delete ticket', () => person.deleteTicket('MA-1'), ticketId],
       ['delete project', () => person.deleteProject('MA'), null],
     ];
     for (const [name, step, ticketId] of steps) {
@@ -119,7 +120,9 @@ describe.each(DIALECTS)('change events (%s)', (dialect) => {
       const result = await step();
       const expected =
         ticketId === 'next' ? (result as { ticket: { id: string } }).ticket.id : ticketId;
-      expect(api.events, name).toEqual([{ type: 'changed', projectId: p, ticketId: expected }]);
+      expect(api.events, name).toEqual([
+        { type: 'changed', projectId: projectId, ticketId: expected },
+      ]);
     }
   });
 
@@ -233,8 +236,8 @@ describe('heartbeat', () => {
   it('pings at least twice before the web app gives up on a silent stream', async () => {
     vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval'] });
     const events = createBroadcaster();
-    const open = new Hono<AppEnv>().use(async (c, next) => {
-      c.set('access', OPEN_ACCESS);
+    const open = new Hono<AppEnv>().use(async (context, next) => {
+      context.set('access', OPEN_ACCESS);
       await next();
     });
     const res = await open.route('/', eventRoutes(events)).request('/events');

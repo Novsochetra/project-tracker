@@ -18,8 +18,8 @@ const PNG_1X1 = Buffer.from(
   'base64',
 );
 // About as long as PT-61's comments (500 to 1,900 characters).
-const LONG_COMMENT = (n: number) =>
-  `Decisions (worker ${n}): the calendar shows with a mouse on a window 768px or wider. `.repeat(
+const LONG_COMMENT = (index: number) =>
+  `Decisions (worker ${index}): the calendar shows with a mouse on a window 768px or wider. `.repeat(
     12,
   );
 
@@ -135,7 +135,7 @@ test.describe('ticket screen on a phone', () => {
   test('folds long comments and jumps to the comment box', async ({ page, api, agent }, info) => {
     test.skip(!isPhone(info.project.name), PHONE_ONLY);
     await seedProject(api, 'Mobile app', 'MOB', [{ title: 'Date picker', description: 'Bad.' }]);
-    for (let n = 1; n <= 8; n += 1) await agent.addComment('MOB-1', { text: LONG_COMMENT(n) });
+    for (let i = 1; i <= 8; i += 1) await agent.addComment('MOB-1', { text: LONG_COMMENT(i) });
     await page.goto('/p/MOB/1');
     await settle(page);
     // The first screen stays uncovered until the reader scrolls down a little.
@@ -229,10 +229,10 @@ test.describe('ticket screen on a phone', () => {
   test('folds many files to two rows with Show all', async ({ page, api }, info) => {
     test.skip(!isPhone(info.project.name), PHONE_ONLY);
     await seedProject(api, 'Mobile app', 'MOB', [{ title: 'Screenshots' }]);
-    for (let n = 1; n <= 12; n += 1) {
+    for (let i = 1; i <= 12; i += 1) {
       await api.uploadAttachment(
         new Blob([PNG_1X1], { type: 'image/png' }),
-        `shot-${n}.png`,
+        `shot-${i}.png`,
         'MOB-1',
       );
     }

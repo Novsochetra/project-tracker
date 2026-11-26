@@ -10,46 +10,55 @@ import type { AppEnv } from '../env';
 import { personDeletesChats, personOnly } from '../personOnly';
 import { jsonBody } from '../validation';
 
-const scope = (c: Context<AppEnv>) => requireScope(c.get('access'));
-const queuedRef = (c: Context<AppEnv>) => ({
-  chatId: c.req.param('id') ?? '',
-  messageId: c.req.param('messageId') ?? '',
+const scope = (context: Context<AppEnv>) => requireScope(context.get('access'));
+const queuedRef = (context: Context<AppEnv>) => ({
+  chatId: context.req.param('id') ?? '',
+  messageId: context.req.param('messageId') ?? '',
 });
 
 export const chatRoutes = (ctx: ServiceContext) =>
   new Hono<AppEnv>()
-    .get('/projects/:key/chats', async (c) =>
-      c.json(await listChats(ctx, scope(c), c.req.param('key'))),
+    .get('/projects/:key/chats', async (context) =>
+      context.json(await listChats(ctx, scope(context), context.req.param('key'))),
     )
-    .post('/projects/:key/chats', personOnly, jsonBody(startChatInput), async (c) =>
-      c.json(await startChat(ctx, scope(c), c.req.param('key'), c.req.valid('json')), 201),
+    .post('/projects/:key/chats', personOnly, jsonBody(startChatInput), async (context) =>
+      context.json(
+        await startChat(ctx, scope(context), context.req.param('key'), context.req.valid('json')),
+        201,
+      ),
     )
-    .get('/chats/:id', async (c) => c.json(await getChat(ctx, scope(c), c.req.param('id'))))
-    .delete('/chats/:id', personDeletesChats, async (c) => {
-      await deleteChat(ctx, scope(c), c.req.param('id'));
+    .get('/chats/:id', async (context) =>
+      context.json(await getChat(ctx, scope(context), context.req.param('id'))),
+    )
+    .delete('/chats/:id', personDeletesChats, async (context) => {
+      await deleteChat(ctx, scope(context), context.req.param('id'));
 
-      return c.body(null, 204);
+      return context.body(null, 204);
     })
-    .post('/chats/:id/messages', personOnly, jsonBody(askInput), async (c) =>
-      c.json(await askInChat(ctx, scope(c), c.req.param('id'), c.req.valid('json'))),
+    .post('/chats/:id/messages', personOnly, jsonBody(askInput), async (context) =>
+      context.json(
+        await askInChat(ctx, scope(context), context.req.param('id'), context.req.valid('json')),
+      ),
     )
-    .patch('/chats/:id/queue/:messageId', personOnly, jsonBody(queuedEditInput), async (c) =>
-      c.json(await editQueued(ctx, scope(c), queuedRef(c), c.req.valid('json').text)),
+    .patch('/chats/:id/queue/:messageId', personOnly, jsonBody(queuedEditInput), async (context) =>
+      context.json(
+        await editQueued(ctx, scope(context), queuedRef(context), context.req.valid('json').text),
+      ),
     )
-    .delete('/chats/:id/queue/:messageId', personOnly, async (c) =>
-      c.json(await removeQueued(ctx, scope(c), queuedRef(c))),
+    .delete('/chats/:id/queue/:messageId', personOnly, async (context) =>
+      context.json(await removeQueued(ctx, scope(context), queuedRef(context))),
     )
-    .post('/chats/:id/queue/:messageId/send', personOnly, async (c) =>
-      c.json(await sendQueuedNow(ctx, scope(c), queuedRef(c))),
+    .post('/chats/:id/queue/:messageId/send', personOnly, async (context) =>
+      context.json(await sendQueuedNow(ctx, scope(context), queuedRef(context))),
     )
     .post(
       '/chats/:id/messages/:messageId/ticket',
       personOnly,
       jsonBody(cardTicketInput),
-      async (c) => {
-        const person = { scope: scope(c), actor: c.get('actor') };
-        const ref = { chatId: c.req.param('id'), messageId: c.req.param('messageId') };
+      async (context) => {
+        const person = { scope: scope(context), actor: context.get('actor') };
+        const ref = { chatId: context.req.param('id'), messageId: context.req.param('messageId') };
 
-        return c.json(await createCardTicket(ctx, person, ref, c.req.valid('json')));
+        return context.json(await createCardTicket(ctx, person, ref, context.req.valid('json')));
       },
     );

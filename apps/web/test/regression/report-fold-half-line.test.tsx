@@ -40,7 +40,7 @@ beforeEach(() => {
 afterEach(() => cleanups.forEach((undo) => undo()));
 
 it('folds a long report after its eighth line, not through the ninth', () => {
-  const text = Array.from({ length: LINES }, (_, n) => `Checked case ${n + 1}.`).join('\n');
+  const text = Array.from({ length: LINES }, (_, index) => `Checked case ${index + 1}.`).join('\n');
   const report = comment('r1', text, {
     type: 'report',
     actor: { kind: 'agent', name: 'Claude' },

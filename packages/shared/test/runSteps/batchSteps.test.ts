@@ -42,29 +42,29 @@ describe('ticketRunIn', () => {
 
 describe('batchTicketSteps', () => {
   it("gives each sub agent's steps to the ticket its Start step names", () => {
-    const a = start('toolu_a', 'PT-12 capture fix');
-    const b = start('toolu_b', 'PT-13 sort order');
-    const steps = [a, b, sub('toolu_a', 'Read a.ts'), sub('toolu_b', 'Read b.ts')];
+    const stepA = start('toolu_a', 'PT-12 capture fix');
+    const stepB = start('toolu_b', 'PT-13 sort order');
+    const steps = [stepA, stepB, sub('toolu_a', 'Read a.ts'), sub('toolu_b', 'Read b.ts')];
     const routed = batchTicketSteps(steps, tickets, none);
-    expect(routed.get('run-12')).toEqual([onTicket(a), onTicket(sub('toolu_a', 'Read a.ts'))]);
-    expect(routed.get('run-13')).toEqual([onTicket(b), onTicket(sub('toolu_b', 'Read b.ts'))]);
+    expect(routed.get('run-12')).toEqual([onTicket(stepA), onTicket(sub('toolu_a', 'Read a.ts'))]);
+    expect(routed.get('run-13')).toEqual([onTicket(stepB), onTicket(sub('toolu_b', 'Read b.ts'))]);
   });
 
   it('ties a sub agent by its claim when the Start step names no ticket', () => {
-    const a = start('toolu_a', 'Next ticket');
+    const stepA = start('toolu_a', 'Next ticket');
     const claim = sub('toolu_a', 'Use tracker: claim_ticket PT-13');
-    const routed = batchTicketSteps([a, sub('toolu_a', 'Run ls'), claim], tickets, none);
-    expect(routed.get('run-13')).toEqual([onTicket(a), onTicket(claim)]);
+    const routed = batchTicketSteps([stepA, sub('toolu_a', 'Run ls'), claim], tickets, none);
+    expect(routed.get('run-13')).toEqual([onTicket(stepA), onTicket(claim)]);
     expect(routed.has('run-12')).toBe(false);
   });
 
   it('uses the Start step and owners saved by earlier requests', () => {
-    const a = start('toolu_a', 'Next ticket');
+    const stepA = start('toolu_a', 'Next ticket');
     const later = batchTicketSteps([sub('toolu_a', 'Use tracker: claim_ticket PT-12')], tickets, {
       owners: new Map(),
-      starts: new Map([['toolu_a', a]]),
+      starts: new Map([['toolu_a', stepA]]),
     });
-    expect(later.get('run-12')?.[0]).toEqual(onTicket(a));
+    expect(later.get('run-12')?.[0]).toEqual(onTicket(stepA));
     const owned = batchTicketSteps([sub('toolu_b', 'Edit b.ts')], tickets, {
       owners: new Map([['toolu_b', 'run-13']]),
       starts: new Map(),
@@ -73,10 +73,10 @@ describe('batchTicketSteps', () => {
   });
 
   it("leaves the main conversation's own steps and other tickets' reads on the batch alone", () => {
-    const a = start('toolu_a', 'PT-12');
+    const stepA = start('toolu_a', 'PT-12');
     const steps: RunStepInput[] = [
       { kind: 'text', label: 'Starting PT-13 next.', subAgent: false, toolId: null },
-      a,
+      stepA,
       sub('toolu_a', 'Use tracker: get_ticket PT-13'),
     ];
     const routed = batchTicketSteps(steps, tickets, none);
@@ -88,7 +88,7 @@ describe('batchTicketSteps', () => {
   });
 
   it("ties a sub agent only by a call, never by Claude's words or a refused call", () => {
-    const a = start('toolu_a', 'Next ticket');
+    const stepA = start('toolu_a', 'Next ticket');
     const words: RunStepInput = {
       kind: 'text',
       label: "I won't claim PT-13, another agent has it.",
@@ -100,7 +100,7 @@ describe('batchTicketSteps', () => {
       ...sub('toolu_a', 'Not allowed: Use tracker: claim_ticket PT-13'),
       kind: 'denied',
     };
-    expect(batchTicketSteps([a, words, refused], tickets, none).size).toBe(0);
+    expect(batchTicketSteps([stepA, words, refused], tickets, none).size).toBe(0);
   });
 
   it('starts the ticket with a Start step even when the batch no longer has its own', () => {

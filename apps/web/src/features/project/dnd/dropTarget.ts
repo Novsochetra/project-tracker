@@ -94,13 +94,13 @@ export function columnDropTarget(
   return column ? targetInGroup(column, point.y, draggedId) : null;
 }
 
-export const sameTarget = (a: DropTarget | null, b: DropTarget | null): boolean =>
-  a === b ||
-  (a !== null &&
-    b !== null &&
-    a.statusId === b.statusId &&
-    (a.beforeId ?? null) === (b.beforeId ?? null) &&
-    (a.afterId ?? null) === (b.afterId ?? null));
+export const sameTarget = (left: DropTarget | null, right: DropTarget | null): boolean =>
+  left === right ||
+  (left !== null &&
+    right !== null &&
+    left.statusId === right.statusId &&
+    (left.beforeId ?? null) === (right.beforeId ?? null) &&
+    (left.afterId ?? null) === (right.afterId ?? null));
 
 export function dropEdgeFor(target: DropTarget | null, ticketId: string): DropEdge | null {
   if (!target) return null;

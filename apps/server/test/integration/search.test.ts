@@ -6,7 +6,7 @@ const keys = (results: TicketSearchResults) => results.tickets.map((ticket) => t
 
 describe.each(DIALECTS)('GET /api/search (%s)', (dialect) => {
   const api = useTestServer(dialect);
-  const search = (q: string, limit?: number) => api.client().searchTickets({ q, limit });
+  const search = (query: string, limit?: number) => api.client().searchTickets({ q: query, limit });
 
   beforeEach(async () => {
     const client = api.client();
@@ -44,9 +44,9 @@ describe.each(DIALECTS)('GET /api/search (%s)', (dialect) => {
   });
 
   it('puts a ticket key first, however it is written', async () => {
-    for (const q of ['WEB-2', 'web 2', 'web2']) {
-      const res = await search(q);
-      expect(res.tickets[0], q).toMatchObject({ key: 'WEB-2', match: 'key' });
+    for (const query of ['WEB-2', 'web 2', 'web2']) {
+      const res = await search(query);
+      expect(res.tickets[0], query).toMatchObject({ key: 'WEB-2', match: 'key' });
     }
 
     expect(keys(await search('2'))).toEqual(['WEB-2', 'MOB-2']);

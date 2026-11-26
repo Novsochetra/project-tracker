@@ -30,36 +30,39 @@ function declaredSize(header: string | undefined): number | null {
 }
 
 // The body is the file itself and is read as it arrives (services/attachments).
-function readUpload(c: Context<AppEnv>): UploadInput {
-  const ticketKey = c.req.query('ticketKey')?.trim();
+function readUpload(context: Context<AppEnv>): UploadInput {
+  const ticketKey = context.req.query('ticketKey')?.trim();
 
   return {
-    body: c.req.raw.body,
-    name: decodeName(c.req.header(FILE_NAME_HEADER)),
-    type: c.req.header('content-type') ?? '',
-    size: declaredSize(c.req.header('content-length')),
+    body: context.req.raw.body,
+    name: decodeName(context.req.header(FILE_NAME_HEADER)),
+    type: context.req.header('content-type') ?? '',
+    size: declaredSize(context.req.header('content-length')),
     ticketKey: ticketKey || undefined,
   };
 }
 
-async function serveFile(c: Context<AppEnv>, ctx: ServiceContext): Promise<Response> {
-  const row = await requireAttachment(userContext(ctx, c), c.req.param('id') ?? '');
+async function serveFile(context: Context<AppEnv>, ctx: ServiceContext): Promise<Response> {
+  const row = await requireAttachment(userContext(ctx, context), context.req.param('id') ?? '');
   const headers = fileHeaders(row);
   // Hono answers HEAD with this handler, and RFC 9110 defines ranges for GET only.
-  if (c.req.method === 'HEAD') {
+  if (context.req.method === 'HEAD') {
     await requireAttachmentFile(ctx, row);
-    return c.body(null, 200, { ...headers, 'Content-Length': String(row.size) });
+    return context.body(null, 200, { ...headers, 'Content-Length': String(row.size) });
   }
 
-  const range = parseByteRange(c.req.header('range'), row.size);
+  const range = parseByteRange(context.req.header('range'), row.size);
   if (range === 'unsatisfiable') {
-    return c.body(null, 416, { 'Accept-Ranges': 'bytes', 'Content-Range': `bytes */${row.size}` });
+    return context.body(null, 416, {
+      'Accept-Ranges': 'bytes',
+      'Content-Range': `bytes */${row.size}`,
+    });
   }
 
   const body = await readAttachmentFile(ctx, row, range ?? undefined);
-  if (!range) return c.body(body, 200, { ...headers, 'Content-Length': String(row.size) });
+  if (!range) return context.body(body, 200, { ...headers, 'Content-Length': String(row.size) });
 
-  return c.body(body, 206, {
+  return context.body(body, 206, {
     ...headers,
     'Content-Length': String(range.end - range.start + 1),
     'Content-Range': `bytes ${range.start}-${range.end}/${row.size}`,
@@ -68,12 +71,12 @@ async function serveFile(c: Context<AppEnv>, ctx: ServiceContext): Promise<Respo
 
 export const attachmentRoutes = (ctx: ServiceContext) =>
   new Hono<AppEnv>()
-    .post('/attachments', async (c) =>
-      c.json(await uploadAttachment(userContext(ctx, c), readUpload(c)), 201),
+    .post('/attachments', async (context) =>
+      context.json(await uploadAttachment(userContext(ctx, context), readUpload(context)), 201),
     )
-    .get('/attachments/:id/file', (c) => serveFile(c, ctx))
-    .delete('/attachments/:id', async (c) => {
-      await deleteAttachment(userContext(ctx, c), c.req.param('id'));
+    .get('/attachments/:id/file', (context) => serveFile(context, ctx))
+    .delete('/attachments/:id', async (context) => {
+      await deleteAttachment(userContext(ctx, context), context.req.param('id'));
 
-      return c.body(null, 204);
+      return context.body(null, 204);
     });

@@ -22,33 +22,39 @@ const AT_REST: LayerVisual = { visible: true, transform: 'none', opacity: 1, dim
 
 const round = (value: number): number => Math.round(value * 1000) / 1000;
 
-function phoneSlide(role: LayerRole, p: number): LayerVisual {
+function phoneSlide(role: LayerRole, progress: number): LayerVisual {
   if (role === 'front') {
-    const x = round((1 - p) * 100);
-    return { ...AT_REST, transform: `translate3d(${x}%, 0, 0)`, shadow: round(p) };
+    const x = round((1 - progress) * 100);
+    return { ...AT_REST, transform: `translate3d(${x}%, 0, 0)`, shadow: round(progress) };
   }
 
   if (role === 'back') {
-    const x = round(-UNDERLAY_SHIFT * p);
-    return { ...AT_REST, transform: `translate3d(${x}%, 0, 0)`, dim: round(UNDERLAY_DIM * p) };
+    const x = round(-UNDERLAY_SHIFT * progress);
+    return {
+      ...AT_REST,
+      transform: `translate3d(${x}%, 0, 0)`,
+      dim: round(UNDERLAY_DIM * progress),
+    };
   }
 
   return role === 'top' ? AT_REST : HIDDEN;
 }
 
-function fadeShift(axis: 'x' | 'y', offset: number, p: number): LayerVisual {
-  const shift = round(offset * (1 - p));
+function fadeShift(axis: 'x' | 'y', offset: number, progress: number): LayerVisual {
+  const shift = round(offset * (1 - progress));
   const transform =
     axis === 'x' ? `translate3d(${shift}px, 0, 0)` : `translate3d(0, ${shift}px, 0)`;
 
-  return { ...AT_REST, transform, opacity: round(p) };
+  return { ...AT_REST, transform, opacity: round(progress) };
 }
 
-function desktopVisual(animation: StackAnimation, role: LayerRole, p: number): LayerVisual {
-  if (animation === 'push') return role === 'front' ? fadeShift('x', DESKTOP_SHIFT, p) : HIDDEN;
-  if (animation === 'pop') return role === 'back' ? fadeShift('x', -DESKTOP_SHIFT, p) : HIDDEN;
+function desktopVisual(animation: StackAnimation, role: LayerRole, progress: number): LayerVisual {
+  if (animation === 'push')
+    return role === 'front' ? fadeShift('x', DESKTOP_SHIFT, progress) : HIDDEN;
+  if (animation === 'pop')
+    return role === 'back' ? fadeShift('x', -DESKTOP_SHIFT, progress) : HIDDEN;
 
-  return phoneSlide(role, p);
+  return phoneSlide(role, progress);
 }
 
 export function layerVisual(
@@ -57,13 +63,13 @@ export function layerVisual(
   role: LayerRole,
   progress: number,
 ): LayerVisual {
-  const p = clamp(progress, 0, 1);
+  const clamped = clamp(progress, 0, 1);
   if (role === 'hidden') return HIDDEN;
   if (animation === 'none') return role === 'top' ? AT_REST : HIDDEN;
   if (animation === 'initial')
-    return role === 'front' ? fadeShift('y', FIRST_LOAD_SHIFT, p) : HIDDEN;
+    return role === 'front' ? fadeShift('y', FIRST_LOAD_SHIFT, clamped) : HIDDEN;
 
-  return platform === 'phone' ? phoneSlide(role, p) : desktopVisual(animation, role, p);
+  return platform === 'phone' ? phoneSlide(role, clamped) : desktopVisual(animation, role, clamped);
 }
 
 // On phones progress is how much of the screen the front layer covers, so a pop runs from 1 to 0.

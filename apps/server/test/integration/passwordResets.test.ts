@@ -168,7 +168,9 @@ describe.each(DIALECTS)('password reset links (%s)', (dialect) => {
     const passwords = ['first long password', 'second long password', 'third long password'];
     const answers = await Promise.all(passwords.map((password) => use(secret, password)));
     expect(answers.map((answer) => answer.status).sort()).toEqual([204, 404, 404]);
-    const signIns = await Promise.all(passwords.map((p) => logIn(send, PERSON.email, p)));
+    const signIns = await Promise.all(
+      passwords.map((password) => logIn(send, PERSON.email, password)),
+    );
     expect(signIns.map((answer) => answer.status).sort()).toEqual([200, 401, 401]);
   });
 });

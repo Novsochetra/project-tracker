@@ -122,7 +122,9 @@ describe('reordering projects in the sidebar', () => {
     expect(reorderProjects).toHaveBeenCalledTimes(1);
     await waitFor(() =>
       expect(
-        queryClient.getQueryData<ProjectSummary[]>(queryKeys.projects())?.map((p) => p.name),
+        queryClient
+          .getQueryData<ProjectSummary[]>(queryKeys.projects())
+          ?.map((project) => project.name),
       ).toEqual(['Beta', 'Gamma', 'Alpha']),
     );
     request.resolve([projects[1]!, projects[2]!, projects[0]!]);

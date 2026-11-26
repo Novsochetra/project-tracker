@@ -4,7 +4,8 @@ interface WithProject {
   project: Project;
 }
 
-const sameKey = (a: string, b: string): boolean => a.toUpperCase() === b.toUpperCase();
+const sameKey = (left: string, right: string): boolean =>
+  left.toUpperCase() === right.toUpperCase();
 
 const summaryOf = (project: Project): ProjectSummary => ({
   ...project,
@@ -42,6 +43,6 @@ export function reorderProjectSummaries(
 
   return list
     .map((item, index) => ({ item, at: place(item, index) }))
-    .sort((a, b) => a.at - b.at)
+    .sort((left, right) => left.at - right.at)
     .map(({ item }) => item);
 }

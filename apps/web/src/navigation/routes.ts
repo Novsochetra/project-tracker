@@ -127,8 +127,8 @@ export function routeDepth(route: Route): number {
   return routeStack(route).length - 1;
 }
 
-export function sameRoute(a: Route, b: Route): boolean {
-  return routePath(a) === routePath(b);
+export function sameRoute(left: Route, right: Route): boolean {
+  return routePath(left) === routePath(right);
 }
 
 export function transitionFor(

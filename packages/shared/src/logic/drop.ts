@@ -19,16 +19,16 @@ const sortedGroup = <T extends Placeable>(
   tickets: readonly T[],
   statusId: string,
   skipId?: string,
-) => tickets.filter((t) => t.statusId === statusId && t.id !== skipId).sort(byRank);
+) => tickets.filter((ticket) => ticket.statusId === statusId && ticket.id !== skipId).sort(byRank);
 
 function insertionIndex(group: readonly Placeable[], target: DropTarget): number {
   if (target.beforeId) {
-    const index = group.findIndex((t) => t.id === target.beforeId);
+    const index = group.findIndex((ticket) => ticket.id === target.beforeId);
     return index < 0 ? group.length : index;
   }
 
   if (target.afterId) {
-    const index = group.findIndex((t) => t.id === target.afterId);
+    const index = group.findIndex((ticket) => ticket.id === target.afterId);
     return index < 0 ? group.length : index + 1;
   }
 
@@ -40,14 +40,14 @@ export function planMove(
   ticketId: string,
   target: DropTarget,
 ): MovePlan | null {
-  const moved = tickets.find((t) => t.id === ticketId);
+  const moved = tickets.find((ticket) => ticket.id === ticketId);
   if (!moved) return null;
   const group = sortedGroup(tickets, target.statusId, ticketId);
   const index = insertionIndex(group, target);
-  const order = [...group.slice(0, index), moved, ...group.slice(index)].map((t) => t.id);
+  const order = [...group.slice(0, index), moved, ...group.slice(index)].map((ticket) => ticket.id);
   const statusChanged = moved.statusId !== target.statusId;
   if (!statusChanged) {
-    const current = sortedGroup(tickets, moved.statusId).map((t) => t.id);
+    const current = sortedGroup(tickets, moved.statusId).map((ticket) => ticket.id);
     if (current.join() === order.join()) return null;
   }
 
@@ -95,10 +95,10 @@ export function keyboardMoveTarget(
   direction: MoveDirection,
   statusOrder: readonly string[],
 ): DropTarget | null {
-  const ticket = tickets.find((t) => t.id === ticketId);
+  const ticket = tickets.find((item) => item.id === ticketId);
   if (!ticket) return null;
   const own = sortedGroup(tickets, ticket.statusId);
-  const index = own.findIndex((t) => t.id === ticketId);
+  const index = own.findIndex((item) => item.id === ticketId);
 
   return (
     moveWithinGroup(own, index, direction) ??

@@ -35,7 +35,9 @@ function Harness() {
 function describeSheet(): string | null {
   const overlay = document.querySelector('[data-sheet]');
   if (!overlay) return null;
-  const apply = [...overlay.querySelectorAll('button')].find((b) => b.textContent === 'Apply');
+  const apply = [...overlay.querySelectorAll('button')].find(
+    (button) => button.textContent === 'Apply',
+  );
   const rows = [...overlay.querySelectorAll('li')].map((row) => row.textContent).join(' / ');
   const phase = overlay.hasAttribute('inert') ? 'closing' : 'open';
 

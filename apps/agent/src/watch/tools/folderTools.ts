@@ -9,7 +9,7 @@ const exists = (path: string) =>
     () => false,
   );
 
-const byName = (names: string[]) => names.sort((a, b) => a.localeCompare(b));
+const byName = (names: string[]) => names.sort((left, right) => left.localeCompare(right));
 
 export async function commandNames(folder: string): Promise<string[]> {
   const entries = await entriesOf(join(folder, '.claude', 'commands'));

@@ -38,9 +38,9 @@ describe('a move refusing an image on a comment', () => {
 
     expect(ok).toBe(false);
     expect(
-      lines.some((l) => l.startsWith('    - f-comment-scan (a comment on MOB-1, scan.jpg')),
+      lines.some((line) => line.startsWith('    - f-comment-scan (a comment on MOB-1, scan.jpg')),
     ).toBe(true);
-    const refusal = lines.find((l) => l.includes("can't go online as they are")) ?? '';
+    const refusal = lines.find((line) => line.includes("can't go online as they are")) ?? '';
     expect(refusal).toMatch(/delete that comment instead/);
     expect(refusal).not.toMatch(/delete each from the ticket or comment/);
   });

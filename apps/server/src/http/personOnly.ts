@@ -4,8 +4,8 @@ import type { AppEnv } from './env';
 
 // Checked before the body, like the other refusals.
 const refuseAgents = (message: string) =>
-  createMiddleware<AppEnv>(async (c, next) => {
-    if (c.get('actor').kind !== 'human') throw forbidden(message);
+  createMiddleware<AppEnv>(async (context, next) => {
+    if (context.get('actor').kind !== 'human') throw forbidden(message);
     await next();
   });
 

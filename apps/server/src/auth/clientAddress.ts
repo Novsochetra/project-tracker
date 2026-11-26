@@ -17,18 +17,20 @@ export function forwardedAddress(
   return entries.at(-Math.min(trustedProxies, entries.length)) ?? null;
 }
 
-function socketAddress(c: Context): string {
+function socketAddress(context: Context): string {
   try {
-    return getConnInfo(c).remote.address ?? UNKNOWN;
+    return getConnInfo(context).remote.address ?? UNKNOWN;
   } catch {
     // Requests made in tests with app.request() have no socket.
     return UNKNOWN;
   }
 }
 
-export function clientAddress(c: Context, trustedProxies: number): string {
+export function clientAddress(context: Context, trustedProxies: number): string {
   const forwarded =
-    trustedProxies > 0 ? forwardedAddress(c.req.header('x-forwarded-for'), trustedProxies) : null;
+    trustedProxies > 0
+      ? forwardedAddress(context.req.header('x-forwarded-for'), trustedProxies)
+      : null;
 
-  return forwarded ?? socketAddress(c);
+  return forwarded ?? socketAddress(context);
 }

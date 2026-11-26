@@ -8,9 +8,11 @@ import { personReadsPlanUsage } from '../personOnly';
 
 export const runUsageRoutes = (ctx: ServiceContext) =>
   new Hono<AppEnv>()
-    .get('/projects/:key/usage', async (c) =>
-      c.json(await getProjectUsage(ctx, requireScope(c.get('access')), c.req.param('key'))),
+    .get('/projects/:key/usage', async (context) =>
+      context.json(
+        await getProjectUsage(ctx, requireScope(context.get('access')), context.req.param('key')),
+      ),
     )
-    .get('/claude-usage', personReadsPlanUsage, async (c) =>
-      c.json(await listPlanUsage(ctx, requireScope(c.get('access')))),
+    .get('/claude-usage', personReadsPlanUsage, async (context) =>
+      context.json(await listPlanUsage(ctx, requireScope(context.get('access')))),
     );

@@ -22,57 +22,68 @@ import { jsonBody, queryParams } from '../validation';
 
 export const ticketRoutes = (ctx: ServiceContext) =>
   new Hono<AppEnv>()
-    .get('/tickets', queryParams(listTicketsQuery), async (c) =>
-      c.json(await listAllTickets(userContext(ctx, c), c.req.valid('query'))),
+    .get('/tickets', queryParams(listTicketsQuery), async (context) =>
+      context.json(await listAllTickets(userContext(ctx, context), context.req.valid('query'))),
     )
-    .get('/projects/:key/tickets', queryParams(listTicketsQuery), async (c) =>
-      c.json(await listTickets(userContext(ctx, c), c.req.param('key'), c.req.valid('query'))),
+    .get('/projects/:key/tickets', queryParams(listTicketsQuery), async (context) =>
+      context.json(
+        await listTickets(
+          userContext(ctx, context),
+          context.req.param('key'),
+          context.req.valid('query'),
+        ),
+      ),
     )
-    .post('/projects/:key/tickets', jsonBody(createTicketInput), async (c) =>
-      c.json(
+    .post('/projects/:key/tickets', jsonBody(createTicketInput), async (context) =>
+      context.json(
         await createTicket(
-          userContext(ctx, c),
-          c.get('actor'),
-          c.req.param('key'),
-          c.req.valid('json'),
+          userContext(ctx, context),
+          context.get('actor'),
+          context.req.param('key'),
+          context.req.valid('json'),
         ),
         201,
       ),
     )
-    .get('/tickets/:key', async (c) =>
-      c.json(await getTicketDetail(userContext(ctx, c), c.req.param('key'))),
+    .get('/tickets/:key', async (context) =>
+      context.json(await getTicketDetail(userContext(ctx, context), context.req.param('key'))),
     )
-    .patch('/tickets/:key', jsonBody(updateTicketRequest), async (c) => {
-      const { expected, ...input } = c.req.valid('json');
-      const update = { actor: c.get('actor'), key: c.req.param('key'), input, expected };
+    .patch('/tickets/:key', jsonBody(updateTicketRequest), async (context) => {
+      const { expected, ...input } = context.req.valid('json');
+      const update = {
+        actor: context.get('actor'),
+        key: context.req.param('key'),
+        input,
+        expected,
+      };
 
-      return c.json(await updateTicket(userContext(ctx, c), update));
+      return context.json(await updateTicket(userContext(ctx, context), update));
     })
-    .delete('/tickets/:key', async (c) => {
-      await deleteTicket(userContext(ctx, c), c.req.param('key'));
+    .delete('/tickets/:key', async (context) => {
+      await deleteTicket(userContext(ctx, context), context.req.param('key'));
 
-      return c.body(null, 204);
+      return context.body(null, 204);
     })
-    .post('/tickets/:key/move', jsonBody(moveTicketInput), async (c) =>
-      c.json(
+    .post('/tickets/:key/move', jsonBody(moveTicketInput), async (context) =>
+      context.json(
         await moveTicket(
-          userContext(ctx, c),
-          c.get('actor'),
-          c.req.param('key'),
-          c.req.valid('json'),
+          userContext(ctx, context),
+          context.get('actor'),
+          context.req.param('key'),
+          context.req.valid('json'),
         ),
       ),
     )
-    .get('/tickets/:key/prompt', async (c) =>
-      c.json(await ticketPrompt(userContext(ctx, c), c.req.param('key'))),
+    .get('/tickets/:key/prompt', async (context) =>
+      context.json(await ticketPrompt(userContext(ctx, context), context.req.param('key'))),
     )
-    .post('/tickets/:key/sent', jsonBody(markSentInput), async (c) =>
-      c.json(
+    .post('/tickets/:key/sent', jsonBody(markSentInput), async (context) =>
+      context.json(
         await markSent(
-          userContext(ctx, c),
-          c.get('actor'),
-          c.req.param('key'),
-          c.req.valid('json'),
+          userContext(ctx, context),
+          context.get('actor'),
+          context.req.param('key'),
+          context.req.valid('json'),
         ),
       ),
     );

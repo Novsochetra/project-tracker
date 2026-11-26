@@ -82,7 +82,9 @@ describe.each(DIALECTS)('comments and activity (%s)', (dialect) => {
     ]);
     const detail = await api.client().getTicket(ticket.key);
     expect(detail.attachments).toEqual([]);
-    expect(detail.activity.at(-1)!.attachments.map((a) => a.id)).toEqual([image.id]);
+    expect(detail.activity.at(-1)!.attachments.map((attachment) => attachment.id)).toEqual([
+      image.id,
+    ]);
   });
 
   it('can move a ticket image into a comment but not an image of another ticket', async () => {
@@ -90,7 +92,7 @@ describe.each(DIALECTS)('comments and activity (%s)', (dialect) => {
     const comment = await api
       .client()
       .addComment(ticket.key, { text: 'see', attachmentIds: [own.id] });
-    expect(comment.attachments.map((a) => a.id)).toEqual([own.id]);
+    expect(comment.attachments.map((attachment) => attachment.id)).toEqual([own.id]);
 
     const other = await api.client().createTicket('MA', { title: 'Other' });
     const foreign = await upload(other.key);
@@ -100,7 +102,7 @@ describe.each(DIALECTS)('comments and activity (%s)', (dialect) => {
     });
     expect(res.status).toBe(400);
     const comments = (await api.client().getTicket(ticket.key)).activity.filter(
-      (a) => a.type === 'comment',
+      (activity) => activity.type === 'comment',
     );
     expect(comments).toHaveLength(1);
   });

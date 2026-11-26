@@ -14,39 +14,43 @@ import { signedInState, signInAs } from '../signIn';
 import { limitTries } from '../tryLimits';
 import { jsonBodyAsSent } from '../validation';
 
-const ownerId = (c: Context<AppEnv>, deps: AuthDeps) =>
-  requireOwner(c, deps, 'Only the owner of this tracker invites people.');
+const ownerId = (context: Context<AppEnv>, deps: AuthDeps) =>
+  requireOwner(context, deps, 'Only the owner of this tracker invites people.');
 
 // Anyone with the link may ask about it and accept it; the secret is what lets them in.
 const linkRoutes = (deps: AuthDeps) => {
   const limited = limitTries(deps, 'tries with invite links');
 
   return new Hono<AppEnv>()
-    .post('/invites/check', jsonBodyAsSent(checkInviteInput), limited, async (c) => {
-      const invite = await requireUsableInvite(deps.db, c.req.valid('json').secret, deps.now());
+    .post('/invites/check', jsonBodyAsSent(checkInviteInput), limited, async (context) => {
+      const invite = await requireUsableInvite(
+        deps.db,
+        context.req.valid('json').secret,
+        deps.now(),
+      );
 
-      return c.json({ expiresAt: invite.expiresAt });
+      return context.json({ expiresAt: invite.expiresAt });
     })
-    .post('/invites/accept', jsonBodyAsSent(acceptInviteInput), limited, async (c) => {
-      const user = await acceptInvite(deps.db, c.req.valid('json'), deps.now());
-      await signInAs(c, deps, user.id);
+    .post('/invites/accept', jsonBodyAsSent(acceptInviteInput), limited, async (context) => {
+      const user = await acceptInvite(deps.db, context.req.valid('json'), deps.now());
+      await signInAs(context, deps, user.id);
 
-      return c.json(signedInState(user), 201);
+      return context.json(signedInState(user), 201);
     });
 };
 
 const ownerRoutes = (deps: AuthDeps) =>
   new Hono<AppEnv>()
-    .get('/invites', async (c) =>
-      c.json(await listOpenInvites(deps.db, await ownerId(c, deps), deps.now())),
+    .get('/invites', async (context) =>
+      context.json(await listOpenInvites(deps.db, await ownerId(context, deps), deps.now())),
     )
-    .post('/invites', async (c) =>
-      c.json(await createInvite(deps.db, await ownerId(c, deps), deps.now()), 201),
+    .post('/invites', async (context) =>
+      context.json(await createInvite(deps.db, await ownerId(context, deps), deps.now()), 201),
     )
-    .delete('/invites/:id', async (c) => {
-      await revokeInvite(deps.db, await ownerId(c, deps), c.req.param('id'));
+    .delete('/invites/:id', async (context) => {
+      await revokeInvite(deps.db, await ownerId(context, deps), context.req.param('id'));
 
-      return c.body(null, 204);
+      return context.body(null, 204);
     });
 
 export const inviteRoutes = (deps: AuthDeps) =>

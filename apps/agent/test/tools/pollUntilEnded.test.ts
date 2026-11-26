@@ -9,7 +9,7 @@ describe('pollUntilEnded', () => {
     const waitOnce = vi.fn().mockResolvedValueOnce('open').mockResolvedValueOnce('done');
     const end = await pollUntilEnded({
       waitOnce,
-      isOpen: (v) => v === 'open',
+      isOpen: (value) => value === 'open',
       limitMs: 1000,
       signal,
     });

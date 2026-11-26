@@ -27,10 +27,10 @@ export function visibleStatuses<T extends Status>(
 }
 
 export function matchesSearch(ticket: { title: string; key: string }, query: string): boolean {
-  const q = query.trim().toLowerCase();
-  if (!q) return true;
+  const text = query.trim().toLowerCase();
+  if (!text) return true;
 
-  return ticket.title.toLowerCase().includes(q) || ticket.key.toLowerCase().includes(q);
+  return ticket.title.toLowerCase().includes(text) || ticket.key.toLowerCase().includes(text);
 }
 
 export interface FilterTab<T extends Status = Status> {

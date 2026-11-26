@@ -1,5 +1,5 @@
-export const sameProjectKey = (a: string, b: string): boolean =>
-  a.toUpperCase() === b.toUpperCase();
+export const sameProjectKey = (left: string, right: string): boolean =>
+  left.toUpperCase() === right.toUpperCase();
 
 export function findProject<T extends { key: string }>(
   projects: readonly T[] | undefined,

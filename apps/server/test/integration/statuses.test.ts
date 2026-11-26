@@ -12,7 +12,8 @@ describe.each(DIALECTS)('statuses (%s)', (dialect) => {
     api.events.length = 0;
   });
 
-  const statusNames = async () => (await api.client().getProject('MA')).statuses.map((s) => s.name);
+  const statusNames = async () =>
+    (await api.client().getProject('MA')).statuses.map((status) => status.name);
 
   it('creates a status at the end with the category color by default', async () => {
     const res = await api.post<Status>('/api/projects/MA/statuses', {
@@ -101,11 +102,11 @@ describe.each(DIALECTS)('statuses (%s)', (dialect) => {
   });
 
   it('reorders statuses when given exactly the project status ids', async () => {
-    const ids = project.statuses.map((s) => s.id).reverse();
+    const ids = project.statuses.map((status) => status.id).reverse();
     const res = await api.put<Status[]>('/api/projects/MA/statuses/order', { ids });
     expect(res.status).toBe(200);
-    expect(res.body.map((s) => s.id)).toEqual(ids);
-    expect(res.body.map((s) => s.position)).toEqual([0, 1, 2, 3, 4]);
+    expect(res.body.map((status) => status.id)).toEqual(ids);
+    expect(res.body.map((status) => status.position)).toEqual([0, 1, 2, 3, 4]);
     expect(await statusNames()).toEqual([
       'Done',
       'Reviewed',
@@ -116,7 +117,7 @@ describe.each(DIALECTS)('statuses (%s)', (dialect) => {
   });
 
   it('rejects a reorder with missing, extra or repeated ids', async () => {
-    const ids = project.statuses.map((s) => s.id);
+    const ids = project.statuses.map((status) => status.id);
     const other = await api.client().createProject({ name: 'Other' });
     for (const bad of [
       ids.slice(1),
@@ -155,7 +156,7 @@ describe.each(DIALECTS)('statuses (%s)', (dialect) => {
     const res = await api.delete(`/api/statuses/${todo.id}?moveTo=${doing.id}`);
     expect(res.status).toBe(204);
     const board = await client.getBoard('MA');
-    expect(board.tickets.map((t) => [t.key, t.statusId])).toEqual([
+    expect(board.tickets.map((ticket) => [ticket.key, ticket.statusId])).toEqual([
       ['MA-1', doing.id],
       ['MA-3', doing.id],
       ['MA-2', doing.id],

@@ -33,7 +33,10 @@ export function refusePersonName(actor: Actor): void {
   );
 }
 
-export const actorMiddleware = createMiddleware<AppEnv>(async (c, next) => {
-  c.set('actor', parseActor(c.req.header('x-actor-kind'), c.req.header('x-actor-name')));
+export const actorMiddleware = createMiddleware<AppEnv>(async (context, next) => {
+  context.set(
+    'actor',
+    parseActor(context.req.header('x-actor-kind'), context.req.header('x-actor-name')),
+  );
   await next();
 });

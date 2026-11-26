@@ -30,58 +30,58 @@ async function stateFor(deps: AuthDeps, access: Access | null): Promise<SessionS
 }
 
 async function signIn(
-  c: Context<AppEnv>,
+  context: Context<AppEnv>,
   deps: AuthDeps,
   limits: LoginLimits,
   input: LoginAttempt & { password: string },
 ) {
   const at = deps.now();
   const wait = limits.waitFor(input, at);
-  if (wait > 0) throw tooManyTries(c, wait, 'sign-in attempts');
+  if (wait > 0) throw tooManyTries(context, wait, 'sign-in attempts');
   // Counted before the check, so attempts sent side by side can't all slip past the limit.
   limits.failed(input, at);
   const user = await checkLogin(deps.db, input.email, input.password);
   if (!user) throw new AppError('unauthorized', LOGIN_FAILED_MESSAGE);
   limits.succeeded(input);
-  await signInAs(c, deps, user.id);
+  await signInAs(context, deps, user.id);
 
-  return c.json(signedInState(user));
+  return context.json(signedInState(user));
 }
 
-async function signOut(c: Context<AppEnv>, deps: AuthDeps) {
-  const secret = readSessionCookie(c);
+async function signOut(context: Context<AppEnv>, deps: AuthDeps) {
+  const secret = readSessionCookie(context);
   if (secret) await endSession(deps.db, secret);
-  clearSessionCookie(c, deps.options);
-  c.header('Clear-Site-Data', CLEAR_SITE_DATA);
-  const access = c.get('access');
+  clearSessionCookie(context, deps.options);
+  context.header('Clear-Site-Data', CLEAR_SITE_DATA);
+  const access = context.get('access');
 
-  return c.json(await stateFor(deps, access?.kind === 'open' ? access : null));
+  return context.json(await stateFor(deps, access?.kind === 'open' ? access : null));
 }
 
-async function signOutEverywhere(c: Context<AppEnv>, deps: AuthDeps) {
-  const access = c.get('access');
+async function signOutEverywhere(context: Context<AppEnv>, deps: AuthDeps) {
+  const access = context.get('access');
   if (access?.kind !== 'session') {
     throw forbidden('Sign in with your email and password to sign out everywhere.');
   }
 
   await endAllSessions(deps.db, access.userId);
-  clearSessionCookie(c, deps.options);
-  c.header('Clear-Site-Data', CLEAR_SITE_DATA);
+  clearSessionCookie(context, deps.options);
+  context.header('Clear-Site-Data', CLEAR_SITE_DATA);
 
-  return c.json(await stateFor(deps, null));
+  return context.json(await stateFor(deps, null));
 }
 
 export function sessionRoutes(deps: AuthDeps) {
   const limits = createLoginLimits(deps.options.loginLimits);
 
   return new Hono<AppEnv>()
-    .get('/session', async (c) => c.json(await stateFor(deps, c.get('access'))))
-    .post('/session', jsonBodyAsSent(loginInput), async (c) => {
-      const { email, password } = c.req.valid('json');
-      const address = clientAddress(c, deps.options.trustedProxies);
+    .get('/session', async (context) => context.json(await stateFor(deps, context.get('access'))))
+    .post('/session', jsonBodyAsSent(loginInput), async (context) => {
+      const { email, password } = context.req.valid('json');
+      const address = clientAddress(context, deps.options.trustedProxies);
 
-      return signIn(c, deps, limits, { address, email, password });
+      return signIn(context, deps, limits, { address, email, password });
     })
-    .delete('/session', (c) => signOut(c, deps))
-    .delete('/sessions', (c) => signOutEverywhere(c, deps));
+    .delete('/session', (context) => signOut(context, deps))
+    .delete('/sessions', (context) => signOutEverywhere(context, deps));
 }

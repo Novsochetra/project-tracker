@@ -52,7 +52,8 @@ export function skippedLines({ skippedActive, skippedDevice, leftOver }: RunAllP
 const COUNTED: readonly BatchTicketState[] = ['running', 'waiting', 'done', 'failed'];
 
 export function batchCountsText(tickets: readonly BatchTicket[]): string {
-  const count = (state: BatchTicketState) => tickets.filter((t) => t.state === state).length;
+  const count = (state: BatchTicketState) =>
+    tickets.filter((ticket) => ticket.state === state).length;
   const cancelled = count('cancelled');
   const parts = COUNTED.map((state) => `${count(state)} ${state}`);
 

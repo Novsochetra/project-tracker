@@ -7,14 +7,14 @@ const NAMES: Record<string, string> = {
 };
 
 async function box(locator: Locator) {
-  const b = await locator.boundingBox();
-  expect(b).not.toBeNull();
+  const rect = await locator.boundingBox();
+  expect(rect).not.toBeNull();
 
-  return b!;
+  return rect!;
 }
 
-const apart = (a: { x: number; width: number }, b: { x: number; width: number }) =>
-  a.x + a.width <= b.x + 0.5 || b.x + b.width <= a.x + 0.5;
+const apart = (left: { x: number; width: number }, right: { x: number; width: number }) =>
+  left.x + left.width <= right.x + 0.5 || right.x + right.width <= left.x + 0.5;
 
 async function hits(page: Page, target: Locator, x: number, y: number) {
   const handle = await target.elementHandle();
@@ -46,15 +46,18 @@ test.describe('phone nav bar with a long project name', () => {
         const bar = page.locator(`[data-stack-path="/p/${key}"] header[data-navbar]`);
         const title = bar.getByText(name, { exact: true });
         await expect(title).toBeVisible();
-        const t = await box(title);
+        const titleBox = await box(title);
         for (const label of ['Back to Projects', 'Project options', 'New ticket']) {
           const button = bar.getByRole('button', { name: label });
-          const b = await box(button);
-          expect(b.width, label).toBeGreaterThanOrEqual(43.5);
-          expect(b.height, label).toBeGreaterThanOrEqual(43.5);
-          expect(b.x + b.width, label).toBeLessThanOrEqual(width);
-          expect(apart(t, b), `${label} vs title`).toBe(true);
-          expect(await hits(page, button, b.x + 12, b.y + b.height / 2), label).toBe(true);
+          const buttonBox = await box(button);
+          expect(buttonBox.width, label).toBeGreaterThanOrEqual(43.5);
+          expect(buttonBox.height, label).toBeGreaterThanOrEqual(43.5);
+          expect(buttonBox.x + buttonBox.width, label).toBeLessThanOrEqual(width);
+          expect(apart(titleBox, buttonBox), `${label} vs title`).toBe(true);
+          expect(
+            await hits(page, button, buttonBox.x + 12, buttonBox.y + buttonBox.height / 2),
+            label,
+          ).toBe(true);
         }
 
         if (name.length > 40) {

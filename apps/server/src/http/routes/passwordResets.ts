@@ -9,8 +9,8 @@ import { requireOwner } from '../ownerAccess';
 import { limitTries } from '../tryLimits';
 import { jsonBodyAsSent } from '../validation';
 
-const ownerId = (c: Context<AppEnv>, deps: AuthDeps) =>
-  requireOwner(c, deps, 'Only the owner of this tracker resets passwords.');
+const ownerId = (context: Context<AppEnv>, deps: AuthDeps) =>
+  requireOwner(context, deps, 'Only the owner of this tracker resets passwords.');
 
 // Anyone with the link may use it, like an invite. It doesn't sign in: the browser may be someone
 // else's, like the owner's trying the link, and signing in with the new password lets a password
@@ -19,33 +19,36 @@ const linkRoutes = (deps: AuthDeps) => {
   const limited = limitTries(deps, 'tries with reset links');
 
   return new Hono<AppEnv>()
-    .post('/password-resets/check', jsonBodyAsSent(checkResetLinkInput), limited, async (c) =>
-      c.json(await checkResetLink(deps.db, c.req.valid('json').secret, deps.now())),
+    .post('/password-resets/check', jsonBodyAsSent(checkResetLinkInput), limited, async (context) =>
+      context.json(await checkResetLink(deps.db, context.req.valid('json').secret, deps.now())),
     )
-    .post('/password-resets/use', jsonBodyAsSent(resetPasswordInput), limited, async (c) => {
-      await resetPassword(deps.db, c.req.valid('json'), deps.now());
+    .post('/password-resets/use', jsonBodyAsSent(resetPasswordInput), limited, async (context) => {
+      await resetPassword(deps.db, context.req.valid('json'), deps.now());
 
-      return c.body(null, 204);
+      return context.body(null, 204);
     });
 };
 
 const ownerRoutes = (deps: AuthDeps) =>
   new Hono<AppEnv>()
-    .get('/users', async (c) => {
-      await ownerId(c, deps);
+    .get('/users', async (context) => {
+      await ownerId(context, deps);
 
-      return c.json(await listInvitedUsers(deps.db, deps.now()));
+      return context.json(await listInvitedUsers(deps.db, deps.now()));
     })
-    .post('/users/:id/reset-link', async (c) => {
-      const owner = await ownerId(c, deps);
+    .post('/users/:id/reset-link', async (context) => {
+      const owner = await ownerId(context, deps);
 
-      return c.json(await createResetLink(deps.db, owner, c.req.param('id'), deps.now()), 201);
+      return context.json(
+        await createResetLink(deps.db, owner, context.req.param('id'), deps.now()),
+        201,
+      );
     })
-    .delete('/users/:id/reset-link', async (c) => {
-      await ownerId(c, deps);
-      await cancelResetLink(deps.db, c.req.param('id'));
+    .delete('/users/:id/reset-link', async (context) => {
+      await ownerId(context, deps);
+      await cancelResetLink(deps.db, context.req.param('id'));
 
-      return c.body(null, 204);
+      return context.body(null, 204);
     });
 
 export const passwordResetRoutes = (deps: AuthDeps) =>

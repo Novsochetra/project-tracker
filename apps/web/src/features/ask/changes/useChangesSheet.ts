@@ -26,7 +26,10 @@ export function useChangesSheet(chatId: string, chatTitle: string, changes: Chat
     setStep(next);
   };
 
-  const sent = { onSuccess: () => go('view'), onError: (e: Error) => setError(errorMessage(e)) };
+  const sent = {
+    onSuccess: () => go('view'),
+    onError: (failure: Error) => setError(errorMessage(failure)),
+  };
 
   const startCommit = () => {
     const branch = initialBranch(changes, chatTitle);

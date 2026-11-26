@@ -8,9 +8,15 @@ import { jsonBody } from '../validation';
 
 export const reportRoutes = (ctx: ServiceContext) =>
   new Hono<AppEnv>()
-    .post('/reports/preview', jsonBody(reportInput), async (c) =>
-      c.json(await previewReport(userContext(ctx, c), c.req.valid('json'))),
+    .post('/reports/preview', jsonBody(reportInput), async (context) =>
+      context.json(await previewReport(userContext(ctx, context), context.req.valid('json'))),
     )
-    .post('/reports/apply', jsonBody(reportInput), async (c) =>
-      c.json(await applyReport(userContext(ctx, c), c.get('actor'), c.req.valid('json'))),
+    .post('/reports/apply', jsonBody(reportInput), async (context) =>
+      context.json(
+        await applyReport(
+          userContext(ctx, context),
+          context.get('actor'),
+          context.req.valid('json'),
+        ),
+      ),
     );

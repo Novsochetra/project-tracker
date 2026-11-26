@@ -22,7 +22,8 @@ export const LAST_STATUS_HINT = 'A project needs at least one status.';
 const COLOR_NAMES = ['Gray', 'Orange', 'Blue', 'Green', 'Indigo', 'Violet', 'Pink', 'Red', 'Teal'];
 const PALETTE: readonly string[] = STATUS_COLORS;
 
-export const sameColor = (a: string, b: string): boolean => a.toLowerCase() === b.toLowerCase();
+export const sameColor = (left: string, right: string): boolean =>
+  left.toLowerCase() === right.toLowerCase();
 
 const paletteIndex = (color: string): number => PALETTE.findIndex((item) => sameColor(item, color));
 
@@ -128,8 +129,8 @@ export function moveInOrder(ids: readonly string[], id: string, delta: number): 
   return next;
 }
 
-export const sameOrder = (a: readonly string[], b: readonly string[]): boolean =>
-  a.length === b.length && a.every((id, index) => id === b[index]);
+export const sameOrder = (left: readonly string[], right: readonly string[]): boolean =>
+  left.length === right.length && left.every((id, index) => id === right[index]);
 
-export const sameMembers = (a: readonly string[], b: readonly string[]): boolean =>
-  a.length === b.length && a.every((id) => b.includes(id));
+export const sameMembers = (left: readonly string[], right: readonly string[]): boolean =>
+  left.length === right.length && left.every((id) => right.includes(id));

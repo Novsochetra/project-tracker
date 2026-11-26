@@ -4,10 +4,10 @@ import { AVATAR_COLORS, avatarColor, initials } from '../src/logic/avatar';
 // The prototype's `hue` from init-design/design/Main.dc.html, kept as the reference.
 const AV = ['#5B5BD6', '#B4540A', '#18794E', '#C2298A', '#0B68CB', '#6E56CF'];
 const prototypeHue = (name: string): string => {
-  let h = 0;
-  for (let i = 0; i < name.length; i++) h = (h + name.charCodeAt(i)) % AV.length;
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) hash = (hash + name.charCodeAt(i)) % AV.length;
 
-  return AV[h] ?? '';
+  return AV[hash] ?? '';
 };
 
 describe('initials', () => {

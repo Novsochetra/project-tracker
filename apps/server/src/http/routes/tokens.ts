@@ -9,8 +9,8 @@ import { jsonBody } from '../validation';
 
 // Only a person signed in with their password manages their tokens: a token that leaks can't mint
 // more of itself.
-function ownerId(c: Context<AppEnv>): string {
-  const access = c.get('access');
+function ownerId(context: Context<AppEnv>): string {
+  const access = context.get('access');
   if (access?.kind === 'session') return access.userId;
   throw forbidden(
     access?.kind === 'open'
@@ -20,21 +20,21 @@ function ownerId(c: Context<AppEnv>): string {
 }
 
 // Checked before the body, so an agent learns it may not, not what a valid body looks like.
-const ownerOnly = createMiddleware<AppEnv>(async (c, next) => {
-  ownerId(c);
+const ownerOnly = createMiddleware<AppEnv>(async (context, next) => {
+  ownerId(context);
   await next();
 });
 
 export const tokenRoutes = ({ db, now }: AuthDeps) =>
   new Hono<AppEnv>()
-    .get('/tokens', async (c) => c.json(await listApiTokens(db, ownerId(c))))
-    .post('/tokens', ownerOnly, jsonBody(createApiTokenInput), async (c) => {
-      const { name } = c.req.valid('json');
+    .get('/tokens', async (context) => context.json(await listApiTokens(db, ownerId(context))))
+    .post('/tokens', ownerOnly, jsonBody(createApiTokenInput), async (context) => {
+      const { name } = context.req.valid('json');
 
-      return c.json(await createApiToken(db, ownerId(c), name, now()), 201);
+      return context.json(await createApiToken(db, ownerId(context), name, now()), 201);
     })
-    .delete('/tokens/:id', async (c) => {
-      await revokeApiToken(db, ownerId(c), c.req.param('id'));
+    .delete('/tokens/:id', async (context) => {
+      await revokeApiToken(db, ownerId(context), context.req.param('id'));
 
-      return c.body(null, 204);
+      return context.body(null, 204);
     });

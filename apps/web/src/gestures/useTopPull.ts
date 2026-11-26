@@ -64,12 +64,12 @@ function attachTopPull(target: HTMLElement, read: () => TopPullOptions): () => v
     read().onMove(dy);
   };
 
-  const finish = (velocityY: (s: PullSession) => number) => {
+  const finish = (velocityY: (ended: PullSession) => number) => {
     if (session?.engaged) read().onEnd(velocityY(session));
     session = null;
   };
 
-  const onEnd = (event: TouchEvent) => finish((s) => s.tracker.velocity(event.timeStamp).y);
+  const onEnd = (event: TouchEvent) => finish((ended) => ended.tracker.velocity(event.timeStamp).y);
   const onCancel = () => finish(() => 0);
 
   target.addEventListener('touchstart', onStart, { passive: true });

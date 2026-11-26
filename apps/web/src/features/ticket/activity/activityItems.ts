@@ -80,7 +80,7 @@ const order = (activity: Activity): number =>
 // Like toItem, this runs outside the cards' boundaries: an entry that isn't an object, such as
 // null, has nothing to show and is left out.
 export function activityItems(activity: readonly Activity[]): ActivityItem[] {
-  const sorted = readableEntries(activity).sort((a, b) => order(a) - order(b));
+  const sorted = readableEntries(activity).sort((left, right) => order(left) - order(right));
   const keys = uniqueKeys(sorted.map((item) => item.id));
 
   return sorted.map((item, index) => toItem(item, keys[index] ?? item.id));

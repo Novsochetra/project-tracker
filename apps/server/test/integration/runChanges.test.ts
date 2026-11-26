@@ -42,11 +42,14 @@ describe.each(DIALECTS)('run changes (%s)', (dialect) => {
   const finish = () => helper('POST', `/api/runs/${run.id}/finish`, { status: 'done' });
 
   beforeEach(async () => {
-    const a = await addUser(api.db, 'a@example.com', Date.now());
-    const b = await addUser(api.db, 'b@example.com', Date.now() + 1);
-    person = caller(() => api.app, a.person);
-    helper = caller(() => api.app, a.helper);
-    other = { person: caller(() => api.app, b.person), helper: caller(() => api.app, b.helper) };
+    const userA = await addUser(api.db, 'a@example.com', Date.now());
+    const userB = await addUser(api.db, 'b@example.com', Date.now() + 1);
+    person = caller(() => api.app, userA.person);
+    helper = caller(() => api.app, userA.helper);
+    other = {
+      person: caller(() => api.app, userB.person),
+      helper: caller(() => api.app, userB.helper),
+    };
     runner = randomUUID();
     await person('POST', '/api/projects', { name: 'Mobile', key: 'MOB' });
     await person('POST', '/api/projects/MOB/tickets', { title: 'Crash' });

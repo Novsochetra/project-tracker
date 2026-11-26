@@ -33,9 +33,9 @@ const LIMITS = {
 
 // Runs after the access check, so only sign-in, invites and reset links read a body from someone
 // not signed in, and those are small. A body with a length over the limit is refused unread.
-export const limitBodies = createMiddleware<AppEnv>(async (c, next) => {
-  if (c.req.method === 'POST' && c.req.path === UPLOAD_PATH) return next();
-  const limit = SMALL_BODY_PATHS.has(c.req.path) ? LIMITS.login : LIMITS.json;
+export const limitBodies = createMiddleware<AppEnv>(async (context, next) => {
+  if (context.req.method === 'POST' && context.req.path === UPLOAD_PATH) return next();
+  const limit = SMALL_BODY_PATHS.has(context.req.path) ? LIMITS.login : LIMITS.json;
 
-  return limit(c, next);
+  return limit(context, next);
 });

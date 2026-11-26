@@ -27,7 +27,7 @@ describe.each(DIALECTS)('an upload whose pending row goes before it finishes (%s
     const app = createApp({ db, storage: held, events: createBroadcaster() });
     const { path, init } = fileUpload({ name: 'notes.txt' });
     const answer = app.request(path, init);
-    while (!reached) await new Promise((r) => setTimeout(r, 5));
+    while (!reached) await new Promise((resolve) => setTimeout(resolve, 5));
     await deleteAllRows(db);
     const logged = vi.spyOn(console, 'error').mockImplementation(() => undefined);
     release();

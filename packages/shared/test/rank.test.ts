@@ -3,7 +3,8 @@ import { byRank, evenRanks, RANK_STEP, topRank, type Rankable } from '../src/log
 
 const item = (num: number, rank: number): Rankable => ({ id: `t${num}`, num, rank });
 
-const sortedIds = (items: Rankable[]): string[] => [...items].sort(byRank).map((t) => t.id);
+const sortedIds = (items: Rankable[]): string[] =>
+  [...items].sort(byRank).map((ticket) => ticket.id);
 
 describe('byRank', () => {
   it('sorts by rank ascending', () => {

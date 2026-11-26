@@ -2,11 +2,11 @@
 const COPIED = ['br', 'gzip'];
 
 const weightOf = (params: string[]): number => {
-  const q = params
+  const quality = params
     .map((param) => param.trim().toLowerCase())
     .find((param) => param.startsWith('q='));
 
-  return q === undefined ? 1 : Number(q.slice(2));
+  return quality === undefined ? 1 : Number(quality.slice(2));
 };
 
 export function acceptedEncodings(header: string): string[] {

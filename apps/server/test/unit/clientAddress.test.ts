@@ -19,7 +19,7 @@ describe('forwardedAddress', () => {
 
 describe('clientAddress', () => {
   const app = (trustedProxies: number) =>
-    new Hono().get('/', (c) => c.text(clientAddress(c, trustedProxies)));
+    new Hono().get('/', (context) => context.text(clientAddress(context, trustedProxies)));
   const ask = async (trustedProxies: number, forwarded?: string) =>
     (
       await app(trustedProxies).request('/', {

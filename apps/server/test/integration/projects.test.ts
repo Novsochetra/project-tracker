@@ -30,8 +30,15 @@ describe.each(DIALECTS)('projects (%s)', (dialect) => {
       nextNum: 1,
     });
     expect(res.body.project.createdAt).toBe(res.body.project.updatedAt);
-    expect(res.body.statuses.map((s) => [s.name, s.category, s.color, s.position])).toEqual(
-      DEFAULT_STATUSES.map((s, index) => [s.name, s.category, s.color, index]),
+    expect(
+      res.body.statuses.map((status) => [
+        status.name,
+        status.category,
+        status.color,
+        status.position,
+      ]),
+    ).toEqual(
+      DEFAULT_STATUSES.map((status, index) => [status.name, status.category, status.color, index]),
     );
     expect(api.events).toEqual([
       { type: 'changed', projectId: res.body.project.id, ticketId: null },
@@ -95,7 +102,7 @@ describe.each(DIALECTS)('projects (%s)', (dialect) => {
 
     const res = await api.get<ProjectSummary[]>('/api/projects');
     expect(res.status).toBe(200);
-    expect(res.body.map((p) => p.key)).toEqual(['FIR', 'SEC']);
+    expect(res.body.map((project) => project.key)).toEqual(['FIR', 'SEC']);
     expect(res.body[0]).toMatchObject({
       totalCount: 3,
       openCount: 2,
@@ -186,30 +193,36 @@ describe.each(DIALECTS)('projects (%s)', (dialect) => {
       expect(rows.length, table).toBe(table === 'statuses' ? 5 : 0);
     }
 
-    expect((await client.listProjects()).map((p) => p.key)).toEqual(['KM']);
+    expect((await client.listProjects()).map((project) => project.key)).toEqual(['KM']);
   });
 
   it('returns the board with sorted statuses and counted ticket rows', async () => {
     const client = api.client();
     const project = await client.createProject({ name: 'Mobile app' });
     const done = statusOf(project, 'done');
-    const a = await client.createTicket('MA', { title: 'A' });
-    const b = await client.createTicket('MA', { title: 'B' });
-    const c = await client.createTicket('MA', { title: 'C', statusId: done.id });
-    await client.addComment(a.key, { text: 'one' });
-    await client.addComment(a.key, { text: 'two' });
-    await api.upload(imageUpload({ ticketKey: a.key }));
+    const ticketA = await client.createTicket('MA', { title: 'A' });
+    const ticketB = await client.createTicket('MA', { title: 'B' });
+    const ticketC = await client.createTicket('MA', { title: 'C', statusId: done.id });
+    await client.addComment(ticketA.key, { text: 'one' });
+    await client.addComment(ticketA.key, { text: 'two' });
+    await api.upload(imageUpload({ ticketKey: ticketA.key }));
 
     const res = await api.get<ProjectBoard>('/api/projects/MA/board');
     expect(res.status).toBe(200);
     expect(res.body.project.key).toBe('MA');
-    expect(res.body.statuses.map((s) => s.name)).toEqual(DEFAULT_STATUSES.map((s) => s.name));
-    expect(res.body.tickets.map((t) => t.key)).toEqual([b.key, a.key, c.key]);
-    expect(res.body.tickets.find((t) => t.key === a.key)).toMatchObject({
+    expect(res.body.statuses.map((status) => status.name)).toEqual(
+      DEFAULT_STATUSES.map((status) => status.name),
+    );
+    expect(res.body.tickets.map((ticket) => ticket.key)).toEqual([
+      ticketB.key,
+      ticketA.key,
+      ticketC.key,
+    ]);
+    expect(res.body.tickets.find((ticket) => ticket.key === ticketA.key)).toMatchObject({
       commentCount: 2,
       attachmentCount: 1,
     });
-    expect(res.body.tickets.find((t) => t.key === b.key)).toMatchObject({
+    expect(res.body.tickets.find((ticket) => ticket.key === ticketB.key)).toMatchObject({
       commentCount: 0,
       attachmentCount: 0,
     });

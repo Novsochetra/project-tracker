@@ -33,19 +33,19 @@ const defaults = DEFAULT_STATUSES.map((template, position) =>
 );
 
 const without = (...categories: StatusCategory[]) =>
-  defaults.filter((s) => !categories.includes(s.category));
+  defaults.filter((item) => !categories.includes(item.category));
 
 describe('sortStatuses', () => {
   it('orders statuses by position', () => {
     const shuffled = [status('C', 'done', 2), status('A', 'todo', 0), status('B', 'todo', 1)];
 
-    expect(sortStatuses(shuffled).map((s) => s.name)).toEqual(['A', 'B', 'C']);
+    expect(sortStatuses(shuffled).map((item) => item.name)).toEqual(['A', 'B', 'C']);
   });
 
   it('breaks position ties by creation time', () => {
     const tied = [status('Later', 'todo', 0, 20), status('Earlier', 'todo', 0, 10)];
 
-    expect(sortStatuses(tied).map((s) => s.name)).toEqual(['Earlier', 'Later']);
+    expect(sortStatuses(tied).map((item) => item.name)).toEqual(['Earlier', 'Later']);
   });
 
   it('leaves the input array unchanged', () => {
@@ -53,7 +53,7 @@ describe('sortStatuses', () => {
 
     sortStatuses(input);
 
-    expect(input.map((s) => s.name)).toEqual(['B', 'A']);
+    expect(input.map((item) => item.name)).toEqual(['B', 'A']);
   });
 });
 
@@ -132,7 +132,7 @@ describe('resolveStatus', () => {
   it('never resolves a step other than done to a done status while another status exists', () => {
     const statuses = [status('Shipped', 'done', 0), status('Inbox', 'todo', 1)];
 
-    for (const category of STATUS_CATEGORIES.filter((c) => c !== 'done')) {
+    for (const category of STATUS_CATEGORIES.filter((candidate) => candidate !== 'done')) {
       expect(resolveStatus(statuses, category).name).toBe('Inbox');
     }
   });

@@ -94,10 +94,9 @@ describe.each(DIALECTS)('reports (%s)', (dialect) => {
       { type: 'event', text: 'changed status to Need review from a Claude Code report' },
     ]);
     const board = await client.getBoard('MA');
-    expect(board.tickets.filter((t) => t.statusId === review).map((t) => t.key)).toEqual([
-      'MA-1',
-      'MA-2',
-    ]);
+    expect(
+      board.tickets.filter((item) => item.statusId === review).map((item) => item.key),
+    ).toEqual(['MA-1', 'MA-2']);
 
     const unchanged = await client.getTicket('WEB-1');
     expect(unchanged.activity.at(-1)).toMatchObject({
@@ -105,7 +104,10 @@ describe.each(DIALECTS)('reports (%s)', (dialect) => {
       text: 'TICKET: WEB-1\nSTATUS: in progress\nSUMMARY: Half way.',
     });
     expect(unchanged.ticket.updatedAt).toBeGreaterThan(unchanged.ticket.createdAt);
-    expect(api.events.map((e) => e.ticketId)).toEqual([ticket.ticket.id, unchanged.ticket.id]);
+    expect(api.events.map((event) => event.ticketId)).toEqual([
+      ticket.ticket.id,
+      unchanged.ticket.id,
+    ]);
   });
 
   it('maps report words to categories and never to Done', async () => {

@@ -37,8 +37,8 @@ const unless =
     skip: (path: string) => boolean,
     handler: MiddlewareHandler<AppEnv>,
   ): MiddlewareHandler<AppEnv> =>
-  async (c, next) =>
-    skip(c.req.path) ? next() : handler(c, next);
+  async (context, next) =>
+    skip(context.req.path) ? next() : handler(context, next);
 
 // serveStatic matches each Accept-Encoding entry as written, so `BR` or `br;q=1` got the plain
 // file and `br;q=0` got brotli. It still takes brotli over gzip whatever their weights: its copies
@@ -68,16 +68,20 @@ function notModified(headers: Headers): Response {
 // The answer sends the bytes its tag was made from. Hashing the file apart from serveStatic's own
 // read could pair a deploy's new tag with the old bytes, and the browser would then keep its old
 // sw.js until the next deploy.
-async function withETag(c: Context<AppEnv>, response: Response, file: string): Promise<Response> {
+async function withETag(
+  context: Context<AppEnv>,
+  response: Response,
+  file: string,
+): Promise<Response> {
   await response.body?.cancel();
   const bytes = await readFile(file);
   const etag = etagOf(bytes);
   const headers = new Headers(response.headers);
   headers.set('ETag', etag);
-  if (etagMatches(c.req.header('If-None-Match'), etag)) return notModified(headers);
+  if (etagMatches(context.req.header('If-None-Match'), etag)) return notModified(headers);
   headers.set('Content-Length', String(bytes.length));
 
-  return new Response(c.req.method === 'HEAD' ? null : bytes, { status: 200, headers });
+  return new Response(context.req.method === 'HEAD' ? null : bytes, { status: 200, headers });
 }
 
 // serveStatic builds its response before onFound runs, so headers are set on the result instead.
@@ -88,22 +92,22 @@ function webFiles(root: string, path?: string): MiddlewareHandler<AppEnv> {
     root,
     path,
     precompressed: true,
-    onFound: (file, c) => void served.set(c, file),
+    onFound: (file, context) => void served.set(context, file),
   });
 
-  return async (c, next) => {
-    if (COMPRESSED_COPY.test(c.req.path)) return c.notFound();
-    rewriteAcceptEncoding(c.req.raw.headers);
+  return async (context, next) => {
+    if (COMPRESSED_COPY.test(context.req.path)) return context.notFound();
+    rewriteAcceptEncoding(context.req.raw.headers);
     // serveStatic answers Range before the tag is checked, but a matching If-None-Match must win
     // (RFC 9110, 14.2). Tagged files are small, so they ignore Range, as a server may.
-    if (!isHashedPath(c.req.path)) c.req.raw.headers.delete('Range');
-    const response = await handler(c, next);
+    if (!isHashedPath(context.req.path)) context.req.raw.headers.delete('Range');
+    const response = await handler(context, next);
     if (!(response instanceof Response)) return response;
-    setCacheHeaders(response, c.req.path);
-    const file = served.get(c);
-    if (!file || response.status !== 200 || isHashedPath(c.req.path)) return response;
+    setCacheHeaders(response, context.req.path);
+    const file = served.get(context);
+    if (!file || response.status !== 200 || isHashedPath(context.req.path)) return response;
 
-    return withETag(c, response, file);
+    return withETag(context, response, file);
   };
 }
 

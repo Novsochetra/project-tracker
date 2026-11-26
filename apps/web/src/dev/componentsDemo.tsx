@@ -1,32 +1,21 @@
 import { DEFAULT_STATUSES, PRIORITIES, PRIORITY_LABELS, isOverdue } from '@tracker/shared';
 import type { Priority, StatusCategory } from '@tracker/shared';
-import * as I from 'lucide-react';
-import { useState, type CSSProperties, type ReactNode } from 'react';
-import * as C from './galleryComponents';
-
-const css = (style: CSSProperties) => style;
-const row = css({ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 10 });
-const stack = css({ display: 'flex', flexDirection: 'column', gap: 16 });
-const caption = css({ font: 'var(--text-caption)', color: 'var(--muted)' });
-const mono = css({ ...caption, fontFamily: 'var(--font-mono)', fontWeight: 400 });
-const clip = css({ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis' });
-const square = css({ width: 10, height: 10, borderRadius: 3, background: 'var(--accent)' });
-const head = css({ ...row, minHeight: 40, padding: '0 8px 0 16px', background: 'var(--fill)' });
-const paper = css({ ...stack, gap: 8, padding: 16, borderRadius: 8, background: 'var(--surface)' });
-const page = css({ ...stack, gap: 24, maxWidth: 1120, margin: '0 auto', padding: '40px 16px' });
-const columns = 'repeat(auto-fit, minmax(min(440px, 100%), 1fr))';
-const grid = css({ display: 'grid', gridTemplateColumns: columns, gap: 24, paddingBottom: 160 });
-const titleText = css({ font: 'var(--text-title)', letterSpacing: '-0.015em', padding: '4px 6px' });
+import * as Icons from 'lucide-react';
+import { useState } from 'react';
+import { DemoSection } from './DemoSection';
+import { clip, grid, head, mono, page, row, square } from './demoStyles';
+import { StatesDemo, TextDemo, ToastDemo } from './feedbackDemos';
+import * as Gallery from './galleryComponents';
 
 const STATUS_OPTIONS = DEFAULT_STATUSES.map((status) => ({
   value: status.category,
   label: status.name,
-  icon: <C.StatusGlyph category={status.category} color={status.color} />,
+  icon: <Gallery.StatusGlyph category={status.category} color={status.color} />,
 }));
 const PRIORITY_OPTIONS = PRIORITIES.map((priority) => ({
   value: priority,
   label: PRIORITY_LABELS[priority],
-  icon: <C.PriorityBars priority={priority} />,
+  icon: <Gallery.PriorityBars priority={priority} />,
 }));
 const FILTERS = [
   { value: 'all', label: 'All', count: 12 },
@@ -38,81 +27,72 @@ const TICKETS = [
   { key: 'MOB-4', title: 'Dark mode colors for Settings', priority: 'medium', who: '' },
   { key: 'MOB-5', title: 'Update App Store screenshots', priority: 'low', who: 'Sophea' },
 ] as const;
-const BUTTONS: [C.ButtonProps, string][] = [
-  [{ variant: 'primary', icon: I.Plus }, 'New ticket'],
-  [{ icon: I.ClipboardCheck }, 'Paste report'],
+const BUTTONS: [Gallery.ButtonProps, string][] = [
+  [{ variant: 'primary', icon: Icons.Plus }, 'New ticket'],
+  [{ icon: Icons.ClipboardCheck }, 'Paste report'],
   [{ variant: 'text' }, 'Cancel'],
   [{ variant: 'danger' }, 'Delete'],
   [{ variant: 'primary', size: 'header', disabled: true }, 'Create'],
-  [{ size: 'sm', icon: I.Terminal }, 'Send open tickets to Claude Code'],
+  [{ size: 'sm', icon: Icons.Terminal }, 'Send open tickets to Claude Code'],
   [{ variant: 'primary', size: 'lg' }, 'Send to Claude Code'],
-  [{ variant: 'text', tone: 'danger', icon: I.Trash2 }, 'Delete ticket'],
-  [{ size: 'bar', icon: I.ClipboardCheck, fullWidth: true }, 'Paste report (full width)'],
-  [{ variant: 'primary', size: 'bar', icon: I.Terminal, style: { flex: 1.35 } }, 'Send to Claude'],
+  [{ variant: 'text', tone: 'danger', icon: Icons.Trash2 }, 'Delete ticket'],
+  [{ size: 'bar', icon: Icons.ClipboardCheck, fullWidth: true }, 'Paste report (full width)'],
+  [
+    { variant: 'primary', size: 'bar', icon: Icons.Terminal, style: { flex: 1.35 } },
+    'Send to Claude',
+  ],
 ];
-const ICON_BUTTONS: C.IconButtonProps[] = [
-  { 'aria-label': 'Project options', icon: I.Ellipsis },
-  { 'aria-label': 'New ticket in To do', icon: I.Plus, size: 'sm' },
-  { 'aria-label': 'New project', icon: I.Plus, size: 'xs' },
-  { 'aria-label': 'New ticket', icon: I.Plus, tone: 'ink' },
+const ICON_BUTTONS: Gallery.IconButtonProps[] = [
+  { 'aria-label': 'Project options', icon: Icons.Ellipsis },
+  { 'aria-label': 'New ticket in To do', icon: Icons.Plus, size: 'sm' },
+  { 'aria-label': 'New project', icon: Icons.Plus, size: 'xs' },
+  { 'aria-label': 'New ticket', icon: Icons.Plus, tone: 'ink' },
 ];
 const PEOPLE = ['Dara', 'Sophea', 'Vanna Chan'];
-const DELETE_PROJECT = "Delete this project and its 8 tickets? This can't be undone.";
-
-function Section({ title, children }: { title: string; children: ReactNode }) {
-  return (
-    <section aria-label={title} style={{ border: '1px solid var(--line)', borderRadius: 12 }}>
-      <h2 style={{ margin: 0, padding: '14px 20px', font: 'var(--text-headline)' }}>{title}</h2>
-      <div style={{ ...stack, padding: '24px 20px', background: 'var(--panel)', borderRadius: 12 }}>
-        {children}
-      </div>
-    </section>
-  );
-}
 
 function ButtonsDemo() {
   return (
-    <Section title="Buttons">
+    <DemoSection title="Buttons">
       <div style={row}>
         {BUTTONS.map(([props, label]) => (
-          <C.Button key={label} {...props}>
+          <Gallery.Button key={label} {...props}>
             {label}
-          </C.Button>
+          </Gallery.Button>
         ))}
       </div>
       <div style={row}>
         {ICON_BUTTONS.map((props) => (
-          <C.IconButton key={props['aria-label']} {...props} />
+          <Gallery.IconButton key={props['aria-label']} {...props} />
         ))}
       </div>
-    </Section>
+    </DemoSection>
   );
 }
 
 function GlyphsDemo() {
   return (
-    <Section title="Glyphs, avatars, rating">
+    <DemoSection title="Glyphs, avatars, rating">
       <div style={row}>
         {DEFAULT_STATUSES.map((status) => (
           <span key={status.category} style={{ ...row, gap: 6 }}>
-            <C.StatusGlyph category={status.category} color={status.color} /> {status.name}
+            <Gallery.StatusGlyph category={status.category} color={status.color} /> {status.name}
           </span>
         ))}
       </div>
       <div style={row}>
         {PRIORITIES.map((priority) => (
-          <C.PriorityBars key={priority} priority={priority} />
+          <Gallery.PriorityBars key={priority} priority={priority} />
         ))}
-        <C.Avatar name="Sophea" />
-        <C.Avatar name="Dara Kim" size={20} />
-        <C.Avatar name="" />
-        <C.AgentAvatar />
-        <C.YouAvatar />
-        <C.LogoGlyph />
-        <C.StarRating value={4} />
-        <C.Spinner />
+        <Gallery.Avatar name="Sophea" />
+        <Gallery.Avatar name="Dara Kim" size={20} />
+        <Gallery.Avatar name="" />
+        <Gallery.AgentAvatar />
+        <Gallery.YouAvatar />
+        <Gallery.LogoGlyph />
+        <Gallery.StarRating value={4} />
+        <Gallery.Spinner />
       </div>
-    </Section>
+    </DemoSection>
   );
 }
 
@@ -121,18 +101,27 @@ function FieldsDemo() {
   const [move, setMove] = useState(true);
 
   return (
-    <Section title="Segmented, search, switch">
+    <DemoSection title="Segmented, search, switch">
       <div style={{ ...row, justifyContent: 'space-between', gap: '10px 16px' }}>
-        <C.Segmented aria-label="Filter" options={FILTERS} value={filter} onChange={setFilter} />
-        <C.SearchField aria-label="Search tickets" placeholder="Search tickets" />
+        <Gallery.Segmented
+          aria-label="Filter"
+          options={FILTERS}
+          value={filter}
+          onChange={setFilter}
+        />
+        <Gallery.SearchField aria-label="Search tickets" placeholder="Search tickets" />
       </div>
-      <C.GroupedCard>
+      <Gallery.GroupedCard>
         <div style={{ ...row, minHeight: 48, padding: '0 12px 0 14px' }}>
           <span style={{ flex: 1 }}>Move MOB-3 to In progress</span>
-          <C.Switch checked={move} onChange={setMove} aria-label="Move to In progress when sent" />
+          <Gallery.Switch
+            checked={move}
+            onChange={setMove}
+            aria-label="Move to In progress when sent"
+          />
         </div>
-      </C.GroupedCard>
-    </Section>
+      </Gallery.GroupedCard>
+    </DemoSection>
   );
 }
 
@@ -143,166 +132,93 @@ function DetailsDemo() {
   const [due, setDue] = useState('2026-10-05');
 
   return (
-    <Section title="Property rows and dropdown">
-      <C.GroupedCard dense>
-        <C.SelectRow label="Status" options={STATUS_OPTIONS} value={status} onChange={setStatus} />
-        <C.SelectRow label="Priority" options={PRIORITY_OPTIONS} value={prio} onChange={setPrio} />
-        <C.InputRow
-          icon={<C.Avatar name={assignee} size={20} decorative />}
+    <DemoSection title="Property rows and dropdown">
+      <Gallery.GroupedCard dense>
+        <Gallery.SelectRow
+          label="Status"
+          options={STATUS_OPTIONS}
+          value={status}
+          onChange={setStatus}
+        />
+        <Gallery.SelectRow
+          label="Priority"
+          options={PRIORITY_OPTIONS}
+          value={prio}
+          onChange={setPrio}
+        />
+        <Gallery.InputRow
+          icon={<Gallery.Avatar name={assignee} size={20} decorative />}
           label="Assignee"
           placeholder="Unassigned"
           suggestions={PEOPLE}
           value={assignee}
           onChange={(event) => setAssignee(event.currentTarget.value)}
         />
-        <C.DateRow value={due} overdue={isOverdue(due, status === 'done')} onChange={setDue} />
-      </C.GroupedCard>
-      <C.GroupedCard>
-        <C.InputRow icon={<C.Icon icon={I.Folder} />} label="Repository" mono placeholder="~/app" />
-        <C.InputRow icon={<C.Icon icon={I.Hash} />} label="Ticket prefix" mono placeholder="MOB" />
-        <C.DateRow value="" mutedIcon onChange={setDue} />
-      </C.GroupedCard>
-      <C.GroupedCard>
-        <C.InfoRow label="Project">Mobile app</C.InfoRow>
-        <C.InfoRow label="Created">Oct 2, 2026</C.InfoRow>
-      </C.GroupedCard>
-    </Section>
+        <Gallery.DateRow
+          value={due}
+          overdue={isOverdue(due, status === 'done')}
+          onChange={setDue}
+        />
+      </Gallery.GroupedCard>
+      <Gallery.GroupedCard>
+        <Gallery.InputRow
+          icon={<Gallery.Icon icon={Icons.Folder} />}
+          label="Repository"
+          mono
+          placeholder="~/app"
+        />
+        <Gallery.InputRow
+          icon={<Gallery.Icon icon={Icons.Hash} />}
+          label="Ticket prefix"
+          mono
+          placeholder="MOB"
+        />
+        <Gallery.DateRow value="" mutedIcon onChange={setDue} />
+      </Gallery.GroupedCard>
+      <Gallery.GroupedCard>
+        <Gallery.InfoRow label="Project">Mobile app</Gallery.InfoRow>
+        <Gallery.InfoRow label="Created">Oct 2, 2026</Gallery.InfoRow>
+      </Gallery.GroupedCard>
+    </DemoSection>
   );
 }
 
 function ListsDemo() {
   return (
-    <Section title="Lists">
-      <C.ListCard as="section" variant="group" aria-label="To do">
+    <DemoSection title="Lists">
+      <Gallery.ListCard as="section" variant="group" aria-label="To do">
         <div style={head}>
-          <C.StatusGlyph category="todo" color={DEFAULT_STATUSES[0]!.color} />
+          <Gallery.StatusGlyph category="todo" color={DEFAULT_STATUSES[0]!.color} />
           <span style={{ flex: 1 }}>To do</span>
-          <C.IconButton aria-label="New ticket in To do" icon={I.Plus} size="sm" />
+          <Gallery.IconButton aria-label="New ticket in To do" icon={Icons.Plus} size="sm" />
         </div>
         {TICKETS.map((ticket) => (
-          <C.ListRow key={ticket.key}>
-            <C.PriorityBars priority={ticket.priority} />
+          <Gallery.ListRow key={ticket.key}>
+            <Gallery.PriorityBars priority={ticket.priority} />
             <span style={mono}>{ticket.key}</span>
-            <C.StatusGlyph category="todo" color={DEFAULT_STATUSES[0]!.color} />
+            <Gallery.StatusGlyph category="todo" color={DEFAULT_STATUSES[0]!.color} />
             <span style={{ ...clip, whiteSpace: 'nowrap' }}>{ticket.title}</span>
-            <C.Avatar name={ticket.who} />
-          </C.ListRow>
+            <Gallery.Avatar name={ticket.who} />
+          </Gallery.ListRow>
         ))}
-      </C.ListCard>
-      <C.ListCard>
-        <C.ListRow style={{ minHeight: 60, gap: 16 }}>
+      </Gallery.ListCard>
+      <Gallery.ListCard>
+        <Gallery.ListRow style={{ minHeight: 60, gap: 16 }}>
           <span style={square} />
           <span style={clip}>Mobile app</span>
-          <C.Icon icon={I.ChevronRight} size={20} style={{ color: 'var(--faint)' }} />
-        </C.ListRow>
-      </C.ListCard>
-    </Section>
-  );
-}
-
-function OptionsMenu() {
-  const [open, setOpen] = useState(false);
-  const [confirming, setConfirming] = useState(false);
-  const close = () => {
-    setOpen(false);
-    setConfirming(false);
-  };
-
-  const toggle = () => setOpen(!open);
-  const trigger = (
-    <C.IconButton aria-label="Options" aria-expanded={open} icon={I.Ellipsis} onClick={toggle} />
-  );
-  const confirm = (
-    <C.ConfirmCard variant="menu" message={DELETE_PROJECT} onCancel={close} onConfirm={close} />
-  );
-
-  return (
-    <C.Popover open={open} onClose={close} aria-label="Project options" trigger={trigger}>
-      {confirming ? (
-        confirm
-      ) : (
-        <>
-          <C.MenuItem icon={I.PenLine} onClick={close}>
-            Edit project
-          </C.MenuItem>
-          <C.MenuItem icon={I.Trash2} tone="danger" onClick={() => setConfirming(true)}>
-            Delete project
-          </C.MenuItem>
-        </>
-      )}
-    </C.Popover>
-  );
-}
-
-function ConfirmDemo() {
-  const [deleting, setDeleting] = useState(false);
-  const done = () => setDeleting(false);
-  const message = "Delete MOB-3? This can't be undone.";
-  if (deleting) return <C.ConfirmCard message={message} onCancel={done} onConfirm={done} />;
-
-  return (
-    <C.Button variant="text" tone="danger" icon={I.Trash2} onClick={() => setDeleting(true)}>
-      Delete ticket
-    </C.Button>
-  );
-}
-
-function StatesDemo() {
-  const action = <C.Button variant="primary">New project</C.Button>;
-
-  return (
-    <Section title="Menu, confirm, empty states">
-      <div style={{ ...row, justifyContent: 'space-between' }}>
-        <ConfirmDemo />
-        <OptionsMenu />
-      </div>
-      <C.EmptyState bordered icon={I.Folder} title="No projects yet" action={action} />
-      <C.EmptyState icon={I.Plus} title="No tickets yet" text="Create the first ticket." />
-    </Section>
-  );
-}
-
-function TextDemo() {
-  return (
-    <Section title="Growing text">
-      <div style={paper}>
-        <span style={mono}>MOB-3</span>
-        <C.AutoTextarea
-          variant="inline"
-          aria-label="Title"
-          defaultValue="Crash"
-          style={titleText}
-        />
-        <C.AutoTextarea variant="inline" aria-label="Description" placeholder="Add details…" />
-        <C.AutoTextarea aria-label="Comment" placeholder="Leave a comment…" />
-      </div>
-    </Section>
-  );
-}
-
-function ToastDemo() {
-  const toast = C.useToast();
-  const [raised, setRaised] = useState(false);
-  C.useToastRaise(raised);
-
-  return (
-    <Section title="Toast">
-      <div style={row}>
-        <C.Button onClick={() => toast.show('MOB-7 created')}>Show toast</C.Button>
-        <C.Button onClick={() => toast.show('Report applied to 2 tickets')}>Replace it</C.Button>
-        <C.Switch checked={raised} onChange={setRaised} aria-label="Raise above the phone bar" />
-        <span style={caption}>Raise above the phone bar</span>
-      </div>
-    </Section>
+          <Gallery.Icon icon={Icons.ChevronRight} size={20} style={{ color: 'var(--faint)' }} />
+        </Gallery.ListRow>
+      </Gallery.ListCard>
+    </DemoSection>
   );
 }
 
 export function ComponentsDemo() {
   return (
-    <C.ToastProvider>
+    <Gallery.ToastProvider>
       <div style={page}>
         <header style={row}>
-          <C.LogoGlyph />
+          <Gallery.LogoGlyph />
           <h1 style={{ margin: 0, font: 'var(--text-heading)' }}>Components</h1>
         </header>
         <div style={grid}>
@@ -316,6 +232,6 @@ export function ComponentsDemo() {
           <DetailsDemo />
         </div>
       </div>
-    </C.ToastProvider>
+    </Gallery.ToastProvider>
   );
 }

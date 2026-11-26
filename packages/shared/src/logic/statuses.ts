@@ -7,7 +7,10 @@ import {
 
 export const sortStatuses = <T extends Pick<Status, 'position' | 'createdAt'>>(
   statuses: readonly T[],
-): T[] => [...statuses].sort((a, b) => a.position - b.position || a.createdAt - b.createdAt);
+): T[] =>
+  [...statuses].sort(
+    (left, right) => left.position - right.position || left.createdAt - right.createdAt,
+  );
 
 const FALLBACKS: Record<StatusCategory, readonly StatusCategory[]> = {
   todo: ['todo'],

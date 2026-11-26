@@ -96,7 +96,7 @@ describe.each(DIALECTS)('attachments (%s)', (dialect) => {
     const res = await upload(imageUpload({ ticketKey: ' ma-1 ' }));
     expect(res.body.ticketId).toBe(ticket.id);
     const detail = await api.client().getTicket(ticket.key);
-    expect(detail.attachments.map((a) => a.id)).toEqual([res.body.id]);
+    expect(detail.attachments.map((attachment) => attachment.id)).toEqual([res.body.id]);
     expect(detail.ticket.updatedAt).toBeGreaterThan(ticket.updatedAt);
     expect(api.events).toEqual([
       { type: 'changed', projectId: ticket.projectId, ticketId: ticket.id },

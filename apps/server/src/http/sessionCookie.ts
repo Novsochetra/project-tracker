@@ -4,34 +4,35 @@ import type { AuthOptions } from './authOptions';
 
 export const SESSION_COOKIE = 'tracker_session';
 
-export const readSessionCookie = (c: Context): string | undefined => getCookie(c, SESSION_COOKIE);
+export const readSessionCookie = (context: Context): string | undefined =>
+  getCookie(context, SESSION_COOKIE);
 
 // X-Forwarded-Proto only counts behind a trusted proxy; anyone could send it otherwise.
-export const isSecureRequest = (c: Context, options: AuthOptions): boolean =>
+export const isSecureRequest = (context: Context, options: AuthOptions): boolean =>
   options.secureCookies ||
-  new URL(c.req.url).protocol === 'https:' ||
-  (options.trustedProxies > 0 && c.req.header('x-forwarded-proto') === 'https');
+  new URL(context.req.url).protocol === 'https:' ||
+  (options.trustedProxies > 0 && context.req.header('x-forwarded-proto') === 'https');
 
 export function setSessionCookie(
-  c: Context,
+  context: Context,
   secret: string,
   maxAgeMs: number,
   options: AuthOptions,
 ): void {
-  setCookie(c, SESSION_COOKIE, secret, {
+  setCookie(context, SESSION_COOKIE, secret, {
     httpOnly: true,
     sameSite: 'Lax',
     path: '/',
     maxAge: Math.max(0, Math.floor(maxAgeMs / 1000)),
-    secure: isSecureRequest(c, options),
+    secure: isSecureRequest(context, options),
   });
 }
 
-export function clearSessionCookie(c: Context, options: AuthOptions): void {
-  deleteCookie(c, SESSION_COOKIE, {
+export function clearSessionCookie(context: Context, options: AuthOptions): void {
+  deleteCookie(context, SESSION_COOKIE, {
     httpOnly: true,
     sameSite: 'Lax',
     path: '/',
-    secure: isSecureRequest(c, options),
+    secure: isSecureRequest(context, options),
   });
 }

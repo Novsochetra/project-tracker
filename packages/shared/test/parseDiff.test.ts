@@ -116,11 +116,11 @@ describe('parseDiff', () => {
   });
 
   it("gives each file a digest that changes with the file's change", () => {
-    const [a] = parseDiff(MODIFIED);
+    const [file] = parseDiff(MODIFIED);
     const [same] = parseDiff(MODIFIED);
     const [other] = parseDiff(MODIFIED.replace('more();', 'less();'));
-    expect(a?.digest).toBe(same?.digest);
-    expect(a?.digest).not.toBe(other?.digest);
-    expect(a?.digest.length).toBeLessThanOrEqual(16);
+    expect(file?.digest).toBe(same?.digest);
+    expect(file?.digest).not.toBe(other?.digest);
+    expect(file?.digest.length).toBeLessThanOrEqual(16);
   });
 });

@@ -26,7 +26,7 @@ export async function seedProject(
       priority: ticket.priority ?? 'medium',
       assignee: ticket.assignee ?? '',
       due: ticket.due ?? '',
-      statusId: statuses.find((s) => s.name === (ticket.status ?? 'To do'))?.id,
+      statusId: statuses.find((status) => status.name === (ticket.status ?? 'To do'))?.id,
     });
   }
 }

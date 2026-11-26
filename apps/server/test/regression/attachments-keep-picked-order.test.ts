@@ -19,11 +19,11 @@ describe.each(DIALECTS)('files keep the order they were picked (%s)', (dialect) 
 
   // Arrival order: c, a, b. Picked order: a, b, c.
   const arrivedOutOfOrder = async () => {
-    const c = await uploadNamed('c.txt');
-    const a = await uploadNamed('a.txt');
-    const b = await uploadNamed('b.txt');
+    const fileC = await uploadNamed('c.txt');
+    const fileA = await uploadNamed('a.txt');
+    const fileB = await uploadNamed('b.txt');
 
-    return [a.id, b.id, c.id];
+    return [fileA.id, fileB.id, fileC.id];
   };
 
   const names = (files: readonly Attachment[]) => files.map((file) => file.fileName);

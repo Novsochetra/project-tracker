@@ -16,10 +16,10 @@ export class VelocityTracker {
     this.samples = [];
   }
 
-  add(t: number, x: number, y: number): void {
-    this.samples.push({ t, x, y });
-    const cutoff = t - WINDOW_MS;
-    while (this.samples.length > 2 && (this.samples[0]?.t ?? t) < cutoff) this.samples.shift();
+  add(time: number, x: number, y: number): void {
+    this.samples.push({ t: time, x, y });
+    const cutoff = time - WINDOW_MS;
+    while (this.samples.length > 2 && (this.samples[0]?.t ?? time) < cutoff) this.samples.shift();
   }
 
   velocity(now: number): Point {

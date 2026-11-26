@@ -32,7 +32,7 @@ const box = async (locator: Locator) => {
 };
 
 // Whole pixels: the thumb sits on a sub-pixel position the tab rounds differently.
-const near = (a: number, b: number) => Math.abs(a - b) <= 1;
+const near = (left: number, right: number) => Math.abs(left - right) <= 1;
 
 async function thumbSitsUnder(page: Page, name: string): Promise<boolean> {
   const thumb = await box(tabs(page).locator('[data-thumb]'));
@@ -194,7 +194,7 @@ test.describe('status tabs', () => {
     await expect
       .poll(() =>
         row.evaluate((el) => {
-          const starts = [...el.querySelectorAll('button')].map((b) => b.offsetLeft - 2);
+          const starts = [...el.querySelectorAll('button')].map((button) => button.offsetLeft - 2);
           const max = el.scrollWidth - el.clientWidth;
 
           return [...starts, max].some((start) => Math.abs(start - el.scrollLeft) <= 1);
@@ -232,7 +232,7 @@ test.describe('status tabs', () => {
     await expect(tab(page, 'Released to beta')).toBeAttached();
     const tops = await tabs(page)
       .getByRole('button')
-      .evaluateAll((buttons) => buttons.map((b) => b.getBoundingClientRect().top));
+      .evaluateAll((buttons) => buttons.map((button) => button.getBoundingClientRect().top));
     expect(new Set(tops).size).toBe(1);
     expect(await tabs(page).evaluate((el) => el.scrollWidth > el.clientWidth)).toBe(true);
     expect(await pageScrollsSideways(page)).toBe(false);
@@ -240,7 +240,9 @@ test.describe('status tabs', () => {
     // Where the row snaps: each tab's start, and its end for the tabs past it.
     const snaps = await tabs(page).evaluate((el) => {
       const max = el.scrollWidth - el.clientWidth;
-      const starts = [...el.querySelectorAll('button')].map((b) => Math.min(b.offsetLeft - 2, max));
+      const starts = [...el.querySelectorAll('button')].map((button) =>
+        Math.min(button.offsetLeft - 2, max),
+      );
 
       return [...new Set(starts)];
     });

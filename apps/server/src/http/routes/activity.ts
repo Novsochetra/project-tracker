@@ -8,22 +8,28 @@ import { jsonBody } from '../validation';
 
 export const activityRoutes = (ctx: ServiceContext) =>
   new Hono<AppEnv>()
-    .post('/tickets/:key/comments', jsonBody(createCommentInput), async (c) =>
-      c.json(
+    .post('/tickets/:key/comments', jsonBody(createCommentInput), async (context) =>
+      context.json(
         await addComment(
-          userContext(ctx, c),
-          c.get('actor'),
-          c.req.param('key'),
-          c.req.valid('json'),
+          userContext(ctx, context),
+          context.get('actor'),
+          context.req.param('key'),
+          context.req.valid('json'),
         ),
         201,
       ),
     )
-    .patch('/activity/:id', jsonBody(updateCommentRequest), async (c) =>
-      c.json(await updateComment(userContext(ctx, c), c.req.param('id'), c.req.valid('json'))),
+    .patch('/activity/:id', jsonBody(updateCommentRequest), async (context) =>
+      context.json(
+        await updateComment(
+          userContext(ctx, context),
+          context.req.param('id'),
+          context.req.valid('json'),
+        ),
+      ),
     )
-    .delete('/activity/:id', async (c) => {
-      await deleteActivity(userContext(ctx, c), c.req.param('id'));
+    .delete('/activity/:id', async (context) => {
+      await deleteActivity(userContext(ctx, context), context.req.param('id'));
 
-      return c.body(null, 204);
+      return context.body(null, 204);
     });

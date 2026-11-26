@@ -9,18 +9,18 @@ import type { AppEnv } from '../env';
 import { personOnly } from '../personOnly';
 import { jsonBody } from '../validation';
 
-const scope = (c: Context<AppEnv>) => requireScope(c.get('access'));
+const scope = (context: Context<AppEnv>) => requireScope(context.get('access'));
 
 export const batchRunRoutes = (ctx: ServiceContext) =>
   new Hono<AppEnv>()
-    .get('/projects/:key/run-all', async (c) =>
-      c.json(await previewRunAll(ctx, scope(c), c.req.param('key'))),
+    .get('/projects/:key/run-all', async (context) =>
+      context.json(await previewRunAll(ctx, scope(context), context.req.param('key'))),
     )
-    .post('/projects/:key/run-all', personOnly, jsonBody(runAllInput), async (c) =>
-      c.json(
-        await runAllTodo(ctx, scope(c), {
-          projectKey: c.req.param('key'),
-          input: c.req.valid('json'),
+    .post('/projects/:key/run-all', personOnly, jsonBody(runAllInput), async (context) =>
+      context.json(
+        await runAllTodo(ctx, scope(context), {
+          projectKey: context.req.param('key'),
+          input: context.req.valid('json'),
         }),
         201,
       ),
@@ -29,12 +29,15 @@ export const batchRunRoutes = (ctx: ServiceContext) =>
       '/chats/:id/messages/:messageId/run-all',
       personOnly,
       jsonBody(runAllCardInput),
-      async (c) => {
-        const ref = { chatId: c.req.param('id'), messageId: c.req.param('messageId') };
+      async (context) => {
+        const ref = { chatId: context.req.param('id'), messageId: context.req.param('messageId') };
 
-        return c.json(await runAllFromCard(ctx, scope(c), ref, c.req.valid('json')), 201);
+        return context.json(
+          await runAllFromCard(ctx, scope(context), ref, context.req.valid('json')),
+          201,
+        );
       },
     )
-    .get('/runs/:id/batch', async (c) =>
-      c.json(await getRunBatch(ctx, scope(c), c.req.param('id'))),
+    .get('/runs/:id/batch', async (context) =>
+      context.json(await getRunBatch(ctx, scope(context), context.req.param('id'))),
     );

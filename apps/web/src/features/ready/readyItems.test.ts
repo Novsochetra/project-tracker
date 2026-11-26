@@ -79,7 +79,9 @@ describe('readyColors', () => {
   it('takes each project’s Reviewed color from its newest ready ticket', () => {
     const colors = readyColors(readyItems(list([web(2), mob(1)]), [project, otherProject]));
     expect(colors.get(otherProject.id)).toBe('#12A594');
-    expect(colors.get(project.id)).toBe(statuses.find((s) => s.category === 'reviewed')?.color);
+    expect(colors.get(project.id)).toBe(
+      statuses.find((status) => status.category === 'reviewed')?.color,
+    );
     expect(colors.get('p-none')).toBeUndefined();
   });
 });

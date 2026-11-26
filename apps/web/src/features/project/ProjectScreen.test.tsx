@@ -138,7 +138,9 @@ describe('ProjectScreen', () => {
 
     const blocked = { ...statuses[1]!, id: 's-blocked', name: 'Blocked', position: 2.5 };
     setStatuses([
-      ...statuses.map((s) => (s.id === STATUS.todo ? { ...s, name: 'Backlog' } : s)),
+      ...statuses.map((status) =>
+        status.id === STATUS.todo ? { ...status, name: 'Backlog' } : status,
+      ),
       blocked,
     ]);
     await waitFor(() =>
@@ -153,12 +155,14 @@ describe('ProjectScreen', () => {
       ]),
     );
 
-    setStatuses(statuses.map((s) => (s.id === STATUS.done ? { ...s, position: -1 } : s)));
+    setStatuses(
+      statuses.map((status) => (status.id === STATUS.done ? { ...status, position: -1 } : status)),
+    );
     await waitFor(() => expect(tabNames()[1]).toBe('Done 1 ticket'));
     pressed(/^In progress/);
     expect(regionNames()).toEqual(['In progress']);
 
-    setStatuses(statuses.filter((s) => s.id !== STATUS.progress));
+    setStatuses(statuses.filter((status) => status.id !== STATUS.progress));
     await waitFor(() => expect(tabNames()).not.toContain('In progress 1 ticket'));
     pressed(/^All/);
     expect(regionNames()).toEqual(['To do', 'Done']);

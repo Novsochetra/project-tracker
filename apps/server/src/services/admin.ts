@@ -5,7 +5,7 @@ import { removeFiles } from '../storage/fileStorage';
 import { inTransaction, type ServiceContext, type UserContext } from './context';
 
 export async function listPeople(ctx: UserContext): Promise<string[]> {
-  return (await listAssignees(ctx.db, ctx.scope)).sort((a, b) => a.localeCompare(b));
+  return (await listAssignees(ctx.db, ctx.scope)).sort((left, right) => left.localeCompare(right));
 }
 
 export async function resetAllData(ctx: ServiceContext): Promise<void> {

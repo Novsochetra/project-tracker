@@ -42,7 +42,9 @@ const sampleEveryFrame = (page: Page) =>
     const sample = () => {
       for (const bar of document.querySelectorAll('[data-stack-path] header[data-navbar]')) {
         const path = bar.closest<HTMLElement>('[data-stack-path]')?.dataset.stackPath ?? '';
-        const title = [...bar.querySelectorAll('span')].find((s) => s.textContent === titles[path]);
+        const title = [...bar.querySelectorAll('span')].find(
+          (span) => span.textContent === titles[path],
+        );
         window.navBarFrames.push({
           path,
           smallTitle: title ? painted(title, bar) : 0,
@@ -57,7 +59,10 @@ const sampleEveryFrame = (page: Page) =>
   }, TITLES);
 
 const framesOf = (page: Page, path: string) =>
-  page.evaluate((p) => window.navBarFrames.filter((f) => f.path === p), path);
+  page.evaluate(
+    (framePath) => window.navBarFrames.filter((frame) => frame.path === framePath),
+    path,
+  );
 
 async function switchTo(page: Page, name: string, path: string) {
   await page.evaluate(() => (window.navBarFrames = []));
@@ -90,9 +95,9 @@ test('a Projects/Activity switch shows no small title and no line under the nav 
   ] as const) {
     const frames = await switchTo(page, name, path);
     expect(
-      Math.max(...frames.map((f) => f.smallTitle)),
+      Math.max(...frames.map((frame) => frame.smallTitle)),
       `small title to ${name}`,
     ).toBeLessThanOrEqual(0.02);
-    expect(Math.max(...frames.map((f) => f.line)), `line under the bar to ${name}`).toBe(0);
+    expect(Math.max(...frames.map((frame) => frame.line)), `line under the bar to ${name}`).toBe(0);
   }
 });

@@ -45,9 +45,11 @@ export const firstIndex = (sql: readonly string[], pattern: RegExp): number =>
 
 // Both statements ran, in this order, in one transaction.
 export function inOrderInOneTransaction(sql: readonly string[], first: RegExp, then: RegExp) {
-  const a = firstIndex(sql, first);
-  const b = firstIndex(sql, then);
-  const begin = sql.lastIndexOf('begin', a);
+  const firstAt = firstIndex(sql, first);
+  const thenAt = firstIndex(sql, then);
+  const begin = sql.lastIndexOf('begin', firstAt);
 
-  return a > -1 && b > a && begin > -1 && !sql.slice(begin, b).includes('commit');
+  return (
+    firstAt > -1 && thenAt > firstAt && begin > -1 && !sql.slice(begin, thenAt).includes('commit')
+  );
 }

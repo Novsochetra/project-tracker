@@ -1,8 +1,8 @@
 import type { Status, TicketListItem, TicketsAcrossProjects } from '@tracker/shared';
 import { entriesOf, isEntry, isList } from '../../lib/entries';
 
-const sameKey = (a: unknown, b: string): boolean =>
-  typeof a === 'string' && a.toUpperCase() === b.toUpperCase();
+const sameKey = (left: unknown, right: string): boolean =>
+  typeof left === 'string' && left.toUpperCase() === right.toUpperCase();
 
 const movesAway = (ticket: unknown, ticketKey: string, statusId: string): boolean => {
   if (!isEntry(ticket)) return false;

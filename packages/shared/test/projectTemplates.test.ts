@@ -53,7 +53,9 @@ describe('project templates', () => {
     const { statuses } = PROJECT_TEMPLATES[name];
     expect(statuses.map((status) => status.name)).toEqual(NAMES[name]);
     expect(statuses.map((status) => status.category)).toEqual([...STATUS_CATEGORIES]);
-    expect(statuses.map((status) => status.color)).toEqual(DEFAULT_STATUSES.map((s) => s.color));
+    expect(statuses.map((status) => status.color)).toEqual(
+      DEFAULT_STATUSES.map((status) => status.color),
+    );
   });
 
   it.each(WORK_TEMPLATES)(

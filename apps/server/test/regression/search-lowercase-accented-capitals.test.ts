@@ -14,7 +14,7 @@ describe.each(DIALECTS)('regression: lowercase words find accented capitals (%s)
   });
 
   it('finds "Été" with "été" and "CAFÉ" with "café"', async () => {
-    const search = (q: string) => api.client().searchTickets({ q });
+    const search = (query: string) => api.client().searchTickets({ q: query });
     const summer = await search('été');
     expect(summer.tickets).toEqual([expect.objectContaining({ key: 'WEB-1', match: 'title' })]);
     const cafe = await search('café');

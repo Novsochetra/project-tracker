@@ -204,8 +204,8 @@ test.describe('a double tap on Undo runs it once and opens nothing behind the to
 
 // Projects past the end of the sidebar, so one sits beside the toast for a press there to open.
 async function fillSidebar(api: TrackerClient): Promise<void> {
-  for (let n = 1; n <= 30; n += 1) {
-    await api.createProject({ name: `Side ${n}`, key: `SD${n}`, repo: '~/code/demo' });
+  for (let i = 1; i <= 30; i += 1) {
+    await api.createProject({ name: `Side ${i}`, key: `SD${i}`, repo: '~/code/demo' });
   }
 }
 

@@ -62,7 +62,10 @@ describe('the tracker tools check', () => {
   it('refuses runs when the tracker server is broken', async () => {
     const log: string[] = [];
     await expect(
-      requireTrackerTools({ listOutput: () => Promise.resolve(LIST), log: (t) => log.push(t) }),
+      requireTrackerTools({
+        listOutput: () => Promise.resolve(LIST),
+        log: (text) => log.push(text),
+      }),
     ).rejects.toThrow(/Refusing runs until that works\.$/);
     expect(log).toEqual([]);
   });

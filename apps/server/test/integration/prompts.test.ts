@@ -178,10 +178,9 @@ describe.each(DIALECTS)('prompts and sending (%s)', (dialect) => {
       expect(res.body.statusId).toBe(doing.id);
       expect(res.body.updatedAt).toBeGreaterThan(ticket.updatedAt);
       const board = await client.getBoard('MA');
-      expect(board.tickets.filter((t) => t.statusId === doing.id).map((t) => t.key)).toEqual([
-        'MA-2',
-        'MA-1',
-      ]);
+      expect(
+        board.tickets.filter((item) => item.statusId === doing.id).map((item) => item.key),
+      ).toEqual(['MA-2', 'MA-1']);
       expect(eventTexts(await client.getTicket(ticket.key)).at(-1)).toBe(
         'sent the ticket to Claude Code and moved it to In progress',
       );

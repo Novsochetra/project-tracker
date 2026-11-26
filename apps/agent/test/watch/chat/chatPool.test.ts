@@ -41,18 +41,18 @@ describe('createChatPool', () => {
   it('counts a process still starting toward the cap, going over it until one is idle', async () => {
     const pool = createChatPool<Chat>({ max: 1 });
     const starting = later<Chat>();
-    const b = pool.use(
+    const chatB = pool.use(
       want('b', () => starting.promise),
       () => Promise.resolve(),
     );
     expect(pool.openCount()).toBe(1);
-    const c = pool.use(
+    const chatC = pool.use(
       want('c', () => Promise.resolve(fakeChat())),
       () => Promise.resolve(),
     );
     expect(pool.openCount()).toBe(2);
     starting.resolve(fakeChat());
-    await Promise.all([b, c]);
+    await Promise.all([chatB, chatC]);
     await pool.use(
       want('d', () => Promise.resolve(fakeChat())),
       () => Promise.resolve(),

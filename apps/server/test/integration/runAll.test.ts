@@ -63,7 +63,9 @@ describe.each(DIALECTS)('run all todo (%s)', (dialect) => {
         ['MOB-4', 'waiting'],
       ]);
       const held = await ticketRuns('MOB-1');
-      expect(held.map(({ status: s, batchId }) => [s, batchId])).toEqual([['queued', body.runId]]);
+      expect(held.map(({ status: item, batchId }) => [item, batchId])).toEqual([
+        ['queued', body.runId],
+      ]);
     });
 
     it('gives the helper one run with the tickets and no fixed sub agent number', async () => {
@@ -92,8 +94,8 @@ describe.each(DIALECTS)('run all todo (%s)', (dialect) => {
     });
 
     it('holds at most 30 tickets and leaves the rest for the next Run all', async () => {
-      for (let n = 5; n <= 33; n += 1) {
-        await person('POST', '/api/projects/MOB/tickets', { title: `Ticket ${n}` });
+      for (let i = 5; i <= 33; i += 1) {
+        await person('POST', '/api/projects/MOB/tickets', { title: `Ticket ${i}` });
       }
 
       const { body } = await runAll();

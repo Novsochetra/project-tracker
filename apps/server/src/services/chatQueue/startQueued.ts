@@ -57,5 +57,8 @@ export async function startQueuedIn(
   const queued = { scope, runner, projectId: project.id, now };
   const request = { queued, project, chat, history, ticket, question: row.text, options };
 
-  return queueAskRun(trx.db, request, { id: row.messageId, files: files.map((f) => f.fileName) });
+  return queueAskRun(trx.db, request, {
+    id: row.messageId,
+    files: files.map((file) => file.fileName),
+  });
 }

@@ -64,7 +64,7 @@ export async function readMigrationState(
   });
   const unknown = [...applied]
     .filter(([name]) => !(name in migrations))
-    .sort(([a], [b]) => a.localeCompare(b));
+    .sort(([left], [right]) => left.localeCompare(right));
 
   return [
     ...states,

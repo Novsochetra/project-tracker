@@ -18,27 +18,35 @@ import { jsonBody } from '../validation';
 
 export const projectRoutes = (ctx: ServiceContext) =>
   new Hono<AppEnv>()
-    .get('/projects', async (c) => c.json(await listProjectSummaries(userContext(ctx, c))))
-    .post('/projects', personCreatesProjects, jsonBody(createProjectInput), async (c) =>
-      c.json(await createProject(userContext(ctx, c), c.req.valid('json')), 201),
+    .get('/projects', async (context) =>
+      context.json(await listProjectSummaries(userContext(ctx, context))),
     )
-    .put('/projects/order', personOrdersProjects, jsonBody(reorderProjectsInput), async (c) =>
-      c.json(await reorderProjects(userContext(ctx, c), c.req.valid('json').ids)),
+    .post('/projects', personCreatesProjects, jsonBody(createProjectInput), async (context) =>
+      context.json(await createProject(userContext(ctx, context), context.req.valid('json')), 201),
     )
-    .get('/projects/:key', async (c) =>
-      c.json(await getProjectDetail(userContext(ctx, c), c.req.param('key'))),
+    .put('/projects/order', personOrdersProjects, jsonBody(reorderProjectsInput), async (context) =>
+      context.json(await reorderProjects(userContext(ctx, context), context.req.valid('json').ids)),
     )
-    .patch('/projects/:key', personEditsProjects, jsonBody(updateProjectInput), async (c) =>
-      c.json(await updateProject(userContext(ctx, c), c.req.param('key'), c.req.valid('json'))),
+    .get('/projects/:key', async (context) =>
+      context.json(await getProjectDetail(userContext(ctx, context), context.req.param('key'))),
     )
-    .delete('/projects/:key', personEditsProjects, async (c) => {
-      await deleteProject(userContext(ctx, c), c.req.param('key'));
+    .patch('/projects/:key', personEditsProjects, jsonBody(updateProjectInput), async (context) =>
+      context.json(
+        await updateProject(
+          userContext(ctx, context),
+          context.req.param('key'),
+          context.req.valid('json'),
+        ),
+      ),
+    )
+    .delete('/projects/:key', personEditsProjects, async (context) => {
+      await deleteProject(userContext(ctx, context), context.req.param('key'));
 
-      return c.body(null, 204);
+      return context.body(null, 204);
     })
-    .get('/projects/:key/board', async (c) =>
-      c.json(await getBoard(userContext(ctx, c), c.req.param('key'))),
+    .get('/projects/:key/board', async (context) =>
+      context.json(await getBoard(userContext(ctx, context), context.req.param('key'))),
     )
-    .get('/projects/:key/prompt', async (c) =>
-      c.json(await projectPrompt(userContext(ctx, c), c.req.param('key'))),
+    .get('/projects/:key/prompt', async (context) =>
+      context.json(await projectPrompt(userContext(ctx, context), context.req.param('key'))),
     );

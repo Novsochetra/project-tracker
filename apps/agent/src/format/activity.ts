@@ -41,7 +41,7 @@ export function formatActivity(
   view: FileView = NO_FILE_CONTENT,
 ): string {
   if (activity.length === 0) return '(No activity yet.)';
-  const sorted = [...activity].sort((a, b) => a.createdAt - b.createdAt);
+  const sorted = [...activity].sort((left, right) => left.createdAt - right.createdAt);
 
   return sorted
     .map((item, index) => {

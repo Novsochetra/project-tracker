@@ -20,8 +20,8 @@ function insideEmptyStar(background: string): Rgb {
   return phoneRule(CSS, '.off').get('fill') === 'none' ? color(background) : cssColor('.off');
 }
 
-function expectContrast(a: Rgb, b: Rgb, minimum: number): void {
-  const ratio = contrast(a, b);
+function expectContrast(left: Rgb, right: Rgb, minimum: number): void {
+  const ratio = contrast(left, right);
   expect(ratio, `${ratio.toFixed(2)}:1`).toBeGreaterThanOrEqual(minimum);
 }
 

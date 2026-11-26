@@ -71,8 +71,11 @@ function stillBars(note: Element, layer: Element): Map<Element, DOMRect> {
   return bars;
 }
 
-const sameBox = (a: DOMRect, b: DOMRect): boolean =>
-  a.x === b.x && a.y === b.y && a.width === b.width && a.height === b.height;
+const sameBox = (left: DOMRect, right: DOMRect): boolean =>
+  left.x === right.x &&
+  left.y === right.y &&
+  left.width === right.width &&
+  left.height === right.height;
 
 // When a note goes, what lay below it moves up into its place, or on a screen scrolled to its end
 // what lay above it moves down, so either can land under the finger: a file's x, the Add tile or

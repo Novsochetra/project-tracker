@@ -17,8 +17,8 @@ describe.each(DIALECTS)('agent workflow (%s)', (dialect) => {
     const statusId = statusOf(project, category).id;
 
     return (await api.client().getBoard('MA')).tickets
-      .filter((t) => t.statusId === statusId)
-      .map((t) => t.key);
+      .filter((ticket) => ticket.statusId === statusId)
+      .map((ticket) => ticket.key);
   };
 
   describe('claiming', () => {
@@ -232,7 +232,7 @@ describe.each(DIALECTS)('agent workflow (%s)', (dialect) => {
     });
     expect(changes.status.category).toBe('todo');
     expect(changes.ticket.rank).toBe(
-      Math.min(...(await person.getBoard('MA')).tickets.map((t) => t.rank)),
+      Math.min(...(await person.getBoard('MA')).tickets.map((ticket) => ticket.rank)),
     );
 
     expect((await workerClient.claimNext('MA'))?.ticket.key).toBe('MA-1');
