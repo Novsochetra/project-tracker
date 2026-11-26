@@ -11,6 +11,7 @@ import {
   PromptSheet,
   ReportSheet,
   RunStepsSheet,
+  SearchSheet,
   StatusManagerSheet,
 } from '../lazyParts';
 import { SheetError } from './SheetError';
@@ -63,5 +64,7 @@ function RequestedSheet({ request, open, onClose }: SheetProps & { request: Shee
       return <ConnectSheet {...sheet} />;
     case 'account':
       return <AccountSheet {...sheet} />;
+    case 'search':
+      return <SearchSheet {...sheet} />;
   }
 }

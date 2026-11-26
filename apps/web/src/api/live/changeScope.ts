@@ -90,7 +90,8 @@ export function changeScope(
 
 export function isAffected(queryKey: QueryKey, scope: ChangeScope): boolean {
   const root = rootOf(queryKey);
-  if (root === 'projects' || root === 'ready' || root === 'reportPreview') return true;
+  const anyTicket = root === 'ready' || root === 'reportPreview' || root === 'search';
+  if (root === 'projects' || anyTicket) return true;
   // Chats, steps and requests change only through runs, which have their own events.
   if (FULL_REFRESH_ONLY.has(root)) return scope.all;
   const key = scopeOf(queryKey) ?? '';

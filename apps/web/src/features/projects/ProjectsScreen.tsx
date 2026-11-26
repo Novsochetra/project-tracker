@@ -1,5 +1,5 @@
 import type { ProjectSummary, TicketsAcrossProjects } from '@tracker/shared';
-import { Folder, Plus } from 'lucide-react';
+import { Folder, Plus, Search } from 'lucide-react';
 import { errorMessage, useProjects, useReadyForYou, type TrackerQuery } from '../../api';
 import { useSheets } from '../../app/sheets/context';
 import { Button, EmptyState, Icon } from '../../components';
@@ -27,9 +27,14 @@ export function ProjectsScreen() {
         title="Projects"
         left={<AccountButton />}
         right={
-          <NavBarButton aria-label="New project" onClick={openNew}>
-            <Icon icon={Plus} size={20} />
-          </NavBarButton>
+          <>
+            <NavBarButton aria-label="Search" onClick={() => sheets.open({ type: 'search' })}>
+              <Icon icon={Search} size={20} />
+            </NavBarButton>
+            <NavBarButton aria-label="New project" onClick={openNew}>
+              <Icon icon={Plus} size={20} />
+            </NavBarButton>
+          </>
         }
       />
       <PullToRefresh

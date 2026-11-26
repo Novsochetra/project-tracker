@@ -44,6 +44,9 @@ export const ConnectSheet = lazyWithPreload(() =>
 export const AccountSheet = lazyWithPreload(() =>
   import('../features/account/AccountSheet').then((module) => module.AccountSheet),
 );
+export const SearchSheet = lazyWithPreload(() =>
+  import('../features/search/SearchSheet').then((module) => module.SearchSheet),
+);
 // Opened once per person, so it stays out of the first load.
 export const InviteScreen = lazyWithPreload(() =>
   import('./InviteScreen').then((module) => module.InviteScreen),
@@ -75,6 +78,7 @@ const SHEETS: Part[] = [
   RunStepsSheet,
   ConnectSheet,
   AccountSheet,
+  SearchSheet,
 ];
 
 // A part that fails to load fails again where it renders, which shows and reports it.

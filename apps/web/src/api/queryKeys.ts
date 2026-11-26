@@ -19,6 +19,7 @@ export const queryKeys = {
   ticketQuestions: (ticketKey: string) => ['ticket', canonical(ticketKey), 'questions'] as const,
   ticketChanges: (ticketKey: string) => ['ticket', canonical(ticketKey), 'changes'] as const,
   people: () => ['people'] as const,
+  search: (query: string) => ['search', query] as const,
   reportPreview: (text: string, ticketKey?: string) =>
     ['reportPreview', ticketKey ? canonical(ticketKey) : '', text] as const,
   session: () => ['session'] as const,

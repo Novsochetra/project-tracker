@@ -4,6 +4,7 @@ import { useLiveUpdates } from '../api';
 import { useToastRaise } from '../components';
 import { AttachmentViewerProvider } from '../features/attachments/AttachmentViewerProvider';
 import { QuickCapture } from '../features/capture';
+import { SearchShortcut } from '../features/search';
 import { useNotificationOpen } from '../features/push/useNotificationOpen';
 import { useIsPhone } from '../lib/media';
 import { StackNavigator, useBottomBarVisible } from '../navigation';
@@ -59,6 +60,7 @@ export function Shell() {
         <RouteFallback />
         <LiveRegion />
         <QuickCapture reachability={reachability} />
+        <SearchShortcut />
       </div>
     </AttachmentViewerProvider>
   );
