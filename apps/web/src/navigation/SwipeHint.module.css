@@ -7,7 +7,7 @@
   width: 40px;
   height: 40px;
   margin-top: -20px;
-  border-radius: 50%;
+  border-radius: var(--radius-full);
   background: var(--surface);
   color: var(--muted);
   box-shadow: var(--shadow-floating);
@@ -28,5 +28,5 @@
 
 .ready {
   background: var(--accent);
-  color: var(--surface);
+  color: var(--text-inverse);
 }

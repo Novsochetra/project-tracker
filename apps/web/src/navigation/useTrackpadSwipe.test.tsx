@@ -43,7 +43,7 @@ const location = () => screen.getByRole('status', { name: 'Location' }).textCont
 
 let clock = 0;
 
-function swipe(target: Element, dx: number, { dy = 0, shiftKey = false } = {}) {
+function swipe(target: Element, dx: number, { dy = 0, shiftKey = false, ctrlKey = false } = {}) {
   clock += GESTURE_GAP_MS * 2;
   const events: WheelEvent[] = [];
   for (let i = 0; i < 6; i += 1) {
@@ -51,6 +51,7 @@ function swipe(target: Element, dx: number, { dy = 0, shiftKey = false } = {}) {
       deltaX: dx / 6,
       deltaY: dy / 6,
       shiftKey,
+      ctrlKey,
       bubbles: true,
       cancelable: true,
     });
@@ -91,14 +92,27 @@ describe('trackpad swipe', () => {
     expect(location()).toBe('/');
   });
 
-  it('leaves a short swipe, a vertical scroll and a Shift wheel alone', () => {
+  it('leaves a short swipe, a vertical scroll, a Shift wheel and a pinch alone', () => {
     renderStack('/p/MOB');
     const content = page('/p/MOB');
     swipe(content, -60);
     const scroll = swipe(content, -300, { dy: 400 });
-    swipe(content, -300, { shiftKey: true });
+    const shifted = swipe(content, -300, { shiftKey: true });
+    const pinch = swipe(content, -300, { ctrlKey: true });
     expect(location()).toBe('/p/MOB');
-    expect(scroll.some((event) => event.defaultPrevented)).toBe(false);
+    for (const events of [scroll, shifted, pinch]) {
+      expect(events.some((event) => event.defaultPrevented)).toBe(false);
+    }
+  });
+
+  it('leaves a swipe alone while a dropdown is open', () => {
+    renderStack('/p/MOB');
+    const listbox = document.createElement('div');
+    listbox.setAttribute('role', 'listbox');
+    document.body.append(listbox);
+    swipe(page('/p/MOB'), -300);
+    listbox.remove();
+    expect(location()).toBe('/p/MOB');
   });
 
   it('leaves a swipe over a sideways scroller to the scroller', () => {
@@ -110,11 +124,11 @@ describe('trackpad swipe', () => {
     expect(location()).toBe('/p/MOB');
   });
 
-  it('does nothing at the first screen', () => {
+  it('leaves a swipe with nowhere to go to the browser', () => {
     renderStack('/');
     const events = swipe(page('/'), -300);
     expect(location()).toBe('/');
-    expect(document.querySelector('[data-swipe-hint]')).toHaveAttribute('data-swipe-hint', 'back');
-    expect(events.every((event) => event.defaultPrevented)).toBe(true);
+    expect(document.querySelector('[data-swipe-hint]')).toBeNull();
+    expect(events.some((event) => event.defaultPrevented)).toBe(false);
   });
 });

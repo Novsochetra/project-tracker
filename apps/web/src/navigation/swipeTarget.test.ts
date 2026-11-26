@@ -45,6 +45,14 @@ describe('isTrackpadSwipeTarget', () => {
     expect(isTrackpadSwipeTarget(target)).toBe(true);
   });
 
+  it('refuses while a dropdown or menu is open', () => {
+    expect(isTrackpadSwipeTarget(mount('<div role="listbox"></div><p id="target">x</p>'))).toBe(
+      false,
+    );
+    const menu = '<button aria-label="Close menu"></button><p id="target">x</p>';
+    expect(isTrackpadSwipeTarget(mount(menu))).toBe(false);
+  });
+
   it('refuses while a modal is open, but not for a closed inert one', () => {
     const open = '<div aria-modal="true"></div><p id="target">x</p>';
     expect(isTrackpadSwipeTarget(mount(open))).toBe(false);

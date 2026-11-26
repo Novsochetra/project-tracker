@@ -14,6 +14,7 @@ describe('historySteps', () => {
     const go = vi.fn();
     const steps = historySteps({
       history: historyAt(['/', '/p/PT', '/p/PT/1'], 1),
+      entryBehind: () => false,
       go,
       backToParent: null,
     });
@@ -27,7 +28,12 @@ describe('historySteps', () => {
   it('goes to the parent screen when nothing is behind a deep link', () => {
     const go = vi.fn();
     const backToParent = vi.fn();
-    const steps = historySteps({ history: historyAt(['/p/PT/1'], 0), go, backToParent });
+    const steps = historySteps({
+      history: historyAt(['/p/PT/1'], 0),
+      entryBehind: () => false,
+      go,
+      backToParent,
+    });
     expect(steps.canStep('back')).toBe(true);
     steps.step('back');
     expect(backToParent).toHaveBeenCalledOnce();
@@ -36,11 +42,29 @@ describe('historySteps', () => {
 
   it('has nowhere to go at the first screen with no forward entry', () => {
     const go = vi.fn();
-    const steps = historySteps({ history: historyAt(['/'], 0), go, backToParent: null });
+    const steps = historySteps({
+      history: historyAt(['/'], 0),
+      entryBehind: () => false,
+      go,
+      backToParent: null,
+    });
     expect(steps.canStep('back')).toBe(false);
     expect(steps.canStep('forward')).toBe(false);
     steps.step('forward');
     steps.step('back');
     expect(go).not.toHaveBeenCalled();
+  });
+
+  it('steps back to an entry from before a reload', () => {
+    const go = vi.fn();
+    const steps = historySteps({
+      history: historyAt(['/'], 0),
+      entryBehind: () => true,
+      go,
+      backToParent: null,
+    });
+    expect(steps.canStep('back')).toBe(true);
+    steps.step('back');
+    expect(go).toHaveBeenCalledWith(-1);
   });
 });

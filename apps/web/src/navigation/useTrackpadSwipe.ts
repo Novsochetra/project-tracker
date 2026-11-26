@@ -34,8 +34,14 @@ interface SwipeOutput {
   read: () => TrackpadSwipeInput;
 }
 
-// Shift turns a mouse wheel sideways and Control is a pinch: neither is a swipe.
-const isPlainWheel = (event: WheelEvent) => !event.shiftKey && !event.ctrlKey;
+// Shift turns a mouse wheel sideways and Control is a pinch: neither is a swipe. Firefox counts a
+// mouse wheel in lines. An event the page can't cancel would leave the browser's own swipe to run
+// as well (Chrome lets a page cancel a scroll's events only if it cancelled the first one).
+const isSwipeWheel = (event: WheelEvent) =>
+  !event.shiftKey &&
+  !event.ctrlKey &&
+  event.deltaMode === WheelEvent.DOM_DELTA_PIXEL &&
+  event.cancelable;
 
 function attachTrackpadSwipe({ progress, setDirection, read }: SwipeOutput): () => void {
   let swipe: TrackpadSwipe = IDLE_SWIPE;
@@ -55,10 +61,10 @@ function attachTrackpadSwipe({ progress, setDirection, read }: SwipeOutput): () 
   };
 
   const track = () => {
-    const direction = swipeDirection(swipe.distance);
+    const direction = swipeDirection(swipe.dx);
     const { steps } = read();
     const possible = direction !== null && steps.canStep(direction);
-    show(direction, possible ? swipeProgress(swipe.distance) : 0);
+    show(direction, possible ? swipeProgress(swipe.dx) : 0);
     if (!possible || !isSwipeComplete(swipe)) return;
     swipe = { ...swipe, phase: 'done' };
     steps.step(direction);
@@ -70,10 +76,15 @@ function attachTrackpadSwipe({ progress, setDirection, read }: SwipeOutput): () 
     swipe = stepSwipe(
       swipe,
       { dx: x, dy: y, at: event.timeStamp },
-      () => isPlainWheel(event) && isTrackpadSwipeTarget(event.target),
+      // A swipe with nowhere to go is left to the browser, which may leave the app that way.
+      (direction) =>
+        isSwipeWheel(event) &&
+        read().steps.canStep(direction) &&
+        isTrackpadSwipeTarget(event.target),
     );
-    if (!ownsWheel(swipe)) return;
-    // Otherwise Safari plays its own back swipe on top of this one.
+    // A pinch or a mouse wheel's first event is never held, even before it is decided.
+    if (!ownsWheel(swipe) || (swipe.phase === 'undecided' && !isSwipeWheel(event))) return;
+    // Otherwise the browser plays its own swipe on top of this one.
     if (event.cancelable) event.preventDefault();
     window.clearTimeout(fadeTimer);
     fadeTimer = window.setTimeout(fadeOut, GESTURE_GAP_MS);

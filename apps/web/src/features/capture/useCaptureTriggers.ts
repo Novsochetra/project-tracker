@@ -1,11 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router';
-import {
-  asksForCapture,
-  hasOpenOverlay,
-  isCaptureShortcut,
-  withoutCaptureParam,
-} from './captureTriggers';
+import { hasOpenOverlay } from '../../lib/openOverlay';
+import { asksForCapture, isCaptureShortcut, withoutCaptureParam } from './captureTriggers';
 
 export function useCaptureShortcut(openCapture: () => void, enabled: boolean): void {
   useEffect(() => {

@@ -1,4 +1,5 @@
 import { isNoSwipeTarget } from '../gestures/pointerClaims';
+import { hasOpenOverlay } from '../lib/openOverlay';
 
 // A field scrolls its own text however its style reads.
 const isField = (element: Element) => element.matches('input, textarea');
@@ -17,13 +18,10 @@ function insideSidewaysScroller(target: Element): boolean {
   return false;
 }
 
-// Overlays stay mounted while closed, made inert, so only an open one counts.
-const hasOpenModal = (): boolean =>
-  [...document.querySelectorAll('[aria-modal="true"]')].some((modal) => !modal.closest('[inert]'));
-
 // A sideways swipe over a board, a tab row, a code block or a field with long text scrolls it; a
-// page change there would take the person away mid-scroll.
+// page change there would take the person away mid-scroll. One while a sheet, dropdown or menu is
+// open is meant for that, not for the page behind it.
 export function isTrackpadSwipeTarget(target: EventTarget | null): boolean {
   if (!(target instanceof Element) || isNoSwipeTarget(target)) return false;
-  return !insideSidewaysScroller(target) && !hasOpenModal();
+  return !insideSidewaysScroller(target) && !hasOpenOverlay(document);
 }

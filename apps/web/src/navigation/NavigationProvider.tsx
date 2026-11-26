@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useMemo, useState, type ReactNode } from 'react';
 import { NavigationType, useLocation, useNavigate, useNavigationType } from 'react-router';
+import { isRecord } from '../lib/isRecord';
 import { forgetReload, reloadTimeLeft } from '../lib/pageReload';
 import {
   NavigationContext,
@@ -24,6 +25,12 @@ export interface NavigationProviderProps {
 }
 
 const READY = () => null;
+
+// React Router numbers its entries in history.state, which survives a reload.
+const routerEntryBehind = (): boolean => {
+  const state: unknown = window.history.state;
+  return isRecord(state) && typeof state.idx === 'number' && state.idx > 0;
+};
 
 export function NavigationProvider({ children, prepare = READY }: NavigationProviderProps) {
   const { key, pathname, search, hash } = useLocation();
@@ -91,6 +98,7 @@ export function NavigationProvider({ children, prepare = READY }: NavigationProv
     };
     const steps = historySteps({
       history,
+      entryBehind: routerEntryBehind,
       go: (delta) => {
         opening.clear();
         void navigate(delta);
