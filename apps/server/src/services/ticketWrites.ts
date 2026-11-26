@@ -70,17 +70,19 @@ export interface TicketWrite {
   actor: Actor;
   changes?: TicketChanges;
   entries?: readonly ActivityEntry[];
-  // Holds the write to the status it was read in also when it sets none, as a claim's assignee.
+  // Holds the write to the status it was read in, for a person too: a claim, a bulk move to Done.
   guardStatus?: boolean;
   // Field values the edit was typed over (expectedMatch).
   match?: TicketMatch;
 }
 
-// On Postgres another commit can land between this transaction's read and its write (§2). So a
-// write that sets the status must still find the status it was read in, which the rules about
-// Done and claims were checked against, and an edit the text it was typed over.
+// On Postgres another commit can land between this transaction's read and its write (§2). So an
+// agent's write that sets the status must still find the status it was read in, which the rules
+// about Done were checked against, and an edit the text it was typed over. A person's own move
+// wins as before: their quick keyboard moves overlap, and must not refuse each other.
 async function saveChanges(db: Db, write: TicketWrite, changes: TicketChanges): Promise<void> {
-  const inStatus = write.guardStatus === true || changes.statusId !== undefined;
+  const agentMoves = write.actor.kind === 'agent' && changes.statusId !== undefined;
+  const inStatus = write.guardStatus === true || agentMoves;
   const match = inStatus ? { ...write.match, statusId: write.ticket.statusId } : write.match;
   if (!match) return updateTicketRow(db, write.ticket.id, changes);
   if (await updateTicketMatching(db, write.ticket.id, match, changes)) return;

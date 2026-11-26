@@ -1,5 +1,5 @@
 import type { TrackerClient } from '@tracker/client';
-import type { ProjectDetail } from '@tracker/shared';
+import type { Actor, ProjectDetail } from '@tracker/shared';
 import type { KyselyPlugin, QueryId } from 'kysely';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { createApp } from '../../src/app';
@@ -67,15 +67,18 @@ describe.each(DIALECTS)('regression: an agent write races the person (%s)', (dia
 
   const detail = () => api.client().getTicket('MOB-1');
 
-  const agentWhile = (ticketId: string, personWrite: PersonWrite) =>
+  const clientWhile = (ticketId: string, personWrite: PersonWrite, actor?: Actor) =>
     clientFor(
       createApp({
         db: racing(api.db, ticketId, personWrite),
         storage: api.storage,
         events: api.broadcaster,
       }),
-      { actor: agent() },
+      actor ? { actor } : {},
     );
+
+  const agentWhile = (ticketId: string, personWrite: PersonWrite) =>
+    clientWhile(ticketId, personWrite, agent());
 
   // The person's write runs inside the agent's transaction here, so the refusal rolls it back too:
   // what counts is the 409, and that the agent's write never landed.
@@ -160,5 +163,22 @@ describe.each(DIALECTS)('regression: an agent write races the person (%s)', (dia
     await expect(
       claude.updateTicket('MOB-1', { statusId: statuses.todo, description: 'C' }),
     ).resolves.toMatchObject({ statusId: statuses.todo, description: 'C' });
+  });
+
+  // A person's quick keyboard moves overlap on Postgres, so each must land rather than refuse the
+  // one before it: the person's own write wins, as it always has.
+  it("lets a person's move land over a move that came in between", async () => {
+    const { id } = await api
+      .client()
+      .createTicket('MOB', { title: 'Crash', statusId: statuses.reviewed });
+    const person = clientWhile(id, { statusId: statuses.done });
+
+    await expect(person.updateTicket('MOB-1', { statusId: statuses.todo })).resolves.toMatchObject({
+      statusId: statuses.todo,
+    });
+    await expect(person.moveTicket('MOB-1', { statusId: statuses.doing })).resolves.toMatchObject({
+      statusId: statuses.doing,
+    });
+    expect((await detail()).status.category).toBe('in_progress');
   });
 });
