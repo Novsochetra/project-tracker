@@ -23,11 +23,16 @@ const cachedEntries = (queryClient: QueryClient): CachedEntry[] =>
     .getAll()
     .map((query) => ({ queryKey: query.queryKey, data: query.state.data }));
 
-// A null event means "anything may have changed": a reconnect may have missed any change.
-export function refreshForChange(queryClient: QueryClient, event: ChangeEvent | null): void {
+// A null event means "anything may have changed": a reconnect may have missed any change, and
+// Move all to Done spans projects.
+export function refreshForChange(
+  queryClient: QueryClient,
+  event: ChangeEvent | null,
+  settling?: unknown,
+): void {
   const entries = cachedEntries(queryClient);
   const scope = event ? changeScope(event, entries) : EVERYTHING;
-  const busy = busyKeys(queryClient);
+  const busy = busyKeys(queryClient, settling);
   const refreshed = (queryKey: QueryKey) =>
     isAffected(queryKey, scope) && isRefreshable(queryClient, queryKey, busy);
   const keys = entries.map(({ queryKey }) => queryKey).filter(refreshed);
