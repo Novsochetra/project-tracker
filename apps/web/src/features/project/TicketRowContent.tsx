@@ -12,7 +12,7 @@ import type { ReactNode } from 'react';
 import { Avatar, Icon, PriorityBars, StatusGlyph, VerdictChip } from '../../components';
 import { useStillWaiting } from '../requests/useStillWaiting';
 import { WaitingMark } from '../requests/WaitingMark';
-import { LabelChips, LabelDots } from '../labels/LabelChips';
+import { LabelChips } from '../labels/LabelChips';
 import { useTicketLabels } from '../labels/projectLabels';
 import { DragHandle } from './DragHandle';
 import type { RowCallbacks } from './rowTypes';
@@ -83,7 +83,7 @@ export function TicketRowContent({ ticket, status, dragged, callbacks }: TicketR
         <LabelChips labels={labels} className={styles.labels} />{' '}
         {(ticket.due || labels.length > 0) && (
           <DueLabel due={ticket.due} overdue={isOverdue(ticket.due, isDone)}>
-            <LabelDots labels={labels} className={styles.dots} />
+            <LabelChips labels={labels} compact className={styles.dueLabels} />
           </DueLabel>
         )}{' '}
         <Avatar name={ticket.assignee} className={styles.assignee} />

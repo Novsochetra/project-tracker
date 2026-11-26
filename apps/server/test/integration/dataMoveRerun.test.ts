@@ -72,6 +72,7 @@ async function addOtherProject(db: Db, key: string): Promise<void> {
       instructions: '',
       color: '#5B5BD6',
       hideName: 0,
+      position: 0,
       nextNum: 2,
       createdAt: 1,
       updatedAt: 1,

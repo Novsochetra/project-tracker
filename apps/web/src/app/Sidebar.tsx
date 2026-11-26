@@ -1,80 +1,30 @@
-import { openNotReviewed, projectDisplayName, type ProjectSummary } from '@tracker/shared';
-import clsx from 'clsx';
+import type { ProjectSummary } from '@tracker/shared';
 import { Activity, LayoutGrid, Plus } from 'lucide-react';
-import type { ReactNode } from 'react';
+import { useRef, type RefObject } from 'react';
 import { useProjects, useReadyForYou } from '../api';
 import { Icon, IconButton, LogoGlyph } from '../components';
 import { AccountRow } from '../features/account';
-import { sameProjectKey } from '../features/projects/projectLookup';
-import { useOpenProject } from '../features/projects/useOpenProject';
 import { readyCounts, readyItems } from '../features/ready/readyItems';
 import { SearchButton } from '../features/search';
 import { ErrorBoundary } from '../lib/ErrorBoundary';
-import { useIsOpening, useNavigation, type Route } from '../navigation';
-import { projectKeyOf } from './crumbs';
+import { useNavigation, type Route } from '../navigation';
 import { useSheets } from './sheets/context';
 import styles from './Sidebar.module.css';
-
-interface SidebarItemProps {
-  route: Route;
-  active: boolean;
-  onClick: () => void;
-  children: ReactNode;
-}
-
-function SidebarItem({ route, active, onClick, children }: SidebarItemProps) {
-  const opening = useIsOpening(route);
-  return (
-    <button
-      type="button"
-      className={clsx(styles.item, active && styles.active)}
-      aria-current={active ? 'page' : undefined}
-      data-opening={opening || undefined}
-      onClick={onClick}
-    >
-      {children}
-    </button>
-  );
-}
-
-interface ProjectItemsProps {
-  projects: readonly ProjectSummary[];
-  ready: ReadonlyMap<string, number>;
-}
+import { SidebarItem } from './SidebarItem';
+import { SidebarProjects } from './SidebarProjects';
 
 const NO_COUNTS: ReadonlyMap<string, number> = new Map();
 const PROJECTS: Route = { name: 'projects' };
 const ACTIVITY: Route = { name: 'activity' };
 
-function ProjectItems({ projects, ready }: ProjectItemsProps) {
-  const { route } = useNavigation();
-  const openProject = useOpenProject();
-  const activeKey = projectKeyOf(route);
-  return projects.map((project) => (
-    <SidebarItem
-      key={project.id}
-      route={{ name: 'project', key: project.key }}
-      active={activeKey !== null && sameProjectKey(project.key, activeKey)}
-      onClick={() => openProject(project.key)}
-    >
-      <span className={styles.square} style={{ background: project.color }} />
-      <span className={styles.name}>{projectDisplayName(project)}</span>{' '}
-      {ready.has(project.id) && (
-        <>
-          <span className={styles.ready}>{ready.get(project.id)} ready</span>{' '}
-        </>
-      )}
-      <span className={styles.count}>
-        {openNotReviewed(project.openCount, ready.get(project.id) ?? 0)}{' '}
-        <span className="visually-hidden">open</span>
-      </span>
-    </SidebarItem>
-  ));
+interface ReadyProjectsProps {
+  projects: readonly ProjectSummary[];
+  scroller: RefObject<HTMLElement | null>;
 }
 
-function ReadyProjectItems({ projects }: Pick<ProjectItemsProps, 'projects'>) {
+function ReadyProjects({ projects, scroller }: ReadyProjectsProps) {
   const ready = readyCounts(readyItems(useReadyForYou().data, projects));
-  return <ProjectItems projects={projects} ready={ready} />;
+  return <SidebarProjects projects={projects} ready={ready} scroller={scroller} />;
 }
 
 export function Sidebar() {
@@ -82,8 +32,9 @@ export function Sidebar() {
   const sheets = useSheets();
   const projects = useProjects().data ?? [];
   const readyList = useReadyForYou().data;
+  const scroller = useRef<HTMLElement>(null);
   return (
-    <aside aria-label="Projects" className={styles.sidebar}>
+    <aside ref={scroller} aria-label="Projects" className={styles.sidebar}>
       <div className={styles.brand}>
         <LogoGlyph />
         <span className={styles.brandName}>Tracker</span>
@@ -123,9 +74,9 @@ export function Sidebar() {
         <ErrorBoundary
           name="Sidebar ready counts"
           retryKey={readyList}
-          fallback={<ProjectItems projects={projects} ready={NO_COUNTS} />}
+          fallback={<SidebarProjects projects={projects} ready={NO_COUNTS} scroller={scroller} />}
         >
-          <ReadyProjectItems projects={projects} />
+          <ReadyProjects projects={projects} scroller={scroller} />
         </ErrorBoundary>
       </div>
       <AccountRow />

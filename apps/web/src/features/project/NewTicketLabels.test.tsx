@@ -23,14 +23,22 @@ const bug: Label = {
   createdAt: 1,
 };
 
+const release: Label = { ...bug, id: 'l-rel', name: 'v1.4', template: '', instructions: '' };
+
 const { commentCount: _c, attachmentCount: _a, ...created } = listItem(5, STATUS.todo, -1000);
 
 function renderSheet() {
-  const board = { ...makeBoard(), labels: [bug] };
+  let board = { ...makeBoard(), labels: [bug] };
   const createTicket = vi.fn().mockResolvedValue({ ...created, labelIds: ['l-bug'] });
+  // The board's refetch after a new label has it, as the server's would.
+  const createLabel = vi.fn(() => {
+    board = { ...board, labels: [bug, release] };
+    return Promise.resolve(release);
+  });
   const api = setupApi({
     createTicket,
-    getBoard: vi.fn().mockResolvedValue(board),
+    createLabel,
+    getBoard: vi.fn(() => Promise.resolve(board)),
     listPeople: vi.fn().mockResolvedValue([]),
   });
   api.queryClient.setQueryData(queryKeys.board('MOB'), board);
@@ -42,7 +50,7 @@ function renderSheet() {
       </ToastProvider>
     </Wrapper>,
   );
-  return { createTicket, user: userEvent.setup() };
+  return { createTicket, createLabel, user: userEvent.setup() };
 }
 
 const pickBug = async (user: ReturnType<typeof userEvent.setup>) => {
@@ -86,5 +94,26 @@ describe('labels in New ticket', () => {
     await user.type(screen.getByLabelText('Description'), 'It crashes.');
     await pickBug(user);
     expect(screen.getByLabelText('Description')).toHaveValue('It crashes.');
+  });
+
+  it('make a new label over the sheet, which the ticket is created with', async () => {
+    const { createTicket, createLabel, user } = renderSheet();
+    await user.click(screen.getByRole('button', { name: /^Labels/ }));
+    const picker = screen.getByRole('dialog', { name: 'Pick labels' });
+    await user.type(within(picker).getByRole('searchbox'), 'v1.4{Enter}');
+    expect(createLabel).toHaveBeenCalledWith('MOB', { name: 'v1.4', color: expect.any(String) });
+    expect(await within(picker).findByRole('option', { name: 'v1.4' })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    );
+    await user.click(within(picker).getByRole('button', { name: 'Done' }));
+    const sheet = screen.getByRole('dialog', { name: 'New ticket' });
+    expect(within(sheet).getByRole('button', { name: /^Labels/ })).toHaveTextContent('v1.4');
+    await user.type(within(sheet).getByLabelText('Ticket title'), 'Ship the release');
+    await user.click(within(sheet).getByRole('button', { name: 'Create' }));
+    expect(createTicket).toHaveBeenCalledWith(
+      'MOB',
+      expect.objectContaining({ labelIds: ['l-rel'] }),
+    );
   });
 });

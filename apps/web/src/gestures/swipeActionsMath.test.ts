@@ -10,6 +10,7 @@ import {
   ACTION_WIDTH,
   actionEdge,
   actionLabelOffset,
+  fullSwipeAt,
   isFullSwipe,
   restingOffset,
   swipeOffset,
@@ -52,10 +53,47 @@ describe('swipeOutcome', () => {
   });
 
   it('triggers the first action past 55% of the row', () => {
-    expect(isFullSwipe(-221, 400)).toBe(true);
-    expect(isFullSwipe(-219, 400)).toBe(false);
+    expect(isFullSwipe(-221, both)).toBe(true);
+    expect(isFullSwipe(-219, both)).toBe(false);
     expect(swipeOutcome(-230, 0, both)).toEqual({ kind: 'full', side: 'trailing' });
     expect(swipeOutcome(230, 900, both)).toEqual({ kind: 'full', side: 'leading' });
+  });
+
+  it('lets a flick back cancel a full swipe', () => {
+    expect(swipeOutcome(-260, 600, both)).toEqual({ kind: 'close' });
+  });
+
+  it.each([288, 343])(
+    'keeps three actions at %dpx clear of a full swipe until well past their open width',
+    (rowWidth) => {
+      const three: SwipeGeometry = { rowWidth, leadingCount: 1, trailingCount: 3 };
+      const open = -3 * ACTION_WIDTH;
+      expect(fullSwipeAt('trailing', three)).toBe(
+        Math.max(rowWidth * 0.55, 3 * ACTION_WIDTH + ACTION_WIDTH / 2),
+      );
+      expect(isFullSwipe(open, three)).toBe(false);
+      expect(swipeOutcome(open, 0, three)).toEqual({ kind: 'open', side: 'trailing' });
+      // Dragging an open row a little to close it, slowly or with a flick.
+      expect(swipeOutcome(open + 20, 0, three)).toEqual({ kind: 'open', side: 'trailing' });
+      expect(swipeOutcome(open + 20, 600, three)).toEqual({ kind: 'close' });
+      // A slow release a little past the open width on a first reveal.
+      expect(swipeOutcome(open - 20, 0, three)).toEqual({ kind: 'open', side: 'trailing' });
+      expect(swipeOutcome(-200, 0, three)).toEqual({ kind: 'open', side: 'trailing' });
+      const full = -fullSwipeAt('trailing', three);
+      expect(swipeOutcome(full - 1, 0, three)).toEqual({ kind: 'full', side: 'trailing' });
+      expect(swipeOutcome(full + 1, 0, three)).toEqual({ kind: 'open', side: 'trailing' });
+    },
+  );
+
+  it('keeps 55% of the row for one or two actions on a wide row', () => {
+    expect(fullSwipeAt('trailing', both)).toBeCloseTo(220);
+    expect(fullSwipeAt('leading', both)).toBeCloseTo(220);
+  });
+
+  it('keeps a two-action row at 320px from going full just past its open width', () => {
+    const narrow: SwipeGeometry = { rowWidth: 288, leadingCount: 1, trailingCount: 2 };
+    expect(fullSwipeAt('trailing', narrow)).toBe(2 * ACTION_WIDTH + ACTION_WIDTH / 2);
+    expect(fullSwipeAt('leading', narrow)).toBeCloseTo(288 * 0.55);
   });
 
   it('closes when there is nothing on that side', () => {

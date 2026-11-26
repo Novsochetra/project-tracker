@@ -22,6 +22,18 @@ export function useStatusChange(): (ticket: TicketListItem, status: Status) => v
   );
 }
 
+export function useLabelsChange(): (ticket: TicketListItem, labelIds: string[]) => void {
+  const { mutateAsync } = useUpdateTicket();
+  const { show } = useToast();
+  return useCallback(
+    (ticket, labelIds) => {
+      const request = mutateAsync({ ticketKey: ticket.key, input: { labelIds } });
+      void request.catch((error: unknown) => show(errorMessage(error), { kind: 'error' }));
+    },
+    [mutateAsync, show],
+  );
+}
+
 export function useRemoveTicket(): (ticket: TicketListItem) => void {
   const { mutate } = useDeleteTicket();
   const { show } = useToast();

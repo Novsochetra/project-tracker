@@ -66,6 +66,11 @@ export const updateProjectInput = z.object({
 });
 export type UpdateProjectInput = z.input<typeof updateProjectInput>;
 
+// The whole list in the person's order. The cap only bounds the work one request asks for.
+export const PROJECT_ORDER_MAX = 1_000;
+export const reorderProjectsInput = z.object({ ids: z.array(id).min(1).max(PROJECT_ORDER_MAX) });
+export type ReorderProjectsInput = z.input<typeof reorderProjectsInput>;
+
 export const createStatusInput = z.object({
   name: z.string().trim().min(1).max(40),
   category: z.enum(STATUS_CATEGORIES),

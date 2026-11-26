@@ -1,7 +1,8 @@
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { STATUS } from '../../api/test/fixtures';
+import type { Label } from '@tracker/shared';
+import { makeBoard, STATUS } from '../../api/test/fixtures';
 import { mockPhone, skipAnimations } from '../../overlays/testing';
 import { dropRowOf } from './dnd/dropRow';
 import { resetListView } from './listViewStore';
@@ -10,6 +11,19 @@ import { renderProject } from './test/renderProject';
 vi.mock('../projects/ProjectOptionsButton', () => ({ ProjectOptionsButton: () => null }));
 
 const pending = () => new Promise(() => undefined);
+
+const label = (id: string, name: string, color: string, position: number): Label => ({
+  id,
+  projectId: 'p1',
+  name,
+  color,
+  template: '',
+  instructions: '',
+  position,
+  createdAt: 1,
+});
+const BUG = label('l-bug', 'Bug', '#B42318', 0);
+const RELEASE = label('l-rel', 'v1.4', '#3E63DD', 1);
 const rowOf = (key: string) =>
   dropRowOf(screen.getByRole('button', { name: new RegExp(`^${key}\\b`) }));
 
@@ -82,7 +96,8 @@ describe('ProjectScreen on phones', () => {
     renderProject();
     await screen.findByRole('region', { name: 'Done' });
     const row = rowOf('MOB-4');
-    expect(row?.querySelectorAll('button')).toHaveLength(4);
+    // The handle, the row, and Status, Labels and Delete.
+    expect(row?.querySelectorAll('button')).toHaveLength(5);
   });
 
   it('swipes left to pick another status from an action sheet', async () => {
@@ -99,6 +114,28 @@ describe('ProjectScreen on phones', () => {
     await waitFor(() =>
       expect(updateTicket).toHaveBeenCalledWith('MOB-1', { statusId: STATUS.done }),
     );
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+  });
+
+  it('swipes left to label a ticket from a sheet of chips, without opening it', async () => {
+    const user = userEvent.setup();
+    const updateTicket = vi.fn(pending);
+    const board = { ...makeBoard(), labels: [BUG, RELEASE] };
+    renderProject({ board, client: { updateTicket } });
+    await screen.findByRole('region', { name: 'To do' });
+    swipeAction('MOB-1', 'Labels');
+    const sheet = await screen.findByRole('dialog', { name: 'Pick labels' });
+    expect(sheet).toHaveTextContent('MOB-1');
+    await user.click(within(sheet).getByRole('option', { name: 'v1.4' }));
+    expect(updateTicket).toHaveBeenLastCalledWith('MOB-1', { labelIds: ['l-rel'] });
+    expect(within(sheet).getByRole('option', { name: 'v1.4' })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    );
+    await user.click(within(sheet).getByRole('option', { name: 'Bug' }));
+    expect(updateTicket).toHaveBeenLastCalledWith('MOB-1', { labelIds: ['l-rel', 'l-bug'] });
+    expect(screen.getByRole('button', { name: /^MOB-1\b/ })).toHaveAccessibleName(/Bug.*v1\.4/);
+    await user.click(within(sheet).getByRole('button', { name: 'Done' }));
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
   });
 

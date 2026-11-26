@@ -32,6 +32,7 @@ import { removeFiles } from '../storage/fileStorage';
 import { changedFields, isEmpty } from '../util';
 import { inTransaction, notify, type UserContext } from './context';
 import { requireProject } from './lookups';
+import { nextProjectPosition } from './projectPosition';
 import { toLabel, toProject, toStatus } from './mappers';
 
 type CreateProjectValues = z.output<typeof createProjectInput>;
@@ -107,6 +108,7 @@ export async function createProject(
       ownerId: ctx.scope,
       autoReview: 0,
       hideName: 0,
+      position: nextProjectPosition(existing),
     };
     const statuses = statusRows(template.statuses, project.id, at);
     await insertProject(trx, project);

@@ -6,6 +6,7 @@ import { createPostgresPool } from './postgresPool';
 import type { Database, Db } from './schema';
 import { TrackerSqliteDialect } from './sqliteDialect';
 import { StripNulPlugin } from './stripNul';
+import { registerUnicodeLower } from './unicodeLower';
 
 export const isPostgresUrl = (url: string): boolean => /^postgres(ql)?:\/\//i.test(url);
 
@@ -29,6 +30,7 @@ function sqliteDialect(file: string): Dialect {
   if (!inMemory) database.pragma('journal_mode = WAL');
   database.pragma('foreign_keys = ON');
   database.pragma('busy_timeout = 5000');
+  registerUnicodeLower(database);
   return new TrackerSqliteDialect(database);
 }
 

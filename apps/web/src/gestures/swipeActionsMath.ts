@@ -30,8 +30,18 @@ export function swipeOffset(raw: number, geometry: SwipeGeometry): number {
   return rubberBandClamp(raw, min, max, geometry.rowWidth / 2);
 }
 
-export const isFullSwipe = (offset: number, rowWidth: number): boolean =>
-  rowWidth > 0 && Math.abs(offset) >= rowWidth * FULL_SWIPE_RATIO;
+// Well past the open actions too, or a row with three of them (228px) would rest open beyond 55%
+// of a phone row, and a small drag to close it would trigger the first action (PT-261).
+export function fullSwipeAt(side: SwipeSide, geometry: SwipeGeometry): number {
+  const open = openWidth(countFor(side, geometry));
+  return Math.max(geometry.rowWidth * FULL_SWIPE_RATIO, open + ACTION_WIDTH / 2);
+}
+
+export function isFullSwipe(offset: number, geometry: SwipeGeometry): boolean {
+  const side = sideOf(offset);
+  if (side === null || geometry.rowWidth <= 0 || countFor(side, geometry) === 0) return false;
+  return Math.abs(offset) >= fullSwipeAt(side, geometry);
+}
 
 export function swipeOutcome(
   offset: number,
@@ -40,10 +50,11 @@ export function swipeOutcome(
 ): SwipeOutcome {
   const side = sideOf(offset);
   if (side === null || countFor(side, geometry) === 0) return { kind: 'close' };
-  if (isFullSwipe(offset, geometry.rowWidth)) return { kind: 'full', side };
   const towardOpen = side === 'leading' ? velocity : -velocity;
-  if (towardOpen > OPEN_VELOCITY) return { kind: 'open', side };
+  // A flick back cancels a full swipe, as on iOS.
   if (towardOpen < -OPEN_VELOCITY) return { kind: 'close' };
+  if (isFullSwipe(offset, geometry)) return { kind: 'full', side };
+  if (towardOpen > OPEN_VELOCITY) return { kind: 'open', side };
   const width = openWidth(countFor(side, geometry));
   return Math.abs(offset) > width / 2 ? { kind: 'open', side } : { kind: 'close' };
 }

@@ -290,6 +290,7 @@ const DATA_MODEL: SchemaShape = {
       'max_parallel_runs integer not null default 5',
       'max_sub_agents integer not null default 3',
       'hide_name integer not null default 0',
+      'position integer not null default 0',
     ],
     indexes: ['index (owner_id)', 'unique (key)'],
     foreignKeys: [],

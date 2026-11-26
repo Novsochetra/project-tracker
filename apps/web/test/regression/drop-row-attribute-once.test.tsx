@@ -29,6 +29,7 @@ const callbacks: RowCallbacks = {
   handleKeyDown: vi.fn(),
   advance: vi.fn(),
   chooseStatus: vi.fn(),
+  chooseLabels: vi.fn(),
   confirmDelete: vi.fn(),
 };
 

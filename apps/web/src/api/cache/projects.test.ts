@@ -4,6 +4,7 @@ import {
   appendProjectSummary,
   patchProjectSummary,
   removeProjectSummary,
+  reorderProjectSummaries,
   withNextNum,
   withProject,
 } from './projects';
@@ -36,5 +37,24 @@ describe('withProject / withNextNum', () => {
     expect(withNextNum(makeBoard(), 5).project.nextNum).toBe(6);
     const board = makeBoard();
     expect(withNextNum(board, 2)).toBe(board);
+  });
+});
+
+describe('reorderProjectSummaries', () => {
+  const third = summaryOf({ ...otherProject, id: 'p-app', key: 'APP' });
+  const list = [summaryOf(project), summaryOf(otherProject), third];
+
+  it('puts the projects in the order given', () => {
+    const keys = reorderProjectSummaries(list, [third.id, project.id, otherProject.id]).map(
+      (item) => item.key,
+    );
+    expect(keys).toEqual(['APP', 'MOB', 'WEB']);
+  });
+
+  it('keeps a project the order leaves out after the ones it names, and skips unknown ids', () => {
+    const keys = reorderProjectSummaries(list, ['p-gone', otherProject.id, project.id]).map(
+      (item) => item.key,
+    );
+    expect(keys).toEqual(['WEB', 'MOB', 'APP']);
   });
 });
