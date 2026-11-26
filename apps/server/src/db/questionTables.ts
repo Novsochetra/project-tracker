@@ -13,6 +13,8 @@ export interface QuestionRow {
   createdAt: number;
   expiresAt: number;
   endedAt: number | null;
+  // The API token that asked; only it can cancel the question (null: no token asked).
+  askedByTokenId: string | null;
 }
 
 export interface QuestionTables {
