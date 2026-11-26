@@ -14,7 +14,7 @@ const refuseAgents = (message: string) =>
 export const personCreatesProjects = refuseAgents('Only a person creates a project.');
 
 // An agent could otherwise answer its own question.
-export const personAnswers = refuseAgents('Only a person answers what Claude asks.');
+export const personAnswers = refuseAgents('Only a person answers what an agent asks.');
 
 // Notifications are for a person's own phone; an agent's token has no device to send them to.
 export const personPushes = refuseAgents('Only a person turns on notifications.');

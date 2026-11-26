@@ -15,7 +15,7 @@ export interface LabelDraft {
 }
 
 export const LABELS_HELP =
-  'Labels sort tickets by kind. A label can start a new ticket’s description and tell Claude more.';
+  'Labels sort tickets by kind. A label can start a new ticket’s description and tell agents more.';
 
 export const newDraft = (labels: readonly Label[]): LabelDraft => ({
   name: '',

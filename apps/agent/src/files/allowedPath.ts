@@ -2,9 +2,9 @@ import { realpath } from 'node:fs/promises';
 import { homedir, tmpdir } from 'node:os';
 import { isAbsolute, parse, relative, resolve, sep } from 'node:path';
 
-// Text in a ticket can ask Claude to attach any file, so only what it made for the work, here or
-// in a temp folder, may leave this computer: never ~/.ssh. /tmp too, since on a Mac it isn't
-// tmpdir() and Claude Code keeps its scratch files there.
+// Text in a ticket can ask the agent to attach any file, so only what it made for the work, here
+// or in a temp folder, may leave this computer: never ~/.ssh. /tmp too, since on a Mac it isn't
+// tmpdir() and agents such as Claude Code keep their scratch files there.
 const tempFolders = (): string[] => [tmpdir(), '/tmp'];
 
 export const attachFolders = (cwd = process.cwd()): string[] => [cwd, ...tempFolders()];
@@ -21,7 +21,7 @@ const isInside = (folder: string, file: string): boolean => {
   return path !== '' && path !== '..' && !path.startsWith(`..${sep}`) && !isAbsolute(path);
 };
 
-// Claude Code started in the home folder or above it would make ~/.docker/config.json or
+// An agent started in the home folder or above it would make ~/.docker/config.json or
 // ~/.claude.json "a file in the current folder".
 const holdsHome = (folder: string, home: string): boolean =>
   folder === home || folder === parse(folder).root || isInside(folder, home);
@@ -51,7 +51,7 @@ const onlyTemp = (temp: boolean) =>
 
 const homeError = (path: string, folder: string, temp: boolean): Error =>
   new Error(
-    `Can't attach ${path}: Claude Code runs in ${folder}, which holds your home folder, so ` +
+    `Can't attach ${path}: the agent runs in ${folder}, which holds your home folder, so ` +
       `${onlyTemp(temp)}. Start it in a project folder instead.`,
   );
 
@@ -63,7 +63,7 @@ const dotFolderError = (path: string): Error =>
 
 const homeDotFolderError = (path: string, folder: string, temp: boolean): Error =>
   new Error(
-    `Can't attach ${path}: Claude Code runs in ${folder}, a dot-folder of your home folder where ` +
+    `Can't attach ${path}: the agent runs in ${folder}, a dot-folder of your home folder where ` +
       `keys and settings are kept, so ${onlyTemp(temp)}. Start it in a project folder instead.`,
   );
 

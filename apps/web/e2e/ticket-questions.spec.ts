@@ -4,7 +4,7 @@ import { activity, seedProject, settledScreenshot } from './helpers';
 
 const QUESTION = 'Should the setting be called Dark mode or Night mode?';
 
-const card = (page: Page) => page.getByRole('region', { name: `Claude asks: ${QUESTION}` });
+const card = (page: Page) => page.getByRole('region', { name: `An agent asks: ${QUESTION}` });
 
 async function expectNoSidewaysScroll(page: Page): Promise<void> {
   const fits = await page.evaluate(
@@ -13,8 +13,8 @@ async function expectNoSidewaysScroll(page: Page): Promise<void> {
   expect(fits).toBe(true);
 }
 
-test.describe('Claude asks a question on the ticket', () => {
-  test('shows it on the ticket, and the answer reaches Claude', async ({
+test.describe('An agent asks a question on the ticket', () => {
+  test('shows it on the ticket, and the answer reaches the agent', async ({
     page,
     api,
     agent,
@@ -31,7 +31,7 @@ test.describe('Claude asks a question on the ticket', () => {
       choices: ['Dark mode', 'Night mode'],
     });
     const shown = card(page);
-    await expect(shown.getByText('Claude asks you')).toBeVisible();
+    await expect(shown.getByText('An agent asks you')).toBeVisible();
     await expect(shown.getByRole('button', { name: 'Night mode' })).toBeVisible();
     await expect(
       shown.getByRole('textbox', { name: `Your own answer to: ${QUESTION}` }),

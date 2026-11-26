@@ -39,7 +39,7 @@ async function makeBugLabel(page: Page): Promise<void> {
   await expect(red).toBeChecked();
   await sheet.getByRole('textbox', { name: 'Template' }).fill(TEMPLATE);
   await sheet
-    .getByRole('textbox', { name: 'Instructions for Claude' })
+    .getByRole('textbox', { name: 'Instructions for agents' })
     .fill('Write a failing regression test first.');
   await shot(page, 'labels-sheet');
   await sheet.getByRole('button', { name: 'Save label' }).click();
@@ -60,7 +60,7 @@ async function labelTicket(page: Page, key: string, phone: boolean): Promise<voi
 }
 
 test.describe('labels', () => {
-  test('a Bug label is made, applied, shown, filtered by, fills New ticket and reaches Claude', async ({
+  test('a Bug label is made, applied, shown, filtered by, fills New ticket and reaches the agent', async ({
     page,
     api,
   }, info) => {

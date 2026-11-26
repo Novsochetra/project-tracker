@@ -116,8 +116,8 @@ function EditorFields({ editor, nameRef, label, onDone, onDelete }: EditorFields
         onChange={(template) => change({ template })}
       />
       <LabelTextField
-        label="Instructions for Claude"
-        hint="Claude gets these with every ticket that has this label, after the project’s."
+        label="Instructions for agents"
+        hint="Agents get these with every ticket that has this label, after the project’s."
         placeholder="What to do or check on these tickets."
         maxLength={LABEL_INSTRUCTIONS_MAX}
         value={draft.instructions}

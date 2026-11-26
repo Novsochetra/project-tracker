@@ -10,7 +10,7 @@ export interface Connection {
   tokenSource?: TokenSource | undefined;
 }
 
-const TOKEN_HELP = 'Create one in the app: Connect Claude Code → API tokens.';
+const TOKEN_HELP = 'Create one in the app: Connect an agent → API tokens.';
 const CHECK_URL = "Check that TRACKER_URL (or --url) is the tracker's address.";
 
 const isFetchFailure = (error: unknown): error is TypeError & { cause: Error } =>

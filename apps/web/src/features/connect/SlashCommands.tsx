@@ -12,7 +12,7 @@ export interface SlashCommandsProps {
 
 export function SlashCommands({ projectKey, onCopy }: SlashCommandsProps) {
   return (
-    <Section title="Then, in Claude Code">
+    <Section title="Then, in Claude Code for example">
       <GroupedCard>
         <ul className={styles.rows}>
           <CommandRow

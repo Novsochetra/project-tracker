@@ -26,7 +26,7 @@ function menuActions(options: ProjectOptions, { close, confirm }: SheetActions) 
     { label: 'Edit project', onSelect: afterClose(close, options.edit) },
     { label: 'Manage statuses', onSelect: afterClose(close, options.manageStatuses) },
     { label: 'Manage labels', onSelect: afterClose(close, options.manageLabels) },
-    { label: 'Connect Claude Code', onSelect: afterClose(close, options.connect) },
+    { label: 'Connect an agent', onSelect: afterClose(close, options.connect) },
     { label: 'Delete project', tone: 'danger', onSelect: confirm },
   ];
 

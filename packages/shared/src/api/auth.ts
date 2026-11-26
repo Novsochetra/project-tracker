@@ -17,7 +17,7 @@ export const createApiTokenInput = z.object({
   name: z
     .string()
     .trim()
-    .min(1, 'Name the token, like “Claude laptop”.')
+    .min(1, 'Name the token, like “Work laptop”.')
     .max(API_TOKEN_NAME_MAX, `Use at most ${API_TOKEN_NAME_MAX} characters for the name.`),
 });
 export type CreateApiTokenInput = z.input<typeof createApiTokenInput>;

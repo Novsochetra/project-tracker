@@ -94,7 +94,7 @@ describe('the Labels sheet', () => {
     await user.click(within(sheet()).getByRole('radio', { name: 'Red' }));
     await user.type(within(sheet()).getByRole('textbox', { name: 'Template' }), '## Steps');
     await user.type(
-      within(sheet()).getByRole('textbox', { name: 'Instructions for Claude' }),
+      within(sheet()).getByRole('textbox', { name: 'Instructions for agents' }),
       ' Write a failing test first. ',
     );
     await user.click(within(sheet()).getByRole('button', { name: 'Save label' }));

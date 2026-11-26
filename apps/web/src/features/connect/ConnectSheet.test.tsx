@@ -18,7 +18,7 @@ const meta: ServerMeta = {
 
 const COMMAND = `claude mcp add tracker -s user --env TRACKER_URL=http://localhost:4100 --env TRACKER_AGENT_NAME=Claude -- node ${meta.mcpEntry}`;
 
-const sheet = () => screen.getByRole('dialog', { name: 'Connect Claude Code' });
+const sheet = () => screen.getByRole('dialog', { name: 'Connect an agent' });
 
 let restore: () => void;
 
@@ -53,6 +53,26 @@ describe('ConnectSheet', () => {
     expect(within(sheet()).queryByText(/TRACKER_TOKEN/)).not.toBeInTheDocument();
     expect(within(sheet()).queryByText(/ watch/)).not.toBeInTheDocument();
     expect(within(sheet()).getByText('Tracker v1.0.0')).toBeInTheDocument();
+  });
+
+  it('names Claude Code only where its commands are shown as an example', async () => {
+    renderWithApi(<ConnectSheet open onClose={() => undefined} />, {
+      getMeta: vi.fn().mockResolvedValue({ ...meta, authRequired: true }),
+      listApiTokens: vi.fn().mockResolvedValue([]),
+    });
+    const setup = await within(sheet()).findByRole('region', {
+      name: 'Add the tracker to your agent',
+    });
+    expect(setup).toHaveTextContent(
+      'The last one is an example for Claude Code; other agents add the same MCP server in their own settings.',
+    );
+    const slash = within(sheet()).getByRole('region', { name: 'Then, in Claude Code for example' });
+    const elsewhere = [setup, slash].reduce(
+      (text, example) => text.replace(example.textContent ?? '', ''),
+      sheet().textContent ?? '',
+    );
+    expect(elsewhere).toContain('AI agents can pick up your tickets');
+    expect(elsewhere).not.toMatch(/claude/i);
   });
 
   it('says an open tracker needs no token and leaves out the login step', async () => {
@@ -102,7 +122,7 @@ describe('ConnectSheet', () => {
       listApiTokens: vi.fn().mockResolvedValue([]),
     });
     const section = await within(sheet()).findByRole('region', {
-      name: 'Add the tracker to Claude Code',
+      name: 'Add the tracker to your agent',
     });
     const rows = within(section).getAllByRole('listitem');
     expect(rows.map((row) => row.querySelector('[aria-hidden="true"]')?.textContent)).toEqual(

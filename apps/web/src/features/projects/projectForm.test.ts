@@ -20,13 +20,13 @@ const form = (patch: Partial<ProjectFormValues>): ProjectFormValues => ({
 describe('projectHint', () => {
   it('explains prefixes before anything is typed', () => {
     expect(projectHint('new', form({ name: '  ' }))).toBe(
-      'Tickets are numbered with a short prefix, like MOB-1. The repository is added to every Claude Code prompt.',
+      'Tickets are numbered with a short prefix, like MOB-1. Agents get the repository with every ticket, and find the project by it.',
     );
   });
 
   it('shows the derived prefix once a name is typed', () => {
     expect(projectHint('new', form({ name: 'Mobile app' }))).toBe(
-      'Tickets will be numbered MA-1, MA-2 and so on. The repository is added to every Claude Code prompt.',
+      'Tickets will be numbered MA-1, MA-2 and so on. Agents get the repository with every ticket, and find the project by it.',
     );
   });
 
@@ -47,7 +47,7 @@ describe('projectHint', () => {
 
   it('only talks about the repository when editing', () => {
     expect(projectHint('edit', form({ name: 'Website' }))).toBe(
-      'The repository is added to every Claude Code prompt for this project.',
+      'Agents get the repository with every ticket in this project, and find the project by it.',
     );
   });
 });

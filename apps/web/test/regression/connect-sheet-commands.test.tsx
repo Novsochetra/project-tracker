@@ -14,7 +14,7 @@ const meta = {
   authRequired: false,
 };
 
-const sheet = () => screen.getByRole('dialog', { name: 'Connect Claude Code' });
+const sheet = () => screen.getByRole('dialog', { name: 'Connect an agent' });
 
 function renderSheet(path: string) {
   return renderWithApp(<ConnectSheet open onClose={() => undefined} />, {

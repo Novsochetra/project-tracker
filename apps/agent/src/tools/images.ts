@@ -8,7 +8,7 @@ import { formatBytes } from '../format/text';
 export const MAX_IMAGES = 4;
 export const MAX_IMAGE_BYTES = 1.5 * 1024 * 1024;
 
-// Claude can only view these formats; HEIC photos from phones would make the request fail.
+// Claude and most other models view only these formats; HEIC photos from phones fail the request.
 const VIEWABLE_TYPES = new Set(['image/png', 'image/jpeg', 'image/gif', 'image/webp']);
 
 export const ticketImages = (detail: TicketDetail): Attachment[] =>

@@ -32,7 +32,7 @@ export const EMPTY_PROJECT_FORM: ProjectFormValues = {
 
 export const NAME_REQUIRED = 'Add a name to create the project.';
 
-const REPO_HINT = 'The repository is added to every Claude Code prompt.';
+const REPO_HINT = 'Agents get the repository with every ticket, and find the project by it.';
 
 export const formValuesOf = (
   project: Pick<Project, 'name' | 'description' | 'repo' | 'instructions' | 'hideName'>,
@@ -64,7 +64,7 @@ export const prefixPlaceholder = (values: ProjectFormValues): string => derivePr
 
 export function projectHint(mode: ProjectFormMode, values: ProjectFormValues): string {
   if (mode === 'edit')
-    return 'The repository is added to every Claude Code prompt for this project.';
+    return 'Agents get the repository with every ticket in this project, and find the project by it.';
   if (!hasName(values) && values.prefix.trim() === '') {
     return `Tickets are numbered with a short prefix, like MOB-1. ${REPO_HINT}`;
   }
@@ -91,7 +91,7 @@ export const updateProjectInput = (values: ProjectFormValues): UpdateProjectInpu
   hideName: values.hideName,
 });
 
-export const INSTRUCTIONS_HINT = 'Claude gets these with every ticket in this project.';
+export const INSTRUCTIONS_HINT = 'Agents get these with every ticket in this project.';
 
 export const createdToast = (name: string): string => `“${name}” created`;
 

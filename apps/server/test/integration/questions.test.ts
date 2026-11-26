@@ -39,7 +39,7 @@ describe.each(DIALECTS)('questions on a ticket (%s)', (dialect) => {
     await person('POST', '/api/projects/MOB/tickets', { title: 'Dark mode' });
   });
 
-  it('keeps what Claude asks and the answer the person gives, for Claude to read', async () => {
+  it('keeps what the agent asks and the answer the person gives, for the agent to read', async () => {
     const created = await ask();
     expect(created).toEqual({
       status: 201,
@@ -94,7 +94,7 @@ describe.each(DIALECTS)('questions on a ticket (%s)', (dialect) => {
     const question = await asked();
     expect(await answer(question.id, { answer: 'Dark' }, agent)).toMatchObject({
       status: 403,
-      body: { error: { message: 'Only a person answers what Claude asks.' } },
+      body: { error: { message: 'Only a person answers what an agent asks.' } },
     });
     expect((await list(agent)).body[0]?.status).toBe('open');
   });
@@ -132,17 +132,17 @@ describe.each(DIALECTS)('questions on a ticket (%s)', (dialect) => {
     });
     expect(await answer(question.id, { answer: 'Dark' })).toMatchObject({
       status: 409,
-      body: { error: { message: 'Nobody answered in time, so Claude went on without it.' } },
+      body: { error: { message: 'Nobody answered in time, so the agent went on without it.' } },
     });
   });
 
-  it('lets Claude end a question it no longer waits for, and keeps an answer that came first', async () => {
+  it('lets the agent end a question it no longer waits for, and keeps an answer that came first', async () => {
     const question = await asked();
     const cancel = (id: string) => agent<TicketQuestion>('POST', `/api/questions/${id}/cancel`);
     expect((await cancel(question.id)).body).toMatchObject({ status: 'cancelled' });
     expect(await answer(question.id, { answer: 'Dark' })).toMatchObject({
       status: 409,
-      body: { error: { message: 'Claude no longer waits for this.' } },
+      body: { error: { message: 'The agent no longer waits for this.' } },
     });
     clock.advance(1);
     const second = await asked();

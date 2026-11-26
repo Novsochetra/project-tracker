@@ -61,7 +61,7 @@ export function AccountSheet({ open, onClose }: SheetProps) {
             </Button>
           )}
           <p className={styles.note}>
-            For a lost phone. Claude Code agents keep working with their API tokens.
+            For a lost phone. Agents keep working with their API tokens.
           </p>
         </section>
         {session?.role === 'owner' && (

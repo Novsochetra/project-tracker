@@ -54,7 +54,7 @@ describe('ask_person', () => {
     expect(api.cancelQuestion).not.toHaveBeenCalled();
   });
 
-  it('lets Claude go on when the person skips or nobody answers', async () => {
+  it('lets the agent go on when the person skips or nobody answers', async () => {
     expect((await ask(tracker(ended({ status: 'skipped' })))).text).toBe(SKIPPED);
     expect((await ask(tracker(ended({ status: 'expired' })))).text).toBe(NO_ANSWER);
     expect((await ask(tracker(ended({ status: 'cancelled' })))).text).toBe(NO_ANSWER);
@@ -87,7 +87,7 @@ describe('ask_person', () => {
     expect(api.waitForQuestion).not.toHaveBeenCalled();
   });
 
-  it('ends the question on the tracker when Claude stops waiting', async () => {
+  it('ends the question on the tracker when the agent stops waiting', async () => {
     const api = tracker();
     const stop = new AbortController();
     api.waitForQuestion.mockImplementation(() => {

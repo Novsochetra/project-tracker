@@ -37,7 +37,7 @@ const sheets: Array<[string, string, (page: Page) => Promise<void>]> = [
   ],
   ['quick capture', 'New ticket', (page) => page.goto('/?capture').then(() => undefined)],
   ['Statuses', 'Statuses', (page) => fromProjectMenu(page, 'Manage statuses')],
-  ['Connect', 'Connect Claude Code', (page) => fromProjectMenu(page, 'Connect Claude Code')],
+  ['Connect', 'Connect an agent', (page) => fromProjectMenu(page, 'Connect an agent')],
   ['Labels', 'Labels', (page) => fromProjectMenu(page, 'Manage labels')],
   ['Edit project', 'Edit project', (page) => fromProjectMenu(page, 'Edit project')],
 ];

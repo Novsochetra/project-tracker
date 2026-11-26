@@ -12,7 +12,7 @@ const CARD_TOP = 8;
 const CARD_HEIGHT = 216;
 const CAPTION = 45.5;
 const ROW = 56;
-const LABELS = ['Edit project', 'Manage statuses', 'Connect Claude Code', 'Delete project'];
+const LABELS = ['Edit project', 'Manage statuses', 'Connect an agent', 'Delete project'];
 
 let restore: Array<() => void> = [];
 

@@ -94,7 +94,7 @@ describe('activity items', () => {
     ]);
     const activity = within(log());
     expect(activity.getByText('Claude report')).toBeInTheDocument();
-    expect(activity.getByText('Claude Code report')).toBeInTheDocument();
+    expect(activity.getByText('Agent report')).toBeInTheDocument();
     expect(activity.getAllByText('Claude reviewed')).toHaveLength(2);
     expect(activity.getByText('Approved')).toBeInTheDocument();
     expect(activity.getByText('Changes requested')).toBeInTheDocument();

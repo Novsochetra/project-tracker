@@ -44,7 +44,7 @@ describe.each(DIALECTS)('http surface (%s)', (dialect) => {
     expect(await client.listPeople()).toEqual(['Bo', 'Dara', 'Sophea']);
   });
 
-  it('describes the server for the Connect Claude Code sheet', async () => {
+  it('describes the server for the Connect an agent sheet', async () => {
     const res = await api.get<ServerMeta>('/api/meta');
     expect(res.body).toEqual({
       version: '1.2.3',

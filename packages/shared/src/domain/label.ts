@@ -12,7 +12,7 @@ export interface Label {
   color: string;
   // Fills an empty description when a person picks the label for a new ticket.
   template: string;
-  // For Claude, after the project's instructions, on every ticket with the label.
+  // For agents, after the project's instructions, on every ticket with the label.
   instructions: string;
   position: number;
   createdAt: number;

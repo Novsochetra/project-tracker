@@ -57,7 +57,7 @@ export function questionPush({ ticket }: { ticket: PushTicket }): PushMessage {
   const key = formatTicketKey(ticket.projectKey, ticket.num);
 
   return ticketMessage(
-    `${key}: Claude has a question`,
+    `${key}: An agent has a question`,
     ticket,
     openedLine(ticket, 'Open the ticket to answer.'),
   );

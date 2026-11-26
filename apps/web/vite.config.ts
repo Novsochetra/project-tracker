@@ -30,7 +30,7 @@ export default defineConfig({
         id: '/',
         name: 'Tracker',
         short_name: 'Tracker',
-        description: 'Capture tickets on your phone and hand them to Claude Code.',
+        description: 'Capture tickets on your phone and hand them to any AI agent.',
         start_url: '/',
         scope: '/',
         display: 'standalone',

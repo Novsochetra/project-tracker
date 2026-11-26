@@ -33,7 +33,7 @@ function renderNewSheet() {
     create,
     onClose,
     dialog,
-    instructions: within(dialog).getByLabelText('Instructions for Claude'),
+    instructions: within(dialog).getByLabelText('Instructions for agents'),
   };
 }
 

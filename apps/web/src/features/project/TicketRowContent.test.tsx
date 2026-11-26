@@ -64,10 +64,10 @@ describe('TicketRowContent', () => {
     expect(renderRow('in_progress', null).querySelector('[data-verdict]')).toBeNull();
   });
 
-  it('says Claude waits for the person after the title, and opens the ticket on a tap', () => {
+  it('says an agent waits for the person after the title, and opens the ticket on a tap', () => {
     const row = renderRow('in_progress', null, true);
     expect(row).toHaveAccessibleName(
-      'MOB-3 Dark mode colors Claude is waiting for you Oct 9 Claude',
+      'MOB-3 Dark mode colors An agent is waiting for you Oct 9 Claude',
     );
     expect(within(row).getByText('Waiting for you')).toBeVisible();
     row.click();
@@ -77,11 +77,11 @@ describe('TicketRowContent', () => {
   it('keeps the mark beside a Changes requested chip, before it', () => {
     const row = renderRow('in_progress', SENT_BACK, true);
     expect(row).toHaveAccessibleName(
-      'MOB-3 Dark mode colors Claude is waiting for you Changes requested Oct 9 Claude',
+      'MOB-3 Dark mode colors An agent is waiting for you Changes requested Oct 9 Claude',
     );
   });
 
-  it('shows no mark while Claude waits for nobody', () => {
+  it('shows no mark while no agent waits for the person', () => {
     expect(renderRow('in_progress', null)).not.toHaveTextContent('Waiting for you');
   });
 });

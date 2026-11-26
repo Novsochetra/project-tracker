@@ -13,9 +13,9 @@ describe('push messages', () => {
     });
   });
 
-  it('says Claude has a question on a ticket, under the ticket’s tag', () => {
+  it('says an agent has a question on a ticket, under the ticket’s tag', () => {
     expect(questionPush({ ticket: TICKET })).toEqual({
-      title: 'MOB-3: Claude has a question',
+      title: 'MOB-3: An agent has a question',
       body: 'Fix the login button · Open the ticket to answer.',
       url: '/p/MOB/3',
       tag: 'ticket:MOB-3',

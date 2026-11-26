@@ -72,7 +72,7 @@ describe('allowedRealPath', () => {
     const file = join(home, 'notes.md');
     writeFileSync(file, 'home');
     const refusedIn = (folder: string) =>
-      `Can't attach ${file}: Claude Code runs in ${folder}, which holds your home folder, so no ` +
+      `Can't attach ${file}: the agent runs in ${folder}, which holds your home folder, so no ` +
       'file can be attached. Start it in a project folder instead.';
     for (const folder of [home, root, '/']) {
       await expect(allowedRealPath(file, [folder], home)).rejects.toThrow(refusedIn(folder));

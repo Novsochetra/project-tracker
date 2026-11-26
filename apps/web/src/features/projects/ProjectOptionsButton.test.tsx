@@ -45,7 +45,7 @@ describe('Project options in the desktop header', () => {
       'Edit project',
       'Manage statuses',
       'Manage labels',
-      'Connect Claude Code',
+      'Connect an agent',
       'Delete project',
     ]);
     expect(within(menu).getByRole('button', { name: 'Delete project' })).toHaveClass('danger');
@@ -116,7 +116,7 @@ describe('Project options in the phone nav bar', () => {
       'Edit project',
       'Manage statuses',
       'Manage labels',
-      'Connect Claude Code',
+      'Connect an agent',
       'Delete project',
       'Cancel',
     ]);

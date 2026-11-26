@@ -49,8 +49,8 @@ test.describe('API tokens for agents', () => {
     await expect(page.getByText('Crash on launch')).toBeVisible();
     await page.getByRole('button', { name: 'Project options' }).first().click();
     await readActionSheet(page);
-    await page.getByRole('button', { name: 'Connect Claude Code' }).click();
-    const sheet = page.getByRole('dialog', { name: 'Connect Claude Code' });
+    await page.getByRole('button', { name: 'Connect an agent' }).click();
+    const sheet = page.getByRole('dialog', { name: 'Connect an agent' });
     await expect(sheet.getByText(API_URL, { exact: true })).toBeVisible();
     await expect(sheet.getByText(`login --url ${API_URL}`)).toBeVisible();
     await expect(sheet.getByText('No tokens yet.')).toBeVisible();
@@ -89,7 +89,7 @@ test.describe('API tokens for agents', () => {
     expect(refused.stdout).toBe('');
     expect(refused.stderr.trim()).toBe(
       `Error: The tracker at ${API_URL} refused the token saved by tracker login: it was revoked, mistyped or made for another tracker. ` +
-        `Create one in the app: Connect Claude Code → API tokens. Then run "tracker login --url ${API_URL}" and paste the new one.`,
+        `Create one in the app: Connect an agent → API tokens. Then run "tracker login --url ${API_URL}" and paste the new one.`,
     );
     expect(refused.stderr).not.toContain(secret);
   });

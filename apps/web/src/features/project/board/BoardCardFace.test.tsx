@@ -68,10 +68,10 @@ describe('BoardCardFace', () => {
     expect(renderCard('in_progress', null).querySelector('[data-verdict]')).toBeNull();
   });
 
-  it('says Claude waits for the person first in the meta line, beside the chip and due date', () => {
+  it('says an agent waits for the person first in the meta line, beside the chip and due date', () => {
     const card = renderCard('in_progress', SENT_BACK, { waiting: true });
     expect(card).toHaveAccessibleName(
-      'MOB-3 Dark mode colors Claude is waiting for you Changes requested Oct 9 Unassigned',
+      'MOB-3 Dark mode colors An agent is waiting for you Changes requested Oct 9 Unassigned',
     );
     const mark = screen.getByText('Waiting for you');
     expect(mark).toBeVisible();
@@ -82,7 +82,7 @@ describe('BoardCardFace', () => {
 
   it('shows the mark on a card with no due date or chip', () => {
     expect(renderCard('in_progress', null, { due: '', waiting: true })).toHaveAccessibleName(
-      'MOB-3 Dark mode colors Claude is waiting for you Unassigned',
+      'MOB-3 Dark mode colors An agent is waiting for you Unassigned',
     );
   });
 });

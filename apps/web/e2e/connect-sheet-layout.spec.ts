@@ -20,8 +20,8 @@ async function openConnect(page: Page): Promise<Locator> {
   await page.goto('/p/MOB');
   await page.getByRole('button', { name: 'Project options' }).first().click();
   await readActionSheet(page);
-  await page.getByRole('button', { name: 'Connect Claude Code' }).click();
-  const sheet = page.getByRole('dialog', { name: 'Connect Claude Code' });
+  await page.getByRole('button', { name: 'Connect an agent' }).click();
+  const sheet = page.getByRole('dialog', { name: 'Connect an agent' });
   await expect(sheet.getByRole('button', { name: 'Copy MCP command' })).toBeVisible();
   await settled(sheet);
 
@@ -70,7 +70,7 @@ for (const height of [800, 700]) {
     expect(panel.y + panel.height).toBeLessThanOrEqual(height);
 
     const address = await box(sheet.getByRole('heading', { name: 'This tracker' }));
-    const setup = await box(sheet.getByRole('heading', { name: 'Add the tracker to Claude Code' }));
+    const setup = await box(sheet.getByRole('heading', { name: 'Add the tracker to your agent' }));
     expect(setup.x).toBeGreaterThan(address.x + address.width);
 
     const url = sheet.getByText(RAILWAY, { exact: true });
@@ -94,7 +94,7 @@ test('desktop: Page Down scrolls the sheet right after it opens', async ({ page 
   await page.setViewportSize({ width: 1280, height: 600 });
   const sheet = await openConnect(page);
   const body = sheet.locator(':focus');
-  await expect(body).toContainText('Add the tracker to Claude Code');
+  await expect(body).toContainText('Add the tracker to your agent');
   await page.keyboard.press('PageDown');
   await expect.poll(() => body.evaluate((element) => element.scrollTop)).toBeGreaterThan(0);
   await page.keyboard.press('Escape');
@@ -107,7 +107,7 @@ test('phone: one column, and commands wrap instead of scrolling sideways', async
   test.skip(!isPhone(info.project.name), 'Phone layout');
   const sheet = await openConnect(page);
   const address = await box(sheet.getByRole('heading', { name: 'This tracker' }));
-  const setup = await box(sheet.getByRole('heading', { name: 'Add the tracker to Claude Code' }));
+  const setup = await box(sheet.getByRole('heading', { name: 'Add the tracker to your agent' }));
   expect(setup.x).toBe(address.x);
   expect(setup.y).toBeGreaterThan(address.y);
 

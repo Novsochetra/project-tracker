@@ -28,7 +28,7 @@ export function NewToken() {
           className={styles.input}
           aria-label="Token name"
           aria-describedby={create.error ? errorId : undefined}
-          placeholder="Name, like Claude laptop"
+          placeholder="Name, like Work laptop"
           maxLength={API_TOKEN_NAME_MAX}
           autoComplete="off"
           autoCapitalize="sentences"

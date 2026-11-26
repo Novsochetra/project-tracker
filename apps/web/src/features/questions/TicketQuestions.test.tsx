@@ -47,9 +47,9 @@ function setup(questions: TicketQuestion[], answerQuestion = vi.fn()) {
 }
 
 const card = () =>
-  screen.findByRole('region', { name: 'Claude asks: Which name should the setting have?' });
+  screen.findByRole('region', { name: 'An agent asks: Which name should the setting have?' });
 
-describe('a question Claude asks on the ticket', () => {
+describe('a question an agent asks on the ticket', () => {
   it('shows the question with its choices, and a tap on one answers it', async () => {
     const asked = question();
     const answerQuestion = vi
@@ -60,8 +60,10 @@ describe('a question Claude asks on the ticket', () => {
     const shown = await card();
 
     expect(listQuestions).toHaveBeenCalledWith('MOB-1');
-    expect(within(shown).getByText('Claude asks you')).toBeVisible();
-    expect(screen.getByText('Claude asks you: Which name should the setting have?')).toBeVisible();
+    expect(within(shown).getByText('An agent asks you')).toBeVisible();
+    expect(
+      screen.getByText('An agent asks you: Which name should the setting have?'),
+    ).toBeVisible();
     await user.click(within(shown).getByRole('button', { name: 'Night' }));
 
     expect(answerQuestion).toHaveBeenCalledWith('q-1', { answer: 'Night' });
@@ -108,10 +110,10 @@ describe('a question Claude asks on the ticket', () => {
     expect(screen.queryByText('This was already answered.')).toBeNull();
   });
 
-  it('shows nothing when Claude asked nothing, or only long ago', async () => {
+  it('shows nothing when no agent asked anything, or only long ago', async () => {
     const old = ended(question(), { status: 'answered', answer: 'Dark', endedAt: 1 });
     const { listQuestions } = setup([old]);
     await vi.waitFor(() => expect(listQuestions).toHaveBeenCalled());
-    expect(screen.queryByRole('region', { name: "Claude's questions" })).toBeNull();
+    expect(screen.queryByRole('region', { name: 'Questions from agents' })).toBeNull();
   });
 });

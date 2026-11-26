@@ -33,7 +33,7 @@ const BUTTONS: [Gallery.ButtonProps, string][] = [
   [{ variant: 'text' }, 'Cancel'],
   [{ variant: 'danger' }, 'Delete'],
   [{ variant: 'primary', size: 'header', disabled: true }, 'Create'],
-  [{ size: 'sm', icon: Icons.Plug }, 'Connect Claude Code'],
+  [{ size: 'sm', icon: Icons.Plug }, 'Connect an agent'],
   [{ variant: 'primary', size: 'lg', icon: Icons.Check }, 'Move to Done'],
   [{ variant: 'text', tone: 'danger', icon: Icons.Trash2 }, 'Delete ticket'],
   [{ size: 'bar', icon: Icons.MessageSquare, fullWidth: true }, 'Comment (full width)'],

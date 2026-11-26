@@ -19,7 +19,7 @@ const GLOBAL_HELP: readonly (readonly [string, string])[] = [
 const SETUP_HELP: readonly (readonly [string, string])[] = [
   [
     'login [--url URL]',
-    'Save an API token for this tracker (asks for it; or pipe it in). Create one in the app: Connect Claude Code.',
+    'Save an API token for this tracker (asks for it; or pipe it in). Create one in the app: Connect an agent.',
   ],
   ['logout [--url URL]', 'Forget the saved token for this tracker.'],
 ];

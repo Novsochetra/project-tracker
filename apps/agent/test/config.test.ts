@@ -15,7 +15,7 @@ describe('loadConfig', () => {
       agentName: DEFAULT_AGENT_NAME,
     });
     expect(DEFAULT_URL).toBe('http://localhost:4100');
-    expect(DEFAULT_AGENT_NAME).toBe('Claude');
+    expect(DEFAULT_AGENT_NAME).toBe('Agent');
   });
 
   it('reads TRACKER_URL, TRACKER_API_TOKEN and TRACKER_AGENT_NAME', () => {
@@ -59,7 +59,7 @@ describe('loadConfig', () => {
       url: RAILWAY,
       token: 'trk_saved',
       tokenSource: 'tracker login',
-      agentName: 'Claude',
+      agentName: 'Agent',
     });
     expect(loadConfig({ TRACKER_URL: `${RAILWAY}/` }, {}, saved).token).toBe('trk_saved');
   });
@@ -69,7 +69,7 @@ describe('loadConfig', () => {
     expect(loadConfig({ TRACKER_URL: 'http://localhost:4100' }, {}, saved)).toEqual({
       url: 'http://localhost:4100',
       token: undefined,
-      agentName: 'Claude',
+      agentName: 'Agent',
     });
     expect(loadConfig({}, { url: 'https://evil.example' }, saved).token).toBeUndefined();
   });
@@ -102,7 +102,7 @@ describe('loadConfig', () => {
     expect(loadConfig({ TRACKER_URL: 'http://192.168.1.20:4100' })).toEqual({
       url: 'http://192.168.1.20:4100',
       token: undefined,
-      agentName: 'Claude',
+      agentName: 'Agent',
     });
   });
 });

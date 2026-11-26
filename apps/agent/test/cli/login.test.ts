@@ -98,7 +98,7 @@ describe('tracker login', () => {
     const result = await cli({ argv: ['login', '--url', URL], tracker });
     expect(result).toMatchObject({ code: EXIT_ERROR, stdout: '', saved: NO_SAVED_CONFIG });
     expect(result.stderr).toBe(
-      `Error: The tracker at ${URL} didn't accept this token: it was revoked, mistyped or made for another tracker. Create a new one in Connect Claude Code → API tokens.`,
+      `Error: The tracker at ${URL} didn't accept this token: it was revoked, mistyped or made for another tracker. Create a new one in Connect an agent → API tokens.`,
     );
   });
 
@@ -127,7 +127,7 @@ describe('tracker login', () => {
   it('refuses an empty answer or one with spaces', async () => {
     const empty = await cli({ argv: ['login'], typed: '  ' });
     expect(empty).toMatchObject({ code: EXIT_USAGE, configs: [], saved: NO_SAVED_CONFIG });
-    expect(empty.stderr).toBe('No token given. Copy one from Connect Claude Code → API tokens.');
+    expect(empty.stderr).toBe('No token given. Copy one from Connect an agent → API tokens.');
     const spaced = await cli({ argv: ['login'], typed: 'trk_a trk_b' });
     expect(spaced).toMatchObject({ code: EXIT_USAGE, configs: [] });
   });
@@ -171,7 +171,7 @@ describe('tracker logout', () => {
     expect(result).toMatchObject({ code: EXIT_OK, configs: [] });
     expect(result.saved).toEqual({ tokens: { 'http://localhost:4100': 'a' } });
     expect(result.stdout).toBe(
-      `Removed the token saved for ${URL}. It still works until you revoke it in Connect Claude Code → API tokens.`,
+      `Removed the token saved for ${URL}. It still works until you revoke it in Connect an agent → API tokens.`,
     );
   });
 

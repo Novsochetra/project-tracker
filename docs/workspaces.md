@@ -1,8 +1,8 @@
 # A project that isn't code
 
-A project doesn't need code. Claude Code in a folder with MCP servers for Notion, Google Drive, Gmail or Calendar can draft a newsletter, sort an inbox or plan a week. The tracker treats that folder like any other: you capture tickets on your phone, Claude Code works on them in the folder through the tracker's MCP server, and the result comes back on the ticket.
+A project doesn't need code. An agent in a folder with MCP servers for Notion, Google Drive, Gmail or Calendar can draft a newsletter, sort an inbox or plan a week. The tracker treats that folder like any other: you capture tickets on your phone, the agent works on them in the folder through the tracker's MCP server, and the result comes back on the ticket.
 
-This guide goes from an empty folder to a finished ticket. The example is a weekly newsletter written from notes in Notion.
+This guide goes from an empty folder to a finished ticket. The example is a weekly newsletter written from notes in Notion, with Claude Code as the agent; another agent works the same way, with its own instructions file, MCP settings and permissions.
 
 ## 1. Make the folder
 
@@ -85,9 +85,9 @@ Claude Code asks before it uses an MCP tool. To skip that for the tools you trus
 
 ## 6. Make the project in the app
 
-1. Add the tracker's own MCP server to Claude Code once, if you haven't: **Connect Claude Code** in the app has the `claude mcp add tracker` command.
+1. Add the tracker's own MCP server to Claude Code once, if you haven't: **Connect an agent** in the app has the `claude mcp add tracker` command.
 2. **New project**: name it "Newsletter" and put the folder in **Repository**: `~/work/newsletter`. Its key is `NEW`. A tracker slash command run without a key finds the project from the folder it runs in.
-3. Under **Instructions for Claude**, add what every ticket in this project should know, for example "Attach the finished draft to the ticket with attach_file." Claude gets these with every ticket it reads in the project.
+3. Under **Instructions for agents**, add what every ticket in this project should know, for example "Attach the finished draft to the ticket with attach_file." The agent gets these with every ticket it reads in the project.
 
 ## 7. Work on a ticket
 

@@ -33,10 +33,10 @@ export function SetupCommands({ info, repoRoot, authRequired, onCopy }: SetupCom
   const local = isLocalTracker(info.serverUrl);
 
   return (
-    <Section title="Add the tracker to Claude Code">
+    <Section title="Add the tracker to your agent">
       <p className={styles.help}>
-        Run these once in a terminal, in order, {whereToRun(local, repoRoot)}. Claude Code then has
-        the tracker in all your projects.
+        Run these once in a terminal, in order, {whereToRun(local, repoRoot)}. The last one is an
+        example for Claude Code; other agents add the same MCP server in their own settings.
       </p>
       <GroupedCard>
         <ol className={styles.rows}>
@@ -59,7 +59,7 @@ export function SetupCommands({ info, repoRoot, authRequired, onCopy }: SetupCom
           <CommandRow
             step={authRequired ? 3 : 2}
             command={mcpAddCommand(info)}
-            description="Adds the tracker’s MCP server to Claude Code."
+            description="Adds the tracker’s MCP server to Claude Code, in all your projects."
             copyLabel="Copy MCP command"
             onCopy={onCopy}
           />

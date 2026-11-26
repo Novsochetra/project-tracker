@@ -76,7 +76,7 @@ describe.each(DIALECTS)('ask_person through the typed client (%s)', (dialect) =>
     const reply = ask();
     const question = await openQuestion();
     await expect(claude().answerQuestion(question.id, { answer: 'Dark mode' })).rejects.toThrow(
-      'Only a person answers what Claude asks.',
+      'Only a person answers what an agent asks.',
     );
     await person().answerQuestion(question.id, { answer: 'Dark mode' });
     expect((await reply).text).toBe('The person answered: Dark mode');

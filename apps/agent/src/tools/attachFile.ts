@@ -12,7 +12,7 @@ const TOO_MANY = `Attach up to ${MAX_NEW_ATTACHMENTS} files at a time.`;
 export const nameList = (names: readonly string[]): string =>
   names.length < 2 ? (names[0] ?? '') : `${names.slice(0, -1).join(', ')} and ${names.at(-1)}`;
 
-// Files sent before a refused one stay on the ticket, so Claude must know not to send them again.
+// Files sent before a refused one stay on the ticket, so the agent must know not to resend them.
 function partwayError(
   error: unknown,
   client: TrackerApi,

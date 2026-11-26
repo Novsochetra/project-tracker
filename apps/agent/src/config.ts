@@ -2,7 +2,7 @@ import { plainHttpProblem, PlainHttpError } from './plainHttp';
 import { NO_SAVED_CONFIG, savedToken, type SavedConfig } from './savedConfig';
 
 export const DEFAULT_URL = 'http://localhost:4100';
-export const DEFAULT_AGENT_NAME = 'Claude';
+export const DEFAULT_AGENT_NAME = 'Agent';
 
 // Where the API token came from, so an error can say which one the tracker refused.
 export type TokenSource = '--token' | 'TRACKER_API_TOKEN' | 'TRACKER_TOKEN' | 'tracker login';

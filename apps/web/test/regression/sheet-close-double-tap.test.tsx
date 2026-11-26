@@ -24,8 +24,8 @@ function Screen({ onBehind, onInside }: { onBehind: () => void; onInside: () => 
       <Sheet
         open={open}
         onClose={() => setOpen(false)}
-        label="Connect Claude Code"
-        title="Connect Claude Code"
+        label="Connect an agent"
+        title="Connect an agent"
         left={<SheetTextButton onClick={() => setOpen(false)}>Close</SheetTextButton>}
         dirty={text !== ''}
       >
@@ -60,7 +60,7 @@ function renderScreen(phone: boolean) {
   return { onBehind, onInside, user: userEvent.setup() };
 }
 
-const sheet = () => screen.queryByRole('dialog', { name: 'Connect Claude Code' });
+const sheet = () => screen.queryByRole('dialog', { name: 'Connect an agent' });
 const close = () => within(sheet()!).getByRole('button', { name: 'Close' });
 const scrim = () =>
   within(sheet()!.parentElement!)
@@ -143,7 +143,7 @@ it('lets the next tap through after Escape closes the sheet', async () => {
 it('lets the next tap through after a swipe-down closes the sheet', async () => {
   const { onBehind, user } = renderScreen(true);
   await tap(user, screen.getByRole('textbox', { name: 'Token name' }));
-  swipeDown(within(sheet()!).getByText('Connect Claude Code'));
+  swipeDown(within(sheet()!).getByText('Connect an agent'));
   await advance(0);
   expect(sheet()).toBeNull();
   await tap(user, behind());
