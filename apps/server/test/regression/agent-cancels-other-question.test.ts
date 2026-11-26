@@ -2,7 +2,7 @@ import type { ApiToken, ErrorBody, TicketQuestion } from '@tracker/shared';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { createApiToken } from '../../src/auth/apiTokens';
 import { agent } from '../helpers/fixtures';
-import { addUser, caller, type Caller } from '../helpers/runs';
+import { addUser, caller, type Caller } from '../helpers/callers';
 import { DIALECTS, useTestServer } from '../helpers/server';
 
 const ASKED = { question: 'Which name should the setting have?', choices: ['Dark', 'Night'] };
@@ -32,7 +32,7 @@ describe.each(DIALECTS)('regression: an agent cancels another agent’s question
     const owner = await addUser(api.db, 'owner@example.com', Date.now(), 'owner');
     const second = await createApiToken(api.db, owner.id, 'second laptop', Date.now());
     person = caller(() => api.app, owner.person);
-    asker = caller(() => api.app, owner.helper);
+    asker = caller(() => api.app, owner.agent);
     otherAgent = caller(() => api.app, { token: second.secret });
     await person('POST', '/api/projects', { name: 'Mobile', key: 'MOB' });
     await person('POST', '/api/projects/MOB/tickets', { title: 'Dark mode' });

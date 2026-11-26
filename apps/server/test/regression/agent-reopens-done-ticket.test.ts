@@ -1,7 +1,7 @@
 import type { ErrorBody, ProjectDetail, Ticket, TicketDetail } from '@tracker/shared';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { agent, statusOf } from '../helpers/fixtures';
-import { addUser, caller, type Caller } from '../helpers/runs';
+import { addUser, caller, type Caller } from '../helpers/callers';
 import { DIALECTS, useTestServer } from '../helpers/server';
 
 type Attempt = [method: string, path: string, body: unknown, refusal: ErrorBody];
@@ -30,7 +30,7 @@ interface Ids {
 describe.each(DIALECTS)('regression: an agent moves a ticket out of Done (%s)', (dialect) => {
   const api = useTestServer(dialect);
   let person: Caller;
-  let helper: Caller;
+  let tokenAgent: Caller;
   let ids: Ids;
 
   const detail = async () => (await person<TicketDetail>('GET', '/api/tickets/MOB-1')).body;
@@ -45,7 +45,7 @@ describe.each(DIALECTS)('regression: an agent moves a ticket out of Done (%s)', 
   beforeEach(async () => {
     const owner = await addUser(api.db, 'owner@example.com', Date.now(), 'owner');
     person = caller(() => api.app, owner.person);
-    helper = caller(() => api.app, owner.helper);
+    tokenAgent = caller(() => api.app, owner.agent);
     const project = await person<ProjectDetail>('POST', '/api/projects', {
       name: 'Mobile',
       key: 'MOB',
@@ -70,7 +70,7 @@ describe.each(DIALECTS)('regression: an agent moves a ticket out of Done (%s)', 
       ['POST', '/api/tickets/MOB-1/submit', { summary: 'Fixed' }, SUBMIT_REFUSED],
     ];
     for (const [method, path, body, refusal] of attempts) {
-      expect(await helper(method, path, body), `${method} ${path}`).toEqual({
+      expect(await tokenAgent(method, path, body), `${method} ${path}`).toEqual({
         status: 403,
         body: refusal,
       });
@@ -86,7 +86,7 @@ describe.each(DIALECTS)('regression: an agent moves a ticket out of Done (%s)', 
         ['PATCH', '/api/tickets/MOB-1'],
         ['POST', '/api/tickets/MOB-1/move'],
       ] as const) {
-        const answer = await helper<ErrorBody>(method, path, { statusId: ids.todo, reopen });
+        const answer = await tokenAgent<ErrorBody>(method, path, { statusId: ids.todo, reopen });
         expect(answer, `${method} ${JSON.stringify(reopen)}`).toMatchObject({
           status: 400,
           body: { error: { code: 'invalid_input' } },
@@ -98,7 +98,7 @@ describe.each(DIALECTS)('regression: an agent moves a ticket out of Done (%s)', 
   });
 
   it('moves it out when the agent says the person told it to, under its own name', async () => {
-    const reopened = await helper<Ticket>('PATCH', '/api/tickets/MOB-1', {
+    const reopened = await tokenAgent<Ticket>('PATCH', '/api/tickets/MOB-1', {
       statusId: ids.todo,
       reopen: true,
     });
@@ -106,7 +106,7 @@ describe.each(DIALECTS)('regression: an agent moves a ticket out of Done (%s)', 
     expect(reopened.body.statusId).toBe(ids.todo);
 
     await putInDone();
-    const dragged = await helper<Ticket>('POST', '/api/tickets/MOB-1/move', {
+    const dragged = await tokenAgent<Ticket>('POST', '/api/tickets/MOB-1/move', {
       statusId: ids.doing,
       reopen: true,
     });
@@ -124,14 +124,14 @@ describe.each(DIALECTS)('regression: an agent moves a ticket out of Done (%s)', 
   });
 
   it('still never lets an agent move a ticket into Done, reopen or not', async () => {
-    await helper('PATCH', '/api/tickets/MOB-1', { statusId: ids.todo, reopen: true });
+    await tokenAgent('PATCH', '/api/tickets/MOB-1', { statusId: ids.todo, reopen: true });
 
     const into: Attempt[] = [
       ['PATCH', '/api/tickets/MOB-1', { statusId: ids.done, reopen: true }, ENTER_REFUSED],
       ['POST', '/api/tickets/MOB-1/move', { statusId: ids.done, reopen: true }, ENTER_REFUSED],
     ];
     for (const [method, path, body, refusal] of into) {
-      expect(await helper(method, path, body), `${method} ${path}`).toEqual({
+      expect(await tokenAgent(method, path, body), `${method} ${path}`).toEqual({
         status: 403,
         body: refusal,
       });
