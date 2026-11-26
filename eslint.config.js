@@ -5,11 +5,21 @@ import reactHooks from 'eslint-plugin-react-hooks';
 import reactRefresh from 'eslint-plugin-react-refresh';
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
+import blankLineBeforeFinalReturn from './eslint/blank-line-before-final-return.js';
 import noJsdocBlocks from './eslint/no-jsdoc-blocks.js';
 
 const testFiles = ['**/*.test.{ts,tsx}', '**/test/**/*.{ts,tsx}', '**/e2e/**/*.{ts,tsx}'];
 
-const local = { rules: { 'no-jsdoc-blocks': noJsdocBlocks } };
+const local = {
+  rules: {
+    'blank-line-before-final-return': blankLineBeforeFinalReturn,
+    'no-jsdoc-blocks': noJsdocBlocks,
+  },
+};
+
+// docs/coding-style.md: names longer than one letter, and blank lines after blocks and before a
+// function's final return. Off until PT-262 applies them across the code in one pass.
+const styleSeverity = 'off';
 
 export default tseslint.config(
   {
@@ -58,6 +68,20 @@ export default tseslint.config(
       complexity: ['error', 15],
       'max-depth': ['error', 4],
       'max-params': ['error', 4],
+    },
+  },
+  {
+    plugins: { local },
+    rules: {
+      'padding-line-between-statements': [
+        styleSeverity,
+        { blankLine: 'always', prev: 'block-like', next: '*' },
+      ],
+      'local/blank-line-before-final-return': styleSeverity,
+      'id-length': [
+        styleSeverity,
+        { min: 2, exceptions: ['x', 'y', 'i', 'j', '_'], properties: 'never' },
+      ],
     },
   },
   {
