@@ -129,12 +129,11 @@ describe.each(DIALECTS)('comments and activity (%s)', (dialect) => {
     const client = api.client();
     const image = await upload();
     const comment = await client.addComment(ticket.key, { text: 'x', attachmentIds: [image.id] });
-    await client.applyReport({ text: 'TICKET: MA-1\nSTATUS: in progress\nSUMMARY: wip' });
     await client.submitForReview(ticket.key, { summary: 'Done' });
     await client.reviewTicket(ticket.key, { verdict: 'approved', rating: 4, summary: 'Good' });
     const activity = (await client.getTicket(ticket.key)).activity;
     const removable = activity.filter((item) => item.type !== 'event');
-    expect(removable.map((item) => item.type)).toEqual(['comment', 'report', 'report', 'review']);
+    expect(removable.map((item) => item.type)).toEqual(['comment', 'report', 'review']);
     expect(api.storage.files.size).toBe(1);
 
     for (const item of removable) {

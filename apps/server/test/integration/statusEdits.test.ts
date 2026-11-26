@@ -2,7 +2,7 @@ import type { ErrorBody, ProjectDetail, Status } from '@tracker/shared';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { testClock } from '../helpers/auth';
 import { agent } from '../helpers/fixtures';
-import { addUser, caller, type Caller } from '../helpers/runs';
+import { addUser, caller, type Caller } from '../helpers/callers';
 import { DIALECTS, useTestServer } from '../helpers/server';
 
 const REFUSED = {
@@ -13,7 +13,7 @@ describe.each(DIALECTS)("who changes a project's statuses (%s)", (dialect) => {
   const clock = testClock();
   const api = useTestServer(dialect, { now: clock.now });
   let person: Caller;
-  let helper: Caller;
+  let tokenAgent: Caller;
 
   const statuses = async () =>
     (await person<ProjectDetail>('GET', '/api/projects/BLOG')).body.statuses;
@@ -22,7 +22,7 @@ describe.each(DIALECTS)("who changes a project's statuses (%s)", (dialect) => {
     clock.set(1_000_000);
     const owner = await addUser(api.db, 'owner@example.com', clock.now());
     person = caller(() => api.app, owner.person);
-    helper = caller(() => api.app, owner.helper);
+    tokenAgent = caller(() => api.app, owner.agent);
     await person('POST', '/api/projects', { name: 'Blog', key: 'BLOG' });
     await person('POST', '/api/projects/BLOG/tickets', { title: 'Post' });
   });
@@ -46,7 +46,7 @@ describe.each(DIALECTS)("who changes a project's statuses (%s)", (dialect) => {
       ['DELETE', '/api/statuses/missing'],
     ];
     for (const [method, path, body] of attempts) {
-      expect(await helper<ErrorBody>(method, path, body), `${method} ${path}`).toEqual({
+      expect(await tokenAgent<ErrorBody>(method, path, body), `${method} ${path}`).toEqual({
         status: 403,
         body: REFUSED,
       });
@@ -56,7 +56,7 @@ describe.each(DIALECTS)("who changes a project's statuses (%s)", (dialect) => {
   });
 
   it('keeps reads open to agents', async () => {
-    const board = await helper<{ statuses: Status[] }>('GET', '/api/projects/BLOG/board');
+    const board = await tokenAgent<{ statuses: Status[] }>('GET', '/api/projects/BLOG/board');
     expect(board.status).toBe(200);
     expect(board.body.statuses).toEqual(await statuses());
   });

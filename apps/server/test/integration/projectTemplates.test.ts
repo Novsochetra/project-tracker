@@ -4,7 +4,7 @@ import {
   PROJECT_TEMPLATES,
   type ErrorBody,
   type ProjectDetail,
-  type PromptResult,
+  type TicketDetail,
 } from '@tracker/shared';
 import { describe, expect, it } from 'vitest';
 import { agent, statusOf } from '../helpers/fixtures';
@@ -77,7 +77,7 @@ describe.each(DIALECTS)('project templates (%s)', (dialect) => {
     expect(res.body.error.code).toBe('invalid_input');
   });
 
-  it('runs a Writing ticket with the writing instructions and the usual workflow', async () => {
+  it('gives a Writing ticket the writing instructions and the usual workflow', async () => {
     const blog = await api.client().createProject({
       name: 'Garden blog',
       key: 'BLOG',
@@ -85,10 +85,8 @@ describe.each(DIALECTS)('project templates (%s)', (dialect) => {
     });
     await api.client().createTicket('BLOG', { title: 'Spring bulbs' });
 
-    const prompt = await api.get<PromptResult>('/api/tickets/BLOG-1/prompt');
-    expect(prompt.body.text).toContain(
-      `## Project instructions\n${PROJECT_TEMPLATES.writing.instructions}`,
-    );
+    const detail = await api.get<TicketDetail>('/api/tickets/BLOG-1');
+    expect(detail.body.project.instructions).toBe(PROJECT_TEMPLATES.writing.instructions);
 
     const worker = api.client(agent('Worker'));
     expect((await worker.claimNext('BLOG'))?.status.name).toBe('Drafting');

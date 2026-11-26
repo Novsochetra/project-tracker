@@ -36,17 +36,9 @@ import { toLabel, toProject, toStatus } from './mappers';
 type CreateProjectValues = z.output<typeof createProjectInput>;
 type UpdateProjectValues = z.output<typeof updateProjectInput>;
 
-const flagEdit = <K extends 'autoReview' | 'hideName'>(field: K, value: boolean | undefined) =>
-  value === undefined ? {} : { [field]: value ? 1 : 0 };
-
-const projectEdits = ({
-  autoReview,
-  hideName,
-  ...rest
-}: UpdateProjectValues): Partial<ProjectRow> => ({
+const projectEdits = ({ hideName, ...rest }: UpdateProjectValues): Partial<ProjectRow> => ({
   ...rest,
-  ...flagEdit('autoReview', autoReview),
-  ...flagEdit('hideName', hideName),
+  ...(hideName === undefined ? {} : { hideName: hideName ? 1 : 0 }),
 });
 
 function summarize(project: ProjectRow, stats: ProjectTicketStats | undefined): ProjectSummary {
@@ -106,7 +98,6 @@ export async function createProject(
       createdAt: at,
       updatedAt: at,
       ownerId: ctx.scope,
-      autoReview: 0,
       hideName: 0,
       position: nextProjectPosition(existing),
     };

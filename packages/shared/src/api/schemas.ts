@@ -60,7 +60,6 @@ export const updateProjectInput = z.object({
   description: z.string().max(5000).optional(),
   repo: z.string().trim().max(500).optional(),
   instructions: projectInstructions,
-  autoReview: z.boolean().optional(),
   hideName: z.boolean().optional(),
 });
 export type UpdateProjectInput = z.input<typeof updateProjectInput>;
@@ -132,7 +131,6 @@ export const createTicketInput = z.object({
   priority: z.enum(PRIORITIES).default('medium'),
   assignee: z.string().trim().max(TICKET_ASSIGNEE_MAX).default(''),
   due: dueDate.default(''),
-  needsDevice: z.boolean().default(false),
   attachmentIds: attachmentIds('ticket').default([]),
   labelIds: labelIds.default([]),
   // From a client that may send the same create again: a repeat gets the ticket the first one made.
@@ -148,7 +146,6 @@ export const updateTicketInput = z.object({
   assignee: z.string().trim().max(TICKET_ASSIGNEE_MAX).optional(),
   due: dueDate.optional(),
   labelIds: changedLabelIds.optional(),
-  needsDevice: z.boolean().optional(),
 });
 export type UpdateTicketInput = z.input<typeof updateTicketInput>;
 

@@ -16,18 +16,6 @@ export const listTicketActivities = (db: Db, ticketId: string) =>
     .orderBy('id')
     .execute();
 
-export async function listActivitiesOfTickets(db: Db, ticketIds: string[]): Promise<ActivityRow[]> {
-  if (ticketIds.length === 0) return [];
-
-  return db
-    .selectFrom('activities')
-    .selectAll()
-    .where('ticketId', 'in', ticketIds)
-    .orderBy('createdAt')
-    .orderBy('id')
-    .execute();
-}
-
 export async function updateActivityRow(
   db: Db,
   id: string,

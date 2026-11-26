@@ -38,45 +38,18 @@ interface Place {
 // go in straight, as an older release left them.
 async function leaveRunRows(api: TestServer, { projectId, ticket }: Place): Promise<string> {
   const runId = randomUUID();
-  await api.db
-    .insertInto('runs')
-    .values({
-      id: runId,
-      projectId,
-      ticketId: ticket.id,
-      runnerName: 'Dara’s MacBook',
-      prompt: 'Go',
-      status: 'running',
-      createdAt: NOW,
-      kind: 'ticket',
-      stepCount: 1,
-    })
-    .execute();
-  await api.db
-    .insertInto('runSteps')
-    .values({ runId, seq: 1, kind: 'tool', label: 'Read src/a.ts', subAgent: 0, createdAt: NOW })
-    .execute();
-  await api.db
-    .insertInto('runRequests')
-    .values({
-      id: randomUUID(),
-      runId,
-      kind: 'permission',
-      label: 'Run npm test',
-      labelCut: 0,
-      status: 'open',
-      createdAt: NOW,
-      expiresAt: NOW + 2 * QUESTION_DEADLINE_MS,
-    })
-    .execute();
-  await api.db
-    .insertInto('runChanges')
-    .values({ runId, ticketId: ticket.id, diff: '', cut: 0, createdAt: NOW })
-    .execute();
-  await api.db
-    .insertInto('ticketViewedFiles')
-    .values({ ticketId: ticket.id, path: 'src/a.ts', digest: 'd', createdAt: NOW })
-    .execute();
+  await sql`insert into runs (id, project_id, ticket_id, runner_name, prompt, status, created_at,
+    kind, step_count) values (${runId}, ${projectId}, ${ticket.id}, 'Dara’s MacBook', 'Go',
+    'running', ${NOW}, 'ticket', 1)`.execute(api.db);
+  await sql`insert into run_steps (run_id, seq, kind, label, sub_agent, created_at)
+    values (${runId}, 1, 'tool', 'Read src/a.ts', 0, ${NOW})`.execute(api.db);
+  await sql`insert into run_requests (id, run_id, kind, label, label_cut, status, created_at,
+    expires_at) values (${randomUUID()}, ${runId}, 'permission', 'Run npm test', 0, 'open',
+    ${NOW}, ${NOW + 2 * QUESTION_DEADLINE_MS})`.execute(api.db);
+  await sql`insert into run_changes (run_id, ticket_id, diff, cut, created_at)
+    values (${runId}, ${ticket.id}, '', 0, ${NOW})`.execute(api.db);
+  await sql`insert into ticket_viewed_files (ticket_id, path, digest, created_at)
+    values (${ticket.id}, 'src/a.ts', 'd', ${NOW})`.execute(api.db);
 
   return runId;
 }
@@ -121,36 +94,31 @@ async function leaveQuestionOfRun(api: TestServer, ticketId: string, runId: stri
 async function leaveChatMessage(db: Db, projectId: string): Promise<string> {
   const chatId = randomUUID();
   const messageId = randomUUID();
-  await db
-    .insertInto('chats')
-    .values({
-      id: chatId,
-      projectId,
-      title: 'Login bug',
-      askModel: 'sonnet',
-      askMode: 'ask',
-      askEffort: 'medium',
-      createdAt: NOW,
-      updatedAt: NOW,
-    })
-    .execute();
-  await db
-    .insertInto('chatMessages')
-    .values({ id: messageId, chatId, role: 'person', text: 'Look', createdAt: NOW })
-    .execute();
+  await sql`insert into chats (id, project_id, title, ask_model, ask_mode, ask_effort, created_at,
+    updated_at) values (${chatId}, ${projectId}, 'Login bug', 'sonnet', 'ask', 'medium', ${NOW},
+    ${NOW})`.execute(db);
+  await sql`insert into chat_messages (id, chat_id, role, text, created_at)
+    values (${messageId}, ${chatId}, 'person', 'Look', ${NOW})`.execute(db);
 
   return messageId;
 }
 
+const count = async (db: Db, table: string) =>
+  (
+    await sql<{
+      count: number | string;
+    }>`select count(*) as count from ${sql.table(table)}`.execute(db)
+  ).rows.map((row) => Number(row.count))[0];
+
 const countRows = async (db: Db) => ({
-  runs: (await db.selectFrom('runs').select('id').execute()).length,
-  runSteps: (await db.selectFrom('runSteps').select('runId').execute()).length,
-  runRequests: (await db.selectFrom('runRequests').select('id').execute()).length,
-  runChanges: (await db.selectFrom('runChanges').select('runId').execute()).length,
-  viewedFiles: (await db.selectFrom('ticketViewedFiles').select('path').execute()).length,
-  questions: (await db.selectFrom('questions').select('id').execute()).length,
-  chats: (await db.selectFrom('chats').select('id').execute()).length,
-  chatMessages: (await db.selectFrom('chatMessages').select('id').execute()).length,
+  runs: await count(db, 'runs'),
+  runSteps: await count(db, 'run_steps'),
+  runRequests: await count(db, 'run_requests'),
+  runChanges: await count(db, 'run_changes'),
+  viewedFiles: await count(db, 'ticket_viewed_files'),
+  questions: await count(db, 'questions'),
+  chats: await count(db, 'chats'),
+  chatMessages: await count(db, 'chat_messages'),
 });
 
 describe.each(DIALECTS)('rows left from runs and chats (%s)', (dialect) => {
@@ -254,8 +222,10 @@ describe.each(DIALECTS)('a file sent in a chat before 0036_unlink_chat_files (%s
         where id = ${sent.id}`.execute(db);
 
       await migrateToLatest(db);
-      const link = db.selectFrom('attachments').select('chatMessageId').where('id', '=', sent.id);
-      expect(await link.executeTakeFirst()).toEqual({ chatMessageId: null });
+      const link = await sql`select chat_message_id from attachments where id = ${sent.id}`.execute(
+        db,
+      );
+      expect(link.rows).toEqual([{ chatMessageId: null }]);
       expect((await app.request('/api/projects/MOB', { method: 'DELETE' })).status).toBe(204);
       const rows = await db.selectFrom('attachments').select(['id', 'ticketId']).execute();
       expect(rows).toEqual([{ id: sent.id, ticketId: null }]);

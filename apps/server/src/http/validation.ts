@@ -8,7 +8,7 @@ interface ValidationResult {
   error?: { issues: readonly { message: string }[] };
 }
 
-export function rejectInvalid(result: ValidationResult): void {
+function rejectInvalid(result: ValidationResult): void {
   if (!result.success) throw invalidInput(result.error?.issues[0]?.message ?? 'Invalid input.');
 }
 

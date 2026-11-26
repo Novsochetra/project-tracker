@@ -1,40 +1,31 @@
-import { randomUUID } from 'node:crypto';
 import {
   PROJECT_INSTRUCTIONS_MAX,
-  type ChatDetail,
   type Project,
   type ProjectDetail,
   type ProjectSummary,
-  type PromptResult,
-  type RunJob,
+  type TicketDetail,
 } from '@tracker/shared';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { testClock } from '../helpers/auth';
-import { addUser, caller, type Caller } from '../helpers/runs';
+import { addUser, caller, type Caller } from '../helpers/callers';
 import { DIALECTS, useTestServer } from '../helpers/server';
 
 const INSTRUCTIONS = 'Write in a warm, plain voice.\nCheck every fact against two sources.';
-const BLOCK = `## Project instructions\n${INSTRUCTIONS}`;
 
 describe.each(DIALECTS)('project instructions (%s)', (dialect) => {
   const clock = testClock();
   const api = useTestServer(dialect, { now: clock.now });
-  const runner = randomUUID();
   let person: Caller;
-  let helper: Caller;
+  let agent: Caller;
 
-  const prompt = async (path: string) => (await person<PromptResult>('GET', path)).body.text;
-  const askJob = async () => {
-    await person<ChatDetail>('POST', '/api/projects/BLOG/chats', { runnerId: runner, text: 'Q' });
-
-    return (await helper<RunJob | null>('POST', `/api/runners/${runner}/next?kind=ask`)).body;
-  };
+  const ticketInstructions = async () =>
+    (await agent<TicketDetail>('GET', '/api/tickets/BLOG-1')).body.project.instructions;
 
   beforeEach(async () => {
     clock.set(1_000_000);
     const owner = await addUser(api.db, 'owner@example.com', clock.now());
     person = caller(() => api.app, owner.person);
-    helper = caller(() => api.app, owner.helper);
+    agent = caller(() => api.app, owner.agent);
   });
 
   describe('with instructions', () => {
@@ -46,7 +37,6 @@ describe.each(DIALECTS)('project instructions (%s)', (dialect) => {
       });
       expect(created.body.project.instructions).toBe(INSTRUCTIONS);
       await person('POST', '/api/projects/BLOG/tickets', { title: 'Spring bulbs' });
-      await helper('PUT', `/api/runners/${runner}`, { name: 'Mac', projectKeys: ['BLOG'] });
     });
 
     it('keeps them on the project and in the list', async () => {
@@ -56,39 +46,30 @@ describe.each(DIALECTS)('project instructions (%s)', (dialect) => {
       expect(list.body[0]?.instructions).toBe(INSTRUCTIONS);
     });
 
-    it('puts them in the ticket and project prompts', async () => {
-      expect(await prompt('/api/tickets/BLOG-1/prompt')).toContain(BLOCK);
-      expect(await prompt('/api/projects/BLOG/prompt')).toContain(BLOCK);
+    it('gives them to an agent with each ticket it reads', async () => {
+      expect(await ticketInstructions()).toBe(INSTRUCTIONS);
     });
 
-    it('puts them in what a chat question sends', async () => {
-      expect((await askJob())?.prompt).toContain(BLOCK);
-    });
-
-    it('takes an edit and leaves the prompts as today once cleared', async () => {
+    it('takes an edit, and clears them with an empty one', async () => {
       const edited = await person<Project>('PATCH', '/api/projects/BLOG', {
         instructions: 'Short.',
       });
       expect(edited.body.instructions).toBe('Short.');
-      expect(await prompt('/api/tickets/BLOG-1/prompt')).toContain(
-        '## Project instructions\nShort.',
-      );
+      expect(await ticketInstructions()).toBe('Short.');
 
       await person('PATCH', '/api/projects/BLOG', { instructions: '' });
-      expect(await prompt('/api/tickets/BLOG-1/prompt')).not.toContain('Project instructions');
-      expect((await askJob())?.prompt).not.toContain('Project instructions');
+      expect(await ticketInstructions()).toBe('');
     });
   });
 
-  it('starts a project without instructions and leaves them out of the prompts', async () => {
+  it('starts a project without instructions', async () => {
     const created = await person<ProjectDetail>('POST', '/api/projects', {
       name: 'Blog',
       key: 'BLOG',
     });
     expect(created.body.project.instructions).toBe('');
     await person('POST', '/api/projects/BLOG/tickets', { title: 'Spring bulbs' });
-    expect(await prompt('/api/tickets/BLOG-1/prompt')).not.toContain('Project instructions');
-    expect(await prompt('/api/projects/BLOG/prompt')).not.toContain('Project instructions');
+    expect(await ticketInstructions()).toBe('');
   });
 
   it('refuses instructions over the limit', async () => {

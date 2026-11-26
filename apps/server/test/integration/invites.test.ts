@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { INVITE_TTL_MS } from '../../src/auth/invites';
 import { DEFAULT_LOGIN_LIMITS } from '../../src/auth/loginLimits';
 import { addOwner, cookieOf, JSON_HEADERS, signIn, testClock } from '../helpers/auth';
-import { addUser } from '../helpers/runs';
+import { addUser } from '../helpers/callers';
 import { DIALECTS, useTestServer } from '../helpers/server';
 
 const NEWCOMER = { name: 'Sam', email: 'Sam@Example.com ', password: 'a long new password' };
@@ -113,7 +113,7 @@ describe.each(DIALECTS)('invites (%s)', (dialect) => {
   it('lets only the owner, signed in with the password, make, list and cancel invites', async () => {
     const owner = await ownerCookie();
     const user = await addUser(api.db, 'user@example.com', clock.now());
-    const token = { authorization: `Bearer ${user.helper.token}` };
+    const token = { authorization: `Bearer ${user.agent.token}` };
     expect((await send('POST', '/api/invites', user.person.cookie)).status).toBe(403);
     expect((await send('GET', '/api/invites', user.person.cookie)).status).toBe(403);
     const byToken = await api.app.request('/api/invites', { method: 'POST', headers: token });

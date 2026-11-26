@@ -22,9 +22,6 @@ export interface Project {
   nextNum: number;
   createdAt: number;
   updatedAt: number;
-  // Review Claude's work with Claude when a run ends in review (§1.11). Optional: trackers from
-  // before PT-192 don't send it.
-  autoReview?: boolean;
   // Screens show projectDisplayName instead of the name. Optional: trackers from before PT-223
   // don't send it.
   hideName?: boolean;

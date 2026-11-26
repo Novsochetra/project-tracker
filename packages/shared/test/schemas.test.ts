@@ -6,6 +6,7 @@ import {
   createTicketInput,
   reviewInput,
   updateProjectInput,
+  updateTicketInput,
 } from '../src/api/schemas';
 
 const messages = (result: { success: boolean; error?: { issues: { message: string }[] } }) =>
@@ -19,7 +20,6 @@ describe('createTicketInput', () => {
       priority: 'medium',
       assignee: '',
       due: '',
-      needsDevice: false,
       attachmentIds: [],
       labelIds: [],
     });
@@ -77,6 +77,13 @@ describe('createTicketInput', () => {
     expect(createTicketInput.safeParse({ title: 'T', clientId: 'x'.repeat(65) }).success).toBe(
       false,
     );
+  });
+
+  it('drops the device mark older clients send', () => {
+    expect(createTicketInput.parse({ title: 'T', needsDevice: true })).not.toHaveProperty(
+      'needsDevice',
+    );
+    expect(updateTicketInput.parse({ title: 'T', needsDevice: true })).toEqual({ title: 'T' });
   });
 });
 
@@ -184,14 +191,9 @@ describe('createStatusInput', () => {
 });
 
 describe('updateProjectInput', () => {
-  it('accepts the old limit fields from older clients and drops them', () => {
-    expect(
-      updateProjectInput.parse({ name: 'Mobile', maxParallelRuns: 9, maxSubAgents: 0 }),
-    ).toEqual({ name: 'Mobile' });
-  });
-
-  it('leaves the sub agents out of an edit that does not change them', () => {
-    expect(updateProjectInput.parse({ name: 'Mobile' })).toEqual({ name: 'Mobile' });
+  it('accepts the fields older clients send and drops them', () => {
+    const older = { name: 'Mobile', maxParallelRuns: 9, maxSubAgents: 0, autoReview: true };
+    expect(updateProjectInput.parse(older)).toEqual({ name: 'Mobile' });
   });
 
   it.each([true, false])('takes hide name %j', (hideName) => {

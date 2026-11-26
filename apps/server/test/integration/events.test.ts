@@ -40,6 +40,7 @@ describe.each(DIALECTS)('change events (%s)', (dialect) => {
     const ticket = await person.createTicket('MA', { title: 'Crash' });
     const ticketId = ticket.id;
     const review = statusOf(project, 'in_review').id;
+    const working = statusOf(project, 'in_progress').id;
     expect(api.events).toEqual([
       { type: 'changed', projectId, ticketId: null },
       { type: 'changed', projectId, ticketId },
@@ -63,8 +64,7 @@ describe.each(DIALECTS)('change events (%s)', (dialect) => {
         null,
       ],
       ['update ticket', () => person.updateTicket('MA-1', { priority: 'high' }), ticketId],
-      ['move ticket', () => person.moveTicket('MA-1', { statusId: review }), ticketId],
-      ['mark sent', () => person.markSent('MA-1', { moveToInProgress: false }), ticketId],
+      ['move ticket', () => person.moveTicket('MA-1', { statusId: working }), ticketId],
       ['comment', () => person.addComment('MA-1', { text: 'note' }), ticketId],
       [
         'edit comment',
@@ -85,7 +85,6 @@ describe.each(DIALECTS)('change events (%s)', (dialect) => {
         async () => person.deleteAttachment((await person.getTicket('MA-1')).attachments[0]!.id),
         ticketId,
       ],
-      ['apply report', () => person.applyReport({ text: 'TICKET: MA-1\nSTATUS: wip' }), ticketId],
       ['claim', () => worker.claimTicket('MA-1'), ticketId],
       ['submit', () => worker.submitForReview('MA-1', { summary: 'done' }), ticketId],
       [
@@ -137,7 +136,6 @@ describe.each(DIALECTS)('change events (%s)', (dialect) => {
     await api.get(pending.body.url);
     await api.post('/api/projects', { name: '' });
     await api.patch('/api/tickets/MA-9', { title: 'x' });
-    await api.post('/api/reports/apply', { text: 'TICKET: MA-9' });
     await api.post('/api/projects/MA/claim', undefined, { actor: agent() });
     expect(api.events).toEqual([]);
   });

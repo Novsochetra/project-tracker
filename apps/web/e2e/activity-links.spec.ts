@@ -63,13 +63,11 @@ test.describe('links in activity', () => {
   test('a report with a very long unbroken run wraps without scrolling sideways', async ({
     page,
     api,
+    agent,
   }) => {
     await seedProject(api, 'Mobile app', 'MOB', [{ title: 'Cache avatars' }]);
-    const brackets = ')'.repeat(90_000);
-    await api.applyReport({
-      ticketKey: 'MOB-1',
-      text: `TICKET: MOB-1\nSTATUS: done\nSUMMARY: https://x.dev/${brackets}`,
-    });
+    const brackets = ')'.repeat(19_000);
+    await agent.submitForReview('MOB-1', { summary: `https://x.dev/${brackets}` });
     await page.goto('/p/MOB/1');
     const summary = activity(page).locator('dd').first();
     await expect(summary).toContainText(brackets.slice(0, 100));

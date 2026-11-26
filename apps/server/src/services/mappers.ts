@@ -27,7 +27,6 @@ export const toProject = (row: ProjectRow): Project => ({
   nextNum: row.nextNum,
   createdAt: row.createdAt,
   updatedAt: row.updatedAt,
-  autoReview: row.autoReview === 1,
   hideName: row.hideName === 1,
 });
 
@@ -64,7 +63,6 @@ export const toTicket = (row: TicketRow, projectKey: string, labelIds: string[])
   priority: row.priority,
   assignee: row.assignee,
   due: row.due,
-  needsDevice: row.needsDevice === 1,
   createdAt: row.createdAt,
   updatedAt: row.updatedAt,
   labelIds,

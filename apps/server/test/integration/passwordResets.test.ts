@@ -12,7 +12,7 @@ import {
   PERSON,
   sender,
 } from '../helpers/accounts';
-import { addUser } from '../helpers/runs';
+import { addUser } from '../helpers/callers';
 import { DIALECTS, useTestServer } from '../helpers/server';
 
 const NEW_PASSWORD = 'a password set by link';
@@ -125,7 +125,7 @@ describe.each(DIALECTS)('password reset links (%s)', (dialect) => {
     const owner = await ownerCookie(api);
     const person = await invitePerson(send, owner);
     const user = await addUser(api.db, 'user@example.com', clock.now() + 1);
-    const token = { authorization: `Bearer ${user.helper.token}` };
+    const token = { authorization: `Bearer ${user.agent.token}` };
     const path = `/api/users/${person.id}/reset-link`;
     expect((await send('GET', '/api/users', person.cookie)).status).toBe(403);
     expect((await send('POST', path, person.cookie)).status).toBe(403);

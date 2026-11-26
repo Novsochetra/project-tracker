@@ -7,13 +7,9 @@ import type {
 } from '@tracker/shared';
 import type { Kysely } from 'kysely';
 import type { AuthTables } from './authTables';
-import type { ChangeTables } from './changeTables';
-import type { ChatChangeTables } from './chatChangeTables';
-import type { ChatAttachmentColumns, ChatTables } from './chatTables';
 import type { LabelTables } from './labelTables';
 import type { PushTables } from './pushTables';
 import type { QuestionTables } from './questionTables';
-import type { RunTables } from './runTables';
 
 export interface ProjectRow {
   id: string;
@@ -28,8 +24,6 @@ export interface ProjectRow {
   updatedAt: number;
   // Null only on a tracker without an owner yet (services/lookups.ts).
   ownerId: string | null;
-  // 1 when on; 0 or null (projects from before it) when off. No booleans (§2).
-  autoReview: number | null;
   hideName: number;
   // The person's order of their projects (PT-260); ties, such as every project before it, go by
   // created_at.
@@ -57,8 +51,6 @@ export interface TicketRow {
   priority: Priority;
   assignee: string;
   due: string;
-  // 0 or 1: no booleans.
-  needsDevice: number;
   createdAt: number;
   updatedAt: number;
   clientId: string | null;
@@ -96,19 +88,14 @@ export interface AttachmentRow {
   userId: string | null;
 }
 
-// The tables that stay once the features that run Claude Code go, without the columns only those
-// features read.
-export interface CoreTables extends AuthTables, LabelTables, PushTables, QuestionTables {
+// The tables of the features that ran Claude Code (runs, chats and the rest) and the columns only
+// they read stay in the database, unread, until a later release drops them (§2.1).
+export interface Database extends AuthTables, LabelTables, PushTables, QuestionTables {
   projects: ProjectRow;
   statuses: StatusRow;
   tickets: TicketRow;
   activities: ActivityRow;
   attachments: AttachmentRow;
-}
-
-export interface Database
-  extends CoreTables, ChangeTables, ChatChangeTables, ChatTables, RunTables {
-  attachments: AttachmentRow & ChatAttachmentColumns;
 }
 
 export type Db = Kysely<Database>;

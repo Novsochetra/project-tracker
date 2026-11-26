@@ -82,7 +82,6 @@ async function insertNewTicket(trx: Db, ctx: UserContext, request: NewTicket): P
     priority: input.priority,
     assignee: input.assignee,
     due: input.due,
-    needsDevice: input.needsDevice ? 1 : 0,
     createdAt: at,
     updatedAt: at,
     clientId: input.clientId ?? null,

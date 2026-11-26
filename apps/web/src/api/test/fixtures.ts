@@ -70,7 +70,6 @@ export function listItem(
     priority: 'medium',
     assignee: '',
     due: '',
-    needsDevice: false,
     createdAt: 1,
     updatedAt: 1,
     commentCount: 0,

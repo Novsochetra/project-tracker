@@ -16,7 +16,7 @@ export interface Auth {
 export interface UserAuth {
   id: string;
   person: Auth;
-  helper: Auth;
+  agent: Auth;
 }
 
 export interface Answer<T = unknown> {
@@ -37,7 +37,7 @@ export async function addUser(
   const { secret } = await startSession(db, id, now);
   const token = await createApiToken(db, id, `${email} laptop`, now);
 
-  return { id, person: { cookie: `${SESSION_COOKIE}=${secret}` }, helper: { token: token.secret } };
+  return { id, person: { cookie: `${SESSION_COOKIE}=${secret}` }, agent: { token: token.secret } };
 }
 
 function headersOf(auth: Auth, body: unknown): Record<string, string> {
@@ -62,5 +62,3 @@ export function caller(app: () => Hono<AppEnv>, auth: Auth) {
 }
 
 export type Caller = ReturnType<typeof caller>;
-
-export const helperName = (name: string) => ({ name, projectKeys: ['MOB'] });
