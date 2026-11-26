@@ -46,8 +46,6 @@ describe('a move refusing images it can’t store', () => {
     );
     expect(lines.some((line) => line.startsWith('    - f-on-ticket (MOB-1, scan.jpg'))).toBe(true);
     expect(lines.join('\n')).not.toMatch(/f-pending|not on a ticket yet/);
-    expect(lines.some((line) => line.startsWith('Not copied: 1 upload(s) on no ticket'))).toBe(
-      true,
-    );
+    expect(lines.some((line) => line.startsWith('Not copied: 1 file(s) on no ticket'))).toBe(true);
   });
 });

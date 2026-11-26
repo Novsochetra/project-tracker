@@ -130,7 +130,7 @@ function wanted(label: string): string {
   const subject = permissionSubject(label);
   if (!subject) return 'Claude wants your OK';
 
-  return `Claude wants to ${cutPushText(subject.replace(HIDDEN, '�'), PUSH_ACTION_MAX)}`;
+  return `Claude wants to ${cutPushText(subject.replace(HIDDEN, '\uFFFD'), PUSH_ACTION_MAX)}`;
 }
 
 export function permissionPush(place: PushPlace, label: string): PushMessage {

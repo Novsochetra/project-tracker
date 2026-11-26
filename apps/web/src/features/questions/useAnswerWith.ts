@@ -24,6 +24,7 @@ export function useAnswerWith<Input>(
   const [focusAnswer, setFocusAnswer] = useState(false);
   const send = (input: Input, event?: MouseEvent<HTMLElement>) => {
     if (sender.pending) return;
+
     // The card shrinks to its answer, so what moves up under the finger must not take a double
     // tap's second tap.
     if (event && event.detail !== 0) holdPresses(event.currentTarget);
