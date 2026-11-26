@@ -95,6 +95,31 @@ describe("Move all to Done in a project's Reviewed group", () => {
     );
   });
 
+  it("keeps focus on the first ticket's handle when Undo puts the group back", async () => {
+    const user = userEvent.setup();
+    const server = fakeBoardServer(board());
+    renderProject({ client: server.client });
+    const reviewed = await screen.findByRole('region', { name: 'Reviewed' });
+    within(reviewed).getByRole('button', { name: 'Move 3 to Done' }).focus();
+    await user.keyboard('{Enter}');
+    await readMenuConfirm();
+    screen.getByRole('button', { name: 'Move to Done' }).focus();
+    await user.keyboard('{Enter}');
+    const handle = () => screen.getByRole('button', { name: handleName('MOB-4') });
+    await waitFor(() => expect(handle()).toHaveFocus());
+    await screen.findByRole('button', { name: 'Undo' });
+
+    await user.keyboard('{Meta>}z{/Meta}');
+
+    await waitFor(() => expect(keysIn('Reviewed')).toEqual(['MOB-4', 'MOB-3', 'MOB-2']));
+    expect(within(group('Reviewed')!).getByRole('button', { name: handleName('MOB-4') })).toBe(
+      handle(),
+    );
+    await waitFor(() => expect(handle()).toHaveFocus());
+    expect(await screen.findByText('3 tickets moved back')).toBeInTheDocument();
+    expect(handle()).toHaveFocus();
+  });
+
   describe('on phones', () => {
     beforeEach(() => {
       restore.push(mockPhone(true));

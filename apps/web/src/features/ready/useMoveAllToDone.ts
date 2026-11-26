@@ -1,8 +1,10 @@
+import { useQueryClient } from '@tanstack/react-query';
 import type { TicketMoves } from '@tracker/shared';
 import { useCallback } from 'react';
 import { errorMessage, useMoveToDone, useUndoMoveToDone } from '../../api';
 import { flashRows } from '../../app/flash';
 import { useToast } from '../../components';
+import { keepMovedRowFocus } from '../project/movedFocus';
 import { movedBackMessage, movedMessage, type DoneBatch } from './doneBatch';
 
 // Last first: each write is newer than the one before it, and Ready for you lists the newest
@@ -11,6 +13,7 @@ const undoPlaces = (moves: TicketMoves) =>
   moves.moved.map(({ key, from }) => ({ key, ...from })).reverse();
 
 function usePutBack(): (moves: TicketMoves) => Promise<void> {
+  const queryClient = useQueryClient();
   const { mutateAsync } = useUndoMoveToDone();
   const { show } = useToast();
 
@@ -19,10 +22,11 @@ function usePutBack(): (moves: TicketMoves) => Promise<void> {
       const places = undoPlaces(moves);
       const ticketKeys = places.map(({ key }) => key);
       flashRows(ticketKeys);
-      const back = await mutateAsync({ ticketKeys, places });
-      show(movedBackMessage(back.moved.length));
+      const putBack = mutateAsync({ ticketKeys, places });
+      keepMovedRowFocus(queryClient, ticketKeys, putBack);
+      show(movedBackMessage((await putBack).moved.length));
     },
-    [mutateAsync, show],
+    [queryClient, mutateAsync, show],
   );
 }
 

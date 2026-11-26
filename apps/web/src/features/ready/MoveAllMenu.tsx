@@ -14,14 +14,16 @@ export function MoveAllMenu({ batch, onMove, className }: MoveAllProps) {
   const moveAll = useMoveAllToDone();
   const triggerRef = useRef<HTMLButtonElement>(null);
   const [open, setOpen] = useState(false);
-  const cancel = () => {
+  // Focus goes back to the button; when the move takes the button away, the card or group says
+  // where focus goes instead.
+  const close = () => {
     setOpen(false);
     triggerRef.current?.focus();
   };
 
   const confirm = () => {
     holdPresses(document.body);
-    setOpen(false);
+    close();
     onMove(moveAll(batch));
   };
 
@@ -48,7 +50,7 @@ export function MoveAllMenu({ batch, onMove, className }: MoveAllProps) {
         message={moveAllQuestion(batch)}
         confirmLabel={`Move to ${batch.doneName}`}
         confirmVariant="primary"
-        onCancel={cancel}
+        onCancel={close}
         onConfirm={confirm}
       />
     </Popover>

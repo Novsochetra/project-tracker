@@ -1,5 +1,10 @@
 import { ApiError } from '@tracker/client';
-import type { TicketListItem, TicketMoves, TicketPlaceInput } from '@tracker/shared';
+import {
+  DONE_MOVE_MAX,
+  type TicketListItem,
+  type TicketMoves,
+  type TicketPlaceInput,
+} from '@tracker/shared';
 import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -138,6 +143,29 @@ describe('Move all to Done in Ready for you', () => {
     expect(screen.getByRole('button', { name: 'Mobile app' })).toHaveFocus();
     await waitFor(() => expect(section()).not.toBeInTheDocument());
     expect(screen.getByRole('button', { name: 'Mobile app' })).toHaveFocus();
+  });
+
+  it('keeps focus on the button when the tickets past the first 500 stay', async () => {
+    const many = Array.from({ length: DONE_MOVE_MAX + 2 }, (_, index) => reviewed(index + 1));
+    await renderReady(many);
+    await confirmInMenu(DONE_MOVE_MAX);
+
+    await waitFor(() => expect(moveAll(2)).toBeInTheDocument());
+    expect(moveAll(2)).toHaveFocus();
+  });
+
+  it('keeps focus in the card on a ticket that stays, once no button is left', async () => {
+    const website = listItem(1, 'web-s-reviewed', 0, {
+      id: 't-web-1',
+      projectId: otherProject.id,
+      key: 'WEB-1',
+      updatedAt: 9,
+    });
+    await renderReady([website, reviewed(3), reviewed(2)]);
+    await confirmInMenu(2);
+
+    await waitFor(() => expect(screen.queryByRole('button', { name: /^Move \d+ to/ })).toBeNull());
+    expect(screen.getByRole('button', { name: /^WEB-1\b/ })).toHaveFocus();
   });
 
   it('says how many really moved and came back when the tracker skips some', async () => {

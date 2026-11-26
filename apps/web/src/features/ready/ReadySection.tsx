@@ -1,7 +1,6 @@
 import { collapseGroup, DEFAULT_STATUSES, type Status } from '@tracker/shared';
 import { useId, useRef, useState } from 'react';
 import { ListCard, StatusGlyph } from '../../components';
-import { focusBefore } from '../../lib/focusBefore';
 import { useNavigation } from '../../navigation';
 import { HeaderShowLess, ShowMoreButton } from '../project/GroupParts';
 import { useStatusChange } from '../project/rowEdits';
@@ -9,6 +8,7 @@ import { useGroupToggle } from '../project/useGroupToggle';
 import { readyBatch } from './doneBatch';
 import { MoveAllToDone } from './MoveAllToDone';
 import type { ReadyItem } from './readyItems';
+import { focusAfterMoveAll } from './readyFocus';
 import { ReadyRow } from './ReadyRow';
 import styles from './ReadySection.module.css';
 
@@ -33,10 +33,9 @@ export function ReadySection({ items }: { items: readonly ReadyItem[] }) {
   const open = ({ project, ticket }: ReadyItem) =>
     push({ name: 'ticket', key: project.key, num: ticket.num });
   const done = ({ ticket }: ReadyItem, status: Status) => changeStatus(ticket, status);
-  // The card leaves with its tickets; the projects above it are where they went.
   const movedAll = () => {
     const card = ref.current?.parentElement;
-    if (card) focusBefore(card);
+    if (card && batch) focusAfterMoveAll(card, items, batch);
   };
 
   return (
