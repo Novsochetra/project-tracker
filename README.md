@@ -140,3 +140,9 @@ npm run test:e2e   # Playwright: iPhone-sized WebKit, desktop Chromium, and an i
 - Original design hand-off: `init-design/`
 
 Configuration (environment variables): `PORT` (4100), `HOST` (127.0.0.1), `DATABASE_URL` (SQLite file path, `:memory:`, or `postgres://…`), `UPLOADS_DIR`, `S3_BUCKET` with `AWS_REGION`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` and an optional `S3_ENDPOINT` (files in S3 instead of `UPLOADS_DIR`: `docs/s3-storage.md`), `WEB_DIST`, `PUBLIC_URL` (the address agents should use, shown in Connect an agent; defaults to the address the request reached), `TRUST_PROXY` (how many proxies in front add to `X-Forwarded-For`, `1` on Railway: sign-in limits then count the client's address, and `X-Forwarded-Proto: https` makes the session cookie Secure), `NODE_ENV=production` (session cookie always Secure). The server no longer reads `TRACKER_TOKEN`; agents use it for their API token.
+
+## License
+
+The tracker is under the [Functional Source License, Version 1.1, ALv2 Future License](LICENSE) (FSL-1.1-ALv2). You may use, copy, change and redistribute it for any purpose except a competing use: making it available to others in a commercial product or service that substitutes for it, or for another product or service of the licensor's that uses it and already exists when that version is made available, or that offers the same or substantially similar features. Internal use, non-commercial education and research, and professional services for someone who uses it under these terms are allowed, and two years after each version is made available, that version is also licensed under the Apache License 2.0.
+
+Third-party code and fonts keep their own licenses: see [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).

@@ -138,10 +138,15 @@ export const createTicketInput = z.object({
 });
 export type CreateTicketInput = z.input<typeof createTicketInput>;
 
+// An agent's word that the person told it to move this ticket out of Done; without it the tracker
+// refuses the move. A person never needs it.
+const reopen = z.boolean().optional();
+
 export const updateTicketInput = z.object({
   title: z.string().max(TICKET_TITLE_MAX).optional(),
   description: z.string().max(TICKET_DESCRIPTION_MAX).optional(),
   statusId: id.optional(),
+  reopen,
   priority: z.enum(PRIORITIES).optional(),
   assignee: z.string().trim().max(TICKET_ASSIGNEE_MAX).optional(),
   due: dueDate.optional(),
@@ -167,6 +172,7 @@ export const moveTicketInput = z.object({
   statusId: id,
   beforeId: id.nullable().optional(),
   afterId: id.nullable().optional(),
+  reopen,
 });
 export type MoveTicketInput = z.input<typeof moveTicketInput>;
 

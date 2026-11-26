@@ -6,3 +6,6 @@ export type Access =
   | { kind: 'token'; userId: string; tokenId: string };
 
 export const OPEN_ACCESS: Access = { kind: 'open' };
+
+export const tokenIdOf = (access: Access | null): string | null =>
+  access?.kind === 'token' ? access.tokenId : null;

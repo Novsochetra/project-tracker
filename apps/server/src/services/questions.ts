@@ -19,6 +19,11 @@ import { eventEntry, writeTicket } from './ticketWrites';
 
 type AskValues = z.output<typeof askQuestionInput>;
 
+export interface Asker {
+  actor: Actor;
+  tokenId: string | null;
+}
+
 const askedEvent = (question: string): string => `asked: ${question}`;
 
 // 404 rather than 403 for another user's question, like a ticket.
@@ -35,10 +40,11 @@ export async function requireQuestion(
 
 export async function askQuestion(
   ctx: UserContext,
-  actor: Actor,
+  asker: Asker,
   key: string,
   input: AskValues,
 ): Promise<TicketQuestion> {
+  const { actor } = asker;
   await settleQuestions(ctx);
   const { ref, row } = await inTransaction(ctx, async (trx) => {
     const ref = await requireTicket(trx, ctx.scope, key);
@@ -56,6 +62,7 @@ export async function askQuestion(
       createdAt,
       expiresAt: createdAt + QUESTION_DEADLINE_MS,
       endedAt: null,
+      askedByTokenId: asker.tokenId,
     };
     await insertQuestion(trx, row);
 

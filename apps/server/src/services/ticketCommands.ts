@@ -27,6 +27,7 @@ import { removeFiles } from '../storage/fileStorage';
 import { isEmpty } from '../util';
 import { attachLaterUploads, attachUploads } from './attachmentLinks';
 import { inTransaction, notify, type UserContext } from './context';
+import { assertMayLeave } from './doneTickets';
 import { expectedMatch, type ExpectedValues } from './expectedFields';
 import {
   requireProject,
@@ -36,6 +37,7 @@ import {
   type TicketScope,
 } from './lookups';
 import { toTicket } from './mappers';
+import { replacedText } from './replacedText';
 import { statusChangedText } from './statusEvents';
 import { ticketOut } from './ticketOut';
 import { fieldChanges, mergeChanges, type PlannedChange } from './ticketChanges';
@@ -169,10 +171,12 @@ async function statusChange(
   trx: Db,
   actor: Actor,
   scope: TicketScope,
-  statusId: string | undefined,
+  { statusId, reopen }: Pick<UpdateTicketValues, 'statusId' | 'reopen'>,
 ): Promise<PlannedChange> {
   if (statusId === undefined || statusId === scope.ticket.statusId) return mergeChanges([]);
+
   const status = requireStatusIn(scope.statuses, statusId);
+  assertMayLeave(actor, scope, reopen);
 
   return {
     changes: await enterStatus(trx, actor, status),
@@ -193,9 +197,12 @@ export async function updateTicket(ctx: UserContext, update: TicketUpdate): Prom
     const scope = await requireTicketScope(trx, ctx.scope, key);
     const match = expectedMatch(scope.ticket, input, expected);
     const labels = await labelChange(trx, scope.ticket, input.labelIds);
+    const fields = fieldChanges(scope.ticket, input, new Date());
+    const replaced = replacedText(actor, scope.ticket, fields.changes);
     const plan = mergeChanges([
-      await statusChange(trx, actor, scope, input.statusId),
-      fieldChanges(scope.ticket, input, new Date()),
+      await statusChange(trx, actor, scope, input),
+      fields,
+      { changes: {}, entries: replaced.events },
       { changes: {}, entries: labels ? [labels.entry] : [] },
     ]);
     if (isEmpty(plan.changes) && !labels) {
@@ -206,7 +213,7 @@ export async function updateTicket(ctx: UserContext, update: TicketUpdate): Prom
       ticket: scope.ticket,
       actor,
       ...plan,
-      match,
+      match: { ...match, ...replaced.match },
     });
     if (labels)
       await setTicketLabels(trx, scope.ticket.id, labels.labelIds, written.ticket.updatedAt);
@@ -246,7 +253,11 @@ export async function moveTicket(
       return { ticket: await ticketOut(trx, scope.ticket, scope.project.key), changed: false };
     }
 
-    if (plan.statusChanged) assertMayEnter(actor, status);
+    if (plan.statusChanged) {
+      assertMayLeave(actor, scope, input.reopen);
+      assertMayEnter(actor, status);
+    }
+
     for (const [id, rank] of plan.ranks) {
       if (id !== scope.ticket.id) await updateTicketRow(trx, id, { rank });
     }

@@ -51,6 +51,32 @@ describe('activity items', () => {
     expect(text.indexOf('created the ticket')).toBeLessThan(text.indexOf('picked up'));
   });
 
+  it("folds the description an agent's edit replaced under its event (PT-276)", async () => {
+    const user = userEvent.setup();
+    setup([
+      event('e1', 'removed the description\nSteps:\n1. Open the app', { actor: CLAUDE }),
+      event('e2', 'changed the title from “Crash on launch”', { actor: CLAUDE }),
+    ]);
+    const text = log().textContent ?? '';
+    expect(text).toContain('Claude removed the description · 1m ago');
+    expect(text).toContain('Claude changed the title from “Crash on launch” · 1m ago');
+
+    const show = within(log()).getByRole('button', { name: 'Show the old description' });
+    expect(show).toHaveAttribute('aria-expanded', 'false');
+    const old = within(log()).getByText(/^Steps:/);
+    expect(old).not.toBeVisible();
+    expect(show).toHaveAttribute('aria-controls', old.id);
+
+    await user.click(show);
+    expect(old).toBeVisible();
+    expect(old.textContent).toBe('Steps:\n1. Open the app');
+    const hide = within(log()).getByRole('button', { name: 'Hide the old description' });
+    expect(hide).toHaveAttribute('aria-expanded', 'true');
+    await user.click(hide);
+    expect(old).not.toBeVisible();
+    expect(within(log()).getAllByRole('button', { name: /old description/ })).toHaveLength(1);
+  });
+
   it('shows reports and reviews by agent name', () => {
     setup([
       comment('r1', 'TICKET: MOB-1\nSTATUS: done', { type: 'report', actor: CLAUDE }),

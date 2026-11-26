@@ -102,14 +102,15 @@ export const COMMANDS: readonly Command[] = [
   },
   {
     name: 'move',
-    usage: 'move <KEY> <STATUS NAME…>',
-    summary: 'Move a ticket to a status (not Done: only a person does that).',
+    usage: 'move <KEY> <STATUS NAME…> [--reopen]',
+    summary:
+      'Move a ticket to a status (not Done: only a person does that). --reopen takes a ticket out of Done, only when the person told you to.',
     args: ['KEY', 'STATUS NAME'],
     rest: true,
-    options: [],
-    plan: ([ticket, ...status]) => ({
+    options: ['reopen'],
+    plan: ([ticket, ...status], { reopen }) => ({
       tool: moveTicket,
-      input: { ticket, status: status.join(' ') },
+      input: { ticket, status: status.join(' '), reopen },
     }),
   },
   {
