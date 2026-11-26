@@ -38,9 +38,14 @@ export function DetailsCard({ detail }: { detail: TicketDetail }) {
         />
         <AssigneeRow draft={assignee} describedBy={assignee.failed ? noteId : undefined} />
         <DateRow value={ticket.due} overdue={fields.overdue} onChange={fields.setDue} />
-        {labels.length > 0 && (
-          <LabelsRow labels={labels} value={ticket.labelIds ?? []} onChange={fields.setLabels} />
-        )}
+        <LabelsRow
+          projectKey={detail.project.key}
+          labels={labels}
+          value={ticket.labelIds ?? []}
+          subtitle={ticket.key}
+          manageable
+          onChange={fields.setLabels}
+        />
       </GroupedCard>
       <FieldNote draft={assignee} subject="Assignee" id={noteId} />
     </div>

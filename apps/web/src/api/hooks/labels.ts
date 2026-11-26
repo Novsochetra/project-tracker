@@ -4,6 +4,7 @@ import type {
   Label,
   ProjectBoard,
   ProjectDetail,
+  TicketDetail,
   UpdateLabelInput,
 } from '@tracker/shared';
 import { removeLabel, reorderLabelList, upsertLabel, withLabels } from '../cache/labels';
@@ -19,7 +20,8 @@ import { queryKeys } from '../queryKeys';
 import { settleMutation } from '../refresh';
 import type { TrackerMutation } from '../types';
 
-// Only the labels sheet uses these, so they stay out of the api barrel and the first load.
+// Only the labels sheet and the label picker use these, so they stay out of the api barrel and
+// the first load.
 
 export interface CreateLabelVariables {
   projectKey: string;
@@ -51,17 +53,32 @@ const labelChanges = (projectKey: string, update: (labels: Label[]) => Label[]):
 const settleLabels = (queryClient: QueryClient, variables: { projectKey: string }) =>
   settleMutation(queryClient, variables, { withTickets: true });
 
+// A label made from a ticket's picker goes on that ticket at once, so its details need it before
+// their refetch lands, or the new chip would blink in a moment late.
+function patchTicketDetails(queryClient: QueryClient, projectKey: string, label: Label) {
+  const wanted = projectKey.toUpperCase();
+  queryClient.setQueriesData<TicketDetail>(
+    { queryKey: ['ticket'], predicate: (query) => query.queryKey.length === 2 },
+    (data) =>
+      data && data.project.key.toUpperCase() === wanted
+        ? withLabels(data, (list) => upsertLabel(list, label))
+        : data,
+  );
+}
+
 export function useCreateLabel(): TrackerMutation<Label, CreateLabelVariables> {
   const client = useApi();
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ projectKey, input }: CreateLabelVariables) =>
       client.createLabel(projectKey, input),
-    onSuccess: (label, { projectKey }) =>
-      patchCaches(
+    onSuccess: async (label, { projectKey }) => {
+      patchTicketDetails(queryClient, projectKey, label);
+      await patchCaches(
         queryClient,
         labelChanges(projectKey, (list) => upsertLabel(list, label)),
-      ),
+      );
+    },
     onSettled: (_label, _error, variables) => settleLabels(queryClient, variables),
   });
 }

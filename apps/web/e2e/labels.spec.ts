@@ -1,6 +1,13 @@
 import type { Locator, Page } from '@playwright/test';
 import { expect, isPhone, test } from './fixtures';
-import { readActionSheet, seedProject, settled, settledScreenshot, ticketRow } from './helpers';
+import {
+  readActionSheet,
+  seedProject,
+  settled,
+  settledScreenshot,
+  swipeLeft,
+  ticketRow,
+} from './helpers';
 
 const SHOTS = process.env.E2E_SHOTS_DIR;
 const TEMPLATE = '## Steps to reproduce\n1. ';
@@ -103,5 +110,102 @@ test.describe('labels', () => {
       '## Instructions for "Bug" tickets\nWrite a failing regression test first.',
     );
     expect(prompt).toContain('## Steps to reproduce');
+  });
+
+  test('a release label is made where a ticket is tagged, shows on its row and filters the list', async ({
+    page,
+    api,
+  }, info) => {
+    const phone = isPhone(info.project.name);
+    const seed = { priority: 'high' as const, assignee: 'Dara', due: DUE };
+    await seedProject(api, 'Mobile app', 'MOB', [
+      { title: 'Crash on rotate', ...seed },
+      { title: 'Dark mode', ...seed },
+    ]);
+    await page.goto('/p/MOB');
+    const tagged = ticketRow(page, 'MOB-1');
+    await expect(tagged).toBeVisible();
+
+    if (phone) {
+      // A swipe tags a ticket from the list, without opening it.
+      await swipeLeft(tagged);
+      // WebKit's hit test still finds the row while the actions spring open.
+      await page.getByRole('button', { name: 'Labels', exact: true }).dispatchEvent('click');
+    } else {
+      await tagged.click();
+      await page.getByRole('button', { name: /^Labels None/ }).click();
+    }
+    const picker = page.getByRole('dialog', { name: 'Pick labels' });
+    await expect(picker).toBeVisible();
+    await expect(picker).toContainText('No labels yet');
+    await picker.getByRole('searchbox', { name: 'Find or create a label' }).fill('v1.4');
+    if (phone) await picker.getByRole('button', { name: 'Create “v1.4”' }).click();
+    else await page.keyboard.press('Enter');
+    const release = picker.getByRole('option', { name: 'v1.4' });
+    await expect(release).toHaveAttribute('aria-selected', 'true');
+    await shot(page, 'release-picker');
+    if (phone) {
+      await picker.getByRole('button', { name: 'Done' }).click();
+    } else {
+      await page.keyboard.press('Escape');
+      await expect(page.getByRole('button', { name: /^Labels v1\.4/ })).toBeVisible();
+      await page.goBack();
+    }
+    await expect(picker).toBeHidden();
+
+    await expect(tagged).toHaveAccessibleName(/v1\.4/);
+    await expect(tagged.getByText('v1.4', { exact: true }).filter({ visible: true })).toHaveCount(
+      1,
+    );
+    for (const width of phone ? [375, 320] : [1280]) {
+      await page.setViewportSize({ width, height: phone ? 812 : 800 });
+      await shot(page, `release-list-${width}`);
+      expect(await height(tagged)).toBeCloseTo(await height(ticketRow(page, 'MOB-2')), 1);
+      expect(await tagged.evaluate((row) => row.scrollWidth <= row.clientWidth)).toBe(true);
+      // The release reads in the row: at least "v1.…", also beside a date with a year at 320.
+      const name = tagged.getByText('v1.4', { exact: true }).filter({ visible: true });
+      const shown = await name.evaluate((element) => ({
+        whole: element.scrollWidth <= element.clientWidth,
+        width: element.getBoundingClientRect().width,
+      }));
+      expect(shown.whole || shown.width >= 23.5).toBe(true);
+      expect(shown.width).toBeGreaterThan(0);
+    }
+
+    await page.getByRole('button', { name: 'Filter by label' }).click();
+    await page
+      .getByRole('listbox', { name: 'Label' })
+      .getByRole('option', { name: 'v1.4' })
+      .click();
+    await expect(ticketRow(page, 'MOB-2')).toBeHidden();
+    await expect(tagged).toBeVisible();
+    await shot(page, 'release-filtered');
+  });
+
+  test('three swipe actions open past their width, and only a longer drag picks Status', async ({
+    page,
+    api,
+  }, info) => {
+    test.skip(!isPhone(info.project.name), 'Rows swipe on phones');
+    await seedProject(api, 'Mobile app', 'MOB', [{ title: 'Crash on rotate' }]);
+    await page.goto('/p/MOB');
+    const status = page.getByRole('dialog', { name: 'Status' });
+    for (const width of [375, 320]) {
+      await page.setViewportSize({ width, height: 812 });
+      const row = ticketRow(page, 'MOB-1');
+      await expect(row).toBeVisible();
+      // Past the 228px of Status, Labels and Delete, but short of the full swipe.
+      await swipeLeft(row, 250);
+      await expect(page.getByRole('button', { name: 'Labels', exact: true })).toBeVisible();
+      await expect(status).toBeHidden();
+      // A tap on the open row only closes it.
+      await row.click();
+      await expect(page.getByRole('button', { name: 'Labels', exact: true })).toBeHidden();
+      await swipeLeft(row, width === 375 ? 290 : 280);
+      await expect(status).toBeVisible();
+      await expect(status).toContainText('Move MOB-1 to');
+      await status.getByRole('button', { name: 'Cancel' }).click();
+      await expect(status).toBeHidden();
+    }
   });
 });

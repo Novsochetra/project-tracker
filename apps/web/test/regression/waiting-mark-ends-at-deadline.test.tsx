@@ -11,6 +11,7 @@ const callbacks: RowCallbacks = {
   handleKeyDown: vi.fn(),
   advance: vi.fn(),
   chooseStatus: vi.fn(),
+  chooseLabels: vi.fn(),
   confirmDelete: vi.fn(),
 };
 const status = statuses.find((candidate) => candidate.category === 'in_progress')!;

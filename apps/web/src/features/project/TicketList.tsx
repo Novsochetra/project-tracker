@@ -11,6 +11,7 @@ import { NoMatches, NoTickets } from './ListEmptyStates';
 import { isSearching, pickedLabel, pickedStatus, useListView } from './listViewStore';
 import styles from './ProjectScreen.module.css';
 import { RowActionSheets } from './RowActionSheets';
+import { RowLabelSheet } from './RowLabelSheet';
 import { TicketGroup } from './TicketGroup';
 import { useRowCallbacks } from './useRowCallbacks';
 import { useRowSheet } from './useRowSheet';
@@ -76,6 +77,7 @@ export function TicketList({ board }: { board: ProjectBoard }) {
       {renderBody()}
       <DragGhost drag={drag} ghostRef={ghostRef} />
       <RowActionSheets sheet={rowSheet.sheet} statuses={statuses} onClose={rowSheet.close} />
+      <RowLabelSheet sheet={rowSheet.sheet} board={board} onClose={rowSheet.close} />
     </>
   );
 }
