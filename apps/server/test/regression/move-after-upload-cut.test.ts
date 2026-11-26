@@ -56,8 +56,8 @@ async function sourceWithPendingUpload() {
 }
 
 const LEFT_OUT =
-  'Not copied: 1 upload(s) on no ticket or comment yet (files picked for a ticket or comment ' +
-  'not created yet, or an upload cut off when the tracker stopped).';
+  'Not copied: 1 file(s) on no ticket or comment (picked for a ticket or comment not created ' +
+  'yet, cut off when the tracker stopped, or sent in a chat).';
 
 describe.each(DIALECTS)(
   'moving into %s a tracker whose server stopped during an upload',

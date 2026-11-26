@@ -1,10 +1,12 @@
 # Deploying to Railway
 
-The tracker runs on [Railway](https://railway.com) as one service built from your private GitHub repo, next to a Railway Postgres database. Files go to your S3 bucket (`docs/s3-storage.md`). Every push to `main` deploys again. You open it on your phone at `https://<name>.up.railway.app`.
+The tracker runs on [Railway](https://railway.com) as one service built from your private GitHub repo, next to a Railway Postgres database. Files go to your S3 bucket (`docs/s3-storage.md`). Every push to `main` deploys again, once CI has passed on it. You open it on your phone at `https://<name>.up.railway.app`.
 
 ## How a deploy runs
 
-`.railway/railway.ts` holds the service's settings, so the dashboard needs none of them. Railway does not read it during a deploy: `railway config apply` sends it to the service once (step 5), and again after any change to it. It names the project (`Project Tracker Staging`) and the GitHub repo, so change those two if yours differ. It leaves the variables to the dashboard (`variables: { managed: false }`), so secrets never go in the repo. (`railway.json` did this before; Railway stops reading those files on 2026-12-01.)
+`.railway/railway.ts` holds the service's settings, so the dashboard needs none of them. Railway does not read it during a deploy: `railway config apply` sends it to the service once (step 5), and again after any change to it: run `railway config plan`, check it lists only that change, then `railway config apply` (you run these yourself; agents never run `railway` commands). It names the project (`Project Tracker Staging`) and the GitHub repo, so change those two if yours differ. It leaves the variables to the dashboard (`variables: { managed: false }`), so secrets never go in the repo. (`railway.json` did this before; Railway stops reading those files on 2026-12-01.)
+
+A push to `main` deploys only after CI has passed on that commit (`checkSuites: true`, the service's **Wait for CI**). The new deployment waits while GitHub Actions runs `.github/workflows/ci.yml` on the commit (the audit of the production dependencies, `npm run verify`, the build and the E2E tests). If CI fails, or hasn't finished after two hours, Railway skips the deployment and the old server keeps serving. Skipped deployments show under **Deployments** → **Show Skipped**; the commit goes live with the next push that passes, or with **Deploy Latest Commit** in the command palette once a re-run on GitHub has passed. Railway reads the checks through its GitHub app: if it asks for the app's updated permissions, accept them at github.com/settings/installations.
 
 | Step       | What runs                                                      | Why                                                                                                                                                                                               |
 | ---------- | -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -78,7 +80,7 @@ Tracker service → **Settings** → **Networking** → **Generate Domain**. If 
 
 ## 5. Deploy
 
-1. Send the settings to the service, from the repo folder on your Mac (needs the [Railway CLI](https://docs.railway.com/cli), `brew install railway`, and `npm ci` for the `railway` package the file imports). `plan` only shows the changes: it must list build, pre-deploy, start, health check, restart and draining, with nothing to destroy and `variables: unmanaged`.
+1. Send the settings to the service, from the repo folder on your Mac (needs the [Railway CLI](https://docs.railway.com/cli), `brew install railway`, and `npm ci` for the `railway` package the file imports). `plan` only shows the changes: it must list build, pre-deploy, start, health check, restart, draining and waiting for CI (`checkSuites`), with nothing to destroy and `variables: unmanaged`.
 
    ```bash
    railway login
@@ -87,7 +89,7 @@ Tracker service → **Settings** → **Networking** → **Generate Domain**. If 
    railway config apply
    ```
 
-2. Click **Deploy** on the staged changes (or push a commit).
+2. Click **Deploy** on the staged changes (or push a commit, which deploys once CI has passed on it).
 3. Watch **Deployments** → the new one:
    - Build logs end with `npm prune` and no errors.
    - Pre-deploy logs: `Applied 0001_initial` … `Up to date.`
@@ -126,7 +128,7 @@ A one-time command copies your local tracker (`data/tracker.db` and `data/upload
 - **Only into Railway.** `DATABASE_URL` must be a `postgres://` URL and the files go only to the S3 bucket, never to a SQLite file or a folder on your Mac, which the online tracker could not read.
 - **Images are compressed** as new uploads are (`docs/architecture.md` §3), and only the compressed copy, or one stripped of its metadata, goes to S3: a screenshot `….png` becomes `….webp`, with the same id, so its tile, its place and links to it stay. The bytes decide the type, so a JPEG once saved as `….png` goes online as what it is. Text that names a file by its old name still reads the same; the command says how many texts do. Other files are copied as they are.
 - **Images that can't go online as they are** (a TIFF, or one cut off before its picture), whose metadata such as a photo's location can't be removed, stop the move before any file or row is written. The dry run lists them by attachment id, ticket key (or the comment on it that holds one), file name, size and reason. Start the local tracker again and remove each one listed with only a ticket key from that ticket's files. A file on a comment can't be removed alone: delete that comment instead (copy its text first if you want to post it again, with a copy of the image saved again). Stop the tracker, then run the dry run again. Starting it migrates `data/tracker.db` to this commit's schema if it was older (the move itself never changes the file); the backup from step 2 keeps the file and the uploads as they were.
-- **Not copied:** sign-in (`users`, `sessions`, `api_tokens`). The online owner is the one you set in step 6; make new API tokens online for your agents (step 9). Nor uploads on no ticket or comment yet (files picked in a New ticket that wasn't created, or an upload cut off when the tracker stopped): only your local tracker could attach them. Nor chats with Claude Code and the files sent in them, which stay with this computer's helpers. The command says how many uploads and chat files it left out.
+- **Not copied:** sign-in (`users`, `sessions`, `api_tokens`). The online owner is the one you set in step 6; make new API tokens online for your agents (step 9). Nor uploads on no ticket or comment yet (files picked in a New ticket that wasn't created, or an upload cut off when the tracker stopped): only your local tracker could attach them. Nor chats with Claude Code and the files sent in them, which stay with this computer's helpers. The command says how many files on no ticket or comment it left out, the files sent in chats among them.
 - **Files first, rows after.** The rows go in one transaction, so a run that stops halfway (network, a refused upload, Ctrl-C) leaves no row pointing at a missing file. Its last line says whether rows were written; when none were, run the same command again: it starts over, writing the files again under the same keys.
 - **It refuses** a database that already holds projects or tickets, and says what is there (`--allow-existing` adds your data next to them); one where your data is already there; and one an older build migrated (deploy this commit first, so the online tracker and the move agree on the schema).
 
@@ -190,7 +192,7 @@ Agents on your Mac reach the online tracker with its address and an API token yo
 
 3. Restart Claude Code and check with `node apps/agent/dist/cli.js projects`.
 
-**Updating:** deploy the tracker first (push to `main` and wait for the deployment to go Active), then rebuild the agent (`npm run build -w @tracker/agent`) and restart `tracker watch` on each computer. A helper newer than its tracker may call routes the tracker doesn't have yet: then every step Claude asks you about is denied with "Update the tracker."
+**Updating:** deploy the tracker first (push to `main` and wait for CI to pass and the deployment to go Active), then rebuild the agent (`npm run build -w @tracker/agent`) and restart `tracker watch` on each computer. A helper newer than its tracker may call routes the tracker doesn't have yet: then every step Claude asks you about is denied with "Update the tracker."
 
 ## Backups
 
@@ -210,7 +212,7 @@ Agents on your Mac reach the online tracker with its address and an API token yo
 
 ## Rolling back
 
-- **A release without new migrations:** **Deployments** → an earlier deployment → **⋮** → **Redeploy**. Or `git revert` the commit and push.
+- **A release without new migrations:** **Deployments** → an earlier deployment → **⋮** → **Redeploy**. Or `git revert` the commit and push (it deploys once CI has passed on it).
 - **A release that added migrations** (its pre-deploy log said `Applied …`): an older build refuses a database with migrations it doesn't know, so undo them first, with the new build:
   1. Take a Railway backup (a migration's undo drops what it added, data included).
   2. `railway ssh` into the tracker, `cd /app`, then `node apps/server/dist/db.js rollback` (says which migration it would undo) and `node apps/server/dist/db.js rollback --yes`, once per migration that release added.
@@ -238,7 +240,8 @@ Agents on your Mac reach the online tracker with its address and an API token yo
 
 - Railway ends a request after 15 minutes, and an upload must arrive within 5 minutes: live updates simply reconnect, but a 100 MB video needs an upload speed of about 3 Mbit/s or more.
 - The health check runs only during a deploy; Railway doesn't watch it afterwards. **Restart on failure** brings a crashed server back.
-- Pushing anything to `main` deploys. In **Settings** you can turn on **Wait for CI** so a deploy waits for GitHub Actions (`npm run verify`) to pass.
+- A push goes live only after CI has passed on it, some minutes later. A test that fails only now and then (a flaky one) skips that deploy too: re-run the failed jobs on GitHub, then **Deploy Latest Commit**.
+- CI runs `npm audit --omit=dev --audit-level=high`, so once a high or critical advisory comes out for any production dependency (the server's, the web app's or the agent's), every push fails CI and nothing deploys until that package is updated. Dependabot's weekly pull request updates only the packages named in a `package.json`, such as zod or hono. A package that another one pulls in, such as body-parser, qs, fast-uri or ip-address (through the MCP SDK, express and ajv), never gets a weekly pull request: update it with `npm update <package>` (agents run it only with your yes), or turn on Dependabot security updates in the repository's settings on GitHub, which update those too.
 
 ## First deploy: what to check
 
@@ -249,5 +252,5 @@ What could only be proved on Railway itself:
 - Sign in on the phone; the cookie works (it is `Secure`).
 - After step 7, upload a photo to a ticket: it is stored as WebP in the bucket under `attachments/`. (Before the move, a ticket made online would make the move refuse.)
 - Keep a ticket open on the phone and change it from the Mac: the change shows up right away (live updates through Railway's proxy).
-- Push a small commit: the old deployment's logs end without errors, and the phone reconnects to the new one.
+- Push a small commit: its deployment waits until CI has passed on GitHub before it builds, the old deployment's logs end without errors, and the phone reconnects to the new one.
 - Turn on notifications on the phone (step 8), lock it and start a run on a ticket: when it ends, a notification says "MOB-3: Claude finished", and tapping it opens the ticket.

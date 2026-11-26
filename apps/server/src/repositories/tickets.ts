@@ -24,6 +24,21 @@ export const findTicketByNum = (db: Db, projectId: string, num: number) =>
     .where('num', '=', num)
     .executeTakeFirst();
 
+export async function listTicketsByNums(
+  db: Db,
+  projectId: string,
+  nums: readonly number[],
+): Promise<TicketRow[]> {
+  if (nums.length === 0) return [];
+
+  return db
+    .selectFrom('tickets')
+    .selectAll()
+    .where('projectId', '=', projectId)
+    .where('num', 'in', nums)
+    .execute();
+}
+
 export const findTicketById = (db: Db, id: string) =>
   db.selectFrom('tickets').selectAll().where('id', '=', id).executeTakeFirst();
 
@@ -47,22 +62,21 @@ const latestReview = (eb: ExpressionBuilder<Database, 'tickets'>) =>
     .orderBy('activities.id', 'desc')
     .limit(1);
 
-// Requests are ended lazily (settleRequests), so one past its deadline or of an ended run may
-// still say open: only a live one counts. Another user's run never asks this one anything. The
-// last deadline goes with it because a helper that is gone sends no event when it passes.
+// Questions are ended lazily (settleQuestions), so one past its deadline may still say open: only
+// a live one counts. The last deadline goes with it because nothing sends an event when it passes.
 const waitingFor =
   (userId: UserScope, now: number) => (eb: ExpressionBuilder<Database, 'tickets'>) =>
     eb
-      .selectFrom('runs')
-      .innerJoin('runRequests', 'runRequests.runId', 'runs.id')
-      .select((sub) => sub.fn.max('runRequests.expiresAt').as('until'))
-      .whereRef('runs.ticketId', '=', 'tickets.id')
-      .where('runs.status', '=', 'running')
+      .selectFrom('questions')
+      .select((sub) => sub.fn.max('questions.expiresAt').as('until'))
+      .whereRef('questions.ticketId', '=', 'tickets.id')
       .where((sub) =>
-        userId === null ? sub('runs.userId', 'is', null) : sub('runs.userId', '=', userId),
+        userId === null
+          ? sub('questions.userId', 'is', null)
+          : sub('questions.userId', '=', userId),
       )
-      .where('runRequests.status', '=', 'open')
-      .where('runRequests.expiresAt', '>', now)
+      .where('questions.status', '=', 'open')
+      .where('questions.expiresAt', '>', now)
       .as('waitingUntil');
 
 export interface ItemReader {
@@ -70,8 +84,8 @@ export interface ItemReader {
   now: number;
 }
 
-// Counts, the latest review and until when Claude waits come from correlated subqueries, so a list
-// is one query.
+// Counts, the latest review and until when an agent waits come from correlated subqueries, so a
+// list is one query.
 const selectTicketItems = (db: Db, { userId, now }: ItemReader) =>
   db
     .selectFrom('tickets')

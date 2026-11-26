@@ -1,4 +1,4 @@
-import { ACTIVE_RUN_STATUSES, type EndedRunStatus, type StatusCategory } from '@tracker/shared';
+import { ACTIVE_RUN_STATUSES, type EndedRunStatus } from '@tracker/shared';
 import type { Db } from '../db/schema';
 
 export const listBatchTicketRows = (db: Db, batchIds: readonly string[]) =>
@@ -24,43 +24,6 @@ export interface BatchEnding {
   status: EndedRunStatus;
   error: string | null;
   endedAt: number;
-}
-
-// A sub agent claims its ticket (In progress) and submits it (Need review), so the ticket's run
-// follows the ticket: that is all the tracker sees of a sub agent.
-export async function advanceBatchTicket(
-  db: Db,
-  ticketId: string,
-  category: StatusCategory,
-  at: number,
-): Promise<string[]> {
-  // Only while the batch runs: a ticket moved before the helper takes it is still in its prompt.
-  const ofTicket = db
-    .updateTable('runs')
-    .where('ticketId', '=', ticketId)
-    .where((eb) =>
-      eb(
-        'batchId',
-        'in',
-        eb.selectFrom('runs as batch').select('batch.id').where('batch.status', '=', 'running'),
-      ),
-    );
-  if (category === 'in_progress') {
-    await ofTicket
-      .set({ status: 'running', startedAt: at })
-      .where('status', '=', 'queued')
-      .execute();
-    return [];
-  }
-
-  if (category === 'todo') return [];
-  const ended = await ofTicket
-    .set({ status: 'done', error: null, endedAt: at })
-    .where('status', 'in', ACTIVE_RUN_STATUSES)
-    .returning('id')
-    .execute();
-
-  return ended.map(({ id }) => id);
 }
 
 export const endBatchTickets = (db: Db, batchId: string, ending: BatchEnding) =>

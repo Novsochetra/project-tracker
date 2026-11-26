@@ -65,6 +65,15 @@
   margin-left: auto;
 }
 
+.action {
+  margin-left: auto;
+}
+
+.less + .action,
+.action + .add {
+  margin-left: 0;
+}
+
 .less {
   display: inline-flex;
   align-items: center;

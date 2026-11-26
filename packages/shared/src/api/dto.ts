@@ -2,7 +2,6 @@ import type { Activity } from '../domain/activity';
 import type { Attachment } from '../domain/attachment';
 import type { Label } from '../domain/label';
 import type { Project } from '../domain/project';
-import type { RunRole } from '../domain/run';
 import type { Status } from '../domain/status';
 import type { Ticket, TicketListItem } from '../domain/ticket';
 import type { UserRole } from '../domain/invite';
@@ -34,30 +33,6 @@ export interface TicketDetail {
   labels?: Label[];
   activity: Activity[];
   attachments: Attachment[];
-}
-
-export interface PromptResult {
-  text: string;
-  ticketCount: number;
-  role: RunRole;
-}
-
-export interface ReportPreviewItem {
-  key: string | null;
-  matched: boolean;
-  ticketKey: string | null;
-  ticketTitle: string | null;
-  fromStatusName: string | null;
-  toStatusName: string | null;
-}
-
-export interface ReportPreview {
-  items: ReportPreviewItem[];
-  matchedCount: number;
-}
-
-export interface ReportResult {
-  updatedTicketKeys: string[];
 }
 
 export interface ErrorBody {

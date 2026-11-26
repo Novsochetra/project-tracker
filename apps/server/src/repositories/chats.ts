@@ -165,9 +165,6 @@ export async function claimMessageBatch(db: Db, id: string, batchRunId: string):
   return Number(result.numUpdatedRows) > 0;
 }
 
-export const assignOwnerlessChats = (db: Db, userId: string) =>
-  db.updateTable('chats').set({ userId }).where('userId', 'is', null).execute();
-
 export async function deleteChatRow(db: Db, id: string): Promise<void> {
   await db.deleteFrom('chats').where('id', '=', id).execute();
 }

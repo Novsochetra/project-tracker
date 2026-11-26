@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { lookalikesOf } from '../../src/features/requests/lookalikes';
+import { lookalikesOf } from '../../src/lib/lookalikes';
 
 // Katakana ロ and Han 口 were marked in ordinary names (プロジェクトA, 人口data), and the long-vowel
 // mark ー counted as a letter of no script (PT-169 third review). A round letter is marked only

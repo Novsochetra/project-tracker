@@ -2,7 +2,6 @@ import { randomUUID } from 'node:crypto';
 import {
   BATCH_NEEDS_NEW_HELPER,
   type Run,
-  type RunActivity,
   type RunAllPreview,
   type RunAllResult,
   type RunBatch,
@@ -210,44 +209,9 @@ describe.each(DIALECTS)('run all todo (%s)', (dialect) => {
       (await person<RunBatch>('GET', `/api/runs/${batchId}/batch`)).body.tickets.map(
         ({ state }) => state,
       );
-    const finish = (status: string) =>
-      helper('POST', `/api/runs/${batchId}/finish`, { status, error: 'Stopped' });
-
     beforeEach(async () => {
       batchId = (await runAll()).body.runId as string;
       await take(runner);
-    });
-
-    it('follows each ticket as a sub agent claims and submits it', async () => {
-      await helper('POST', '/api/tickets/MOB-1/claim');
-      await helper('POST', '/api/tickets/MOB-2/claim');
-      expect(await states()).toEqual(['running', 'running', 'waiting', 'waiting']);
-      await helper('POST', '/api/tickets/MOB-1/submit', { summary: 'Fixed', files: '', next: '' });
-      expect(await states()).toEqual(['done', 'running', 'waiting', 'waiting']);
-      expect((await person<Run>('GET', `/api/runs/${batchId}`)).body.status).toBe('running');
-    });
-
-    it('fails what the batch did not finish and keeps what it did', async () => {
-      await helper('POST', '/api/tickets/MOB-1/claim');
-      await helper('POST', '/api/tickets/MOB-1/submit', { summary: 'Fixed', files: '', next: '' });
-      expect((await helper('POST', `/api/runs/${batchId}/finish`, { status: 'done' })).status).toBe(
-        200,
-      );
-      expect(await states()).toEqual(['done', 'failed', 'failed', 'failed']);
-      expect((await person<Run>('GET', `/api/runs/${batchId}`)).body.status).toBe('done');
-      expect((await start('MOB-2', runner)).status).toBe(201);
-    });
-
-    it('lists the batch on the Activity screen with its count and failed tickets', async () => {
-      await helper('POST', '/api/tickets/MOB-1/claim');
-      await helper('POST', '/api/tickets/MOB-1/submit', { summary: 'Fixed', files: '', next: '' });
-      const running = (await person<RunActivity>('GET', '/api/run-activity')).body.batches;
-      expect(running).toMatchObject([{ runId: batchId, state: 'running', total: 4, done: 1 }]);
-      await finish('failed');
-      const ended = (await person<RunActivity>('GET', '/api/run-activity')).body.batches;
-      expect(ended).toMatchObject([
-        { runId: batchId, state: 'failed', failedKeys: ['MOB-2', 'MOB-3', 'MOB-4'] },
-      ]);
     });
 
     it('stops the whole batch on Cancel', async () => {

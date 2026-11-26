@@ -1,4 +1,5 @@
 import type { StatusCategory } from '../domain/status';
+import { normalizeReportStatus } from './reportStatus';
 
 export interface ParsedReportBlock {
   key: string | null;
@@ -9,21 +10,6 @@ export interface ParsedReportBlock {
 const TICKET_LINE = /^[\s>*_`#-]*TICKET[\s*_`]*[:：][\s*_`]*([A-Za-z0-9]+-\d+)/i;
 const STATUS_LINE = /STATUS[\s*_`]*[:：]\s*(.+)/i;
 const FENCE_LINE = /^\s*```/;
-
-const STATUS_RULES: readonly (readonly [RegExp, StatusCategory])[] = [
-  [/\b(reviewed|approved|verified)\b/, 'reviewed'],
-  [/\b(done|complete|completed|fixed|finished|resolved)\b/, 'in_review'],
-  [/\b(needs? review|ready for review|in review|review)\b/, 'in_review'],
-  [/not started/, 'todo'],
-  [/(progress|partial|blocked|wip|started|ongoing)/, 'in_progress'],
-  [/to ?do/, 'todo'],
-];
-
-export function normalizeReportStatus(raw: string): StatusCategory | null {
-  const value = raw.toLowerCase();
-
-  return STATUS_RULES.find(([pattern]) => pattern.test(value))?.[1] ?? null;
-}
 
 interface RawBlock {
   key: string | null;

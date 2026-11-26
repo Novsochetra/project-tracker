@@ -1,23 +1,14 @@
-import { randomUUID } from 'node:crypto';
-import {
-  RUN_REQUEST_DEADLINE_MS,
-  type Run,
-  type TicketDetail,
-  type TicketQuestion,
-} from '@tracker/shared';
+import { QUESTION_DEADLINE_MS, type TicketDetail, type TicketQuestion } from '@tracker/shared';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { createBroadcaster } from '../../src/events/broadcaster';
-import type { RunNotice } from '../../src/events/runNotice';
 import { testClock } from '../helpers/auth';
-import { addUser, caller, helperName, type Caller } from '../helpers/runs';
+import { addUser, caller, type Caller } from '../helpers/runs';
 import { DIALECTS, useTestServer } from '../helpers/server';
 
 const ASKED = { question: 'Which name should the setting have?', choices: ['Dark', 'Night'] };
 
 describe.each(DIALECTS)('questions on a ticket (%s)', (dialect) => {
   const clock = testClock();
-  const runEvents = createBroadcaster<RunNotice>();
-  const api = useTestServer(dialect, { now: clock.now, runEvents });
+  const api = useTestServer(dialect, { now: clock.now });
   let person: Caller;
   let agent: Caller;
   let other: { person: Caller; agent: Caller };
@@ -55,13 +46,12 @@ describe.each(DIALECTS)('questions on a ticket (%s)', (dialect) => {
       body: {
         id: expect.any(String),
         ticketId: expect.any(String),
-        runId: null,
         text: ASKED.question,
         choices: ASKED.choices,
         status: 'open',
         answer: null,
         createdAt: expect.any(Number),
-        expiresAt: created.body.createdAt + RUN_REQUEST_DEADLINE_MS,
+        expiresAt: created.body.createdAt + QUESTION_DEADLINE_MS,
         endedAt: null,
       },
     });
@@ -133,7 +123,7 @@ describe.each(DIALECTS)('questions on a ticket (%s)', (dialect) => {
 
   it('ends a question nobody answered at its deadline', async () => {
     const question = await asked();
-    clock.advance(RUN_REQUEST_DEADLINE_MS - 1);
+    clock.advance(QUESTION_DEADLINE_MS - 1);
     expect((await list()).body[0]?.status).toBe('open');
     clock.advance(1);
     expect((await wait(question.id)).body).toMatchObject({
@@ -164,47 +154,5 @@ describe.each(DIALECTS)('questions on a ticket (%s)', (dialect) => {
     await asked();
     await person('DELETE', '/api/tickets/MOB-1');
     expect(await api.db.selectFrom('questions').selectAll().execute()).toEqual([]);
-  });
-
-  describe('in a run', () => {
-    let runner: string;
-    let run: Run;
-    const checkIn = () => agent('PUT', `/api/runners/${runner}`, helperName('A Mac'));
-
-    beforeEach(async () => {
-      runner = randomUUID();
-      await checkIn();
-      run = (
-        await person<Run>('POST', '/api/tickets/MOB-1/runs', { runnerId: runner, prompt: 'Go' })
-      ).body;
-    });
-
-    it('belongs to the run that works on the ticket, and ends with it', async () => {
-      expect((await asked()).runId).toBeNull();
-      await agent('POST', `/api/runners/${runner}/next`);
-      const question = await asked();
-      expect(question.runId).toBe(run.id);
-      const waiting = wait(question.id);
-      await vi.waitFor(() => expect(runEvents.listenerCount()).toBe(1));
-      await person('POST', `/api/runs/${run.id}/cancel`);
-      expect((await waiting).body).toMatchObject({ status: 'cancelled' });
-      expect(await answer(question.id, { answer: 'Dark' })).toMatchObject({
-        status: 409,
-        body: { error: { message: 'Claude no longer waits for this.' } },
-      });
-    });
-
-    it('keeps a waiting run going while its helper checks in, past the question deadline', async () => {
-      await agent('POST', `/api/runners/${runner}/next`);
-      const question = await asked();
-      for (let minutes = 0; minutes < 40; minutes += 10) {
-        clock.advance(10 * 60_000);
-        await checkIn();
-        expect((await person<Run>('GET', `/api/runs/${run.id}`)).body.status).toBe('running');
-      }
-
-      expect((await wait(question.id)).body).toMatchObject({ status: 'expired' });
-      expect((await person<Run>('GET', `/api/runs/${run.id}`)).body.status).toBe('running');
-    });
   });
 });

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { permissionPush } from '../../src/logic/pushMessages';
+import { permissionPush } from '../../src/logic/runPushMessages';
 import { permissionLabel } from '../../src/logic/runRequests/permissionLabel';
 
 // A push shows on the lock screen without unlocking, and its title held the command, which

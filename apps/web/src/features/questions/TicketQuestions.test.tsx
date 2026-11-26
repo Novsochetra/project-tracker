@@ -1,7 +1,7 @@
 import { act, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ApiError } from '@tracker/client';
-import { RUN_REQUEST_DEADLINE_MS, type TicketQuestion } from '@tracker/shared';
+import { QUESTION_DEADLINE_MS, type TicketQuestion } from '@tracker/shared';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { announce } from '../../app/announce';
 import { LiveRegion } from '../../app/LiveRegion';
@@ -14,13 +14,12 @@ afterEach(() => act(() => announce('')));
 const question = (more: Partial<TicketQuestion> = {}): TicketQuestion => ({
   id: 'q-1',
   ticketId: 't-1',
-  runId: null,
   text: 'Which name should the setting have?',
   choices: ['Dark', 'Night'],
   status: 'open',
   answer: null,
   createdAt: Date.now(),
-  expiresAt: Date.now() + RUN_REQUEST_DEADLINE_MS,
+  expiresAt: Date.now() + QUESTION_DEADLINE_MS,
   endedAt: null,
   ...more,
 });

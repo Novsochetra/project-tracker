@@ -2,7 +2,6 @@ import { randomUUID } from 'node:crypto';
 import type { Attachment, ChatDetail, RunJob } from '@tracker/shared';
 import sharp from 'sharp';
 import { beforeEach, describe, expect, it } from 'vitest';
-import { PENDING_TTL_MS, removeStalePendingAttachments } from '../../src/services/attachments';
 import { testClock } from '../helpers/auth';
 import { containsText, jpegPhoto, pngImage, twoColorPixels } from '../helpers/images';
 import { addUser, caller, helperName, type Auth, type Caller } from '../helpers/runs';
@@ -106,7 +105,7 @@ describe.each(DIALECTS)('files sent with a chat question (%s)', (dialect) => {
     expect(job.prompt).toContain('Person:\nFirst\n(Sent with it: board.png)');
   });
 
-  it("refuses another user's upload and a file already sent, and keeps nothing of the question", async () => {
+  it("refuses another user's upload, and keeps nothing of the question", async () => {
     const other = await addUser(api.db, 'other@example.com', clock.now());
     const theirs = await upload(NOTES, 'theirs.txt', 'text/plain', other.person);
     const refused = await startChat('Look', [theirs.id]);
@@ -115,13 +114,6 @@ describe.each(DIALECTS)('files sent with a chat question (%s)', (dialect) => {
       body: { error: { message: 'Some files could not be sent. Upload them again.' } },
     });
     expect((await person('GET', '/api/projects/MOB/chats')).body).toEqual([]);
-
-    const { photo } = await uploadBoth();
-    const chatId = (await startChat('Look', [photo.id])).body.chat.id;
-    await finish((await next()).body?.run.id ?? '');
-    const again = { runnerId: runner, text: 'Again', attachmentIds: [photo.id] };
-    expect((await person('POST', `/api/chats/${chatId}/messages`, again)).status).toBe(400);
-    expect((await person<ChatDetail>('GET', `/api/chats/${chatId}`)).body.messages).toHaveLength(2);
   });
 
   it('takes questions only from a person', async () => {
@@ -129,29 +121,13 @@ describe.each(DIALECTS)('files sent with a chat question (%s)', (dialect) => {
     expect((await startChat('Look', [notes.id], helper)).status).toBe(403);
   });
 
-  it('never treats a sent file as pending: it stays past a day and joins no ticket', async () => {
-    const { photo } = await uploadBoth();
-    await startChat('Look', [photo.id]);
-    const later = clock.now() + PENDING_TTL_MS + 1;
-    expect(await removeStalePendingAttachments(api, later)).toBe(1);
-    expect(await rowCount()).toBe(1);
-    const ticket = { title: 'Steal it', attachmentIds: [photo.id] };
-    expect((await person('POST', '/api/projects/MOB/tickets', ticket)).status).toBe(400);
-  });
-
-  it('removes the files with their chat, and with their project', async () => {
+  it('removes the files with their chat', async () => {
     const chatId = (await startChat('Look', [(await uploadBoth()).photo.id])).body.chat.id;
     await finish((await next()).body?.run.id ?? '');
-    const second = (await startChat('More', [(await uploadBoth()).notes.id])).body.chat.id;
-    expect(api.storage.files.size).toBe(4);
+    expect(api.storage.files.size).toBe(2);
 
     expect((await person('DELETE', `/api/chats/${chatId}`)).status).toBe(204);
-    expect(api.storage.files.size).toBe(3);
-    expect(await rowCount()).toBe(3);
-    expect((await person('DELETE', '/api/projects/MOB')).status).toBe(204);
-    expect((await person('GET', `/api/chats/${second}`)).status).toBe(404);
-    // The two uploads never sent stay pending until they expire.
-    expect(await rowCount()).toBe(2);
-    expect(api.storage.files.size).toBe(2);
+    expect(api.storage.files.size).toBe(1);
+    expect(await rowCount()).toBe(1);
   });
 });

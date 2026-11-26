@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { lookalikesOf } from '../../src/features/requests/lookalikes';
+import { lookalikesOf } from '../../src/lib/lookalikes';
 
 const markedIn = (text: string) => [...lookalikesOf(text)].map((index) => text.charAt(index));
 

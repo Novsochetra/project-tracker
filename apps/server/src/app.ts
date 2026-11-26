@@ -15,6 +15,7 @@ import { handleError, handleNotFound } from './http/errors';
 import { securityHeaders, unbufferedStreams } from './http/responseHeaders';
 import { activityRoutes } from './http/routes/activity';
 import { attachmentRoutes } from './http/routes/attachments';
+import { doneMoveRoutes } from './http/routes/doneMoves';
 import { eventRoutes } from './http/routes/events';
 import { inviteRoutes } from './http/routes/invites';
 import { labelRoutes } from './http/routes/labels';
@@ -22,6 +23,7 @@ import { passwordRoutes } from './http/routes/password';
 import { passwordResetRoutes } from './http/routes/passwordResets';
 import { miscRoutes, testResetRoutes } from './http/routes/misc';
 import { projectRoutes } from './http/routes/projects';
+import { promptRoutes } from './http/routes/prompts';
 import { pushRoutes } from './http/routes/push';
 import { questionRoutes } from './http/routes/questions';
 import { reportRoutes } from './http/routes/reports';
@@ -89,10 +91,12 @@ function createApi(ctx: ServiceContext, deps: AppDeps): Hono<AppEnv> {
     .route('/', statusRoutes(ctx))
     .route('/', labelRoutes(ctx))
     .route('/', ticketRoutes(ctx))
+    .route('/', doneMoveRoutes(ctx))
     .route('/', searchRoutes(ctx))
     .route('/', workflowRoutes(ctx))
     .route('/', activityRoutes(ctx))
     .route('/', attachmentRoutes(ctx))
+    .route('/', promptRoutes(ctx))
     .route('/', reportRoutes(ctx))
     .route('/', runRoutes(ctx))
     .route('/', batchRunRoutes(ctx))

@@ -26,6 +26,21 @@ describe('ConfirmCard', () => {
     expect(onCancel).toHaveBeenCalledTimes(1);
   });
 
+  it('asks for something that can be undone with a primary button', () => {
+    render(
+      <ConfirmCard
+        message="Move all 12 tickets to Done?"
+        confirmLabel="Move to Done"
+        confirmVariant="primary"
+        onConfirm={vi.fn()}
+        onCancel={vi.fn()}
+      />,
+    );
+    const confirm = screen.getByRole('button', { name: 'Move to Done' });
+    expect(confirm).toHaveClass('primary');
+    expect(confirm).not.toHaveClass('danger');
+  });
+
   it('blocks a second delete while the first is pending', () => {
     render(<ConfirmCard message="Delete?" pending onConfirm={vi.fn()} onCancel={vi.fn()} />);
     expect(screen.getByRole('button', { name: 'Delete' })).toBeDisabled();

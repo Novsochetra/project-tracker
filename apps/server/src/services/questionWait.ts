@@ -1,6 +1,6 @@
 import { nextWaitMs, type TicketQuestion } from '@tracker/shared';
 import type { UserContext } from './context';
-import { longPoll } from './longPoll';
+import { longPoll, wakeOn } from './longPoll';
 import { toQuestion } from './questionMappers';
 import { requireQuestion } from './questions';
 import { settleQuestions } from './questionSweep';
@@ -16,13 +16,10 @@ export async function waitForQuestion(
     return requireQuestion(ctx, ctx.scope, id);
   };
 
-  const row = await longPoll(ctx, {
+  const row = await longPoll({
     read,
     isOpen: (seen) => seen.status === 'open',
-    wakes: (first) => ({
-      change: ({ event }) => event.ticketId === first.ticketId,
-      run: ({ event }) => event.type === 'run' && event.runId === first.runId,
-    }),
+    wakes: (first) => [wakeOn(ctx.events, ({ event }) => event.ticketId === first.ticketId)],
     waitMs: (seen) => nextWaitMs(seen.expiresAt, ctx.now()),
     signal,
   });

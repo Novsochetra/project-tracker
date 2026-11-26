@@ -5,10 +5,9 @@ import {
   RUN_REQUEST_DEADLINE_MS,
   RUN_PERMISSION_LABEL_MAX,
   RUN_REQUEST_LABEL_MAX,
-  RUN_REQUEST_WAIT_MS,
 } from '../src/domain/runRequest';
 import { answerProblem } from '../src/logic/runRequests/answerProblem';
-import { nextWaitMs, requestExpiresAt, requestIsOverdue } from '../src/logic/runRequests/deadline';
+import { requestExpiresAt, requestIsOverdue } from '../src/logic/runRequests/deadline';
 import { labelHead, permissionLabel } from '../src/logic/runRequests/permissionLabel';
 import { requestOfCall } from '../src/logic/runRequests/requestOfCall';
 
@@ -294,11 +293,5 @@ describe('the deadline', () => {
     expect(RUN_REQUEST_DEADLINE_MS).toBe(30 * 60_000);
     expect(requestIsOverdue(5000, 4999)).toBe(false);
     expect(requestIsOverdue(5000, 5000)).toBe(true);
-  });
-
-  it('waits at most one wait, and never past the deadline', () => {
-    expect(nextWaitMs(100_000, 0)).toBe(RUN_REQUEST_WAIT_MS);
-    expect(nextWaitMs(100_000, 90_000)).toBe(10_000);
-    expect(nextWaitMs(100_000, 120_000)).toBe(0);
   });
 });

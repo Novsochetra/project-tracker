@@ -1,5 +1,9 @@
 export const RANK_STEP = 1000;
 
+// A rank the tracker takes from a client, as Undo's put-back: a million tickets put on top of one
+// group stay inside it, and topRank's step past it stays inside Postgres's 32-bit integer.
+export const RANK_LIMIT = 1_000_000_000;
+
 export interface Rankable {
   id: string;
   rank: number;
@@ -13,6 +17,14 @@ export function topRank(group: readonly Rankable[]): number {
   if (group.length === 0) return 0;
 
   return Math.min(...group.map((ticket) => ticket.rank)) - RANK_STEP;
+}
+
+// Tickets that enter the top of a group together keep the order given: the last one gets the rank
+// a ticket entering alone would.
+export function topRanks(group: readonly Rankable[], ids: readonly string[]): Map<string, number> {
+  const last = topRank(group);
+
+  return new Map(ids.map((id, index) => [id, last - (ids.length - 1 - index) * RANK_STEP]));
 }
 
 export function evenRanks(ids: readonly string[]): Map<string, number> {

@@ -4,6 +4,7 @@ import { Play } from 'lucide-react';
 import type { MouseEvent } from 'react';
 import { errorMessage } from '../../api';
 import { useRunCardTicket } from '../../api/hooks/chats';
+import { runErrorMessage } from '../../api/promptTooLong';
 import { useCancelRun, useTicketRuns } from '../../api/hooks/runs';
 import { Button, Spinner, useToast } from '../../components';
 import { holdPresses } from '../../lib/holdPresses';
@@ -68,7 +69,7 @@ export function CardRun({ ticketKey, helper }: CardRunProps) {
       {shown && <UsageLine usage={shown.run.usage} />}
       {start.error && (
         <p role="alert" className={clsx(styles.error, 'fade-in')}>
-          {errorMessage(start.error)}
+          {runErrorMessage(start.error)}
         </p>
       )}
       {helper && (

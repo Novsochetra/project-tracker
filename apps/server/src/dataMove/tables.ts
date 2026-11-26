@@ -1,8 +1,8 @@
-import type { Database } from '../db/schema';
+import type { CoreTables } from '../db/schema';
 
 export interface CopiedTable {
-  name: keyof Database;
-  references: readonly (keyof Database)[];
+  name: keyof CoreTables;
+  references: readonly (keyof CoreTables)[];
   // Tables the move leaves behind (SKIPPED_TABLES) that some of its rows point at; those rows are
   // left out too.
   leftBehind?: readonly string[];
@@ -15,7 +15,8 @@ export const COPIED_TABLES = [
   { name: 'statuses', references: ['projects'] },
   { name: 'tickets', references: ['projects', 'statuses'] },
   { name: 'activities', references: ['tickets'] },
-  // Files sent in chats stay with their chats (pendingUploads.ts).
+  // A file whose chat_message_id names a chat message is on no ticket or comment, so it stays
+  // behind as a pending upload (pendingUploads.ts).
   { name: 'attachments', references: ['tickets', 'activities'], leftBehind: ['chat_messages'] },
   { name: 'labels', references: ['projects'] },
   { name: 'ticketLabels', references: ['tickets', 'labels'] },
@@ -41,7 +42,7 @@ export const SKIPPED_TABLES: Readonly<Record<string, string>> = {
   run_requests: 'what Claude Code asked in those runs',
   run_changes: 'what Claude Code changed in those runs',
   ticket_viewed_files: 'the changed files of those runs ticked as viewed',
-  questions: 'what Claude Code asked on tickets, tied to those runs',
+  questions: 'what agents asked on tickets, each ended within 30 minutes',
   chats: "chats with Claude Code on this tracker's helpers",
   chat_messages: "chats with Claude Code on this tracker's helpers",
   chat_card_tickets: "chats with Claude Code on this tracker's helpers",

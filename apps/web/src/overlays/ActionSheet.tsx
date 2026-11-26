@@ -1,9 +1,10 @@
 import clsx from 'clsx';
 import { m } from 'motion/react';
-import { useRef, type ReactNode } from 'react';
+import { useCallback, useRef, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { useTapShield } from '../lib/clickShield';
 import { MotionScope } from '../lib/MotionScope';
+import { useLatest } from '../lib/useLatest';
 import styles from './ActionSheet.module.css';
 import { actionSheetContent } from './actionSheetContent';
 import { useActionSheetMotion } from './useActionSheetMotion';
@@ -27,6 +28,8 @@ export interface ActionSheetProps {
   actions: ActionSheetAction[];
   cancelLabel?: string;
   holdOnClose?: boolean;
+  // Once the sheet has left the screen, for an action whose result takes away what holds the sheet.
+  onClosed?: () => void;
 }
 
 function ActionSheetPanel(props: ActionSheetProps & { onExited: () => void }) {
@@ -96,11 +99,17 @@ function ActionSheetPanel(props: ActionSheetProps & { onExited: () => void }) {
 // Selecting an action leaves the sheet open, so the owner can swap the actions or close it.
 export function ActionSheet(props: ActionSheetProps) {
   const { mounted, onExited } = usePresence(props.open);
+  // Kept out of the exit's dependencies, so a render while the sheet leaves doesn't restart it.
+  const onClosed = useLatest(props.onClosed);
+  const exited = useCallback(() => {
+    onExited();
+    onClosed.current?.();
+  }, [onExited, onClosed]);
   if (!mounted) return null;
 
   return createPortal(
     <MotionScope>
-      <ActionSheetPanel {...props} onExited={onExited} />
+      <ActionSheetPanel {...props} onExited={exited} />
     </MotionScope>,
     document.body,
   );

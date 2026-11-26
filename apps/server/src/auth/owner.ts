@@ -3,9 +3,6 @@ import { EMAIL_MAX, PASSWORD_MAX, PASSWORD_MIN, normalizeEmail } from '@tracker/
 import { z } from 'zod';
 import type { Db } from '../db/schema';
 import { conflict, invalidInput } from '../errors';
-import { assignOwnerlessChats } from '../repositories/chats';
-import { assignOwnerlessRunners } from '../repositories/runners';
-import { assignOwnerlessRuns } from '../repositories/runs';
 import { deleteUserSessions } from '../repositories/sessions';
 import { assignOwnerlessProjects } from '../repositories/projects';
 import { assignOwnerlessUploads } from '../repositories/attachments';
@@ -54,9 +51,6 @@ async function createOwner(db: Db, owner: { email: string; passwordHash: string;
   // Until now everyone on this computer was the one person, and that person is the owner.
   await assignOwnerlessProjects(db, id);
   await assignOwnerlessUploads(db, id);
-  await assignOwnerlessRuns(db, id);
-  await assignOwnerlessRunners(db, id);
-  await assignOwnerlessChats(db, id);
   // A device turned notifications on with no sign-in; once it signs in, it turns them on again.
   await deleteOwnerlessSubscriptions(db);
 }
