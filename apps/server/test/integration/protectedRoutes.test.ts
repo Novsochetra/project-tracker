@@ -19,6 +19,7 @@ const PROTECTED: readonly (readonly [string, string])[] = [
   ['PATCH', '/api/statuses/s1'],
   ['DELETE', '/api/statuses/s1'],
   ['GET', '/api/tickets'],
+  ['GET', '/api/search'],
   ['GET', '/api/projects/MOB/tickets'],
   ['POST', '/api/projects/MOB/tickets'],
   ['GET', '/api/tickets/MOB-1'],

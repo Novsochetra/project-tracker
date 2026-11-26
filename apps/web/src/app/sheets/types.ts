@@ -16,7 +16,8 @@ export type SheetRequest =
   | { type: 'labels'; projectKey: string }
   | { type: 'runSteps'; runId: string; ticketKey: string }
   | { type: 'connect' }
-  | { type: 'account' };
+  | { type: 'account' }
+  | { type: 'search' };
 
 export interface SheetProps {
   open: boolean;

@@ -9,6 +9,7 @@ import {
   type ProjectSummary,
   type Run,
   type TicketsAcrossProjects,
+  type TicketSearchResults,
 } from '@tracker/shared';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { addUser, caller, helperName, type Auth, type Caller } from '../helpers/runs';
@@ -224,11 +225,19 @@ describe.each(DIALECTS)("one user's projects stay theirs (%s)", (dialect) => {
       expect((await as<ProjectSummary[]>('GET', '/api/projects')).body).toEqual([]);
       const all = await as<TicketsAcrossProjects>('GET', '/api/tickets?q=Crash');
       expect(all.body).toEqual({ tickets: [], statuses: [], labels: [] });
+      const found = await as<TicketSearchResults>('GET', '/api/search?q=Crash');
+      expect(found.body).toEqual({ tickets: [] });
+      expect((await as<TicketSearchResults>('GET', '/api/search?q=MOB-1')).body.tickets).toEqual(
+        [],
+      );
+      expect((await as<TicketSearchResults>('GET', '/api/search')).body.tickets).toEqual([]);
       const ready = await as<TicketsAcrossProjects>('GET', '/api/tickets?category=todo');
       expect(ready.body.tickets).toEqual([]);
       expect((await as<string[]>('GET', '/api/people')).body).toEqual([]);
     }
     expect((await a.person<ProjectSummary[]>('GET', '/api/projects')).body).toHaveLength(1);
+    const own = await a.person<TicketSearchResults>('GET', '/api/search?q=Crash');
+    expect(own.body.tickets.map((ticket) => ticket.key)).toEqual(['MOB-1']);
   });
 
   it("matches no ticket of A's in B's pasted report", async () => {

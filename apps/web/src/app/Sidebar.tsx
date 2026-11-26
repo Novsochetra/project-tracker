@@ -8,6 +8,7 @@ import { AccountRow } from '../features/account';
 import { sameProjectKey } from '../features/projects/projectLookup';
 import { useOpenProject } from '../features/projects/useOpenProject';
 import { readyCounts, readyItems } from '../features/ready/readyItems';
+import { SearchButton } from '../features/search';
 import { ErrorBoundary } from '../lib/ErrorBoundary';
 import { useIsOpening, useNavigation, type Route } from '../navigation';
 import { projectKeyOf } from './crumbs';
@@ -87,6 +88,7 @@ export function Sidebar() {
         <LogoGlyph />
         <span className={styles.brandName}>Tracker</span>
       </div>
+      <SearchButton />
       <nav aria-label="Main" className={styles.group}>
         <SidebarItem
           route={PROJECTS}

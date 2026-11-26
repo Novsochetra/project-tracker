@@ -1,0 +1,195 @@
+/* A fixed height, so the sheet doesn't jump as results come and go under the field. */
+.palette {
+  display: flex;
+  flex-direction: column;
+  height: min(480px, 70vh);
+}
+
+.field {
+  flex: none;
+  padding: var(--space-3) var(--space-3) var(--space-2);
+}
+
+.searchField {
+  flex: 1 1 100%;
+  width: 100%;
+  min-height: 38px;
+}
+
+.results {
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 0 var(--space-2) var(--space-2);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.sectionLabel {
+  padding: var(--space-2) var(--space-2) var(--space-1);
+  color: var(--muted);
+  font: var(--text-caption);
+}
+
+.options {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 36px;
+  margin: 0;
+  padding: 6px var(--space-2);
+  border: 0;
+  border-radius: var(--radius-control);
+  background: transparent;
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: var(--size-secondary);
+  text-align: left;
+  cursor: pointer;
+}
+
+.option.active {
+  background: var(--fill-2);
+}
+
+.square {
+  flex: none;
+  width: 10px;
+  height: 10px;
+  border-radius: var(--radius-square);
+}
+
+.glyph {
+  flex: none;
+  align-self: center;
+}
+
+.text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.line {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.key {
+  flex: none;
+  color: var(--muted);
+  font: var(--text-mono);
+}
+
+.title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  line-height: 1.4;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Under the key, past the glyph and its gap. */
+.snippet {
+  padding-left: calc(16px + var(--space-2));
+  overflow: hidden;
+  color: var(--muted);
+  font-size: var(--size-caption);
+  line-height: 1.4;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.meta {
+  flex: none;
+  max-width: 30%;
+  overflow: hidden;
+  color: var(--subtle);
+  font-size: var(--size-caption);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mark {
+  background: transparent;
+  color: var(--ink);
+  font-weight: var(--weight-semibold);
+}
+
+.snippet .mark {
+  color: var(--ink-2);
+}
+
+.status {
+  margin: 0;
+  padding: var(--space-6) var(--space-3);
+  color: var(--muted);
+  font-size: var(--size-secondary);
+  text-align: center;
+}
+
+.status:empty {
+  padding: 0;
+}
+
+.hints {
+  display: flex;
+  flex: none;
+  gap: var(--space-4);
+  margin: 0;
+  padding: var(--space-2) var(--space-4);
+  border-top: 1px solid var(--line);
+  color: var(--subtle);
+  font-size: var(--size-caption);
+}
+
+.hints kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  margin-right: 2px;
+  padding: 0 4px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-square);
+  background: var(--fill);
+  font-family: var(--font-mono);
+  font-size: var(--size-caption);
+  line-height: 1;
+}
+
+/* The sheet shrinks above the keyboard (Sheet.module.css); the list shrinks with it, so the field
+   stays in sight. 68px is the grabber and header above it. */
+@media (width < 768px),
+  (pointer: coarse) and (device-width < 600px),
+  (pointer: coarse) and (device-height < 600px) {
+  .palette {
+    height: 75dvh;
+    max-height: calc(var(--sheet-viewport, 100dvh) - 32px - 68px - var(--safe-bottom));
+  }
+
+  .option {
+    min-height: var(--touch-target);
+  }
+
+  /* About 40 characters fit a line at 375px, so a snippet gets two. */
+  .snippet {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    white-space: normal;
+  }
+}

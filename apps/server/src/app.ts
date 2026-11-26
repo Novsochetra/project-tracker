@@ -35,6 +35,7 @@ import { runUsageRoutes } from './http/routes/runUsage';
 import { chatRoutes } from './http/routes/chats';
 import { sessionRoutes } from './http/routes/session';
 import { statusRoutes } from './http/routes/statuses';
+import { searchRoutes } from './http/routes/search';
 import { ticketRoutes } from './http/routes/tickets';
 import { tokenRoutes } from './http/routes/tokens';
 import { workflowRoutes } from './http/routes/workflow';
@@ -88,6 +89,7 @@ function createApi(ctx: ServiceContext, deps: AppDeps): Hono<AppEnv> {
     .route('/', statusRoutes(ctx))
     .route('/', labelRoutes(ctx))
     .route('/', ticketRoutes(ctx))
+    .route('/', searchRoutes(ctx))
     .route('/', workflowRoutes(ctx))
     .route('/', activityRoutes(ctx))
     .route('/', attachmentRoutes(ctx))
