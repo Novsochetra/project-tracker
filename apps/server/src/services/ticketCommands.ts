@@ -26,7 +26,6 @@ import {
 import { removeFiles } from '../storage/fileStorage';
 import { isEmpty } from '../util';
 import { attachLaterUploads, attachUploads } from './attachmentLinks';
-import { chainHeldTickets } from './batchChain';
 import { inTransaction, notify, type UserContext } from './context';
 import { assertMayLeave } from './doneTickets';
 import { expectedMatch, type ExpectedValues } from './expectedFields';
@@ -52,12 +51,10 @@ type MoveTicketValues = z.output<typeof moveTicketInput>;
 interface Outcome<T extends Ticket = Ticket> {
   ticket: T;
   changed: boolean;
-  heldDone?: string[];
 }
 
-async function finish<T extends Ticket>(ctx: UserContext, outcome: Outcome<T>): Promise<T> {
+function finish<T extends Ticket>(ctx: UserContext, outcome: Outcome<T>): T {
   if (outcome.changed) notify(ctx, outcome.ticket.projectId, outcome.ticket.id);
-  await chainHeldTickets(ctx, ctx.scope, outcome.heldDone ?? []);
 
   return outcome.ticket;
 }
@@ -221,7 +218,7 @@ export async function updateTicket(ctx: UserContext, update: TicketUpdate): Prom
       await setTicketLabels(trx, scope.ticket.id, labels.labelIds, written.ticket.updatedAt);
     const ticket = await ticketOut(trx, written.ticket, scope.project.key);
 
-    return { ticket, changed: true, heldDone: written.heldDone };
+    return { ticket, changed: true };
   });
 
   return finish(ctx, outcome);
@@ -231,10 +228,8 @@ export async function deleteTicket(ctx: UserContext, key: string): Promise<void>
   const removed = await inTransaction(ctx, async (trx) => {
     const ref = await requireTicket(trx, ctx.scope, key);
     const files = await storageKeysOfTicket(trx, ref.ticket.id);
-    // The project's row before its runs' rows (the delete cascades to them), in the order a take
-    // locks them (takeNextRun), or the two can deadlock on Postgres.
-    await updateProjectRow(trx, ref.project.id, { updatedAt: ctx.now() });
     await deleteTicketRow(trx, ref.ticket.id);
+    await updateProjectRow(trx, ref.project.id, { updatedAt: ctx.now() });
 
     return { ref, files };
   });
@@ -274,7 +269,7 @@ export async function moveTicket(
     });
     const ticket = await ticketOut(trx, written.ticket, scope.project.key);
 
-    return { ticket, changed: true, heldDone: written.heldDone };
+    return { ticket, changed: true };
   });
 
   return finish(ctx, outcome);

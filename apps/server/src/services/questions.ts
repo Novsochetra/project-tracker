@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import {
-  requestExpiresAt,
+  QUESTION_DEADLINE_MS,
   type Actor,
   type askQuestionInput,
   type TicketQuestion,
@@ -9,12 +9,7 @@ import type { z } from 'zod';
 import type { UserScope } from '../auth/scope';
 import type { QuestionRow } from '../db/questionTables';
 import { notFound } from '../errors';
-import {
-  findQuestionRow,
-  insertQuestion,
-  listTicketQuestionRows,
-  runningRunOfTicket,
-} from '../repositories/questions';
+import { findQuestionRow, insertQuestion, listTicketQuestionRows } from '../repositories/questions';
 import { inTransaction, type ServiceContext, type UserContext } from './context';
 import { requireTicket } from './lookups';
 import { notifyQuestion, toQuestion } from './questionMappers';
@@ -26,7 +21,7 @@ type AskValues = z.output<typeof askQuestionInput>;
 
 const askedEvent = (question: string): string => `asked: ${question}`;
 
-// 404 rather than 403 for another user's question, like runs.
+// 404 rather than 403 for another user's question, like a ticket.
 export async function requireQuestion(
   ctx: ServiceContext,
   scope: UserScope,
@@ -54,13 +49,12 @@ export async function askQuestion(
       id: randomUUID(),
       userId: ctx.scope,
       ticketId: ref.ticket.id,
-      runId: (await runningRunOfTicket(trx, ctx.scope, ref.ticket.id))?.id ?? null,
       text: input.question,
       choices: JSON.stringify(input.choices),
       status: 'open',
       answer: null,
       createdAt,
-      expiresAt: requestExpiresAt(createdAt),
+      expiresAt: createdAt + QUESTION_DEADLINE_MS,
       endedAt: null,
     };
     await insertQuestion(trx, row);

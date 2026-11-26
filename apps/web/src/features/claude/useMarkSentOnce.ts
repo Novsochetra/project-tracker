@@ -1,5 +1,5 @@
 import { useCallback, useRef, useState } from 'react';
-import { useMarkSent } from '../../api';
+import { useMarkSent } from '../../api/hooks/prompts';
 
 export interface MarkSentOnce {
   sent: boolean;

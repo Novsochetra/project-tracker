@@ -47,14 +47,4 @@ describe('regression: a take holds its project while it starts a run (pglite)', 
       inOrderInOneTransaction(sql, LOCK, /update "runs" set "status" = \$1, "started_at"/),
     ).toBe(true);
   });
-
-  it('locks the project row before a ticket delete reaches its runs', async () => {
-    expect((await person('DELETE', '/api/tickets/MOB-1')).status).toBe(204);
-    expect(inOrderInOneTransaction(sql, LOCK, /delete from "tickets"/)).toBe(true);
-  });
-
-  it('locks the project row before a project delete reaches its runs', async () => {
-    expect((await person('DELETE', '/api/projects/MOB')).status).toBe(204);
-    expect(inOrderInOneTransaction(sql, LOCK, /delete from "tickets"/)).toBe(true);
-  });
 });

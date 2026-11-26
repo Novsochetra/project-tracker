@@ -5,7 +5,6 @@ import { changeScope } from './changeScope';
 import { refreshBatches } from './refreshBatches';
 import { cachedEntries } from './refreshForChange';
 import { refreshLive } from './refreshLive';
-import { refreshTicketQuestions } from './refreshQuestions';
 import { refreshRunSteps } from './refreshRunSteps';
 import { endsRun, refreshWaiting } from './refreshWaiting';
 
@@ -45,7 +44,6 @@ export function refreshForRun(queryClient: QueryClient, event: RunEvent): void {
   if (event.ticketId) refreshTicketRuns(queryClient, event.ticketId, event.projectId);
   if (event.ticketId && endsRun(event.status)) {
     refreshWaiting(queryClient, event.projectId, event.ticketId);
-    refreshTicketQuestions(queryClient, event.ticketId, event.projectId);
   }
 
   if (event.chatId) {

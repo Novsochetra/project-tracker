@@ -1,10 +1,10 @@
-import { RUN_REQUEST_WAIT_MS } from '@tracker/shared';
-import { retryDelay, worthRetrying } from '../watch/retry';
-import { wait } from '../watch/wait';
+import { QUESTION_WAIT_MS } from '@tracker/shared';
+import { retryDelay, worthRetrying } from '../backoff';
+import { wait } from '../wait';
 
 // A wait the tracker holds a little longer than it should is still answered, but one a proxy
 // keeps open forever is dropped and asked again.
-const WAIT_TIMEOUT_MS = RUN_REQUEST_WAIT_MS + 15_000;
+const WAIT_TIMEOUT_MS = QUESTION_WAIT_MS + 15_000;
 
 export interface PollOptions<T> {
   // One long poll: the tracker answers once it ended or after about 25 s with it still open.

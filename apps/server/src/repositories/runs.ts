@@ -224,9 +224,6 @@ export const failRunsOf = (
     .returningAll()
     .execute();
 
-export const assignOwnerlessRuns = (db: Db, userId: string) =>
-  db.updateTable('runs').set({ userId }).where('userId', 'is', null).execute();
-
 export interface ActivityRunRow {
   runId: string;
   batchId: string | null;
@@ -303,3 +300,14 @@ export const listActivityBatchRows = (db: Db, userId: UserScope, since: number) 
     .orderBy('runs.createdAt', 'desc')
     .orderBy('runs.id', 'desc')
     .execute();
+
+// An update that changes nothing still holds the row until the transaction ends, in both
+// databases' SQL, where "select ... for update" is Postgres only. So takes of one project's runs
+// start one at a time, and each one's count sees the runs the others started.
+export async function holdProjectRuns(db: Db, projectId: string): Promise<void> {
+  await db
+    .updateTable('projects')
+    .set((eb) => ({ updatedAt: eb.ref('updatedAt') }))
+    .where('id', '=', projectId)
+    .execute();
+}

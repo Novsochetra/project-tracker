@@ -172,14 +172,6 @@ describe('formatActivity', () => {
     );
   });
 
-  it('names the file and line of a line comment', () => {
-    const line = { runId: 'r1', path: 'src/a.ts', side: 'new' as const, line: 12 };
-    const comment = activity({ type: 'comment', text: 'Rename this.', line });
-    expect(formatActivity([comment])).toBe(
-      '### Comment on src/a.ts line 12 · User · 2026-10-02 14:05\nRename this.',
-    );
-  });
-
   it('shows the description an agent replaced whole, in a fence its backticks cannot close', () => {
     const replaced = activity({
       actor: claude,

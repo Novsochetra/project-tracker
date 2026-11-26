@@ -5,7 +5,7 @@ import { Button } from '../../components';
 import { QUESTION_HEAD, SEND_ANSWER_LABEL, SKIP_LABEL } from './copy';
 import { QuestionBlock } from './QuestionBlock';
 import { RequestHead } from './RequestHead';
-import { revealActions } from './revealActions';
+import { revealActions } from '../questions/revealActions';
 import {
   answersAtOnce,
   choiceAnswer,

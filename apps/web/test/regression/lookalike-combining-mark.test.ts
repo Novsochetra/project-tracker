@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { markHidden } from '../../src/features/requests/hiddenChars';
+import { markHidden } from '../../src/lib/hiddenChars';
 
 // A combining mark after a marked letter sat on the next letter: 'pа́y' showed 'p\u{430}ý', with
 // the acute on the Latin y (PT-169 review).

@@ -1,10 +1,4 @@
-import {
-  lineLabel,
-  replacedDescription,
-  VERDICT_LABELS,
-  type Activity,
-  type Review,
-} from '@tracker/shared';
+import { replacedDescription, VERDICT_LABELS, type Activity, type Review } from '@tracker/shared';
 import { formatAttachments, NO_FILE_CONTENT, type FileView } from './attachments';
 import { authorName, fenced, formatTime, SEP } from './text';
 
@@ -39,8 +33,7 @@ function formatItem(item: Activity, view: FileView): string {
     case 'event':
       return formatEvent(item);
     case 'comment':
-      // A line comment says which line, so Claude fixes that line (the Changes tab).
-      return formatCard(item.line ? `Comment on ${lineLabel(item.line)}` : 'Comment', item, view);
+      return formatCard('Comment', item, view);
     case 'report':
       return formatCard('Report', item, view);
     case 'review':

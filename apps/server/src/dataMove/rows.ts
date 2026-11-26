@@ -1,7 +1,8 @@
-import type { Database, Db } from '../db/schema';
+import type { CoreTables, Db } from '../db/schema';
 import { COPIED_TABLE_NAMES, type CopiedTableName } from './tables';
 
-export type TableRows = { [T in CopiedTableName]: Database[T][] };
+// A table's other columns are copied as they are, though no type names them.
+export type TableRows = { [T in CopiedTableName]: CoreTables[T][] };
 
 export type TableCounts = Record<CopiedTableName, number>;
 

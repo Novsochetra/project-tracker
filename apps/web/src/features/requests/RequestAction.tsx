@@ -2,7 +2,7 @@ import { Icon } from '../../components';
 import { stepIcon } from '../steps/stepIcon';
 import { CodeLines } from './CodeLines';
 import { HIDDEN_CHARS_TEXT, LABEL_CUT_TEXT, LOOKALIKE_TEXT } from './copy';
-import { hasHidden, hasLookalike } from './hiddenChars';
+import { hasHidden, hasLookalike } from '../../lib/hiddenChars';
 import { MarkedText } from './MarkedText';
 import styles from './Requests.module.css';
 import { labelParts } from './requestText';

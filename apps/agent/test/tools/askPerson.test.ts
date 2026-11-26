@@ -9,7 +9,6 @@ import { run } from './run';
 const open: TicketQuestion = {
   id: 'q1',
   ticketId: 't1',
-  runId: null,
   text: 'Which name?',
   choices: ['Dark', 'Night'],
   status: 'open',

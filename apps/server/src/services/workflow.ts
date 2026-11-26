@@ -2,11 +2,9 @@ import {
   pickNextTicket,
   resolveStatus,
   type Actor,
-  type markSentInput,
   type reviewInput,
   type StatusCategory,
   type submitWorkInput,
-  type Ticket,
   type TicketDetail,
 } from '@tracker/shared';
 import type { z } from 'zod';
@@ -14,7 +12,6 @@ import type { Db, StatusRow } from '../db/schema';
 import { conflict } from '../errors';
 import { listStatusRows } from '../repositories/statuses';
 import { listTicketRows } from '../repositories/tickets';
-import { chainHeldTickets } from './batchChain';
 import { inTransaction, notify, type UserContext } from './context';
 import { assertMaySubmit } from './doneTickets';
 import { requireProject, requireTicketScope, ticketKeyOf, type TicketScope } from './lookups';
@@ -22,11 +19,9 @@ import { WORKFLOW_VERBS, workflowMoveText, type WorkflowVerb } from './statusEve
 import { pushToUser } from './push';
 import { readyPush } from './reviewPush';
 import type { PlannedChange } from './ticketChanges';
-import { ticketOut } from './ticketOut';
 import { getTicketDetailById } from './ticketQueries';
 import { enterStatus, eventEntry, writeTicket, type WrittenTicket } from './ticketWrites';
 
-type SentValues = z.output<typeof markSentInput>;
 type SubmitValues = z.output<typeof submitWorkInput>;
 type ReviewValues = z.output<typeof reviewInput>;
 
@@ -48,32 +43,8 @@ export async function transition(
 
 async function finishDetail(ctx: UserContext, written: WrittenTicket): Promise<TicketDetail> {
   notify(ctx, written.ticket.projectId, written.ticket.id);
-  await chainHeldTickets(ctx, ctx.scope, written.heldDone);
 
   return getTicketDetailById(ctx.db, ctx.scope, written.ticket.id);
-}
-
-export async function markSent(
-  ctx: UserContext,
-  actor: Actor,
-  key: string,
-  input: SentValues,
-): Promise<Ticket> {
-  const ticket = await inTransaction(ctx, async (trx) => {
-    const scope = await requireTicketScope(trx, ctx.scope, key);
-    const moves = input.moveToInProgress && scope.status.category === 'todo';
-    const target = moves ? resolveStatus(scope.statuses, 'in_progress') : scope.status;
-    const plan = await transition(trx, actor, scope, {
-      target,
-      verb: WORKFLOW_VERBS.send,
-    });
-    const written = await writeTicket(trx, ctx.now, { ticket: scope.ticket, actor, ...plan });
-
-    return ticketOut(trx, written.ticket, scope.project.key);
-  });
-  notify(ctx, ticket.projectId, ticket.id);
-
-  return ticket;
 }
 
 async function claimInScope(

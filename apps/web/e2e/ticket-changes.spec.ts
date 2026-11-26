@@ -32,7 +32,7 @@ async function runWithChanges(api: TrackerClient): Promise<void> {
   await api.finishRun(job!.run.id, { status: 'done' });
 }
 
-test('shows a run’s changes, keeps line comments and viewed ticks, and asks for changes', async ({
+test('shows a run’s changes, keeps viewed ticks, and asks for changes', async ({
   page,
   api,
 }, info) => {
@@ -46,8 +46,8 @@ test('shows a run’s changes, keeps line comments and viewed ticks, and asks fo
   await expect(page.getByText('0 of 2 viewed')).toBeVisible();
 
   await page.getByRole('button', { name: CODE_FILE }).click();
-  const added = page.getByRole('button', { name: /Added line 2/ });
-  const removed = page.getByRole('button', { name: /Removed line 2/ });
+  const added = page.locator('[data-kind="add"]', { hasText: 'Added line 2' });
+  const removed = page.locator('[data-kind="del"]', { hasText: 'Removed line 2' });
   const background = (line: typeof added) =>
     line.evaluate((element) => getComputedStyle(element).backgroundColor);
   expect(await background(added)).toBe('rgb(233, 246, 238)');
@@ -57,10 +57,6 @@ test('shows a run’s changes, keeps line comments and viewed ticks, and asks fo
     page.viewportSize()!.width,
   );
 
-  await added.click();
-  await page.getByRole('textbox', { name: /^Comment on .* line 2$/ }).fill('Say “label” once.');
-  await page.getByRole('button', { name: 'Comment', exact: true }).click();
-  await expect(page.getByText('Say “label” once.')).toBeVisible();
   await page.getByRole('checkbox', { name: 'Viewed README.md' }).check();
   await expect(page.getByText('1 of 2 viewed')).toBeVisible();
   await settledScreenshot(page, info.outputPath(`ticket-changes-${info.project.name}.png`));
@@ -68,17 +64,8 @@ test('shows a run’s changes, keeps line comments and viewed ticks, and asks fo
   await page.reload();
   await page.getByRole('button', { name: 'Changes 2' }).click();
   await expect(page.getByText('1 of 2 viewed')).toBeVisible();
-  await expect(page.getByText('1 line comment goes to Claude on its next run.')).toBeVisible();
-  await page.getByRole('button', { name: CODE_FILE }).click();
-  await expect(page.getByText('Say “label” once.')).toBeVisible();
 
   await page.getByRole('button', { name: 'Ask for changes' }).click();
-  await expect(
-    toast(page, 'Asked for changes. Claude gets your line comments on its next run.'),
-  ).toBeVisible();
-  const { text } = await api.getTicketPrompt('MOB-1');
-  expect(text).toContain(
-    '- On apps/web/src/features/ticket/changes/TicketChanges.tsx line 2: Say “label” once.',
-  );
+  await expect(toast(page, 'Asked for changes.')).toBeVisible();
   expect((await api.getTicket('MOB-1')).status.name).toBe('To do');
 });

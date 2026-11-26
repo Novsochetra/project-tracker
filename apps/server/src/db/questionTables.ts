@@ -4,7 +4,7 @@ export interface QuestionRow {
   id: string;
   userId: string | null;
   ticketId: string;
-  runId: string | null;
+  // run_id stays in the table, unread, until a later release decides its fate (§2.1).
   text: string;
   // JSON as text, like runners.project_ids: no JSON columns (§2).
   choices: string;

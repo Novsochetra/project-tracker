@@ -1,8 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import {
   RUN_DIFF_MAX,
-  type Activity,
-  type PromptResult,
   type Run,
   type TicketChangesAnswer,
   type TicketDetail,
@@ -110,29 +108,6 @@ describe.each(DIALECTS)('run changes (%s)', (dialect) => {
     expect((await tick({ path: 'src/b.ts', digest: 'd2', viewed: true })).status).toBe(404);
     expect((await tick({ path: 'src/a.ts', digest: 'd2', viewed: true }, helper)).status).toBe(403);
     expect((await tick({ path: 'x', digest: 'd', viewed: true }, other.person)).status).toBe(404);
-  });
-
-  it('keeps the line a comment is on, and gives it to the next prompt', async () => {
-    await take();
-    await send({});
-    const line = { runId: run.id, path: 'src/a.ts', side: 'new', line: 2 };
-    const comment = await person<Activity>('POST', '/api/tickets/MOB-1/comments', {
-      text: 'Use 4 here.',
-      line,
-    });
-    expect(comment.status).toBe(201);
-    expect(comment.body.line).toEqual(line);
-    const plain = await person<Activity>('POST', '/api/tickets/MOB-1/comments', { text: 'Hi' });
-    expect(plain.body).not.toHaveProperty('line');
-    const detail = await person<TicketDetail>('GET', '/api/tickets/MOB-1');
-    expect(detail.body.activity.find((item) => item.id === comment.body.id)?.line).toEqual(line);
-    const prompt = await person<PromptResult>('GET', '/api/tickets/MOB-1/prompt');
-    expect(prompt.body.text).toContain('- On src/a.ts line 2: Use 4 here.');
-    const elsewhere = await person('POST', '/api/tickets/MOB-1/comments', {
-      text: 'Nope',
-      line: { ...line, runId: randomUUID() },
-    });
-    expect(elsewhere.status).toBe(404);
   });
 
   it('approves or asks for changes on the latest changes only, for a person only', async () => {

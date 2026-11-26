@@ -15,7 +15,6 @@ import type { z } from 'zod';
 import type { ProjectRow, StatusRow } from '../db/schema';
 import {
   deleteProjectRow,
-  holdProjectRuns,
   insertProject,
   listProjectKeys,
   listProjectRows,
@@ -24,7 +23,6 @@ import {
   type ProjectTicketStats,
 } from '../repositories/projects';
 import { storageKeysOfProject } from '../repositories/attachments';
-import { storageKeysOfChats } from '../repositories/chatAttachments';
 import { listLabelRows } from '../repositories/labels';
 import { insertStatuses, listStatusRows } from '../repositories/statuses';
 import { deleteProjectTickets } from '../repositories/tickets';
@@ -157,12 +155,7 @@ export async function updateProject(
 export async function deleteProject(ctx: UserContext, key: string): Promise<void> {
   const removed = await inTransaction(ctx, async (trx) => {
     const project = await requireProject(trx, ctx.scope, key);
-    const files = [
-      ...(await storageKeysOfProject(trx, project.id)),
-      ...(await storageKeysOfChats(trx, 'projectId', project.id)),
-    ];
-    // The project's row before its runs' rows, in the order a take locks them (takeNextRun).
-    await holdProjectRuns(trx, project.id);
+    const files = await storageKeysOfProject(trx, project.id);
     // Tickets go first: their status foreign key restricts deleting statuses that are in use.
     await deleteProjectTickets(trx, project.id);
     await deleteProjectRow(trx, project.id);

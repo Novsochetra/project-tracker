@@ -3,16 +3,13 @@ import type { TrackerClient } from '@tracker/client';
 import type {
   CreatedTicket,
   CreateTicketInput,
-  MarkSentInput,
   ProjectBoard,
   ProjectDetail,
-  Ticket,
   TicketDetail,
 } from '@tracker/shared';
 import { removeBoardTicket, upsertBoardTicket } from '../cache/board';
 import { withNextNum } from '../cache/projects';
-import { withTicket } from '../cache/ticketDetail';
-import { boardChanges, ticketChange } from '../cacheChanges';
+import { boardChanges } from '../cacheChanges';
 import { useApi } from '../context';
 import { markDeleted } from '../deleted';
 import { isNetworkError } from '../errors';
@@ -29,11 +26,6 @@ export interface CreateTicketVariables {
 
 export interface DeleteTicketVariables {
   ticketKey: string;
-}
-
-export interface MarkSentVariables {
-  ticketKey: string;
-  input: MarkSentInput;
 }
 
 // A ticket changed since its last fresh read is read fresh, because the service worker's copy may
@@ -105,20 +97,5 @@ export function useDeleteTicket(): TrackerMutation<void, DeleteTicketVariables> 
       queryClient.removeQueries({ queryKey: queryKeys.ticket(ticketKey), type: 'inactive' });
     },
     onSettled: (_result, _error, variables) => settleMutation(queryClient, variables),
-  });
-}
-
-export function useMarkSent(): TrackerMutation<Ticket, MarkSentVariables> {
-  const client = useApi();
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: ({ ticketKey, input }: MarkSentVariables) => client.markSent(ticketKey, input),
-    onSuccess: (ticket, { ticketKey }) =>
-      patchCaches(queryClient, [
-        ...boardChanges(ticketKey, (board) => upsertBoardTicket(board, ticket)),
-        ticketChange(ticketKey, (detail) => withTicket(detail, ticket)),
-      ]),
-    onSettled: (_ticket, _error, variables) => settleMutation(queryClient, variables),
   });
 }

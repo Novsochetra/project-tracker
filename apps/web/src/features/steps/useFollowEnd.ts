@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, type RefObject } from 'react';
-import { isAtEnd, scrollParent } from './followEnd';
+import { scrollParent } from '../../lib/scrollParent';
+import { isAtEnd } from './followEnd';
 
 interface Watched {
   scroller: HTMLElement;
