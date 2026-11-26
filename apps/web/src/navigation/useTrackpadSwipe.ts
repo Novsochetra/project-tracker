@@ -82,8 +82,7 @@ function attachTrackpadSwipe({ progress, setDirection, read }: SwipeOutput): () 
         read().steps.canStep(direction) &&
         isTrackpadSwipeTarget(event.target),
     );
-    // A pinch or a mouse wheel's first event is never held, even before it is decided.
-    if (!ownsWheel(swipe) || (swipe.phase === 'undecided' && !isSwipeWheel(event))) return;
+    if (!ownsWheel(swipe)) return;
     // Otherwise the browser plays its own swipe on top of this one.
     if (event.cancelable) event.preventDefault();
     window.clearTimeout(fadeTimer);

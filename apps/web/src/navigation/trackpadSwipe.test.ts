@@ -50,14 +50,16 @@ describe('stepSwipe', () => {
 
   it('waits for a tiny first event to move before deciding', () => {
     const first = run([{ dx: -1, dy: 1, at: 0 }]);
-    expect(first.phase).toBe('undecided');
+    expect(first.phase).toBe('leaning');
     expect(ownsWheel(first)).toBe(true);
     expect(run([{ dx: -4, dy: 1, at: 16 }], yes, first)).toEqual(tracking(-5, 16));
     expect(run([{ dx: 0, dy: 4, at: 16 }], yes, first).phase).toBe('vertical');
   });
 
-  it('lets go of a tiny first event that leans vertical', () => {
+  it('lets go of a tiny first event that leans vertical or has nowhere to go', () => {
     expect(ownsWheel(run([{ dx: 0, dy: 1, at: 0 }]))).toBe(false);
+    expect(ownsWheel(run([{ dx: 0, dy: 0, at: 0 }]))).toBe(false);
+    expect(ownsWheel(run([{ dx: -1, dy: 0, at: 0 }], () => false))).toBe(false);
   });
 
   it('refuses a swipe that cannot be tracked that way, and asks only once', () => {
@@ -96,8 +98,27 @@ describe('stepSwipe', () => {
   it('lets a vertical scroll go at once after a finished swipe', () => {
     const done: TrackpadSwipe = { phase: 'done', dx: -200, dy: 0, at: 0 };
     const next = stepSwipe(done, { dx: -1, dy: 20, at: 10 }, yes);
-    expect(next.phase).toBe('vertical');
     expect(ownsWheel(next)).toBe(false);
+    expect(run([{ dx: -40, dy: 0, at: 20 }], yes, next).phase).toBe('refused');
+  });
+
+  it.each([
+    ['a still event', { dx: 0, dy: 0 }],
+    ['a tiny diagonal one', { dx: -1, dy: -1 }],
+    ['a small diagonal one', { dx: -2, dy: -2 }],
+  ])('completes a swipe once, even with %s in its momentum', (_, odd) => {
+    let completions = 0;
+    let swipe = IDLE_SWIPE;
+    const steps = [-30, -40, -50, -60, -40, null, -35, -30, -25, -20, -15, -10, -8];
+    steps.forEach((dx, i) => {
+      const step = dx === null ? odd : { dx, dy: 0 };
+      swipe = stepSwipe(swipe, { ...step, at: i * 16 }, yes);
+      if (isSwipeComplete(swipe)) {
+        completions += 1;
+        swipe = { ...swipe, phase: 'done' };
+      }
+    });
+    expect(completions).toBe(1);
   });
 });
 

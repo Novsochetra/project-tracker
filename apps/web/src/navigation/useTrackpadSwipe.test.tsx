@@ -124,6 +124,16 @@ describe('trackpad swipe', () => {
     expect(location()).toBe('/p/MOB');
   });
 
+  it('lets a tiny first event with nowhere to go reach the browser', () => {
+    renderStack('/');
+    const event = new WheelEvent('wheel', { deltaX: -1, bubbles: true, cancelable: true });
+    Object.defineProperty(event, 'timeStamp', { value: (clock += GESTURE_GAP_MS * 2) });
+    act(() => {
+      page('/').dispatchEvent(event);
+    });
+    expect(event.defaultPrevented).toBe(false);
+  });
+
   it('leaves a swipe with nowhere to go to the browser', () => {
     renderStack('/');
     const events = swipe(page('/'), -300);
