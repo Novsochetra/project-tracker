@@ -241,7 +241,7 @@ Agents on your Mac reach the online tracker with its address and an API token yo
 - Railway ends a request after 15 minutes, and an upload must arrive within 5 minutes: live updates simply reconnect, but a 100 MB video needs an upload speed of about 3 Mbit/s or more.
 - The health check runs only during a deploy; Railway doesn't watch it afterwards. **Restart on failure** brings a crashed server back.
 - A push goes live only after CI has passed on it, some minutes later. A test that fails only now and then (a flaky one) skips that deploy too: re-run the failed jobs on GitHub, then **Deploy Latest Commit**.
-- CI runs `npm audit --omit=dev --audit-level=high`, so once a high or critical advisory comes out for a package the server or the agent uses, every push fails CI and nothing deploys until that package is updated (Dependabot's weekly pull request, or `npm update <package>`).
+- CI runs `npm audit --omit=dev --audit-level=high`, so once a high or critical advisory comes out for any production dependency (the server's, the web app's or the agent's), every push fails CI and nothing deploys until that package is updated. Dependabot's weekly pull request updates only the packages named in a `package.json`, such as zod or hono. A package that another one pulls in, such as body-parser, qs, fast-uri or ip-address (through the MCP SDK, express and ajv), never gets a weekly pull request: update it with `npm update <package>` (agents run it only with your yes), or turn on Dependabot security updates in the repository's settings on GitHub, which update those too.
 
 ## First deploy: what to check
 
