@@ -12,6 +12,17 @@ export function boardChanges(
   return projectKey ? [cacheChange<ProjectBoard>(queryKeys.board(projectKey), update)] : [];
 }
 
+export function boardsChanges(
+  ticketKeys: readonly string[],
+  update: (board: ProjectBoard) => ProjectBoard,
+): CacheChange[] {
+  const projectKeys = new Set(ticketKeys.flatMap((key) => projectOfTicket(key) ?? []));
+
+  return [...projectKeys].map((projectKey) =>
+    cacheChange<ProjectBoard>(queryKeys.board(projectKey), update),
+  );
+}
+
 export const ticketChange = (
   ticketKey: string,
   update: (detail: TicketDetail) => TicketDetail,

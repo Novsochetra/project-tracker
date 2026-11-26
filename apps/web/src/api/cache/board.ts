@@ -1,11 +1,15 @@
 import {
   byRank,
+  findStatusByCategory,
+  isDoneCategory,
   planMove,
   topRank,
+  topRanks,
   type MoveTicketInput,
   type ProjectBoard,
   type Ticket,
   type TicketListItem,
+  type TicketPlaceInput,
   type UpdateTicketInput,
 } from '@tracker/shared';
 import { ticketFields } from './fields';
@@ -69,6 +73,55 @@ export function moveBoardTicket(
     return rank === ticket.rank && statusId === ticket.statusId
       ? ticket
       : { ...ticket, rank, statusId };
+  });
+
+  return withTickets(board, tickets);
+}
+
+const isDoneIn = (board: ProjectBoard, statusId: string): boolean =>
+  board.statuses.some((status) => status.id === statusId && isDoneCategory(status.category));
+
+// As the tracker moves them: to the top of the project's first done status, in the order they
+// stood in, while a ticket already done stays where it is.
+export function moveBoardTicketsToDone(
+  board: ProjectBoard,
+  ticketKeys: readonly string[],
+): ProjectBoard {
+  const done = findStatusByCategory(board.statuses, 'done');
+  const named = new Set(ticketKeys.map((key) => key.toUpperCase()));
+  const leaving = board.tickets
+    .filter((ticket) => named.has(ticket.key.toUpperCase()) && !isDoneIn(board, ticket.statusId))
+    .sort(byRank);
+  if (!done || leaving.length === 0) return board;
+
+  const group = board.tickets.filter((ticket) => ticket.statusId === done.id);
+  const ranks = topRanks(
+    group,
+    leaving.map((ticket) => ticket.id),
+  );
+  const tickets = board.tickets.map((ticket) => {
+    const rank = ranks.get(ticket.id);
+
+    return rank === undefined ? ticket : { ...ticket, statusId: done.id, rank };
+  });
+
+  return withTickets(board, tickets);
+}
+
+// As the tracker puts them back: only a ticket still done, only into a status that is not.
+export function placeBoardTickets(
+  board: ProjectBoard,
+  places: readonly TicketPlaceInput[],
+): ProjectBoard {
+  const byKey = new Map(places.map((place) => [place.key.toUpperCase(), place]));
+  const tickets = board.tickets.map((ticket) => {
+    const place = byKey.get(ticket.key.toUpperCase());
+    const status = board.statuses.find((candidate) => candidate.id === place?.statusId);
+    const back = place && status && !isDoneCategory(status.category);
+
+    return back && isDoneIn(board, ticket.statusId)
+      ? { ...ticket, statusId: status.id, rank: place.rank }
+      : ticket;
   });
 
   return withTickets(board, tickets);

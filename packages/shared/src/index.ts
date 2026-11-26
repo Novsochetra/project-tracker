@@ -17,6 +17,7 @@ export * from './domain/ticket';
 export * from './domain/ticketQuestion';
 export * from './api/auth';
 export * from './api/dto';
+export * from './api/doneMoves';
 export * from './api/invites';
 export * from './api/passwords';
 export * from './api/push';

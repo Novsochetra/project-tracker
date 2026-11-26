@@ -25,6 +25,8 @@ const PROTECTED: readonly (readonly [string, string])[] = [
   ['GET', '/api/tickets/MOB-1'],
   ['PATCH', '/api/tickets/MOB-1'],
   ['DELETE', '/api/tickets/MOB-1'],
+  ['POST', '/api/tickets/done'],
+  ['POST', '/api/tickets/done/undo'],
   ['POST', '/api/tickets/MOB-1/move'],
   ['POST', '/api/tickets/MOB-1/comments'],
   ['PATCH', '/api/activity/a1'],

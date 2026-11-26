@@ -38,6 +38,8 @@ import type {
   Ticket,
   TicketDetail,
   TicketListItem,
+  TicketMoves,
+  TicketPlaceInput,
   TicketsAcrossProjects,
   UpdateCommentInput,
   UpdateProjectInput,
@@ -124,6 +126,12 @@ export class TrackerClient extends SearchClient {
 
   moveTicket = (ticketKey: string, input: MoveTicketInput) =>
     this.http.request<Ticket>('POST', `/api/tickets/${segment(ticketKey)}/move`, { body: input });
+
+  moveToDone = (keys: string[]) =>
+    this.http.request<TicketMoves>('POST', '/api/tickets/done', { body: { keys } });
+
+  undoMoveToDone = (tickets: TicketPlaceInput[]) =>
+    this.http.request<TicketMoves>('POST', '/api/tickets/done/undo', { body: { tickets } });
 
   deleteTicket = (ticketKey: string) =>
     this.http.request<void>('DELETE', `/api/tickets/${segment(ticketKey)}`);

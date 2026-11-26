@@ -78,7 +78,7 @@ A deploy runs `node apps/server/dist/db.js migrate` before starting the new serv
 
 ## Deploy to Railway
 
-To use the tracker from anywhere, deploy it to [Railway](https://railway.com) from a private GitHub repo; each push to `main` deploys again. `.railway/railway.ts` holds the build (`npm run build`, then dev dependencies pruned), the pre-deploy migration, the start command and the health check (`/api/health`); `railway config apply` sends it to the service. In short:
+To use the tracker from anywhere, deploy it to [Railway](https://railway.com) from a private GitHub repo; each push to `main` deploys again once CI has passed on it. `.railway/railway.ts` holds the build (`npm run build`, then dev dependencies pruned), the pre-deploy migration, the start command, the health check (`/api/health`) and the wait for CI; `railway config apply` sends it to the service. In short:
 
 1. Push the repo to a private GitHub repo.
 2. In Railway: a new project with PostgreSQL, then add the GitHub repo as a service (one replica).

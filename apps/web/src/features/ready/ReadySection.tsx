@@ -5,7 +5,10 @@ import { useNavigation } from '../../navigation';
 import { HeaderShowLess, ShowMoreButton } from '../project/GroupParts';
 import { useStatusChange } from '../project/rowEdits';
 import { useGroupToggle } from '../project/useGroupToggle';
+import { readyBatch } from './doneBatch';
+import { MoveAllToDone } from './MoveAllToDone';
 import type { ReadyItem } from './readyItems';
+import { focusAfterMoveAll } from './readyFocus';
 import { ReadyRow } from './ReadyRow';
 import styles from './ReadySection.module.css';
 
@@ -26,9 +29,14 @@ export function ReadySection({ items }: { items: readonly ReadyItem[] }) {
   if (items.length === 0) return null;
   const { shown, hiddenCount, hasToggle } = collapseGroup(items, { expanded, searching: false });
   const unfolded = expanded && hasToggle;
+  const batch = readyBatch(items);
   const open = ({ project, ticket }: ReadyItem) =>
     push({ name: 'ticket', key: project.key, num: ticket.num });
   const done = ({ ticket }: ReadyItem, status: Status) => changeStatus(ticket, status);
+  const movedAll = () => {
+    const card = ref.current?.parentElement;
+    if (card && batch) focusAfterMoveAll(card, items, batch);
+  };
 
   return (
     <ListCard
@@ -47,6 +55,7 @@ export function ReadySection({ items }: { items: readonly ReadyItem[] }) {
         {unfolded && (
           <HeaderShowLess name="Ready for you" onClick={toggle} className={styles.less} />
         )}
+        <MoveAllToDone batch={batch} place="header" className={styles.move} onMove={movedAll} />
       </div>
       {shown.map((item, index) => (
         <ReadyRow key={item.ticket.id} item={item} index={index} onOpen={open} onDone={done} />
@@ -59,6 +68,7 @@ export function ReadySection({ items }: { items: readonly ReadyItem[] }) {
           onToggle={toggle}
         />
       )}
+      <MoveAllToDone batch={batch} place="footer" onMove={movedAll} />
     </ListCard>
   );
 }

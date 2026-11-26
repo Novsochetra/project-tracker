@@ -8,6 +8,8 @@ export interface ConfirmCardProps {
   onConfirm: () => void;
   onCancel: () => void;
   confirmLabel?: string;
+  // Danger for what can't be taken back; primary for what can, such as a move with Undo.
+  confirmVariant?: 'danger' | 'primary';
   pending?: boolean;
   variant?: 'card' | 'menu';
   className?: string | undefined;
@@ -18,6 +20,7 @@ export function ConfirmCard({
   onConfirm,
   onCancel,
   confirmLabel = 'Delete',
+  confirmVariant = 'danger',
   pending = false,
   variant = 'card',
   className,
@@ -34,7 +37,7 @@ export function ConfirmCard({
         <Button ref={cancelRef} size={size} className={styles.cancel} onClick={onCancel}>
           Cancel
         </Button>
-        <Button variant="danger" size={size} disabled={pending} onClick={onConfirm}>
+        <Button variant={confirmVariant} size={size} disabled={pending} onClick={onConfirm}>
           {confirmLabel}
         </Button>
       </div>

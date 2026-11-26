@@ -1,6 +1,6 @@
 # Releasing
 
-The app has one version, in the root `package.json` (semver). Every release gets a `CHANGELOG.md` entry and a git tag `vX.Y.Z`. Railway still deploys every push to `main`; the version says which release a deploy is, and the app shows it with the deploy's commit at the bottom of the Account and Connect Claude Code sheets (`tracker --version` for the CLI).
+The app has one version, in the root `package.json` (semver). Every release gets a `CHANGELOG.md` entry and a git tag `vX.Y.Z`. Railway still deploys every push to `main` once CI has passed on it; the version says which release a deploy is, and the app shows it with the deploy's commit at the bottom of the Account and Connect Claude Code sheets (`tracker --version` for the CLI).
 
 ## Once
 
@@ -27,4 +27,4 @@ It bumps `package.json` and `package-lock.json`, adds the commit subjects since 
 git push --follow-tags
 ```
 
-Railway deploys the push, and the app shows the new version once it is live.
+Railway deploys the push once CI has passed on it, and the app shows the new version once it is live.

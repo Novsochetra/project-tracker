@@ -36,8 +36,11 @@ export const ticketKeyOf = (ref: TicketRef): string =>
 const reachable = (project: ProjectRow | undefined, scope: UserScope): ProjectRow | undefined =>
   project && inScope(project.ownerId, scope) ? project : undefined;
 
+export const findProject = async (db: Db, scope: UserScope, key: string) =>
+  reachable(await findProjectByKey(db, key.trim().toUpperCase()), scope);
+
 export async function requireProject(db: Db, scope: UserScope, key: string): Promise<ProjectRow> {
-  const project = reachable(await findProjectByKey(db, key.trim().toUpperCase()), scope);
+  const project = await findProject(db, scope, key);
   if (!project) throw notFound(`Project ${key} was not found.`);
 
   return project;

@@ -6,7 +6,8 @@ export const partial = 'project-tracker';
 
 export default defineRailway(() => {
   const tracker = service('project-tracker', {
-    source: github('Novsochetra/project-tracker', { branch: 'main', checkSuites: false }),
+    // The dashboard's "Wait for CI": without it a push to main deploys even when CI fails.
+    source: github('Novsochetra/project-tracker', { branch: 'main', checkSuites: true }),
     build: 'npm run build && NPM_CONFIG_PRODUCTION= npm prune --omit=dev',
     preDeploy: 'node apps/server/dist/db.js migrate',
     start: 'node apps/server/dist/main.js',

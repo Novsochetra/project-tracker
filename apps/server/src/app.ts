@@ -14,6 +14,7 @@ import { handleError, handleNotFound } from './http/errors';
 import { securityHeaders, unbufferedStreams } from './http/responseHeaders';
 import { activityRoutes } from './http/routes/activity';
 import { attachmentRoutes } from './http/routes/attachments';
+import { doneMoveRoutes } from './http/routes/doneMoves';
 import { eventRoutes } from './http/routes/events';
 import { inviteRoutes } from './http/routes/invites';
 import { labelRoutes } from './http/routes/labels';
@@ -78,6 +79,7 @@ function createApi(ctx: ServiceContext, deps: AppDeps): Hono<AppEnv> {
     .route('/', statusRoutes(ctx))
     .route('/', labelRoutes(ctx))
     .route('/', ticketRoutes(ctx))
+    .route('/', doneMoveRoutes(ctx))
     .route('/', searchRoutes(ctx))
     .route('/', workflowRoutes(ctx))
     .route('/', activityRoutes(ctx))

@@ -2,6 +2,7 @@ import { projectDisplayName, resolveFilter, type ProjectBoard } from '@tracker/s
 import { useRef } from 'react';
 import { useSheets } from '../../app/sheets/context';
 import { useScreen } from '../../navigation';
+import { groupBatch } from '../ready/doneBatch';
 import { buildGroups, nextStatus } from './buildGroups';
 import { DragGhost } from './dnd/DragGhost';
 import { listEnvironment } from './dnd/listEnvironment';
@@ -55,6 +56,7 @@ export function TicketList({ board }: { board: ProjectBoard }) {
           rise={rise}
           searching={isSearching(view)}
           next={nextStatus(statuses, group.status.id)}
+          doneBatch={groupBatch(group.status, group.tickets, statuses)}
           drag={drag}
           callbacks={callbacks}
           onAdd={addTicket}
