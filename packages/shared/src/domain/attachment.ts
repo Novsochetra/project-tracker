@@ -75,12 +75,11 @@ export const FILE_NAME_HEADER = 'x-file-name';
 // Only creates (`attachmentIds`) are limited; files added to a ticket later go one at a time.
 export const MAX_NEW_ATTACHMENTS = 20;
 
-export type AttachmentOwner = 'ticket' | 'comment' | 'question';
+export type AttachmentOwner = 'ticket' | 'comment';
 
 const OWNER_NAMES: Record<AttachmentOwner, string> = {
   ticket: 'A new ticket',
   comment: 'A comment',
-  question: 'A question',
 };
 
 export const tooManyFilesMessage = (owner: AttachmentOwner): string =>

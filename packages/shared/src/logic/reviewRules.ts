@@ -1,5 +1,3 @@
-// The review prompt sheet (reviewPrompt.ts) and the MCP review prompt (apps/agent/src/prompts/
-// review.ts) share these, so the two can't drift.
 export const REVIEW_RATING_SCALE = [
   '   - 5: fully meets the requirement, with good quality and tests',
   '   - 4: meets the requirement, with minor nits',

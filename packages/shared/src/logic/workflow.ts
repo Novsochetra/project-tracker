@@ -30,27 +30,6 @@ export function pickNextTicket<T extends WorkItem>(
   return [...ready].sort(byPriorityThenRank)[0] ?? null;
 }
 
-export function workableTickets<T extends WorkItem>(
-  tickets: readonly T[],
-  statuses: readonly Status[],
-): T[] {
-  const category = categoryOf(statuses);
-  const stage = (ticket: T): number => (category(ticket.statusId) === 'in_progress' ? 0 : 1);
-
-  return tickets
-    .filter((ticket) => {
-      const value = category(ticket.statusId);
-
-      return value === 'todo' || value === 'in_progress';
-    })
-    .sort(
-      (left, right) =>
-        stage(left) - stage(right) ||
-        PRIORITY_ORDER[left.priority] - PRIORITY_ORDER[right.priority] ||
-        left.num - right.num,
-    );
-}
-
 const SENT_BACK_TO: readonly StatusCategory[] = ['todo', 'in_progress'];
 
 // A submit keeps the latest review (changes requested) but moves the ticket to review, which

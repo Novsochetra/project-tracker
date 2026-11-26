@@ -6,20 +6,11 @@ import {
   updateTicketInput,
 } from '../../src/api/schemas';
 import { LABEL_INSTRUCTIONS_MAX, TICKET_LABELS_MAX } from '../../src/domain/label';
-import { RUN_PROMPT_MAX } from '../../src/domain/run';
-import { instructionsBlock } from '../../src/logic/instructions';
 
 // PT-190 review: 50 labels of 20,000 characters each let a ticket's prompt pass the 100,000 a run
-// takes, and Run in Claude Code was refused without saying why.
-describe('regression: a ticket’s label instructions fit in a run prompt', () => {
-  it('stay under half of the run prompt limit at the most labels and longest instructions', () => {
-    const labels = Array.from({ length: TICKET_LABELS_MAX }, (_, index) => ({
-      name: `Label ${index}`,
-      instructions: 'x'.repeat(LABEL_INSTRUCTIONS_MAX),
-    }));
-    expect(instructionsBlock({}, '##', labels).join('\n').length).toBeLessThan(RUN_PROMPT_MAX / 2);
-  });
-
+// took, and the run was refused without saying why. The limits stay, so what an agent reads of a
+// ticket's labels stays bounded.
+describe('regression: a ticket’s label instructions stay bounded', () => {
   it('refuses longer label instructions, saying the limit', () => {
     const instructions = 'x'.repeat(LABEL_INSTRUCTIONS_MAX + 1);
     const message = 'Instructions can be up to 4,000 characters.';

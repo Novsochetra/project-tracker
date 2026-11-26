@@ -1,9 +1,4 @@
-import {
-  isDoneCategory,
-  STATUS_CATEGORIES,
-  type Status,
-  type StatusCategory,
-} from '../domain/status';
+import { isDoneCategory, type Status, type StatusCategory } from '../domain/status';
 
 export const sortStatuses = <T extends Pick<Status, 'position' | 'createdAt'>>(
   statuses: readonly T[],
@@ -37,7 +32,7 @@ export function resolveStatus<T extends Status>(
   }
 
   const sorted = sortStatuses(statuses);
-  // Reports and agents must never move a ticket to Done, so the last resort skips done statuses.
+  // Agents must never move a ticket to Done, so the last resort skips done statuses.
   const fallback = sorted.find((status) => !isDoneCategory(status.category)) ?? sorted[0];
   if (!fallback) throw new Error('A project always has at least one status.');
 
@@ -52,9 +47,3 @@ export function findStatusByName<T extends Status>(
 
   return statuses.find((status) => status.name.toLowerCase() === wanted);
 }
-
-const categoryRank = (category: StatusCategory): number => STATUS_CATEGORIES.indexOf(category);
-
-// Once a ticket is reviewed only a person moves it back, so a late report cannot undo an approval.
-export const reportMayMove = (from: StatusCategory, to: StatusCategory): boolean =>
-  categoryRank(from) < categoryRank('reviewed') || categoryRank(to) > categoryRank(from);

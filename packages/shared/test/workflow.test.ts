@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { Priority } from '../src/domain/priority';
 import { DEFAULT_STATUSES, type Status } from '../src/domain/status';
-import { isSentBack, pickNextTicket, workableTickets } from '../src/logic/workflow';
+import { isSentBack, pickNextTicket } from '../src/logic/workflow';
 
 const statuses: Status[] = [
   ...DEFAULT_STATUSES.map((template, position) => ({
@@ -29,8 +29,6 @@ const item = (num: number, statusId: string, priority: Priority, rank = 0) => ({
   priority,
   rank,
 });
-
-const keys = (tickets: { id: string }[]) => tickets.map((ticket) => ticket.id);
 
 describe('pickNextTicket', () => {
   it('only picks tickets in a todo-category status', () => {
@@ -77,59 +75,6 @@ describe('pickNextTicket', () => {
     expect(pickNextTicket([], statuses)).toBeNull();
     expect(pickNextTicket([item(1, 'in_progress', 'high')], statuses)).toBeNull();
     expect(pickNextTicket([item(1, 'unknown-status', 'high')], statuses)).toBeNull();
-  });
-});
-
-describe('workableTickets', () => {
-  it('keeps only todo and in-progress tickets', () => {
-    const tickets = [
-      item(1, 'todo', 'medium'),
-      item(2, 'in_progress', 'medium'),
-      item(3, 'in_review', 'medium'),
-      item(4, 'reviewed', 'medium'),
-      item(5, 'done', 'medium'),
-      item(6, 'backlog', 'medium'),
-    ];
-
-    expect(keys(workableTickets(tickets, statuses))).toEqual(['MOB-2', 'MOB-1', 'MOB-6']);
-  });
-
-  it('orders in-progress tickets first, then by priority, then by number', () => {
-    const tickets = [
-      item(1, 'todo', 'low'),
-      item(2, 'todo', 'high'),
-      item(3, 'in_progress', 'low'),
-      item(4, 'todo', 'high'),
-      item(5, 'in_progress', 'high'),
-      item(6, 'todo', 'medium'),
-    ];
-
-    expect(keys(workableTickets(tickets, statuses))).toEqual([
-      'MOB-5',
-      'MOB-3',
-      'MOB-2',
-      'MOB-4',
-      'MOB-6',
-      'MOB-1',
-    ]);
-  });
-
-  it('ignores rank', () => {
-    const tickets = [item(2, 'todo', 'high', -9000), item(1, 'todo', 'high', 9000)];
-
-    expect(keys(workableTickets(tickets, statuses))).toEqual(['MOB-1', 'MOB-2']);
-  });
-
-  it('leaves the input array unchanged', () => {
-    const tickets = [item(2, 'todo', 'low'), item(1, 'in_progress', 'high')];
-
-    workableTickets(tickets, statuses);
-
-    expect(keys(tickets)).toEqual(['MOB-2', 'MOB-1']);
-  });
-
-  it('returns an empty list when nothing is open', () => {
-    expect(workableTickets([item(1, 'done', 'high')], statuses)).toEqual([]);
   });
 });
 

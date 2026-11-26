@@ -27,14 +27,3 @@ export function instructionsBlock(
 
   return blocks.flatMap((lines, index) => (index === 0 ? lines : ['', ...lines]));
 }
-
-export function distinctLabels(
-  tickets: readonly { labels?: readonly PromptLabel[] | undefined }[],
-): PromptLabel[] {
-  const seen = new Map<string, PromptLabel>();
-  for (const label of tickets.flatMap((ticket) => ticket.labels ?? [])) {
-    if (!seen.has(label.name)) seen.set(label.name, label);
-  }
-
-  return [...seen.values()];
-}

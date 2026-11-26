@@ -7,7 +7,6 @@ import {
   type ProjectTemplateName,
 } from '../src/domain/projectTemplates';
 import { DEFAULT_STATUSES, STATUS_CATEGORIES } from '../src/domain/status';
-import { buildTicketPrompt, type PromptTicket } from '../src/logic/prompt';
 
 const NAMES: Record<ProjectTemplateName, string[]> = {
   software: ['To do', 'In progress', 'Need review', 'Reviewed', 'Done'],
@@ -18,19 +17,6 @@ const NAMES: Record<ProjectTemplateName, string[]> = {
 };
 
 const WORK_TEMPLATES = PROJECT_TEMPLATE_NAMES.filter((name) => name !== 'software');
-
-const ticket: PromptTicket = {
-  key: 'BLOG-1',
-  title: 'Post about spring bulbs',
-  description: '',
-  priority: 'medium',
-  statusName: 'Ideas',
-  due: '',
-  assignee: '',
-  notes: [],
-  lastReport: null,
-  lastReview: null,
-};
 
 describe('project templates', () => {
   it('lists Software first', () => {
@@ -71,18 +57,6 @@ describe('project templates', () => {
       expect(instructions.length).toBeLessThan(PROJECT_INSTRUCTIONS_MAX);
     },
   );
-
-  it('puts the writing instructions into a ticket prompt', () => {
-    const project = {
-      name: 'Garden blog',
-      key: 'BLOG',
-      repo: '',
-      instructions: PROJECT_TEMPLATES.writing.instructions,
-    };
-    const prompt = buildTicketPrompt(project, ticket);
-    expect(prompt).toContain(`## Project instructions\n${PROJECT_TEMPLATES.writing.instructions}`);
-    expect(prompt).toContain('There are no tests or builds.');
-  });
 });
 
 describe('the template in createProjectInput', () => {

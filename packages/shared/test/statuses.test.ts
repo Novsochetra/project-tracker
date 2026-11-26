@@ -8,7 +8,6 @@ import {
 import {
   findStatusByCategory,
   findStatusByName,
-  reportMayMove,
   resolveStatus,
   sortStatuses,
 } from '../src/logic/statuses';
@@ -165,31 +164,5 @@ describe('findStatusByName', () => {
 
   it('matches the whole name, not a part of it', () => {
     expect(findStatusByName(defaults, 'review')).toBeUndefined();
-  });
-});
-
-describe('reportMayMove', () => {
-  it('moves a ticket that is not reviewed yet in any direction', () => {
-    expect(reportMayMove('in_review', 'in_progress')).toBe(true);
-    expect(reportMayMove('todo', 'reviewed')).toBe(true);
-    expect(reportMayMove('in_progress', 'todo')).toBe(true);
-  });
-
-  it('never moves a Reviewed or Done ticket to an earlier category', () => {
-    for (const to of ['todo', 'in_progress', 'in_review'] as const) {
-      expect(reportMayMove('reviewed', to)).toBe(false);
-      expect(reportMayMove('done', to)).toBe(false);
-    }
-
-    expect(reportMayMove('done', 'reviewed')).toBe(false);
-  });
-
-  it('keeps a Reviewed ticket in its own status', () => {
-    expect(reportMayMove('reviewed', 'reviewed')).toBe(false);
-    expect(reportMayMove('done', 'done')).toBe(false);
-  });
-
-  it('keeps a Reviewed ticket free to move forward', () => {
-    expect(reportMayMove('reviewed', 'done')).toBe(true);
   });
 });
