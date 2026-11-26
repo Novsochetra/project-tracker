@@ -25,6 +25,25 @@ export function withoutMovedTicket(
   return tickets.length === list.tickets.length ? list : { ...list, tickets };
 }
 
+const upperKeyOf = (ticket: unknown): string => {
+  const key = isEntry(ticket) ? (ticket as Partial<TicketListItem>).key : undefined;
+
+  return typeof key === 'string' ? key.toUpperCase() : '';
+};
+
+// Tickets moved to Done all at once, which a ready list never holds.
+export function withoutTickets(
+  list: TicketsAcrossProjects,
+  ticketKeys: readonly string[],
+): TicketsAcrossProjects {
+  if (!isEntry(list) || !isList(list.tickets)) return list;
+
+  const leaving = new Set(ticketKeys.map((key) => key.toUpperCase()));
+  const tickets = list.tickets.filter((ticket) => !leaving.has(upperKeyOf(ticket)));
+
+  return tickets.length === list.tickets.length ? list : { ...list, tickets };
+}
+
 export const readyStatuses = (list: TicketsAcrossProjects | undefined): Status[] =>
   isEntry(list) ? entriesOf(list.statuses) : [];
 

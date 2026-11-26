@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { listItem, STATUS, statuses } from '../test/fixtures';
-import { readyStatuses, withoutMovedTicket, withStatuses } from './ready';
+import { readyStatuses, withoutMovedTicket, withoutTickets, withStatuses } from './ready';
 
 const ready = () => ({
   tickets: [listItem(3, STATUS.reviewed, 0), listItem(5, STATUS.reviewed, 1000)],
@@ -20,6 +20,26 @@ describe('withoutMovedTicket', () => {
     expect(withoutMovedTicket(list, 'MOB-3', STATUS.reviewed)).toBe(list);
     expect(withoutMovedTicket(list, 'MOB-3', undefined)).toBe(list);
     expect(withoutMovedTicket(list, 'MOB-9', STATUS.done)).toBe(list);
+  });
+});
+
+describe('withoutTickets', () => {
+  it('drops every ticket named, in any case, and keeps the statuses', () => {
+    const left = withoutTickets(
+      { ...ready(), tickets: [...ready().tickets, listItem(7, STATUS.reviewed, 2000)] },
+      ['mob-3', 'MOB-7', 'MOB-9'],
+    );
+    expect(keysOf(left)).toEqual(['MOB-5']);
+    expect(left.statuses).toBe(statuses);
+  });
+
+  it('keeps a list it has nothing to take from, or cannot read', () => {
+    const list = ready();
+    expect(withoutTickets(list, ['MOB-9'])).toBe(list);
+    const odd = { tickets: null, statuses } as never;
+    expect(withoutTickets(odd, ['MOB-3'])).toBe(odd);
+    const unreadable = { tickets: [null, listItem(3, STATUS.reviewed, 0)], statuses } as never;
+    expect(withoutTickets(unreadable, ['MOB-3']).tickets).toEqual([null]);
   });
 });
 

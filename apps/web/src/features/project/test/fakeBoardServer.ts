@@ -1,7 +1,33 @@
 import { ApiError } from '@tracker/client';
-import type { MoveTicketInput, ProjectBoard, UpdateTicketInput } from '@tracker/shared';
+import type {
+  MoveTicketInput,
+  ProjectBoard,
+  TicketMoves,
+  TicketPlaceInput,
+  UpdateTicketInput,
+} from '@tracker/shared';
 import { vi } from 'vitest';
-import { findBoardTicket, moveBoardTicket, patchBoardTicket } from '../../../api/cache/board';
+import {
+  findBoardTicket,
+  moveBoardTicket,
+  moveBoardTicketsToDone,
+  patchBoardTicket,
+  placeBoardTickets,
+} from '../../../api/cache/board';
+
+// What the tracker answers a move of many: each ticket that changed status, with where it was.
+function movesBetween(before: ProjectBoard, after: ProjectBoard, keys: string[]): TicketMoves {
+  const moved = keys.flatMap((key) => {
+    const was = findBoardTicket(before, key);
+    const now = findBoardTicket(after, key);
+    if (!was || !now || was.statusId === now.statusId) return [];
+
+    return [{ key: was.key, from: { statusId: was.statusId, rank: was.rank } }];
+  });
+  const movedKeys = new Set(moved.map(({ key }) => key));
+
+  return { moved, skipped: keys.filter((key) => !movedKeys.has(key)) };
+}
 
 export function fakeBoardServer(initial: ProjectBoard) {
   let board = initial;
@@ -24,6 +50,24 @@ export function fakeBoardServer(initial: ProjectBoard) {
       board = moveBoardTicket(board, ticketKey, input);
 
       return saved(ticketKey);
+    }),
+    moveToDone: vi.fn((keys: string[]) => {
+      const before = board;
+      board = moveBoardTicketsToDone(board, keys);
+
+      return Promise.resolve(movesBetween(before, board, keys));
+    }),
+    undoMoveToDone: vi.fn((places: TicketPlaceInput[]) => {
+      const before = board;
+      board = placeBoardTickets(board, places);
+
+      return Promise.resolve(
+        movesBetween(
+          before,
+          board,
+          places.map(({ key }) => key),
+        ),
+      );
     }),
     listPeople: vi.fn(() => Promise.resolve([])),
   };

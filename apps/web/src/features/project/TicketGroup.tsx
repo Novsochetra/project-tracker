@@ -1,5 +1,7 @@
 import { collapseGroup, type Status } from '@tracker/shared';
 import { useRef } from 'react';
+import type { DoneBatch } from '../ready/doneBatch';
+import { MoveAllToDone } from '../ready/MoveAllToDone';
 import { groupRiseDelay, revealedRowDelay, type TicketGroupData } from './buildGroups';
 import { DROP_GROUP_ATTRIBUTE } from './dnd/dropGroup';
 import { dropEdgeFor } from './dnd/dropTarget';
@@ -19,13 +21,15 @@ export interface TicketGroupProps {
   rise: RisePhase;
   searching: boolean;
   next: Status | null;
+  doneBatch: DoneBatch | null;
   drag: DragState | null;
   callbacks: RowCallbacks;
   onAdd: (statusId: string) => void;
 }
 
 export function TicketGroup(props: TicketGroupProps) {
-  const { projectKey, group, index, rise, searching, next, drag, callbacks, onAdd } = props;
+  const { projectKey, group, index, rise, searching, next, doneBatch, drag, callbacks, onAdd } =
+    props;
   const { status, tickets } = group;
   const ref = useRef<HTMLElement>(null);
   const footerRef = useRef<HTMLButtonElement>(null);
@@ -54,6 +58,7 @@ export function TicketGroup(props: TicketGroupProps) {
         tint={tint}
         onAdd={() => onAdd(status.id)}
         onCollapse={unfolded ? toggle : undefined}
+        action={doneBatch && <MoveAllToDone batch={doneBatch} className={styles.action} />}
       />
       {drag && tickets.length === 0 && <DropZone name={status.name} targeted={target !== null} />}
       {collapsed.shown.map((ticket, row) => (

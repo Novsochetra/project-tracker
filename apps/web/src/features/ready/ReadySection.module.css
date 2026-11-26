@@ -2,10 +2,14 @@
   container-type: inline-size;
 }
 
+/* Too wide for a phone with Show less and Move to Done, it puts them on a line of their own, at
+   the right. */
 .header {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: var(--space-2);
+  justify-content: flex-end;
+  gap: 0 var(--space-2);
   min-height: 40px;
   padding: 0 var(--space-4);
   background: var(--fill);
@@ -28,7 +32,9 @@
   scroll-margin-top: calc(var(--sticky-top) + var(--sticky-header-height));
 }
 
-.header .less {
+/* The last button's text lines up with the rows' right edge. */
+.header .less:last-child,
+.header .move {
   margin-right: calc(var(--space-2) * -1);
 }
 
@@ -39,6 +45,7 @@
 }
 
 .count {
+  margin-right: auto;
   color: var(--subtle);
   font-variant-numeric: tabular-nums;
 }

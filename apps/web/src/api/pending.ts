@@ -26,24 +26,42 @@ export function targetsOf(variables: unknown): MutationTargets {
   return { projectKey, ticketKey };
 }
 
+// A move of many tickets at once (Move all to Done) names them all.
+function manyTicketKeys(variables: unknown): string[] {
+  if (typeof variables !== 'object' || variables === null) return [];
+
+  const keys: unknown = (variables as Record<string, unknown>).ticketKeys;
+  if (!Array.isArray(keys)) return [];
+
+  return keys
+    .filter((key): key is string => typeof key === 'string' && key !== '')
+    .map((key) => key.toUpperCase());
+}
+
 const sameTargets = (left: MutationTargets, right: MutationTargets): boolean =>
   left.projectKey === right.projectKey && left.ticketKey === right.ticketKey;
 
 // A mutation still counts as pending inside its own callbacks, so a settling mutation passes
 // its variables to leave itself out and only other pending work keeps a key busy.
 export function busyKeys(queryClient: QueryClient, settling?: unknown): BusyKeys {
-  const targets = queryClient
+  const pending = queryClient
     .getMutationCache()
     .findAll({ status: 'pending' })
-    .map((mutation) => targetsOf(mutation.state.variables));
+    .map((mutation) => mutation.state.variables);
+  const targets = pending.map(targetsOf);
   if (settling !== undefined) {
     const own = targetsOf(settling);
     const index = targets.findIndex((item) => sameTargets(item, own));
     if (index >= 0) targets.splice(index, 1);
   }
 
+  // A pending mutation keeps the very variables its callbacks get.
+  const many = pending.filter((variables) => variables !== settling).flatMap(manyTicketKeys);
+  const projectKeys = targets.flatMap(({ projectKey }) => (projectKey ? [projectKey] : []));
+  const ticketKeys = targets.flatMap(({ ticketKey }) => (ticketKey ? [ticketKey] : []));
+
   return {
-    projectKeys: new Set(targets.flatMap(({ projectKey }) => (projectKey ? [projectKey] : []))),
-    ticketKeys: new Set(targets.flatMap(({ ticketKey }) => (ticketKey ? [ticketKey] : []))),
+    projectKeys: new Set([...projectKeys, ...many.flatMap((key) => projectOfTicket(key) ?? [])]),
+    ticketKeys: new Set([...ticketKeys, ...many]),
   };
 }

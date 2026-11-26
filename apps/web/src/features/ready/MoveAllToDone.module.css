@@ -1,0 +1,43 @@
+/* A text button like the header's Show less, in the link color because it acts on every ticket.
+   The header that holds it places it, so it sets no margin of its own. */
+.button {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+  min-height: 28px;
+  padding: 0 var(--space-2);
+  border: 0;
+  border-radius: var(--radius-control);
+  background: transparent;
+  color: var(--link);
+  font-family: var(--font-sans);
+  font-size: var(--size-secondary);
+  font-weight: var(--weight-medium);
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    transform var(--duration-press) ease-out,
+    background-color var(--duration-fast) ease-out,
+    color var(--duration-fast) ease-out;
+}
+
+.button:active {
+  transform: scale(0.97);
+  background: var(--fill-2);
+}
+
+@media (hover: hover) {
+  .button:hover {
+    background: var(--fill-2);
+    color: var(--link-hover);
+  }
+}
+
+@media (width < 768px),
+  (pointer: coarse) and (device-width < 600px),
+  (pointer: coarse) and (device-height < 600px) {
+  .button {
+    min-height: var(--touch-target);
+  }
+}
