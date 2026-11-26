@@ -5,13 +5,13 @@ import { fakePushService, newDevice, type Device } from '../helpers/push';
 import { addUser, caller, type Caller } from '../helpers/callers';
 import { DIALECTS, useTestServer } from '../helpers/server';
 
-// Claude's question can quote a secret it found, and a push shows on the lock screen.
+// An agent's question can quote a secret it found, and a push shows on the lock screen.
 const SECRET = 'postgres://admin:hunter2pass@db.internal:5432/app';
 const QUESTION = { question: `Should I keep DATABASE_URL=${SECRET}?`, choices: ['Yes', 'No'] };
 
 const settle = () => new Promise((resolve) => setTimeout(resolve, 50));
 
-describe.each(DIALECTS)('push when Claude waits on the person (%s)', (dialect) => {
+describe.each(DIALECTS)('push when an agent waits on the person (%s)', (dialect) => {
   const clock = testClock();
   const service = fakePushService();
   const api = useTestServer(dialect, { now: clock.now, push: { send: service.send } });
@@ -49,7 +49,7 @@ describe.each(DIALECTS)('push when Claude waits on the person (%s)', (dialect) =
     expect(asked.status).toBe(201);
     expect(await service.messagesFor(phone)).toEqual([
       {
-        title: 'MOB-3: Claude has a question',
+        title: 'MOB-3: An agent has a question',
         body: 'Ticket 3 · Open the ticket to answer.',
         url: '/p/MOB/3',
         tag: 'ticket:MOB-3',

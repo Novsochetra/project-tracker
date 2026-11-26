@@ -5,9 +5,9 @@ import { questionPush } from '../../src/logic/pushMessages';
 const TICKET = { projectKey: 'MOB', num: 3, title: 'Fix the login button' };
 
 describe('a ticket push on the lock screen', () => {
-  it('says Claude has a question on the ticket and where to answer it', () => {
+  it('says an agent has a question on the ticket and where to answer it', () => {
     expect(questionPush({ ticket: TICKET })).toEqual({
-      title: 'MOB-3: Claude has a question',
+      title: 'MOB-3: An agent has a question',
       body: 'Fix the login button · Open the ticket to answer.',
       url: '/p/MOB/3',
       tag: 'ticket:MOB-3',

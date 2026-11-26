@@ -10,7 +10,7 @@ export const SKIPPED =
 
 export const answeredText = (answer: string): string => `The person answered: ${answer}`;
 
-// Anything but an answer lets Claude go on, so an unanswered question never fails the run.
+// Anything but an answer lets the agent go on, so an unanswered question never fails the run.
 export function replyText(end: PollEnd<TicketQuestion>): string {
   if (end.kind !== 'ended') return NO_ANSWER;
   const { status, answer } = end.value;

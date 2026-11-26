@@ -9,8 +9,8 @@ import { personAnswers } from '../personOnly';
 import { userContext } from '../userContext';
 import { jsonBody } from '../validation';
 
-// Claude asks and waits with its API token; only the person answers, so an agent can't answer
-// its own question.
+// An agent asks and waits with its API token; only the person answers, so it can't answer its
+// own question.
 export const questionRoutes = (ctx: ServiceContext) =>
   new Hono<AppEnv>()
     .post('/tickets/:key/questions', jsonBody(askQuestionInput), async (context) =>

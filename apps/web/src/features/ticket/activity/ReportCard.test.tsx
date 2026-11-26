@@ -113,7 +113,7 @@ describe('report card sections', () => {
       '**NEXT:** none',
     );
     const card = renderReport(report(pasted, HUMAN));
-    expect(card).toHaveTextContent('Claude Code report');
+    expect(card).toHaveTextContent('Agent report');
     expect(card).toHaveTextContent('Submitted for review');
     expect(terms(card)).toEqual(['Summary', 'Files']);
     expect(section(card, 'Files')).toHaveTextContent('src/login/LoginForm.tsx');

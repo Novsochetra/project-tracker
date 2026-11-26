@@ -10,7 +10,7 @@ export interface PollOptions<T> {
   // One long poll: the tracker answers once it ended or after about 25 s with it still open.
   waitOnce: (signal: AbortSignal) => Promise<T>;
   isOpen: (value: T) => boolean;
-  // On this computer's clock, so a tracker that can't be reached doesn't keep Claude forever.
+  // On this computer's clock, so a tracker that can't be reached doesn't keep the agent forever.
   limitMs: number;
   signal: AbortSignal;
   now?: () => number;

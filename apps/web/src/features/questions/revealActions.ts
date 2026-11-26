@@ -9,7 +9,7 @@ const COVERS = '[data-bottom-cover], [data-bottom-bar]';
 
 // The bottom of the screen is covered by a footer or a bar, and by the keyboard, which only the
 // visual viewport's bottom knows of. What is taller than the room left keeps its top in sight,
-// where a card says what Claude asks.
+// where a card says what the agent asks.
 export function revealDistance(
   bottom: number,
   visibleBottom: number,

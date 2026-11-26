@@ -16,7 +16,7 @@ export interface LoginIo {
   connect?: (config: Config) => TrackerApi;
 }
 
-const NO_TOKEN_GIVEN = 'No token given. Copy one from Connect Claude Code → API tokens.';
+const NO_TOKEN_GIVEN = 'No token given. Copy one from Connect an agent → API tokens.';
 
 const isTokenShaped = (token: string): boolean => /^\S+$/.test(token);
 
@@ -30,7 +30,7 @@ async function checkToken(url: string, token: string, io: LoginIo): Promise<Chec
     const session = await client.getSession();
     if (session.authenticated) return { open: !session.authRequired };
     return {
-      problem: `The tracker at ${url} didn't accept this token: it was revoked, mistyped or made for another tracker. Create a new one in Connect Claude Code → API tokens.`,
+      problem: `The tracker at ${url} didn't accept this token: it was revoked, mistyped or made for another tracker. Create a new one in Connect an agent → API tokens.`,
     };
   } catch (error) {
     return { problem: describeError(error, { trackerUrl: url }) };
@@ -93,7 +93,7 @@ export function logout(global: GlobalValues, io: LoginIo): number {
 
   io.store.write(withoutToken(saved, url));
   io.stdout(
-    `Removed the token saved for ${url}. It still works until you revoke it in Connect Claude Code → API tokens.`,
+    `Removed the token saved for ${url}. It still works until you revoke it in Connect an agent → API tokens.`,
   );
 
   return EXIT_OK;

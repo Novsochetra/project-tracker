@@ -16,7 +16,7 @@ const meta: ServerMeta = {
   authRequired: true,
 };
 
-const sheet = () => screen.getByRole('dialog', { name: 'Connect Claude Code' });
+const sheet = () => screen.getByRole('dialog', { name: 'Connect an agent' });
 
 let restore: () => void;
 
@@ -26,7 +26,7 @@ beforeEach(() => {
 
 afterEach(() => restore());
 
-describe('regression: Connect Claude Code at a plain-http LAN address', () => {
+describe('regression: Connect an agent at a plain-http LAN address', () => {
   it('gives the commands for localhost on the tracker’s computer and says why', async () => {
     renderWithApi(<ConnectSheet open onClose={() => undefined} />, {
       getMeta: vi.fn().mockResolvedValue(meta),

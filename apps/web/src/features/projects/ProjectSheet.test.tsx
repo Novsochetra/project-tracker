@@ -42,7 +42,7 @@ describe('New project sheet', () => {
     expect(create).toBeDisabled();
     expect(
       within(dialog).getByText(
-        'Tickets are numbered with a short prefix, like MOB-1. The repository is added to every Claude Code prompt.',
+        'Tickets are numbered with a short prefix, like MOB-1. Agents get the repository with every ticket, and find the project by it.',
       ),
     ).toBeInTheDocument();
     await user.type(within(dialog).getByLabelText('Project name'), 'Mobile app');
@@ -50,7 +50,7 @@ describe('New project sheet', () => {
     expect(within(dialog).getByLabelText('Ticket prefix')).toHaveAttribute('placeholder', 'MA');
     expect(
       within(dialog).getByText(
-        'Tickets will be numbered MA-1, MA-2 and so on. The repository is added to every Claude Code prompt.',
+        'Tickets will be numbered MA-1, MA-2 and so on. Agents get the repository with every ticket, and find the project by it.',
       ),
     ).toBeInTheDocument();
     await user.type(within(dialog).getByLabelText('Ticket prefix'), 'mob');
@@ -89,16 +89,16 @@ describe('New project sheet', () => {
     await waitFor(() => expect(currentPath()).toBe('/p/MA'));
   });
 
-  it('sends the instructions for Claude', async () => {
+  it('sends the instructions for agents', async () => {
     const user = userEvent.setup();
     const { dialog, create } = renderNewSheet();
     await user.type(within(dialog).getByLabelText('Project name'), 'Garden blog');
     await user.type(
-      within(dialog).getByLabelText('Instructions for Claude'),
+      within(dialog).getByLabelText('Instructions for agents'),
       ' Plain voice.{Enter}Cite two sources. ',
     );
     expect(
-      within(dialog).getByText('Claude gets these with every ticket in this project.'),
+      within(dialog).getByText('Agents get these with every ticket in this project.'),
     ).toBeInTheDocument();
     await user.click(within(dialog).getByRole('button', { name: 'Create' }));
     expect(create).toHaveBeenCalledWith(
@@ -110,13 +110,13 @@ describe('New project sheet', () => {
     restore.push(mockPhone(true));
     const user = userEvent.setup();
     const { dialog, onClose } = renderNewSheet();
-    await user.type(within(dialog).getByLabelText('Instructions for Claude'), 'Plain voice.');
+    await user.type(within(dialog).getByLabelText('Instructions for agents'), 'Plain voice.');
     await user.click(within(dialog).getByRole('button', { name: 'Cancel' }));
     const ask = screen.getByRole('dialog', { name: 'Discard changes?' });
     await readActionSheet();
     await user.click(within(ask).getByRole('button', { name: 'Keep editing' }));
     expect(onClose).not.toHaveBeenCalled();
-    expect(within(dialog).getByLabelText('Instructions for Claude')).toHaveValue('Plain voice.');
+    expect(within(dialog).getByLabelText('Instructions for agents')).toHaveValue('Plain voice.');
   });
 
   it('shows the server error and stays open', async () => {
@@ -170,12 +170,12 @@ describe('Edit project sheet', () => {
     expect(within(dialog).getByLabelText('Project name')).toHaveValue('Website');
     expect(within(dialog).getByLabelText('Description')).toHaveValue('Docs');
     expect(within(dialog).getByLabelText('Repository or folder')).toHaveValue('~/code/web');
-    expect(within(dialog).getByLabelText('Instructions for Claude')).toHaveValue('Plain voice.');
+    expect(within(dialog).getByLabelText('Instructions for agents')).toHaveValue('Plain voice.');
     expect(within(dialog).queryByLabelText('Ticket prefix')).not.toBeInTheDocument();
     expect(within(dialog).queryByRole('button', { name: /^Template/ })).not.toBeInTheDocument();
     expect(
       within(dialog).getByText(
-        'The repository is added to every Claude Code prompt for this project.',
+        'Agents get the repository with every ticket in this project, and find the project by it.',
       ),
     ).toBeInTheDocument();
   });
@@ -206,7 +206,7 @@ describe('Edit project sheet', () => {
     expect(within(dialog).getAllByRole('switch')).toEqual([toggle]);
     expect(toggle).toHaveAttribute('aria-checked', 'false');
     expect(toggle).toHaveAccessibleDescription(
-      "Shows the project's key instead of its name, and hides its description and folder. This sheet still shows them, and Claude Code still gets them with each ticket.",
+      "Shows the project's key instead of its name, and hides its description and folder. This sheet still shows them, and agents still get them with each ticket.",
     );
     await user.click(toggle);
     expect(within(dialog).getByLabelText('Project name')).toHaveValue('Website');
@@ -220,7 +220,7 @@ describe('Edit project sheet', () => {
   it('saves changed instructions', async () => {
     const user = userEvent.setup();
     const { dialog } = renderEditSheet();
-    const field = within(dialog).getByLabelText('Instructions for Claude');
+    const field = within(dialog).getByLabelText('Instructions for agents');
     await user.clear(field);
     await user.type(field, 'Cite two sources.');
     await user.click(within(dialog).getByRole('button', { name: 'Save' }));

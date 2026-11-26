@@ -31,7 +31,7 @@ describe('a refusal for the project folder only', () => {
     expect(message).not.toContain('temp folder');
   });
 
-  it('names no temp folder when Claude Code runs in the home folder', async () => {
+  it('names no temp folder when the agent runs in the home folder', async () => {
     const message = await refusal(join(home, 'b.png'), [home]);
     expect(message).toContain('which holds your home folder, so no file can be attached');
     expect(message).not.toContain('temp folder');

@@ -22,7 +22,7 @@ test.describe('projects', () => {
     await expect(dialog.getByRole('button', { name: 'Create' })).toBeDisabled();
     await expect(
       dialog.getByText(
-        'Tickets are numbered with a short prefix, like MOB-1. The repository is added to every Claude Code prompt.',
+        'Tickets are numbered with a short prefix, like MOB-1. Agents get the repository with every ticket, and find the project by it.',
       ),
     ).toBeVisible();
 
@@ -104,7 +104,7 @@ test.describe('projects', () => {
     await page.getByRole('button', { name: 'Edit project' }).click();
     const dialog = page.getByRole('dialog', { name: 'Edit project' });
     await dialog
-      .getByLabel('Instructions for Claude')
+      .getByLabel('Instructions for agents')
       .fill('Write in a warm, plain voice.\nCheck every fact against two sources.');
     await dialog.screenshot({ path: info.outputPath('edit-project-instructions.png') });
     await dialog.getByRole('button', { name: 'Save' }).click();
@@ -128,7 +128,7 @@ test.describe('projects', () => {
     await expect(
       dialog.getByText('Statuses: Ideas, Drafting, Needs edit, Edited, Published.'),
     ).toBeVisible();
-    const instructions = dialog.getByLabel('Instructions for Claude');
+    const instructions = dialog.getByLabel('Instructions for agents');
     await expect(instructions).toHaveValue(/^This project is writing, not code\./);
     await dialog.screenshot({ path: info.outputPath('new-writing-project.png') });
     await dialog.getByRole('button', { name: 'Create' }).click();

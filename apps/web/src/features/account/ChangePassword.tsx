@@ -7,7 +7,7 @@ import password from './Password.module.css';
 import { PasswordField } from './PasswordField';
 import { usePasswordChange } from './usePasswordChange';
 
-const NOTE = 'Other phones and browsers are signed out. Claude Code agents keep their API tokens.';
+const NOTE = 'Other phones and browsers are signed out. Agents keep their API tokens.';
 
 function PasswordForm({ onClose }: { onClose: () => void }) {
   const toast = useToast();

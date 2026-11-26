@@ -31,7 +31,7 @@ export type ActivityItem =
   | (ItemBase & { kind: 'unknown' });
 
 export const reportTitle = (actor: Actor | null): string =>
-  actor?.kind === 'agent' && actor.name ? `${actor.name} report` : 'Claude Code report';
+  actor?.kind === 'agent' && actor.name ? `${actor.name} report` : 'Agent report';
 
 const ACTOR_KIND_SET: ReadonlySet<unknown> = new Set(ACTOR_KINDS);
 

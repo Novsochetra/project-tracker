@@ -32,7 +32,7 @@ const heldSecrets = (queryClient: QueryClient): unknown[] =>
     .getAll()
     .filter((mutation) => JSON.stringify(mutation.state.data ?? null).includes(SECRET));
 
-const sheet = () => screen.queryByRole('dialog', { name: 'Connect Claude Code' });
+const sheet = () => screen.queryByRole('dialog', { name: 'Connect an agent' });
 
 function ClosableSheet() {
   const [open, setOpen] = useState(true);

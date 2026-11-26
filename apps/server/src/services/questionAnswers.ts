@@ -14,11 +14,11 @@ import { settleQuestions } from './questionSweep';
 import { eventEntry, writeTicket } from './ticketWrites';
 
 const ENDED: Readonly<Record<QuestionRow['status'], string>> = {
-  open: 'Claude no longer waits for this.',
+  open: 'The agent no longer waits for this.',
   answered: 'This was already answered.',
   skipped: 'This was already skipped.',
-  expired: 'Nobody answered in time, so Claude went on without it.',
-  cancelled: 'Claude no longer waits for this.',
+  expired: 'Nobody answered in time, so the agent went on without it.',
+  cancelled: 'The agent no longer waits for this.',
 };
 
 const endOf = (input: AnswerQuestionInput, endedAt: number): QuestionEnd =>
@@ -59,8 +59,8 @@ export async function answerQuestion(
   return toQuestion(await requireQuestion(ctx, ctx.scope, id));
 }
 
-// One that already ended stays as it ended: Claude may give up just as the person answers, and
-// the answer then stands.
+// One that already ended stays as it ended: the agent may give up just as the person answers,
+// and the answer then stands.
 export async function cancelQuestion(ctx: UserContext, id: string): Promise<TicketQuestion> {
   await settleQuestions(ctx);
   const row = await requireQuestion(ctx, ctx.scope, id);

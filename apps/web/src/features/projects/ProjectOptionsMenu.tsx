@@ -61,7 +61,7 @@ export function ProjectOptionsMenu({ projectKey }: { projectKey: string }) {
             Manage labels
           </MenuItem>
           <MenuItem icon={Plug} onClick={() => run(options.connect)}>
-            Connect Claude Code
+            Connect an agent
           </MenuItem>
           <MenuItem icon={Trash2} tone="danger" onClick={() => setConfirming(true)}>
             Delete project

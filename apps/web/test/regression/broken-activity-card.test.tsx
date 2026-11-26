@@ -246,7 +246,7 @@ it('names an author it cannot read "Someone", and shows an unknown kind of item 
   const card = someone!.closest('article')!;
   expect(within(card).getByRole('link', { name: 'https://x.dev/who' })).toBeInTheDocument();
   expect(within(card).getByRole('button', { name: 'Comment options' })).toBeInTheDocument();
-  expect(within(log()).getByText('Claude Code report')).toBeInTheDocument();
+  expect(within(log()).getByText('Agent report')).toBeInTheDocument();
   const [poll] = unshown();
   expect(poll).toHaveTextContent('A poll from a newer tracker');
   expect(within(poll!).queryByRole('button')).toBeNull();

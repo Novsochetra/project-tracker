@@ -74,7 +74,7 @@ describe('activityItems', () => {
       ['unknown', HUMAN, 'You'],
       ['comment', HUMAN, 'You'],
     ]);
-    expect(items[1]).toMatchObject({ title: 'Claude Code report' });
+    expect(items[1]).toMatchObject({ title: 'Agent report' });
     expect(items[3]).toMatchObject({ text: 'poll d' });
     expect(items[4]).toMatchObject({ draft: false });
   });
@@ -96,13 +96,13 @@ describe('entries that are not activities', () => {
 });
 
 describe('reportTitle', () => {
-  it('uses the agent name, or "Claude Code" for pasted and unnamed reports', () => {
+  it('uses the agent name, or "Agent" for pasted and unnamed reports', () => {
     expect(reportTitle({ kind: 'agent', name: 'Claude (reviewer)' })).toBe(
       'Claude (reviewer) report',
     );
-    expect(reportTitle(HUMAN)).toBe('Claude Code report');
-    expect(reportTitle({ kind: 'agent', name: '' })).toBe('Claude Code report');
-    expect(reportTitle(null)).toBe('Claude Code report');
+    expect(reportTitle(HUMAN)).toBe('Agent report');
+    expect(reportTitle({ kind: 'agent', name: '' })).toBe('Agent report');
+    expect(reportTitle(null)).toBe('Agent report');
   });
 });
 

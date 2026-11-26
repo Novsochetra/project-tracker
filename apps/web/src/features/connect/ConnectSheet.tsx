@@ -17,7 +17,7 @@ export function ConnectSheet({ open, onClose }: SheetProps) {
   const intro = (
     <>
       <p className={styles.help}>
-        Claude Code agents can pick up your tickets, do the work and hand it back for review.
+        AI agents can pick up your tickets, do the work and hand it back for review.
       </p>
       <ConnectSteps />
     </>
@@ -27,8 +27,8 @@ export function ConnectSheet({ open, onClose }: SheetProps) {
     <Sheet
       open={open}
       onClose={onClose}
-      label="Connect Claude Code"
-      title="Connect Claude Code"
+      label="Connect an agent"
+      title="Connect an agent"
       size="wide"
       left={<SheetTextButton onClick={onClose}>Close</SheetTextButton>}
     >

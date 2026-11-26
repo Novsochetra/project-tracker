@@ -16,7 +16,7 @@ export function ProjectInstructionsField({ form: { values, setField } }: { form:
         <div className={clsx('ring-inside', styles.instructions)}>
           <label htmlFor={id} className={styles.instructionsLabel}>
             <Icon icon={PenLine} className={styles.fieldIcon} />
-            Instructions for Claude
+            Instructions for agents
           </label>
           <AutoTextarea
             id={id}

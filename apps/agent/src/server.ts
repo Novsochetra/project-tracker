@@ -26,7 +26,7 @@ function registerTool(server: McpServer, tool: Tool, client: TrackerApi): void {
       annotations: { readOnlyHint: tool.readOnly },
     },
     async (input, extra) => {
-      // ask_person waits for the person far longer than Claude Code's idle timeout.
+      // ask_person waits for the person far longer than an MCP client's idle timeout.
       const stop = keepCallAlive(extra._meta?.progressToken, extra.sendNotification);
       try {
         return await callTool(tool, client, input, { signal: extra.signal });

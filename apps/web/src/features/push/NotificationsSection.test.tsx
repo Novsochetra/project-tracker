@@ -29,7 +29,7 @@ describe('NotificationsSection', () => {
     const user = userEvent.setup();
     const push = stubPush();
     const api = renderSection();
-    expect(await screen.findByText(/Tells you when Claude finishes/)).toBeInTheDocument();
+    expect(await screen.findByText(/Tells you when an agent finishes/)).toBeInTheDocument();
     expect(toggle()).toHaveAttribute('aria-checked', 'false');
     await user.click(toggle());
     expect(push.notification.requestPermission).toHaveBeenCalledTimes(1);
@@ -43,7 +43,7 @@ describe('NotificationsSection', () => {
   it('asks before anything is awaited, as iOS shows the prompt only inside the tap', async () => {
     const push = stubPush();
     const api = renderSection();
-    await screen.findByText(/Tells you when Claude finishes/);
+    await screen.findByText(/Tells you when an agent finishes/);
     toggle().click();
     expect(push.notification.requestPermission).toHaveBeenCalledTimes(1);
     expect(api.getPushKey).not.toHaveBeenCalled();
@@ -65,7 +65,7 @@ describe('NotificationsSection', () => {
     const user = userEvent.setup();
     const push = stubPush({ answer: 'denied' });
     renderSection();
-    await screen.findByText(/Tells you when Claude finishes/);
+    await screen.findByText(/Tells you when an agent finishes/);
     await user.click(toggle());
     expect(await screen.findByRole('alert')).toHaveTextContent('Notifications are blocked');
     expect(toggle()).toHaveAttribute('aria-checked', 'false');
@@ -77,7 +77,7 @@ describe('NotificationsSection', () => {
     const user = userEvent.setup();
     const push = stubPush();
     renderSection({ savePushSubscription: vi.fn().mockRejectedValue(new TypeError('Failed')) });
-    await screen.findByText(/Tells you when Claude finishes/);
+    await screen.findByText(/Tells you when an agent finishes/);
     await user.click(toggle());
     expect(await screen.findByRole('alert')).toHaveTextContent("Can't reach the tracker.");
     expect(push.subscription.unsubscribe).toHaveBeenCalled();

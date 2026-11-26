@@ -70,7 +70,7 @@ describe('imageContent', () => {
     ]);
   });
 
-  it('does not send formats Claude cannot view', async () => {
+  it('does not send formats models cannot view', async () => {
     const fetchAttachment = vi.fn();
     const heic = image('photo', { fileName: 'IMG_1.heic', mimeType: 'image/heic' });
     const blocks = await imageContent(fakeClient({ fetchAttachment }), [heic]);

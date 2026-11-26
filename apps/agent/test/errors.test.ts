@@ -8,7 +8,7 @@ const refused = () => new ApiError(401, 'unauthorized', 'Sign in to use this tra
 describe('describeError for a 401', () => {
   it('says the tracker needs a token and how to get one', () => {
     expect(describeError(refused(), { trackerUrl: URL })).toBe(
-      `The tracker at ${URL} needs an API token. Create one in the app: Connect Claude Code → API tokens. ` +
+      `The tracker at ${URL} needs an API token. Create one in the app: Connect an agent → API tokens. ` +
         `Then run "tracker login --url ${URL}" and paste it, or set TRACKER_API_TOKEN.`,
     );
   });
@@ -17,10 +17,10 @@ describe('describeError for a 401', () => {
     const saved = describeError(refused(), { trackerUrl: URL, tokenSource: 'tracker login' });
     expect(saved).toBe(
       `The tracker at ${URL} refused the token saved by tracker login: it was revoked, mistyped or made for another tracker. ` +
-        `Create one in the app: Connect Claude Code → API tokens. Then run "tracker login --url ${URL}" and paste the new one.`,
+        `Create one in the app: Connect an agent → API tokens. Then run "tracker login --url ${URL}" and paste the new one.`,
     );
     expect(describeError(refused(), { trackerUrl: URL, tokenSource: 'TRACKER_TOKEN' })).toContain(
-      `refused the token in TRACKER_TOKEN: it was revoked, mistyped or made for another tracker. Create one in the app: Connect Claude Code → API tokens. Then set TRACKER_TOKEN to the new one, or unset it and run "tracker login --url ${URL}".`,
+      `refused the token in TRACKER_TOKEN: it was revoked, mistyped or made for another tracker. Create one in the app: Connect an agent → API tokens. Then set TRACKER_TOKEN to the new one, or unset it and run "tracker login --url ${URL}".`,
     );
     expect(describeError(refused(), { tokenSource: '--token' })).toMatch(
       /^The tracker refused the token from --token: .* Then pass the new one\.$/,

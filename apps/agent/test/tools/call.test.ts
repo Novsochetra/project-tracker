@@ -43,7 +43,7 @@ describe('callTool', () => {
     });
     expect(await callTool(listProjects, client, {})).toEqual(
       errorResult(
-        'The tracker at https://t.example needs an API token. Create one in the app: Connect Claude Code → API tokens. ' +
+        'The tracker at https://t.example needs an API token. Create one in the app: Connect an agent → API tokens. ' +
           'Then run "tracker login --url https://t.example" and paste it, or set TRACKER_API_TOKEN.',
       ),
     );

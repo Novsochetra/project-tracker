@@ -32,8 +32,8 @@ async function openConnect(page: Page): Promise<Locator> {
   await page.goto('/p/MOB');
   await page.getByRole('button', { name: 'Project options' }).first().click();
   await readActionSheet(page);
-  await page.getByRole('button', { name: 'Connect Claude Code' }).click();
-  const sheet = page.getByRole('dialog', { name: 'Connect Claude Code' });
+  await page.getByRole('button', { name: 'Connect an agent' }).click();
+  const sheet = page.getByRole('dialog', { name: 'Connect an agent' });
   await expect(sheet.getByRole('button', { name: 'Copy CLI command' })).toBeAttached();
 
   return sheet;

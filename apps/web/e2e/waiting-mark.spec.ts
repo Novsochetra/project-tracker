@@ -49,7 +49,7 @@ async function expectOnSecondLine(page: Page, row: Locator): Promise<void> {
   expect(await row.evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(true);
 }
 
-test.describe('Claude waiting for the person', () => {
+test.describe('An agent waiting for the person', () => {
   test('shows on the row and card, and a tap opens the ticket with the question in sight', async ({
     page,
     api,
@@ -70,11 +70,11 @@ test.describe('Claude waiting for the person', () => {
 
     await ask(agent);
     await expect(mark(row)).toBeVisible();
-    await expect(row).toHaveAccessibleName(/^MOB-1 .* Claude is waiting for you\b/);
+    await expect(row).toHaveAccessibleName(/^MOB-1 .* An agent is waiting for you\b/);
     await expect(mark(ticketRow(page, 'MOB-2'))).toHaveCount(0);
     if (isPhone(info.project.name)) {
       await api.updateTicket('MOB-1', { title: 'Crash on rotate' });
-      await expect(row).toHaveAccessibleName(/^MOB-1 Crash on rotate Claude is waiting/);
+      await expect(row).toHaveAccessibleName(/^MOB-1 Crash on rotate An agent is waiting/);
       await expectOnSecondLine(page, row);
       await settledScreenshot(page, info.outputPath('waiting-list-375.png'));
       await page.setViewportSize({ width: 320, height: 568 });
@@ -96,7 +96,7 @@ test.describe('Claude waiting for the person', () => {
     await showView(page, 'List');
 
     await ticketRow(page, 'MOB-1').click();
-    const asked = page.getByRole('region', { name: `Claude asks: ${FILES}` });
+    const asked = page.getByRole('region', { name: `An agent asks: ${FILES}` });
     await expect(asked).toBeVisible();
     await settled(asked);
     if (isPhone(info.project.name)) {
@@ -118,7 +118,7 @@ test.describe('Claude waiting for the person', () => {
     await expect(mark(ticketRow(page, 'MOB-1'))).toHaveCount(0);
   });
 
-  test('goes once Claude stops waiting, and once the person answers elsewhere', async ({
+  test('goes once the agent stops waiting, and once the person answers elsewhere', async ({
     page,
     api,
     agent,
@@ -162,7 +162,7 @@ test.describe('Claude waiting for the person', () => {
     await page.goto('/p/TRACK');
     const row = ticketRow(page, 'TRACK-1');
     await expect(row).toHaveAccessibleName(
-      /^TRACK-1 Crash on rotate Claude is waiting for you Changes requested/,
+      /^TRACK-1 Crash on rotate An agent is waiting for you Changes requested/,
     );
     await settled(row);
 

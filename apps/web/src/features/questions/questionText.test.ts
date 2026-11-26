@@ -39,6 +39,6 @@ describe('a question on the phone', () => {
   it('marks what hides or reorders text where it names the question', () => {
     const hidden = question({ text: 'Delete ‮txt.exe?' });
     expect(subjectOf(hidden)).toBe('Delete \\u{202E}txt.exe?');
-    expect(announcementOf(hidden)).toBe('Claude asks you: Delete \\u{202E}txt.exe?');
+    expect(announcementOf(hidden)).toBe('An agent asks you: Delete \\u{202E}txt.exe?');
   });
 });

@@ -51,8 +51,8 @@ export function TokensSection() {
   return (
     <Section title="API tokens">
       <p className={shared.help}>
-        Claude Code signs in to this tracker with a token. Make one for each computer, and revoke it
-        if it leaks.
+        An agent signs in to this tracker with a token. Make one for each computer, and revoke it if
+        it leaks.
       </p>
       <TokenList query={tokens} />
       <NewToken />
