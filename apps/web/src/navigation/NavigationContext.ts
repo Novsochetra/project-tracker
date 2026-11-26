@@ -1,4 +1,5 @@
 import { createContext } from 'react';
+import type { HistorySteps } from './historySteps';
 import { createOpeningStore, type OpeningStore } from './openingStore';
 import type { NavigationIntent } from './resolveTransition';
 import { routePath, type Route } from './routes';
@@ -16,7 +17,7 @@ export interface Navigation {
   back: () => void;
 }
 
-export interface NavigationState extends Navigation {
+export interface NavigationState extends Navigation, HistorySteps {
   intent: NavigationIntent | null;
   finishSwipeBack: () => void;
 }

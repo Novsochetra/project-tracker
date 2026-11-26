@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useState, type ReactNode } from 'react';
 import { NavigationType, useLocation, useNavigate, useNavigationType } from 'react-router';
 import { forgetReload, reloadTimeLeft } from '../lib/pageReload';
 import {
@@ -8,6 +8,7 @@ import {
   type NavigationState,
   type NavigationTarget,
 } from './NavigationContext';
+import { historySteps } from './historySteps';
 import { toNavigationKind } from './navigationKind';
 import { useOpeningStore } from './openingStore';
 import { PUSH_WAIT_LIMIT_MS, waitAtMost } from './pushWait';
@@ -28,14 +29,13 @@ export function NavigationProvider({ children, prepare = READY }: NavigationProv
   const { key, pathname, search, hash } = useLocation();
   const navigationType = useNavigationType();
   const navigate = useNavigate();
-  const historyRef = useRef<SessionHistory | null>(null);
+  const [history] = useState(() => new SessionHistory());
   const [intent, setIntent] = useState<NavigationIntent | null>(null);
   const opening = useOpeningStore(key);
 
   useLayoutEffect(() => {
-    historyRef.current ??= new SessionHistory();
-    historyRef.current.record(key, pathname, toNavigationKind(navigationType));
-  }, [key, pathname, navigationType]);
+    history.record(key, pathname, toNavigationKind(navigationType));
+  }, [history, key, pathname, navigationType]);
 
   useLayoutEffect(() => {
     if (navigationType === NavigationType.Pop) forgetReload();
@@ -86,9 +86,17 @@ export function NavigationProvider({ children, prepare = READY }: NavigationProv
       opening.clear();
       setIntent({ fromKey: key, toPath: parentPath, animate });
       // Deep links have no parent entry behind them, so replace instead of leaving the app.
-      if (historyRef.current?.previousPath() === parentPath) void navigate(-1);
+      if (history.previousPath() === parentPath) void navigate(-1);
       else void navigate(parentPath, { replace: true });
     };
+    const steps = historySteps({
+      history,
+      go: (delta) => {
+        opening.clear();
+        void navigate(delta);
+      },
+      backToParent: parent === null ? null : () => goBack(true),
+    });
     return {
       route,
       canGoBack: parent !== null,
@@ -97,8 +105,9 @@ export function NavigationProvider({ children, prepare = READY }: NavigationProv
       replace: (target) => go(target, true),
       back: () => goBack(true),
       finishSwipeBack: () => goBack(false),
+      ...steps,
     };
-  }, [pathname, key, intent, navigate, opening, prepare]);
+  }, [pathname, key, intent, navigate, opening, prepare, history]);
 
   return (
     <NavigationContext value={value}>

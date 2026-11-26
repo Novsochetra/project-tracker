@@ -4,9 +4,12 @@
   box-sizing: border-box;
 }
 
+/* The app plays its own trackpad swipe between pages (navigation/useTrackpadSwipe); the browser's
+   would run a second one over places the app leaves alone, such as a sideways scroller's end. */
 html {
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
+  overscroll-behavior-x: none;
 }
 
 body {

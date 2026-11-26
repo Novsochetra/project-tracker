@@ -22,7 +22,9 @@ import styles from './StackNavigator.module.css';
 import './tokens.css';
 import { useStackAnimation } from './useStackAnimation';
 import { useStatusBarTap } from './useStatusBarTap';
+import { SwipeHint } from './SwipeHint';
 import { useSwipeBack } from './useSwipeBack';
+import { useTrackpadSwipe } from './useTrackpadSwipe';
 
 export interface StackNavigatorProps {
   renderScreen: (route: Route) => ReactNode;
@@ -92,6 +94,7 @@ function StackView({
     enabled: swipeEnabled,
     reducedMotion,
   });
+  const trackpadHint = useTrackpadSwipe({ steps: navigation, reducedMotion });
 
   const animation = swipe ? 'swipe' : model.animation;
   // A boundary of the layer's own shows its loading state in the layer that slides in (PT-104). A
@@ -117,6 +120,7 @@ function StackView({
           renderScreen={renderScreen}
         />
       ))}
+      <SwipeHint {...trackpadHint} />
     </div>
   );
 }

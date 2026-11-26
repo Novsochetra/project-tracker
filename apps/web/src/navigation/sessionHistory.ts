@@ -35,4 +35,8 @@ export class SessionHistory {
   previousPath(): string | null {
     return this.entries[this.index - 1]?.path ?? null;
   }
+
+  nextPath(): string | null {
+    return this.entries[this.index + 1]?.path ?? null;
+  }
 }

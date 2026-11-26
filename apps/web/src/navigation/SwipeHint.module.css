@@ -1,0 +1,32 @@
+.hint {
+  position: absolute;
+  top: 50%;
+  z-index: var(--z-stack-overlay);
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  margin-top: -20px;
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--muted);
+  box-shadow: var(--shadow-floating);
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    background-color var(--duration-fast) var(--ease-out),
+    color var(--duration-fast) var(--ease-out);
+}
+
+.back {
+  left: 16px;
+}
+
+.forward {
+  right: 16px;
+}
+
+.ready {
+  background: var(--accent);
+  color: var(--surface);
+}
