@@ -31,6 +31,7 @@ export * from './api/changes';
 export * from './api/chatChanges';
 export * from './api/chats';
 export * from './api/dto';
+export * from './api/doneMoves';
 export * from './api/invites';
 export * from './api/passwords';
 export * from './api/planLimits';

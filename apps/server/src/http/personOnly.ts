@@ -41,6 +41,11 @@ export const personOrdersProjects = refuseAgents('Only a person reorders project
 // A status's category decides what counts as done and its name goes into prompts.
 export const personEditsStatuses = refuseAgents("Only a person changes a project's statuses.");
 
+// Done is the person's verdict on the work, so an agent can't finish its own (§1.2), and the undo
+// belongs to the person's own move.
+export const personMovesToDone = refuseAgents('Only a person can move tickets to Done.');
+export const personUndoesDone = refuseAgents('Only a person undoes a move to Done.');
+
 // A label's instructions go into the prompts of its tickets, so an agent could rewrite what later
 // runs are told. Agents still put labels on tickets.
 export const personEditsLabels = refuseAgents('Only a person changes labels.');

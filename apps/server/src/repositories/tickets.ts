@@ -24,6 +24,21 @@ export const findTicketByNum = (db: Db, projectId: string, num: number) =>
     .where('num', '=', num)
     .executeTakeFirst();
 
+export async function listTicketsByNums(
+  db: Db,
+  projectId: string,
+  nums: readonly number[],
+): Promise<TicketRow[]> {
+  if (nums.length === 0) return [];
+
+  return db
+    .selectFrom('tickets')
+    .selectAll()
+    .where('projectId', '=', projectId)
+    .where('num', 'in', nums)
+    .execute();
+}
+
 export const findTicketById = (db: Db, id: string) =>
   db.selectFrom('tickets').selectAll().where('id', '=', id).executeTakeFirst();
 
