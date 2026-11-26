@@ -177,3 +177,44 @@ describe('ActionSheet', () => {
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
   });
 });
+
+describe('ActionSheet onClosed', () => {
+  // With motion on, so the sheet takes its 220ms way out before it says it has gone.
+  beforeEach(() => {
+    restore.forEach((undo) => undo());
+    restore = [mockPhone(true)];
+  });
+
+  const sheet = (open: boolean, onClosed: () => void) => (
+    <ActionSheet
+      open={open}
+      onClose={vi.fn()}
+      onClosed={onClosed}
+      label="Move to Done"
+      actions={[{ label: 'Move 3 to Done', onSelect: vi.fn() }]}
+    />
+  );
+
+  it('runs once the sheet has left the screen, not while it is leaving', async () => {
+    const onClosed = vi.fn();
+    const { rerender } = render(sheet(true, onClosed));
+    rerender(sheet(false, onClosed));
+    expect(screen.getByRole('dialog', { hidden: true })).toBeInTheDocument();
+    expect(onClosed).not.toHaveBeenCalled();
+
+    const other = vi.fn();
+    rerender(sheet(false, other));
+    await waitFor(() => expect(screen.queryByRole('dialog', { hidden: true })).toBeNull());
+    expect(onClosed).not.toHaveBeenCalled();
+    expect(other).toHaveBeenCalledTimes(1);
+  });
+
+  it('runs no callback while the sheet stays open', async () => {
+    const onClosed = vi.fn();
+    const { rerender } = render(sheet(true, onClosed));
+    rerender(sheet(true, onClosed));
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    expect(onClosed).not.toHaveBeenCalled();
+    expect(screen.getByRole('dialog', { name: 'Move to Done' })).toBeInTheDocument();
+  });
+});

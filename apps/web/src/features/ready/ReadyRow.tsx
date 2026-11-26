@@ -41,7 +41,7 @@ export function ReadyRow({ item, index, onOpen, onDone }: ReadyRowProps) {
     <div
       className={clsx(styles.row, 'rise')}
       style={{ animationDelay: `${riseDelay(index)}ms` }}
-      data-ready-row=""
+      data-ready-row={item.ticket.key}
     >
       {isPhone ? (
         <SwipeActions

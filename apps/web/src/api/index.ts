@@ -19,6 +19,7 @@ export type { TrackerMutation, TrackerQuery } from './types';
 // and through this barrel, which the first load imports, they would load at start (PT-103).
 export * from './hooks/attachments';
 export * from './hooks/comments';
+export * from './hooks/doneMoves';
 export * from './hooks/live';
 export * from './hooks/people';
 export * from './hooks/projectMutations';

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { byRank, evenRanks, RANK_STEP, topRank, type Rankable } from '../src/logic/rank';
+import { byRank, evenRanks, RANK_STEP, topRank, topRanks, type Rankable } from '../src/logic/rank';
 
 const item = (num: number, rank: number): Rankable => ({ id: `t${num}`, num, rank });
 
@@ -47,6 +47,34 @@ describe('topRank', () => {
     const created = item(3, topRank(group));
 
     expect(sortedIds([...group, created])[0]).toBe('t3');
+  });
+});
+
+describe('topRanks', () => {
+  it('ends at 0 in an empty group, with the tickets before the last one above it', () => {
+    expect(topRanks([], ['c', 'a', 'b'])).toEqual(
+      new Map([
+        ['c', -2000],
+        ['a', -1000],
+        ['b', 0],
+      ]),
+    );
+  });
+
+  it('gives one ticket the rank topRank would', () => {
+    const group = [item(1, 2000), item(2, 0)];
+    expect(topRanks(group, ['t9'])).toEqual(new Map([['t9', topRank(group)]]));
+  });
+
+  it('puts every ticket above the group, in the order given', () => {
+    const group = [item(1, 0), item(2, 1000)];
+    const ranks = topRanks(group, ['t7', 't9', 't8']);
+    const entering = [7, 8, 9].map((num) => item(num, ranks.get(`t${num}`) ?? 0));
+    expect(sortedIds([...group, ...entering])).toEqual(['t7', 't9', 't8', 't1', 't2']);
+  });
+
+  it('returns nothing for no tickets', () => {
+    expect(topRanks([item(1, 0)], []).size).toBe(0);
   });
 });
 

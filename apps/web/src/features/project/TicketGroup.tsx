@@ -1,10 +1,13 @@
 import { collapseGroup, type Status } from '@tracker/shared';
 import { useRef } from 'react';
+import type { DoneBatch } from '../ready/doneBatch';
+import { MoveAllToDone } from '../ready/MoveAllToDone';
 import { groupRiseDelay, revealedRowDelay, type TicketGroupData } from './buildGroups';
 import { DROP_GROUP_ATTRIBUTE } from './dnd/dropGroup';
 import { dropEdgeFor } from './dnd/dropTarget';
 import type { DragState } from './dnd/useTicketDrag';
 import { toggleExpanded, useIsExpanded } from './expandedStore';
+import { followMovedTickets } from './movedFocus';
 import { DropZone, GroupHeader, ShowMoreButton } from './GroupParts';
 import type { RowCallbacks } from './rowTypes';
 import styles from './TicketGroup.module.css';
@@ -19,13 +22,15 @@ export interface TicketGroupProps {
   rise: RisePhase;
   searching: boolean;
   next: Status | null;
+  doneBatch: DoneBatch | null;
   drag: DragState | null;
   callbacks: RowCallbacks;
   onAdd: (statusId: string) => void;
 }
 
 export function TicketGroup(props: TicketGroupProps) {
-  const { projectKey, group, index, rise, searching, next, drag, callbacks, onAdd } = props;
+  const { projectKey, group, index, rise, searching, next, doneBatch, drag, callbacks, onAdd } =
+    props;
   const { status, tickets } = group;
   const ref = useRef<HTMLElement>(null);
   const footerRef = useRef<HTMLButtonElement>(null);
@@ -37,6 +42,8 @@ export function TicketGroup(props: TicketGroupProps) {
   const unfolded = expanded && collapsed.hasToggle;
   const target = drag?.target?.statusId === status.id ? drag.target : null;
   const tint = target !== null && drag?.ticket.statusId !== status.id;
+  const movedAll = (moving: Promise<unknown>) =>
+    followMovedTickets(ref.current, tickets[0]?.id, moving);
 
   return (
     <section
@@ -54,6 +61,14 @@ export function TicketGroup(props: TicketGroupProps) {
         tint={tint}
         onAdd={() => onAdd(status.id)}
         onCollapse={unfolded ? toggle : undefined}
+        action={
+          <MoveAllToDone
+            batch={doneBatch}
+            place="header"
+            className={styles.action}
+            onMove={movedAll}
+          />
+        }
       />
       {drag && tickets.length === 0 && <DropZone name={status.name} targeted={target !== null} />}
       {collapsed.shown.map((ticket, row) => (
@@ -76,6 +91,7 @@ export function TicketGroup(props: TicketGroupProps) {
           onToggle={toggle}
         />
       )}
+      <MoveAllToDone batch={doneBatch} place="footer" onMove={movedAll} />
     </section>
   );
 }
