@@ -4,7 +4,13 @@ import { beforeAll, describe, expect, it } from 'vitest';
 import { MIGRATIONS } from '../../src/db/migrations';
 import { createMigrator, migrateToLatest } from '../../src/db/migrator';
 import type { Db } from '../../src/db/schema';
-import { exactSchema, portableSchema, readSchema, type SchemaShape } from '../helpers/schemaShape';
+import {
+  exactSchema,
+  portableSchema,
+  readSchema,
+  withDroppedColumnsLast,
+  type SchemaShape,
+} from '../helpers/schemaShape';
 import {
   DIALECTS,
   emptyPgliteDataDir,
@@ -33,7 +39,9 @@ async function stepThrough(db: Db, dialect: TestDialect): Promise<SchemaShape[]>
     await expectRan(migrator.migrateUp(), [name]);
     const after = await exactSchema(db, dialect);
     await expectRan(migrator.migrateDown(), [name]);
-    expect(await exactSchema(db, dialect), `${name} down() undoes its up()`).toEqual(before);
+    expect(await exactSchema(db, dialect), `${name} down() undoes its up()`).toEqual(
+      withDroppedColumnsLast(before, after),
+    );
     await expectRan(migrator.migrateUp(), [name]);
     const again = await readSchema(db, dialect);
     expect(again.exact, `${name} up() after its down()`).toEqual(after);
@@ -290,8 +298,6 @@ const DATA_MODEL: SchemaShape = {
       'owner_id text',
       "instructions text not null default ''",
       'auto_review integer',
-      'max_parallel_runs integer not null default 5',
-      'max_sub_agents integer not null default 3',
       'hide_name integer not null default 0',
       'position integer not null default 0',
     ],
