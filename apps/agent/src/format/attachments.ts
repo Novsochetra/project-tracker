@@ -1,5 +1,5 @@
 import { attachmentKind, type Attachment, type TicketDetail } from '@tracker/shared';
-import { formatBytes, SEP } from './text';
+import { fenced, formatBytes, SEP } from './text';
 
 export const MAX_TEXT_CHARS = 20_000;
 // Claude Code caps a tool result at about 25,000 tokens by default, and images take room too.
@@ -73,15 +73,10 @@ export function describeAttachment(file: Attachment, view: FileView): string {
   return (note ? [...parts, note] : parts).join(SEP);
 }
 
-// A fence longer than any run of backticks inside, so the contents can't close it early.
-const fenceFor = (text: string): string =>
-  '`'.repeat(Math.max(3, ...(text.match(/`+/g) ?? []).map((run) => run.length + 1)));
-
 function contentsOf(file: Attachment, view: FileView): string | null {
   const text = view.texts.get(file.id);
   if (text?.status !== 'shown') return null;
-  const fence = fenceFor(text.text);
-  const block = `Contents of ${file.fileName}:\n${fence}\n${text.text.replace(/\r?\n$/, '')}\n${fence}`;
+  const block = `Contents of ${file.fileName}:\n${fenced(text.text)}`;
   if (text.text.length === text.fullLength) return block;
   const shown = `${NUMBER.format(text.text.length)} of ${NUMBER.format(text.fullLength)}`;
 

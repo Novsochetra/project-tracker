@@ -67,6 +67,7 @@ export * from './logic/reviewPrompt';
 export * from './logic/pushMessages';
 export * from './logic/pushServices';
 export * from './logic/rank';
+export * from './logic/replacedText';
 export * from './logic/search';
 export * from './logic/runAllCard';
 export * from './logic/runRequests';

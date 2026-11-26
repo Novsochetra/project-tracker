@@ -27,9 +27,17 @@ export const moveTicket = defineTool({
   name: 'move_ticket',
   description:
     'Move a ticket to another status by name (case-insensitive, e.g. "In progress"); it goes to the top of that ' +
-    'status. Agents cannot move tickets to a Done status: only a person does that. For the normal workflow ' +
-    'prefer claim_ticket, submit_for_review and review_ticket, which also record reports and reviews.',
-  input: z.object({ ticket: ticketKey, status: statusName }),
+    'status. Agents cannot move tickets to a Done status: only a person does that. A ticket in a Done status ' +
+    'moves out only with reopen, when the person told you to. For the normal workflow prefer claim_ticket, ' +
+    'submit_for_review and review_ticket, which also record reports and reviews.',
+  input: z.object({
+    ticket: ticketKey,
+    status: statusName,
+    reopen: z
+      .boolean()
+      .optional()
+      .describe('Set true only when the person told you to move this Done ticket out of Done.'),
+  }),
   readOnly: false,
   async handler(client, input) {
     const detail = await client.getTicket(input.ticket);
@@ -43,7 +51,10 @@ export const moveTicket = defineTool({
       return { text: `${detail.ticket.key} is already in ${target.name}.`, data: detail.ticket };
     }
 
-    const ticket = await client.updateTicket(detail.ticket.key, { statusId: target.id });
+    const ticket = await client.updateTicket(detail.ticket.key, {
+      statusId: target.id,
+      reopen: input.reopen,
+    });
 
     return { text: `Moved ${ticket.key} to ${target.name}.`, data: ticket };
   },

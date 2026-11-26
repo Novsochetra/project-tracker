@@ -1,12 +1,24 @@
-import { lineLabel, VERDICT_LABELS, type Activity, type Review } from '@tracker/shared';
+import {
+  lineLabel,
+  replacedDescription,
+  VERDICT_LABELS,
+  type Activity,
+  type Review,
+} from '@tracker/shared';
 import { formatAttachments, NO_FILE_CONTENT, type FileView } from './attachments';
-import { authorName, formatTime, SEP } from './text';
+import { authorName, fenced, formatTime, SEP } from './text';
 
 export const formatVerdict = (review: Review): string =>
   `${VERDICT_LABELS[review.verdict]}${SEP}★ ${review.rating}/5`;
 
-const formatEvent = (item: Activity): string =>
-  `- ${authorName(item.actor)} ${item.text}${SEP}${formatTime(item.createdAt)}`;
+// An agent's edit keeps the description it replaced, which the person may ask to get back whole.
+function formatEvent(item: Activity): string {
+  const replaced = replacedDescription(item.text);
+  const sentence = replaced?.sentence ?? item.text;
+  const line = `- ${authorName(item.actor)} ${sentence}${SEP}${formatTime(item.createdAt)}`;
+
+  return replaced ? `${line}\nThe old description:\n${fenced(replaced.oldText)}` : line;
+}
 
 function formatCard(label: string, item: Activity, view: FileView): string {
   const parts = [label, authorName(item.actor)];

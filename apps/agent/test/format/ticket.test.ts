@@ -179,4 +179,29 @@ describe('formatActivity', () => {
       '### Comment on src/a.ts line 12 · User · 2026-10-02 14:05\nRename this.',
     );
   });
+
+  it('shows the description an agent replaced whole, in a fence its backticks cannot close', () => {
+    const replaced = activity({
+      actor: claude,
+      text: 'removed the description\nRun `npm test`, then:\n```\nnpm run build\n```\n',
+    });
+    const renamed = activity({
+      actor: claude,
+      text: 'changed the title from “Crash on launch”',
+      createdAt: at(2, 14, 6),
+    });
+    expect(formatActivity([replaced, renamed])).toBe(
+      [
+        '- Claude removed the description · 2026-10-02 14:05',
+        'The old description:',
+        '````',
+        'Run `npm test`, then:',
+        '```',
+        'npm run build',
+        '```',
+        '````',
+        '- Claude changed the title from “Crash on launch” · 2026-10-02 14:06',
+      ].join('\n'),
+    );
+  });
 });
