@@ -51,18 +51,21 @@ export function createS3Storage({ client, bucket }: S3StorageOptions): FileStora
       const upload = new Upload({ client, params, partSize: PART_BYTES, queueSize: PARTS_AT_ONCE });
       await s3Call('upload', upload.done());
     },
+
     async read(key, range) {
       const command = new GetObjectCommand({ ...target(key), Range: rangeHeader(range) });
       const output = await s3Call('GetObject', unlessMissing(client.send(command)));
 
       return (output?.Body?.transformToWebStream() as ReadableStream<Uint8Array>) ?? null;
     },
+
     async stat(key) {
       const request = unlessMissing(client.send(new HeadObjectCommand(target(key))));
       const output = await s3Call('HeadObject', request);
 
       return output && { size: output.ContentLength ?? 0 };
     },
+
     async remove(key) {
       await s3Call('DeleteObject', client.send(new DeleteObjectCommand(target(key))));
     },

@@ -63,7 +63,7 @@ describe.each(DIALECTS)('run all todo (%s)', (dialect) => {
         ['MOB-4', 'waiting'],
       ]);
       const held = await ticketRuns('MOB-1');
-      expect(held.map(({ status: item, batchId }) => [item, batchId])).toEqual([
+      expect(held.map(({ status: runStatus, batchId }) => [runStatus, batchId])).toEqual([
         ['queued', body.runId],
       ]);
     });

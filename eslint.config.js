@@ -66,7 +66,8 @@ export default tseslint.config(
       'max-params': ['error', 4],
     },
   },
-  // docs/coding-style.md: short names and the blank lines a formatter never adds.
+  // docs/coding-style.md: no one-letter names but x, y, i, j and _, and the blank lines a
+  // formatter never adds.
   {
     plugins: { local },
     rules: {

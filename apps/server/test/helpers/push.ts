@@ -64,6 +64,7 @@ export function fakePushService() {
       service.send.mockReset();
       service.send.mockImplementation(answer);
     },
+
     async messagesFor(device: Device, count = 1): Promise<PushMessage[]> {
       await vi.waitFor(() => {
         if (service.forDevice(device).length < count) throw new Error('No push yet.');

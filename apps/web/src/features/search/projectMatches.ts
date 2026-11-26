@@ -16,11 +16,11 @@ function scoreOf(project: NamedProject, query: string): number {
 export function matchProjects<T extends NamedProject>(projects: readonly T[], query: string): T[] {
   const terms = searchTerms(query);
   if (terms.length === 0) return [...projects];
-  const text = query.trim().toLowerCase();
+  const wanted = query.trim().toLowerCase();
 
   return projects
     .filter((project) => terms.every((term) => textOf(project).includes(term)))
-    .map((project, index) => ({ project, index, score: scoreOf(project, text) }))
+    .map((project, index) => ({ project, index, score: scoreOf(project, wanted) }))
     .sort((left, right) => left.score - right.score || left.index - right.index)
     .map(({ project }) => project);
 }

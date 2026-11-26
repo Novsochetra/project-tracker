@@ -95,7 +95,9 @@ describe.each(DIALECTS)('reports (%s)', (dialect) => {
     ]);
     const board = await client.getBoard('MA');
     expect(
-      board.tickets.filter((item) => item.statusId === review).map((item) => item.key),
+      board.tickets
+        .filter((boardTicket) => boardTicket.statusId === review)
+        .map((boardTicket) => boardTicket.key),
     ).toEqual(['MA-1', 'MA-2']);
 
     const unchanged = await client.getTicket('WEB-1');

@@ -332,7 +332,9 @@ describe.each(DIALECTS)('tickets (%s)', (dialect) => {
       expect(await ranks(todo)).toEqual(['MA-2', 'MA-1', 'MA-3']);
       const board = await api.client().getBoard('MA');
       expect(
-        board.tickets.filter((item) => item.statusId === todo).map((item) => item.rank),
+        board.tickets
+          .filter((boardTicket) => boardTicket.statusId === todo)
+          .map((boardTicket) => boardTicket.rank),
       ).toEqual([0, 1000, 2000]);
       expect(ticket.rank).toBe(2000);
       expect(eventTexts(await api.client().getTicket('MA-3'))).toEqual(['created the ticket']);

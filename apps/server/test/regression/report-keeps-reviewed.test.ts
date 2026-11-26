@@ -27,7 +27,9 @@ describe.each(DIALECTS)(
         const detail = await api.client().getTicket('MA-1');
         expect(detail.status.category).toBe(category);
         expect(detail.activity.at(-1)).toMatchObject({ type: 'report', text });
-        expect(eventTexts(detail).some((line) => line.includes('Claude Code report'))).toBe(false);
+        expect(
+          eventTexts(detail).some((eventText) => eventText.includes('Claude Code report')),
+        ).toBe(false);
       },
     );
 

@@ -21,6 +21,7 @@ export function createBroadcaster<T = ChangeNotice>(): Broadcaster<T> {
         }
       }
     },
+
     subscribe(listener) {
       listeners.add(listener);
 

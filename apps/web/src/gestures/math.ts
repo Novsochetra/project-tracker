@@ -11,12 +11,12 @@ export const clamp = (value: number, min: number, max: number): number =>
 export const lerp = (from: number, to: number, progress: number): number =>
   from + (to - from) * progress;
 
-export const distance = (left: Point, right: Point): number =>
-  Math.hypot(left.x - right.x, left.y - right.y);
+export const distance = (from: Point, to: Point): number =>
+  Math.hypot(from.x - to.x, from.y - to.y);
 
-export const midpoint = (left: Point, right: Point): Point => ({
-  x: (left.x + right.x) / 2,
-  y: (left.y + right.y) / 2,
+export const midpoint = (first: Point, second: Point): Point => ({
+  x: (first.x + second.x) / 2,
+  y: (first.y + second.y) / 2,
 });
 
 // Same curve as UIScrollView so overscroll feels like iOS.

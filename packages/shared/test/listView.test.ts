@@ -51,7 +51,7 @@ describe('visibleStatuses', () => {
   });
 
   it('shows every status again when the picked one was deleted', () => {
-    const left = statuses.filter((item) => item.id !== 'review');
+    const left = statuses.filter((kept) => kept.id !== 'review');
     expect(ids(visibleStatuses(left, 'review'))).toEqual(ids(visibleStatuses(left, ALL_TICKETS)));
   });
 });

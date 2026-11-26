@@ -34,6 +34,7 @@ These hold in every project and are copied unchanged from a shared set; the sect
 ## Code rules
 
 - Lint enforces size and complexity limits, names of two letters or more (`id-length`; only `x`, `y`, `i`, `j` and `_` may be one), and the blank lines after a block and before a function's final return (`padding-line-between-statements`, `local/blank-line-before-final-return`, both auto-fixed by `npm run lint:fix`), all in `eslint.config.js`. Split code instead of raising limits.
+- Lint does not check two of the coding-style blank lines, so add them by hand: between the methods of an object, and after an early return written without braces (`if (!pad) return;`).
 - `local/no-jsdoc-blocks` rejects `/** */` blocks in app and package source.
 - All colors, type, radii, shadows and motion come from `apps/web/src/design/tokens.css`. No raw hex values in components.
 - Never install packages without asking; concurrent installs corrupt `node_modules`.

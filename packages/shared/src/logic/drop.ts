@@ -95,10 +95,10 @@ export function keyboardMoveTarget(
   direction: MoveDirection,
   statusOrder: readonly string[],
 ): DropTarget | null {
-  const ticket = tickets.find((item) => item.id === ticketId);
+  const ticket = tickets.find((candidate) => candidate.id === ticketId);
   if (!ticket) return null;
   const own = sortedGroup(tickets, ticket.statusId);
-  const index = own.findIndex((item) => item.id === ticketId);
+  const index = own.findIndex((sibling) => sibling.id === ticketId);
 
   return (
     moveWithinGroup(own, index, direction) ??

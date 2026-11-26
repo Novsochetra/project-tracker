@@ -72,6 +72,7 @@ export function createStepBatcher({
       // A tracker that can't be reached mustn't make the helper hold a whole run.
       waiting = [...waiting, ...steps].slice(-RUN_STEPS_KEPT);
     },
+
     async end() {
       open = false;
       clearInterval(timer);

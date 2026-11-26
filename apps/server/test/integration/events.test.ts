@@ -41,8 +41,8 @@ describe.each(DIALECTS)('change events (%s)', (dialect) => {
     const ticketId = ticket.id;
     const review = statusOf(project, 'in_review').id;
     expect(api.events).toEqual([
-      { type: 'changed', projectId: projectId, ticketId: null },
-      { type: 'changed', projectId: projectId, ticketId: ticketId },
+      { type: 'changed', projectId, ticketId: null },
+      { type: 'changed', projectId, ticketId },
     ]);
 
     const steps: [string, () => Promise<unknown>, string | null][] = [
@@ -115,14 +115,12 @@ describe.each(DIALECTS)('change events (%s)', (dialect) => {
       ['delete ticket', () => person.deleteTicket('MA-1'), ticketId],
       ['delete project', () => person.deleteProject('MA'), null],
     ];
-    for (const [name, step, ticketId] of steps) {
+    for (const [name, step, changedId] of steps) {
       api.events.length = 0;
       const result = await step();
       const expected =
-        ticketId === 'next' ? (result as { ticket: { id: string } }).ticket.id : ticketId;
-      expect(api.events, name).toEqual([
-        { type: 'changed', projectId: projectId, ticketId: expected },
-      ]);
+        changedId === 'next' ? (result as { ticket: { id: string } }).ticket.id : changedId;
+      expect(api.events, name).toEqual([{ type: 'changed', projectId, ticketId: expected }]);
     }
   });
 

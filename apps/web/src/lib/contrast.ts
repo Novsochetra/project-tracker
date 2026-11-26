@@ -25,8 +25,8 @@ export function luminance([red, green, blue]: Rgb): number {
   return 0.2126 * linear(red) + 0.7152 * linear(green) + 0.0722 * linear(blue);
 }
 
-export function contrast(left: Rgb, right: Rgb): number {
-  const [lighter, darker] = [luminance(left), luminance(right)].sort((x, y) => y - x) as [
+export function contrast(first: Rgb, second: Rgb): number {
+  const [lighter, darker] = [luminance(first), luminance(second)].sort((x, y) => y - x) as [
     number,
     number,
   ];

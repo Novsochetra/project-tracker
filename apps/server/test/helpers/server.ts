@@ -144,6 +144,7 @@ export function useTestServer(dialect: TestDialect, deps: TestDeps = {}) {
     get db() {
       return current().db;
     },
+
     get app() {
       return current().app;
     },

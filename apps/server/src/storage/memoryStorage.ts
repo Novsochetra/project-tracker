@@ -14,6 +14,7 @@ export function createMemoryStorage(): MemoryStorage {
       checkedKey(key);
       files.set(key, new Uint8Array(await new Response(body).arrayBuffer()));
     },
+
     read(key, range) {
       return Promise.resolve().then(() => {
         const bytes = bytesOf(key);
@@ -22,6 +23,7 @@ export function createMemoryStorage(): MemoryStorage {
         return part ? new Blob([part]).stream() : null;
       });
     },
+
     stat(key) {
       return Promise.resolve().then(() => {
         const bytes = bytesOf(key);
@@ -29,6 +31,7 @@ export function createMemoryStorage(): MemoryStorage {
         return bytes ? { size: bytes.byteLength } : null;
       });
     },
+
     remove(key) {
       return Promise.resolve().then(() => void files.delete(checkedKey(key)));
     },

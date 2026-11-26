@@ -33,6 +33,7 @@ export function createJsonLines({ onEvent, onText }: JsonLineHandlers) {
       partial = rest.pop() ?? '';
       rest.forEach(take);
     },
+
     end() {
       take(partial);
       partial = '';

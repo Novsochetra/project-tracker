@@ -109,10 +109,10 @@ describe('matchProjects', () => {
   });
 
   it('matches every word in the name or key, the key itself first', () => {
-    expect(matchProjects(all, 'pt').map((item) => item.key)).toEqual(['PT']);
-    expect(matchProjects(all, 'app mob').map((item) => item.key)).toEqual(['MOB']);
-    expect(matchProjects(all, 'web').map((item) => item.key)).toEqual(['WEB']);
-    expect(matchProjects(all, 'project').map((item) => item.key)).toEqual(['PT', 'SEC']);
+    expect(matchProjects(all, 'pt').map((found) => found.key)).toEqual(['PT']);
+    expect(matchProjects(all, 'app mob').map((found) => found.key)).toEqual(['MOB']);
+    expect(matchProjects(all, 'web').map((found) => found.key)).toEqual(['WEB']);
+    expect(matchProjects(all, 'project').map((found) => found.key)).toEqual(['PT', 'SEC']);
   });
 
   it('never matches a hidden name', () => {

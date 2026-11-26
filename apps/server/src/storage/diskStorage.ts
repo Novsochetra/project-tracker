@@ -37,6 +37,7 @@ export function createDiskStorage(dir: string): FileStorage {
         throw error;
       }
     },
+
     async read(key, range) {
       const path = pathOf(key);
       if (!(await fileAt(path))) return null;
@@ -44,11 +45,13 @@ export function createDiskStorage(dir: string): FileStorage {
 
       return Readable.toWeb(stream) as ReadableStream<Uint8Array>;
     },
+
     async stat(key) {
       const info = await fileAt(pathOf(key));
 
       return info && { size: info.size };
     },
+
     async remove(key) {
       await rm(pathOf(key), { force: true });
     },

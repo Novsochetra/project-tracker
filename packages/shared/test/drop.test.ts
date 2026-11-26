@@ -234,7 +234,7 @@ describe('keyboardMoveTarget', () => {
     });
     expect(keyboardMove(board, 'E', 'down')).toEqual({ statusId: 'done', order: ['E'] });
 
-    const noTodo = board.filter((item) => item.statusId !== 'todo');
+    const noTodo = board.filter((boardTicket) => boardTicket.statusId !== 'todo');
     expect(keyboardMove(noTodo, 'D', 'up')).toEqual({ statusId: 'todo', order: ['D'] });
   });
 

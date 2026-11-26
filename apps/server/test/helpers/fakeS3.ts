@@ -147,6 +147,7 @@ export async function startFakeS3(bucket = 'tracker-test'): Promise<FakeS3> {
       store(key, bytes);
       res.writeHead(200, { etag: etag(bytes) }).end();
     },
+
     CreateMultipartUpload(_req, res, { key }) {
       const uploadId = randomUUID();
       uploads.set(uploadId, { key, parts: new Map() });
@@ -156,6 +157,7 @@ export async function startFakeS3(bucket = 'tracker-test'): Promise<FakeS3> {
         `<InitiateMultipartUploadResult><Bucket>${bucket}</Bucket><Key>${key}</Key><UploadId>${uploadId}</UploadId></InitiateMultipartUploadResult>`,
       );
     },
+
     async UploadPart(req, res, { query }) {
       const bytes = await bodyOf(req);
       const upload = uploads.get(query.get('uploadId') ?? '');
@@ -163,6 +165,7 @@ export async function startFakeS3(bucket = 'tracker-test'): Promise<FakeS3> {
       upload.parts.set(Number(query.get('partNumber')), bytes);
       res.writeHead(200, { etag: etag(bytes) }).end();
     },
+
     async CompleteMultipartUpload(req, res, { key, query }) {
       const listed = [
         ...(await bodyOf(req)).toString().matchAll(/<PartNumber>(\d+)<\/PartNumber>/g),
@@ -180,25 +183,30 @@ export async function startFakeS3(bucket = 'tracker-test'): Promise<FakeS3> {
         `<CompleteMultipartUploadResult><Bucket>${bucket}</Bucket><Key>${key}</Key><ETag>"done"</ETag></CompleteMultipartUploadResult>`,
       );
     },
+
     AbortMultipartUpload(_req, res, { query }) {
       uploads.delete(query.get('uploadId') ?? '');
       res.writeHead(204).end();
     },
+
     GetObject(req, res, { key }) {
       const bytes = objects.get(key);
       if (!bytes) return error(res, 404, 'NoSuchKey');
       sendObject(res, bytes, req.headers.range);
     },
+
     HeadObject(_req, res, { key }) {
       const bytes = objects.get(key);
       if (!bytes) return void res.writeHead(404).end();
       res.writeHead(200, { 'content-length': bytes.byteLength, etag: etag(bytes) }).end();
     },
+
     DeleteObject(_req, res, { key }) {
       objects.delete(key);
       modified.delete(key);
       res.writeHead(204).end();
     },
+
     ListObjectsV2(_req, res, { query }) {
       const keys = [...objects].map(([key, bytes]): [string, number, number] => [
         key,
@@ -261,6 +269,7 @@ export async function startFakeS3(bucket = 'tracker-test'): Promise<FakeS3> {
       refused.clear();
       Object.assign(refusal, ACCESS_DENIED);
     },
+
     async close() {
       server.closeAllConnections();
       server.close();
