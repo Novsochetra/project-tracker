@@ -134,7 +134,7 @@ A one-time command copies your local tracker (`data/tracker.db` and `data/upload
 
 It runs on your Mac and reaches Railway's Postgres through its public address: the service's own `DATABASE_URL` (`postgres.railway.internal`) works only inside Railway. Your Mac needs the exact commit Railway deployed, and a `.env` with the S3 settings (`S3_BUCKET`, `AWS_REGION` and the two keys; made from `.env.example`, `docs/s3-storage.md`). Without a `.env`, node stops at once with `.env: not found`.
 
-1. Stop your local Claude Code agents and the local tracker (Ctrl-C where `npm run dev` or `node apps/server/dist/main.js` runs), so nothing changes after the copy.
+1. Stop your local agents and the local tracker (Ctrl-C where `npm run dev` or `node apps/server/dist/main.js` runs), so nothing changes after the copy.
 2. Take a final backup and build. `git status` should show nothing to commit, and `git log` the commit the Railway deployment shows:
 
    ```bash
@@ -173,14 +173,14 @@ With exported variables, `npm run data:move -- --from data/tracker.db --uploads 
 
 1. Safari → `https://<name>.up.railway.app` → sign in.
 2. **Share** → **Add to Home Screen**. It opens full screen like an app. HTTPS also turns on offline support and the clipboard.
-3. Open it from the Home Screen → **Account** → turn on **Notifications on this device** and allow them. The phone then tells you when a ticket is ready for you or Claude asks you something on one. iOS offers notifications only to the app opened from the Home Screen, not in Safari.
+3. Open it from the Home Screen → **Account** → turn on **Notifications on this device** and allow them. The phone then tells you when a ticket is ready for you or an agent asks you something on one. iOS offers notifications only to the app opened from the Home Screen, not in Safari.
 
-## 9. Connect Claude Code agents
+## 9. Connect your agents
 
-Agents on your Mac reach the online tracker with its address and an API token you create in the app. Follow README → **Connect Claude Code**, "To an online tracker", with `https://<name>.up.railway.app`:
+Agents on your Mac reach the online tracker with its address and an API token you create in the app. Follow README → **Connect an agent**, "To an online tracker", with `https://<name>.up.railway.app`:
 
-1. In the app on the phone or the Mac: project menu (•••) → **Connect Claude Code** → **API tokens** → name it ("Claude laptop") → **Create token** → **Copy token** (shown once).
-2. On the Mac, in the repo folder (`login` asks for the token: paste it):
+1. In the app on the phone or the Mac: project menu (•••) → **Connect an agent** → **API tokens** → name it ("Work laptop") → **Create token** → **Copy token** (shown once).
+2. On the Mac, in the repo folder (`login` asks for the token: paste it). The last command adds the tracker to Claude Code, as the example; another agent takes the same MCP server in its own settings:
 
    ```bash
    npm run build -w @tracker/agent
@@ -190,9 +190,9 @@ Agents on your Mac reach the online tracker with its address and an API token yo
 
    Registered `tracker` for the local tracker before? Run `claude mcp remove tracker -s user` first.
 
-3. Restart Claude Code and check with `node apps/agent/dist/cli.js projects`.
+3. Restart your agent and check with `node apps/agent/dist/cli.js projects`.
 
-**Updating:** deploy the tracker first (push to `main` and wait for CI to pass and the deployment to go Active), then rebuild the agent (`npm run build -w @tracker/agent`) on each computer and restart Claude Code (or run `/mcp`), since an agent newer than its tracker may call routes the tracker doesn't have yet. The CLI has no `tracker watch` since PT-275: on a computer where you ran `tracker watch --install`, run `tracker watch --uninstall` in that folder before you rebuild, or the login job keeps starting a command the new CLI refuses. Already rebuilt? Remove it by hand (`ls ~/Library/LaunchAgents | grep project-tracker` names it): on macOS `launchctl bootout gui/$(id -u)/com.project-tracker.watch.<id>`, then delete `~/Library/LaunchAgents/com.project-tracker.watch.<id>.plist` and its log `~/Library/Logs/com.project-tracker.watch.<id>.log`; on Linux `systemctl --user disable --now com.project-tracker.watch.<id>.service`, then delete `~/.config/systemd/user/com.project-tracker.watch.<id>.service` and run `systemctl --user daemon-reload`.
+**Updating:** deploy the tracker first (push to `main` and wait for CI to pass and the deployment to go Active), then rebuild the agent (`npm run build -w @tracker/agent`) on each computer and restart your agents (in Claude Code, `/mcp` does it too), since an agent newer than its tracker may call routes the tracker doesn't have yet. The CLI has no `tracker watch` since PT-275: on a computer where you ran `tracker watch --install`, run `tracker watch --uninstall` in that folder before you rebuild, or the login job keeps starting a command the new CLI refuses. Already rebuilt? Remove it by hand (`ls ~/Library/LaunchAgents | grep project-tracker` names it): on macOS `launchctl bootout gui/$(id -u)/com.project-tracker.watch.<id>`, then delete `~/Library/LaunchAgents/com.project-tracker.watch.<id>.plist` and its log `~/Library/Logs/com.project-tracker.watch.<id>.log`; on Linux `systemctl --user disable --now com.project-tracker.watch.<id>.service`, then delete `~/.config/systemd/user/com.project-tracker.watch.<id>.service` and run `systemctl --user daemon-reload`.
 
 ## Backups
 
@@ -253,4 +253,4 @@ What could only be proved on Railway itself:
 - After step 7, upload a photo to a ticket: it is stored as WebP in the bucket under `attachments/`. (Before the move, a ticket made online would make the move refuse.)
 - Keep a ticket open on the phone and change it from the Mac: the change shows up right away (live updates through Railway's proxy).
 - Push a small commit: its deployment waits until CI has passed on GitHub before it builds, the old deployment's logs end without errors, and the phone reconnects to the new one.
-- Turn on notifications on the phone (step 8), lock it and start a run on a ticket: when it ends, a notification says "MOB-3: Claude finished", and tapping it opens the ticket.
+- Turn on notifications on the phone (step 8), lock it and let an agent ask you something on a ticket (`ask_person`): a notification says "MOB-3: An agent has a question", and tapping it opens the ticket.
