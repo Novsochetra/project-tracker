@@ -8,6 +8,7 @@ import tsupConfig from '../../tsup.config';
 
 interface TrackerService {
   name: string;
+  source: { branch: string; checkSuites: boolean };
   build: { buildCommand: string };
   deploy: {
     startCommand: string;
@@ -32,6 +33,10 @@ const serverFileOf = (command: string | undefined) =>
 
 // Only Railway reads .railway/railway.ts, so a renamed entry or route would first fail a deploy.
 describe('.railway/railway.ts', () => {
+  it('deploys a push to main only once its GitHub checks pass', () => {
+    expect(tracker?.source).toMatchObject({ branch: 'main', checkSuites: true });
+  });
+
   it('starts and migrates with files the server build makes', () => {
     expect(tracker?.build.buildCommand).toMatch(/^npm run build && /);
     expect(builtEntries).toContain(serverFileOf(tracker?.deploy.startCommand));

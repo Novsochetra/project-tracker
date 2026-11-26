@@ -44,7 +44,7 @@ function reveal(target: HTMLElement): void {
 }
 
 // Measured a frame later, once a screen that just opened has its layout.
-export const revealInSight = (target: HTMLElement): void =>
+const revealInSight = (target: HTMLElement): void =>
   void requestAnimationFrame(() => reveal(target));
 
 // Typing an answer put Send answer under a footer, and under the keyboard on a phone, so the

@@ -5,14 +5,12 @@ import {
   preloadParts,
   preloadRoute,
   ProjectScreen,
-  PromptSheet,
-  ReportSheet,
   screensOnTheirWay,
   StatusManagerSheet,
   TicketScreen,
 } from './lazyParts';
 
-const SHEETS = [NewTicketSheet, PromptSheet, ReportSheet, StatusManagerSheet, ConnectSheet];
+const SHEETS = [NewTicketSheet, StatusManagerSheet, ConnectSheet];
 
 afterEach(() => {
   vi.restoreAllMocks();

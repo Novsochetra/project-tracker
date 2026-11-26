@@ -29,17 +29,17 @@ const TICKETS = [
 ] as const;
 const BUTTONS: [Gallery.ButtonProps, string][] = [
   [{ variant: 'primary', icon: Icons.Plus }, 'New ticket'],
-  [{ icon: Icons.ClipboardCheck }, 'Paste report'],
+  [{ icon: Icons.Paperclip }, 'Add files'],
   [{ variant: 'text' }, 'Cancel'],
   [{ variant: 'danger' }, 'Delete'],
   [{ variant: 'primary', size: 'header', disabled: true }, 'Create'],
-  [{ size: 'sm', icon: Icons.Terminal }, 'Send open tickets to Claude Code'],
-  [{ variant: 'primary', size: 'lg' }, 'Send to Claude Code'],
+  [{ size: 'sm', icon: Icons.Plug }, 'Connect Claude Code'],
+  [{ variant: 'primary', size: 'lg', icon: Icons.Check }, 'Move to Done'],
   [{ variant: 'text', tone: 'danger', icon: Icons.Trash2 }, 'Delete ticket'],
-  [{ size: 'bar', icon: Icons.ClipboardCheck, fullWidth: true }, 'Paste report (full width)'],
+  [{ size: 'bar', icon: Icons.MessageSquare, fullWidth: true }, 'Comment (full width)'],
   [
-    { variant: 'primary', size: 'bar', icon: Icons.Terminal, style: { flex: 1.35 } },
-    'Send to Claude',
+    { variant: 'primary', size: 'bar', icon: Icons.Plus, style: { flex: 1.35 } },
+    'New ticket (bar)',
   ],
 ];
 const ICON_BUTTONS: Gallery.IconButtonProps[] = [
@@ -154,11 +154,7 @@ function DetailsDemo() {
           value={assignee}
           onChange={(event) => setAssignee(event.currentTarget.value)}
         />
-        <Gallery.DateRow
-          value={due}
-          overdue={isOverdue(due, status === 'done')}
-          onChange={setDue}
-        />
+        <Gallery.DateRow value={due} overdue={isOverdue(due, status)} onChange={setDue} />
       </Gallery.GroupedCard>
       <Gallery.GroupedCard>
         <Gallery.InputRow

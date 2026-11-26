@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { listItem, makeBoard, project, STATUS } from '../../api/test/fixtures';
 import { CLICK_SHIELD_MS } from '../../lib/clickShield';
-import { renderWithApi, sheetTestSetup } from '../claude/test/renderWithApi';
+import { renderWithApi, sheetTestSetup } from '../../app/test/renderWithApi';
 import { LabelManagerSheet } from './LabelManagerSheet';
 
 const bug: Label = {

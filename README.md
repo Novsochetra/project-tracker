@@ -78,7 +78,7 @@ A deploy runs `node apps/server/dist/db.js migrate` before starting the new serv
 
 ## Deploy to Railway
 
-To use the tracker from anywhere, deploy it to [Railway](https://railway.com) from a private GitHub repo; each push to `main` deploys again. `.railway/railway.ts` holds the build (`npm run build`, then dev dependencies pruned), the pre-deploy migration, the start command and the health check (`/api/health`); `railway config apply` sends it to the service. In short:
+To use the tracker from anywhere, deploy it to [Railway](https://railway.com) from a private GitHub repo; each push to `main` deploys again once CI has passed on it. `.railway/railway.ts` holds the build (`npm run build`, then dev dependencies pruned), the pre-deploy migration, the start command, the health check (`/api/health`) and the wait for CI; `railway config apply` sends it to the service. In short:
 
 1. Push the repo to a private GitHub repo.
 2. In Railway: a new project with PostgreSQL, then add the GitHub repo as a service (one replica).
@@ -125,10 +125,6 @@ In any repository, Claude Code then has tracker tools and two slash commands:
 - `/mcp__tracker__review` — review tickets in **Need review**, rate them, approve or request changes.
 
 Agents never move tickets to **Done**. See `apps/agent/README.md` for the tools and the `tracker` CLI.
-
-The app also keeps the copy/paste loop: **Send to Claude Code** copies a ready-made prompt, and **Paste report** reads Claude's reply back into the ticket.
-
-To start Claude Code from your phone instead, run `tracker watch` in the project's code folder on your computer and leave it open (`apps/agent/README.md`, Run Claude Code from your phone).
 
 ## Development
 

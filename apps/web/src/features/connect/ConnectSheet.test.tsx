@@ -2,9 +2,8 @@ import { screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { ServerMeta } from '@tracker/shared';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { DARA, makeRunner } from '../../api/test/runFixtures';
 import { renderWithApp } from '../../app/test/harness';
-import { renderWithApi, setClipboard, sheetTestSetup } from '../claude/test/renderWithApi';
+import { renderWithApi, setClipboard, sheetTestSetup } from '../../app/test/renderWithApi';
 import { ConnectSheet } from './ConnectSheet';
 
 const meta: ServerMeta = {
@@ -52,6 +51,7 @@ describe('ConnectSheet', () => {
     expect(within(sheet()).getByText('/mcp__tracker__review <PROJECT KEY>')).toBeInTheDocument();
     expect(within(sheet()).getByText(`node ${meta.cliEntry} help`)).toBeInTheDocument();
     expect(within(sheet()).queryByText(/TRACKER_TOKEN/)).not.toBeInTheDocument();
+    expect(within(sheet()).queryByText(/ watch/)).not.toBeInTheDocument();
     expect(within(sheet()).getByText('Tracker v1.0.0')).toBeInTheDocument();
   });
 
@@ -155,87 +155,5 @@ describe('ConnectSheet', () => {
     );
     await user.click(within(sheet()).getByRole('button', { name: 'Try again' }));
     expect(await within(sheet()).findByText(COMMAND)).toBeInTheDocument();
-  });
-});
-
-describe('ConnectSheet: Run Claude Code from your phone', () => {
-  const step = () =>
-    within(sheet()).findByRole('region', { name: 'Run Claude Code from your phone' });
-
-  it('shows the watch command for the project behind the sheet and this user’s computers', async () => {
-    const studio = makeRunner({
-      id: 'h-studio',
-      name: 'Studio',
-      online: false,
-      lastSeenAt: Date.now() - 2 * 60 * 60 * 1000,
-    });
-    renderWithApp(<ConnectSheet open onClose={() => undefined} />, {
-      path: '/p/mob/2',
-      client: {
-        getMeta: vi.fn().mockResolvedValue(meta),
-        listRunners: vi
-          .fn()
-          .mockResolvedValue([makeRunner({ projectKeys: ['MOB', 'WEB'] }), studio]),
-      },
-    });
-    const section = await step();
-    const command = `node ${meta.cliEntry} watch MOB`;
-    expect(within(section).getByText(command)).toBeInTheDocument();
-    expect(
-      within(section).getByText(
-        "Your Mac has to be on, awake and logged in; after a restart with FileVault it waits for your password. If it is off, asleep or offline, a run waits 30 minutes, then stops with “Your computer didn't take the run.”",
-      ),
-    ).toBeInTheDocument();
-    expect(
-      within(section).getByText(
-        'To run it while your Mac is off, put it on a Linux server or in Docker: see docs/always-on-helper.md in the tracker’s repo.',
-      ),
-    ).toBeInTheDocument();
-    const computers = await within(section).findByRole('list', { name: 'Your computers' });
-    expect(
-      within(computers)
-        .getAllByRole('listitem')
-        .map((row) => row.textContent),
-    ).toEqual([`${DARA}MOB, WEB · Online`, 'StudioMOB · Last seen 2h ago']);
-
-    const user = userEvent.setup();
-    const writeText = vi.fn().mockResolvedValue(undefined);
-    setClipboard({ writeText });
-    await user.click(within(section).getByRole('button', { name: 'Copy watch command' }));
-    expect(writeText).toHaveBeenCalledWith(command);
-  });
-
-  it("lists each computer's servers, commands and skills in full", async () => {
-    const tools = {
-      servers: ['GitHub', 'Notion', 'Gmail', 'Google Drive', 'Google Calendar'],
-      commands: ['standup', 'weekly-report'],
-      skills: ['drafting'],
-    };
-    renderWithApp(<ConnectSheet open onClose={() => undefined} />, {
-      path: '/p/mob/2',
-      client: {
-        getMeta: vi.fn().mockResolvedValue(meta),
-        listRunners: vi.fn().mockResolvedValue([makeRunner({ tools }), makeRunner({ id: 'h-2' })]),
-      },
-    });
-    const computers = await within(await step()).findByRole('list', { name: 'Your computers' });
-    expect(
-      within(computers)
-        .getAllByRole('listitem')
-        .map((row) => row.textContent),
-    ).toEqual([
-      `${DARA}MOB · OnlineGitHub, Notion, Gmail, Google Drive, Google Calendar, /standup, /weekly-report, /drafting`,
-      `${DARA}MOB · Online`,
-    ]);
-  });
-
-  it('says when no computer runs it yet', async () => {
-    renderWithApi(<ConnectSheet open onClose={() => undefined} />, {
-      getMeta: vi.fn().mockResolvedValue(meta),
-      listRunners: vi.fn().mockResolvedValue([]),
-    });
-    const section = await step();
-    expect(await within(section).findByText('No computers yet.')).toBeInTheDocument();
-    expect(within(section).getByText(`node ${meta.cliEntry} watch`)).toBeInTheDocument();
   });
 });

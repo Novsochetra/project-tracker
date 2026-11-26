@@ -16,7 +16,6 @@
   overflow-y: auto;
 }
 
-.desktop.prompt,
 .desktop.report {
   padding-top: 8vh;
 }
@@ -53,10 +52,6 @@
 .desktop .panel {
   max-width: 540px;
   border-radius: var(--radius-sheet);
-}
-
-.desktop.prompt .panel {
-  max-width: 620px;
 }
 
 .desktop.report .panel {

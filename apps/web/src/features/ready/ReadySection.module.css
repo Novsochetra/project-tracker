@@ -28,7 +28,9 @@
   scroll-margin-top: calc(var(--sticky-top) + var(--sticky-header-height));
 }
 
-.header .less {
+/* The last button's text lines up with the rows' right edge. */
+.header .less:last-child,
+.header .move {
   margin-right: calc(var(--space-2) * -1);
 }
 
@@ -39,6 +41,7 @@
 }
 
 .count {
+  margin-right: auto;
   color: var(--subtle);
   font-variant-numeric: tabular-nums;
 }

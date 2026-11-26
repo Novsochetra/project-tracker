@@ -38,22 +38,8 @@ const sheets: Array<[string, string, (page: Page) => Promise<void>]> = [
   ['quick capture', 'New ticket', (page) => page.goto('/?capture').then(() => undefined)],
   ['Statuses', 'Statuses', (page) => fromProjectMenu(page, 'Manage statuses')],
   ['Connect', 'Connect Claude Code', (page) => fromProjectMenu(page, 'Connect Claude Code')],
-  [
-    'Prompt',
-    'Send to Claude Code',
-    async (page) => {
-      await page.goto('/p/MOB');
-      await page.getByRole('button', { name: 'Send open tickets' }).click();
-    },
-  ],
-  [
-    'Report',
-    'Paste Claude Code report',
-    async (page) => {
-      await page.goto('/p/MOB');
-      await page.getByRole('button', { name: 'Paste report' }).click();
-    },
-  ],
+  ['Labels', 'Labels', (page) => fromProjectMenu(page, 'Manage labels')],
+  ['Edit project', 'Edit project', (page) => fromProjectMenu(page, 'Edit project')],
 ];
 
 // Where the sheet's buttons and fields begin and end, and where the sheet and its header line do.

@@ -20,10 +20,6 @@ vi.mock('../features/project/ProjectScreen', async () => {
   };
 });
 
-vi.mock('../features/project/projectScreens', async () =>
-  (await import('./test/projectScreensMock')).projectScreensWithoutAsk(),
-);
-
 vi.mock('../features/ticket/TicketScreen', async () => {
   const { createElement } = await import('react');
 

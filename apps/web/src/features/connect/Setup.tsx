@@ -13,7 +13,6 @@ import { SlashCommands } from './SlashCommands';
 import { ADDRESS_COPY } from './tokenText';
 import { OpenTrackerNote, TokensSection } from './TokensSection';
 import { useCopyCommand, type CopyHandler } from './useCopyCommand';
-import { WatchSection } from './WatchSection';
 
 export interface SetupProps {
   meta: ServerMeta;
@@ -86,7 +85,6 @@ export function Setup({ meta, projectKey, intro }: SetupProps) {
         onCopy={copy}
       />
       <SlashCommands projectKey={projectKey} onCopy={copy} />
-      <WatchSection info={info} projectKey={projectKey} onCopy={copy} />
       <WithoutMcp info={info} onCopy={copy} />
       {blocked && (
         <p role="alert" className={`${styles.error} fade-in`}>

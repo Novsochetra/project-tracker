@@ -1,6 +1,7 @@
 import type { Locator, Page } from '@playwright/test';
 import { expect, isPhone, test } from './fixtures';
 import {
+  agentInstructions,
   readActionSheet,
   seedProject,
   settled,
@@ -106,11 +107,10 @@ test.describe('labels', () => {
     await expect(sheet).toBeHidden();
     await expect(ticketRow(page, 'MOB-3')).toBeVisible();
 
-    const prompt = (await api.getTicketPrompt('MOB-3')).text;
-    expect(prompt).toContain(
+    expect(await agentInstructions(api, 'MOB-3')).toContain(
       '## Instructions for "Bug" tickets\nWrite a failing regression test first.',
     );
-    expect(prompt).toContain('## Steps to reproduce');
+    expect((await api.getTicket('MOB-3')).ticket.description).toContain('## Steps to reproduce');
   });
 
   test('a release label is made where a ticket is tagged, shows on its row and filters the list', async ({

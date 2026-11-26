@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import type { ProjectBoard } from '@tracker/shared';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { makeBoard } from '../../src/api/test/fixtures';
-import { renderWithApi, sheetTestSetup } from '../../src/features/claude/test/renderWithApi';
+import { renderWithApi, sheetTestSetup } from '../../src/app/test/renderWithApi';
 import { StatusManagerSheet } from '../../src/features/statuses/StatusManagerSheet';
 import { CLICK_SHIELD_MS } from '../../src/lib/clickShield';
 import { tap } from '../../src/overlays/testing';

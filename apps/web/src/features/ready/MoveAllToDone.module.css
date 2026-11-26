@@ -1,0 +1,60 @@
+/* A desktop header's text button like Show less, in the link color because it acts on every
+   ticket. The header that holds it places it, so it sets no margin of its own. */
+.button {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+  min-height: 28px;
+  padding: 0 var(--space-2);
+  border: 0;
+  border-radius: var(--radius-control);
+  background: transparent;
+  color: var(--link);
+  font-family: var(--font-sans);
+  font-size: var(--size-secondary);
+  font-weight: var(--weight-medium);
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    transform var(--duration-press) ease-out,
+    background-color var(--duration-fast) ease-out,
+    color var(--duration-fast) ease-out;
+}
+
+.button:active {
+  transform: scale(0.97);
+  background: var(--fill-2);
+}
+
+@media (hover: hover) {
+  .button:hover {
+    background: var(--fill-2);
+    color: var(--link-hover);
+  }
+}
+
+/* A phone's last row of the card, the size of its Show more row (SPEC §12: 48px). */
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  min-height: 48px;
+  margin: 0;
+  padding: 0 16px;
+  border: 0;
+  border-top: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--link);
+  font-family: var(--font-sans);
+  font-size: var(--size-secondary);
+  font-weight: var(--weight-medium);
+  cursor: pointer;
+  transition: background-color var(--duration-fast) ease-out;
+}
+
+.row:active {
+  background: var(--fill);
+}

@@ -24,13 +24,13 @@ function Screen({ onBehind, onInside }: { onBehind: () => void; onInside: () => 
       <Sheet
         open={open}
         onClose={() => setOpen(false)}
-        label="Send to Claude Code"
-        title="Send to Claude Code"
+        label="Connect Claude Code"
+        title="Connect Claude Code"
         left={<SheetTextButton onClick={() => setOpen(false)}>Close</SheetTextButton>}
         dirty={text !== ''}
       >
         <input
-          aria-label="Prompt"
+          aria-label="Token name"
           value={text}
           onChange={(event) => setText(event.currentTarget.value)}
         />
@@ -60,7 +60,7 @@ function renderScreen(phone: boolean) {
   return { onBehind, onInside, user: userEvent.setup() };
 }
 
-const sheet = () => screen.queryByRole('dialog', { name: 'Send to Claude Code' });
+const sheet = () => screen.queryByRole('dialog', { name: 'Connect Claude Code' });
 const close = () => within(sheet()!).getByRole('button', { name: 'Close' });
 const scrim = () =>
   within(sheet()!.parentElement!)
@@ -91,7 +91,7 @@ it('drops the second tap of a double tap on the scrim', async () => {
 
 it('drops the second tap after Discard changes closes the sheet', async () => {
   const { onBehind, user } = renderScreen(true);
-  await user.type(screen.getByRole('textbox', { name: 'Prompt' }), 'Half a prompt');
+  await user.type(screen.getByRole('textbox', { name: 'Token name' }), 'Phone agent');
   await tap(user, scrim());
   await advance(CLICK_SHIELD_MS);
   await tap(user, screen.getByRole('button', { name: 'Discard changes' }));
@@ -102,7 +102,7 @@ it('drops the second tap after Discard changes closes the sheet', async () => {
 // The sheet under it stays open, so what lies under Keep editing is the sheet's, as the person left it.
 it('lets the next tap in the sheet through after Keep editing', async () => {
   const { onInside, user } = renderScreen(true);
-  await user.type(screen.getByRole('textbox', { name: 'Prompt' }), 'Half a prompt');
+  await user.type(screen.getByRole('textbox', { name: 'Token name' }), 'Phone agent');
   await tap(user, scrim());
   await advance(CLICK_SHIELD_MS);
   await tap(user, screen.getByRole('button', { name: 'Keep editing' }));
@@ -133,7 +133,7 @@ function swipeDown(target: Element) {
 // Escape and a swipe-down are no click, so no second tap follows them: the next tap is aimed.
 it('lets the next tap through after Escape closes the sheet', async () => {
   const { onBehind, user } = renderScreen(true);
-  await tap(user, screen.getByRole('textbox', { name: 'Prompt' }));
+  await tap(user, screen.getByRole('textbox', { name: 'Token name' }));
   await user.keyboard('{Escape}');
   expect(sheet()).toBeNull();
   await tap(user, behind());
@@ -142,8 +142,8 @@ it('lets the next tap through after Escape closes the sheet', async () => {
 
 it('lets the next tap through after a swipe-down closes the sheet', async () => {
   const { onBehind, user } = renderScreen(true);
-  await tap(user, screen.getByRole('textbox', { name: 'Prompt' }));
-  swipeDown(within(sheet()!).getByText('Send to Claude Code'));
+  await tap(user, screen.getByRole('textbox', { name: 'Token name' }));
+  swipeDown(within(sheet()!).getByText('Connect Claude Code'));
   await advance(0);
   expect(sheet()).toBeNull();
   await tap(user, behind());

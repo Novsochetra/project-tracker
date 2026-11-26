@@ -171,11 +171,11 @@ describe('the phone bottom bar', () => {
       phone: true,
       client: { updateTicket: pending() },
     });
-    expect(labels()).toEqual(['Ask Claude', 'Paste report', 'Move to Done']);
+    expect(labels()).toEqual(['Move to Done']);
     await user.click(within(bar()).getByRole('button', { name: 'Move to Done' }));
     expect(client.updateTicket).toHaveBeenCalledWith('MOB-3', { statusId: STATUS.done });
     expect(await screen.findByText('MOB-3 moved to Done')).toBeInTheDocument();
-    await waitFor(() => expect(labels()).toEqual(['Ask Claude', 'Paste report', 'Send to Claude']));
+    await waitFor(() => expect(labels()).toEqual(['Go to the comment box']));
   });
 
   it('keeps the review on the card without its own Move to Done, and focuses the Status chip after', async () => {
@@ -194,12 +194,12 @@ describe('the phone bottom bar', () => {
 
   it('offers Move to Done for a ticket moved to Reviewed by hand', () => {
     setup(STATUS.reviewed, [], { phone: true });
-    expect(labels()).toEqual(['Ask Claude', 'Paste report', 'Move to Done']);
+    expect(labels()).toEqual(['Move to Done']);
   });
 
-  it('keeps Send to Claude for a sent-back ticket', () => {
+  it('offers Comment for a sent-back ticket', () => {
     setup(STATUS.todo, [sendBack], { phone: true });
-    expect(labels()).toEqual(['Ask Claude', 'Paste report', 'Send to Claude']);
+    expect(labels()).toEqual(['Go to the comment box']);
     expect(latest()).toHaveTextContent('Changes requested');
   });
 });

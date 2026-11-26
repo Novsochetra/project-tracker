@@ -5,7 +5,7 @@ import type { ApiToken, CreatedApiToken } from '@tracker/shared';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { CLICK_SHIELD_MS } from '../../lib/clickShield';
 import { tap } from '../../overlays/testing';
-import { renderWithApi, setClipboard, sheetTestSetup } from '../claude/test/renderWithApi';
+import { renderWithApi, setClipboard, sheetTestSetup } from '../../app/test/renderWithApi';
 import { TokensSection } from './TokensSection';
 
 const NOW = new Date('2026-10-09T12:00:00').getTime();

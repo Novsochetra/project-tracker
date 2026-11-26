@@ -1,14 +1,4 @@
-import {
-  GIT_ACTION_STATUSES,
-  RUN_REQUEST_STATUSES,
-  RUN_STATUSES,
-  type ChangeEvent,
-  type ChatDeletedEvent,
-  type ChatGitEvent,
-  type RunEvent,
-  type RunRequestEvent,
-  type RunStepEvent,
-} from '@tracker/shared';
+import type { ChangeEvent } from '@tracker/shared';
 import { isRecord } from '../../lib/isRecord';
 
 const idOrNull = (value: unknown): string | null =>
@@ -33,70 +23,4 @@ export function parseChangeEvent(data: unknown): ChangeEvent | null {
     projectId: idOrNull(value.projectId),
     ticketId: idOrNull(value.ticketId),
   };
-}
-
-// A run works on a ticket or answers in a chat, so it names one of them.
-export function parseRunEvent(data: unknown): RunEvent | null {
-  const value = readJson(data);
-  const status = RUN_STATUSES.find((known) => known === value?.status);
-  const runId = idOrNull(value?.runId);
-  const projectId = idOrNull(value?.projectId);
-  const ticketId = idOrNull(value?.ticketId);
-  const chatId = idOrNull(value?.chatId);
-  if (value?.type !== 'run' || !status || !runId || !projectId) return null;
-  if (!ticketId && !chatId) return null;
-  const runnerId = idOrNull(value.runnerId);
-
-  return { type: 'run', runId, runnerId, projectId, ticketId, chatId, status };
-}
-
-export function parseRunStepEvent(data: unknown): RunStepEvent | null {
-  const value = readJson(data);
-  const runId = idOrNull(value?.runId);
-  const projectId = idOrNull(value?.projectId);
-  const count = value?.count;
-  if (value?.type !== 'run-step' || !runId || !projectId) return null;
-  if (typeof count !== 'number' || !Number.isInteger(count) || count < 0) return null;
-  const ticketId = idOrNull(value.ticketId);
-  const chatId = idOrNull(value.chatId);
-
-  return { type: 'run-step', runId, projectId, ticketId, chatId, count };
-}
-
-export function parseRunRequestEvent(data: unknown): RunRequestEvent | null {
-  const value = readJson(data);
-  const status = RUN_REQUEST_STATUSES.find((known) => known === value?.status);
-  const runId = idOrNull(value?.runId);
-  const requestId = idOrNull(value?.requestId);
-  const projectId = idOrNull(value?.projectId);
-  if (value?.type !== 'run-request' || !status || !runId || !requestId || !projectId) return null;
-  const ticketId = idOrNull(value.ticketId);
-  const chatId = idOrNull(value.chatId);
-
-  return { type: 'run-request', runId, requestId, projectId, ticketId, chatId, status };
-}
-
-export function parseChatDeletedEvent(data: unknown): ChatDeletedEvent | null {
-  const value = readJson(data);
-  const chatId = idOrNull(value?.chatId);
-  const projectId = idOrNull(value?.projectId);
-  if (value?.type !== 'chat-deleted' || !chatId || !projectId) return null;
-
-  return { type: 'chat-deleted', chatId, projectId };
-}
-
-export function parseChatGitEvent(data: unknown): ChatGitEvent | null {
-  const value = readJson(data);
-  const status = GIT_ACTION_STATUSES.find((known) => known === value?.status);
-  const [actionId, runnerId, chatId, projectId] = [
-    value?.actionId,
-    value?.runnerId,
-    value?.chatId,
-    value?.projectId,
-  ].map(idOrNull);
-  if (value?.type !== 'chat-git' || !status || !actionId || !runnerId || !chatId || !projectId) {
-    return null;
-  }
-
-  return { type: 'chat-git', actionId, runnerId, chatId, projectId, status };
 }

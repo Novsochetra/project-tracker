@@ -38,7 +38,7 @@ function shown(queryKey: QueryKey, data?: string) {
 
 describe('refreshLive', () => {
   it('reads once when no read is on its way', async () => {
-    const { queryFn, land, refresh, data } = shown(queryKeys.chat('c-1'), 'old');
+    const { queryFn, land, refresh, data } = shown(queryKeys.ticket('MOB-1'), 'old');
     const done = refresh();
     expect(queryFn).toHaveBeenCalledTimes(1);
     await land(0, 'new');
@@ -48,7 +48,7 @@ describe('refreshLive', () => {
   });
 
   it('lets a first read on its way land, then reads once more', async () => {
-    const { queryFn, land, refresh, data } = shown(queryKeys.chat('c-1'));
+    const { queryFn, land, refresh, data } = shown(queryKeys.ticket('MOB-1'));
     expect(queryFn).toHaveBeenCalledTimes(1);
     const done = refresh();
     expect(queryFn).toHaveBeenCalledTimes(1);
@@ -64,8 +64,8 @@ describe('refreshLive', () => {
   });
 
   it('turns a burst during a read into one more read, never cancelling the one on its way', async () => {
-    const { queryClient, queryFn, land, refresh, data } = shown(queryKeys.chat('c-1'), 'old');
-    void queryClient.refetchQueries({ queryKey: queryKeys.chat('c-1') });
+    const { queryClient, queryFn, land, refresh, data } = shown(queryKeys.ticket('MOB-1'), 'old');
+    void queryClient.refetchQueries({ queryKey: queryKeys.ticket('MOB-1') });
     expect(queryFn).toHaveBeenCalledTimes(1);
 
     const burst = Array.from({ length: 10 }, refresh);
@@ -81,7 +81,7 @@ describe('refreshLive', () => {
   });
 
   it('gives an event during the second read one more read of its own, and no more', async () => {
-    const { queryFn, land, refresh, data } = shown(queryKeys.chat('c-1'));
+    const { queryFn, land, refresh, data } = shown(queryKeys.ticket('MOB-1'));
     const first = refresh();
     await land(0, 'first');
     expect(queryFn).toHaveBeenCalledTimes(2);

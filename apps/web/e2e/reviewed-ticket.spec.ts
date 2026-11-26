@@ -18,7 +18,7 @@ const DESCRIPTION = 'Steps to reproduce, what happened and what should happen in
 // On phones the ticket's bottom bar covers the end of the viewport. Screens under it in the
 // navigation stack keep their own bars.
 async function expectAboveBar(page: Page, locator: Locator) {
-  const ticketBar = bottomBar(page).filter({ hasText: /Move to Done|Send to Claude/ });
+  const ticketBar = bottomBar(page).filter({ hasText: /Move to Done|Comment/ });
   // Right after the page loads the cards still rise and the bar still slides in.
   await settled(locator);
   await settled(ticketBar);
@@ -89,7 +89,8 @@ test.describe('reviewed ticket', () => {
     if (isPhone(info.project.name)) await expectAboveBar(page, latest.getByText('Toggle rows'));
     await expect(page.getByRole('button', { name: 'Move to Done' })).toHaveCount(0);
     if (isPhone(info.project.name)) {
-      await expect(bottomBar(page).getByRole('button', { name: 'Send to Claude' })).toBeVisible();
+      const comment = bottomBar(page).getByRole('button', { name: 'Go to the comment box' });
+      await expect(comment).toBeVisible();
     }
 
     await agent.claimTicket('MOB-1');

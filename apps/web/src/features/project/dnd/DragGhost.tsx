@@ -1,4 +1,4 @@
-import { isDoneCategory, isOverdue, isSentBack } from '@tracker/shared';
+import { isOverdue, isSentBack } from '@tracker/shared';
 import clsx from 'clsx';
 import { GripVertical } from 'lucide-react';
 import type { ReactNode } from 'react';
@@ -21,7 +21,6 @@ export function Lifted({ className, children }: { className?: string; children: 
 }
 
 function RowFace({ drag: { ticket, status } }: { drag: DragState }) {
-  const isDone = isDoneCategory(status.category);
   const waiting = useStillWaiting(ticket.waitingUntil);
 
   return (
@@ -43,7 +42,11 @@ function RowFace({ drag: { ticket, status } }: { drag: DragState }) {
         <VerdictChip verdict="changes_requested" compact className={styles.sentBack} />
       )}
       {ticket.due && (
-        <DueLabel due={ticket.due} overdue={isOverdue(ticket.due, isDone)} className={styles.due} />
+        <DueLabel
+          due={ticket.due}
+          overdue={isOverdue(ticket.due, status.category)}
+          className={styles.due}
+        />
       )}
       <Avatar name={ticket.assignee} decorative className={styles.assignee} />
     </Lifted>

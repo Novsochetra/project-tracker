@@ -111,9 +111,3 @@ export const DEMO_IMAGES: ViewerImage[] = [
     alt: 'Tall photo',
   },
 ];
-
-export const DEMO_PROMPT = Array.from(
-  { length: 28 },
-  (_, i) =>
-    `${i === 0 ? '## MOB-3: Crash when rotating the profile screen' : `- Step ${i}: check the rotation handler and the saved state ${i}`}`,
-).join('\n');

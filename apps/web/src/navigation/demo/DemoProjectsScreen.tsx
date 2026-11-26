@@ -60,7 +60,7 @@ export function DemoProjectsScreen() {
             <button type="button" className={styles.tool} onClick={() => demo.openImages(0)}>
               Images
             </button>
-            <button type="button" className={styles.tool} onClick={() => demo.openSheet('report')}>
+            <button type="button" className={styles.tool} onClick={() => demo.openSheet('long')}>
               Long sheet
             </button>
             <button type="button" className={styles.tool} onClick={() => demo.openOptions('MOB')}>

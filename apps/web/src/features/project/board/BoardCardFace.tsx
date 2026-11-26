@@ -41,7 +41,7 @@ function CardMeta({ ticket, status }: Omit<BoardCardFaceProps, 'decorative'>) {
   const waiting = useStillWaiting(ticket.waitingUntil);
   const labels = useTicketLabels(ticket);
   if (!waiting && !sentBack && !ticket.due && labels.length === 0) return null;
-  const overdue = isOverdue(ticket.due, isDoneCategory(status.category));
+  const overdue = isOverdue(ticket.due, status.category);
 
   return (
     <span className={styles.meta}>

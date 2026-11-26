@@ -19,11 +19,6 @@
   font: var(--text-caption);
 }
 
-.note {
-  color: var(--muted);
-  font-size: var(--size-caption);
-}
-
 .project {
   display: inline-flex;
   align-items: center;

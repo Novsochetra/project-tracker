@@ -8,9 +8,6 @@ import {
   EditProjectSheet,
   LabelManagerSheet,
   NewTicketSheet,
-  PromptSheet,
-  ReportSheet,
-  RunStepsSheet,
   SearchSheet,
   StatusManagerSheet,
 } from '../lazyParts';
@@ -51,16 +48,10 @@ function RequestedSheet({ request, open, onClose }: SheetProps & { request: Shee
       );
     case 'capture':
       return <CaptureSheet {...sheet} />;
-    case 'prompt':
-      return <PromptSheet {...sheet} scope={request.scope} />;
-    case 'report':
-      return <ReportSheet {...sheet} scope={request.scope} />;
     case 'statuses':
       return <StatusManagerSheet {...sheet} projectKey={request.projectKey} />;
     case 'labels':
       return <LabelManagerSheet {...sheet} projectKey={request.projectKey} />;
-    case 'runSteps':
-      return <RunStepsSheet {...sheet} runId={request.runId} ticketKey={request.ticketKey} />;
     case 'connect':
       return <ConnectSheet {...sheet} />;
     case 'account':

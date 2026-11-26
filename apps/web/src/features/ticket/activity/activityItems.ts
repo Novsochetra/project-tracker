@@ -86,12 +86,4 @@ export function activityItems(activity: readonly Activity[]): ActivityItem[] {
   return sorted.map((item, index) => toItem(item, keys[index] ?? item.id));
 }
 
-export function lastReportAt(activity: readonly Activity[]): number | null {
-  const times = readableEntries(activity)
-    .filter((item) => item.type === 'report')
-    .map((item) => item.createdAt);
-
-  return times.length > 0 ? Math.max(...times) : null;
-}
-
 export const isDraftItem = (item: ActivityItem): boolean => item.kind === 'comment' && item.draft;

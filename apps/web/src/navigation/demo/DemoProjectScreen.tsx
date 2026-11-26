@@ -1,14 +1,5 @@
 import clsx from 'clsx';
-import {
-  ArrowRight,
-  ClipboardCheck,
-  CircleDot,
-  Ellipsis,
-  GripVertical,
-  Plus,
-  Terminal,
-  Trash2,
-} from 'lucide-react';
+import { ArrowRight, CircleDot, Ellipsis, GripVertical, Plus, Trash2 } from 'lucide-react';
 import { PullToRefresh } from '../../gestures/PullToRefresh';
 import { SwipeActions } from '../../gestures/SwipeActions';
 import type { SwipeAction } from '../../gestures/swipeTypes';
@@ -95,17 +86,9 @@ export function DemoProjectScreen({ projectKey }: { projectKey: string }) {
         title={project.name}
         backLabel="Projects"
         right={
-          <>
-            <NavBarButton
-              aria-label="Project options"
-              onClick={() => demo.openOptions(project.key)}
-            >
-              <Ellipsis {...icon} />
-            </NavBarButton>
-            <NavBarButton aria-label="New ticket" onClick={() => demo.openSheet('ticket')}>
-              <Plus {...icon} />
-            </NavBarButton>
-          </>
+          <NavBarButton aria-label="Project options" onClick={() => demo.openOptions(project.key)}>
+            <Ellipsis {...icon} />
+          </NavBarButton>
         }
       />
       <PullToRefresh onRefresh={demo.refresh} scrollRef={scrollRef}>
@@ -119,17 +102,10 @@ export function DemoProjectScreen({ projectKey }: { projectKey: string }) {
       <BottomBar>
         <button
           type="button"
-          className={clsx(styles.barButton, 'press')}
-          onClick={() => demo.openSheet('report')}
-        >
-          <ClipboardCheck {...icon} /> Paste report
-        </button>
-        <button
-          type="button"
           className={clsx(styles.barButton, styles.barPrimary, 'press')}
-          onClick={() => demo.openSheet('prompt')}
+          onClick={() => demo.openSheet('ticket')}
         >
-          <Terminal {...icon} /> Send open tickets
+          <Plus {...icon} /> New ticket
         </button>
       </BottomBar>
     </>

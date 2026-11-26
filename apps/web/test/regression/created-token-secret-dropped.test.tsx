@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event';
 import type { CreatedApiToken, ServerMeta } from '@tracker/shared';
 import { useState } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { renderWithApi, sheetTestSetup } from '../../src/features/claude/test/renderWithApi';
+import { renderWithApi, sheetTestSetup } from '../../src/app/test/renderWithApi';
 import { ConnectSheet } from '../../src/features/connect/ConnectSheet';
 
 // The reviewer of PT-125: the new token's secret is shown once, but it stayed in React Query's

@@ -2,7 +2,7 @@ import { screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { renderWithApp } from '../../src/app/test/harness';
-import { setClipboard, sheetTestSetup } from '../../src/features/claude/test/renderWithApi';
+import { setClipboard, sheetTestSetup } from '../../src/app/test/renderWithApi';
 import { ConnectSheet } from '../../src/features/connect/ConnectSheet';
 
 const meta = {

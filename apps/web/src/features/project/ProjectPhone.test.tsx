@@ -48,33 +48,15 @@ afterEach(() => {
 });
 
 describe('ProjectScreen on phones', () => {
-  it('shows the nav bar and the Claude Code bottom bar', async () => {
+  it('shows the nav bar and New ticket in the bottom bar, within reach of a thumb', async () => {
     const user = userEvent.setup();
     const { sheets } = renderProject();
     await screen.findByRole('region', { name: 'To do' });
     expect(screen.getByRole('button', { name: 'Back to Projects' })).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'New ticket' }));
+    const newTicket = screen.getByRole('button', { name: 'New ticket' });
+    expect(newTicket.closest('[data-bottom-bar]')).not.toBeNull();
+    await user.click(newTicket);
     expect(sheets.open).toHaveBeenCalledWith({ type: 'newTicket', projectKey: 'MOB' });
-    await user.click(screen.getByRole('button', { name: 'Send open tickets' }));
-    expect(sheets.open).toHaveBeenCalledWith({
-      type: 'prompt',
-      scope: { kind: 'project', projectKey: 'MOB' },
-    });
-    await user.click(screen.getByRole('button', { name: 'Paste report' }));
-    expect(sheets.open).toHaveBeenCalledWith({
-      type: 'report',
-      scope: { kind: 'project', projectKey: 'MOB' },
-    });
-  });
-
-  it('opens Ask Claude from the bottom bar, within reach of a thumb', async () => {
-    const user = userEvent.setup();
-    renderProject();
-    await screen.findByRole('region', { name: 'To do' });
-    await user.click(screen.getByRole('button', { name: 'Ask Claude' }));
-    await waitFor(() =>
-      expect(screen.getByRole('status', { name: 'Location' })).toHaveTextContent('/p/MOB/ask'),
-    );
   });
 
   it('swipes right to move a ticket to the next status', async () => {

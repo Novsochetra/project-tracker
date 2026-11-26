@@ -1,7 +1,7 @@
 import { createContext, use } from 'react';
 import type { DemoProject } from './demoData';
 
-export type DemoSheet = 'project' | 'ticket' | 'prompt' | 'report';
+export type DemoSheet = 'project' | 'ticket' | 'long';
 
 export interface DemoActions {
   projects: DemoProject[];

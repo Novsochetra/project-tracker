@@ -1,7 +1,7 @@
 import { screen, within } from '@testing-library/react';
 import type { ServerMeta } from '@tracker/shared';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { renderWithApi, sheetTestSetup } from '../../src/features/claude/test/renderWithApi';
+import { renderWithApi, sheetTestSetup } from '../../src/app/test/renderWithApi';
 import { ConnectSheet } from '../../src/features/connect/ConnectSheet';
 
 // Reviewer 100 (PT-138): opened at a plain-http LAN address (HOST=0.0.0.0, http://192.168.x:4100),

@@ -20,9 +20,8 @@ const ANSWER_WITHIN_MS = 60_000;
 beforeEach(() => vi.useFakeTimers({ now: 1_000_000 }));
 afterEach(() => vi.useRealTimers());
 
-// A helper that was killed or went offline sends no event when its request runs out, and the
-// tracker ends requests lazily, so the board read before the deadline still says Claude waits
-// (PT-168 review).
+// No event comes when an agent's question runs out: the tracker ends questions when someone next
+// looks, so the board read before the deadline still says Claude waits (PT-168 review).
 describe('regression: the waiting mark at the request deadline', () => {
   it.each([
     ['row', TicketRowContent],

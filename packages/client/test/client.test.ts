@@ -193,6 +193,20 @@ const routes: Route[] = [
     call: (client) => client.moveTicket('MOB-3', { statusId: 's2', beforeId: 't1', afterId: null }),
   },
   {
+    name: 'moveToDone',
+    method: 'POST',
+    path: '/api/tickets/done',
+    body: { keys: ['MOB-3', 'WEB-1'] },
+    call: (client) => client.moveToDone(['MOB-3', 'WEB-1']),
+  },
+  {
+    name: 'undoMoveToDone',
+    method: 'POST',
+    path: '/api/tickets/done/undo',
+    body: { tickets: [{ key: 'MOB-3', statusId: 's4', rank: -1000 }] },
+    call: (client) => client.undoMoveToDone([{ key: 'MOB-3', statusId: 's4', rank: -1000 }]),
+  },
+  {
     name: 'deleteTicket',
     method: 'DELETE',
     path: '/api/tickets/MOB-3',
