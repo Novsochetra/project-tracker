@@ -33,6 +33,7 @@ import * as chatChanges from './0031_chat_changes';
 import * as runContext from './0032_run_context';
 import * as runnerPlanLimits from './0033_runner_plan_limits';
 import * as projectPosition from './0034_project_position';
+import * as dropProjectLimits from './0035_drop_project_limits';
 
 // Keyed by file name; they run in name order, so the four-digit number decides. The bundled server
 // can't list a folder, so a new file is added here too (test/unit/migrationFiles checks it is).
@@ -71,4 +72,5 @@ export const MIGRATIONS: Record<string, Migration> = {
   '0032_run_context': runContext,
   '0033_runner_plan_limits': runnerPlanLimits,
   '0034_project_position': projectPosition,
+  '0035_drop_project_limits': dropProjectLimits,
 };

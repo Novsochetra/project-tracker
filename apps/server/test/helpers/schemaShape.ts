@@ -266,3 +266,22 @@ export const exactSchema = async (db: Db, dialect: TestDialect): Promise<SchemaS
 
 export const portableSchema = async (db: Db, dialect: TestDialect): Promise<SchemaShape> =>
   (await readSchema(db, dialect)).portable;
+
+const columnName = (column: string): string => column.split(' ', 1)[0] ?? '';
+
+// The schema a down() should leave: the one before its up(), except that a column the up() dropped
+// comes back at the end of its table, the only place either database can add one.
+export function withDroppedColumnsLast(before: SchemaShape, afterUp: SchemaShape): SchemaShape {
+  return Object.fromEntries(
+    Object.entries(before).map(([name, table]) => {
+      const kept = new Set(afterUp[name]?.columns.map(columnName));
+      const isKept = (column: string) => kept.has(columnName(column));
+      const columns = [
+        ...table.columns.filter(isKept),
+        ...table.columns.filter((column) => !isKept(column)),
+      ];
+
+      return [name, { ...table, columns }];
+    }),
+  );
+}

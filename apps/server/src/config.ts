@@ -4,7 +4,7 @@ import { APP_VERSION, shortCommit } from '@tracker/shared';
 import { loadAuthConfig, type AuthConfig } from './authConfig';
 import { loadPushSettings } from './push/pushConfig';
 import type { SenderSettings } from './push/senderKeys';
-import { withRailwayDefaults } from './railway';
+import { onRailway, withRailwayDefaults } from './railway';
 import { loadS3Config, type S3Config } from './storage/s3Config';
 
 export interface Config {
@@ -49,6 +49,23 @@ function parsePublicUrl(value: string | undefined): string | null {
 export const databaseUrlOf = (env: NodeJS.ProcessEnv): string =>
   env.DATABASE_URL || join(REPO_ROOT, 'data', 'tracker.db');
 
+const testResetRefused = (where: string): Error =>
+  new Error(
+    `TRACKER_TEST_RESET=1 is set ${where}: remove it. It adds POST /api/test/reset, which lets ` +
+      "anyone signed in delete every account's tickets and files, so only E2E tests may use it.",
+  );
+
+function loadTestReset(env: NodeJS.ProcessEnv): boolean {
+  if (env.TRACKER_TEST_RESET !== '1') return false;
+
+  // On Railway whatever NODE_ENV says: a service variable replaces the production that Railpack's
+  // image sets.
+  if (onRailway(env)) throw testResetRefused('on Railway');
+  if (env.NODE_ENV === 'production') throw testResetRefused('while NODE_ENV is production');
+
+  return true;
+}
+
 export function loadConfig(given: NodeJS.ProcessEnv = process.env): Config {
   const env = withRailwayDefaults(given);
   const host = env.HOST || '127.0.0.1';
@@ -61,7 +78,7 @@ export function loadConfig(given: NodeJS.ProcessEnv = process.env): Config {
     uploadsDir: env.UPLOADS_DIR || join(REPO_ROOT, 'data', 'uploads'),
     s3: loadS3Config(env),
     webDist: env.WEB_DIST || join(REPO_ROOT, 'apps', 'web', 'dist'),
-    testReset: env.TRACKER_TEST_RESET === '1',
+    testReset: loadTestReset(env),
     repoRoot: REPO_ROOT,
     version: APP_VERSION,
     // Railway sets it for a deploy from git; elsewhere the build has no commit to show.

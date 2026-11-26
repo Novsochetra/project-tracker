@@ -102,6 +102,9 @@ const personOnlyPaths = (world: AWorld) =>
     'PUT /api/projects/MOB/labels/order',
     `PATCH /api/labels/${world.labelId}`,
     `DELETE /api/labels/${world.labelId}`,
+    'DELETE /api/tickets/MOB-1',
+    `PATCH /api/activity/${world.commentId}`,
+    `DELETE /api/activity/${world.commentId}`,
   ]);
 const personOnly = (world: AWorld, method: string, path: string): boolean =>
   personOnlyPaths(world).has(`${method} ${path}`) ||

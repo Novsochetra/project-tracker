@@ -23,8 +23,6 @@ export interface ProjectRow {
   repo: string;
   instructions: string;
   color: string;
-  // max_parallel_runs and max_sub_agents stay in the table, unread, until a later release drops
-  // them: the release before PT-253 still reads them while a deploy runs (§2.1).
   nextNum: number;
   createdAt: number;
   updatedAt: number;
