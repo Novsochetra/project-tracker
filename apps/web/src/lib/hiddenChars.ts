@@ -44,13 +44,6 @@ export function markHidden(text: string): ShownPart[] {
   return parts;
 }
 
-const holds = (text: string, kind: ShownPart['kind']): boolean =>
-  markHidden(text).some((part) => part.kind === kind);
-
-export const hasHidden = (text: string): boolean => holds(text, 'hidden');
-
-export const hasLookalike = (text: string): boolean => holds(text, 'lookalike');
-
 // For a name or a one-line summary, where a marked span can't go.
 export const showHidden = (text: string): string =>
   markHidden(text)

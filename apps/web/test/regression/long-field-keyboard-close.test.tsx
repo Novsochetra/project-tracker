@@ -71,7 +71,7 @@ function renderDescription(field: { top: number; bottom: number }, screenHeight:
       <header data-navbar="" data-testid="nav-bar" />
       <textarea aria-label="Description" />
       <BottomBar>
-        <button type="button">Send to Claude</button>
+        <button type="button">Move to Done</button>
       </BottomBar>
     </TicketScreenStub>,
   );

@@ -1,6 +1,6 @@
 import type { FormEvent, ReactNode, RefObject } from 'react';
 
-export type SheetSize = 'form' | 'prompt' | 'report' | 'wide';
+export type SheetSize = 'form' | 'report' | 'wide';
 
 export interface SheetProps {
   open: boolean;

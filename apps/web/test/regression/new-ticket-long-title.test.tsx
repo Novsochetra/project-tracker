@@ -5,7 +5,7 @@ import { queryKeys } from '../../src/api';
 import { listItem, makeBoard, STATUS } from '../../src/api/test/fixtures';
 import { setupApi } from '../../src/api/test/render';
 import { ToastProvider } from '../../src/components';
-import { sheetTestSetup } from '../../src/features/claude/test/renderWithApi';
+import { sheetTestSetup } from '../../src/app/test/renderWithApi';
 import { NewTicketSheet } from '../../src/features/project/NewTicketSheet';
 import { phoneStyle, pixels } from './phoneCss';
 

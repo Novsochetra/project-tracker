@@ -75,6 +75,8 @@ test.describe('Move to Done for a reviewed ticket', () => {
       expect(picker).toBe(false);
       await expect(page.getByRole('dialog')).toHaveCount(0);
       await expect(description(page)).not.toBeFocused();
+      // Comment takes Move to Done's place once the ticket moves.
+      await expect(page.getByLabel('Comment', { exact: true })).not.toBeFocused();
       await expect(ticketBar(page)).not.toHaveAttribute('data-hidden');
       expect((await api.getTicket('MOB-1')).status.category).toBe('done');
     });

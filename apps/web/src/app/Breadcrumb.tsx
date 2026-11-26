@@ -49,7 +49,7 @@ export function Breadcrumb({ crumbs }: { crumbs: Crumb[] }) {
               <span
                 className={clsx(
                   styles.current,
-                  (crumb.level === 'project' || crumb.level === 'chat') && styles.shrinks,
+                  crumb.level === 'project' && styles.shrinks,
                   crumb.level === 'ticket' && styles.ticketKey,
                 )}
                 aria-current="page"

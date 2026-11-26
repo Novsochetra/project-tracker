@@ -195,14 +195,14 @@ describe('ProjectScreen', () => {
     expect(within(empty).queryByRole('button')).toBeNull();
   });
 
-  it("leaves an empty project's New ticket to the nav bar on phones", async () => {
+  it("leaves an empty project's New ticket to the bottom bar on phones", async () => {
     restore.unshift(mockPhone(true));
     const user = userEvent.setup();
     const { sheets } = renderProject({ board: makeBoard([]) });
     await screen.findByText('No tickets yet');
     const [newTicket, ...others] = screen.getAllByRole('button', { name: 'New ticket' });
     expect(others).toEqual([]);
-    expect(newTicket!.closest('[data-navbar]')).not.toBeNull();
+    expect(newTicket!.closest('[data-bottom-bar]')).not.toBeNull();
     await user.click(newTicket!);
     expect(sheets.open).toHaveBeenCalledWith({ type: 'newTicket', projectKey: 'MOB' });
   });
@@ -294,36 +294,19 @@ describe('ProjectScreen', () => {
     );
   });
 
-  it('shows the repository and the Claude Code actions on desktop', async () => {
-    const user = userEvent.setup();
-    const { sheets } = renderProject();
+  it('shows the repository on desktop', async () => {
+    renderProject();
     expect(await screen.findByText('~/code/mobile-app')).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Send open tickets to Claude Code' }));
-    expect(sheets.open).toHaveBeenCalledWith({
-      type: 'prompt',
-      scope: { kind: 'project', projectKey: 'MOB' },
-    });
-    await user.click(screen.getByRole('button', { name: 'Paste report' }));
-    expect(sheets.open).toHaveBeenCalledWith({
-      type: 'report',
-      scope: { kind: 'project', projectKey: 'MOB' },
-    });
+    expect(screen.getByTitle('~/code/mobile-app')).toBeInTheDocument();
   });
 
   it('leaves out the repository and the name of a project that hides its name', async () => {
     const board = { ...makeBoard(), project: { ...makeBoard().project, hideName: true } };
     renderProject({ board });
-    expect(await screen.findByRole('button', { name: 'Paste report' })).toBeInTheDocument();
+    expect(await screen.findByRole('region', { name: 'To do' })).toBeInTheDocument();
     expect(screen.queryByText('~/code/mobile-app')).not.toBeInTheDocument();
     expect(document.querySelector('[title="~/code/mobile-app"]')).toBeNull();
     expect(document.body).not.toHaveTextContent('Mobile app');
-  });
-
-  it('opens Ask Claude from the toolbar on desktop', async () => {
-    const user = userEvent.setup();
-    renderProject();
-    await user.click(await screen.findByRole('button', { name: 'Ask Claude' }));
-    await waitFor(() => expect(location()).toBe('/p/MOB/ask'));
   });
 
   it('shows an error with a retry when the board fails to load', async () => {

@@ -650,8 +650,8 @@ test.describe('attachments', () => {
   for (const [bar, done] of [
     ['Back to Mobile app', (page: Page) => expect(page).toHaveURL(/\/p\/MOB$/)],
     [
-      'Paste report',
-      (page: Page) => expect(page.getByRole('dialog', { name: /report/i })).toBeVisible(),
+      'Go to the comment box',
+      (page: Page) => expect(page.getByLabel('Comment', { exact: true })).toBeFocused(),
     ],
   ] as const) {
     test(`phone: a tap on ${bar} just after Dismiss on the ticket screen acts`, async ({

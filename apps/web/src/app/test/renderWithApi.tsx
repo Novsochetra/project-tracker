@@ -1,8 +1,8 @@
 import { render } from '@testing-library/react';
 import type { ReactElement } from 'react';
-import { setupApi } from '../../../api/test/render';
-import { ToastProvider } from '../../../components';
-import { mockPhone, skipAnimations } from '../../../overlays/testing';
+import { setupApi } from '../../api/test/render';
+import { ToastProvider } from '../../components';
+import { mockPhone, skipAnimations } from '../../overlays/testing';
 
 type ClientOverrides = Parameters<typeof setupApi>[0];
 
@@ -26,8 +26,4 @@ export function sheetTestSetup(isPhone = false): () => void {
 
 export function setClipboard(value: Partial<Clipboard> | undefined): void {
   Object.defineProperty(navigator, 'clipboard', { value, configurable: true });
-}
-
-export function setShare(value: Navigator['share'] | undefined): void {
-  Object.defineProperty(navigator, 'share', { value, configurable: true });
 }

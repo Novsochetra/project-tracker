@@ -2,7 +2,7 @@ import { QueryObserver } from '@tanstack/react-query';
 import { TrackerClient } from '@tracker/client';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { queryKeys } from '../queryKeys';
-import { makeChatDetail } from '../test/chatFixtures';
+import { makeTicketDetail } from '../test/fixtures';
 import { createTestQueryClient } from '../test/render';
 import { LIVE_READ_HEADER, startLiveReads, tagLiveReads } from './liveReads';
 import { refreshLive } from './refreshLive';
@@ -28,15 +28,15 @@ function watched() {
 describe('tagLiveReads', () => {
   it('tags the API reads started for a live refresh, and nothing else', async () => {
     const { scope, fetch } = watched();
-    await scope.fetch('/api/chats/c-1');
+    await scope.fetch('/api/tickets/MOB-1');
     await startLiveReads(() =>
       Promise.all([
-        scope.fetch('/api/chats/c-1', { headers: { accept: 'application/json' } }),
-        scope.fetch('/api/chats/c-1/messages', { method: 'POST' }),
+        scope.fetch('/api/tickets/MOB-1', { headers: { accept: 'application/json' } }),
+        scope.fetch('/api/tickets/MOB-1/comments', { method: 'POST' }),
         scope.fetch('/assets/app.js'),
       ]),
     );
-    await scope.fetch('/api/chats/c-1');
+    await scope.fetch('/api/tickets/MOB-1');
 
     expect(fetch.mock.calls.map(isTagged)).toEqual([false, true, false, false, false]);
     expect(headersOf(fetch.mock.calls[1]).get('accept')).toBe('application/json');
@@ -45,26 +45,30 @@ describe('tagLiveReads', () => {
   it('stops tagging once taken off', async () => {
     const { scope, fetch } = watched();
     stops.splice(0).forEach((stop) => stop());
-    await startLiveReads(() => scope.fetch('/api/chats/c-1'));
+    await startLiveReads(() => scope.fetch('/api/tickets/MOB-1'));
     expect(isTagged(fetch.mock.calls[0])).toBe(false);
   });
 });
 
 describe('the reads refreshLive starts', () => {
   it('go out tagged through the API client, while a screen reads as usual', async () => {
-    const fetch = vi.fn((..._args: unknown[]) => Promise.resolve(Response.json(makeChatDetail())));
+    const fetch = vi.fn((..._args: unknown[]) =>
+      Promise.resolve(Response.json(makeTicketDetail())),
+    );
     vi.stubGlobal('fetch', fetch);
     stops.push(tagLiveReads(globalThis));
     const client = new TrackerClient({ baseUrl: '' });
     const queryClient = createTestQueryClient();
     const observer = new QueryObserver(queryClient, {
-      queryKey: queryKeys.chat('c-1'),
-      queryFn: () => client.getChat('c-1'),
+      queryKey: queryKeys.ticket('MOB-1'),
+      queryFn: () => client.getTicket('MOB-1'),
     });
     stops.push(observer.subscribe(() => undefined));
-    await vi.waitFor(() => expect(queryClient.getQueryData(queryKeys.chat('c-1'))).toBeDefined());
+    await vi.waitFor(() =>
+      expect(queryClient.getQueryData(queryKeys.ticket('MOB-1'))).toBeDefined(),
+    );
 
-    await refreshLive(queryClient, { queryKey: queryKeys.chat('c-1'), exact: true });
+    await refreshLive(queryClient, { queryKey: queryKeys.ticket('MOB-1'), exact: true });
 
     expect(fetch.mock.calls.map(isTagged)).toEqual([false, true]);
   });

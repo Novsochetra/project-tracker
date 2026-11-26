@@ -1,6 +1,6 @@
 import { screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import { renderWithApi } from '../claude/test/renderWithApi';
+import { renderWithApi } from '../../app/test/renderWithApi';
 import { VersionNote } from './VersionNote';
 
 const meta = (commit: string | null) => ({ version: '1.2.3', commit });

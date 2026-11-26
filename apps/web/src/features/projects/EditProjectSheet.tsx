@@ -52,7 +52,6 @@ export function EditProjectSheet({
       onSubmit={submit}
     >
       <ProjectSwitchField form={form} field="hideName" />
-      <ProjectSwitchField form={form} field="autoReview" />
     </ProjectFormSheet>
   );
 }

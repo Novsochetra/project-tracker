@@ -1,30 +1,15 @@
 import { lazyWithPreload } from '../lib/lazyWithPreload';
 import { routeStack, type Route } from '../navigation';
 
-export const ActivityScreen = lazyWithPreload(() =>
-  import('../features/activity/ActivityScreen').then((module) => module.ActivityScreen),
-);
 export const ProjectScreen = lazyWithPreload(() =>
-  import('../features/project/projectScreens').then((module) => module.ProjectScreen),
+  import('../features/project/ProjectScreen').then((module) => module.ProjectScreen),
 );
 export const TicketScreen = lazyWithPreload(() =>
-  import('../features/ticket/ticketParts').then((module) => module.TicketScreen),
-);
-export const ChatsScreen = lazyWithPreload(() =>
-  import('../features/project/projectScreens').then((module) => module.ChatsScreen),
-);
-export const ChatScreen = lazyWithPreload(() =>
-  import('../features/project/projectScreens').then((module) => module.ChatScreen),
+  import('../features/ticket/TicketScreen').then((module) => module.TicketScreen),
 );
 
 export const NewTicketSheet = lazyWithPreload(() =>
   import('../features/project/NewTicketSheet').then((module) => module.NewTicketSheet),
-);
-export const PromptSheet = lazyWithPreload(() =>
-  import('../features/claude/PromptSheet').then((module) => module.PromptSheet),
-);
-export const ReportSheet = lazyWithPreload(() =>
-  import('../features/claude/ReportSheet').then((module) => module.ReportSheet),
 );
 export const EditProjectSheet = lazyWithPreload(() =>
   import('../features/projects/EditProjectSheet').then((module) => module.EditProjectSheet),
@@ -34,9 +19,6 @@ export const StatusManagerSheet = lazyWithPreload(() =>
 );
 export const LabelManagerSheet = lazyWithPreload(() =>
   import('../features/labels/LabelManagerSheet').then((module) => module.LabelManagerSheet),
-);
-export const RunStepsSheet = lazyWithPreload(() =>
-  import('../features/ticket/ticketParts').then((module) => module.RunStepsSheet),
 );
 export const ConnectSheet = lazyWithPreload(() =>
   import('../features/connect/ConnectSheet').then((module) => module.ConnectSheet),
@@ -62,20 +44,14 @@ interface Part {
 
 const SCREENS: Record<Route['name'], Part | null> = {
   projects: null,
-  activity: ActivityScreen,
   project: ProjectScreen,
   ticket: TicketScreen,
-  chats: ChatsScreen,
-  chat: ChatScreen,
 };
 const SHEETS: Part[] = [
   NewTicketSheet,
-  PromptSheet,
-  ReportSheet,
   EditProjectSheet,
   StatusManagerSheet,
   LabelManagerSheet,
-  RunStepsSheet,
   ConnectSheet,
   AccountSheet,
   SearchSheet,
@@ -104,6 +80,6 @@ export function screensOnTheirWay(route: Route): Promise<unknown> | null {
 
 // Screens first: on a slow network the screen a tap opens shouldn't share it with sheets.
 export async function preloadParts(): Promise<void> {
-  await Promise.all([ProjectScreen, TicketScreen, ChatsScreen, ChatScreen].map(preloadQuietly));
+  await Promise.all([ProjectScreen, TicketScreen].map(preloadQuietly));
   await Promise.all(SHEETS.map(preloadQuietly));
 }

@@ -18,11 +18,6 @@ let stop: (() => void) | undefined;
 function connect() {
   const handlers = {
     onChange: vi.fn(),
-    onRun: vi.fn(),
-    onRunStep: vi.fn(),
-    onRunRequest: vi.fn(),
-    onChatDeleted: vi.fn(),
-    onChatGit: vi.fn(),
     onReconnect: vi.fn(),
     onRefreshPending: vi.fn(),
     onRefused: vi.fn(),

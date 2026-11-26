@@ -29,11 +29,7 @@ function TicketCheck({ route }: { route: Extract<Route, { name: 'ticket' }> }) {
 export function RouteFallback() {
   const { route } = useNavigation();
   switch (route.name) {
-    // The chat screens leave a missing chat or project themselves, step by step up the stack.
     case 'projects':
-    case 'activity':
-    case 'chats':
-    case 'chat':
       return null;
     case 'project':
       return <ProjectCheck key={route.key} route={route} />;

@@ -1,3 +1,5 @@
+import { isDoneCategory, type StatusCategory } from '../domain/status';
+
 const LOCALE = 'en-US';
 
 const parseDay = (ymd: string): Date => new Date(`${ymd}T00:00:00`);
@@ -48,8 +50,11 @@ export const formatShortDay = (ymd: string, now: Date = new Date()): string =>
 export const formatLongDay = (ymd: string, now: Date = new Date()): string =>
   formatDay(ymd, now, { weekday: 'short', month: 'short', day: 'numeric' });
 
-export const isOverdue = (due: string, isDone: boolean, today: string = todayYmd()): boolean =>
-  Boolean(due) && due < today && !isDone;
+export const isOverdue = (
+  due: string,
+  category: StatusCategory | undefined,
+  today: string = todayYmd(),
+): boolean => Boolean(due) && due < today && !(category && isDoneCategory(category));
 
 export function formatBytes(bytes: number): string {
   if (bytes < KB) return `${bytes} B`;

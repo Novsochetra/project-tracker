@@ -59,5 +59,4 @@ it.each([
   expect(within(log).getByText('Done.')).toBeInTheDocument();
   expect(within(log).getByText('After the gap')).toBeInTheDocument();
   expect(within(log).queryByText("Couldn't show this item")).toBeNull();
-  if (!phone) expect(screen.getByText(/^Last report/)).toBeInTheDocument();
 });

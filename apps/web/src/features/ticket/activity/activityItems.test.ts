@@ -1,7 +1,7 @@
 import { HUMAN, type Activity, type Actor } from '@tracker/shared';
 import { describe, expect, it } from 'vitest';
 import { attachment, comment } from '../../../api/test/fixtures';
-import { activityItems, lastReportAt, reportTitle } from './activityItems';
+import { activityItems, reportTitle } from './activityItems';
 
 const CLAUDE = { kind: 'agent', name: 'Claude' } as const;
 
@@ -93,10 +93,6 @@ describe('entries that are not activities', () => {
   it('leaves them out of the items', () => {
     expect(activityItems(gaps).map((item) => item.id)).toEqual(['a', 'b']);
   });
-
-  it('leaves them out of the last report', () => {
-    expect(lastReportAt(gaps)).toBe(5);
-  });
 });
 
 describe('reportTitle', () => {
@@ -107,14 +103,6 @@ describe('reportTitle', () => {
     expect(reportTitle(HUMAN)).toBe('Claude Code report');
     expect(reportTitle({ kind: 'agent', name: '' })).toBe('Claude Code report');
     expect(reportTitle(null)).toBe('Claude Code report');
-  });
-});
-
-describe('lastReportAt', () => {
-  it('finds the newest report', () => {
-    const activity = [entry('a', 'report', 5), entry('b', 'report', 9), entry('c', 'event', 12)];
-    expect(lastReportAt(activity)).toBe(9);
-    expect(lastReportAt([entry('c', 'event', 12)])).toBeNull();
   });
 });
 

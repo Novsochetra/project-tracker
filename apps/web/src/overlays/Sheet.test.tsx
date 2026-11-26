@@ -146,11 +146,11 @@ describe('Sheet', () => {
     const onSubmit = vi.fn((event: { preventDefault: () => void }) => event.preventDefault());
     const user = userEvent.setup();
     render(
-      <Sheet open onClose={() => undefined} label="Report" title="Paste report" onSubmit={onSubmit}>
-        <SheetActionButton type="submit">Apply</SheetActionButton>
+      <Sheet open onClose={() => undefined} label="Status" title="New status" onSubmit={onSubmit}>
+        <SheetActionButton type="submit">Add</SheetActionButton>
       </Sheet>,
     );
-    await user.click(screen.getByRole('button', { name: 'Apply' }));
+    await user.click(screen.getByRole('button', { name: 'Add' }));
     expect(onSubmit).toHaveBeenCalledTimes(1);
   });
 });

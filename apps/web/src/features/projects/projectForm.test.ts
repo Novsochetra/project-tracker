@@ -89,14 +89,13 @@ describe('inputs', () => {
     expect(createProjectInput(form({ name: 'Mobile app' })).key).toBe('MA');
   });
 
-  it('never sends a prefix or a template on edit, and sends the automatic review setting', () => {
-    expect(updateProjectInput({ ...values, autoReview: true })).toEqual({
+  it('never sends a prefix or a template on edit', () => {
+    expect(updateProjectInput({ ...values, hideName: true })).toEqual({
       name: 'Mobile app',
       description: 'iOS and Android',
       repo: '~/code/mobile',
       instructions: 'Run the tests first.',
-      autoReview: true,
-      hideName: false,
+      hideName: true,
     });
   });
 
@@ -108,14 +107,12 @@ describe('inputs', () => {
       prefix: '',
       instructions: '',
       template: 'software',
-      autoReview: false,
       hideName: false,
     });
     const instructed = { name: 'Blog', description: '', repo: '', instructions: 'Plain voice.' };
     expect(formValuesOf(instructed).instructions).toBe('Plain voice.');
-    const on = { name: 'Website', description: '', repo: '', autoReview: true };
-    expect(formValuesOf(on).autoReview).toBe(true);
-    expect(formValuesOf({ ...on, hideName: true }).hideName).toBe(true);
+    const hidden = { name: 'Website', description: '', repo: '', hideName: true };
+    expect(formValuesOf(hidden).hideName).toBe(true);
   });
 });
 
@@ -148,7 +145,6 @@ describe('projectFormChanged', () => {
     expect(changed({ name: 'website' })).toBe(true);
     expect(changed({ description: '' })).toBe(true);
     expect(changed({ repo: '~/code/site' })).toBe(true);
-    expect(changed({ autoReview: true })).toBe(true);
     expect(changed({ hideName: true })).toBe(true);
     expect(changed({ instructions: 'Cite two sources.' })).toBe(true);
   });

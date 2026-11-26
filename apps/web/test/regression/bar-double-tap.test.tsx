@@ -7,9 +7,10 @@ import { PRIMARY_SETTLE_MS } from '../../src/features/ticket/TicketBottomBar';
 import { skipAnimations } from '../../src/overlays/testing';
 import { advance, stillClock } from './stillClock';
 
-// On a reviewed ticket the phone bar's primary is Move to Done, and Send to Claude takes its place
-// once the ticket moves. Two taps 120 ms apart moved the ticket, then the second tap landed on Send
-// to Claude and opened the Send to Claude Code sheet.
+// On a reviewed ticket the phone bar's primary is Move to Done, and another primary takes its place
+// once the ticket moves. Two taps 120 ms apart moved the ticket, then the second tap landed on
+// that button: Send to Claude opened its sheet. Since PT-274 it is Comment, which would focus the
+// comment box and open the keyboard.
 
 const approval = comment('v1', 'Fix is correct.', {
   type: 'review',
@@ -22,6 +23,9 @@ let cleanups: Array<() => void> = [];
 beforeEach(() => {
   localStorage.clear();
   cleanups = [skipAnimations()];
+  // jsdom has no scrollIntoView; the jump to the comment box scrolls the box into view.
+  Element.prototype.scrollIntoView = vi.fn();
+  cleanups.push(() => Reflect.deleteProperty(Element.prototype, 'scrollIntoView'));
 });
 
 afterEach(() => cleanups.forEach((undo) => undo()));
@@ -39,20 +43,22 @@ function renderReviewedTicket() {
 }
 
 const bar = () => document.querySelector<HTMLElement>('[data-bottom-bar]')!;
-const sheet = () => screen.getByRole('status', { name: 'Sheet' });
+const commentField = () => screen.getByRole('textbox', { name: 'Comment' });
 
-it('ignores a second tap that lands on Send to Claude right after Move to Done', async () => {
+it('ignores a second tap that lands on Comment right after Move to Done', async () => {
   const user = userEvent.setup();
   const { client } = renderReviewedTicket();
   cleanups.push(stillClock());
   await user.click(within(bar()).getByRole('button', { name: 'Move to Done' }));
   expect(client.updateTicket).toHaveBeenCalledWith('MOB-3', { statusId: STATUS.done });
-  const send = await waitFor(() => within(bar()).getByRole('button', { name: 'Send to Claude' }));
+  const comment = await waitFor(() =>
+    within(bar()).getByRole('button', { name: 'Go to the comment box' }),
+  );
 
-  await user.click(send);
-  expect(sheet()).toBeEmptyDOMElement();
+  await user.click(comment);
+  expect(commentField()).not.toHaveFocus();
 
   await advance(PRIMARY_SETTLE_MS);
-  await user.click(send);
-  expect(sheet()).toHaveTextContent('"type":"prompt"');
+  await user.click(comment);
+  expect(commentField()).toHaveFocus();
 });

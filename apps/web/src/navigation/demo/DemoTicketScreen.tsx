@@ -1,5 +1,6 @@
 import clsx from 'clsx';
-import { ClipboardCheck, Terminal } from 'lucide-react';
+import { MessageSquare } from 'lucide-react';
+import { useRef } from 'react';
 import { BottomBar } from '../BottomBar';
 import { NavBar } from '../NavBar';
 import { useNavigation } from '../useNavigation';
@@ -21,6 +22,7 @@ export function DemoTicketScreen({ projectKey, num }: { projectKey: string; num:
   const project = demo.projects.find((candidate) => candidate.key === projectKey);
   const ticket = project?.tickets.find((candidate) => candidate.num === num);
   const key = `${projectKey}-${num}`;
+  const comment = useRef<HTMLTextAreaElement>(null);
 
   return (
     <>
@@ -47,7 +49,11 @@ export function DemoTicketScreen({ projectKey, num }: { projectKey: string; num:
         </div>
         <label className={styles.composer}>
           <span className="visually-hidden">Comment</span>
-          <textarea rows={3} placeholder="Leave a comment… (the bottom bar hides while you type)" />
+          <textarea
+            ref={comment}
+            rows={3}
+            placeholder="Leave a comment… (the bottom bar hides while you type)"
+          />
         </label>
         {PARAGRAPHS.map((text) => (
           <p key={text} className={styles.paragraph}>
@@ -58,17 +64,10 @@ export function DemoTicketScreen({ projectKey, num }: { projectKey: string; num:
       <BottomBar>
         <button
           type="button"
-          className={clsx(styles.barButton, 'press')}
-          onClick={() => demo.openSheet('report')}
-        >
-          <ClipboardCheck {...icon} /> Paste report
-        </button>
-        <button
-          type="button"
           className={clsx(styles.barButton, styles.barPrimary, 'press')}
-          onClick={() => demo.openSheet('prompt')}
+          onClick={() => comment.current?.focus()}
         >
-          <Terminal {...icon} /> Send to Claude
+          <MessageSquare {...icon} /> Comment
         </button>
       </BottomBar>
     </>

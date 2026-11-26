@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { CLIPBOARD_MESSAGES, copyText, readClipboardText } from './clipboard';
+import { copyText } from './clipboard';
 
 function setClipboard(value: Partial<Clipboard> | undefined) {
   Object.defineProperty(navigator, 'clipboard', { value, configurable: true });
@@ -74,49 +74,5 @@ describe('copyText', () => {
     await expect(copyText('claude mcp add tracker')).resolves.toBe(true);
     expect(copied).toBe('claude mcp add tracker');
     expect(document.querySelector('textarea')).toBeNull();
-  });
-});
-
-describe('readClipboardText', () => {
-  afterEach(() => {
-    setClipboard(undefined);
-  });
-
-  it('returns the clipboard text', async () => {
-    setClipboard({ readText: vi.fn().mockResolvedValue('TICKET: MOB-1') });
-    await expect(readClipboardText()).resolves.toEqual({ ok: true, text: 'TICKET: MOB-1' });
-  });
-
-  it('reports an empty clipboard', async () => {
-    setClipboard({ readText: vi.fn().mockResolvedValue('  \n') });
-    await expect(readClipboardText()).resolves.toEqual({
-      ok: false,
-      message: 'The clipboard is empty.',
-    });
-  });
-
-  it('reports refused access', async () => {
-    setClipboard({ readText: vi.fn().mockRejectedValue(new DOMException('', 'NotAllowedError')) });
-    await expect(readClipboardText()).resolves.toEqual({
-      ok: false,
-      message: 'Clipboard access was blocked. Paste into the box instead.',
-    });
-  });
-
-  it('reports a missing Clipboard API', async () => {
-    setClipboard(undefined);
-    await expect(readClipboardText()).resolves.toEqual({
-      ok: false,
-      message: 'Clipboard access isn’t available here. Paste into the box instead.',
-    });
-    setClipboard({
-      readText: () => {
-        throw new Error('not here');
-      },
-    });
-    await expect(readClipboardText()).resolves.toEqual({
-      ok: false,
-      message: CLIPBOARD_MESSAGES.unavailable,
-    });
   });
 });

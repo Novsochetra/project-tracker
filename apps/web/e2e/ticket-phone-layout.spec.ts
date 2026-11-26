@@ -5,7 +5,8 @@ import { activity, seedProject, settled, toast } from './helpers';
 
 // PT-73: on a phone the Details card sat in the middle of the ticket, under the description and
 // the files, and with long comments the comment box was screens away. The details are now chips
-// under the title, long text folds, and a pill jumps to the comment box.
+// under the title, long text folds, and a pill jumps to the comment box. Since PT-274 the bar's
+// Comment jumps there, and the pill does while Move to Done takes a reviewed ticket's bar.
 
 const PHONE_ONLY = 'The phone layout';
 const LONG_TITLE =
@@ -134,7 +135,9 @@ test.describe('ticket screen on a phone', () => {
 
   test('folds long comments and jumps to the comment box', async ({ page, api, agent }, info) => {
     test.skip(!isPhone(info.project.name), PHONE_ONLY);
-    await seedProject(api, 'Mobile app', 'MOB', [{ title: 'Date picker', description: 'Bad.' }]);
+    await seedProject(api, 'Mobile app', 'MOB', [
+      { title: 'Date picker', description: 'Bad.', status: 'Reviewed' },
+    ]);
     for (let i = 1; i <= 8; i += 1) await agent.addComment('MOB-1', { text: LONG_COMMENT(i) });
     await page.goto('/p/MOB/1');
     await settle(page);
@@ -187,6 +190,26 @@ test.describe('ticket screen on a phone', () => {
     await expect(jump(page)).toHaveCount(0);
     await page.getByRole('button', { name: 'Comment', exact: true }).click();
     await expect(activity(page)).toContainText('Reached the box in one tap');
+  });
+
+  test("the bar's Comment jumps to the comment box from the first screen", async ({
+    page,
+    api,
+    agent,
+  }, info) => {
+    test.skip(!isPhone(info.project.name), PHONE_ONLY);
+    await seedProject(api, 'Mobile app', 'MOB', [{ title: 'Date picker', description: 'Bad.' }]);
+    for (let i = 1; i <= 8; i += 1) await agent.addComment('MOB-1', { text: LONG_COMMENT(i) });
+    await page.goto('/p/MOB/1');
+    await settle(page);
+    const comment = bar(page).getByRole('button', { name: 'Go to the comment box' });
+    await expect(comment).toHaveText('Comment');
+    await expect(bar(page).getByRole('button')).toHaveCount(1);
+    await comment.tap();
+    await expect(commentField(page)).toBeFocused();
+    await expect(bar(page)).toHaveAttribute('data-hidden');
+    await settle(page);
+    await expect(commentField(page)).toBeInViewport();
   });
 
   test('keeps the whole assignee name after an edit and places the caret where tapped', async ({

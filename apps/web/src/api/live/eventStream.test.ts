@@ -13,11 +13,6 @@ let connections: Array<() => void> = [];
 function connect(tracker?: TrackerReachability) {
   const handlers = {
     onChange: vi.fn(),
-    onRun: vi.fn(),
-    onRunStep: vi.fn(),
-    onRunRequest: vi.fn(),
-    onChatDeleted: vi.fn(),
-    onChatGit: vi.fn(),
     onReconnect: vi.fn(),
     onRefreshPending: vi.fn(),
     onRefused: vi.fn(),
@@ -88,95 +83,6 @@ describe('connectLiveUpdates', () => {
     source.emit('', 'ping');
     expect(onChange).toHaveBeenCalledTimes(2);
     expect(onChange).toHaveBeenCalledWith(event);
-  });
-
-  it('passes named run events apart from changes', () => {
-    const { source, onChange, onRun } = connect();
-    const run = {
-      type: 'run',
-      runId: 'r1',
-      runnerId: 'h1',
-      projectId: 'p-mob',
-      ticketId: 't-1',
-      chatId: null,
-      status: 'running',
-    };
-    source.emit(run, 'run');
-    source.emit(run);
-    source.emit(event, 'run');
-    expect(onRun).toHaveBeenCalledTimes(1);
-    expect(onRun).toHaveBeenCalledWith(run);
-    expect(onChange).not.toHaveBeenCalled();
-  });
-
-  it('passes named step events apart from runs and changes', () => {
-    const { source, onChange, onRun, onRunStep } = connect();
-    const step = {
-      type: 'run-step',
-      runId: 'r1',
-      projectId: 'p-mob',
-      ticketId: null,
-      chatId: 'c-1',
-      count: 4,
-    };
-    source.emit(step, 'run-step');
-    source.emit(step);
-    source.emit(step, 'run');
-    expect(onRunStep).toHaveBeenCalledTimes(1);
-    expect(onRunStep).toHaveBeenCalledWith(step);
-    expect(onRun).not.toHaveBeenCalled();
-    expect(onChange).not.toHaveBeenCalled();
-  });
-
-  it('passes named request events apart from steps, runs and changes', () => {
-    const { source, onChange, onRun, onRunStep, onRunRequest } = connect();
-    const request = {
-      type: 'run-request',
-      runId: 'r1',
-      requestId: 'q1',
-      projectId: 'p-mob',
-      ticketId: null,
-      chatId: 'c-1',
-      status: 'open',
-    };
-    source.emit(request, 'run-request');
-    source.emit(request);
-    source.emit(request, 'run-step');
-    source.emit({ ...request, status: 'pending' }, 'run-request');
-    expect(onRunRequest).toHaveBeenCalledTimes(1);
-    expect(onRunRequest).toHaveBeenCalledWith(request);
-    expect(onRunStep).not.toHaveBeenCalled();
-    expect(onRun).not.toHaveBeenCalled();
-    expect(onChange).not.toHaveBeenCalled();
-  });
-
-  it('passes a named chat-deleted event apart from runs and changes', () => {
-    const { source, onChange, onRun, onChatDeleted } = connect();
-    const deleted = { type: 'chat-deleted', chatId: 'c-1', projectId: 'p-mob' };
-    source.emit(deleted, 'chat-deleted');
-    source.emit(deleted);
-    source.emit(deleted, 'run');
-    expect(onChatDeleted).toHaveBeenCalledTimes(1);
-    expect(onChatDeleted).toHaveBeenCalledWith(deleted);
-    expect(onRun).not.toHaveBeenCalled();
-    expect(onChange).not.toHaveBeenCalled();
-  });
-
-  it("passes a named chat-git event, so the chat's changes are read again", () => {
-    const { source, onRun, onChatGit } = connect();
-    const git = {
-      type: 'chat-git',
-      actionId: 'g-1',
-      runnerId: 'r',
-      chatId: 'c-1',
-      projectId: 'p-mob',
-      status: 'done',
-    };
-    source.emit(git, 'chat-git');
-    source.emit({ ...git, status: 'lost' }, 'chat-git');
-    expect(onChatGit).toHaveBeenCalledTimes(1);
-    expect(onChatGit).toHaveBeenCalledWith(git);
-    expect(onRun).not.toHaveBeenCalled();
   });
 
   it('reports reconnects but not the first connection', () => {
@@ -549,11 +455,6 @@ describe('connectLiveUpdates', () => {
     vi.stubGlobal('EventSource', undefined);
     const stop = connectLiveUpdates('/api/events', {
       onChange: vi.fn(),
-      onRun: vi.fn(),
-      onRunStep: vi.fn(),
-      onRunRequest: vi.fn(),
-      onChatDeleted: vi.fn(),
-      onChatGit: vi.fn(),
       onReconnect: vi.fn(),
       onRefreshPending: vi.fn(),
       onRefused: vi.fn(),

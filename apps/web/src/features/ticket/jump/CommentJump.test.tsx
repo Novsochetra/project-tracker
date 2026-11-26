@@ -72,8 +72,14 @@ afterEach(() => {
   observers.clear();
 });
 
-function setup(statusId: string = STATUS.progress) {
-  const detail = makeTicketDetail(listItem(1, statusId, 0), { statuses });
+// Move to Done takes a reviewed ticket's bar, so the tab is the jump there; elsewhere the bar's
+// Comment is. A second reviewed status lets a move toast while the tab stays.
+const reviewed = statuses.find((status) => status.id === STATUS.reviewed)!;
+const approved = { ...reviewed, id: 's-approved', name: 'Approved', position: statuses.length };
+const WITH_APPROVED = [...statuses, approved];
+
+function setup(statusId: string = STATUS.reviewed) {
+  const detail = makeTicketDetail(listItem(1, statusId, 0), { statuses: WITH_APPROVED });
   const stack = (
     <StackNavigator
       renderScreen={(route) =>
@@ -187,16 +193,33 @@ describe('the jump to the comment box', () => {
 
   it('makes way for a toast, which sits in the same place', async () => {
     const user = userEvent.setup();
-    setup(STATUS.todo);
+    setup();
     await screen.findByLabelText('Comment');
     boxAt(4000);
     scrollTo(300);
-    await user.click(screen.getByRole('button', { name: /^Priority/ }));
-    await user.click(screen.getByRole('option', { name: 'High' }));
     await user.click(screen.getByRole('button', { name: /^Status/ }));
-    await user.click(screen.getByRole('option', { name: 'In progress' }));
-    expect(await screen.findByText('MOB-1 moved to In progress')).toBeInTheDocument();
+    await user.click(screen.getByRole('option', { name: 'Approved' }));
+    expect(await screen.findByText('MOB-1 moved to Approved')).toBeInTheDocument();
     expect(jump()).not.toBeInTheDocument();
     await waitFor(() => expect(jump()).toBeInTheDocument(), { timeout: 6000 });
+  });
+});
+
+describe("the bar's Comment, while Move to Done doesn't take the bar", () => {
+  it('stands in the bar from the first screen and jumps to the comment box', async () => {
+    const user = userEvent.setup();
+    const scrolled = vi.fn();
+    Element.prototype.scrollIntoView = scrolled;
+    cleanups.push(() => Reflect.deleteProperty(Element.prototype, 'scrollIntoView'));
+    setup(STATUS.progress);
+    const field = await screen.findByLabelText('Comment');
+    const comment = within(bar()).getByRole('button', { name: 'Go to the comment box' });
+    expect(comment).toHaveTextContent('Comment');
+    boxAt(4000);
+    scrollTo(300);
+    expect(within(bar()).getAllByRole('button')).toEqual([comment]);
+    await user.click(comment);
+    expect(field).toHaveFocus();
+    expect(scrolled).toHaveBeenCalledWith({ block: 'center', behavior: 'smooth' });
   });
 });

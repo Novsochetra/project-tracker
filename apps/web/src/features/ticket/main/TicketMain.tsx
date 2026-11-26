@@ -11,14 +11,12 @@ import { TITLE_MAX_LENGTH } from '../fields/limits';
 import type { MoveToDone } from '../useMoveToDone';
 import { DescriptionField } from './DescriptionField';
 import { LatestReview } from './LatestReview';
-import { LatestRun } from './LatestRun';
 import { TicketAttachments } from './TicketAttachments';
 import styles from './TicketMain.module.css';
 
 export interface TicketMainProps {
   detail: TicketDetail;
   done: MoveToDone | null;
-  onRunCancelled: () => void;
   className?: string | undefined;
 }
 
@@ -27,7 +25,7 @@ function keepOneLine(event: KeyboardEvent<HTMLTextAreaElement>) {
   if (event.key === 'Enter' && !event.nativeEvent.isComposing) event.preventDefault();
 }
 
-export function TicketMain({ detail, done, onRunCancelled, className }: TicketMainProps) {
+export function TicketMain({ detail, done, className }: TicketMainProps) {
   const { ticket } = detail;
   const isPhone = useIsPhone();
   const uploads = useAttachmentUploads({ ticketKey: ticket.key });
@@ -51,7 +49,6 @@ export function TicketMain({ detail, done, onRunCancelled, className }: TicketMa
         />
         {isPhone && <DetailChips detail={detail} />}
         {/* Above the description, which often runs long enough to push them below a phone's fold. */}
-        <LatestRun ticketKey={ticket.key} onCancelled={onRunCancelled} />
         <TicketQuestions ticketKey={ticket.key} />
         <LatestReview detail={detail} done={done} />
         <DescriptionField

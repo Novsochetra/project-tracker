@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 import { errorMessage, isNotFound, useTicket } from '../../api';
 import { Button, EmptyState, Spinner } from '../../components';
 import { forgetTicketDrafts } from '../../lib/storedDrafts';
-import { useNavigation, useOptionalScreen } from '../../navigation';
+import { useNavigation } from '../../navigation';
 import { useTicketOnScreen } from './drafts/liveDrafts';
 import { TicketLoadingBar } from './TicketLoadingBar';
 import styles from './TicketScreen.module.css';
@@ -35,17 +35,16 @@ export function TicketScreen({ projectKey, num }: TicketScreenProps) {
 }
 
 // An unknown or deleted ticket falls back to its project (SPEC §3). Text kept for a ticket
-// deleted elsewhere has nothing left to save into. Under a chat opened from it, the screen waits
-// until Back shows it: the chat outlives the ticket (PT-184).
+// deleted elsewhere has nothing left to save into.
 function useLeaveWhenMissing(error: Error | null, ticketKey: string, projectKey: string) {
   const { replace } = useNavigation();
-  const isTop = useOptionalScreen()?.isTop ?? true;
   const missing = isNotFound(error);
   useEffect(() => {
     if (!missing) return;
+
     forgetTicketDrafts(ticketKey);
-    if (isTop) replace({ name: 'project', key: projectKey });
-  }, [missing, isTop, ticketKey, projectKey, replace]);
+    replace({ name: 'project', key: projectKey });
+  }, [missing, ticketKey, projectKey, replace]);
 }
 
 interface TicketPlaceholderProps {

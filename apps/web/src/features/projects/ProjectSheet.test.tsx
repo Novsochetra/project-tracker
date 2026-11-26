@@ -98,7 +98,7 @@ describe('New project sheet', () => {
       ' Plain voice.{Enter}Cite two sources. ',
     );
     expect(
-      within(dialog).getByText('Claude gets these with every ticket and question in this project.'),
+      within(dialog).getByText('Claude gets these with every ticket in this project.'),
     ).toBeInTheDocument();
     await user.click(within(dialog).getByRole('button', { name: 'Create' }));
     expect(create).toHaveBeenCalledWith(
@@ -193,38 +193,20 @@ describe('Edit project sheet', () => {
       description: 'Docs',
       repo: '~/code/web',
       instructions: 'Plain voice.',
-      autoReview: false,
       hideName: false,
     });
     expect(await screen.findByText('Project updated')).toBeInTheDocument();
     await waitFor(() => expect(onClose).toHaveBeenCalled());
   });
 
-  it('turns automatic review on with a switch that Save sends', async () => {
-    const user = userEvent.setup();
-    const { dialog } = renderEditSheet();
-    const save = within(dialog).getByRole('button', { name: 'Save' });
-    const toggle = within(dialog).getByRole('switch', { name: 'Review automatically' });
-    expect(toggle).toHaveAttribute('aria-checked', 'false');
-    expect(toggle).toHaveAccessibleDescription(
-      'When Claude finishes a ticket, Claude reviews it on the same computer. Changes it asks for go back to Claude, up to 2 rounds.',
-    );
-    await user.click(toggle);
-    expect(toggle).toHaveAttribute('aria-checked', 'true');
-    await user.click(save);
-    expect(updateProject).toHaveBeenLastCalledWith(
-      'WEB',
-      expect.objectContaining({ autoReview: true }),
-    );
-  });
-
   it('hides the name with a switch that Save sends, and keeps the real name here', async () => {
     const user = userEvent.setup();
     const { dialog } = renderEditSheet();
     const toggle = within(dialog).getByRole('switch', { name: 'Hide name' });
+    expect(within(dialog).getAllByRole('switch')).toEqual([toggle]);
     expect(toggle).toHaveAttribute('aria-checked', 'false');
     expect(toggle).toHaveAccessibleDescription(
-      "Shows the project's key instead of its name, and hides its description and folder. This sheet and the prompt for Claude Code still show them.",
+      "Shows the project's key instead of its name, and hides its description and folder. This sheet still shows them, and Claude Code still gets them with each ticket.",
     );
     await user.click(toggle);
     expect(within(dialog).getByLabelText('Project name')).toHaveValue('Website');

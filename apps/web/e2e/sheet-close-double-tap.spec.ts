@@ -27,11 +27,8 @@ const landedClicks = (page: Page): Promise<string[]> =>
 
 const LONG = 'Steps to reproduce, what happened and what should happen instead. '.repeat(10);
 
-const sendButton = (projectName: string) =>
-  isPhone(projectName) ? 'Send to Claude' : 'Send to Claude Code';
-
-// Under the prompt sheet's Close lie the ticket's description, whose field opens the keyboard, or
-// its main, by the screen's size. The bars it covered are held too (holdPresses.test).
+// Under a text file's sheet Close lie the ticket's fields, which open the keyboard, or its main,
+// by the screen's size. The bars it covered are held too (holdPresses.test).
 test("a double tap on a sheet's Close leaves the screen behind it alone", async ({
   page,
   api,
@@ -45,15 +42,20 @@ test("a double tap on a sheet's Close leaves the screen behind it alone", async 
     'MOB',
     cases.map(({ description }) => ({ title: 'Crash when rotating', description })),
   );
+  for (const index of cases.keys()) {
+    const notes = new Blob(['Rotate the phone twice.'], { type: 'text/plain' });
+    await api.uploadAttachment(notes, 'notes.txt', `MOB-${index + 1}`);
+  }
+
   await page.addInitScript(recordLandedClicks);
-  const dialog = page.getByRole('dialog', { name: 'Send to Claude Code' });
+  const dialog = page.getByRole('dialog', { name: 'notes.txt' });
   const close = dialog.getByRole('button', { name: 'Close' });
 
   for (const [index, { viewport }] of cases.entries()) {
     const path = `/p/MOB/${index + 1}`;
     await page.setViewportSize(viewport);
     await page.goto(path);
-    await page.getByRole('button', { name: sendButton(info.project.name), exact: true }).click();
+    await page.getByRole('button', { name: 'Open notes.txt' }).click();
     await expect(close).toBeVisible();
     await resetLandedClicks(page);
     await doubleTap(page, close, Boolean(info.project.use.hasTouch));
@@ -68,7 +70,7 @@ test("a double tap on a sheet's Close leaves the screen behind it alone", async 
   }
 });
 
-// An action sheet's Cancel lies over the project screen's bottom bar, whose buttons open sheets.
+// An action sheet's Cancel lies over the project screen's bottom bar, whose New ticket opens a sheet.
 test("a double tap on an action sheet's Cancel leaves the screen behind it alone", async ({
   page,
   api,

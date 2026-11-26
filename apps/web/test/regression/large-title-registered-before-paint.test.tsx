@@ -6,9 +6,9 @@ import { LargeTitle } from '../../src/navigation/LargeTitle';
 import { createLargeTitleStore } from '../../src/navigation/largeTitleStore';
 import { ScreenContext, type ScreenState } from '../../src/navigation/ScreenContext';
 
-// Switching between the Projects and Activity tabs mounts a new screen. Its large title told the
-// nav bar it was there in a passive effect, after the first paint, so the nav bar's small title
-// showed for a frame and then faded out: the title seemed to glitch.
+// Switching between the Projects and Activity tabs (PT-254) mounted a new screen. Its large title
+// told the nav bar it was there in a passive effect, after the first paint, so the nav bar's small
+// title showed for a frame and then faded out: the title seemed to glitch.
 
 let restore: () => void = () => undefined;
 
@@ -18,7 +18,7 @@ it('has the large title registered before the first paint', () => {
   restore = mockPhone(true);
   const largeTitle = createLargeTitleStore();
   const state: ScreenState = {
-    route: { name: 'activity' },
+    route: { name: 'projects' },
     isTop: true,
     scrollRef: { current: null },
     largeTitle,
@@ -37,7 +37,7 @@ it('has the large title registered before the first paint', () => {
 
   render(
     <ScreenContext value={state}>
-      <LargeTitle>Activity</LargeTitle>
+      <LargeTitle>Projects</LargeTitle>
       <Probe />
     </ScreenContext>,
   );
