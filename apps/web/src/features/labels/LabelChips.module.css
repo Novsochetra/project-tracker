@@ -34,20 +34,21 @@
 }
 
 .compact .chip {
-  gap: 4px;
   height: var(--label-chip-compact);
   min-height: 0;
-  padding: 0 6px 0 5px;
+  padding: 0 5px;
+  background: color-mix(in srgb, var(--chip-color) 16%, var(--surface));
+  color: var(--ink-2);
   line-height: var(--label-chip-compact);
-}
-
-.compact .chipDot {
-  width: 6px;
-  height: 6px;
 }
 
 .compact .name {
   max-width: 96px;
+}
+
+/* The first label always shows a few letters ("v1.…"), however tight the row. */
+.compact .chip:first-child .name {
+  min-width: 24px;
 }
 
 .dots {

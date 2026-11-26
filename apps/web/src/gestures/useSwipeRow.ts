@@ -122,7 +122,7 @@ export function useSwipeRow({
     onMove: (dx) => {
       const offset = swipeOffset(startRef.current + dx, geometryRef.current);
       x.set(offset);
-      const past = isFullSwipe(offset, geometryRef.current.rowWidth);
+      const past = isFullSwipe(offset, geometryRef.current);
       if (past === fullRef.current) return;
       haptic('selection');
       setFull(past);

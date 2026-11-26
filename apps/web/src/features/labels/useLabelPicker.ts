@@ -33,11 +33,18 @@ export function useLabelPicker(
   const toggle = (id: string) => {
     if (canAdd(valueRef.current, id)) onChange(toggled(valueRef.current, id));
   };
+  // Set before the request, as `creating` turns true only a render later, so a quick double
+  // Enter or tap sends one create, not a second one the server refuses as a duplicate.
+  const inFlightRef = useRef(false);
   const addNew = async (name: string) => {
-    if (creating || isFull(valueRef.current)) return;
-    const label = await create(name);
+    if (inFlightRef.current || isFull(valueRef.current)) return;
+    inFlightRef.current = true;
+    const label = await create(name).finally(() => {
+      inFlightRef.current = false;
+    });
     if (!label) return;
-    setQuery('');
+    // Text typed while the label was made stays, so a second name is not lost.
+    setQuery((current) => (current.trim() === name ? '' : current));
     onChange([...valueRef.current, label.id]);
   };
   const onEnter = () => {

@@ -9,7 +9,8 @@ import { phoneRule, pixels } from './phoneCss';
 
 // PT-190: labels on phone rows had to leave rows at 320 and 375px their height. They show in the
 // due date's cell, after the date, and give way before the date ever has to wrap. PT-261 turned
-// the dots into small named chips, so a release's label reads in the list, under the same rule.
+// the dots into small named chips tinted with the label color, so a release label reads in the
+// list, under the same rule.
 
 const ROW = 'features/project/TicketRow.module.css';
 
@@ -63,7 +64,13 @@ describe('labels on a phone row', () => {
     const due = chips.parentElement!;
     expect(due.textContent).toBe('Oct 9BugUI');
     expect(due.firstElementChild?.tagName).toBe('svg');
-    expect(chips.querySelectorAll('[aria-hidden="true"]')).toHaveLength(2);
+    // Tinted with each label's color instead of a dot, which left no room for a name at 320px.
+    expect(chips.querySelectorAll('[aria-hidden="true"]')).toHaveLength(0);
+    expect(
+      Array.from(chips.children, (chip) =>
+        (chip as HTMLElement).style.getPropertyValue('--chip-color'),
+      ),
+    ).toEqual(['#B42318', '#6E56CF']);
     expect(main).toContainElement(due);
     expect(main).toHaveAccessibleName(/Bug/);
   });

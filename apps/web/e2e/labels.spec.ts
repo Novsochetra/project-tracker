@@ -162,6 +162,14 @@ test.describe('labels', () => {
       await shot(page, `release-list-${width}`);
       expect(await height(tagged)).toBeCloseTo(await height(ticketRow(page, 'MOB-2')), 1);
       expect(await tagged.evaluate((row) => row.scrollWidth <= row.clientWidth)).toBe(true);
+      // The release reads in the row: at least "v1.…", also beside a date with a year at 320.
+      const name = tagged.getByText('v1.4', { exact: true }).filter({ visible: true });
+      const shown = await name.evaluate((element) => ({
+        whole: element.scrollWidth <= element.clientWidth,
+        width: element.getBoundingClientRect().width,
+      }));
+      expect(shown.whole || shown.width >= 23.5).toBe(true);
+      expect(shown.width).toBeGreaterThan(0);
     }
 
     await page.getByRole('button', { name: 'Filter by label' }).click();
@@ -172,5 +180,32 @@ test.describe('labels', () => {
     await expect(ticketRow(page, 'MOB-2')).toBeHidden();
     await expect(tagged).toBeVisible();
     await shot(page, 'release-filtered');
+  });
+
+  test('three swipe actions open past their width, and only a longer drag picks Status', async ({
+    page,
+    api,
+  }, info) => {
+    test.skip(!isPhone(info.project.name), 'Rows swipe on phones');
+    await seedProject(api, 'Mobile app', 'MOB', [{ title: 'Crash on rotate' }]);
+    await page.goto('/p/MOB');
+    const status = page.getByRole('dialog', { name: 'Status' });
+    for (const width of [375, 320]) {
+      await page.setViewportSize({ width, height: 812 });
+      const row = ticketRow(page, 'MOB-1');
+      await expect(row).toBeVisible();
+      // Past the 228px of Status, Labels and Delete, but short of the full swipe.
+      await swipeLeft(row, 250);
+      await expect(page.getByRole('button', { name: 'Labels', exact: true })).toBeVisible();
+      await expect(status).toBeHidden();
+      // A tap on the open row only closes it.
+      await row.click();
+      await expect(page.getByRole('button', { name: 'Labels', exact: true })).toBeHidden();
+      await swipeLeft(row, width === 375 ? 290 : 280);
+      await expect(status).toBeVisible();
+      await expect(status).toContainText('Move MOB-1 to');
+      await status.getByRole('button', { name: 'Cancel' }).click();
+      await expect(status).toBeHidden();
+    }
   });
 });

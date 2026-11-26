@@ -114,6 +114,23 @@ describe('a ticket’s labels', () => {
     await waitFor(() => expect(field).toHaveValue(''));
   });
 
+  it('send one create for a quick double Enter, and keep what is typed meanwhile', async () => {
+    const { createLabel, updateTicket, user } = setup(false, LABELS, []);
+    let finish: (label: Label) => void = () => undefined;
+    createLabel.mockReturnValue(new Promise<Label>((resolve) => (finish = resolve)));
+    await user.click(screen.getByRole('button', { name: /^Labels/ }));
+    const field = screen.getByRole('searchbox', { name: PICKER_FIELD_LABEL });
+    await user.keyboard('v1.4{Enter}{Enter}');
+    expect(createLabel).toHaveBeenCalledTimes(1);
+    await user.clear(field);
+    await user.keyboard('v1.5');
+    finish(RELEASE);
+    await waitFor(() =>
+      expect(updateTicket).toHaveBeenLastCalledWith('MOB-3', { labelIds: ['l-new'] }),
+    );
+    expect(field).toHaveValue('v1.5');
+  });
+
   it('move between the field and the labels with the arrows', async () => {
     const { user } = setup(false, LABELS, []);
     await user.click(screen.getByRole('button', { name: /^Labels/ }));

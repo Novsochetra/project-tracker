@@ -318,6 +318,14 @@
   }
 }
 
+/* With labels, the icon goes sooner, so a label's name has room beside a date with a year (a
+   320px row: 122px for "May 20, 2027" and a "v1.4" chip). */
+@container due (max-width: 160px) {
+  .due:has(.dueLabels) svg {
+    display: none;
+  }
+}
+
 @keyframes rise {
   from {
     opacity: 0;
