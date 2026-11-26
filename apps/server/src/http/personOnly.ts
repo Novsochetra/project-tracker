@@ -45,6 +45,16 @@ export const personEditsStatuses = refuseAgents("Only a person changes a project
 // runs are told. Agents still put labels on tickets.
 export const personEditsLabels = refuseAgents('Only a person changes labels.');
 
+// A delete can't be undone and takes the ticket's whole history with it, so an agent, or a prompt
+// hidden in a ticket, could erase the person's work.
+export const personDeletesTickets = refuseAgents('Only a person deletes a ticket.');
+
+// Comments, reports and reviews are the ticket's record: an agent could rewrite what the person
+// wrote or delete the review that judged its own work. Agents still add all three.
+export const personEditsActivity = refuseAgents(
+  'Only a person edits or deletes comments, reports and reviews.',
+);
+
 // Approve and Ask for changes decide where the ticket goes, so an agent can't approve its own work.
 export const personReviewsChanges = refuseAgents('Only a person reviews the changes.');
 

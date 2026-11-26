@@ -3,6 +3,7 @@ import { Hono } from 'hono';
 import { addComment, deleteActivity, updateComment } from '../../services/comments';
 import type { ServiceContext } from '../../services/context';
 import type { AppEnv } from '../env';
+import { personEditsActivity } from '../personOnly';
 import { userContext } from '../userContext';
 import { jsonBody } from '../validation';
 
@@ -19,7 +20,7 @@ export const activityRoutes = (ctx: ServiceContext) =>
         201,
       ),
     )
-    .patch('/activity/:id', jsonBody(updateCommentRequest), async (context) =>
+    .patch('/activity/:id', personEditsActivity, jsonBody(updateCommentRequest), async (context) =>
       context.json(
         await updateComment(
           userContext(ctx, context),
@@ -28,7 +29,7 @@ export const activityRoutes = (ctx: ServiceContext) =>
         ),
       ),
     )
-    .delete('/activity/:id', async (context) => {
+    .delete('/activity/:id', personEditsActivity, async (context) => {
       await deleteActivity(userContext(ctx, context), context.req.param('id'));
 
       return context.body(null, 204);
