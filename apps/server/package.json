@@ -2,6 +2,7 @@
   "name": "@tracker/server",
   "version": "0.0.0",
   "private": true,
+  "license": "FSL-1.1-ALv2",
   "type": "module",
   "scripts": {
     "dev": "tsx watch --clear-screen=false src/main.ts",
