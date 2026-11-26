@@ -65,14 +65,6 @@
   margin-left: auto;
 }
 
-/* Too wide for a phone with Show less and Move to Done, it puts its buttons on a line of their
-   own, at the right. Only then: a long status name keeps its ellipsis in every other header. */
-.header[data-action] {
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  row-gap: 0;
-}
-
 .action {
   margin-left: auto;
 }

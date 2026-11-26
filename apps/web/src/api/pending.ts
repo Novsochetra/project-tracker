@@ -26,7 +26,6 @@ export function targetsOf(variables: unknown): MutationTargets {
   return { projectKey, ticketKey };
 }
 
-// A move of many tickets at once (Move all to Done) names them all.
 function manyTicketKeys(variables: unknown): string[] {
   if (typeof variables !== 'object' || variables === null) return [];
 

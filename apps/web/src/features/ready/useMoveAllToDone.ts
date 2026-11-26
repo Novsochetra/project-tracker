@@ -10,25 +10,24 @@ import { movedBackMessage, movedMessage, type DoneBatch } from './doneBatch';
 const undoPlaces = (moves: TicketMoves) =>
   moves.moved.map(({ key, from }) => ({ key, ...from })).reverse();
 
-// Waits for the move: one that failed is already back, and its answer says where each ticket was.
-function usePutBack(): (request: Promise<TicketMoves>) => Promise<void> {
+function usePutBack(): (moves: TicketMoves) => Promise<void> {
   const { mutateAsync } = useUndoMoveToDone();
+  const { show } = useToast();
 
   return useCallback(
-    async (request) => {
-      const moves = await request.catch(() => null);
-      if (!moves || moves.moved.length === 0) return;
-
+    async (moves) => {
       const places = undoPlaces(moves);
       const ticketKeys = places.map(({ key }) => key);
       flashRows(ticketKeys);
-      await mutateAsync({ ticketKeys, places });
+      const back = await mutateAsync({ ticketKeys, places });
+      show(movedBackMessage(back.moved.length));
     },
-    [mutateAsync],
+    [mutateAsync, show],
   );
 }
 
-export function useMoveAllToDone(): (batch: DoneBatch) => void {
+// The toast waits for the answer, which says how many really moved and where each one was.
+export function useMoveAllToDone(): (batch: DoneBatch) => Promise<unknown> {
   const { mutateAsync } = useMoveToDone();
   const putBack = usePutBack();
   const { show } = useToast();
@@ -36,16 +35,17 @@ export function useMoveAllToDone(): (batch: DoneBatch) => void {
   return useCallback(
     (batch) => {
       const failed = (error: unknown) => show(errorMessage(error), { kind: 'error' });
-      const request = mutateAsync({ ticketKeys: batch.keys });
-      void request.catch(failed);
       flashRows(batch.keys);
-
-      const undo = () => {
-        show(movedBackMessage(batch));
-        void putBack(request).catch(failed);
+      const request = mutateAsync({ ticketKeys: batch.keys });
+      const moved = (moves: TicketMoves) => {
+        const count = moves.moved.length;
+        const undo = () => void putBack(moves).catch(failed);
+        show(movedMessage(count, batch.doneName), count > 0 ? { undo } : {});
       };
 
-      show(movedMessage(batch), { undo });
+      void request.then(moved, failed);
+
+      return request;
     },
     [mutateAsync, putBack, show],
   );

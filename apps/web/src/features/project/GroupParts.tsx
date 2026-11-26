@@ -12,7 +12,6 @@ export interface GroupHeaderProps {
   onAdd: () => void;
   // Only while the group is expanded, so it can be collapsed without scrolling to its footer.
   onCollapse?: (() => void) | undefined;
-  // A button for the whole group, placed with the `action` class.
   action?: ReactNode;
   className?: string | undefined;
 }
@@ -21,11 +20,7 @@ export function GroupHeader(props: GroupHeaderProps) {
   const { status, count, tint, onAdd, onCollapse, action, className } = props;
 
   return (
-    <div
-      className={clsx(styles.header, className)}
-      data-tint={tint || undefined}
-      data-action={action ? '' : undefined}
-    >
+    <div className={clsx(styles.header, className)} data-tint={tint || undefined}>
       <StatusGlyph category={status.category} color={status.color} />
       <span className={styles.name}>{status.name}</span>{' '}
       <span className={styles.count}>{count}</span>

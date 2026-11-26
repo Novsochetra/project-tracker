@@ -110,3 +110,58 @@ test.describe('move all to Done', () => {
     await expect.poll(() => places(api, 'MOB')).toEqual(before);
   });
 });
+
+const middle = async (locator: Locator) => {
+  const box = (await locator.boundingBox())!;
+
+  return box.y + box.height / 2;
+};
+
+// PT-273 review: at phone width the button took the header's room, so the + fell to a second line
+// and the stuck header grew past the 45px rows scroll clear of (WCAG 2.4.11).
+test('group headers stay one line at phone width, and focus stays clear of the stuck one', async ({
+  page,
+  api,
+}, info) => {
+  test.skip(isPhone(info.project.name), 'Tab moves through buttons in Chromium; WebKit skips them');
+  const qaName = 'Reviewed and waiting for QA';
+  const reviewed = (count: number) =>
+    Array.from({ length: count }, (_, index) => ({
+      title: `Approved ${index + 1}`,
+      status: 'Reviewed',
+    }));
+  await seedProject(api, 'Mobile app', 'MOB', reviewed(30));
+  const qa = await api.createStatus('MOB', { name: qaName, category: 'reviewed' });
+  for (const title of ['QA one', 'QA two'])
+    await api.createTicket('MOB', { title, statusId: qa.id });
+
+  for (const width of [375, 320]) {
+    await page.setViewportSize({ width, height: 812 });
+    await page.goto('/p/MOB');
+    for (const name of ['Reviewed', qaName]) {
+      const add = group(page, name).getByRole('button', { name: `New ticket in ${name}` });
+      const header = add.locator('..');
+      expect((await header.boundingBox())!.height).toBeLessThanOrEqual(45.5);
+      expect(
+        Math.abs((await middle(add)) - (await middle(header.getByText(name, { exact: true })))),
+      ).toBeLessThan(2);
+    }
+  }
+
+  await page.setViewportSize({ width: 375, height: 812 });
+  const many = group(page, 'Reviewed');
+  await many.getByRole('button', { name: 'Show 25 more' }).click();
+  const headerLess = many.getByRole('button', { name: 'Show less of Reviewed' });
+  const header = headerLess.locator('..');
+  expect((await header.boundingBox())!.height).toBeLessThanOrEqual(45.5);
+  await many.getByRole('button', { name: 'Show less', exact: true }).focus();
+  // Up past the first rows on screen, so the browser scrolls each one into view below the header.
+  for (let press = 0; press < 30; press++) {
+    await page.keyboard.press('Shift+Tab');
+    const box = (await header.boundingBox())!;
+    const focusedTop = await page.evaluate(
+      () => document.activeElement!.getBoundingClientRect().top,
+    );
+    expect(focusedTop).toBeGreaterThanOrEqual(box.y + box.height - 0.5);
+  }
+});

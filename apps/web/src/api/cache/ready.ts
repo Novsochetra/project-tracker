@@ -31,7 +31,6 @@ const upperKeyOf = (ticket: unknown): string => {
   return typeof key === 'string' ? key.toUpperCase() : '';
 };
 
-// Tickets moved to Done all at once, which a ready list never holds.
 export function withoutTickets(
   list: TicketsAcrossProjects,
   ticketKeys: readonly string[],

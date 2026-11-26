@@ -1,6 +1,7 @@
 import { collapseGroup, DEFAULT_STATUSES, type Status } from '@tracker/shared';
 import { useId, useRef, useState } from 'react';
 import { ListCard, StatusGlyph } from '../../components';
+import { focusBefore } from '../../lib/focusBefore';
 import { useNavigation } from '../../navigation';
 import { HeaderShowLess, ShowMoreButton } from '../project/GroupParts';
 import { useStatusChange } from '../project/rowEdits';
@@ -32,6 +33,11 @@ export function ReadySection({ items }: { items: readonly ReadyItem[] }) {
   const open = ({ project, ticket }: ReadyItem) =>
     push({ name: 'ticket', key: project.key, num: ticket.num });
   const done = ({ ticket }: ReadyItem, status: Status) => changeStatus(ticket, status);
+  // The card leaves with its tickets; the projects above it are where they went.
+  const movedAll = () => {
+    const card = ref.current?.parentElement;
+    if (card) focusBefore(card);
+  };
 
   return (
     <ListCard
@@ -50,7 +56,7 @@ export function ReadySection({ items }: { items: readonly ReadyItem[] }) {
         {unfolded && (
           <HeaderShowLess name="Ready for you" onClick={toggle} className={styles.less} />
         )}
-        {batch && <MoveAllToDone batch={batch} className={styles.move} />}
+        <MoveAllToDone batch={batch} place="header" className={styles.move} onMove={movedAll} />
       </div>
       {shown.map((item, index) => (
         <ReadyRow key={item.ticket.id} item={item} index={index} onOpen={open} onDone={done} />
@@ -63,6 +69,7 @@ export function ReadySection({ items }: { items: readonly ReadyItem[] }) {
           onToggle={toggle}
         />
       )}
+      <MoveAllToDone batch={batch} place="footer" onMove={movedAll} />
     </ListCard>
   );
 }

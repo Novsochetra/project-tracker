@@ -9,7 +9,6 @@ import type { ReadyItem } from './readyItems';
 
 export interface DoneBatch {
   keys: string[];
-  // The done status they all go to, or the category's name when their projects name it apart.
   doneName: string;
 }
 
@@ -26,6 +25,7 @@ function batchOf(movable: readonly Movable[]): DoneBatch | null {
   const sent = movable.slice(0, DONE_MOVE_MAX);
   if (sent.length < SMALLEST_BATCH) return null;
 
+  // Projects can name their done status apart; then the category's own name stands for them all.
   const [first, ...others] = new Set(sent.map(({ doneName }) => doneName));
 
   return {
@@ -53,14 +53,16 @@ export function groupBatch(
   return batchOf(tickets.map(({ key }) => ({ key, doneName: done.name })));
 }
 
+const ticketCount = (count: number): string => (count === 1 ? '1 ticket' : `${count} tickets`);
+
 export const moveAllLabel = ({ keys, doneName }: DoneBatch): string =>
   `Move ${keys.length} to ${doneName}`;
 
 export const moveAllQuestion = ({ keys, doneName }: DoneBatch): string =>
   `Move all ${keys.length} tickets to ${doneName}?`;
 
-export const movedMessage = ({ keys, doneName }: DoneBatch): string =>
-  `${keys.length} tickets moved to ${doneName}`;
+// From the tracker's answer, which leaves out a ticket moved elsewhere meanwhile, on another device.
+export const movedMessage = (count: number, doneName: string): string =>
+  `${ticketCount(count)} moved to ${doneName}`;
 
-export const movedBackMessage = ({ keys }: DoneBatch): string =>
-  `${keys.length} tickets moved back`;
+export const movedBackMessage = (count: number): string => `${ticketCount(count)} moved back`;

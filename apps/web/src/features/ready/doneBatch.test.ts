@@ -89,10 +89,16 @@ describe('groupBatch', () => {
 describe('texts', () => {
   const batch = { keys: ['MOB-1', 'MOB-2', 'WEB-3'], doneName: 'Shipped' };
 
-  it('counts the tickets and names where they go', () => {
+  it('counts the tickets asked about and names where they go', () => {
     expect(moveAllLabel(batch)).toBe('Move 3 to Shipped');
     expect(moveAllQuestion(batch)).toBe('Move all 3 tickets to Shipped?');
-    expect(movedMessage(batch)).toBe('3 tickets moved to Shipped');
-    expect(movedBackMessage(batch)).toBe('3 tickets moved back');
+  });
+
+  it('counts the tickets the tracker really moved, one as a ticket', () => {
+    expect(movedMessage(3, 'Shipped')).toBe('3 tickets moved to Shipped');
+    expect(movedMessage(1, 'Done')).toBe('1 ticket moved to Done');
+    expect(movedMessage(0, 'Done')).toBe('0 tickets moved to Done');
+    expect(movedBackMessage(2)).toBe('2 tickets moved back');
+    expect(movedBackMessage(1)).toBe('1 ticket moved back');
   });
 });

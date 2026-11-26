@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { listItem, makeBoard, STATUS } from '../../api/test/fixtures';
 import { readMenuConfirm } from '../../components/Popover/testing';
-import { mockPhone, skipAnimations } from '../../overlays/testing';
+import { mockPhone, readActionSheet, skipAnimations } from '../../overlays/testing';
 import { resetListView } from './listViewStore';
 import { fakeBoardServer } from './test/fakeBoardServer';
 import { renderProject } from './test/renderProject';
@@ -27,6 +27,8 @@ const keysIn = (name: string) =>
     .queryAllByRole('button', { name: /^MOB-\d+/ })
     .map((button) => /^MOB-\d+/.exec(button.textContent ?? '')?.[0]);
 
+const handleName = (key: string) => `Move ${key}. Drag, or use the arrow keys.`;
+
 const places = ({ tickets }: ProjectBoard) =>
   tickets.map(({ key, statusId, rank }) => `${key} ${statusId} ${rank}`).sort();
 
@@ -42,11 +44,12 @@ afterEach(() => {
 });
 
 describe("Move all to Done in a project's Reviewed group", () => {
-  it('shows only in a reviewed group, with its count', async () => {
+  it("shows only in a reviewed group's header, with its count", async () => {
     const server = fakeBoardServer(board());
     renderProject({ client: server.client });
-    const reviewed = await screen.findByRole('region', { name: 'Reviewed' });
-    expect(within(reviewed).getByRole('button', { name: 'Move 3 to Done' })).toBeInTheDocument();
+    await screen.findByRole('region', { name: 'Reviewed' });
+    const header = within(group('Reviewed')!).getByText('Reviewed').parentElement!;
+    expect(within(header).getByRole('button', { name: 'Move 3 to Done' })).toBeInTheDocument();
     expect(within(group('To do')!).queryByRole('button', { name: /^Move \d+ to/ })).toBeNull();
     expect(within(group('Done')!).queryByRole('button', { name: /^Move \d+ to/ })).toBeNull();
   });
@@ -61,14 +64,56 @@ describe("Move all to Done in a project's Reviewed group", () => {
     await user.click(screen.getByRole('button', { name: 'Move to Done' }));
 
     expect(server.client.moveToDone).toHaveBeenCalledWith(['MOB-4', 'MOB-3', 'MOB-2']);
-    expect(screen.getByText('3 tickets moved to Done')).toBeInTheDocument();
+    expect(await screen.findByText('3 tickets moved to Done')).toBeInTheDocument();
     await waitFor(() => expect(keysIn('Done')).toEqual(['MOB-4', 'MOB-3', 'MOB-2', 'MOB-5']));
     expect(group('Reviewed')).toBeNull();
 
     await user.click(screen.getByRole('button', { name: 'Undo' }));
+    expect(await screen.findByText('3 tickets moved back')).toBeInTheDocument();
     await waitFor(() => expect(keysIn('Reviewed')).toEqual(['MOB-4', 'MOB-3', 'MOB-2']));
     expect(keysIn('Done')).toEqual(['MOB-5']);
     expect(server.client.undoMoveToDone).toHaveBeenCalledTimes(1);
     expect(places(server.board)).toEqual(places(board()));
+  });
+
+  it('keeps focus with the first ticket, on its handle in Done, as the group leaves', async () => {
+    const user = userEvent.setup();
+    const server = fakeBoardServer(board());
+    renderProject({ client: server.client });
+    const reviewed = await screen.findByRole('region', { name: 'Reviewed' });
+    within(reviewed).getByRole('button', { name: 'Move 3 to Done' }).focus();
+    await user.keyboard('{Enter}');
+    await readMenuConfirm();
+    screen.getByRole('button', { name: 'Move to Done' }).focus();
+    await user.keyboard('{Enter}');
+
+    const handle = () => screen.getByRole('button', { name: handleName('MOB-4') });
+    await waitFor(() => expect(keysIn('Done')).toEqual(['MOB-4', 'MOB-3', 'MOB-2', 'MOB-5']));
+    await waitFor(() => expect(handle()).toHaveFocus());
+    expect(within(group('Done')!).getByRole('button', { name: handleName('MOB-4') })).toBe(
+      handle(),
+    );
+  });
+
+  describe('on phones', () => {
+    beforeEach(() => {
+      restore.push(mockPhone(true));
+    });
+
+    it("is the group's last row, as the header has no room beside Show less and the +", async () => {
+      const user = userEvent.setup();
+      const server = fakeBoardServer(board());
+      renderProject({ client: server.client });
+      const reviewed = await screen.findByRole('region', { name: 'Reviewed' });
+      const row = within(reviewed).getByRole('button', { name: 'Move 3 to Done' });
+      expect(reviewed.lastElementChild).toBe(row);
+
+      await user.click(row);
+      const sheet = screen.getByRole('dialog', { name: 'Move to Done' });
+      await readActionSheet();
+      await user.click(within(sheet).getByRole('button', { name: 'Move 3 to Done' }));
+      await waitFor(() => expect(keysIn('Done')).toEqual(['MOB-4', 'MOB-3', 'MOB-2', 'MOB-5']));
+      expect(server.client.moveToDone).toHaveBeenCalledTimes(1);
+    });
   });
 });

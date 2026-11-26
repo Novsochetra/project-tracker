@@ -1,5 +1,5 @@
-/* A text button like the header's Show less, in the link color because it acts on every ticket.
-   The header that holds it places it, so it sets no margin of its own. */
+/* A desktop header's text button like Show less, in the link color because it acts on every
+   ticket. The header that holds it places it, so it sets no margin of its own. */
 .button {
   display: inline-flex;
   flex: none;
@@ -34,10 +34,27 @@
   }
 }
 
-@media (width < 768px),
-  (pointer: coarse) and (device-width < 600px),
-  (pointer: coarse) and (device-height < 600px) {
-  .button {
-    min-height: var(--touch-target);
-  }
+/* A phone's last row of the card, the size of its Show more row (SPEC §12: 48px). */
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  min-height: 48px;
+  margin: 0;
+  padding: 0 16px;
+  border: 0;
+  border-top: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--link);
+  font-family: var(--font-sans);
+  font-size: var(--size-secondary);
+  font-weight: var(--weight-medium);
+  cursor: pointer;
+  transition: background-color var(--duration-fast) ease-out;
+}
+
+.row:active {
+  background: var(--fill);
 }
