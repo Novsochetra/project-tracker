@@ -21,6 +21,7 @@ On Railway (`RAILWAY_ENVIRONMENT_ID` is set) the server also:
 
 - listens on `0.0.0.0`, trusts one proxy (`TRUST_PROXY=1`: Railway's edge sets `X-Forwarded-For` and `X-Forwarded-Proto`), and tells agents `https://<RAILWAY_PUBLIC_DOMAIN>` (`PUBLIC_URL`), unless you set those variables;
 - refuses to start, and the pre-deploy command refuses to migrate, unless `DATABASE_URL` is a `postgres://` URL (or a SQLite file on the service's volume, `RAILWAY_VOLUME_MOUNT_PATH`), and unless files go to S3 (`S3_BUCKET`) or to an `UPLOADS_DIR` on that volume: a deployment's own disk is replaced by the next deploy, so data kept there would be lost. The message never shows the value, which may hold the password.
+- refuses to start with `TRACKER_TEST_RESET=1`, whatever `NODE_ENV` says (elsewhere `NODE_ENV=production` refuses it): it is for the E2E tests only, and adds `POST /api/test/reset`, which lets anyone signed in delete every account's tickets and files. Railpack sets `NODE_ENV=production`, but a service variable can replace it, so being on Railway is enough.
 
 Why Railpack and not a Dockerfile: the commands above are all there is, and they were run as written on a clean copy of the repo (install, build, prune, migrate, start, sign-in, upload, SIGTERM); there is no Docker on the Mac to prove a Dockerfile, and Railway keeps Railpack's base images up to date.
 
