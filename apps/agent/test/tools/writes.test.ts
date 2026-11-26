@@ -3,7 +3,7 @@ import { addComment } from '../../src/tools/addComment';
 import { createTicket } from '../../src/tools/createTicket';
 import { moveTicket } from '../../src/tools/moveTicket';
 import { updateTicket } from '../../src/tools/updateTicket';
-import { fakeClient, returns } from '../fakeClient';
+import { fakeClient, rejectWith, returns } from '../fakeClient';
 import { activity, detail, projectSummary, statuses, statusAt, ticket } from '../fixtures';
 import { run } from './run';
 
@@ -126,6 +126,41 @@ describe('move_ticket', () => {
     const reply = await run(moveTicket, client, { ticket: 'MOB-3', status: '  need REVIEW ' });
     expect(updateTicketApi).toHaveBeenCalledWith('MOB-3', { statusId: 's3' });
     expect(reply.text).toBe('Moved MOB-3 to Need review.');
+  });
+
+  it('takes a ticket out of Done with reopen, which the person asked for', async () => {
+    const updateTicketApi = vi.fn(returns(ticket({ statusId: 's1' })));
+    const client = fakeClient({
+      getTicket: returns(detail({ ticket: ticket({ statusId: 's5' }), status: statusAt(4) })),
+      updateTicket: updateTicketApi,
+    });
+    const reply = await run(moveTicket, client, { ticket: 'MOB-3', status: 'To do', reopen: true });
+    expect(updateTicketApi.mock.calls).toEqual([['MOB-3', { statusId: 's1', reopen: true }]]);
+    expect(reply.text).toBe('Moved MOB-3 to To do.');
+  });
+
+  it('leaves the tracker to refuse a Done ticket moved out without reopen', async () => {
+    const updateTicketApi = vi.fn(rejectWith(403, 'forbidden', 'MOB-3 is in Done.'));
+    const client = fakeClient({
+      getTicket: returns(detail({ ticket: ticket({ statusId: 's5' }), status: statusAt(4) })),
+      updateTicket: updateTicketApi,
+    });
+    await expect(run(moveTicket, client, { ticket: 'MOB-3', status: 'To do' })).rejects.toThrow(
+      'MOB-3 is in Done.',
+    );
+    expect(updateTicketApi.mock.calls).toEqual([['MOB-3', { statusId: 's1' }]]);
+  });
+
+  it('never moves a ticket to Done, also with reopen', async () => {
+    const updateTicketApi = vi.fn();
+    const client = fakeClient({
+      getTicket: returns(detail({ ticket: ticket({ statusId: 's1' }), status: statusAt(0) })),
+      updateTicket: updateTicketApi,
+    });
+    await expect(
+      run(moveTicket, client, { ticket: 'MOB-3', status: 'Done', reopen: true }),
+    ).rejects.toThrow('Only a person can move a ticket to Done.');
+    expect(updateTicketApi).not.toHaveBeenCalled();
   });
 
   it('lists the valid names when the status does not exist', async () => {

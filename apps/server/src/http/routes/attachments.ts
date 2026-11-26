@@ -12,6 +12,7 @@ import type { ServiceContext } from '../../services/context';
 import { parseByteRange } from '../byteRange';
 import type { AppEnv } from '../env';
 import { fileHeaders } from '../fileHeaders';
+import { personDeletesFiles } from '../personOnly';
 import { userContext } from '../userContext';
 
 function decodeName(header: string | undefined): string {
@@ -75,7 +76,7 @@ export const attachmentRoutes = (ctx: ServiceContext) =>
       context.json(await uploadAttachment(userContext(ctx, context), readUpload(context)), 201),
     )
     .get('/attachments/:id/file', (context) => serveFile(context, ctx))
-    .delete('/attachments/:id', async (context) => {
+    .delete('/attachments/:id', personDeletesFiles, async (context) => {
       await deleteAttachment(userContext(ctx, context), context.req.param('id'));
 
       return context.body(null, 204);

@@ -40,6 +40,7 @@ export * from './logic/reviewRules';
 export * from './logic/pushMessages';
 export * from './logic/pushServices';
 export * from './logic/rank';
+export * from './logic/replacedText';
 export * from './logic/search';
 export * from './logic/reportStatus';
 export * from './logic/statuses';

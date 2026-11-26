@@ -576,6 +576,7 @@ const DATA_MODEL: SchemaShape = {
       'created_at bigint not null',
       'expires_at bigint not null',
       'ended_at bigint',
+      'asked_by_token_id text',
     ],
     indexes: ['index (status, expires_at)', 'index (ticket_id, created_at)'],
     foreignKeys: [

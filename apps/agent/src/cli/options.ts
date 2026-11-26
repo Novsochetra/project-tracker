@@ -26,11 +26,16 @@ export const COMMAND_OPTIONS = {
   comment: { type: 'string' },
   verdict: { type: 'string' },
   rating: { type: 'string' },
+  reopen: { type: 'boolean' },
 } as const satisfies NonNullable<ParseArgsConfig['options']>;
 
 export type CommandOption = keyof typeof COMMAND_OPTIONS;
 
-export type CommandValues = Partial<Record<CommandOption, string>>;
+type OptionValue<Option> = Option extends { type: 'boolean' } ? boolean : string;
+
+export type CommandValues = {
+  [Name in CommandOption]?: OptionValue<(typeof COMMAND_OPTIONS)[Name]>;
+};
 
 export interface GlobalValues {
   url?: string;

@@ -172,6 +172,21 @@ describe('prepareCommand', () => {
     });
   });
 
+  it('move --reopen takes a ticket out of Done, and only move has it', () => {
+    expect(prepare('move', 'MOB-3', 'To', 'do', '--reopen').input).toStrictEqual({
+      ticket: 'MOB-3',
+      status: 'To do',
+      reopen: true,
+    });
+    expect(prepare('move', '--reopen', 'MOB-3', 'To do').input).toMatchObject({ reopen: true });
+    expect(usageError(['update', 'MOB-3', '--reopen']).message).toBe(
+      '"update" has no --reopen option.',
+    );
+    expect(usageError(['move', 'MOB-3', 'To do', '--reopen=yes']).message).toContain(
+      "Option '--reopen' does not take an argument",
+    );
+  });
+
   it('comment <KEY> <TEXT…> joins the words of the text', () => {
     expect(prepare('comment', 'MOB-3', 'Blocked', 'on', 'the', 'API')).toEqual({
       tool: addComment,
@@ -237,7 +252,7 @@ describe('usage errors', () => {
     [[], 'Missing command.', undefined],
     [['launch'], 'Unknown command "launch".', undefined],
     [['show'], 'Missing <KEY>.', 'show <KEY>'],
-    [['move', 'MOB-3'], 'Missing <STATUS NAME>.', 'move <KEY> <STATUS NAME…>'],
+    [['move', 'MOB-3'], 'Missing <STATUS NAME>.', 'move <KEY> <STATUS NAME…> [--reopen]'],
     [['show', 'MOB-3', 'MOB-4'], 'Unexpected argument "MOB-4".', 'show <KEY>'],
     [['projects', '--title', 'x'], '"projects" has no --title option.', 'projects'],
     [['create', 'MOB'], 'Missing --title.', createUsage()],

@@ -45,7 +45,7 @@ The project key is optional: without it the agent finds the project with `list_p
 
 **Labels** are the project's own (a person makes them on the phone). `create_ticket` and `update_ticket` take `labels`, a list of up to 10 names in any case (`update_ticket` sets the whole list; `[]` removes them all), and `list_tickets` takes one `label` to filter by. An unknown name fails before anything is sent, listing the project's labels. Lists and `get_ticket` show a ticket's labels. CLI: `tracker create MOB --title "Crash" --label "Bug, UI"`, `tracker update MOB-3 --label ""` and `tracker tickets MOB --label Bug`.
 
-Tools: `list_projects`, `list_statuses`, `list_tickets`, `get_ticket` (with up to 4 images), `create_ticket`, `update_ticket`, `move_ticket` (by status name), `add_comment`, `attach_file`, `claim_next_ticket`, `claim_ticket`, `submit_for_review`, `review_ticket`, `ask_person` (asks the person a question on a ticket and waits up to 30 minutes for the answer from their phone; with no answer it tells Claude to go on with its best judgment).
+Tools: `list_projects`, `list_statuses`, `list_tickets`, `get_ticket` (with up to 4 images), `create_ticket`, `update_ticket`, `move_ticket` (by status name; `reopen: true` takes a ticket out of Done, only when the person told the agent to), `add_comment`, `attach_file`, `claim_next_ticket`, `claim_ticket`, `submit_for_review`, `review_ticket`, `ask_person` (asks the person a question on a ticket and waits up to 30 minutes for the answer from their phone; with no answer it tells Claude to go on with its best judgment).
 
 `attach_file { ticket, paths, comment? }` (CLI: `tracker attach KEY FILE… [--comment TEXT]`) uploads local files to a ticket, or with a comment to a new comment on it, so results that aren't code (a draft, a CSV, a PDF, an image) can be read on the phone. It takes the tracker's types and sizes, and only files in the current folder or a temp folder (`tmpdir()`, `/tmp`), by their real path: a symlink or `..` leading out, to `~/.ssh` for example, is refused, and so is a file in a dot-folder (`.ssh`, `.aws`, `.config`, …), and anything from a current folder that is your home folder or above it, or inside one of its dot-folders (`~/.claude`, `~/.aws`, …). The name and type come from the real file, not a symlink's name. Every file is checked and opened before any is sent, and the upload reads what was checked. Reports list them under `OUTPUT:` (`submit_for_review`'s `output`, `tracker submit --output`), which the app shows as **Output**.
 
@@ -81,6 +81,7 @@ tracker attach MOB-3 plan.md budget.csv --comment "The plan and its budget"
 tracker submit MOB-3 --summary "Fixed the crash; added a test" --files src/profile.ts --next none
 tracker review MOB-3 --verdict changes_requested --rating 3 --summary "Landscape still crashes on iPad"
 tracker move MOB-3 In progress
+tracker move MOB-3 To do --reopen     # out of Done, only when the person said so
 tracker --json show MOB-3
 ```
 

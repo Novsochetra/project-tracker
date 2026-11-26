@@ -59,6 +59,21 @@
   color: var(--placeholder);
 }
 
+.replaced {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-2);
+}
+
+/* Quoted, so it reads as text the ticket had before rather than its own. */
+.oldText {
+  padding-left: var(--space-3);
+  border-left: 3px solid var(--control-line);
+  color: var(--muted);
+  white-space: pre-wrap;
+}
+
 /* Fills backwards only: a finished row must not stay a stacking context (or a compositor
    layer), or it would paint over the options menu of the card above it. */
 .rise {

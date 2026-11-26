@@ -13,6 +13,7 @@ import { conflict } from '../errors';
 import { listStatusRows } from '../repositories/statuses';
 import { listTicketRows } from '../repositories/tickets';
 import { inTransaction, notify, type UserContext } from './context';
+import { assertMaySubmit } from './doneTickets';
 import { requireProject, requireTicketScope, ticketKeyOf, type TicketScope } from './lookups';
 import { WORKFLOW_VERBS, workflowMoveText, type WorkflowVerb } from './statusEvents';
 import { pushToUser } from './push';
@@ -119,6 +120,7 @@ export async function submitWork(
 ): Promise<TicketDetail> {
   const written = await inTransaction(ctx, async (trx) => {
     const scope = await requireTicketScope(trx, ctx.scope, key);
+    assertMaySubmit(actor, scope);
     const target = resolveStatus(scope.statuses, 'in_review');
     const plan = await transition(trx, actor, scope, { target, verb: WORKFLOW_VERBS.submit });
 

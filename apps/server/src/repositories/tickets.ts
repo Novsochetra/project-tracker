@@ -181,14 +181,6 @@ export async function updateTicketMatching(
   return Number(result.numUpdatedRows) > 0;
 }
 
-// Conditional on the old status so two agents can't claim the same ticket at once.
-export const updateTicketInStatus = (
-  db: Db,
-  id: string,
-  statusId: string,
-  changes: TicketChanges,
-): Promise<boolean> => updateTicketMatching(db, id, { statusId }, changes);
-
 export async function deleteTicketRow(db: Db, id: string): Promise<void> {
   await db.deleteFrom('tickets').where('id', '=', id).execute();
 }
