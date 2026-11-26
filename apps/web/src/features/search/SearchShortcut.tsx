@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useSheets } from '../../app/sheets/context';
-import { hasOpenOverlay } from '../capture/captureTriggers';
+import { hasOpenOverlay } from '../../lib/openOverlay';
 import { isApplePlatform, isPaletteShortcut } from './paletteShortcut';
 
 // Works from a text field too: Command-K types nothing. Another sheet or menu keeps its place, so
