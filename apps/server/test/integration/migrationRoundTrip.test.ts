@@ -19,6 +19,8 @@ import {
 } from '../helpers/server';
 
 const NAMES = Object.keys(MIGRATIONS).sort();
+// The last migration with the chats, which 0038 and 0039 drop.
+const BEFORE_DROP = NAMES.filter((name) => name < '0038_drop_claude_run_columns').at(-1)!;
 
 async function expectRan(run: Promise<MigrationResultSet>, names: string[]): Promise<void> {
   const { error, results } = await run;
@@ -194,13 +196,13 @@ describe.each(DIALECTS)('every migration up and down (%s)', (dialect) => {
       await sql`insert into chats (id, project_id, title, created_at, updated_at, ask_model,
         ask_mode) values ('c', 'p', 'Q', 1000, 1000, 'opus', 'plan')`.execute(db);
 
-      await migrateToLatest(db);
+      await migrator.migrateTo(BEFORE_DROP);
       const after = await sql<{ askEffort: string }>`select ask_effort from chats`.execute(db);
       expect(after.rows).toEqual([{ askEffort: 'default' }]);
 
       await expectRan(
         migrator.migrateTo('0009_run_requests'),
-        NAMES.filter((name) => name > '0009_run_requests').reverse(),
+        NAMES.filter((name) => name > '0009_run_requests' && name <= BEFORE_DROP).reverse(),
       );
       const back = await sql<{ askModel: string }>`select ask_model from chats`.execute(db);
       expect(back.rows).toEqual([{ askModel: 'opus' }]);
@@ -297,7 +299,6 @@ const DATA_MODEL: SchemaShape = {
       'updated_at bigint not null',
       'owner_id text',
       "instructions text not null default ''",
-      'auto_review integer',
       'hide_name integer not null default 0',
       'position integer not null default 0',
     ],
@@ -332,7 +333,6 @@ const DATA_MODEL: SchemaShape = {
       'created_at bigint not null',
       'updated_at bigint not null',
       'client_id text',
-      'needs_device integer not null default 0',
     ],
     indexes: [
       'index (project_id, status_id, rank)',
@@ -356,10 +356,6 @@ const DATA_MODEL: SchemaShape = {
       'review_rating integer',
       'created_at bigint not null',
       'edited_at bigint',
-      'line_run_id text',
-      'line_path text',
-      'line_side text',
-      'line_number integer',
     ],
     indexes: ['index (ticket_id, created_at)'],
     foreignKeys: ['ticket_id -> tickets.id on delete cascade'],
@@ -378,12 +374,10 @@ const DATA_MODEL: SchemaShape = {
       'created_at bigint not null',
       'position integer not null default 0',
       'user_id text',
-      'chat_message_id text',
     ],
-    indexes: ['index (activity_id)', 'index (chat_message_id)', 'index (ticket_id)'],
+    indexes: ['index (activity_id)', 'index (ticket_id)'],
     foreignKeys: [
       'activity_id -> activities.id on delete cascade',
-      'chat_message_id -> chat_messages.id on delete cascade',
       'ticket_id -> tickets.id on delete cascade',
     ],
   },
@@ -442,133 +436,11 @@ const DATA_MODEL: SchemaShape = {
     indexes: ['index (user_id)', 'unique (token_hash)'],
     foreignKeys: ['user_id -> users.id on delete cascade'],
   },
-  runners: {
-    columns: [
-      'id text primary key',
-      'user_id text',
-      'name text not null',
-      'project_ids text not null',
-      'created_at bigint not null',
-      'last_seen_at bigint not null',
-      'tools text',
-      'plan_limits text',
-    ],
-    indexes: ['index (user_id)'],
-    foreignKeys: ['user_id -> users.id on delete cascade'],
-  },
-  runs: {
-    columns: [
-      'id text primary key',
-      'user_id text',
-      'project_id text not null',
-      'ticket_id text',
-      'runner_id text',
-      'runner_name text not null',
-      'prompt text not null',
-      'status text not null',
-      'error text',
-      'created_at bigint not null',
-      'started_at bigint',
-      'ended_at bigint',
-      "kind text not null default 'ticket'",
-      'chat_id text',
-      'resume_session_id text',
-      'ask_model text',
-      'ask_mode text',
-      'step_count integer not null default 0',
-      'ask_effort text',
-      'role text',
-      'cost_micros bigint',
-      'turns integer',
-      'duration_ms bigint',
-      'round integer',
-      'chain_stop text',
-      'question_id text',
-      'batch_id text',
-      'context_tokens bigint',
-      'context_window bigint',
-      'tokens bigint',
-    ],
-    indexes: [
-      'index (batch_id)',
-      'index (chat_id, created_at)',
-      'index (project_id, ended_at)',
-      'index (runner_id, status)',
-      'index (status, created_at)',
-      'unique (chat_id)',
-      'unique (ticket_id)',
-    ],
-    foreignKeys: [
-      'chat_id -> chats.id on delete cascade',
-      'project_id -> projects.id on delete cascade',
-      'runner_id -> runners.id on delete set null',
-      'ticket_id -> tickets.id on delete cascade',
-      'user_id -> users.id on delete cascade',
-    ],
-  },
-  run_steps: {
-    columns: [
-      'run_id text primary key',
-      'seq integer primary key',
-      'kind text not null',
-      'label text not null',
-      'sub_agent integer not null',
-      'tool_id text',
-      'created_at bigint not null',
-      'todos text',
-    ],
-    indexes: [],
-    foreignKeys: ['run_id -> runs.id on delete cascade'],
-  },
-  run_requests: {
-    columns: [
-      'id text primary key',
-      'run_id text not null',
-      'kind text not null',
-      'label text not null',
-      'label_cut integer not null',
-      'questions text',
-      'status text not null',
-      'decision text',
-      'answers text',
-      'created_at bigint not null',
-      'expires_at bigint not null',
-      'ended_at bigint',
-    ],
-    indexes: ['index (run_id, created_at)', 'index (status, expires_at)'],
-    foreignKeys: ['run_id -> runs.id on delete cascade'],
-  },
-  run_changes: {
-    columns: [
-      'run_id text primary key',
-      'ticket_id text not null',
-      'diff text not null',
-      'cut integer not null',
-      'verdict text',
-      'created_at bigint not null',
-    ],
-    indexes: ['index (ticket_id, created_at)'],
-    foreignKeys: [
-      'run_id -> runs.id on delete cascade',
-      'ticket_id -> tickets.id on delete cascade',
-    ],
-  },
-  ticket_viewed_files: {
-    columns: [
-      'ticket_id text primary key',
-      'path text primary key',
-      'digest text not null',
-      'created_at bigint not null',
-    ],
-    indexes: [],
-    foreignKeys: ['ticket_id -> tickets.id on delete cascade'],
-  },
   questions: {
     columns: [
       'id text primary key',
       'user_id text',
       'ticket_id text not null',
-      'run_id text',
       'text text not null',
       'choices text not null',
       'status text not null',
@@ -580,110 +452,9 @@ const DATA_MODEL: SchemaShape = {
     ],
     indexes: ['index (status, expires_at)', 'index (ticket_id, created_at)'],
     foreignKeys: [
-      'run_id -> runs.id on delete set null',
       'ticket_id -> tickets.id on delete cascade',
       'user_id -> users.id on delete cascade',
     ],
-  },
-  chats: {
-    columns: [
-      'id text primary key',
-      'user_id text',
-      'project_id text not null',
-      'title text not null',
-      'session_id text',
-      'session_runner_id text',
-      'created_at bigint not null',
-      'updated_at bigint not null',
-      "ask_model text not null default 'default'",
-      "ask_mode text not null default 'ask'",
-      "ask_effort text not null default 'default'",
-      'ticket_id text',
-    ],
-    indexes: ['index (project_id, updated_at)', 'index (ticket_id)'],
-    foreignKeys: [
-      'project_id -> projects.id on delete cascade',
-      'ticket_id -> tickets.id on delete set null',
-      'user_id -> users.id on delete cascade',
-    ],
-  },
-  chat_messages: {
-    columns: [
-      'id text primary key',
-      'chat_id text not null',
-      'role text not null',
-      'text text not null',
-      'ticket_id text',
-      'created_at bigint not null',
-      'run_id text',
-      'batch_run_id text',
-    ],
-    indexes: ['index (chat_id, created_at)'],
-    foreignKeys: [
-      'chat_id -> chats.id on delete cascade',
-      'ticket_id -> tickets.id on delete set null',
-    ],
-  },
-  chat_card_tickets: {
-    columns: [
-      'message_id text primary key',
-      'card_index integer primary key',
-      'ticket_id text not null',
-    ],
-    indexes: ['index (ticket_id)'],
-    foreignKeys: [
-      'message_id -> chat_messages.id on delete cascade',
-      'ticket_id -> tickets.id on delete cascade',
-    ],
-  },
-  chat_queue: {
-    columns: [
-      'message_id text primary key',
-      'chat_id text not null',
-      'runner_id text not null',
-      'ask_model text not null',
-      'ask_mode text not null',
-      'ask_effort text not null',
-      'position integer not null',
-    ],
-    indexes: ['unique (chat_id, position)'],
-    foreignKeys: [
-      'chat_id -> chats.id on delete cascade',
-      'message_id -> chat_messages.id on delete cascade',
-    ],
-  },
-  chat_changes: {
-    columns: [
-      'chat_id text primary key',
-      'version text not null',
-      'runner_id text not null',
-      'tree text not null',
-      'diff text not null',
-      'cut integer not null',
-      'files text not null',
-      'branch text',
-      'default_branch text',
-      'gh_ready integer not null',
-      'created_at bigint not null',
-    ],
-    indexes: [],
-    foreignKeys: ['chat_id -> chats.id on delete cascade'],
-  },
-  chat_git_actions: {
-    columns: [
-      'id text primary key',
-      'chat_id text not null',
-      'runner_id text not null',
-      'kind text not null',
-      'input text not null',
-      'status text not null',
-      'error text',
-      'result text',
-      'created_at bigint not null',
-      'ended_at bigint',
-    ],
-    indexes: ['index (chat_id, created_at)', 'index (runner_id, status, created_at)'],
-    foreignKeys: ['chat_id -> chats.id on delete cascade'],
   },
   push_subscriptions: {
     columns: [

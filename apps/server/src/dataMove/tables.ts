@@ -3,9 +3,6 @@ import type { Database } from '../db/schema';
 export interface CopiedTable {
   name: keyof Database;
   references: readonly (keyof Database)[];
-  // Tables the move leaves behind (SKIPPED_TABLES) that some of its rows point at; those rows are
-  // left out too.
-  leftBehind?: readonly string[];
 }
 
 // Parents before children, so every foreign key finds its row as it is inserted.
@@ -15,9 +12,7 @@ export const COPIED_TABLES = [
   { name: 'statuses', references: ['projects'] },
   { name: 'tickets', references: ['projects', 'statuses'] },
   { name: 'activities', references: ['tickets'] },
-  // A file whose chat_message_id names a chat message is on no ticket or comment, so it stays
-  // behind as a pending upload (pendingUploads.ts).
-  { name: 'attachments', references: ['tickets', 'activities'], leftBehind: ['chat_messages'] },
+  { name: 'attachments', references: ['tickets', 'activities'] },
   { name: 'labels', references: ['projects'] },
   { name: 'ticketLabels', references: ['tickets', 'labels'] },
 ] as const satisfies readonly CopiedTable[];
@@ -36,19 +31,7 @@ export const SKIPPED_TABLES: Readonly<Record<string, string>> = {
   sessions: "this computer's sign-ins",
   api_tokens: "this computer's agent tokens; make new ones online",
   invites: "this computer's invites; the online owner invites people there",
-  runners: "this computer's helpers; start them again against the online tracker",
-  runs: 'Claude Code runs started from this tracker',
-  run_steps: 'what Claude Code did in those runs',
-  run_requests: 'what Claude Code asked in those runs',
-  run_changes: 'what Claude Code changed in those runs',
-  ticket_viewed_files: 'the changed files of those runs ticked as viewed',
   questions: 'what agents asked on tickets, each ended within 30 minutes',
-  chats: "chats with Claude Code on this tracker's helpers",
-  chat_messages: "chats with Claude Code on this tracker's helpers",
-  chat_card_tickets: "chats with Claude Code on this tracker's helpers",
-  chat_queue: "chats with Claude Code on this tracker's helpers",
-  chat_changes: "what Claude Code changed in those chats, on this tracker's helpers",
-  chat_git_actions: "commits and pull requests asked of this tracker's helpers",
   push_subscriptions: "this computer's devices with notifications on; turn them on again online",
   push_keys: "this tracker's own push keys; the online tracker has its own",
 };
