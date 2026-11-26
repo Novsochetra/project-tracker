@@ -45,9 +45,11 @@ describe.each(DIALECTS)("Claude's to-do list (%s)", (dialect) => {
     for (const steps of batches) {
       await helper('POST', `/api/runs/${run.id}/steps`, { runnerId: runner, steps });
     }
+
     const steps = (await person<RunStep[]>('GET', `/api/runs/${run.id}/steps`)).body;
     await helper('POST', `/api/runs/${run.id}/finish`, { status: 'done', answer: 'Fixed.' });
     const { messages } = (await person<ChatDetail>('GET', `/api/chats/${chat.body.chat.id}`)).body;
+
     return { steps, answer: messages.at(-1) };
   }
 

@@ -12,6 +12,7 @@ export function useSwipeDown(ref: RefObject<HTMLElement | null>, context: SwipeD
     element.addEventListener('pointermove', swipe.move);
     element.addEventListener('pointerup', swipe.up);
     element.addEventListener('pointercancel', swipe.up);
+
     return () => {
       element.removeEventListener('pointerdown', swipe.down);
       element.removeEventListener('pointermove', swipe.move);

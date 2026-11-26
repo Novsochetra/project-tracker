@@ -36,6 +36,7 @@ async function runChanging(change: () => void) {
   const send = await trackRunChanges(deps, job('r-1', 'MOB-1'));
   change();
   await send({ status: 'done' });
+
   return tracker.changes[0]?.diff ?? '';
 }
 

@@ -15,6 +15,7 @@ type Palette = ReturnType<typeof useSearchPalette>;
 function statusText({ items, pending, text }: Palette): string {
   if (items.length > 0) return '';
   if (pending) return 'Searching…';
+
   return text.trim() ? `No matches for “${text.trim()}”` : '';
 }
 
@@ -29,6 +30,7 @@ function StatusLine({ palette }: { palette: Palette }) {
       </p>
     );
   }
+
   return (
     <p role="status" className={styles.status}>
       {statusText(palette)}
@@ -42,6 +44,7 @@ function Results({ palette }: { palette: Palette }) {
   useEffect(() => {
     if (activeId) document.getElementById(activeId)?.scrollIntoView?.({ block: 'nearest' });
   }, [activeId]);
+
   return (
     <div className={styles.results}>
       <div id={LIST_ID} role="listbox" aria-label="Results">
@@ -98,6 +101,7 @@ export function SearchSheet({ open, onClose }: SheetProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const palette = useSearchPalette(onClose);
   const isPhone = useIsPhone();
+
   return (
     <Sheet
       open={open}

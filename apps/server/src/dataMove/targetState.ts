@@ -16,6 +16,7 @@ export async function countRows(db: Db, name: CopiedTableName): Promise<number> 
     .selectFrom(name)
     .select((eb) => eb.fn.countAll<number | string>().as('count'))
     .executeTakeFirst();
+
   return Number(row?.count ?? 0);
 }
 
@@ -28,12 +29,14 @@ export async function countIds(
   for (const chunk of inChunks(ids)) {
     found += (await db.selectFrom(name).select('id').where('id', 'in', chunk).execute()).length;
   }
+
   return found;
 }
 
 async function sameKeys(db: Db, keys: readonly string[]): Promise<string[]> {
   if (keys.length === 0) return [];
   const rows = await db.selectFrom('projects').select('key').where('key', 'in', keys).execute();
+
   return rows.map((row) => row.key);
 }
 
@@ -49,11 +52,13 @@ export async function readTargetState(db: Db, rows: TableRows): Promise<TargetSt
     state.existing[name] = await countRows(db, name);
     if (state.existing[name] > 0) state.sameIds[name] = await countIds(db, name, idsOf(rows[name]));
   }
+
   if (state.existing.projects > 0) {
     state.sameKeys = await sameKeys(
       db,
       rows.projects.map((project) => project.key),
     );
   }
+
   return state;
 }

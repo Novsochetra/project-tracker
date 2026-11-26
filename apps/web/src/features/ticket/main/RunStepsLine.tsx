@@ -23,6 +23,7 @@ export function RunStepsLine({ run, ticketKey }: RunStepsLineProps) {
   if (!latest) return null;
   const line = stepLine(latest);
   const count = stepsLabel(Math.max(run.stepCount, lastSeq(rows)));
+
   return (
     <button
       type="button"

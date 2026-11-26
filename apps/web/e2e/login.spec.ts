@@ -41,6 +41,7 @@ test.describe('owner sign-in', () => {
         OWNER.email,
       );
     }
+
     await account.click();
     const sheet = page.getByRole('dialog', { name: 'Account' });
     await expect(sheet).toContainText(`Signed in as ${OWNER.email}`);

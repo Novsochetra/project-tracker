@@ -15,6 +15,7 @@ function deferred<T>() {
     resolve = done;
     reject = fail;
   });
+
   return { promise, resolve, reject };
 }
 

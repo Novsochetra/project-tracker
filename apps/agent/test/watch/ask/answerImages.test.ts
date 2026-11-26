@@ -31,6 +31,7 @@ function setup(
     upload,
     describe: (error) => (error instanceof Error ? error.message : String(error)),
   };
+
   return { deps, upload };
 }
 

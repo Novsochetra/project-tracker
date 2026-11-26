@@ -54,6 +54,7 @@ const projectEdits = ({
 function summarize(project: ProjectRow, stats: ProjectTicketStats | undefined): ProjectSummary {
   const total = stats?.total ?? 0;
   const done = stats?.done ?? 0;
+
   return {
     ...toProject(project),
     totalCount: total,
@@ -68,6 +69,7 @@ export async function listProjectSummaries(ctx: UserContext): Promise<ProjectSum
   const projects = await listProjectRows(ctx.db, ctx.scope);
   const stats = await ticketStatsByProject(ctx.db, ctx.scope);
   const statsOf = new Map(stats.map((row) => [row.projectId, row]));
+
   return projects.map((project) => summarize(project, statsOf.get(project.id)));
 }
 
@@ -113,9 +115,11 @@ export async function createProject(
     const statuses = statusRows(template.statuses, project.id, at);
     await insertProject(trx, project);
     await insertStatuses(trx, statuses);
+
     return { project: toProject(project), statuses: statuses.map(toStatus), labels: [] };
   });
   notify(ctx, detail.project.id);
+
   return detail;
 }
 
@@ -123,6 +127,7 @@ export async function getProjectDetail(ctx: UserContext, key: string): Promise<P
   const project = await requireProject(ctx.db, ctx.scope, key);
   const statuses = await listStatusRows(ctx.db, project.id);
   const labels = await listLabelRows(ctx.db, project.id);
+
   return {
     project: toProject(project),
     statuses: statuses.map(toStatus),
@@ -141,9 +146,11 @@ export async function updateProject(
     if (isEmpty(edits)) return { project, changed: false };
     const changes = { ...edits, updatedAt: ctx.now() };
     await updateProjectRow(trx, project.id, changes);
+
     return { project: { ...project, ...changes }, changed: true };
   });
   if (outcome.changed) notify(ctx, outcome.project.id);
+
   return toProject(outcome.project);
 }
 
@@ -159,6 +166,7 @@ export async function deleteProject(ctx: UserContext, key: string): Promise<void
     // Tickets go first: their status foreign key restricts deleting statuses that are in use.
     await deleteProjectTickets(trx, project.id);
     await deleteProjectRow(trx, project.id);
+
     return { project, files };
   });
   await removeFiles(ctx.storage, removed.files);

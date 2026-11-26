@@ -30,6 +30,7 @@ function renderRow(category: StatusCategory, lastReview: Review | null, waiting 
   render(
     <TicketRowContent ticket={ticket} status={status} dragged={false} callbacks={callbacks} />,
   );
+
   return screen.getByRole('button', { name: /^MOB-3\b/ });
 }
 

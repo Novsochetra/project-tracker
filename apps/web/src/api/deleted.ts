@@ -9,6 +9,7 @@ function keysOf(queryClient: QueryClient): Set<string> {
   if (existing) return existing;
   const created = new Set<string>();
   registry.set(queryClient, created);
+
   return created;
 }
 

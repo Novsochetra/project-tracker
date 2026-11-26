@@ -16,6 +16,7 @@ export function QueuedEditor({ text, busy, onSave, onCancel }: QueuedEditorProps
   const field = useRef<HTMLTextAreaElement>(null);
   useEffect(() => field.current?.focus(), []);
   const canSave = draft.trim() !== '' && !busy;
+
   return (
     <form
       className={styles.editor}

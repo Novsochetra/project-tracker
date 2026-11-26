@@ -27,6 +27,7 @@ async function imageBlock(client: TrackerApi, image: Attachment): Promise<Conten
       note(`Image ${image.fileName} not shown: ${image.mimeType} images can't be displayed.`),
     ];
   }
+
   if (image.size > MAX_IMAGE_BYTES) return [tooLarge(image, image.size)];
   try {
     const response = await client.fetchAttachment(image.id);
@@ -52,5 +53,6 @@ export async function imageContent(
   if (hidden > 0) {
     blocks.push(note(`${hidden} more image${hidden === 1 ? '' : 's'} not shown.`));
   }
+
   return blocks;
 }

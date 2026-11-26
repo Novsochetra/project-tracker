@@ -45,6 +45,7 @@ export async function setUp(
   if (!(await claudeIsInstalled(CLAUDE))) {
     throw new ClaudeMissingError('Claude Code (the claude command) is not on PATH here.');
   }
+
   const folder = canonicalPath(io.cwd);
   const listOutput = () => mcpListOutput(CLAUDE, folder, signal);
   const firstList = await listOutput();
@@ -74,5 +75,6 @@ export async function setUp(
   await untilAnswered(() =>
     api.registerRunner(runnerId, { name, projectKeys: [projectKey], tools: tools.current() }),
   );
+
   return { config, api, folder, settings, tools };
 }

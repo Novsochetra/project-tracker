@@ -16,5 +16,6 @@ export function waitAtMost(waiting: Promise<unknown>, ms: number): Promise<void>
     () => undefined,
     () => undefined,
   );
+
   return Promise.race([settled, timeUp]).finally(() => clearTimeout(timer));
 }

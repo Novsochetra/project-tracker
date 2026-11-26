@@ -22,6 +22,7 @@ export function useLeavingRows(shown: StepRow[]) {
     const kept = state.leaving.filter(({ seq }) => !shown.some((row) => row.seq === seq));
     setState({ key, rows: shown, leaving: [...kept, ...left] });
   }
+
   const onLeft = useCallback(
     (seq: number) =>
       setState((current) => ({
@@ -30,5 +31,6 @@ export function useLeavingRows(shown: StepRow[]) {
       })),
     [],
   );
+
   return { leaving: state.leaving, onLeft };
 }

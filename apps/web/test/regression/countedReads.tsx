@@ -29,6 +29,7 @@ export const ONE_EACH = { listProjects: 1, listAllTickets: 1, getBoard: 1 };
 function countsOf(names: readonly string[]): Record<string, number> {
   const counts: Record<string, number> = {};
   for (const name of names) counts[name] = (counts[name] ?? 0) + 1;
+
   return counts;
 }
 
@@ -47,12 +48,15 @@ export function fakeServer() {
   const counted = (name: string, route: (...args: unknown[]) => unknown) => {
     return (...args: unknown[]) => {
       calls.push(name);
+
       return route(...args);
     };
   };
+
   const client = fakeClient(
     Object.fromEntries(Object.entries(routes).map(([name, route]) => [name, counted(name, route)])),
   );
+
   return {
     routes,
     client,
@@ -70,6 +74,7 @@ export const loadScreens = () => Promise.all([ProjectScreen.preload(), TicketScr
 export function renderApp(path: string, server = fakeServer()) {
   window.history.replaceState(null, '', path);
   render(<TrackerApp client={server.client} queryClient={createTestQueryClient()} />);
+
   return server;
 }
 

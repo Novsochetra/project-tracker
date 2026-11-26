@@ -15,6 +15,7 @@ const isImage = (file: Attachment) => attachmentKind(file.mimeType) === 'image';
 function AnswerFiles({ files, open }: { files: Attachment[]; open: Open }) {
   const labels = thumbnailLabels(files);
   const others = files.filter((file) => !isImage(file));
+
   return (
     <div className={styles.answerFiles}>
       {files.map((file, index) =>
@@ -37,6 +38,7 @@ function AnswerFiles({ files, open }: { files: Attachment[]; open: Open }) {
 function Files({ files, from }: { files: Attachment[]; from: ChatRole }) {
   const { open } = useAttachmentViewer();
   if (from === 'claude') return <AnswerFiles files={files} open={open} />;
+
   return (
     <>
       <ThumbnailGrid
@@ -61,5 +63,6 @@ export function MessageAttachments({
   from: ChatRole;
 }) {
   const files = readableFiles(attachments);
+
   return files.length > 0 ? <Files files={files} from={from} /> : null;
 }

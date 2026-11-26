@@ -74,7 +74,9 @@ export function projectHint(mode: ProjectFormMode, values: ProjectFormValues): s
   if (!hasName(values) && values.prefix.trim() === '') {
     return `Tickets are numbered with a short prefix, like MOB-1. ${REPO_HINT}`;
   }
+
   const prefix = resolvePrefix(values.prefix, values.name);
+
   return `Tickets will be numbered ${prefix}-1, ${prefix}-2 and so on. ${REPO_HINT}`;
 }
 

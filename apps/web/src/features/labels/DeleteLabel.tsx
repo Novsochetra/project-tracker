@@ -16,6 +16,7 @@ export interface DeleteLabelProps {
 export function DeleteLabel({ projectKey, label, count, onCancel, onDeleted }: DeleteLabelProps) {
   const remove = useDeleteLabel();
   const confirm = () => remove.mutate({ projectKey, labelId: label.id }, { onSuccess: onDeleted });
+
   return (
     <div className={styles.confirm}>
       <ConfirmCard

@@ -38,6 +38,7 @@ function fakeServer() {
     getBoard: route(() => board),
     checkHealth: route(() => ({ ok: true })),
   };
+
   return {
     client: fakeClient(routes),
     stop: () => void (up = false),
@@ -53,6 +54,7 @@ function renderApp(path: string) {
   const queryClient: QueryClient = createTestQueryClient();
   window.history.replaceState(null, '', path);
   render(<TrackerApp client={server.client} queryClient={queryClient} />);
+
   return { server, queryClient };
 }
 
@@ -68,6 +70,7 @@ async function streamRefusedFor(ms: number) {
       refused.add(source);
       act(() => source.fail(true));
     }
+
     await advance(STEP_MS);
   }
 }

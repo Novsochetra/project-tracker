@@ -32,8 +32,10 @@ describe.each(DIALECTS)('review automatically (%s)', (dialect) => {
   const take = async () => {
     clock.advance(1_000);
     const job = await helper<RunJob | null>('POST', `/api/runners/${runner}/next`);
+
     return job.body;
   };
+
   const finish = (id: string, status = 'done') =>
     helper<Run>('POST', `/api/runs/${id}/finish`, { status });
   const runs = async () => (await person<Run[]>('GET', '/api/tickets/MOB-1/runs')).body;
@@ -50,6 +52,7 @@ describe.each(DIALECTS)('review automatically (%s)', (dialect) => {
     if (!job) throw new Error('No work run was queued.');
     await work();
     await finish(job.run.id);
+
     return job;
   }
 
@@ -115,6 +118,7 @@ describe.each(DIALECTS)('review automatically (%s)', (dialect) => {
       if (round === 1) expect(workJob?.run.role).toBe('work');
       if (round === 1) expect(workJob?.prompt).toContain('Add a test.');
     }
+
     expect(workJob).toBeNull();
 
     expect(await statusOf()).toBe('To do');
@@ -166,6 +170,7 @@ describe.each(DIALECTS)('review automatically (%s)', (dialect) => {
       });
       labelIds.push(label.body.id);
     }
+
     const description = 'd'.repeat(TICKET_DESCRIPTION_MAX);
     await person('PATCH', '/api/tickets/MOB-1', { description, labelIds });
     const prompt = await person<{ text: string }>('GET', '/api/tickets/MOB-1/prompt');

@@ -27,6 +27,7 @@ export interface ChangesOverviewProps {
 
 function prNote(changes: ChatChanges): string | null {
   if (!changes.ghReady) return GH_NOTE;
+
   return canOpenPullRequest(changes) ? null : MAIN_NOTE;
 }
 
@@ -36,6 +37,7 @@ export function ChangesOverview({ answer, onCommit, onPullRequest }: ChangesOver
   const files = useMemo(() => parseDiff(changes.diff), [changes.diff]);
   const busy = isGoing(action);
   const note = prNote(changes);
+
   return (
     <div className={styles.body}>
       <p className={styles.summary}>

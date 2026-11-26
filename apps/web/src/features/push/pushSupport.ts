@@ -15,5 +15,6 @@ export function pushSupportOf({
   standalone,
 }: PushEnvironment): PushSupport {
   if (!canPush) return ios && !standalone ? 'home-screen' : 'unsupported';
+
   return permission === 'denied' ? 'blocked' : 'ready';
 }

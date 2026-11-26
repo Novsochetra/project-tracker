@@ -46,6 +46,7 @@ describe('a Plan question asks the person to approve its plan', () => {
       api: {
         addRunRequest: vi.fn((_id: string, input: AddRunRequestInput) => {
           asked.push(input);
+
           return Promise.resolve(planRequest({}));
         }),
         waitForRunRequest: vi.fn(() =>
@@ -83,6 +84,7 @@ describe('a Plan question asks the person to approve its plan', () => {
       api: {
         addRunRequest: vi.fn((_id: string, input: AddRunRequestInput) => {
           asked.push(input);
+
           return Promise.resolve(permissionRequest());
         }),
         waitForRunRequest: vi.fn(() =>

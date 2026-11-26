@@ -37,6 +37,7 @@ function setup(listRunRequests: ReturnType<typeof vi.fn>, steps = makeSteps(2)) 
     },
   });
   restore = rendered.restore;
+
   return rendered;
 }
 

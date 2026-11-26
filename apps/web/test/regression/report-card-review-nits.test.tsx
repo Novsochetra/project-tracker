@@ -31,6 +31,7 @@ function renderReport(text: string, phone = false) {
   const detail = makeTicketDetail(undefined, { activity: [report] });
   cleanups.push(renderTicket({ detail, phone }).restorePhone);
   const log = screen.getByRole('region', { name: 'Activity' });
+
   return within(log).getByText('Claude report').closest('article')!;
 }
 

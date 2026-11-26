@@ -24,6 +24,7 @@ function renderInvite(overrides: Parameters<typeof setupApi>[0], session = SIGNE
     </MemoryRouter>,
     { wrapper: api.wrapper },
   );
+
   return api;
 }
 

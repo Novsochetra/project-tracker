@@ -14,7 +14,9 @@ export function trackerToolsProblem(
   if (!server) {
     return `Claude Code has no "${name}" MCP server here, so it would have no tracker tools: ${ADD}.`;
   }
+
   if (server.ok) return undefined;
+
   return (
     `Claude Code can't start the "${name}" MCP server (${server.state}), so it would have no ` +
     `tracker tools: ${server.detail}. Check that file exists (npm run build makes it), or ` +

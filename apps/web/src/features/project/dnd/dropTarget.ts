@@ -24,6 +24,7 @@ export type DropEdge = 'before' | 'after';
 
 const distanceTo = (start: number, end: number, value: number): number => {
   if (value < start) return start - value;
+
   return value > end ? value - end : 0;
 };
 
@@ -42,6 +43,7 @@ function nearest<T>(
       best = distance;
     }
   }
+
   return found;
 }
 
@@ -57,12 +59,14 @@ export const columnAt = <T extends { left: number; right: number }>(
 
 export function insertionIndex(rows: readonly RowBox[], y: number): number {
   const index = rows.findIndex((row) => y < row.top + row.height / 2);
+
   return index < 0 ? rows.length : index;
 }
 
 export function targetInGroup(group: GroupBox, y: number, draggedId: string): DropTarget {
   const rows = group.rows.filter((row) => row.id !== draggedId);
   const index = insertionIndex(rows, y);
+
   return {
     statusId: group.statusId,
     beforeId: rows[index]?.id ?? null,
@@ -76,6 +80,7 @@ export function dropTargetAt(
   draggedId: string,
 ): DropTarget | null {
   const group = groupAt(groups, y);
+
   return group ? targetInGroup(group, y, draggedId) : null;
 }
 
@@ -85,6 +90,7 @@ export function columnDropTarget(
   draggedId: string,
 ): DropTarget | null {
   const column = columnAt(columns, point.x);
+
   return column ? targetInGroup(column, point.y, draggedId) : null;
 }
 
@@ -99,5 +105,6 @@ export const sameTarget = (a: DropTarget | null, b: DropTarget | null): boolean 
 export function dropEdgeFor(target: DropTarget | null, ticketId: string): DropEdge | null {
   if (!target) return null;
   if (target.beforeId === ticketId) return 'before';
+
   return !target.beforeId && target.afterId === ticketId ? 'after' : null;
 }

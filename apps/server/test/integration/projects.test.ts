@@ -56,6 +56,7 @@ describe.each(DIALECTS)('projects (%s)', (dialect) => {
     for (let index = 0; index < 7; index++) {
       colors.push((await client.createProject({ name: `Project ${index}` })).project.color);
     }
+
     expect(colors).toEqual([...PROJECT_COLORS, PROJECT_COLORS[0]]);
   });
 
@@ -184,6 +185,7 @@ describe.each(DIALECTS)('projects (%s)', (dialect) => {
       const rows = await api.db.selectFrom(table).select('id').execute();
       expect(rows.length, table).toBe(table === 'statuses' ? 5 : 0);
     }
+
     expect((await client.listProjects()).map((p) => p.key)).toEqual(['KM']);
   });
 

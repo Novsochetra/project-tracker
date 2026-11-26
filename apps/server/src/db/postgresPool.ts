@@ -20,11 +20,13 @@ export function withLibpqSslMode(url: string, env: NodeJS.ProcessEnv): string {
   if (!mode) return url;
   parsed.searchParams.set('sslmode', LIBPQ_MODES[mode] ?? mode);
   parsed.searchParams.set('uselibpqcompat', 'true');
+
   return parsed.toString();
 }
 
 function wholeNumber(value: string | undefined, fallback: number, min: number): number {
   const number = Number(value);
+
   return value && Number.isInteger(number) && number >= min ? number : fallback;
 }
 
@@ -32,6 +34,7 @@ export function postgresPoolConfig(url: string, env: NodeJS.ProcessEnv): pg.Pool
   const types = new pg.TypeOverrides();
   // Timestamps are epoch-ms bigints; they fit safely in a JS number.
   types.setTypeParser(INT8_OID, (value: string) => Number(value));
+
   return {
     connectionString: withLibpqSslMode(url, env),
     types,
@@ -52,5 +55,6 @@ export function createPostgresPool(url: string, env: NodeJS.ProcessEnv): pg.Pool
   // An idle connection the database drops (a restart, a network blip) emits 'error' on the pool,
   // which would end the process if nothing listened. The pool replaces it on the next query.
   pool.on('error', (error) => console.error('A Postgres connection was lost:', error.message));
+
   return pool;
 }

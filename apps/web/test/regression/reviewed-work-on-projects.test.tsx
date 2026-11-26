@@ -31,6 +31,7 @@ function renderProjects(ready: TicketListItem[]) {
   });
   window.history.replaceState(null, '', '/');
   render(<TrackerApp client={client} queryClient={createTestQueryClient()} />);
+
   return { review: (ticket: TicketListItem) => void (current = [ticket, ...current]) };
 }
 

@@ -17,6 +17,7 @@ export function useReachability(): Reachability {
   useLayoutEffect(() => {
     const unwatch = watchSavedAnswers(window);
     const untag = tagLiveReads(window);
+
     return () => {
       untag();
       unwatch();
@@ -26,11 +27,13 @@ export function useReachability(): Reachability {
     () => watchApiTraffic(queryClient, reachability, trackerCheckOf(client), { recheck: true }),
     [client, queryClient, reachability],
   );
+
   return reachability;
 }
 
 export function useApiUnreachable(reachability: Reachability): boolean {
   const { banner } = reachability;
+
   return useSyncExternalStore(banner.subscribe, banner.isUnreachable);
 }
 
@@ -42,5 +45,6 @@ export function useShowsSavedData(): boolean {
   const saved = useSyncExternalStore(subscribeSavedAnswers, lastAnswerWasSaved, () => false);
   const [shown, setShown] = useState(saved);
   if (saved && !shown) setShown(true);
+
   return saved || shown;
 }

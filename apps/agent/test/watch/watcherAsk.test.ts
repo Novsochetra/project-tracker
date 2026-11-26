@@ -39,8 +39,10 @@ describe('the watcher with a chat question', () => {
     const exitOf = (costUsd: number, sessionTokens: number, readTokens: number): ClaudeExit => {
       const usage = { costUsd, turns: 2, durationMs: 5_000, readTokens: sessionTokens };
       const result = { text: 'Yes.', sessionId: SESSION, isError: false, usage };
+
       return { code: 0, signal: null, output: '', results: [result], readTokens };
     };
+
     const runAsk = vi
       .fn()
       .mockResolvedValueOnce(exitOf(0.3, 1_000, 1_000))

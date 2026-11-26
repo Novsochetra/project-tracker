@@ -24,9 +24,11 @@ function fakeWorker(windows: WindowClientLike[] = []) {
     const waitUntil = (promise: Promise<unknown>) => {
       work = promise;
     };
+
     listeners.get(type)?.({ ...event, waitUntil } as never);
     await work;
   };
+
   return {
     scope,
     push: (data: PushEventLike['data']) => fire('push', { data }),

@@ -23,6 +23,7 @@ export function ChatOptionsSheet({ projectKey, chatId, title }: ChatOptionsSheet
     remove.reset();
     setOpen(true);
   };
+
   const action: ActionSheetAction = confirming
     ? {
         label: DELETE_CHAT_LABEL,
@@ -38,6 +39,7 @@ export function ChatOptionsSheet({ projectKey, chatId, title }: ChatOptionsSheet
   ) : (
     title
   );
+
   return (
     <>
       <NavBarButton aria-label={CHAT_OPTIONS_LABEL} onClick={show}>

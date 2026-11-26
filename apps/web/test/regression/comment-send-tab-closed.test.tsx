@@ -24,6 +24,7 @@ function sendHangs() {
   const addComment = vi.fn().mockReturnValue(new Promise<never>(() => {}));
   const rendered = renderTicket({ client: { addComment } });
   cleanups.push(rendered.restorePhone);
+
   return addComment;
 }
 
@@ -31,6 +32,7 @@ async function send(text: string) {
   const user = userEvent.setup();
   await user.type(screen.getByLabelText('Comment'), text);
   await user.click(screen.getByRole('button', { name: 'Comment' }));
+
   return user;
 }
 

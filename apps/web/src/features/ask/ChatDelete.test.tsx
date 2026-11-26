@@ -24,6 +24,7 @@ function setup(deleteChat = vi.fn().mockResolvedValue(undefined), path = '/p/MOB
     },
   });
   restore = rendered.restore;
+
   return deleteChat;
 }
 
@@ -32,6 +33,7 @@ async function askToDelete() {
   await user.click(await screen.findByRole('button', { name: 'Chat options' }));
   await user.click(screen.getByRole('button', { name: 'Delete chat' }));
   expect(screen.getByRole('alert')).toHaveTextContent(QUESTION);
+
   return user;
 }
 

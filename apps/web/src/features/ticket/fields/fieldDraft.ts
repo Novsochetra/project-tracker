@@ -52,6 +52,7 @@ export const restoreDraft = (text: string, carried: boolean): FieldDraft => ({
 export function editDraft(draft: FieldDraft, value: string): FieldDraft {
   if (draft.edited && draft.value === value) return draft;
   const landed = draft.carried ? { text: draft.value } : draft.landed;
+
   return { ...draft, value, edited: true, carried: false, landed };
 }
 
@@ -74,9 +75,11 @@ function settledDraft(draft: FieldDraft, kept: string | undefined, server: strin
       ? landedDraft(draft.value, server)
       : { ...draft, carried: false, failed: true };
   }
+
   if (kept === undefined && (draft.failed || draft.conflict) && !draft.refused) {
     return { ...draft, failed: false, conflict: false };
   }
+
   return draft;
 }
 
@@ -85,6 +88,7 @@ function settledDraft(draft: FieldDraft, kept: string | undefined, server: strin
 // edit waits for that save with its note: it isn't the text being sent.
 function sentElsewhere(draft: FieldDraft, kept: string | undefined): FieldDraft {
   if (kept === undefined || draft.conflict || draft.refused) return draft;
+
   return draft.value === kept && !draft.failed ? draft : restoreDraft(kept, true);
 }
 
@@ -97,6 +101,7 @@ export function syncDraft(draft: FieldDraft, server: string, context: FieldConte
   const settled = settledDraft(draft, context.kept, server);
   if (context.focused || settled.failed || settled.landed?.stale === server) return settled;
   const inStep = !settled.edited && settled.value === server && settled.landed === undefined;
+
   return inStep ? settled : startDraft(server);
 }
 
@@ -108,6 +113,7 @@ export const markSaved = (draft: FieldDraft, value: string): FieldDraft =>
 // own save landed, the field's copy has it, so another tab's landed text no longer counts.
 export function endSave(draft: FieldDraft, value: string, saved: boolean): FieldDraft {
   if (!saved) return draft.value === value ? { ...draft, failed: true, carried: false } : draft;
+
   return draft.value === value ? { ...markSaved(draft, value), landed: undefined } : draft;
 }
 
@@ -122,6 +128,7 @@ export function checkedDraft(
 ): FieldDraft {
   if (draft.value !== value) return draft;
   const checked = { ...draft, refused: undefined };
+
   return check === 'saved' ? { ...checked, failed: false } : { ...checked, conflict: true };
 }
 

@@ -19,11 +19,13 @@ export interface SocketFolder {
 function baseFolder(): string {
   const base = tmpdir();
   const longest = join(base, `${PREFIX}XXXXXX`, NAME);
+
   return Buffer.byteLength(longest) > PATH_MAX ? SHORT_BASE : base;
 }
 
 // mkdtemp makes the folder 0700, so only this user can reach the socket in it.
 export function makeSocketFolder(): SocketFolder {
   const dir = mkdtempSync(join(baseFolder(), PREFIX));
+
   return { dir, path: join(dir, NAME) };
 }

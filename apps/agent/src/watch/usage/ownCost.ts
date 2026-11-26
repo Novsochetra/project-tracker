@@ -22,5 +22,6 @@ export function ownCostUsd({ final, readTokens, resumed, before }: CostSource): 
   if (unstreamed <= 0) return costUsd;
   if (!before) return undefined;
   if (unstreamed < before.readTokens) return costUsd;
+
   return Math.max(0, costUsd - before.costUsd);
 }

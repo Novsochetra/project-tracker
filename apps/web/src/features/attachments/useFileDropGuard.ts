@@ -13,6 +13,7 @@ export function useFileDropGuard(): void {
   useEffect(() => {
     window.addEventListener('dragover', refuseStrayFileDrop);
     window.addEventListener('drop', refuseStrayFileDrop);
+
     return () => {
       window.removeEventListener('dragover', refuseStrayFileDrop);
       window.removeEventListener('drop', refuseStrayFileDrop);

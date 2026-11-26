@@ -26,5 +26,6 @@ export const labelRoutes = (ctx: ServiceContext) =>
     )
     .delete('/labels/:id', personEditsLabels, async (c) => {
       await deleteLabel(userContext(ctx, c), c.req.param('id'));
+
       return c.body(null, 204);
     });

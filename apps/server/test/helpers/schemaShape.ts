@@ -79,6 +79,7 @@ async function sqliteTable(db: Raw, table: string): Promise<RawTable> {
     db,
     sql`select "table", "from", "to", on_delete from pragma_foreign_key_list(${table})`,
   );
+
   return {
     columns: columns.map((column) => ({
       name: column.name,
@@ -104,6 +105,7 @@ function parseForeignKey(definition: string): ForeignKey[] {
   const match = FOREIGN_KEY.exec(definition);
   if (!match) return [];
   const [, column = '', table = '', references = '', onDelete = 'NO ACTION'] = match;
+
   return [{ column, table, references, onDelete: onDelete.toLowerCase() }];
 }
 
@@ -180,6 +182,7 @@ async function postgresTables(db: Raw, names: string[]): Promise<Record<string, 
       constraints: own.map((constraint) => `${constraint.name}: ${constraint.definition}`),
     };
   }
+
   return tables;
 }
 
@@ -191,6 +194,7 @@ async function tableNames(db: Raw, dialect: TestDialect): Promise<string[]> {
           sql`select name from sqlite_master where type = 'table' and name not like 'sqlite_%'`,
         )
       : await rows<{ name: string }>(db, sql`select relname as name from (${PUBLIC_TABLES}) t`);
+
   return names
     .map((row) => row.name)
     .filter((name) => !name.startsWith('kysely_'))
@@ -235,6 +239,7 @@ async function readTables(db: Db, dialect: TestDialect): Promise<Record<string, 
   if (dialect === 'pglite') return postgresTables(raw, names);
   const tables: Record<string, RawTable> = {};
   for (const name of names) tables[name] = await sqliteTable(raw, name);
+
   return tables;
 }
 
@@ -252,6 +257,7 @@ export interface SchemaShapes {
 // Both shapes from one read, for a test that needs both of the same state.
 export async function readSchema(db: Db, dialect: TestDialect): Promise<SchemaShapes> {
   const tables = await readTables(db, dialect);
+
   return { exact: mapTables(tables, exactTable), portable: mapTables(tables, portableTable) };
 }
 

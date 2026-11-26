@@ -31,5 +31,6 @@ export function TicketCardView({
 }: TicketCardViewProps) {
   if (ticketKey) return <CreatedCard ticketKey={ticketKey} card={card} helper={helper} />;
   if (replaced) return <ReplacedCard title={card.title} />;
+
   return <CardEditor {...editor} />;
 }

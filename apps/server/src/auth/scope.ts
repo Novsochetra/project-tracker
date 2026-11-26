@@ -19,6 +19,7 @@ export function scopeOf(access: Access | null | undefined): UserScope | undefine
 export function requireScope(access: Access | null | undefined): UserScope {
   const scope = scopeOf(access);
   if (scope === undefined) throw new AppError('unauthorized', 'Sign in to use this tracker.');
+
   return scope;
 }
 

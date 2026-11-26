@@ -46,10 +46,12 @@ async function checkInTime(read: HealthRead): Promise<ApiSignal | null> {
 // share its check: one GET /api/health, not one each (PT-109).
 export function sharedCheck(read: HealthRead): TrackerCheck {
   let running: Promise<ApiSignal | null> | null = null;
+
   return () => {
     running ??= checkInTime(read).finally(() => {
       running = null;
     });
+
     return running;
   };
 }
@@ -61,5 +63,6 @@ export function trackerCheckOf(client: Pick<TrackerClient, 'checkHealth'>): Trac
   if (known) return known;
   const check = sharedCheck((signal) => client.checkHealth({ signal }));
   checks.set(client, check);
+
   return check;
 }

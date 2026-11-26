@@ -12,10 +12,12 @@ export function placeOf(rows: TableRows): (row: AttachmentRow) => string {
       formatTicketKey(keys.get(ticket.projectId) ?? '?', ticket.num),
     ]),
   );
+
   return (row) => {
     const key = row.ticketId ? tickets.get(row.ticketId) : undefined;
     if (!key) return 'not on a ticket yet';
     if (!row.activityId) return key;
+
     return `a comment on ${key}`;
   };
 }
@@ -28,6 +30,7 @@ export function refusedImageProblems(
 ): string[] {
   const refused = moved.filter((file) => file.refusal !== null);
   if (refused.length === 0) return [];
+
   return [
     `${refused.length} image(s) can't go online as they are: their metadata (such as where a ` +
       'photo was taken) can’t be removed. In the local tracker, remove each one listed with only ' +

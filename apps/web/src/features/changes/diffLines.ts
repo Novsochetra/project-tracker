@@ -26,6 +26,7 @@ const KIND_NAMES = { add: 'Added line', del: 'Removed line', context: 'Line' } a
 // What a screen reader hears before the code, which the numbers and sign only show.
 export function lineName(line: DiffLine): string {
   const { line: number } = lineAt(line);
+
   return `${KIND_NAMES[line.kind]} ${number}: `;
 }
 

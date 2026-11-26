@@ -35,6 +35,7 @@ interface Settle {
 const keyDelta = (event: KeyboardEvent): number => {
   if (!event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return 0;
   if (event.key === 'ArrowUp') return -1;
+
   return event.key === 'ArrowDown' ? 1 : 0;
 };
 
@@ -66,6 +67,7 @@ export function useRowReorder({ ids, list, scroller, commit }: RowReorderOptions
         settle(list.current, waiting);
         return;
       }
+
       pending.current = waiting;
       current.commit(next);
     },
@@ -110,6 +112,7 @@ export function useRowReorder({ ids, list, scroller, commit }: RowReorderOptions
       event.preventDefault();
       const next = moveInOrder(latest.current.ids, id, delta);
       if (next) apply(next, { shown: shownTops(rowsIn(list.current)), focus: id });
+
       return next;
     },
     [apply, latest, list],

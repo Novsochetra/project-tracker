@@ -46,16 +46,20 @@ describe.each(DIALECTS)("a chat's changes (%s)", (dialect) => {
     const job = (await helper<RunJob>('POST', `/api/runners/${runner}/next?kind=ticket`)).body;
     const sent = await helper('POST', `/api/runs/${job.run.id}/chat-changes`, changesBody(body));
     await helper('POST', `/api/runs/${job.run.id}/finish`, { status: 'done', answer: 'Done.' });
+
     return { job, sent };
   };
+
   const askAgain = (body: object = {}) => {
     clock.advance(1000);
+
     return person('POST', `/api/chats/${chatId}/messages`, {
       runnerId: runner,
       text: 'More',
       ...body,
     });
   };
+
   const read = (as = person) => as<ChatChangesAnswer>('GET', `/api/chats/${chatId}/changes`);
   const version = async () => (await read()).body.changes?.version ?? '';
   const commit = async (body: object = {}, as = person) =>

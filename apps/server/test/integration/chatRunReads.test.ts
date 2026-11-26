@@ -11,6 +11,7 @@ async function plan(db: Db, dialect: string, query: Compilable): Promise<string>
   const { sql: text, parameters } = query.compile();
   const prefix = dialect === 'sqlite' ? 'explain query plan ' : 'explain ';
   const result = await db.executeQuery(CompiledQuery.raw(prefix + text, [...parameters]));
+
   return JSON.stringify(result.rows);
 }
 

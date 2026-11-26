@@ -37,6 +37,7 @@ function rightClick(target: Element) {
 const voiceOverClick = (target: Element) => {
   const event = new MouseEvent('click', { bubbles: true, cancelable: true, detail: 1 });
   target.dispatchEvent(event);
+
   return event;
 };
 

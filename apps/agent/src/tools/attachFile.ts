@@ -23,6 +23,7 @@ function partwayError(
   const already = ticket
     ? `${nameList(sent)} ${sent.length === 1 ? 'was' : 'were'} already attached to ${ticket}.`
     : 'No comment was added.';
+
   return new ToolError(`${describeError(error, client)} ${already}`);
 }
 
@@ -37,6 +38,7 @@ async function upload(client: TrackerApi, files: readonly LocalFile[], ticket?: 
       throw partwayError(error, client, sent, ticket);
     }
   }
+
   return uploaded;
 }
 
@@ -51,8 +53,10 @@ async function attach(
     const attachments = await upload(client, files, ticket);
     return { text: `Attached ${names} to ${ticket}.`, data: attachments };
   }
+
   const attachmentIds = (await upload(client, files)).map((file) => file.id);
   const activity = await client.addComment(ticket, { text: comment, attachmentIds });
+
   return { text: `Added a comment with ${names} to ${ticket}.`, data: activity };
 }
 

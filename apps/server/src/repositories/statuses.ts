@@ -9,6 +9,7 @@ export async function listStatusRows(db: Db, projectId: string): Promise<StatusR
     .selectAll()
     .where('projectId', '=', projectId)
     .execute();
+
   return sortStatuses(rows);
 }
 

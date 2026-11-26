@@ -56,6 +56,7 @@ function copyWithHiddenField(text: string): boolean {
 
 export async function copyText(text: string, fallbackElement?: TextField | null): Promise<boolean> {
   if (await writeWithClipboardApi(text)) return true;
+
   return fallbackElement ? copySelection(fallbackElement) : copyWithHiddenField(text);
 }
 

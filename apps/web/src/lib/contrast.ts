@@ -7,6 +7,7 @@ export const BLACK: Rgb = [0, 0, 0];
 export function parseHex(hex: string): Rgb | null {
   const match = /^#([\da-f]{2})([\da-f]{2})([\da-f]{2})$/i.exec(hex);
   if (!match) return null;
+
   return match.slice(1).map((part) => Number.parseInt(part, 16) / 255) as Rgb;
 }
 
@@ -26,6 +27,7 @@ export function luminance([red, green, blue]: Rgb): number {
 
 export function contrast(a: Rgb, b: Rgb): number {
   const [lighter, darker] = [luminance(a), luminance(b)].sort((x, y) => y - x) as [number, number];
+
   return (lighter + 0.05) / (darker + 0.05);
 }
 

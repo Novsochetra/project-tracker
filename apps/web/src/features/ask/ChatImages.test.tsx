@@ -29,6 +29,7 @@ function showAnswer(answer: Partial<ChatMessage>) {
 
 const claudeAnswer = async () => {
   const messages = await screen.findByRole('list', { name: 'Messages' });
+
   return within(messages).getAllByRole('article', { name: 'Claude' }).at(-1)!;
 };
 

@@ -37,6 +37,7 @@ describe.each(DIALECTS)('regression: a run waits for a busy helper (%s)', (diale
     for (const title of ['Crash', 'Login']) {
       await person('POST', '/api/projects/MOB/tickets', { title });
     }
+
     await helper('PUT', `/api/runners/${runner}`, helperName('Mac'));
   });
 

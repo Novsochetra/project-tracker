@@ -26,6 +26,7 @@ function screenFor(route: Route): ReactNode {
   if (route.name === 'chat') {
     return <ChatScreen projectKey={route.key} chatId={route.chatId} ticketNum={route.ticketNum} />;
   }
+
   return <p>{routePath(route)}</p>;
 }
 

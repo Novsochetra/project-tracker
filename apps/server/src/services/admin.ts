@@ -12,6 +12,7 @@ export async function resetAllData(ctx: ServiceContext): Promise<void> {
   const files = await inTransaction(ctx, async (trx) => {
     const keys = await allStorageKeys(trx);
     await deleteAllRows(trx);
+
     return keys;
   });
   await removeFiles(ctx.storage, files);

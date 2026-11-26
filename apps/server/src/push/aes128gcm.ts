@@ -20,6 +20,7 @@ const derive = (ikm: Buffer, salt: Buffer, label: string, length: number): Buffe
 function header(salt: Buffer, keyId: Buffer): Buffer {
   const size = Buffer.alloc(4);
   size.writeUInt32BE(RECORD_SIZE);
+
   return Buffer.concat([salt, size, Buffer.from([keyId.length]), keyId]);
 }
 
@@ -32,5 +33,6 @@ export function encryptContent({ ikm, salt, keyId, plaintext }: ContentInput): B
     derive(ikm, salt, 'nonce', 12),
   );
   const sealed = Buffer.concat([cipher.update(record), cipher.final(), cipher.getAuthTag()]);
+
   return Buffer.concat([header(salt, keyId), sealed]);
 }

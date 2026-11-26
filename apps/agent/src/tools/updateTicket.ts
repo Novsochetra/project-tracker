@@ -8,6 +8,7 @@ import { defineTool } from './tool';
 
 async function labelIds(client: TrackerApi, ticket: string, names: string[]): Promise<string[]> {
   const project = await client.getProject(parseTicketKey(ticket)?.projectKey ?? '');
+
   return labelsByName(project.labels, names).map((label) => label.id);
 }
 
@@ -49,11 +50,13 @@ export const updateTicket = defineTool({
         'Nothing to update. Pass at least one of: title, description, priority, assignee, due, labels.',
       );
     }
+
     const input: UpdateTicketInput =
       labels === undefined
         ? fields
         : { ...fields, labelIds: await labelIds(client, ticket, labels) };
     const updated = await client.updateTicket(ticket, input);
+
     return { text: `Updated ${updated.key}: ${changed.join(', ')}.`, data: updated };
   },
 });

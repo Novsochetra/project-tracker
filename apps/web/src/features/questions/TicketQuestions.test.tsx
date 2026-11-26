@@ -43,6 +43,7 @@ function setup(questions: TicketQuestion[], answerQuestion = vi.fn()) {
       </ToastProvider>
     </Wrapper>,
   );
+
   return { listQuestions, answerQuestion };
 }
 

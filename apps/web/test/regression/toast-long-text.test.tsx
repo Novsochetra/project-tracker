@@ -18,6 +18,7 @@ function Trigger({ text, undo }: { text: string; undo: (() => void) | undefined 
   const toast = useToast();
   useToastRaise(true);
   const options = undo ? { undo } : { kind: 'error' as const };
+
   return (
     <button type="button" onClick={() => toast.show(text, options)}>
       Show
@@ -34,6 +35,7 @@ function renderToast(text: string, undo?: () => void) {
   fireEvent.click(screen.getByRole('button', { name: 'Show' }));
   const label = screen.getByText(text, { exact: true });
   const toast = label.parentElement!;
+
   return {
     view,
     region: screen.getByRole('status'),
@@ -69,6 +71,7 @@ describe('regression: a toast too long for a phone wraps instead of ending in an
         // A server message can hold a long path or URL with nowhere to break.
         expect(style.get('overflow-wrap')).toBe('anywhere');
       }
+
       view.unmount();
     }
   });

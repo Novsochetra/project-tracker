@@ -14,6 +14,7 @@ export const listStatuses = defineTool({
   readOnly: true,
   async handler(client, { project }) {
     const statuses = sortStatuses((await client.getProject(project)).statuses);
+
     return { text: formatStatuses(statuses), data: statuses };
   },
 });

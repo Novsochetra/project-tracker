@@ -12,6 +12,7 @@ export function rowsHeight(tiles: readonly TileEdges[], rows = FOLDED_ROWS): num
   const lastTop = tops[rows - 1];
   if (tops.length <= rows || lastTop === undefined) return null;
   const shown = tiles.filter((tile) => Math.round(tile.top) <= lastTop);
+
   return Math.round(Math.max(...shown.map((tile) => tile.bottom)));
 }
 
@@ -25,7 +26,9 @@ export function measureRows(box: HTMLElement): number | null {
     .filter((tile) => !tile.hasAttribute('data-add-tile'))
     .map((tile) => {
       const rect = tile.getBoundingClientRect();
+
       return { top: rect.top - top, bottom: rect.bottom - top };
     });
+
   return rowsHeight(tiles);
 }

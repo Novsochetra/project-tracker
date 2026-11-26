@@ -35,6 +35,7 @@ function fakeServer() {
     listProjects: route(() => PROJECTS),
     getBoard: route(() => makeBoard()),
   };
+
   return {
     routes,
     client: fakeClient(routes),
@@ -46,6 +47,7 @@ function fakeServer() {
 function renderApp(path: string, server = fakeServer()) {
   window.history.replaceState(null, '', path);
   render(<TrackerApp client={server.client} queryClient={createTestQueryClient()} />);
+
   return server;
 }
 

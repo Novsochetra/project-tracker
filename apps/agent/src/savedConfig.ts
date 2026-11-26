@@ -28,13 +28,16 @@ export function parseSavedConfig(text: string, path: string): SavedConfig {
   } catch {
     throw new ConfigFileError(`${path} is not valid JSON. Fix it, or delete it and log in again.`);
   }
+
   const result = savedConfigSchema.safeParse(data);
   if (!result.success) {
     throw new ConfigFileError(
       `${path} should look like {"url": "...", "tokens": {"<url>": "trk_..."}}. Fix it, or delete it and log in again.`,
     );
   }
+
   const { url, tokens, runners } = result.data;
+
   return { ...(url === undefined ? {} : { url }), tokens, ...(runners ? { runners } : {}) };
 }
 
@@ -54,6 +57,7 @@ export const savedToken = (saved: SavedConfig, url: string): string | undefined 
 
 export const withToken = (saved: SavedConfig, url: string, token: string): SavedConfig => {
   const key = trackerKey(url);
+
   return { ...saved, url: key, tokens: { ...saved.tokens, [key]: token } };
 };
 
@@ -62,5 +66,6 @@ export function withoutToken(saved: SavedConfig, url: string): SavedConfig {
   const tokens = Object.fromEntries(Object.entries(saved.tokens).filter(([name]) => name !== key));
   const keepUrl = saved.url !== undefined && trackerKey(saved.url) !== key;
   const { url: _url, ...rest } = saved;
+
   return keepUrl ? { ...rest, url: saved.url, tokens } : { ...rest, tokens };
 }

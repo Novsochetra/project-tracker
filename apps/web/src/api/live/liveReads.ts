@@ -24,12 +24,14 @@ function isApiRead(input: RequestInfo | URL, init: RequestInit | undefined): boo
   const request = input instanceof Request ? input : null;
   const method = (init?.method ?? request?.method ?? 'GET').toUpperCase();
   const url = new URL(urlOf(input), window.location.href);
+
   return method === 'GET' && url.pathname.startsWith('/api/');
 }
 
 function tagged(input: RequestInfo | URL, init: RequestInit | undefined): RequestInit {
   const headers = new Headers(init?.headers ?? (input instanceof Request ? input.headers : {}));
   headers.set(LIVE_READ_HEADER, '1');
+
   return { ...init, headers };
 }
 
@@ -41,6 +43,7 @@ export function tagLiveReads(scope: { fetch: typeof fetch }): () => void {
       input,
       starting > 0 && isApiRead(input, init) ? tagged(input, init) : init,
     );
+
   return () => {
     scope.fetch = fetchRead;
   };

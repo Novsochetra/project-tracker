@@ -13,6 +13,7 @@ export const projectArgument = (project: string | undefined): string =>
 
 export function findProjectStep(project: string | undefined): string {
   if (project) return `The project key is "${project}".`;
+
   return (
     'First call list_projects to find the project key. Pick the project whose repository matches the ' +
     'current repository; if that is unclear, ask me which project to use.'

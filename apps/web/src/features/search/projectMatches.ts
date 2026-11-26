@@ -7,6 +7,7 @@ function scoreOf(project: NamedProject, query: string): number {
   const key = project.key.toLowerCase();
   if (key === query) return 0;
   const name = projectDisplayName(project).toLowerCase();
+
   return name.startsWith(query) || key.startsWith(query) ? 1 : 2;
 }
 
@@ -16,6 +17,7 @@ export function matchProjects<T extends NamedProject>(projects: readonly T[], qu
   const terms = searchTerms(query);
   if (terms.length === 0) return [...projects];
   const q = query.trim().toLowerCase();
+
   return projects
     .filter((project) => terms.every((term) => textOf(project).includes(term)))
     .map((project, index) => ({ project, index, score: scoreOf(project, q) }))

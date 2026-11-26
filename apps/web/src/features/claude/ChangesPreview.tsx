@@ -6,6 +6,7 @@ import styles from './ReportSheet.module.css';
 
 export function ChangesPreview({ items }: { items: readonly ReportPreviewItem[] }) {
   const labelId = useId();
+
   return (
     <div className={clsx(styles.changes, 'fade-in')}>
       <span id={labelId} className={styles.changesLabel}>
@@ -14,6 +15,7 @@ export function ChangesPreview({ items }: { items: readonly ReportPreviewItem[] 
       <ul className={styles.changeList} aria-labelledby={labelId}>
         {items.map((item, index) => {
           const row = previewRow(item);
+
           return (
             // Blocks have no ids and the whole list is rebuilt from each preview.
             <li key={index} className={styles.change}>

@@ -24,9 +24,11 @@ const hasCard = (segments: readonly CardSegment[]) =>
 export function messageCards(messages: readonly ChatMessage[]): Map<string, MessageCards> {
   const answers = messages.flatMap((message) => {
     const segments = message.role === 'claude' ? splitTicketCards(message.text) : [];
+
     return hasCard(segments) ? [{ message, segments }] : [];
   });
   const latest = answers.at(-1)?.message.id;
+
   return new Map(
     answers.map(({ message, segments }) => [
       message.id,

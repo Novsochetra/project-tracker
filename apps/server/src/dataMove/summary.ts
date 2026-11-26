@@ -39,6 +39,7 @@ export function planLines(counts: TableCounts, files: FileTotals): string[] {
   const width = Math.max(...numbers.map((number) => number.length));
   const row = (name: string, count: number) =>
     `  ${name.padEnd(NAME_WIDTH)}  ${String(count).padStart(width)}`;
+
   return [
     'To copy:',
     ...COPIED_TABLE_NAMES.map((name) => row(tableName(name), counts[name])),
@@ -60,6 +61,7 @@ export function compressionTotals(moved: readonly MovedAttachment[]): Compressio
   const images = moved.filter(({ before }) => attachmentKind(before.mimeType) === 'image');
   const compressed = images.filter((file) => file.compressed);
   const sum = (sizes: number[]) => sizes.reduce((total, size) => total + size, 0);
+
   return {
     images: images.length,
     compressed: compressed.length,
@@ -74,6 +76,7 @@ export function compressionLine(totals: CompressionTotals, dryRun: boolean): str
     totals.compressed > 0
       ? ` (${formatBytes(totals.bytesBefore)} → ${formatBytes(totals.bytesAfter)})`
       : '';
+
   return `${verb} ${totals.compressed} of ${totals.images} images, as new uploads are${saving}.`;
 }
 
@@ -83,6 +86,7 @@ export const checkedLine = (counts: TableCounts): string =>
 
 export function renamedTextsLine(texts: number): string[] {
   if (texts === 0) return [];
+
   return [
     `${texts} ticket or comment text(s) name a compressed image by its old file name or key. ` +
       'They still read the same and the image keeps its id and place; only the name shown ' +

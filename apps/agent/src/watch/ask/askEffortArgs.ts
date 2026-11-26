@@ -10,5 +10,6 @@ const EFFORTS: Readonly<Record<string, string>> = {
 export function askEffortArgs(effort: unknown): string[] {
   const name =
     typeof effort === 'string' && Object.hasOwn(EFFORTS, effort) ? EFFORTS[effort] : undefined;
+
   return name ? ['--effort', name] : [];
 }

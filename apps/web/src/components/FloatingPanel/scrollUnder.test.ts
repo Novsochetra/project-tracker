@@ -7,6 +7,7 @@ function box(overflow: string, size: { height: number; content: number; top?: nu
   Object.defineProperty(element, 'clientHeight', { value: size.height });
   Object.defineProperty(element, 'scrollHeight', { value: size.content });
   element.scrollTop = size.top ?? 0;
+
   return element;
 }
 
@@ -22,6 +23,7 @@ const wheel = (deltaY: number, deltaMode = 0) => ({
 function stubElementsAt(elements: Element[]) {
   const at = vi.fn().mockReturnValue(elements);
   Object.defineProperty(document, 'elementsFromPoint', { configurable: true, value: at });
+
   return at;
 }
 

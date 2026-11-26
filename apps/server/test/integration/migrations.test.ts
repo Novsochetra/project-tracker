@@ -27,6 +27,7 @@ async function databaseWithTickets(dialect: TestDialect): Promise<Db> {
       values (${`t-${num}`}, 'p-mob', ${num}, 's-todo', ${num * 1000}, ${`Old idea ${num}`}, '',
       'medium', '', '', 1000, 1000)`.execute(db);
   }
+
   return db;
 }
 
@@ -67,6 +68,7 @@ describe.each(DIALECTS)('migrations (%s)', (dialect) => {
           created_at) values (${id}, 't-1', ${`${id}.txt`}, 'text/plain', 5, ${`${id}.txt`},
           ${createdAt})`.execute(db);
       }
+
       await migrateToLatest(db);
       const client = clientFor(
         createApp({ db, storage: createMemoryStorage(), events: createBroadcaster() }),

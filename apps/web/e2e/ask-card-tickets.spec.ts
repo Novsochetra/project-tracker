@@ -49,6 +49,7 @@ test('turns an answer with three cards into three tickets with one tap', async (
     const made = page.getByRole('region', { name: `Ticket ${key}` });
     await expect(made.getByRole('button', { name: `Run ${key} in Claude Code` })).toBeVisible();
   }
+
   await expect(createAll).toBeHidden();
   await expect(cards).toHaveCount(0);
   const tickets = await api.listTickets('MOB');

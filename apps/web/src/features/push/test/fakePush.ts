@@ -24,6 +24,7 @@ export function stubPush({
     toJSON: () => SUBSCRIPTION_JSON,
     unsubscribe: vi.fn(() => {
       current = null;
+
       return unsubscribe();
     }),
   };
@@ -32,6 +33,7 @@ export function stubPush({
     permission,
     requestPermission: vi.fn(() => {
       notification.permission = answer;
+
       return Promise.resolve(answer);
     }),
   };
@@ -39,6 +41,7 @@ export function stubPush({
     getSubscription: vi.fn(() => Promise.resolve(current)),
     subscribe: vi.fn((_options: PushSubscriptionOptionsInit) => {
       current = subscription;
+
       return Promise.resolve(subscription);
     }),
   };
@@ -48,6 +51,7 @@ export function stubPush({
   vi.stubGlobal('Notification', notification);
   if (supported) vi.stubGlobal('PushManager', function PushManager() {});
   Object.defineProperty(navigator, 'serviceWorker', { value: worker, configurable: true });
+
   return { notification, pushManager, subscription, worker, json: SUBSCRIPTION_JSON };
 }
 
@@ -61,6 +65,7 @@ export function stubIPhone(standalone: boolean): () => void {
     .spyOn(navigator, 'userAgent', 'get')
     .mockReturnValue('Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X)');
   Object.defineProperty(navigator, 'standalone', { value: standalone, configurable: true });
+
   return () => {
     agent.mockRestore();
     Reflect.deleteProperty(navigator, 'standalone');

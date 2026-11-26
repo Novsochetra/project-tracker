@@ -38,6 +38,7 @@ function setup(detail: ChatDetail, listRunSteps: ReturnType<typeof vi.fn>) {
     },
   });
   restore = rendered.restore;
+
   return rendered;
 }
 

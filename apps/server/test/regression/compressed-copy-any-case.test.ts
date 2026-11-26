@@ -18,6 +18,7 @@ describe('a compressed copy asked for by name in another letter case', () => {
     writeFileSync(join(dist, `${path}.br`), brotliCompressSync(SCRIPT));
     writeFileSync(join(dist, `${path}.gz`), gzipSync(SCRIPT));
   }
+
   const api = useTestServer('sqlite', { webDist: dist });
   afterAll(() => rmSync(dist, { recursive: true, force: true }));
 

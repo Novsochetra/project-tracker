@@ -71,6 +71,7 @@ describe('useReadyForYou', () => {
     const { result } = renderHook(
       () => {
         useLiveUpdates();
+
         return useUpdateTicket();
       },
       { wrapper },

@@ -20,6 +20,7 @@ export const IDENTITY: ZoomState = { scale: 1, x: 0, y: 0 };
 export function fitSize(natural: Size, viewport: Size): Size {
   if (natural.width <= 0 || natural.height <= 0) return { width: 0, height: 0 };
   const ratio = Math.min(viewport.width / natural.width, viewport.height / natural.height);
+
   return { width: natural.width * ratio, height: natural.height * ratio };
 }
 
@@ -32,6 +33,7 @@ export function panLimits(base: Size, viewport: Size, scale: number): Point {
 
 export function clampPan(state: ZoomState, base: Size, viewport: Size): ZoomState {
   const limits = panLimits(base, viewport, state.scale);
+
   return {
     scale: state.scale,
     x: clamp(state.x, -limits.x, limits.x),
@@ -41,6 +43,7 @@ export function clampPan(state: ZoomState, base: Size, viewport: Size): ZoomStat
 
 export function rubberPan(state: ZoomState, base: Size, viewport: Size): ZoomState {
   const limits = panLimits(base, viewport, state.scale);
+
   return {
     scale: state.scale,
     x: rubberBandClamp(state.x, -limits.x, limits.x, viewport.width),
@@ -51,11 +54,13 @@ export function rubberPan(state: ZoomState, base: Size, viewport: Size): ZoomSta
 export function rubberScale(raw: number): number {
   if (raw < MIN_SCALE) return MIN_SCALE - rubberBand(MIN_SCALE - raw, MIN_SCALE);
   if (raw > MAX_SCALE) return MAX_SCALE + rubberBand(raw - MAX_SCALE, MAX_SCALE);
+
   return raw;
 }
 
 export function zoomAround(state: ZoomState, anchor: Point, scale: number): ZoomState {
   const ratio = scale / state.scale;
+
   return {
     scale,
     x: anchor.x - (anchor.x - state.x) * ratio,
@@ -70,6 +75,7 @@ export function pinchState(
   scale: number,
 ): ZoomState {
   const ratio = scale / start.scale;
+
   return {
     scale,
     x: mid.x - (startMid.x - start.x) * ratio,
@@ -80,11 +86,13 @@ export function pinchState(
 export function settleZoom(state: ZoomState, anchor: Point, base: Size, viewport: Size): ZoomState {
   if (state.scale <= MIN_SCALE) return IDENTITY;
   const scaled = state.scale > MAX_SCALE ? zoomAround(state, anchor, MAX_SCALE) : state;
+
   return clampPan(scaled, base, viewport);
 }
 
 export function doubleTapZoom(state: ZoomState, tap: Point, base: Size, viewport: Size): ZoomState {
   if (state.scale > MIN_SCALE + 0.01) return IDENTITY;
+
   return clampPan(zoomAround(state, tap, DOUBLE_TAP_SCALE), base, viewport);
 }
 

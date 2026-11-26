@@ -27,6 +27,7 @@ async function addStatuses(api: TrackerClient, names: string[]): Promise<void> {
 const box = async (locator: Locator) => {
   const found = await locator.boundingBox();
   if (!found) throw new Error('Missing box');
+
   return found;
 };
 
@@ -36,6 +37,7 @@ const near = (a: number, b: number) => Math.abs(a - b) <= 1;
 async function thumbSitsUnder(page: Page, name: string): Promise<boolean> {
   const thumb = await box(tabs(page).locator('[data-thumb]'));
   const picked = await box(tab(page, name));
+
   return near(thumb.x, picked.x) && near(thumb.width, picked.width);
 }
 
@@ -44,11 +46,13 @@ const pageScrollsSideways = (page: Page) =>
   page.evaluate(() => {
     const overflows = (element: Element) => element.scrollWidth > element.clientWidth + 1;
     if (overflows(document.documentElement)) return true;
+
     return [...document.querySelectorAll('*')].some((element) => {
       const { overflowX } = getComputedStyle(element);
       if (overflowX !== 'auto' && overflowX !== 'scroll') return false;
       if (element.matches('[role="toolbar"][aria-label="Filter tickets"], [data-board]'))
         return false;
+
       return overflows(element);
     });
   });
@@ -180,6 +184,7 @@ test.describe('status tabs', () => {
     await expect
       .poll(async () => {
         const picked = await box(cutOff);
+
         return picked.x + picked.width <= rowBox.x + rowBox.width + 0.5 && picked.x >= rowBox.x;
       })
       .toBe(true);
@@ -191,6 +196,7 @@ test.describe('status tabs', () => {
         row.evaluate((el) => {
           const starts = [...el.querySelectorAll('button')].map((b) => b.offsetLeft - 2);
           const max = el.scrollWidth - el.clientWidth;
+
           return [...starts, max].some((start) => Math.abs(start - el.scrollLeft) <= 1);
         }),
       )
@@ -208,8 +214,10 @@ test.describe('status tabs', () => {
     await expect(tab(page, 'Done')).toBeVisible();
     const middle = async (locator: Locator) => {
       const found = await box(locator);
+
       return found.y + found.height / 2;
     };
+
     const searchMiddle = await middle(page.getByLabel('Search tickets'));
     expect(Math.abs((await middle(tabs(page))) - searchMiddle)).toBeLessThan(3);
 
@@ -233,6 +241,7 @@ test.describe('status tabs', () => {
     const snaps = await tabs(page).evaluate((el) => {
       const max = el.scrollWidth - el.clientWidth;
       const starts = [...el.querySelectorAll('button')].map((b) => Math.min(b.offsetLeft - 2, max));
+
       return [...new Set(starts)];
     });
     expect(snaps.length).toBeGreaterThan(3);
@@ -243,6 +252,7 @@ test.describe('status tabs', () => {
           tabs(page).evaluate(async (el, at) => {
             const before = el.scrollLeft;
             await new Promise((resolve) => setTimeout(resolve, 150));
+
             return Math.abs(el.scrollLeft - before) < 0.5 ? Math.abs(el.scrollLeft - at) : Infinity;
           }, snap),
         )
@@ -254,6 +264,7 @@ test.describe('status tabs', () => {
       await page.mouse.wheel(0, 100);
       await settlesOn(snap);
     }
+
     for (const snap of [snaps[1]!, snaps[0]!]) {
       await page.mouse.wheel(0, -100);
       await settlesOn(snap);
@@ -268,6 +279,7 @@ test.describe('status tabs', () => {
     await expect
       .poll(async () => {
         const picked = await box(tab(page, 'Released to beta'));
+
         return picked.x + picked.width <= rowBox.x + rowBox.width + 0.5;
       })
       .toBe(true);

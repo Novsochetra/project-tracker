@@ -4,5 +4,6 @@ const MODELS: Readonly<Record<string, string>> = { opus: 'opus', sonnet: 'sonnet
 export function askModelArgs(model: unknown): string[] {
   const name =
     typeof model === 'string' && Object.hasOwn(MODELS, model) ? MODELS[model] : undefined;
+
   return name ? ['--model', name] : [];
 }

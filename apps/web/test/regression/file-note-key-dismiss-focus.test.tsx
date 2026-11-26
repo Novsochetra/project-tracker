@@ -51,6 +51,7 @@ function showWithLateFailure(surface: Surface) {
         : Promise.resolve(attachment(fileName, { fileName, mimeType: 'text/plain' })),
     ),
   });
+
   return () => late.reject(new ApiError(408, 'http_error', 'Request Timeout'));
 }
 

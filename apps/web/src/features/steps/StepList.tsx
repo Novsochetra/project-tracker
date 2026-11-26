@@ -21,6 +21,7 @@ export function StepList({ id, rows, variant, leaving = [] }: StepListProps) {
     ...leaving.map((row) => ({ row, isLeaving: true })),
     ...rows.map((row) => ({ row, isLeaving: false })),
   ];
+
   return (
     <ol id={id} className={clsx(styles.list, styles[variant])} aria-label={STEPS_LIST_LABEL}>
       {items.map(({ row, isLeaving }) => (

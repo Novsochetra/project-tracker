@@ -115,8 +115,10 @@ describe.each(DIALECTS)('several ticket cards in one answer (%s)', (dialect) => 
       await person('POST', `/api/chats/${chatId}/messages`, { runnerId, text: 'Make 1 smaller' });
       const job = await helper<RunJob | null>('POST', `/api/runners/${runnerId}/next?kind=ask`);
       await person('POST', `/api/runs/${job.body?.run.id ?? ''}/cancel`);
+
       return job.body?.prompt ?? '';
     };
+
     const elsewhere = await promptOn(otherRunner);
     expect(elsewhere).toContain('title: Third\n---\nWhy.\n````\n[card 2 → MOB-1]');
     const resumed = await promptOn(runner);

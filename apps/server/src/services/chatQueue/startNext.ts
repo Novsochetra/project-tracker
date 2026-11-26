@@ -22,6 +22,7 @@ export async function startWaitingIn(
     const runner = await usableRunner(trx, scope, chat, row);
     if (runner) return startQueuedIn(trx, scope, chat, { row, runner });
   }
+
   return null;
 }
 
@@ -32,6 +33,7 @@ export async function startNextQueued(
 ): Promise<void> {
   const run = await inTransaction(ctx, async (db) => {
     await lockChat(db, chatId);
+
     return startWaitingIn({ ...ctx, db }, scope, chatId);
   });
   if (run) notifyRun(ctx, scope, run);

@@ -8,6 +8,7 @@ type Timed = Pick<RunRequest, 'status' | 'expiresAt'>;
 // takes the buttons away first.
 export function requestState(request: Timed, now: number): RequestState {
   if (request.status === 'answered') return 'answered';
+
   return request.status === 'open' && now < request.expiresAt ? 'open' : 'ended';
 }
 
@@ -22,6 +23,7 @@ function lastSettled(requests: readonly RunRequest[], now: number): RunRequest |
     if (isOpen(request, now)) continue;
     if (!last || settledAt(request) >= settledAt(last)) last = request;
   }
+
   return last;
 }
 
@@ -29,6 +31,7 @@ function lastSettled(requests: readonly RunRequest[], now: number): RunRequest |
 // answers growing under the steps, which already show what Claude did with each.
 export function shownRequests(requests: readonly RunRequest[], now: number): RunRequest[] {
   const last = lastSettled(requests, now);
+
   return requests.filter((request) => request === last || isOpen(request, now));
 }
 

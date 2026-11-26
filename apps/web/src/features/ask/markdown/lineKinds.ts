@@ -32,11 +32,13 @@ export const leadingSpaces = (line: string): number => /^ */.exec(line)![0].leng
 export function fenceOf(line: string): Fence | null {
   const [, indent = '', marker = '', info = ''] = FENCE_OPEN.exec(line) ?? [];
   if (!marker || (marker.startsWith('`') && info.includes('`'))) return null;
+
   return { indent: indent.length, marker, lang: info.trim().split(/\s/, 1)[0] ?? '' };
 }
 
 export function closesFence(line: string, fence: Fence): boolean {
   const marker = FENCE_CLOSE.exec(line)?.[1];
+
   return !!marker && marker[0] === fence.marker[0] && marker.length >= fence.marker.length;
 }
 
@@ -44,6 +46,7 @@ function withoutClosingHashes(text: string): string {
   let end = text.length;
   while (end > 0 && text[end - 1] === '#') end -= 1;
   if (end === 0) return '';
+
   return end < text.length && /[ \t]/.test(text[end - 1]!) ? text.slice(0, end).trimEnd() : text;
 }
 
@@ -51,6 +54,7 @@ export function headingOf(line: string): { level: HeadingLevel; text: string } |
   const match = HEADING.exec(line);
   if (!match) return null;
   const text = withoutClosingHashes(line.slice(match[0].length).trim());
+
   return { level: match[1]!.length as HeadingLevel, text };
 }
 
@@ -64,6 +68,7 @@ export function itemOf(line: string): ItemStart | null {
   const marker = lead.length + (bullet?.length ?? digits!.length + 1);
   // Text more than 4 spaces past the marker keeps its extra spaces, as in Markdown.
   const indent = gap.length === 0 || gap.length > 4 ? marker + 1 : marker + gap.length;
+
   return { ordered: digits !== undefined, number: Number(digits ?? 1), indent };
 }
 

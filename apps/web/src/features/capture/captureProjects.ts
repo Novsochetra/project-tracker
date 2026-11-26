@@ -56,6 +56,7 @@ export function projectChoices(
   remembered: ProjectChoice | null,
 ): ProjectChoice[] {
   if (projects) return projects.map(choiceOf);
+
   return remembered ? [remembered] : [];
 }
 
@@ -71,6 +72,7 @@ export function defaultProjectKey(
 ): string | undefined {
   if (!projects) return remembered?.key;
   const last = remembered ? findProject(projects, remembered.key) : undefined;
+
   return (last ?? mostRecentlyActive(projects))?.key;
 }
 
@@ -80,5 +82,6 @@ export function resolveProject(
   defaultKey: string | undefined,
 ): ProjectChoice | undefined {
   const chosen = chosenKey === null ? undefined : findProject(choices, chosenKey);
+
   return chosen ?? (defaultKey === undefined ? undefined : findProject(choices, defaultKey));
 }

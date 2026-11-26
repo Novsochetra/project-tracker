@@ -12,5 +12,6 @@ export const appPathOf = (value: unknown): string | null =>
 export function openPathOf(data: unknown): string | null {
   if (typeof data !== 'object' || data === null) return null;
   const { type, path } = data as Partial<OpenMessage>;
+
   return type === OPEN_MESSAGE ? appPathOf(path) : null;
 }

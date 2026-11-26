@@ -13,7 +13,9 @@ export function useCaptureShortcut(openCapture: () => void, enabled: boolean): v
       event.preventDefault();
       openCapture();
     };
+
     window.addEventListener('keydown', onKeyDown);
+
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [openCapture, enabled]);
 }

@@ -55,6 +55,7 @@ async function pickThree(surface: Surface, phone = true) {
   await waitFor(() => expect(within(shown!.area()).queryByRole('progressbar')).toBeNull());
   expect(tileNames()).toEqual(NAMES);
   restore.push(stillClock());
+
   return user;
 }
 

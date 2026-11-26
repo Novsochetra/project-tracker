@@ -25,6 +25,7 @@ const numberOf = (value: unknown): number | undefined =>
 function textOf(event: Json): string {
   if (typeof event.result === 'string') return event.result;
   const errors = Array.isArray(event.errors) ? event.errors : [];
+
   return errors.filter((error): error is string => typeof error === 'string').join('\n');
 }
 
@@ -33,6 +34,7 @@ function sessionReadTokens(modelUsage: unknown): number | undefined {
   if (!isJson(modelUsage)) return undefined;
   const models = Object.values(modelUsage).filter(isJson);
   if (models.length === 0) return undefined;
+
   return models.reduce(
     (total, model) =>
       total +
@@ -51,6 +53,7 @@ const usageOf = (event: Json): ResultUsage => ({
 
 export function resultOf(event: unknown): ClaudeResult | null {
   if (!isJson(event) || event.type !== 'result') return null;
+
   return {
     text: textOf(event).trim(),
     sessionId: typeof event.session_id === 'string' ? event.session_id : undefined,

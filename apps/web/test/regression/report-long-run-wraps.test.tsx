@@ -13,6 +13,7 @@ const textNodes = (root: Node): string[] => {
   const nodes: string[] = [];
   for (let node = walker.nextNode(); node; node = walker.nextNode())
     nodes.push(node.nodeValue ?? '');
+
   return nodes;
 };
 
@@ -57,6 +58,7 @@ describe('regression: a very long run in a report wraps', () => {
       expect(starts.has(offset)).toBe(true);
       offset += node.length;
     }
+
     expect(nodes.length).toBeGreaterThan(1);
   });
 

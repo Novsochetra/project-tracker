@@ -25,24 +25,31 @@ export function slowReads(initial: TicketDetail) {
     if (!isSavedApiRead({ url, request, sameOrigin: url.origin === ORIGIN })) {
       return Response.json(tracker);
     }
+
     const saved = await savedAnswerPlugin.cachedResponseWillBeUsed({
       request,
       cachedResponse: Response.json(initial),
     });
     if (saved) return saved;
     if (fresh === 'fail') throw new TypeError('Failed to fetch');
+
     return fresh === 'hold' ? new Promise<Response>(() => undefined) : Response.json(tracker);
   };
+
   const page = (fresh: FreshReads) => {
     const fetch: typeof globalThis.fetch = async (input, init) => {
       const request = new Request(input, init);
       if (request.method === 'GET') return read(request, fresh);
       tracker = withChanges(tracker, (await request.json()) as UpdateTicketInput);
+
       return Response.json(tracker.ticket);
     };
+
     const client = new TrackerClient({ baseUrl: ORIGIN, fetch });
+
     return { getTicket: client.getTicket, updateTicket: client.updateTicket };
   };
+
   return {
     page,
     tracker: () => tracker,

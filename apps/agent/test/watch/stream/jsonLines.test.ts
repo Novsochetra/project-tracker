@@ -8,6 +8,7 @@ function reader() {
     onEvent: (event) => events.push(event),
     onText: (text) => texts.push(text),
   });
+
   return { lines, events, texts };
 }
 

@@ -7,5 +7,6 @@ import type { StepRow } from './stepRows';
 export function leavingRows(before: StepRow[], after: StepRow[]): StepRow[] {
   if (lastSeq(after) <= lastSeq(before)) return [];
   const first = after[0]?.seq ?? Infinity;
+
   return before.filter(({ seq }) => seq < first);
 }

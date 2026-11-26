@@ -38,6 +38,7 @@ const toNumber = (value: string | undefined): number | undefined =>
 function withLabels({ label, ...options }: CommandValues): Record<string, unknown> {
   if (label === undefined) return options;
   const labels = label.split(',').map((name) => name.trim());
+
   return { ...options, labels: labels.filter((name) => name !== '') };
 }
 

@@ -27,6 +27,7 @@ afterEach(() => {
 // Tab A: the same modules with memory of their own, as in another tab.
 async function otherTab() {
   vi.resetModules();
+
   return {
     drafts: await import('../../src/lib/storedDrafts'),
     saves: await import('../../src/features/ticket/fields/fieldSaves'),
@@ -53,11 +54,13 @@ function trackerBehindTabA() {
       .mockRejectedValueOnce(STALE)
       .mockImplementation((_key: string, input: { assignee: string }) => {
         detail = { ...detail, ticket: { ...detail.ticket, ...input } };
+
         return Promise.resolve(detail.ticket);
       }),
   };
   const rendered = renderTicket({ client });
   cleanups.push(rendered.restorePhone);
+
   return { client, land: () => (landed = true) };
 }
 

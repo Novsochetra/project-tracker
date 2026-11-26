@@ -50,6 +50,7 @@ describe.each(DIALECTS)('regression: an answer counts the steps it shows (%s)', 
     const { messages } = (await person<ChatDetail>('GET', `/api/chats/${chat.body.chat.id}`)).body;
     const message = messages.at(-1);
     const shown = await person<RunStep[]>('GET', `/api/runs/${job.run.id}/steps`);
+
     return { count: message?.stepCount, rows: withoutAnswer(shown.body, answer).length };
   }
 

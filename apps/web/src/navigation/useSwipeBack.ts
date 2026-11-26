@@ -42,6 +42,7 @@ export function useSwipeBack(input: SwipeBackInput): void {
         done();
         return;
       }
+
       const velocity = releaseProgressVelocity(release.velocity, release.width);
       stopRef.current = momentum(progress, target, { ...SETTLE, velocity }, done);
     },

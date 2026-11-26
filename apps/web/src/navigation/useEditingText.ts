@@ -31,6 +31,7 @@ function leave(event: FocusEvent): void {
     lastField = event.target;
     held ||= pressing;
   }
+
   notify();
 }
 
@@ -48,6 +49,7 @@ function listen(): () => void {
   PRESS_EVENTS.forEach(([type, handler]) => document.addEventListener(type, handler, true));
   document.addEventListener('focusin', notify);
   document.addEventListener('focusout', leave);
+
   return () => {
     PRESS_EVENTS.forEach(([type, handler]) => document.removeEventListener(type, handler, true));
     document.removeEventListener('focusin', notify);
@@ -61,6 +63,7 @@ let stopListening: () => void = () => undefined;
 function subscribe(listener: () => void): () => void {
   if (listeners.size === 0) stopListening = listen();
   listeners.add(listener);
+
   return () => {
     listeners.delete(listener);
     if (listeners.size === 0) stopListening();

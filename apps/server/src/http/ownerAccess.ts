@@ -13,5 +13,6 @@ export async function requireOwner(
   const access = c.get('access');
   const user = access?.kind === 'session' ? await findUserById(deps.db, access.userId) : undefined;
   if (user?.role !== 'owner') throw forbidden(refusal);
+
   return user.id;
 }

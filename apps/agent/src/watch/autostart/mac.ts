@@ -11,10 +11,12 @@ export const macAutostart: Autostart = {
   runningPid: (label) => pidFrom(jobState(label)),
   statusLines: (label) => {
     const state = jobState(label);
+
     return runningLines(pidFrom(state), lastExitFrom(state), logPathOf(label));
   },
   install: (job) => {
     installAgent(job);
+
     return {
       starts: 'it starts when you log in, and again if it crashes',
       notes: [

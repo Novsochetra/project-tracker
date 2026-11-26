@@ -35,6 +35,7 @@ export function VerdictChip({
   const iconOnly = useMediaQuery(ICON_ONLY_QUERY) && compact;
   const touch = useMediaQuery(NO_HOVER_QUERY);
   const tooltip = iconOnly && !touch;
+
   return (
     <span
       data-verdict={verdict}

@@ -56,6 +56,7 @@ interface Outcome<T extends Ticket = Ticket> {
 async function finish<T extends Ticket>(ctx: UserContext, outcome: Outcome<T>): Promise<T> {
   if (outcome.changed) notify(ctx, outcome.ticket.projectId, outcome.ticket.id);
   await chainHeldTickets(ctx, ctx.scope, outcome.heldDone ?? []);
+
   return outcome.ticket;
 }
 
@@ -95,6 +96,7 @@ async function insertNewTicket(trx: Db, ctx: UserContext, request: NewTicket): P
   const target = { ticketId: row.id, activityId: null, uploader: ctx.scope };
   await attachUploads(trx, input.attachmentIds, target);
   await setTicketLabels(trx, row.id, labelIds, at);
+
   return toTicket(row, project.key, labelIds);
 }
 
@@ -124,6 +126,7 @@ async function repeatCreate(
   if (attached) await updateTicketRow(trx, earlier.id, { updatedAt });
   const ticket = await ticketOut(trx, { ...earlier, updatedAt }, project.key);
   if (leftOut.length === 0) return { ticket, changed: attached };
+
   return { ticket: { ...ticket, leftOutAttachmentIds: leftOut }, changed: attached };
 }
 
@@ -140,6 +143,7 @@ async function createOrRepeat(
   if (earlier) {
     return repeatCreate(trx, ctx, { project, earlier, attachmentIds: input.attachmentIds });
   }
+
   return { ticket: await insertNewTicket(trx, ctx, { actor, project, input }), changed: true };
 }
 
@@ -161,6 +165,7 @@ export async function createTicket(
     if (input.clientId && isUniqueViolation(error)) return attempt();
     throw error;
   });
+
   return finish(ctx, outcome);
 }
 
@@ -172,6 +177,7 @@ async function statusChange(
 ): Promise<PlannedChange> {
   if (statusId === undefined || statusId === scope.ticket.statusId) return mergeChanges([]);
   const status = requireStatusIn(scope.statuses, statusId);
+
   return {
     changes: await enterStatus(trx, actor, status),
     entries: [eventEntry(statusChangedText(status.name))],
@@ -199,6 +205,7 @@ export async function updateTicket(ctx: UserContext, update: TicketUpdate): Prom
     if (isEmpty(plan.changes) && !labels) {
       return { ticket: await ticketOut(trx, scope.ticket, scope.project.key), changed: false };
     }
+
     const written = await writeTicket(trx, ctx.now, {
       ticket: scope.ticket,
       actor,
@@ -208,8 +215,10 @@ export async function updateTicket(ctx: UserContext, update: TicketUpdate): Prom
     if (labels)
       await setTicketLabels(trx, scope.ticket.id, labels.labelIds, written.ticket.updatedAt);
     const ticket = await ticketOut(trx, written.ticket, scope.project.key);
+
     return { ticket, changed: true, heldDone: written.heldDone };
   });
+
   return finish(ctx, outcome);
 }
 
@@ -221,6 +230,7 @@ export async function deleteTicket(ctx: UserContext, key: string): Promise<void>
     // locks them (takeNextRun), or the two can deadlock on Postgres.
     await updateProjectRow(trx, ref.project.id, { updatedAt: ctx.now() });
     await deleteTicketRow(trx, ref.ticket.id);
+
     return { ref, files };
   });
   await removeFiles(ctx.storage, removed.files);
@@ -241,10 +251,12 @@ export async function moveTicket(
     if (!plan) {
       return { ticket: await ticketOut(trx, scope.ticket, scope.project.key), changed: false };
     }
+
     if (plan.statusChanged) assertMayEnter(actor, status);
     for (const [id, rank] of plan.ranks) {
       if (id !== scope.ticket.id) await updateTicketRow(trx, id, { rank });
     }
+
     const written = await writeTicket(trx, ctx.now, {
       ticket: scope.ticket,
       actor,
@@ -252,7 +264,9 @@ export async function moveTicket(
       entries: plan.statusChanged ? [eventEntry(statusChangedText(status.name))] : [],
     });
     const ticket = await ticketOut(trx, written.ticket, scope.project.key);
+
     return { ticket, changed: true, heldDone: written.heldDone };
   });
+
   return finish(ctx, outcome);
 }

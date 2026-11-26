@@ -45,6 +45,7 @@ function renderPalette(path = '/', search: Search = answers, extra: ReactNode = 
       client: { searchTickets },
     },
   );
+
   return { ...app, searchTickets, user: userEvent.setup() };
 }
 

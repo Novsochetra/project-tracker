@@ -14,6 +14,7 @@ import { advance, stillClock } from './stillClock';
 function Screen({ onBehind, onInside }: { onBehind: () => void; onInside: () => void }) {
   const [open, setOpen] = useState(true);
   const [text, setText] = useState('');
+
   return (
     <>
       <button type="button" onClick={onBehind}>
@@ -55,6 +56,7 @@ function renderScreen(phone: boolean) {
   const onInside = vi.fn();
   render(<Screen onBehind={onBehind} onInside={onInside} />);
   cleanups.push(stillClock());
+
   return { onBehind, onInside, user: userEvent.setup() };
 }
 

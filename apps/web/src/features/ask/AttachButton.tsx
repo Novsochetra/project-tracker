@@ -6,6 +6,7 @@ import styles from './ChatScreen.module.css';
 
 export function AttachButton({ onFiles }: { onFiles: (files: File[]) => void }) {
   const inputRef = useRef<HTMLInputElement>(null);
+
   return (
     <>
       <IconButton

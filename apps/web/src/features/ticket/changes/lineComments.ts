@@ -16,6 +16,7 @@ export function commentLine(activity: Activity): LineRef | null {
   if (typeof runId !== 'string' || typeof path !== 'string' || typeof number !== 'number') {
     return null;
   }
+
   return isSide(side) ? { runId, path, side, line: number } : null;
 }
 
@@ -27,6 +28,7 @@ export function lineThreads(activity: readonly Activity[], runId: string): Map<s
     const id = lineId(runId, line.path, line);
     threads.set(id, [...(threads.get(id) ?? []), item]);
   }
+
   return threads;
 }
 

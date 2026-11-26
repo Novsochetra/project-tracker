@@ -14,5 +14,6 @@ export function textPreview(text: string, max = TEXT_PREVIEW_MAX_CHARS): TextPre
   if (text.length <= max) return { text, cut: false };
   const head = text.slice(0, max).replace(HIGH_SURROGATE, '');
   const lineEnd = head.lastIndexOf('\n');
+
   return { text: lineEnd >= max - LINE_SEARCH ? head.slice(0, lineEnd) : head, cut: true };
 }

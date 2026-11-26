@@ -80,6 +80,7 @@ async function openStatuses(page: Page): Promise<Locator> {
   await page.getByRole('button', { name: 'Manage statuses' }).click();
   const sheet = page.getByRole('dialog', { name: 'Statuses' });
   await expect(sheet).toBeVisible();
+
   return sheet;
 }
 
@@ -87,6 +88,7 @@ function statusParts(sheet: Locator, name: string): HoverParts {
   const handle = sheet.getByRole('button', { name: `Reorder ${name}` });
   const filled = handle.locator('xpath=ancestor::li[1]');
   const row = filled.getByRole('button', { name: new RegExp(`^${name}`) });
+
   return { row, handle, filled, draggedMark: 'data-dragging' };
 }
 

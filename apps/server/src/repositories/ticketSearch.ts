@@ -43,6 +43,7 @@ const contains = (
   word: string,
 ): Expression<SqlBool> => {
   const fn = sql.raw(lower);
+
   return sql<SqlBool>`${fn}(${eb.ref(column)}) like ${fn}(${containsPattern(word)}) escape ${LIKE_ESCAPE}`;
 };
 
@@ -63,12 +64,14 @@ function keyHit(eb: SearchBuilder, key: KeyQuery | null): Expression<SqlBool> {
   if (key === null) return eb.lit(false);
   const num = eb('tickets.num', '=', key.num);
   if (key.projectKey === null) return num;
+
   return eb.and([num, eb(eb.fn('upper', ['projects.key']), '=', key.projectKey)]);
 }
 
 function matches(eb: SearchBuilder, search: TicketSearch, text: TextSearch): Expression<SqlBool> {
   if (search.words.length === 0 && search.key === null) return eb.lit(true);
   const textHit = search.words.length === 0 ? [] : [inText(eb, text)];
+
   return eb.or([keyHit(eb, search.key), ...textHit]);
 }
 
@@ -118,5 +121,6 @@ export async function searchTicketRows(
     .orderBy('tickets.id')
     .limit(search.limit)
     .execute();
+
   return rows.map((row) => ({ ...row, num: Number(row.num), updatedAt: Number(row.updatedAt) }));
 }

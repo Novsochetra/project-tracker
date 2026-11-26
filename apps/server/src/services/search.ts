@@ -21,6 +21,7 @@ const isKeyHit = (row: TicketSearchRow, key: KeyQuery | null): boolean =>
 function toHit(row: TicketSearchRow, terms: string[], key: KeyQuery | null): TicketSearchHit {
   const { id: _id, description, ...rest } = row;
   const match = searchMatchOf(row.title, terms, isKeyHit(row, key));
+
   return {
     ...rest,
     key: formatTicketKey(row.projectKey, row.num),
@@ -37,5 +38,6 @@ export async function searchTickets(
   const key = parseKeyQuery(query.q);
   const words = searchWords(query.q);
   const rows = await searchTicketRows(ctx.db, ctx.scope, { words, key, limit: query.limit });
+
   return { tickets: rows.map((row) => toHit(row, terms, key)) };
 }

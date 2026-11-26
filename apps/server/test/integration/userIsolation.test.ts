@@ -25,6 +25,7 @@ async function readUntil(reader: Reader, pattern: RegExp): Promise<string> {
     if (chunk.done) throw new Error(`Stream ended before ${String(pattern)}: ${text}`);
     text += decoder.decode(chunk.value, { stream: true });
   }
+
   return text;
 }
 
@@ -124,17 +125,20 @@ describe.each(DIALECTS)("one user's projects stay theirs (%s)", (dialect) => {
     const reader = response.body!.getReader();
     readers.push(reader);
     await readUntil(reader, /: connected\n\n/);
+
     return reader;
   }
 
   async function request(auth: Auth, method: string, path: string, body?: unknown) {
     const headers = { ...authHeaders(auth), 'content-type': 'application/json' };
     const init = { method, headers, body: body === undefined ? undefined : JSON.stringify(body) };
+
     return api.app.request(path, init);
   }
 
   async function upload(auth: Auth, ticketKey?: string): Promise<Response> {
     const query = ticketKey ? `?ticketKey=${ticketKey}` : '';
+
     return api.app.request(`/api/attachments${query}`, {
       method: 'POST',
       headers: { ...authHeaders(auth), 'content-type': 'text/plain', [FILE_NAME_HEADER]: 'a.txt' },
@@ -167,6 +171,7 @@ describe.each(DIALECTS)("one user's projects stay theirs (%s)", (dialect) => {
       runnerId: aRunner,
       prompt: 'Go',
     });
+
     return {
       projectId: project.body.project.id,
       statusIds: project.body.statuses.map((status) => status.id),
@@ -212,6 +217,7 @@ describe.each(DIALECTS)("one user's projects stay theirs (%s)", (dialect) => {
         expect(response.status, `${method} ${path}`).toBe(writeStatus(world, auth, method, path));
       }
     }
+
     const ticket = await a.person<{ ticket: { title: string } }>('GET', '/api/tickets/MOB-1');
     expect(ticket.body.ticket.title).toBe('Crash');
     expect((await request(a.auth, 'GET', `/api/attachments/${world.ticketFile}/file`)).status).toBe(
@@ -235,6 +241,7 @@ describe.each(DIALECTS)("one user's projects stay theirs (%s)", (dialect) => {
       expect(ready.body.tickets).toEqual([]);
       expect((await as<string[]>('GET', '/api/people')).body).toEqual([]);
     }
+
     expect((await a.person<ProjectSummary[]>('GET', '/api/projects')).body).toHaveLength(1);
     const own = await a.person<TicketSearchResults>('GET', '/api/search?q=Crash');
     expect(own.body.tickets.map((ticket) => ticket.key)).toEqual(['MOB-1']);

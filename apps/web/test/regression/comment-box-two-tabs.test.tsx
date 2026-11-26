@@ -21,6 +21,7 @@ afterEach(() => {
 function openTicket() {
   const rendered = renderTicket();
   cleanups.push(rendered.restorePhone);
+
   return rendered;
 }
 
@@ -32,6 +33,7 @@ function anotherTabKeeps(text: string | null) {
       const draft = { ticketKey: 'MOB-1', field: 'comment', base: '', text };
       localStorage.setItem(DRAFTS_STORAGE_KEY, JSON.stringify({ [ID]: draft }));
     }
+
     window.dispatchEvent(new StorageEvent('storage', { key: DRAFTS_STORAGE_KEY }));
   });
 }

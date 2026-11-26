@@ -31,11 +31,13 @@ function setup(waits: Waited[], changes: Partial<AskPersonDeps> = {}) {
   const api: AskPersonDeps['api'] = {
     addRunRequest: vi.fn((_runId: string, input: AddRunRequestInput) => {
       asked.push(input);
+
       return Promise.resolve(permissionRequest());
     }),
     waitForRunRequest: vi.fn(
       (_id: string, _input: unknown, { signal }: { signal?: AbortSignal } = {}) => {
         const next = waits.shift();
+
         return next ? next() : untilAborted(signal);
       },
     ),
@@ -51,6 +53,7 @@ function setup(waits: Waited[], changes: Partial<AskPersonDeps> = {}) {
     retryDelay: () => 1,
     ...changes,
   });
+
   return { ask, api, log, asked };
 }
 
@@ -134,8 +137,10 @@ describe('asking the person', () => {
     let now = 0;
     const down = () => {
       now += 1_000_000;
+
       return Promise.reject(new TypeError('fetch failed'));
     };
+
     const { ask, api, log } = setup([down, down, down, down], { now: () => now });
     expect(await ask(run, bash, signal())).toEqual({ behavior: 'deny', message: NO_ANSWER });
     expect(log.at(-1)).toBe(`MOB-1: stopped waiting: ${NO_ANSWER}`);

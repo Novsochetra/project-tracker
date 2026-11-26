@@ -22,5 +22,6 @@ export function useCaptureProject(keptKey: string | null = null): CaptureProject
   const [chosenKey, setChosenKey] = useState(keptKey);
   const choices = useMemo(() => projectChoices(projects, remembered), [projects, remembered]);
   const current = resolveProject(choices, chosenKey, defaultProjectKey(projects, remembered));
+
   return { choices, current, chosenKey, loaded: projects !== undefined, choose: setChosenKey };
 }

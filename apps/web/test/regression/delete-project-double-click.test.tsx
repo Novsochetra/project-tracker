@@ -33,6 +33,7 @@ function renderProjectMenu() {
     projects: [projectSummary({ totalCount: 4 })],
   });
   restore.push(stillClock());
+
   return { user: userEvent.setup(), deleteProject };
 }
 

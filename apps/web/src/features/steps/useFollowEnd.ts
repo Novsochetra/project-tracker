@@ -10,7 +10,9 @@ function watch(scroller: HTMLElement, atEnd: { current: boolean }): Watched {
   const onScroll = () => {
     atEnd.current = isAtEnd(scroller);
   };
+
   scroller.addEventListener('scroll', onScroll, { passive: true });
+
   return { scroller, stop: () => scroller.removeEventListener('scroll', onScroll) };
 }
 

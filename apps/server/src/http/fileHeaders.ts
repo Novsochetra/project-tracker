@@ -18,6 +18,7 @@ const percentEncode = (value: string): string =>
 export function contentDisposition(fileName: string): string {
   const name = fileName.replace(LONE_SURROGATE, '\uFFFD');
   const fallback = name.replace(NOT_PLAIN_ASCII, '_');
+
   return `inline; filename="${fallback}"; filename*=UTF-8''${percentEncode(name)}`;
 }
 
@@ -33,5 +34,6 @@ export function fileHeaders(row: AttachmentRow): Record<string, string> {
   // Defense in depth for a text file opened on its own. Not for PDFs: Chrome refuses to show
   // a sandboxed PDF.
   if (isText) headers['Content-Security-Policy'] = 'sandbox';
+
   return headers;
 }

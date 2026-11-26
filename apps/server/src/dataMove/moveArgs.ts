@@ -50,6 +50,7 @@ function readFlags(argv: readonly string[]): Map<string, string> | string {
       return `Unknown option: ${argv[index]}.`;
     }
   }
+
   return flags;
 }
 
@@ -61,6 +62,7 @@ export function parseMoveArgs(argv: readonly string[]): ParsedMoveArgs {
   const uploads = flags.get('--uploads');
   if (!from || !uploads)
     return { error: 'Give the local database with --from and its folder of files with --uploads.' };
+
   return {
     from,
     uploads,

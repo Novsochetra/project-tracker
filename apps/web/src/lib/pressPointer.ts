@@ -33,15 +33,18 @@ export function followPresses(): Presses {
   const forget = () => {
     current = null;
   };
+
   const release = ({ target }: Event) => {
     if (!(target instanceof Node && current?.on.contains(target))) forget();
   };
+
   const ends = [
     ['pointerup', release],
     ['pointercancel', forget],
     ['contextmenu', forget],
   ] as const;
   ends.forEach(([type, end]) => window.addEventListener(type, end, true));
+
   return {
     press: ({ pointerType, button }, on) => {
       if (button === 0) current = { pointerType, on };
@@ -58,7 +61,9 @@ export function usePresses(): RefObject<Presses | null> {
   useEffect(() => {
     const followed = followPresses();
     presses.current = followed;
+
     return followed.stop;
   }, []);
+
   return presses;
 }

@@ -19,6 +19,7 @@ describe.each(DIALECTS)('push when a Run all batch ends (%s)', (dialect) => {
     await helper('POST', `/api/tickets/${key}/claim`);
     await helper('POST', `/api/tickets/${key}/submit`, { summary: 'Fixed.' });
   };
+
   const finish = (status: string, error?: string) =>
     helper('POST', `/api/runs/${batchId}/finish`, { status, error });
 
@@ -31,6 +32,7 @@ describe.each(DIALECTS)('push when a Run all batch ends (%s)', (dialect) => {
     for (const title of ['Crash', 'Login', 'Search', 'Share']) {
       await person('POST', '/api/projects/MOB/tickets', { title });
     }
+
     await helper('PUT', `/api/runners/${runner}`, helperName('Mac'));
     device = newDevice();
     await person('PUT', '/api/push/subscription', device.subscription);

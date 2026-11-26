@@ -19,5 +19,6 @@ export function useNewTicketFiles(
     }));
   const files = useAttachmentList(setAttachments, { owner: 'ticket', attached });
   useDraftMark(`new-ticket-files:${projectKey}`, open && files.uploading.length > 0);
+
   return files;
 }

@@ -192,6 +192,7 @@ test('picks the model, effort and mode above the box, and sends them', async ({
     expect(Math.abs(middle(chip) - middle(group))).toBeLessThan(1);
     expect(gauge!.x + gauge!.width).toBeLessThanOrEqual(group!.x);
   }
+
   expect(
     await modes
       .getByRole('button', { name: 'Plan' })
@@ -234,6 +235,7 @@ test('keeps the options row still and each mode hint on one line when the mode c
       await modes.getByRole('button', { name: mode }).click();
       places.push([await modes.boundingBox(), await box.boundingBox()]);
     }
+
     expect(places[1], `Plan at ${width}px`).toEqual(places[0]);
     expect(places[2], `Edit at ${width}px`).toEqual(places[0]);
     for (const [mode, hint] of Object.entries(hints)) {
@@ -242,6 +244,7 @@ test('keeps the options row still and each mode hint on one line when the mode c
       await expect(line).toBeVisible();
       expect(await line.evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(true);
     }
+
     await settledScreenshot(page, info.outputPath(`ask-mode-hint-${width}.png`));
   }
 });
@@ -254,6 +257,7 @@ const labelEdges = (modes: ReturnType<Page['getByRole']>) =>
       range.selectNodeContents(button);
       const text = range.getBoundingClientRect();
       const own = button.getBoundingClientRect();
+
       return {
         left: text.left,
         right: text.right,
@@ -268,6 +272,7 @@ const placeholderFits = (box: ReturnType<Page['getByRole']>) =>
     const context = document.createElement('canvas').getContext('2d')!;
     context.font = style.font;
     const room = field.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
+
     return context.measureText(field.placeholder).width <= room;
   });
 
@@ -289,6 +294,7 @@ test('fits the options row and the placeholder on a 320px screen', async ({ page
     for (let i = 1; i < labels.length; i++) {
       expect(labels[i]!.left - labels[i - 1]!.right, `label gap at ${width}px`).toBeGreaterThan(8);
     }
+
     const group = (await modes.boundingBox())!;
     expect(group.x + group.width, `Mode at ${width}px`).toBeLessThanOrEqual(width - 16);
     expect(await placeholderFits(box), `placeholder at ${width}px`).toBe(true);
@@ -370,8 +376,10 @@ test('answers Claude from the phone: Allow, Deny and a choice, and Claude goes o
   // The helper's side (apps/agent/src/watch/permissionTool): ask, then wait for the person.
   const asks = async (input: Parameters<TrackerClient['addRunRequest']>[1]) => {
     const request = await api.addRunRequest(runId, input);
+
     return api.waitForRunRequest(request.id, { runnerId: helperId });
   };
+
   const permission = (label: string) =>
     asks({ runnerId: helperId, kind: 'permission', label, labelCut: false, questions: null });
 
@@ -457,6 +465,7 @@ test('answers Claude from the phone: Allow, Deny and a choice, and Claude goes o
     while (scroller && !/auto|scroll/.test(getComputedStyle(scroller).overflowY)) {
       scroller = scroller.parentElement;
     }
+
     const cover = document.querySelector('[data-bottom-cover]')!.getBoundingClientRect().top;
     scroller?.scrollBy(0, box.getBoundingClientRect().bottom - cover + 2);
   });
@@ -467,6 +476,7 @@ test('answers Claude from the phone: Allow, Deny and a choice, and Claude goes o
   await expect
     .poll(async () => {
       const [button, cover] = await Promise.all([sendAnswer.boundingBox(), footer.boundingBox()]);
+
       return button!.y + button!.height <= cover!.y;
     })
     .toBe(true);
@@ -502,17 +512,23 @@ function watchFolds(page: Page, lastLabel: string): Promise<number> {
           while (node && !/auto|scroll/.test(getComputedStyle(node).overflowY)) {
             node = node.parentElement;
           }
+
           return node;
         };
+
         const placeOf = (row: Element, scrolled: number): Place => {
           const box = row.getBoundingClientRect();
+
           return { top: box.top + scrolled, height: box.height };
         };
+
         const changed = (place: Place, key: string) => {
           const before = was.get(key);
           if (!before) return 0;
+
           return Math.max(Math.abs(place.height - before.height), Math.abs(place.top - before.top));
         };
+
         const tick = (now: number) => {
           const frame = Math.max(now - then, 1000 / 60) / (1000 / 60);
           then = now;
@@ -534,6 +550,7 @@ function watchFolds(page: Page, lastLabel: string): Promise<number> {
           if (settled < 10 && frames < 1_200) requestAnimationFrame(tick);
           else resolve(most);
         };
+
         requestAnimationFrame(tick);
       }),
     lastLabel,
@@ -554,6 +571,7 @@ async function startWorking(page: Page, api: TrackerClient, words: string) {
     step(words, { kind: 'text' }),
   ]);
   await expect(page.getByText(words.split('\n').at(-1)!.slice(-30))).toBeVisible();
+
   return send;
 }
 

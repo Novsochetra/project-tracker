@@ -23,6 +23,7 @@ import { scrollUnder } from './scrollUnder';
 export function FloatingPortal({ open, children }: { open: boolean; children: ReactNode }) {
   const { mounted, session } = useFloatingPresence(open);
   if (!mounted) return null;
+
   return createPortal(children, document.body, String(session));
 }
 
@@ -60,6 +61,7 @@ export function FloatingPanel({
     scrollUnder(event.currentTarget, event);
     onClose();
   };
+
   return (
     <>
       {open && (

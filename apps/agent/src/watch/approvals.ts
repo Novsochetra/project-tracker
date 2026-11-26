@@ -6,6 +6,7 @@ const ASKS_NO_ONE: ReadonlySet<string> = new Set(['auto', 'bypassPermissions', '
 
 export function approvalsProblem({ approvals, permissionMode }: WatchArgs): string | undefined {
   if (!approvals || !permissionMode || !ASKS_NO_ONE.has(permissionMode)) return undefined;
+
   return `--approvals asks on the phone before each step, but --permission-mode ${permissionMode} doesn't. Use acceptEdits.`;
 }
 

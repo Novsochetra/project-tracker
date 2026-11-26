@@ -20,6 +20,7 @@ export interface TrackerAppProps {
 
 export function TrackerApp({ client, queryClient }: TrackerAppProps) {
   useFileDropGuard();
+
   return (
     <ApiProvider client={client} queryClient={queryClient}>
       <ToastProvider>

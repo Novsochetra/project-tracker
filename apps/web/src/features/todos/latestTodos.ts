@@ -8,6 +8,7 @@ export const isTodoStep = (step: WithTodos): boolean => step.todos !== undefined
 
 export function latestTodos(steps: readonly WithTodos[]): RunTodo[] | null {
   const todos = steps.findLast(isTodoStep)?.todos;
+
   return todos && todos.length > 0 ? todos : null;
 }
 

@@ -49,6 +49,7 @@ export async function insertQuestion(trx: Db, request: AskRequest, id: string): 
     batchRunId: null,
     createdAt: queued.now,
   });
+
   return sendChatFiles(trx, request.attachmentIds, { messageId: id, uploader: queued.scope });
 }
 
@@ -88,6 +89,7 @@ export async function queueAskRun(trx: Db, request: AskRunRequest, saved: SavedQ
     questionId: saved.id,
   });
   await insertQueuedRun(trx, run, CHAT_BUSY);
+
   return run;
 }
 
@@ -97,5 +99,6 @@ export async function queueAsk(trx: Db, request: AskRequest) {
   const files = await insertQuestion(trx, request, id);
   const run = await queueAskRun(trx, request, { id, files });
   await saveChatChoice(trx, request.chat.id, request.queued, request.options);
+
   return run;
 }

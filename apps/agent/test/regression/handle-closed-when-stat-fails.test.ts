@@ -9,10 +9,12 @@ const opened = vi.hoisted(() => ({ closed: 0 }));
 
 vi.mock('node:fs/promises', async (importOriginal) => {
   const actual = await importOriginal<typeof FsPromises>();
+
   return {
     ...actual,
     open: async (...args: Parameters<typeof actual.open>) => {
       const handle = await actual.open(...args);
+
       return {
         stat: () => Promise.reject(new Error('EIO: i/o error, fstat')),
         close: async () => {

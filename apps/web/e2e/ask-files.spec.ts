@@ -23,12 +23,14 @@ async function answerWithFiles(api: TrackerClient, helperId: string): Promise<st
     expect(bytes.subarray(0, 4)).toEqual(PNG_SIGNATURE);
     names.push(file.fileName);
   }
+
   expect(job?.prompt).toContain('(Sent with it: whiteboard.png)');
   await api.finishRun(job!.run.id, {
     status: 'done',
     answer: `I read ${names.join(', ')}: two tickets.`,
     sessionId: randomUUID(),
   });
+
   return names;
 }
 

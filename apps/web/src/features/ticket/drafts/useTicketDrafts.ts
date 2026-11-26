@@ -22,6 +22,7 @@ import { useDraftSave } from './useDraftSave';
 
 function useSyncDeps(): DraftSyncDeps {
   const client = useApi();
+
   return {
     fetchTicket: (ticketKey) => client.getTicket(ticketKey, { fresh: true }),
     save: useDraftSave(),
@@ -34,6 +35,7 @@ const announced = new Set<string>();
 function firstNewChange(report: DraftSyncReport): StoredDraft | undefined {
   const fresh = report.changed.find(([id]) => !announced.has(id));
   report.changed.forEach(([id]) => announced.add(id));
+
   return fresh?.[1];
 }
 
@@ -42,6 +44,7 @@ function firstNewChange(report: DraftSyncReport): StoredDraft | undefined {
 function useDraftSync(): (takeScope: () => SyncScope) => void {
   const deps = useLatest(useSyncDeps());
   const { show } = useToast();
+
   return useCallback(
     (takeScope) => {
       runDraftSync(async () => {
@@ -66,6 +69,7 @@ export const LEFT_SAVE_WAIT_MS = 1_000;
 
 function runLater(run: () => void, ms: number) {
   let timer: ReturnType<typeof setTimeout> | undefined;
+
   return {
     soon: () => {
       timer ??= setTimeout(() => {
@@ -89,9 +93,11 @@ function spacedRuns(sync: () => void) {
     last = Date.now();
     sync();
   };
+
   const soon = () => {
     timer ??= setTimeout(now, Math.max(0, last + RETRY_GAP_MS - Date.now()));
   };
+
   return { now, soon, stop: () => clearTimeout(timer) };
 }
 
@@ -99,6 +105,7 @@ function spacedRuns(sync: () => void) {
 // whose queries a reported change refreshed.
 function scopeOfNextRun() {
   let next: SyncScope = new Set<string>();
+
   return {
     all: () => {
       next = 'all';
@@ -109,6 +116,7 @@ function scopeOfNextRun() {
     take: (): SyncScope => {
       const taken = next;
       next = new Set<string>();
+
       return taken;
     },
   };
@@ -140,6 +148,7 @@ const retryingAfter =
   async () => {
     const signal = await check();
     if (signal === 'reachable') retry();
+
     return signal;
   };
 
@@ -180,6 +189,7 @@ function syncOnReconnect(queryClient: QueryClient, sync: Sync, check: TrackerChe
   });
   window.addEventListener('online', all.now);
   all.now();
+
   return () => {
     stopped = true;
     runs.stop();
@@ -218,6 +228,7 @@ export function useTicketDrafts(enabled: boolean): void {
   const client = useApi();
   useEffect(() => {
     if (!enabled) return;
+
     return syncOnReconnect(queryClient, sync, trackerCheckOf(client));
   }, [client, enabled, queryClient, sync]);
 }

@@ -28,6 +28,7 @@ export function StepsPanel({ id, steps, variant, answer }: StepsPanelProps) {
       </div>
     );
   }
+
   if (steps.error) {
     return (
       <p id={id} className={styles.failed}>
@@ -43,6 +44,7 @@ export function StepsPanel({ id, steps, variant, answer }: StepsPanelProps) {
       </p>
     );
   }
+
   return (
     <div id={id} className={`${styles.loading} quiet-in`}>
       <Spinner size={14} label="Loading the steps" />

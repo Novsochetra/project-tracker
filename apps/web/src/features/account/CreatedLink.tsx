@@ -27,6 +27,7 @@ export function CreatedLink({ label, title, warning, link, copied, onDone }: Cre
       behavior: prefersReducedMotionNow() ? 'instant' : 'smooth',
     });
   }, []);
+
   return (
     <div
       ref={cardRef}

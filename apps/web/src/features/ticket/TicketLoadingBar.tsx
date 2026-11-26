@@ -13,5 +13,6 @@ export function TicketLoadingBar({ projectKey, num }: TicketLoadingBarProps) {
   const project = useProject(projectKey).data?.project;
   const projectName = project ? projectDisplayName(project) : projectKey;
   const ticketKey = `${projectKey}-${num}`.toUpperCase();
+
   return <NavBar title={ticketKey} mono backLabel={projectName} right={<NavBarSpacer />} />;
 }

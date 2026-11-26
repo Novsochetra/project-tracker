@@ -27,6 +27,7 @@ function workToReview({ lastReport, lastReview }: PromptTicket): string[] {
     const { verdict, rating, text } = lastReview;
     out.push('', `Earlier review: ${VERDICT_LABELS[verdict]} · ${rating}/5`, text);
   }
+
   return out;
 }
 
@@ -49,6 +50,7 @@ export function buildReviewPrompt(
   now: Date = new Date(),
 ): string {
   const { key } = ticket;
+
   return [
     `Please review the work on ticket ${key} from my "${project.name}" project, using the tracker MCP tools.`,
     ...repoLine(project),

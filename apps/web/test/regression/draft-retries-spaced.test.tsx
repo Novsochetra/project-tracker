@@ -10,6 +10,7 @@ const NETWORK_DOWN = new TypeError('Failed to fetch');
 
 function Drafts() {
   useTicketDrafts(true);
+
   return null;
 }
 
@@ -46,6 +47,7 @@ it('spaces out retries started by the tracker answering again', async () => {
       api.queryClient.fetchQuery({ queryKey: ['meta', ok], queryFn }).catch(() => ''),
     );
   };
+
   await flush(0);
   expect(getTicket).toHaveBeenCalledTimes(1);
 

@@ -18,6 +18,7 @@ export function useReportPreview(text: string, ticketKey?: string): TrackerQuery
   const debounced = useDebouncedValue(text, REPORT_PREVIEW_DELAY_MS);
   const settled = text.trim() ? debounced : '';
   const enabled = settled.trim().length > 0;
+
   return useQuery({
     queryKey: queryKeys.reportPreview(settled, ticketKey),
     queryFn: () => client.previewReport({ text: settled, ticketKey }),
@@ -29,6 +30,7 @@ export function useReportPreview(text: string, ticketKey?: string): TrackerQuery
 export function useApplyReport(): TrackerMutation<ReportResult, ApplyReportVariables> {
   const client = useApi();
   const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: (input: ApplyReportVariables) => client.applyReport(input),
     onSuccess: (_result, variables) => refreshForChange(queryClient, null, variables),

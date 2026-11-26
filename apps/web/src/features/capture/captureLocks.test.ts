@@ -13,6 +13,7 @@ function memoryStorage() {
     },
     removeItem: (key: string) => void values.delete(key),
   } as Storage;
+
   return { storage, values, refuseWrites: () => void (refuse = true) };
 }
 
@@ -29,19 +30,23 @@ function twoTabs(platform: Partial<LockPlatform>) {
   };
   const tab = () => {
     const locks = createCaptureLocks(shared);
+
     return {
       hold: (id: string) => {
         const release = locks.hold(id);
         releases.push(release);
+
         return release;
       },
       claim: async (id: string) => {
         const release = await locks.claim(id);
         if (release) releases.push(release);
+
         return release;
       },
     };
   };
+
   return [tab(), tab()] as const;
 }
 
@@ -56,6 +61,7 @@ afterEach(() => {
 describe('capture locks with Web Locks', () => {
   const withLocks = () => {
     const locks = fakeLockManager();
+
     return twoTabs({ locks: () => locks });
   };
 

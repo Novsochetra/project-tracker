@@ -29,6 +29,7 @@ export function useChatDelete(projectKey: string, chatId: string, leave = true):
       },
     );
   };
+
   return {
     pending: remove.isPending,
     error: remove.error ? errorMessage(remove.error) : null,

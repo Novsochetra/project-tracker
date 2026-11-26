@@ -66,6 +66,7 @@ const scrimOf = (dialog: HTMLElement) =>
 function NewTicketHarness() {
   const [open, setOpen] = useState(false);
   const [opening, setOpening] = useState(0);
+
   return (
     <>
       <button
@@ -99,6 +100,7 @@ async function openNewTicket(isPhone: boolean) {
   );
   const user = userEvent.setup();
   await user.click(screen.getByRole('button', { name: 'Open sheet' }));
+
   return user;
 }
 
@@ -154,6 +156,7 @@ describe('regression: sheets threw typed text away on swipe-down or tap outside'
     const preview: ReportPreview = { items: [], matchedCount: 0 };
     function Harness() {
       const [open, setOpen] = useState(true);
+
       return (
         <ReportSheet
           open={open}
@@ -162,6 +165,7 @@ describe('regression: sheets threw typed text away on swipe-down or tap outside'
         />
       );
     }
+
     renderWithApi(<Harness />, {
       getProject: vi.fn().mockResolvedValue({ project, statuses }),
       previewReport: vi.fn().mockResolvedValue(preview),
@@ -184,8 +188,10 @@ describe('regression: sheets threw typed text away on swipe-down or tap outside'
     restore = sheetTestSetup(true);
     function Harness() {
       const [open, setOpen] = useState(true);
+
       return <StatusManagerSheet open={open} onClose={() => setOpen(false)} projectKey="MOB" />;
     }
+
     renderWithApi(<Harness />, { getBoard: vi.fn().mockResolvedValue(makeBoard()) });
     const user = userEvent.setup();
     const dialog = screen.getByRole('dialog', { name: 'Statuses' });
@@ -209,6 +215,7 @@ describe('regression: sheets threw typed text away on swipe-down or tap outside'
 
 function SheetOpener({ request }: { request: SheetRequest }) {
   const sheets = useSheets();
+
   return (
     <button type="button" onClick={() => sheets.open(request)}>
       Open sheet
@@ -238,6 +245,7 @@ async function openProjectSheet(
   );
   const user = userEvent.setup();
   await user.click(screen.getByRole('button', { name: 'Open sheet' }));
+
   return user;
 }
 

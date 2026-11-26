@@ -19,6 +19,7 @@ export interface QueuedItemProps {
 export function QueuedItem({ chatId, message, waits }: QueuedItemProps) {
   const [editing, setEditing] = useState(false);
   const actions = useQueuedActions(chatId, message.id);
+
   return (
     <li className={`${styles.item} rise`}>
       <article className={styles.personMessage} aria-label={`${QUEUED_LABEL}: ${message.text}`}>

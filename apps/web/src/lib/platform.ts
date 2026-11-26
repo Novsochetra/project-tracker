@@ -5,6 +5,7 @@ interface NavigatorWithStandalone extends Navigator {
 export function isIOS(): boolean {
   if (typeof navigator === 'undefined') return false;
   const iPadOnMacUA = navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1;
+
   return /iPad|iPhone|iPod/.test(navigator.userAgent) || iPadOnMacUA;
 }
 
@@ -14,6 +15,7 @@ export function isStandalone(): boolean {
   const displayMode =
     typeof window.matchMedia === 'function' &&
     window.matchMedia('(display-mode: standalone)').matches;
+
   return legacy || displayMode;
 }
 

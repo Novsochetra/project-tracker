@@ -39,6 +39,7 @@ export const submitForReview = defineTool({
   readOnly: false,
   async handler(client, { ticket, summary, files, output, next }) {
     const detail = await client.submitForReview(ticket, { summary, files, output, next });
+
     return {
       text: `Submitted ${detail.ticket.key} for review. It is now in ${detail.status.name}.`,
       data: detail,

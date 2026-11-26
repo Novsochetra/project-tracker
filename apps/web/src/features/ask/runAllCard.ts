@@ -25,9 +25,11 @@ export function messageRunAllCards(
 ): Map<string, RunAllMessageCard> {
   const splits = messages.flatMap((message) => {
     const split = message.role === 'claude' ? splitRunAllCard(message.text) : null;
+
     return split ? [{ message, split }] : [];
   });
   const latest = splits.at(-1)?.message.id;
+
   return new Map(
     splits.map(({ message, split }) => [
       message.id,
@@ -53,6 +55,7 @@ export function batchCountsText(tickets: readonly BatchTicket[]): string {
   const count = (state: BatchTicketState) => tickets.filter((t) => t.state === state).length;
   const cancelled = count('cancelled');
   const parts = COUNTED.map((state) => `${count(state)} ${state}`);
+
   return [...parts, ...(cancelled > 0 ? [`${cancelled} cancelled`] : [])].join(' · ');
 }
 
@@ -62,6 +65,7 @@ const isEnded = (status: RunStatus): boolean =>
 export const batchEndText = (status: RunStatus): string | null => {
   if (!isEnded(status)) return null;
   if (status === 'done') return 'Finished';
+
   return status === 'cancelled' ? 'Stopped' : 'Failed';
 };
 

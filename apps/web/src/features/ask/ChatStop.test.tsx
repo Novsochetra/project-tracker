@@ -35,6 +35,7 @@ function setup(details: ChatDetail[], client: Record<string, unknown> = {}) {
     client: { getChat, listRunners: vi.fn().mockResolvedValue([makeRunner()]), ...client },
   });
   restore = [rendered.restore];
+
   return rendered;
 }
 
@@ -42,6 +43,7 @@ function stoppable(run: Run, client: Record<string, unknown> = {}) {
   const stopped = cancelledOf(run);
   const cancelRun = vi.fn().mockResolvedValue(stopped);
   const details = [makeChatDetail({ run }), makeChatDetail({ run: stopped })];
+
   return setup(details, { cancelRun, ...client });
 }
 

@@ -19,6 +19,7 @@ function canvasGives(type: string) {
   const toBlob = vi
     .spyOn(HTMLCanvasElement.prototype, 'toBlob')
     .mockImplementation((done) => done(new Blob(['encoded'], { type })));
+
   return { drawImage, toBlob };
 }
 

@@ -18,6 +18,7 @@ export interface JobInput {
 // The key can come from the tracker's project list; one shaped like a flag must not reach argv.
 function projectKeyOf(key: string): string {
   if (!SAFE_PROJECT_KEY.test(key)) throw new AutostartError(`"${key}" isn't a project key.`);
+
   return key;
 }
 

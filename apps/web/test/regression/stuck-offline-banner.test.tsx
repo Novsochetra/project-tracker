@@ -12,6 +12,7 @@ const A_WHILE_MS = 30_000;
 
 function renderShell(checkHealth: () => Promise<unknown>) {
   const api = setupApi({ checkHealth });
+
   return renderHook(() => useApiUnreachable(useReachability()), { wrapper: api.wrapper });
 }
 

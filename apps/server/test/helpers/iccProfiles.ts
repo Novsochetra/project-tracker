@@ -6,6 +6,7 @@ export type BuiltInProfile = 'srgb' | 'p3' | 'cmyk';
 
 const grey = (profile: BuiltInProfile) => {
   const image = sharp({ create: { width: 16, height: 12, channels: 3, background: '#808080' } });
+
   return (profile === 'cmyk' ? image.toColourspace('cmyk') : image).withIccProfile(profile);
 };
 
@@ -29,6 +30,7 @@ const tableEnd = (profile: Buffer) => 132 + 12 * profile.readUInt32BE(128);
 export function withBytesAfterTags(profile: Buffer, hidden: Buffer): Buffer {
   const grown = Buffer.concat([profile, padded(hidden)]);
   grown.writeUInt32BE(grown.length, 0);
+
   return grown;
 }
 
@@ -41,6 +43,7 @@ export function withBytesBeforeTags(profile: Buffer, hidden: Buffer): Buffer {
   for (let at = 136; at < end; at += 12) {
     grown.writeUInt32BE(grown.readUInt32BE(at) + gap.length, at);
   }
+
   return grown;
 }
 
@@ -48,5 +51,6 @@ export function withBytesBeforeTags(profile: Buffer, hidden: Buffer): Buffer {
 export function withTagPastEnd(profile: Buffer): Buffer {
   const broken = Buffer.from(profile);
   broken.writeUInt32BE(profile.length, 140);
+
   return broken;
 }

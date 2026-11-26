@@ -3,8 +3,10 @@ import { peekHeight, type RowSpan } from './rowPeek';
 
 function rowSpans(card: HTMLElement): RowSpan[] {
   const top = card.getBoundingClientRect().top - card.scrollTop;
+
   return [...card.querySelectorAll(':scope > button')].map((row) => {
     const box = row.getBoundingClientRect();
+
     return { top: box.top - top, height: box.height };
   });
 }
@@ -28,6 +30,7 @@ export function useRowPeek(cardRef: RefObject<HTMLElement | null>, content: stri
     // the card: a capped card keeps its size as they grow, and the cap set here resizes the card.
     const observer = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(fit);
     for (const row of card.children) observer?.observe(row, { box: 'border-box' });
+
     return () => {
       window.removeEventListener('resize', fit);
       observer?.disconnect();

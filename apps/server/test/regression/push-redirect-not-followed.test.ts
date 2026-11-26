@@ -12,6 +12,7 @@ async function listen(handler: Parameters<typeof createServer>[1]): Promise<stri
   const server = createServer(handler);
   servers.push(server);
   await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
+
   return `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
 }
 
@@ -46,5 +47,6 @@ it('never follows a push service that redirects, and keeps the device', async ()
     expect(await db.selectFrom('pushSubscriptions').selectAll().execute()).toHaveLength(1);
     await db.destroy();
   }
+
   expect(reached).toEqual([]);
 });

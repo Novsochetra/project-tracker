@@ -28,6 +28,7 @@ function fakeLabelServer(labels: Label[] = []) {
   const save = (next: Label[]) => {
     board = { ...board, labels: next };
   };
+
   return {
     getBoard: vi.fn(() => Promise.resolve(board)),
     createLabel: vi.fn((_key: string, input: CreateLabelInput) => {
@@ -41,16 +42,19 @@ function fakeLabelServer(labels: Label[] = []) {
         position: board.labels?.length ?? 0,
       };
       save([...(board.labels ?? []), label]);
+
       return Promise.resolve(label);
     }),
     updateLabel: vi.fn((id: string, input: UpdateLabelInput) => {
       const label = { ...board.labels!.find((item) => item.id === id)!, ...input };
       save(board.labels!.map((item) => (item.id === id ? label : item)));
+
       return Promise.resolve(label);
     }),
     reorderLabels: vi.fn(() => Promise.resolve(board.labels)),
     deleteLabel: vi.fn((id: string) => {
       save(board.labels!.filter((item) => item.id !== id));
+
       return Promise.resolve(undefined);
     }),
   };
@@ -58,6 +62,7 @@ function fakeLabelServer(labels: Label[] = []) {
 
 function Harness() {
   const [open, setOpen] = useState(true);
+
   return <LabelManagerSheet open={open} onClose={() => setOpen(false)} projectKey="MOB" />;
 }
 
@@ -66,6 +71,7 @@ const sheet = () => screen.getByRole('dialog', { name: 'Labels' });
 async function openSheet(server = fakeLabelServer()) {
   renderWithApi(<Harness />, server);
   await within(sheet()).findByRole('button', { name: 'Add label' });
+
   return { server, user: userEvent.setup() };
 }
 

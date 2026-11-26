@@ -6,5 +6,6 @@ export function boundNames(names: readonly string[]): string[] {
   const kept = names
     .map((name) => name.trim())
     .filter((name) => name.length > 0 && name.length <= RUNNER_TOOL_NAME_MAX);
+
   return [...new Set(kept)].slice(0, RUNNER_TOOLS_MAX);
 }

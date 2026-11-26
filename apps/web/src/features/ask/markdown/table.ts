@@ -27,7 +27,9 @@ export function splitRow(line: string): string[] {
       start = i + 1;
     }
   }
+
   cells.push(cellText(row.slice(start)));
+
   return cells;
 }
 
@@ -36,12 +38,14 @@ function alignOf(cell: string): Align {
   const right = cell.endsWith(':');
   if (left && right) return 'center';
   if (right) return 'right';
+
   return left ? 'left' : null;
 }
 
 function delimiterRow(line: string): Align[] | null {
   if (!line.includes('|')) return null;
   const cells = splitRow(line);
+
   return cells.every((cell) => DELIMITER.test(cell)) ? cells.map(alignOf) : null;
 }
 
@@ -52,5 +56,6 @@ export function tableAt(lines: readonly string[], at: number): TableHead | null 
   const align = delimiterRow(below);
   if (!align) return null;
   const head = splitRow(header);
+
   return align.length === head.length && head.length <= MAX_TABLE_CELLS ? { align, head } : null;
 }

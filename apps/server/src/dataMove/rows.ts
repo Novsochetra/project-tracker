@@ -14,6 +14,7 @@ export function inChunks<T>(items: readonly T[], size = ROWS_PER_STATEMENT): T[]
   for (let start = 0; start < items.length; start += size) {
     chunks.push(items.slice(start, start + size));
   }
+
   return chunks;
 }
 
@@ -25,6 +26,7 @@ export async function readRows(db: Db): Promise<TableRows> {
       async (name) => [name, await db.selectFrom(name).selectAll().execute()] as const,
     ),
   );
+
   return Object.fromEntries(entries) as unknown as TableRows;
 }
 
@@ -44,6 +46,7 @@ export async function insertRows(db: Db, rows: TableRows, onInserted = () => {})
           .execute();
       }
     }
+
     onInserted();
   });
 }

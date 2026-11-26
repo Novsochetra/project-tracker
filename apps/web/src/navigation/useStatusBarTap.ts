@@ -20,6 +20,7 @@ export function useStatusBarTap(rootRef: RefObject<HTMLElement | null>): void {
         if (scroller) scrollScreenToTop(scroller);
       },
     });
+
     return () => {
       stop();
       delete html.dataset.statusBarTap;

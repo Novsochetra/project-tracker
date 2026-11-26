@@ -17,6 +17,7 @@ const viewersModule = async (importOriginal: () => Promise<unknown>) => {
   code.asked += 1;
   await code.arrived;
   if (code.fails) throw new TypeError('Failed to fetch dynamically imported module');
+
   return importOriginal();
 };
 
@@ -67,6 +68,7 @@ async function renderTicketFiles() {
     ]);
   function Grid() {
     const viewer = useAttachmentViewer();
+
     return (
       <>
         <ThumbnailGrid attachments={FILES} onOpen={(index) => viewer.open(FILES, index)} />
@@ -74,6 +76,7 @@ async function renderTicketFiles() {
       </>
     );
   }
+
   const Wrapper = api.setupApi({ fetchAttachmentText: () => Promise.resolve('line one') }).wrapper;
   render(
     <Wrapper>
@@ -84,6 +87,7 @@ async function renderTicketFiles() {
       </ui.ToastProvider>
     </Wrapper>,
   );
+
   return userEvent.setup();
 }
 

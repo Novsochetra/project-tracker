@@ -6,12 +6,15 @@ export function onFirstPress(run: () => void, target: EventTarget = window): () 
   const stop = () => {
     for (const type of PRESS_EVENTS) target.removeEventListener(type, start, true);
   };
+
   const start = () => {
     stop();
     run();
   };
+
   for (const type of PRESS_EVENTS) {
     target.addEventListener(type, start, { capture: true, passive: true });
   }
+
   return stop;
 }

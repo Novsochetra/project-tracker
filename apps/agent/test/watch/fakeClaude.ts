@@ -169,5 +169,6 @@ export function installFakeClaude(): { command: string; dir: string; remove: () 
   const command = join(dir, 'claude');
   writeFileSync(command, SCRIPT);
   chmodSync(command, 0o755);
+
   return { command, dir, remove: () => rmSync(dir, { recursive: true, force: true }) };
 }

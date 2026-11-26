@@ -67,6 +67,7 @@ export async function trackChatChanges(deps: ChatChangesDeps, job: RunJob): Prom
   if (!previous) return NOTHING;
   const start = await startTurn(deps, job);
   if (!start) return NOTHING;
+
   return async (outcome) => {
     if (outcome.status === 'cancelled') return;
     try {

@@ -40,6 +40,7 @@ function openNewTicket(onClose: () => void) {
       </ToastProvider>
     </Wrapper>,
   );
+
   return userEvent.setup();
 }
 

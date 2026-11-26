@@ -35,6 +35,7 @@ export const cancelledText = (run: Pick<Run, 'askOptions' | 'startedAt'>): strin
 function stoppedOf(run: Run | null | undefined): StoppedNote | null {
   if (run?.status === 'failed') return { kind: 'failed', text: stoppedText(run) };
   if (run?.status === 'cancelled') return { kind: 'cancelled', text: cancelledText(run) };
+
   return null;
 }
 
@@ -55,10 +56,12 @@ export function chatFooter({ runners, run, projectKey, lastUsedId }: ChatFooterI
       helper: runners?.find(({ id }) => id === run.runnerId) ?? null,
     };
   }
+
   if (!runners) return { kind: 'loading' };
   const stopped = stoppedOf(run);
   const helpers = helpersFor(runners, projectKey);
   const helper = pickHelper(helpers, lastUsedId);
+
   return helper ? { kind: 'ask', helpers, helper, stopped } : { kind: 'setup', stopped };
 }
 

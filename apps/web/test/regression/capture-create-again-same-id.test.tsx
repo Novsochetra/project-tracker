@@ -35,12 +35,14 @@ function trackerWithFirstAnswer(first: Answer) {
   const tracker = fakeTracker();
   const createTicket = vi.fn((projectKey: string, input: CreateTicketInput) => {
     const ticket = tracker.create(projectKey, input);
+
     return createTicket.mock.calls.length === 1 ? first(ticket) : Promise.resolve(ticket);
   });
   const updateTicket = vi.fn((ticketKey: string, input: UpdateTicketInput) =>
     Promise.resolve(tracker.update(ticketKey, input)),
   );
   const clientIds = () => createTicket.mock.calls.map(([, input]) => input.clientId);
+
   return { tracker, createTicket, updateTicket, clientIds };
 }
 
@@ -48,6 +50,7 @@ type Sent = Pick<ReturnType<typeof trackerWithFirstAnswer>, 'createTicket' | 'up
 
 function Opener() {
   const sheets = useSheets();
+
   return (
     <button type="button" onClick={() => sheets.open({ type: 'capture' })}>
       Capture
@@ -74,6 +77,7 @@ function loadApp({ createTicket, updateTicket }: Sent, { sync = false } = {}) {
       },
     },
   );
+
   return userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
 }
 
@@ -210,6 +214,7 @@ async function crashMidCreate(sent: Sent, text: string) {
   user = loadApp(sent);
   await openCapture(user);
   expect(title()).toHaveValue(text);
+
   return user;
 }
 

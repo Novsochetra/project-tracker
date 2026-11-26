@@ -30,5 +30,6 @@ export function visibleSteps(
   const listed = hideTodos ? withoutTodoSteps(rows) : rows;
   const canExpand = listed.length > limit;
   const shown = expanded || !canExpand ? listed : listed.slice(-limit);
+
   return { shown, earlier: notKept + listed.length - shown.length, canExpand, notKept };
 }

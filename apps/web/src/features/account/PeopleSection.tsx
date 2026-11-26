@@ -14,6 +14,7 @@ export function PeopleSection() {
   if (!users.data?.length) return null;
   const madeFor = users.data.find((user) => user.id === make.variables);
   const name = madeFor ? personName(madeFor) : 'this person';
+
   return (
     <section aria-labelledby={headingId} className={styles.section}>
       <h2 id={headingId} className={styles.heading}>

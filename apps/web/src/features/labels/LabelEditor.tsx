@@ -52,11 +52,13 @@ export function LabelEditor(props: LabelEditorProps) {
     event.preventDefault();
     editor.save();
   };
+
   // As in the status editor: the shorter confirm moves Add label under the finger.
   const askDelete = (event: MouseEvent<HTMLButtonElement>) => {
     if (event.detail !== 0) holdPresses(event.currentTarget);
     setDeleting(true);
   };
+
   return (
     <form
       ref={formRef}
@@ -88,6 +90,7 @@ interface EditorFieldsProps extends LabelEditorProps {
 
 function EditorFields({ editor, nameRef, label, onDone, onDelete }: EditorFieldsProps) {
   const { draft, change, issue } = editor;
+
   return (
     <>
       <div className={styles.nameRow}>

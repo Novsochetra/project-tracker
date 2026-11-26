@@ -19,5 +19,6 @@ export function planDecision(request: RunRequest): PromptDecision {
   const mode = request.decision === 'allow' ? planModeOf(request.answers) : null;
   if (mode) return deny(planApproved(mode));
   const note = request.answers?.[0];
+
   return deny(note ? keepPlanningWith(note) : KEEP_PLANNING);
 }

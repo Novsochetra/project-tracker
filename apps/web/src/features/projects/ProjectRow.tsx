@@ -15,6 +15,7 @@ interface ProjectRowProps {
 
 export function ProjectRow({ project, readyCount, index, onOpen }: ProjectRowProps) {
   const opening = useIsOpening({ name: 'project', key: project.key });
+
   return (
     <ListRow
       className={clsx(styles.row, 'rise')}

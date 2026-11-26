@@ -23,7 +23,9 @@ export function isRefreshable(
   if (rootOf(queryKey) === 'ticket') {
     return !busy.ticketKeys.has(scope) && !isDeleted(queryClient, scope);
   }
+
   if (rootOf(queryKey) === 'project') return !busy.projectKeys.has(scope);
+
   return true;
 }
 
@@ -37,6 +39,7 @@ function refreshProject(
   if (isRefreshable(queryClient, queryKeys.ready(), busy)) {
     void queryClient.invalidateQueries({ queryKey: queryKeys.ready(), exact: true });
   }
+
   if (busy.projectKeys.has(projectKey) || isDeleted(queryClient, projectKey)) return;
   void queryClient.invalidateQueries({ queryKey: queryKeys.project(projectKey) });
   if (!options.withTickets) return;
@@ -61,6 +64,7 @@ export function settleMutation(
   if (ticketKey && !busy.ticketKeys.has(ticketKey) && !isDeleted(queryClient, ticketKey)) {
     void queryClient.invalidateQueries({ queryKey: queryKeys.ticket(ticketKey) });
   }
+
   if (projectKey) refreshProject(queryClient, projectKey, busy, options);
 }
 

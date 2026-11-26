@@ -15,6 +15,7 @@ export async function countMoreSteps(
     .where('status', '=', 'running')
     .returning('stepCount')
     .executeTakeFirst();
+
   return row?.stepCount;
 }
 
@@ -55,5 +56,6 @@ export async function listRunStepRows(db: Db, runId: string, after: number) {
     .orderBy('seq', 'desc')
     .limit(RUN_STEPS_KEPT)
     .execute();
+
   return rows.reverse();
 }

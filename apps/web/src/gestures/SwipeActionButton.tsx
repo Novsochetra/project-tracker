@@ -35,6 +35,7 @@ export function SwipeActionButton({
     [reveal, full],
     (values) => -sign * actionLabelOffset(values[0] ?? 0, index, count, values[1] ?? 0),
   );
+
   return (
     <m.button
       type="button"

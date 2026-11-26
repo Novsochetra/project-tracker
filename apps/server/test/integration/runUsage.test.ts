@@ -18,8 +18,10 @@ const FULL = { costMicros: 840_000, turns: 23, durationMs: 361_000 };
 const sumOf = (runs: readonly Run[], field: keyof RunUsage): number | null => {
   const values = runs.flatMap((run) => {
     const value = run.usage?.[field] ?? null;
+
     return value === null ? [] : [value];
   });
+
   return values.length === 0 ? null : values.reduce((total, value) => total + value, 0);
 };
 
@@ -43,6 +45,7 @@ describe.each(DIALECTS)('what each run took (%s)', (dialect) => {
       .body;
     clock.advance(1_000);
     const body = { status: 'done', ...(usage ? { usage } : {}) };
+
     return (await as.helper<Run>('POST', `/api/runs/${job.run.id}/finish`, body)).body;
   }
 

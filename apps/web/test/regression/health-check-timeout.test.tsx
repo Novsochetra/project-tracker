@@ -25,6 +25,7 @@ function renderShell(checkHealth: HealthRead) {
     act(() =>
       new MutationObserver(api.queryClient, { mutationFn: answer }).mutate().catch(() => undefined),
     );
+
   return { ...view, settle };
 }
 

@@ -24,7 +24,9 @@ export function useDoIt(projectKey: string, chat: Chat, plan: Run): DoIt {
     const input = askInputOf(helper.id, question, doItOptions(chat));
     ask.mutate({ chatId: chat.id, input });
   };
+
   const helper = runners.data && planHelper(plan, runners.data, projectKey);
+
   return {
     helper,
     away: helper === null && runners.data ? helperAway(plan, runners.data) : null,

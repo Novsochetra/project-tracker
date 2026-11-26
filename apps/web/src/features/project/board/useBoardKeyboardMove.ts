@@ -9,6 +9,7 @@ import { boardDirection, boardMoveTarget } from './boardMoves';
 
 export function useBoardKeyboardMove(projectKey: string, moveTicket: MoveTicket): HandleKeyDown {
   const readBoard = useBoardReader(projectKey);
+
   return useCallback<HandleKeyDown>(
     (event, ticket) => {
       const direction = boardDirection(event.key);

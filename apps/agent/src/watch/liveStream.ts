@@ -39,6 +39,7 @@ async function readUntilDropped(response: Response, options: LiveStreamOptions):
     clearTimeout(silence);
     silence = setTimeout(() => void reader.cancel(), options.staleMs ?? LIVE_STALE_MS);
   };
+
   try {
     alive();
     for (;;) {

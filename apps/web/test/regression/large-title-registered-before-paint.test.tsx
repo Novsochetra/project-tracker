@@ -31,8 +31,10 @@ it('has the large title registered before the first paint', () => {
       done.current = true;
       atFirstPaint = largeTitle.get();
     });
+
     return null;
   }
+
   render(
     <ScreenContext value={state}>
       <LargeTitle>Activity</LargeTitle>

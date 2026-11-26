@@ -20,5 +20,6 @@ export function askOutcomeOf(exit: ClaudeExit, cancelled: boolean): FinishRunInp
     const sessionId = isSessionId(result.sessionId) ? result.sessionId : undefined;
     return { status: 'done', answer: fittedAnswer(answer), ...(sessionId ? { sessionId } : {}) };
   }
+
   return failureOf(exit);
 }

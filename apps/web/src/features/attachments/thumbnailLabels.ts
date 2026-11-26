@@ -5,10 +5,12 @@ type Labelled = Pick<Attachment, 'fileName' | 'mimeType'>;
 // Images and videos are numbered within their kind because the image viewer counts the same way.
 export function thumbnailLabels(attachments: readonly Labelled[]): string[] {
   const counts = { image: 0, video: 0 };
+
   return attachments.map(({ fileName, mimeType }) => {
     const kind = attachmentKind(mimeType);
     if (kind !== 'image' && kind !== 'video') return fileName;
     counts[kind] += 1;
+
     return `${kind} ${counts[kind]}`;
   });
 }
@@ -35,6 +37,7 @@ export function splitFileName(name: string): NameParts {
   const dot = characters.lastIndexOf('.');
   const extension = dot > 0 ? dot : characters.length;
   const cut = Math.max(0, extension - KEPT_BEFORE_EXTENSION);
+
   return { head: characters.slice(0, cut).join(''), tail: characters.slice(cut).join('') };
 }
 
@@ -46,5 +49,6 @@ export function formatDuration(seconds: number): string | null {
   const hours = Math.floor(total / 3600);
   const minutes = Math.floor((total % 3600) / 60);
   const rest = pad(total % 60);
+
   return hours > 0 ? `${hours}:${pad(minutes)}:${rest}` : `${minutes}:${rest}`;
 }

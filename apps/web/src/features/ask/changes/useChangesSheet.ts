@@ -25,6 +25,7 @@ export function useChangesSheet(chatId: string, chatTitle: string, changes: Chat
     setError(null);
     setStep(next);
   };
+
   const sent = { onSuccess: () => go('view'), onError: (e: Error) => setError(errorMessage(e)) };
 
   const startCommit = () => {
@@ -32,10 +33,12 @@ export function useChangesSheet(chatId: string, chatTitle: string, changes: Chat
     setValues({ message: chatTitle, branch, picks: initialPicks(changes.files) });
     go('commit');
   };
+
   const startPullRequest = () => {
     setPrTitle(chatTitle);
     go('pull_request');
   };
+
   const submit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (step === 'pull_request') {
@@ -43,10 +46,12 @@ export function useChangesSheet(chatId: string, chatTitle: string, changes: Chat
       if (!title) return setError('Give the pull request a title.');
       return pullRequest.mutate({ version: changes.version, title, confirm: true }, sent);
     }
+
     const problem = commitProblem(values, changes);
     if (problem) return setError(problem);
     commit.mutate(commitInput(values, changes), sent);
   };
+
   return {
     step,
     values,

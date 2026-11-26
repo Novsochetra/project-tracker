@@ -14,6 +14,7 @@ const SUNDAY = 0;
 function readFirstDay(locale: string): unknown {
   const intl = new Intl.Locale(locale) as LocaleWithWeek;
   const info = typeof intl.getWeekInfo === 'function' ? intl.getWeekInfo() : intl.weekInfo;
+
   return info?.firstDay;
 }
 

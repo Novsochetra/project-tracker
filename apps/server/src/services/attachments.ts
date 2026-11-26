@@ -54,6 +54,7 @@ export function fileNameOf(name: string, extension: string): string {
   if (characters.length <= MAX_NAME_LENGTH) return plain || `attachment.${extension}`;
   // The extension is what opens the file, so a long name loses the end of its stem instead.
   const ending = Array.from(NAME_EXTENSION.exec(plain)?.[0] ?? '');
+
   return characters.slice(0, MAX_NAME_LENGTH - ending.length).join('') + ending.join('');
 }
 
@@ -84,6 +85,7 @@ function checkUpload(input: UploadInput): CheckedUpload {
   if (input.type.toLowerCase().startsWith('multipart/form-data')) throw invalidInput(FORM_MESSAGE);
   const check = checkAttachment({ type: input.type, name: input.name, size: input.size ?? 0 });
   if (!check.ok) throw invalidInput(check.message);
+
   return check;
 }
 
@@ -105,8 +107,10 @@ async function contentOf(
       size: upload.size,
     };
   }
+
   const image = await compressImage(await readWhole(upload.body), mimeType);
   if (image.refusal) throw invalidInput(image.refusal);
+
   return {
     storageKey: `${id}.${storedExtension(image.mimeType)}`,
     mimeType: image.mimeType,
@@ -119,6 +123,7 @@ async function contentOf(
 
 function pendingRow(ctx: UserContext, id: string, fileName: string, content: UploadContent) {
   const { storageKey, mimeType, width, height } = content;
+
   return {
     id,
     fileName,
@@ -153,7 +158,9 @@ async function finishUpload(
     if (!(await finishAttachmentRow(trx, row.id, done))) {
       throw new Error(`The pending row of upload ${row.id} was removed while its file was stored.`);
     }
+
     if (ref) await updateTicketRow(trx, ref.ticket.id, { updatedAt: ctx.now() });
+
     return { ...row, ...done };
   });
 }
@@ -197,12 +204,14 @@ export async function uploadAttachment(ctx: UserContext, input: UploadInput): Pr
   const row = await storeUpload(ctx, pendingRow(ctx, id, fileName, content), content, ref);
   // Pending uploads belong to no ticket yet, so no open screen needs to refresh.
   if (ref) notify(ctx, ref.project.id, ref.ticket.id);
+
   return toAttachment(row);
 }
 
 export async function requireAttachment(ctx: UserContext, id: string): Promise<AttachmentRow> {
   const row = await findReachableAttachment(ctx.db, ctx.scope, id);
   if (!row) throw notFound(NOT_FOUND_MESSAGE);
+
   return row;
 }
 
@@ -213,6 +222,7 @@ export async function readAttachmentFile(
 ): Promise<ReadableStream<Uint8Array>> {
   const body = await ctx.storage.read(row.storageKey, range);
   if (!body) throw notFound(NOT_FOUND_MESSAGE);
+
   return body;
 }
 
@@ -232,6 +242,7 @@ export async function deleteAttachment(ctx: UserContext, id: string): Promise<vo
     const owner = found.ticketId ? await findTicketById(trx, found.ticketId) : undefined;
     await deleteAttachmentRows(trx, [id]);
     if (owner) await updateTicketRow(trx, owner.id, { updatedAt: ctx.now() });
+
     return { storageKey: found.storageKey, owner };
   });
   await removeFiles(ctx.storage, [removed.storageKey]);
@@ -251,5 +262,6 @@ export async function removeStalePendingAttachments(
     deps.storage,
     stale.map((row) => row.storageKey),
   );
+
   return stale.length;
 }

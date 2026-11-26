@@ -38,6 +38,7 @@ function track(theJob: RunJob = job('r-1', 'MOB-1')) {
     log: (text: string) => log.push(text),
     describe: String,
   };
+
   return { tracker, log, start: () => trackRunChanges(deps, theJob) };
 }
 

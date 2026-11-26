@@ -21,6 +21,7 @@ type LabelManagerSheetProps = SheetProps & { projectKey: string };
 export function LabelManagerSheet({ open, onClose, projectKey }: LabelManagerSheetProps) {
   const board = useBoard(projectKey);
   const [unsavedEdit, setUnsavedEdit] = useState(false);
+
   return (
     <Sheet
       open={open}
@@ -69,6 +70,7 @@ function LabelManagerBody({ projectKey, board, onDirtyChange }: LabelManagerBody
     flushSync(() => inPlace(() => setEditing(null)));
     focusRow(focusId);
   };
+
   const open = (next: Editing) => inPlace(() => setEditing(next));
   const editor = (label: Label | null) => (
     <LabelEditor
@@ -81,6 +83,7 @@ function LabelManagerBody({ projectKey, board, onDirtyChange }: LabelManagerBody
       onDirtyChange={onDirtyChange}
     />
   );
+
   return (
     <>
       {(labels.length > 0 || adding) && (

@@ -11,15 +11,19 @@ export function watchMovingOn(drop: () => void): () => void {
     if (event instanceof KeyboardEvent && event.key === 'Escape') event.preventDefault();
     drop();
   };
+
   const onVisibility = () => {
     if (document.visibilityState === 'hidden') drop();
   };
+
   // Capturing, so a control that stops an event from bubbling can't hide it.
   for (const type of ON_DOCUMENT) {
     document.addEventListener(type, onEvent, { capture: true, passive: type !== 'keydown' });
   }
+
   document.addEventListener('visibilitychange', onVisibility);
   window.addEventListener('popstate', drop);
+
   return () => {
     for (const type of ON_DOCUMENT) document.removeEventListener(type, onEvent, { capture: true });
     document.removeEventListener('visibilitychange', onVisibility);

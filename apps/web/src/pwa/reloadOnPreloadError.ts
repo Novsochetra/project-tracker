@@ -48,10 +48,13 @@ export function reloadOnPreloadError(reload: () => void): () => void {
       console.warn(STAYING[last], event.payload);
       return;
     }
+
     reloadWhenSafe(() => {
       if (rememberReload(Date.now())) reloadPage(reload);
     });
   };
+
   window.addEventListener('vite:preloadError', onPreloadError);
+
   return () => window.removeEventListener('vite:preloadError', onPreloadError);
 }

@@ -62,6 +62,7 @@ describe.each(DIALECTS)('sign-in limits (%s)', (dialect) => {
     for (let i = 0; i < 3; i += 1) {
       await attempt(WRONG, '203.0.113.7', `10.0.0.${i}, 203.0.113.7`);
     }
+
     expect((await attempt(OWNER, '203.0.113.7', '10.9.9.9, 203.0.113.7')).status).toBe(429);
   });
 
@@ -69,6 +70,7 @@ describe.each(DIALECTS)('sign-in limits (%s)', (dialect) => {
     for (let i = 0; i < 5; i += 1) {
       expect((await attempt(WRONG, `203.0.113.${i}`)).status).toBe(401);
     }
+
     expect((await attempt(OWNER, '203.0.113.99')).status).toBe(429);
     const otherEmail = { email: 'someone@example.com', password: 'x' };
     expect((await attempt(otherEmail, '203.0.113.99')).status).toBe(401);
@@ -113,6 +115,7 @@ describe('sign-in limits without a trusted proxy', () => {
         loginRequest(WRONG, { 'x-forwarded-for': `10.0.0.${i}` }),
       );
     }
+
     const res = await api.app.request(
       '/api/session',
       loginRequest(OWNER, { 'x-forwarded-for': '10.0.0.99' }),

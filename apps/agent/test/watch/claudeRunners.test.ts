@@ -16,8 +16,10 @@ const opened: ReturnType<typeof claudeRunners>[] = [];
 const runners = (setup: ClaudeSetup) => {
   const made = claudeRunners(setup);
   opened.push(made);
+
   return made;
 };
+
 afterAll(() => {
   for (const claude of opened) claude.closeChats();
   fake.remove();

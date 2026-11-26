@@ -20,6 +20,7 @@ export interface LineThreadProps {
 
 export function LineThread({ comments, boxOpen, now, ...box }: LineThreadProps) {
   if (comments.length === 0 && !boxOpen) return null;
+
   return (
     <div className={styles.thread}>
       {comments.map((comment) => (

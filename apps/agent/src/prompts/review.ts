@@ -13,6 +13,7 @@ export const reviewPrompt: PromptDefinition = {
     'Reviewer loop: verify the work on tickets in Need review, rate it 1-5 and approve or request changes.',
   text(rawProject) {
     const project = normalizeProject(rawProject);
+
     return [
       'Review finished work in my project tracker, using the tracker MCP tools.',
       findProjectStep(project),

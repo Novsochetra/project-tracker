@@ -20,8 +20,10 @@ export function createDiskStorage(dir: string): FileStorage {
   const pathOf = (key: string): string => join(dir, checkedKey(key));
   const fileAt = async (path: string) => {
     const info = await stat(path).catch(() => null);
+
     return info?.isFile() ? info : null;
   };
+
   return {
     async write(key, body) {
       const path = pathOf(key);
@@ -39,10 +41,12 @@ export function createDiskStorage(dir: string): FileStorage {
       const path = pathOf(key);
       if (!(await fileAt(path))) return null;
       const stream = createReadStream(path, range && { start: range.start, end: range.end });
+
       return Readable.toWeb(stream) as ReadableStream<Uint8Array>;
     },
     async stat(key) {
       const info = await fileAt(pathOf(key));
+
       return info && { size: info.size };
     },
     async remove(key) {

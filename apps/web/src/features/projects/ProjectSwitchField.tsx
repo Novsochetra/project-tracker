@@ -18,6 +18,7 @@ export function ProjectSwitchField({
 }: ProjectSwitchFieldProps) {
   const hintId = useId();
   const { label, hint } = PROJECT_SWITCH_TEXT[field];
+
   return (
     <>
       <GroupedCard>

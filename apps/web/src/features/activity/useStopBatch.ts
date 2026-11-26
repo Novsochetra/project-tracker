@@ -7,6 +7,7 @@ import type { TrackerMutation } from '../../api/types';
 export function useStopBatch(): TrackerMutation<Run, string> {
   const client = useApi();
   const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: (runId: string) => client.cancelRun(runId),
     onSettled: () => refreshBatches(queryClient),

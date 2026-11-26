@@ -228,8 +228,10 @@ describe('ActivityScreen', () => {
         });
         const row = await batchRow();
         await user.click(row);
+
         return { user, row };
       };
+
       const ticketList = () => screen.findByRole('list', { name: 'Run all tickets in Mobile app' });
 
       it('lists its tickets under it, with each state and what a working one does now', async () => {

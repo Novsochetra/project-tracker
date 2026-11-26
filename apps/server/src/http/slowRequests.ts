@@ -32,6 +32,7 @@ export function endSlowRequests(
       req.off('end', stop);
       socket.off('close', stop);
     };
+
     const timer = setTimeout(() => {
       stop();
       if (!req.complete) endRequest(req, res);

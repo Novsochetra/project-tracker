@@ -49,6 +49,7 @@ beforeEach(() => {
     if (this.getAttribute('role') === 'presentation') return rect(CARD_TOP, CARD_HEIGHT);
     const row = LABELS.indexOf(this.textContent ?? '');
     if (this.tagName === 'BUTTON' && row >= 0) return rect(CARD_TOP + caption + row * ROW, ROW);
+
     return rect(0, 0);
   });
 });

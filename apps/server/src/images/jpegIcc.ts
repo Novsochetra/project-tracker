@@ -20,12 +20,15 @@ function joined(segments: Buffer[]): Buffer | null {
     if (count !== segments.length || number < 1 || number > count || parts[number - 1]) {
       return null;
     }
+
     parts[number - 1] = segment.subarray(DATA_AT);
   }
+
   return Buffer.concat(parts);
 }
 
 export function isWholeIccProfile(segments: Buffer[]): boolean {
   const profile = joined(segments);
+
   return profile !== null && isWellFormedIccProfile(profile);
 }

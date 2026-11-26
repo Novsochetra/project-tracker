@@ -12,6 +12,7 @@ export const readTokensOf = (input: unknown, cacheRead: unknown, cacheWrite: unk
 // its parts, so each counts once.
 export function createReadTokenCount() {
   const byMessage = new Map<string, number>();
+
   return {
     add(event: unknown) {
       if (!isJson(event) || event.type !== 'assistant' || !isJson(event.message)) return;

@@ -10,11 +10,13 @@ import { projectSummary, renderWithApp } from '../../src/app/test/harness';
 
 function ChatText() {
   const chat = useChat('c-1');
+
   return <p>{chat.data?.messages.at(-1)?.text}</p>;
 }
 
 function WidenedWindow() {
   const [wide, setWide] = useState(false);
+
   return (
     <>
       <ChatText />

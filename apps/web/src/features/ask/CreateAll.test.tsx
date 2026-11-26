@@ -29,9 +29,11 @@ function fakeTracker(text: string, failOnce: number | null = null) {
         failed = true;
         throw new ApiError(500, 'internal', 'Database is locked');
       }
+
       if (!made.has(index)) made.set(index, `MOB-${made.size + 1}`);
       const cardTickets = [...made].map(([at, ticketKey]) => ({ index: at, ticketKey }));
       detail = { ...detail, messages: detail.messages.map((each) => ({ ...each, cardTickets })) };
+
       return Promise.resolve(detail);
     },
   );
@@ -50,6 +52,7 @@ function fakeTracker(text: string, failOnce: number | null = null) {
       listTicketRuns: vi.fn().mockResolvedValue([]),
     },
   }).restore;
+
   return createCardTicket;
 }
 
@@ -72,6 +75,7 @@ describe('Ask: several ticket cards', () => {
       const made = await screen.findByRole('region', { name: `Ticket ${key}` });
       expect(within(made).getByRole('button', { name: `Run ${key} in Claude Code` })).toBeVisible();
     }
+
     expect(sent(create)).toEqual([
       [0, 'One'],
       [1, 'Two, edited'],

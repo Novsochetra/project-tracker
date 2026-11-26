@@ -9,5 +9,6 @@ export function prepareDiff(raw: string, readCut = false, max = RUN_DIFF_MAX): C
   const whole = readCut ? raw.slice(0, raw.lastIndexOf('\n') + 1) : raw;
   const bounded = capDiff(whole, max * 2);
   const capped = capDiff(maskDiff(bounded.diff), max);
+
   return { diff: capped.diff, cut: readCut || bounded.cut || capped.cut };
 }

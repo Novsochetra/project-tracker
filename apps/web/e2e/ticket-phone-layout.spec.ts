@@ -33,6 +33,7 @@ const commentField = (page: Page) => page.getByLabel('Comment', { exact: true })
 const daysFromToday = (days: number) => {
   const date = new Date();
   date.setDate(date.getDate() + days);
+
   return toYmd(date);
 };
 
@@ -67,6 +68,7 @@ const textLine = (button: Locator) =>
     const label = [...element.childNodes].find((node) => node.nodeType === Node.TEXT_NODE)!;
     const range = document.createRange();
     range.selectNodeContents(label);
+
     return {
       fontSize: getComputedStyle(element).fontSize,
       bottom: range.getBoundingClientRect().bottom,
@@ -99,6 +101,7 @@ test.describe('ticket screen on a phone', () => {
         const box = (await chip.boundingBox())!;
         expect(box.x + box.width, `${size.width}px`).toBeLessThanOrEqual(size.width - 16);
       }
+
       await noSidewaysScroll(page);
     }
 
@@ -201,6 +204,7 @@ test.describe('ticket screen on a phone', () => {
     // iOS Safari cut the field's own text ("Claude (le…"), so the chip shows a copy of the name.
     const shown = await assignee.evaluate((field) => {
       const name = field.nextElementSibling!;
+
       return {
         text: name.textContent,
         cut: name.scrollWidth > name.clientWidth,
@@ -232,6 +236,7 @@ test.describe('ticket screen on a phone', () => {
         'MOB-1',
       );
     }
+
     for (const size of [
       { width: 320, height: 568 },
       { width: 375, height: 812 },
@@ -255,6 +260,7 @@ test.describe('ticket screen on a phone', () => {
       expect(addText.bottom).toBeCloseTo(showAllText.bottom, 0);
       await noSidewaysScroll(page);
     }
+
     const showAll = page.getByRole('button', { name: 'Show all 12 files' });
     const files = page.locator(`[id="${await showAll.getAttribute('aria-controls')}"]`);
     await showAll.tap();

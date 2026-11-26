@@ -66,7 +66,9 @@ export function TicketList({ board }: { board: ProjectBoard }) {
     if (tickets.length === 0) {
       return <NoTickets projectName={projectDisplayName(project)} />;
     }
+
     if (groups.length > 0) return renderGroups();
+
     return (
       <NoMatches status={isSearching(view) ? undefined : pickedStatus(view, statuses)?.name} />
     );

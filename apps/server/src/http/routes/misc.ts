@@ -38,5 +38,6 @@ export const miscRoutes = (ctx: ServiceContext, meta: MetaOptions) =>
 export const testResetRoutes = (ctx: ServiceContext) =>
   new Hono<AppEnv>().post('/test/reset', async (c) => {
     await resetAllData(ctx);
+
     return c.body(null, 204);
   });

@@ -33,6 +33,7 @@ describe.each(DIALECTS)('a picture in an answer (%s)', (dialect) => {
       body: bytes,
     });
     expect(response.status).toBe(201);
+
     return ((await response.json()) as Attachment).id;
   };
 

@@ -16,6 +16,7 @@ export const pushRoutes = (ctx: ServiceContext) =>
     .get('/push/key', async (c) => c.json({ publicKey: await ctx.push.publicKey() }))
     .put('/push/subscription', personPushes, jsonBody(pushSubscriptionInput), async (c) => {
       await savePushSubscription(ctx, c.get('access'), c.req.valid('json'));
+
       return c.body(null, 204);
     })
     .delete(
@@ -25,10 +26,12 @@ export const pushRoutes = (ctx: ServiceContext) =>
       async (c) => {
         const { endpoint } = c.req.valid('json');
         await removePushSubscription(ctx, requireScope(c.get('access')), endpoint);
+
         return c.body(null, 204);
       },
     )
     .put('/push/viewing', personPushes, jsonBody(viewingChatInput), (c) => {
       viewChat(ctx, c.get('access'), c.req.valid('json').chatId);
+
       return c.body(null, 204);
     });

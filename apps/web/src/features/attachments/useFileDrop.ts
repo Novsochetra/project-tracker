@@ -43,6 +43,7 @@ export function useFileDrop(onFiles: (files: File[]) => void): FileDrop {
       if (files.length > 0) onFiles(files);
     },
   };
+
   return { active, handlers };
 }
 

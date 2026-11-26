@@ -12,6 +12,7 @@ export function useNavigation(): Navigation {
   if (!navigation) {
     throw new Error('useNavigation() needs a <NavigationProvider> or <StackNavigator> above it.');
   }
+
   return navigation;
 }
 
@@ -22,6 +23,7 @@ export const useOptionalNavigation = (): Navigation | null => use(NavigationCont
 export function useIsOpening(target: NavigationTarget): boolean {
   const opening = use(OpeningContext);
   const path = targetPath(target);
+
   return useSyncExternalStore(
     opening.subscribe,
     () => opening.get() === path,

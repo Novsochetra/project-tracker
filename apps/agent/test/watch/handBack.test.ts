@@ -9,6 +9,7 @@ const OUTPUT = `Read the ticket and fixed it.\n\n\`\`\`\n${REPORT}\n\`\`\`\n`;
 function handBack(tracker: ReturnType<typeof fakeTracker>, output: string) {
   const log: string[] = [];
   const deps = { api: tracker.api, log: (text: string) => log.push(text), describe: String };
+
   return { log, done: handBackReport(deps, job('r-1', 'MOB-1'), [output]) };
 }
 

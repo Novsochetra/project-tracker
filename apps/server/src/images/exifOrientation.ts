@@ -8,6 +8,7 @@ export function orientationExif(orientation: number): Buffer {
   exif.set([0x01, 0x12, 0x00, 0x03], 10);
   exif.writeUInt32BE(1, 14);
   exif.writeUInt16BE(orientation, 18);
+
   return exif;
 }
 

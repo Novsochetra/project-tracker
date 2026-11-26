@@ -21,5 +21,6 @@ const EXAMPLE = /^\.env\.(?:example|sample|template)$/;
 
 export function isSecretPath(path: string): boolean {
   const name = (path.split('/').at(-1) ?? '').toLowerCase();
+
   return !EXAMPLE.test(name) && SECRET_NAMES.some((pattern) => pattern.test(name));
 }

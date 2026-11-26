@@ -5,6 +5,7 @@ const BACK = 'In touch with the tracker again.';
 
 function logged() {
   const lines: string[] = [];
+
   return { lines, note: createProblemLog((text) => lines.push(text)) };
 }
 

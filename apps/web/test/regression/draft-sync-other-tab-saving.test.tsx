@@ -8,6 +8,7 @@ import { keepDraft, rebaseDraft, storedDraft } from '../../src/lib/storedDrafts'
 
 function Drafts() {
   useTicketDrafts(true);
+
   return null;
 }
 
@@ -18,6 +19,7 @@ const keep = (text: string) =>
 // Tab A, with MOB-1 open: the same modules with memory of their own, as in another tab.
 async function otherTab() {
   vi.resetModules();
+
   return import('../../src/features/ticket/fields/fieldSaves');
 }
 
@@ -40,6 +42,7 @@ function syncInThisTab(trackerHas: string) {
       </ToastProvider>
     </api.wrapper>,
   );
+
   return api.client;
 }
 

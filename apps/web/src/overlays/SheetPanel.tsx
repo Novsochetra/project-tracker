@@ -37,6 +37,7 @@ function useKeyboardVars(enabled: boolean): CSSProperties | undefined {
   const { inset, viewportHeight } = useKeyboardInset();
   const editing = useEditingText();
   if (!enabled || !editing || viewportHeight === 0) return undefined;
+
   return {
     '--sheet-keyboard': `${inset}px`,
     '--sheet-viewport': `${viewportHeight}px`,
@@ -52,6 +53,7 @@ interface SheetContentProps extends SheetPanelProps {
 function SheetContent(props: SheetContentProps): ReactNode {
   const { isPhone, left, title, subtitle, right, children, footer, handleRef, bodyRef } = props;
   const bodyTabIndex = props.bodyScrolls ? -1 : undefined;
+
   return (
     <>
       <div ref={handleRef} className={styles.handle}>
@@ -110,6 +112,7 @@ function useSheetMotion(
   const panelStyle = isPhone
     ? { y: bottom.y, opacity: bottom.opacity }
     : { y: dialog.y, scale: dialog.scale, opacity: dialog.opacity };
+
   return { drag, panelStyle, scrim: isPhone ? bottom.scrim : dialog.scrim };
 }
 
@@ -143,6 +146,7 @@ export function SheetPanel(props: SheetPanelProps) {
   const content = (
     <SheetContent {...props} handleRef={handleRef} bodyRef={bodyRef} bodyScrolls={bodyScrolls} />
   );
+
   return (
     <MotionScope>
       <SheetCancelContext.Provider value={cancel}>

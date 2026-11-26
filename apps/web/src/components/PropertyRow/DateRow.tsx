@@ -11,6 +11,7 @@ export type { DateRowProps } from './DateRowParts';
 // Desktop gets the app's calendar instead of the SPEC's native picker (docs/architecture.md §1.7).
 export function DateRow(props: DateRowProps) {
   const calendar = useCalendarPicker();
+
   return calendar ? <CalendarDateRow {...props} /> : <NativeDateRow {...props} />;
 }
 
@@ -27,6 +28,7 @@ function NativeDateRow({
     onChange('');
     inputRef.current?.focus({ preventScroll: true });
   };
+
   return (
     <label className={clsx('ring-inside', styles.row, className)}>
       <DateFace value={value} label={label} overdue={overdue} mutedIcon={mutedIcon} />

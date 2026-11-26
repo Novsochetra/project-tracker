@@ -29,6 +29,7 @@ const READY = () => null;
 // React Router numbers its entries in history.state, which survives a reload.
 const routerEntryBehind = (): boolean => {
   const state: unknown = window.history.state;
+
   return isRecord(state) && typeof state.idx === 'number' && state.idx > 0;
 };
 
@@ -69,10 +70,12 @@ export function NavigationProvider({ children, prepare = READY }: NavigationProv
         opening.clear();
         return;
       }
+
       const stillOpening = opening.open(path);
       const letGo = () => {
         if (stillOpening()) opening.clear();
       };
+
       const send = () => {
         if (!stillOpening()) return;
         // A reload on its way, as when its screen's code failed, would fill a pushed entry with the
@@ -83,10 +86,12 @@ export function NavigationProvider({ children, prepare = READY }: NavigationProv
         if (reloading > 0) window.setTimeout(letGo, reloading);
         else void navigate(path, { replace });
       };
+
       const waiting = prepare(parseRoute(path));
       if (waiting) void waitAtMost(waiting, PUSH_WAIT_LIMIT_MS).then(send);
       else send();
     };
+
     const goBack = (animate: boolean) => {
       if (parent === null) return;
       const parentPath = routePath(parent);
@@ -96,6 +101,7 @@ export function NavigationProvider({ children, prepare = READY }: NavigationProv
       if (history.previousPath() === parentPath) void navigate(-1);
       else void navigate(parentPath, { replace: true });
     };
+
     const steps = historySteps({
       history,
       entryBehind: routerEntryBehind,
@@ -105,6 +111,7 @@ export function NavigationProvider({ children, prepare = READY }: NavigationProv
       },
       backToParent: parent === null ? null : () => goBack(true),
     });
+
     return {
       route,
       canGoBack: parent !== null,

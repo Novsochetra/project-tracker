@@ -8,5 +8,6 @@ export const helperOnly = createMiddleware<AppEnv>(async (c, next) => {
   if (kind !== 'token' && kind !== 'open') {
     throw forbidden('Only tracker watch does this, with an API token from Connect Claude Code.');
   }
+
   await next();
 });

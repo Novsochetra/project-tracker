@@ -20,5 +20,6 @@ export async function sendOrQueue(
   if (!waiting) return [await queueAsk(trx.db, request)];
   await queueMessage(trx.db, request);
   const started = busy ? null : await startWaitingIn(trx, scope, chatId);
+
   return started ? [started] : [];
 }

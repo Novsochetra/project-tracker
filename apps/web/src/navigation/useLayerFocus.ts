@@ -9,6 +9,7 @@ const isTextField = (element: Element): boolean =>
 
 function focusLost(): boolean {
   const active = document.activeElement;
+
   return !active || active === document.body || active.closest('[inert]') !== null;
 }
 
@@ -29,7 +30,9 @@ export function useLayerFocus(
     const remember = (event: FocusEvent) => {
       if (event.target instanceof HTMLElement) lastFocusRef.current = event.target;
     };
+
     layer.addEventListener('focusin', remember);
+
     return () => layer.removeEventListener('focusin', remember);
   }, [layerRef]);
 

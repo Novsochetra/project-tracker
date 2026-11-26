@@ -18,6 +18,7 @@ export function shouldDismissSheet({ offset, height, velocity }: SheetRelease): 
   if (offset <= 0) return false;
   if (velocity >= DISMISS_VELOCITY) return true;
   if (velocity <= KEEP_VELOCITY) return false;
+
   return offset >= height * DISMISS_RATIO;
 }
 

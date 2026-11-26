@@ -79,6 +79,7 @@ test.describe('links in activity', () => {
       const sizes = await box.evaluate((element) => [element.scrollWidth, element.clientWidth]);
       expect(sizes[0]).toBeLessThanOrEqual(sizes[1]!);
     }
+
     await expect(summary.getByRole('link', { name: 'https://x.dev/' })).toBeVisible();
   });
 });

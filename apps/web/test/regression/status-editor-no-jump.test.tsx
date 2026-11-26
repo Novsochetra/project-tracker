@@ -20,6 +20,7 @@ const listHeight = (list: Element) =>
 function listTop(list: Element): number {
   const newEditor = document.querySelector('form[aria-label="New status"]') ? PHONE.editor : 0;
   const content = PHONE.aboveList + listHeight(list) + newEditor + PHONE.belowList;
+
   return Math.max(PHONE.minTop, PHONE.height - content) + PHONE.aboveList;
 }
 
@@ -30,6 +31,7 @@ function boxOf(element: Element): DOMRect {
   if (element === list) return new DOMRect(16, listTop(list), 343, listHeight(list));
   const before = [...list.children].slice(0, [...list.children].indexOf(element));
   const offset = before.reduce((sum, item) => sum + heightOf(item), 0);
+
   return new DOMRect(16, listTop(list) + offset, 343, heightOf(element));
 }
 
@@ -42,15 +44,18 @@ function statusServer() {
     position: board.statuses.length,
   });
   const byId = (id: string) => board.statuses.find((status) => status.id === id)!;
+
   return {
     getBoard: vi.fn(() => Promise.resolve(board)),
     createStatus: vi.fn((_key: string, input: CreateStatusInput) => {
       const status = create(input);
       board = { ...board, statuses: [...board.statuses, status] };
+
       return Promise.resolve(status);
     }),
     reorderStatuses: vi.fn((_key: string, ids: string[]) => {
       board = { ...board, statuses: ids.map((id, position) => ({ ...byId(id), position })) };
+
       return Promise.resolve(board.statuses);
     }),
   };
@@ -64,6 +69,7 @@ const frames = () => new Promise((resolve) => setTimeout(resolve, 80));
 // A layout animation starts the row a whole move away, as a translate, and slides it back.
 const shiftOf = (element: HTMLElement): number => {
   const match = /translate3d\([^,]+,\s*([-\d.]+)px/.exec(element.style.transform);
+
   return match ? Math.abs(Number(match[1])) : 0;
 };
 
@@ -79,6 +85,7 @@ async function openSheet() {
   );
   await within(sheet()).findByText('To do', { exact: true });
   await frames();
+
   return userEvent.setup();
 }
 

@@ -15,6 +15,7 @@ const BUDGET_MS = 1_000;
 
 function wideTable(columns: number, size: number): string {
   const head = `|${' |'.repeat(columns)}\n|${'-|'.repeat(columns)}\n`;
+
   return head + '|\n'.repeat(Math.max(0, Math.floor((size - head.length) / 2)));
 }
 

@@ -30,6 +30,7 @@ export async function deleteChat(ctx: ServiceContext, scope: UserScope, id: stri
   const files = await inTransaction(ctx, async (trx) => {
     const keys = await storageKeysOfChats(trx, 'id', chat.id);
     await deleteChatRow(trx, chat.id);
+
     return keys;
   });
   await removeFiles(ctx.storage, files);

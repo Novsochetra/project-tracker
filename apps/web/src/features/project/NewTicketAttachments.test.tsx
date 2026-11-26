@@ -35,6 +35,7 @@ const crashLog = () => new File(['boom'], 'crash.log', { type: 'text/plain' });
 
 function Harness() {
   const [open, setOpen] = useState(true);
+
   return (
     <>
       <button type="button" onClick={() => setOpen(true)}>
@@ -64,6 +65,7 @@ function renderSheet(overrides: Overrides = {}) {
       </ToastProvider>
     </Wrapper>,
   );
+
   return { ...api, user: userEvent.setup({ applyAccept: false }) };
 }
 
@@ -97,6 +99,7 @@ describe('New ticket attachments', () => {
     const uploadAttachment = vi.fn(
       (_file: Blob, _name: string, _key?: string, options?: UploadOptions) => {
         report = options?.onProgress;
+
         return upload.promise;
       },
     );
@@ -188,6 +191,7 @@ describe('New ticket attachments', () => {
     let signal: AbortSignal | undefined;
     const uploadAttachment = vi.fn((_f: Blob, _n: string, _k?: string, options?: UploadOptions) => {
       signal = options?.signal;
+
       return new Promise<Attachment>(() => undefined);
     });
     const { user } = renderSheet({ uploadAttachment });

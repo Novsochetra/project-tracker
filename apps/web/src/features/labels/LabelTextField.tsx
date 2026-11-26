@@ -14,6 +14,7 @@ export interface LabelTextFieldProps {
 export function LabelTextField({ label, hint, value, onChange, ...field }: LabelTextFieldProps) {
   const id = useId();
   const hintId = useId();
+
   return (
     <div className={styles.field}>
       <label htmlFor={id} className={styles.label}>

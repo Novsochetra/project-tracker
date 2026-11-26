@@ -40,8 +40,10 @@ describe('S3 refusing to delete an object', () => {
 
   const upload = async () => {
     const { path, init } = fileUpload({ name: 'notes.txt' });
+
     return (await (await app.request(path, init)).json()) as Attachment;
   };
+
   const rows = async () => (await db.selectFrom('attachments').select('id').execute()).length;
   const quietly = () => vi.spyOn(console, 'warn').mockImplementation(() => undefined);
 

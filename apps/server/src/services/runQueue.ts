@@ -72,6 +72,7 @@ export async function takeNextRun(
   if (!next) return null;
   const marked = await inTransaction(ctx, async (trx) => {
     await holdProjectRuns(trx, next.projectId);
+
     return markRunStarted(trx, scope, next.id, ctx.now());
   });
   if (!marked) return null;
@@ -83,11 +84,13 @@ export async function takeNextRun(
   const chatFiles = await chatFilesFor(ctx.db, started);
   const { resumeSessionId } = started;
   const job = { run: toRun(started), prompt, resumeSessionId, files, ticketKeys };
+
   return chatFiles ? { ...job, chatFiles } : job;
 }
 
 async function batchTicketKeys(ctx: ServiceContext, run: RunWithKey): Promise<string[]> {
   if (run.kind !== 'batch') return [];
   const rows = await listBatchTicketRows(ctx.db, [run.id]);
+
   return rows.map((row) => formatTicketKey(run.projectKey, row.ticketNum));
 }

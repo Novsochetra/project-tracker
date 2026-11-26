@@ -18,6 +18,7 @@ export async function readChatChanges(
     findChatChanges(ctx.db, chat.id),
     latestGitAction(ctx.db, chat.id),
   ]);
+
   return {
     changes: changes ? toChatChanges(changes) : null,
     action: action ? toGitAction(action) : null,

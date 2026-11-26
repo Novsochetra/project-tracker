@@ -19,6 +19,7 @@ export function ProjectCard(props: ProjectCardProps) {
   const { project, readyCount, readyColor, index, now, onOpen } = props;
   const opening = useIsOpening({ name: 'project', key: project.key });
   const progress = projectProgress(project, readyCount);
+
   return (
     <button
       type="button"

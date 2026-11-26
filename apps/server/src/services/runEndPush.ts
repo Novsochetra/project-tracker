@@ -14,6 +14,7 @@ function pushTicketRunEnd(ctx: ServiceContext, scope: UserScope, run: RunWithKey
   pushToUser(ctx, scope, async () => {
     const ticket = await findTicketById(ctx.db, ticketId);
     if (!ticket) return null;
+
     return runEndedPush({ projectKey, num: ticketNum, title: ticket.title }, status);
   });
 }

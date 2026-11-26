@@ -31,6 +31,7 @@ beforeEach(() => {
   ) {
     const animation: FakeAnimation = { element: this, frames, options, onfinish: null };
     animations.push(animation);
+
     return animation as unknown as Animation;
   });
 });

@@ -29,6 +29,7 @@ export function ReadySection({ items }: { items: readonly ReadyItem[] }) {
   const open = ({ project, ticket }: ReadyItem) =>
     push({ name: 'ticket', key: project.key, num: ticket.num });
   const done = ({ ticket }: ReadyItem, status: Status) => changeStatus(ticket, status);
+
   return (
     <ListCard
       as="section"

@@ -10,6 +10,7 @@ export const PROJECTS_CHANGED =
 
 function sameProjects(rows: readonly ProjectRow[], ids: readonly string[]): boolean {
   const known = new Set(rows.map((row) => row.id));
+
   return (
     ids.length === known.size &&
     new Set(ids).size === ids.length &&
@@ -36,5 +37,6 @@ export async function reorderProjects(
   // Every change event refreshes the project list; naming one project keeps the other screens
   // from reading everything again.
   if (ids[0]) notify(ctx, ids[0]);
+
   return listProjectSummaries(ctx);
 }

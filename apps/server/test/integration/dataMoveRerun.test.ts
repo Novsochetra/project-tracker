@@ -40,6 +40,7 @@ function failingInsertInto(table: string): KyselyPlugin {
       if (InsertQueryNode.is(node) && node.into?.table.identifier.name === table) {
         throw new Error('The connection dropped.');
       }
+
       return node;
     },
     transformResult: ({ result }: PluginTransformResultArgs) => Promise.resolve(result),
@@ -48,6 +49,7 @@ function failingInsertInto(table: string): KyselyPlugin {
 
 function failingAfter(storage: FileStorage, writes: number): FileStorage {
   let written = 0;
+
   return {
     ...storage,
     async write(key, body) {

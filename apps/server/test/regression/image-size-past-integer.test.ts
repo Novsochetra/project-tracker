@@ -16,6 +16,7 @@ function pngClaiming(width: number, height: number): Uint8Array {
   // Image data and an end, empty: a PNG without them is refused as cut off (PT-127 review).
   const empty = (type: string) =>
     Buffer.concat([Buffer.alloc(4), Buffer.from(type), Buffer.alloc(4)]);
+
   return new Uint8Array(Buffer.concat([header, empty('IDAT'), empty('IEND')]));
 }
 

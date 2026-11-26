@@ -7,6 +7,7 @@ import type { TrackerQuery } from '../types';
 // Read each time Account opens: the figures change only when a run ends.
 export function usePlanUsage(): TrackerQuery<HelperPlanUsage[]> {
   const client = useApi();
+
   return useQuery({
     queryKey: queryKeys.planUsage(),
     queryFn: () => client.listPlanUsage(),

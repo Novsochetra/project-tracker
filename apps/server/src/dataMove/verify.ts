@@ -33,6 +33,7 @@ async function storedAttachments(db: Db, ids: readonly string[]): Promise<Attach
       ...(await db.selectFrom('attachments').selectAll().where('id', 'in', chunk).execute()),
     );
   }
+
   return rows;
 }
 
@@ -47,6 +48,7 @@ export async function verifyMove(
     const ids = idsOf(rows[name]);
     tables.push({ name, expected: ids.length, found: await countIds(db, name, ids) });
   }
+
   const stored = await storedAttachments(db, idsOf(rows.attachments));
   const files = await Promise.all(
     stored.map((row) =>
@@ -57,6 +59,7 @@ export async function verifyMove(
       })),
     ),
   );
+
   return { tables, files };
 }
 
@@ -70,5 +73,6 @@ export function verificationProblems({ tables, files }: Verification): string[] 
   const resized = files
     .filter((file) => file.found !== null && file.found !== file.expected)
     .map((file) => `${file.key}: ${file.found} bytes stored, the row says ${file.expected}.`);
+
   return [...rows, ...missing, ...resized];
 }

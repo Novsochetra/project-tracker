@@ -40,6 +40,7 @@ function setup(phone: boolean, labels: Label[] = LABELS, labelIds = ['l-ui']) {
     client: { updateTicket, createLabel },
   });
   cleanups.push(rendered.restorePhone);
+
   return { ...rendered, updateTicket, createLabel, user: userEvent.setup() };
 }
 

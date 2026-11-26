@@ -25,10 +25,12 @@ export function mcpListOutput(
         output += text;
       });
     }
+
     const end = () => {
       clearTimeout(timer);
       resolve(output);
     };
+
     child.on('error', end);
     child.on('close', end);
   });

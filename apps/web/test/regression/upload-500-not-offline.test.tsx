@@ -14,9 +14,11 @@ const file = new File(['log'], 'late.log', { type: 'text/plain' });
 
 function renderShell(client: Parameters<typeof setupApi>[0]) {
   const { wrapper } = setupApi(client);
+
   return renderHook(
     () => {
       const reachability = useReachability();
+
       return { unreachable: useApiUnreachable(reachability), upload: useUploadAttachment() };
     },
     { wrapper },
@@ -26,6 +28,7 @@ function renderShell(client: Parameters<typeof setupApi>[0]) {
 async function failUpload(client: Parameters<typeof setupApi>[0]) {
   const shell = renderShell({ uploadAttachment: vi.fn().mockRejectedValue(bare500()), ...client });
   await act(() => shell.result.current.upload.mutateAsync({ file }).catch(() => undefined));
+
   return shell;
 }
 

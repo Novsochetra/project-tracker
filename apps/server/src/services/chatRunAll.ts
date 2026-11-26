@@ -41,5 +41,6 @@ export async function runAllFromCard(
   if (!result.runId && (await findMessage(ctx.db, chat.id, message.id))?.batchRunId) {
     throw conflict(STARTED);
   }
+
   return result;
 }

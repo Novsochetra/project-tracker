@@ -28,6 +28,7 @@ async function renderTicketWithCodeOnItsWay() {
     }),
   });
   cleanups.push(rendered.restorePhone);
+
   return userEvent.setup();
 }
 

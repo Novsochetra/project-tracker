@@ -35,9 +35,11 @@ function measure(input: RowDragInput): Measured {
   const listTop = input.list.getBoundingClientRect().top;
   const boxes = [...rows].map(([id, row]) => {
     const rect = row.getBoundingClientRect();
+
     return { id, top: rect.top - listTop, height: rect.height };
   });
   const from = boxes.findIndex((box) => box.id === input.id);
+
   return { rows, boxes, from, step: slotStep(boxes, from), listTop };
 }
 
@@ -56,6 +58,7 @@ export function rowDrag(input: RowDragInput): {
     listTop = input.list.getBoundingClientRect().top;
     const rows = measured.boxes.map((box) => ({ ...box, top: box.top + listTop }));
     const group = { statusId: '', top: 0, bottom: 0, left: 0, right: 0, rows };
+
     return targetInGroup(group, y, input.id);
   };
 
@@ -72,6 +75,7 @@ export function rowDrag(input: RowDragInput): {
       const box = input.scroller?.getBoundingClientRect();
       if (!box) return false;
       const zones = { start: EDGE_ZONE, end: EDGE_ZONE, capped: true };
+
       return scrollAlong(input.scroller, 'y', edgeScrollStep(point.y, box.top, box.bottom, zones));
     },
   };
@@ -98,5 +102,6 @@ export function rowDrag(input: RowDragInput): {
       input.onDrop(target ? orderAfterDrop(input.ids, input.id, target) : null, shown);
     },
   };
+
   return { env, listener };
 }

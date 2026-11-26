@@ -17,6 +17,7 @@ export function BoardState({
       </div>
     );
   }
+
   return (
     <>
       <p role="alert" className={styles.error}>

@@ -46,6 +46,7 @@ export async function createApiToken(
     lastUsedAt: null,
   };
   await insertApiToken(db, row);
+
   return { token: toApiToken(row), secret };
 }
 
@@ -68,5 +69,6 @@ export async function authenticateApiToken(
   if (row.lastUsedAt === null || now - row.lastUsedAt >= TOUCH_AFTER_MS) {
     await touchApiToken(db, row.id, now);
   }
+
   return { tokenId: row.id, userId: row.userId };
 }

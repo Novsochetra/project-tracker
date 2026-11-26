@@ -13,6 +13,7 @@ export interface GroupMove {
 
 async function endRank(db: Db, statusId: string): Promise<number> {
   const group = await listGroupRanks(db, statusId);
+
   return group.length === 0 ? 0 : Math.max(...group.map((ticket) => ticket.rank)) + RANK_STEP;
 }
 

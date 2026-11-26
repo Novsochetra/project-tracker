@@ -42,6 +42,7 @@ export const createTicket = defineTool({
       ...(picked.length > 0 ? { labelIds: picked.map((label) => label.id) } : {}),
     });
     const line = formatTicketLine(ticket, statusNameOf(statuses, ticket.statusId), labels);
+
     return { text: `Created ${line}`, data: ticket };
   },
 });

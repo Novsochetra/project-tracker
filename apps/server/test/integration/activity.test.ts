@@ -138,6 +138,7 @@ describe.each(DIALECTS)('comments and activity (%s)', (dialect) => {
     for (const item of removable) {
       expect((await api.delete(`/api/activity/${item.id}`)).status).toBe(204);
     }
+
     expect(api.storage.files.size).toBe(0);
     expect(
       await api.db.selectFrom('attachments').select('id').where('id', '=', image.id).execute(),

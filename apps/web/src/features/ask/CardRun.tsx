@@ -31,6 +31,7 @@ function WorkingRun({ run, text }: { run: Run; text: string }) {
       onError: (error) => toast.show(errorMessage(error), { kind: 'error' }),
     });
   };
+
   return (
     <div className={styles.run}>
       <p className={styles.runLine}>
@@ -60,6 +61,7 @@ export function CardRun({ ticketKey, helper }: CardRunProps) {
       { onSuccess: () => toast.show(sentText(helper)) },
     );
   };
+
   return (
     <div className={styles.run}>
       {shown && <p className={styles.runLine}>{shown.text}</p>}

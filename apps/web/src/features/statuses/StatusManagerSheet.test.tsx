@@ -14,6 +14,7 @@ function fakeStatusServer(initial: ProjectBoard = makeBoard()) {
   const save = (next: Status[]) => {
     board = { ...board, statuses: next };
   };
+
   return {
     getBoard: vi.fn(() => Promise.resolve(board)),
     createStatus: vi.fn((_key: string, input: CreateStatusInput) => {
@@ -27,19 +28,23 @@ function fakeStatusServer(initial: ProjectBoard = makeBoard()) {
         createdAt: 2,
       };
       save([...board.statuses, status]);
+
       return Promise.resolve(status);
     }),
     updateStatus: vi.fn((id: string, input: UpdateStatusInput) => {
       const status = { ...board.statuses.find((item) => item.id === id)!, ...input };
       save(board.statuses.map((item) => (item.id === id ? status : item)));
+
       return Promise.resolve(status);
     }),
     reorderStatuses: vi.fn((_key: string, ids: string[]) => {
       save(ids.map((id, position) => ({ ...board.statuses.find((s) => s.id === id)!, position })));
+
       return Promise.resolve(board.statuses);
     }),
     deleteStatus: vi.fn((id: string) => {
       save(board.statuses.filter((item) => item.id !== id));
+
       return Promise.resolve(undefined);
     }),
   };
@@ -47,6 +52,7 @@ function fakeStatusServer(initial: ProjectBoard = makeBoard()) {
 
 function Harness() {
   const [open, setOpen] = useState(true);
+
   return <StatusManagerSheet open={open} onClose={() => setOpen(false)} projectKey="MOB" />;
 }
 
@@ -65,6 +71,7 @@ async function askDelete(user: ReturnType<typeof userEvent.setup>) {
 async function openSheet(server = fakeStatusServer()) {
   const view = renderWithApi(<Harness />, server);
   await within(sheet()).findByText('To do', { exact: true });
+
   return { ...view, server, user: userEvent.setup() };
 }
 

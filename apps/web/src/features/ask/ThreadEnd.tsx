@@ -14,6 +14,7 @@ export interface ThreadEndProps {
 export function ThreadEnd({ chatId, detail, live: { rows, requests }, waits }: ThreadEndProps) {
   // A request that comes before any step shows the working message too.
   const working = rows.length > 0 || requests.shown.length > 0;
+
   return (
     <>
       {detail?.run && working && (

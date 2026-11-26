@@ -102,6 +102,7 @@ export const detail = (overrides: Partial<TicketDetail> = {}): TicketDetail => {
     lastActivityAt: _l,
     ...project
   } = projectSummary();
+
   return {
     ticket: ticket(),
     project,

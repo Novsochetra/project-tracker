@@ -56,6 +56,7 @@ describe('withAskFiles', () => {
           names: got!.paths.map((path) => basename(path)),
         };
         expect(got!.paths.every((path) => dirname(path) === got!.dir)).toBe(true);
+
         return Promise.resolve('Two tickets.');
       },
     );
@@ -69,6 +70,7 @@ describe('withAskFiles', () => {
     let dir = '';
     const failing = withAskFiles(fetchFile, { job: { files: FILES }, stop: running() }, (got) => {
       dir = got!.dir;
+
       return Promise.reject(new Error('Claude Code exited with 1.'));
     });
     await expect(failing).rejects.toThrow('Claude Code exited with 1.');
@@ -81,11 +83,14 @@ describe('withAskFiles', () => {
     const halfway: FetchFile = (id) => {
       if (id === 'f1') return bytesOf(id);
       dirs.push(...foldersWithBoard());
+
       return Promise.reject(new Error('Attachment was not found.'));
     };
+
     let ran = false;
     const failing = withAskFiles(halfway, { job: { files: FILES }, stop: running() }, () => {
       ran = true;
+
       return Promise.resolve();
     });
     await expect(failing).rejects.toThrow(
@@ -102,11 +107,14 @@ describe('withAskFiles', () => {
     const stopping: FetchFile = (id) => {
       stop.abort();
       asked.push(id);
+
       return bytesOf(id);
     };
+
     let ran = false;
     const stopped = withAskFiles(stopping, { job: { files: FILES }, stop: stop.signal }, () => {
       ran = true;
+
       return Promise.resolve();
     });
     await expect(stopped).rejects.toThrow();
@@ -131,8 +139,10 @@ describe('withAskFiles', () => {
     const fetched = new Promise<void>((resolve) => {
       const started: FetchFile = (id, options) => {
         resolve();
+
         return silent(id, options);
       };
+
       void withAskFiles(
         started,
         { job: { files: [file('f1', 'board.jpg')] }, stop: stop.signal },

@@ -98,6 +98,7 @@ export function createWatcher(deps: WatcherDeps, settings: WatcherSettings) {
     } catch (error) {
       onProblem('check-in', error);
     }
+
     void runs.lookForWork();
   }
 

@@ -16,6 +16,7 @@ const projectDetail = () => {
     lastActivityAt: _l,
     ...project
   } = projectSummary();
+
   return { project, statuses: statuses().reverse() };
 };
 

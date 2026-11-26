@@ -12,6 +12,7 @@ export const isLeftToScreen = (id: string, ticketKey: string): boolean =>
 export function useTicketOnScreen(ticketKey: string): void {
   useEffect(() => {
     openTickets.set(ticketKey, (openTickets.get(ticketKey) ?? 0) + 1);
+
     return () => {
       const left = (openTickets.get(ticketKey) ?? 1) - 1;
       if (left > 0) openTickets.set(ticketKey, left);
@@ -34,6 +35,7 @@ export function useLiveDraft(id: string, retry: () => void): void {
     const holder = { retry: () => retryRef.current() };
     live.set(id, holder);
     holder.retry();
+
     return () => {
       if (live.get(id) === holder) live.delete(id);
     };

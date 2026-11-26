@@ -68,6 +68,7 @@ export function FilterTabs({ tabs, value, onChange, className }: FilterTabsProps
     target.focus({ preventScroll: true });
     revealTab(track, target, tabScrollBehavior());
   };
+
   const leaveRow = (event: FocusEvent<HTMLButtonElement>) => {
     if (!trackRef.current?.contains(event.relatedTarget)) setFocused(null);
   };

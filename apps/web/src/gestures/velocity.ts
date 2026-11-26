@@ -30,6 +30,7 @@ export class VelocityTracker {
     if (now - last.t > STALE_MS) return { x: 0, y: 0 };
     const dt = (last.t - first.t) / 1000;
     if (dt <= 0) return { x: 0, y: 0 };
+
     return { x: (last.x - first.x) / dt, y: (last.y - first.y) / dt };
   }
 }

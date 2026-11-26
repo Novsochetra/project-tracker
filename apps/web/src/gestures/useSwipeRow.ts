@@ -51,8 +51,10 @@ function useCloseOnOutsideTouch(
       if (target.closest('[data-swipe-row]')) swallowTapClick(event.pointerId);
       close();
     };
+
     document.addEventListener('pointerdown', onPointerDown, true);
     document.addEventListener('scroll', close, true);
+
     return () => {
       document.removeEventListener('pointerdown', onPointerDown, true);
       document.removeEventListener('scroll', close, true);
@@ -93,12 +95,14 @@ export function useSwipeRow({
       });
       return;
     }
+
     if (outcome.kind === 'open') {
       moveTo(restingOffset(outcome, geometry), velocity);
       setOpenSide(outcome.side);
       markRowOpen(token, close);
       return;
     }
+
     moveTo(0, velocity);
     setOpenSide(null);
     markRowClosed(token);
@@ -134,6 +138,7 @@ export function useSwipeRow({
     action.onTrigger();
     close();
   };
+
   // Tapping a swiped-open row only closes it, like iOS.
   const onContentClick = (event: MouseEvent) => {
     if (openSide === null) return;
@@ -141,5 +146,6 @@ export function useSwipeRow({
     event.stopPropagation();
     close();
   };
+
   return { x, full, openSide, press, onContentClick };
 }

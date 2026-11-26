@@ -34,11 +34,13 @@ export function CardEditor({
     if (!canCreate(fields) || pending) return;
     create.mutate({ chatId, messageId, input: cardInput({ index, card: fields }) });
   };
+
   // Run takes Create's place once the ticket is made, and must not take a double tap's second tap.
   const onCreate = (event: MouseEvent<HTMLButtonElement>) => {
     if (event.detail !== 0) holdPresses(event.currentTarget);
     submit();
   };
+
   return (
     <section className={styles.card} aria-label="Ticket card">
       <div className={styles.head}>

@@ -30,6 +30,7 @@ const DOT_CLASSES = { done: styles.doneDot, ready: styles.readyDot, open: undefi
 export function ProjectProgressParts({ progress, readyColor }: ProgressProps) {
   const parts = progressParts(progress);
   if (parts.length === 0) return <span className={styles.parts}>No tickets</span>;
+
   return (
     <span className={styles.parts}>
       {parts.map(({ kind, count }, index) => (

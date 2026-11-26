@@ -24,6 +24,7 @@ function renderReset(overrides: Parameters<typeof setupApi>[0], entry = '/reset-
     </MemoryRouter>,
     { wrapper: api.wrapper },
   );
+
   return api;
 }
 

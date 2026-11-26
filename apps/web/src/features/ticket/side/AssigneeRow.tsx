@@ -10,6 +10,7 @@ export interface AssigneeRowProps {
 
 export function AssigneeRow({ draft, describedBy }: AssigneeRowProps) {
   const people = usePeople().data;
+
   return (
     <InputRow
       icon={<Avatar name={draft.value} size={20} decorative />}

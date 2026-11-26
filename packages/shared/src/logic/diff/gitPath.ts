@@ -20,15 +20,18 @@ function unquote(quoted: string): string {
       bytes.push(...new TextEncoder().encode(char));
       continue;
     }
+
     const octal = /^[0-7]{3}/.exec(body.slice(index + 1, index + 4));
     if (octal) {
       bytes.push(parseInt(octal[0], 8));
       index += 3;
       continue;
     }
+
     index += 1;
     bytes.push(ESCAPES[body[index] ?? ''] ?? body.charCodeAt(index));
   }
+
   return new TextDecoder().decode(new Uint8Array(bytes));
 }
 
@@ -40,6 +43,7 @@ const plain = (text: string): string => (isQuoted(text) ? unquote(text) : text);
 export function sidePath(text: string): string | null {
   const path = plain(text.replace(/\t.*$/, ''));
   if (path === '/dev/null') return null;
+
   return /^[ab]\//.test(path) ? path.slice(2) : path;
 }
 
@@ -50,9 +54,11 @@ export function headerPath(rest: string): string {
     const end = rest.indexOf('" ', 1);
     return sidePath(end === -1 ? rest : rest.slice(0, end + 1)) ?? '';
   }
+
   const half = (rest.length - 5) / 2;
   if (Number.isInteger(half) && rest.slice(2, 2 + half) === rest.slice(5 + half)) {
     return rest.slice(2, 2 + half);
   }
+
   return sidePath(rest.split(' ')[0] ?? '') ?? '';
 }

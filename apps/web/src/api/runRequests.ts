@@ -8,5 +8,6 @@ export function withRequest<T extends { id: string; status: string }>(
   const known = list.find(({ id }) => id === answered.id);
   if (!known) return [...list, answered];
   if (known.status !== 'open') return list;
+
   return list.map((request) => (request.id === answered.id ? answered : request));
 }

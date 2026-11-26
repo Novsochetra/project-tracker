@@ -4,6 +4,7 @@ import { isEditable } from './editable';
 function input(type?: string): HTMLInputElement {
   const element = document.createElement('input');
   if (type) element.type = type;
+
   return element;
 }
 
@@ -11,6 +12,7 @@ function input(type?: string): HTMLInputElement {
 function element(tag: string, isContentEditable: boolean): HTMLElement {
   const created = document.createElement(tag);
   Object.defineProperty(created, 'isContentEditable', { value: isContentEditable });
+
   return created;
 }
 

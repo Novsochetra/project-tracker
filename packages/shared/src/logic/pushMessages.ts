@@ -7,6 +7,7 @@ import { formatTicketKey } from './ticketKey';
 function cut(text: string, max: number): string {
   const flat = text.replace(/\s+/g, ' ').trim();
   const chars = [...flat];
+
   return chars.length <= max
     ? flat
     : `${chars
@@ -50,6 +51,7 @@ const opened = (ticket: PushTicket, line: string) => `${ticket.title} · ${line}
 export function runEndedPush(ticket: PushTicket, ended: PushRunEnd): PushMessage {
   const key = formatTicketKey(ticket.projectKey, ticket.num);
   if (ended === 'done') return ticketMessage(`${key}: Claude finished`, ticket);
+
   return ticketMessage(
     `${key}: Claude stopped`,
     ticket,
@@ -59,12 +61,14 @@ export function runEndedPush(ticket: PushTicket, ended: PushRunEnd): PushMessage
 
 export function chainStoppedPush(ticket: PushTicket, reason: string): PushMessage {
   const title = `${formatTicketKey(ticket.projectKey, ticket.num)}: ${AUTO_REVIEW_STOPPED}`;
+
   return ticketMessage(title, ticket, reason);
 }
 
 export function reviewedPush(ticket: PushTicket, rating: number): PushMessage {
   const key = formatTicketKey(ticket.projectKey, ticket.num);
   const title = `${key} is ready for you · ${rating}/5`;
+
   return ticketMessage(title, ticket);
 }
 
@@ -84,6 +88,7 @@ export function batchEndedPush(batch: PushBatch, ended: PushRunEnd): PushMessage
   const body = batch.notDoneKeys.length
     ? `Not finished: ${batch.notDoneKeys.join(', ')}`
     : 'Every ticket is done.';
+
   return message(
     `${batch.projectKey}: ${what}: ${done}`,
     body,
@@ -137,6 +142,7 @@ export function questionPush(place: PushPlace): PushMessage {
   const asks = 'Claude has a question';
   if ('chat' in place) return chatMessage(named(asks, place.chat), place.chat, ANSWER_IT);
   const { ticket } = place;
+
   return ticketMessage(
     `${keyOf(ticket)}: ${asks}`,
     ticket,
@@ -150,7 +156,9 @@ export function planPush(place: PushPlace): PushMessage {
   if ('chat' in place) {
     return chatMessage(named(ready, place.chat), place.chat, 'Open the chat to approve it.');
   }
+
   const { ticket } = place;
+
   return ticketMessage(
     `${keyOf(ticket)}: ${ready}`,
     ticket,
@@ -165,11 +173,13 @@ const HIDDEN = /[\p{Cc}\p{Cf}\p{Zl}\p{Zp}\p{Default_Ignorable_Code_Point}]/gu;
 function wanted(label: string): string {
   const subject = permissionSubject(label);
   if (!subject) return 'Claude wants your OK';
+
   return `Claude wants to ${cut(subject.replace(HIDDEN, '\uFFFD'), PUSH_ACTION_MAX)}`;
 }
 
 export function permissionPush(place: PushPlace, label: string): PushMessage {
   const wants = wanted(label);
   if ('chat' in place) return chatMessage(wants, place.chat, place.chat.title.trim() || ANSWER_IT);
+
   return ticketMessage(`${keyOf(place.ticket)}: ${wants}`, place.ticket);
 }

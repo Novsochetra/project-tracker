@@ -25,6 +25,7 @@ export function Segmented<T extends string>({
 }: SegmentedProps<T>) {
   const index = options.findIndex((option) => option.value === value);
   const layout = { '--count': options.length, '--index': Math.max(index, 0) } as CSSProperties;
+
   return (
     <div role="group" aria-label={label} className={clsx(styles.track, className)} style={layout}>
       {index >= 0 && <span className={styles.thumb} aria-hidden="true" />}

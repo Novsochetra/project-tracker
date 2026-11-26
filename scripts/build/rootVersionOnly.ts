@@ -10,6 +10,7 @@ const ROOT_PACKAGE = fileURLToPath(new URL('../../package.json', import.meta.url
 export function versionOnlyJson(packageText: string): string {
   const { version } = JSON.parse(packageText) as { version?: unknown };
   if (typeof version !== 'string') throw new Error('package.json has no version.');
+
   return JSON.stringify({ version });
 }
 

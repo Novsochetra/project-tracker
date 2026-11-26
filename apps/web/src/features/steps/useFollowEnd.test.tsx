@@ -6,6 +6,7 @@ import { useFollowEnd } from './useFollowEnd';
 function Steps({ count }: { count: number }) {
   const ref = useRef<HTMLOListElement>(null);
   useFollowEnd(ref, count);
+
   return <ol ref={ref} />;
 }
 

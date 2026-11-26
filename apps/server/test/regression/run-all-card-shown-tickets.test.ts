@@ -19,6 +19,7 @@ describe.each(DIALECTS)('regression: a Run all card runs what it showed (%s)', (
     const job = (await helper<RunJob>('POST', `/api/runners/${runner}/next?kind=ask`)).body;
     await helper('POST', `/api/runs/${job.run.id}/finish`, { status: 'done', answer: text });
   };
+
   const cardIds = async () =>
     (await person<ChatDetail>('GET', `/api/chats/${chatId}`)).body.messages
       .filter(({ role }) => role === 'claude')
@@ -37,6 +38,7 @@ describe.each(DIALECTS)('regression: a Run all card runs what it showed (%s)', (
     for (const title of ['Crash', 'Login']) {
       await person('POST', '/api/projects/MOB/tickets', { title });
     }
+
     await helper('PUT', `/api/runners/${runner}`, helperName('Mac'));
     const started = await person<ChatDetail>('POST', '/api/projects/MOB/chats', {
       runnerId: runner,

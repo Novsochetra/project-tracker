@@ -37,6 +37,7 @@ describe('withoutNulInJson', () => {
       cleaned = (cleaned as unknown[])[0];
       sent = (sent as unknown[])[0];
     }
+
     expect(cleaned).toBe('x');
     expect(sent).toBe('x\u0000');
   });

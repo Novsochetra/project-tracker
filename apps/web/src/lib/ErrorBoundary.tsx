@@ -30,6 +30,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   ): Partial<ErrorBoundaryState> | null {
     if (!state.failed) return { shownWith: props.retryKey };
     if (props.holdRetry || Object.is(props.retryKey, state.shownWith)) return null;
+
     return { failed: false, shownWith: props.retryKey };
   }
 

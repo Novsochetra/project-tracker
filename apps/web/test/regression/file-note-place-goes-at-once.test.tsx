@@ -45,6 +45,7 @@ async function pickWithRefusal(surface: Surface) {
   await user.upload(shown.input(), picked());
   await waitFor(() => expect(area().queryByRole('progressbar')).toBeNull());
   restore.push(stillClock());
+
   return user;
 }
 

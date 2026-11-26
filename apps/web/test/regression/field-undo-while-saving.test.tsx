@@ -37,6 +37,7 @@ function openOnSlowConnection() {
     const gate = gates[calls++]?.promise ?? Promise.resolve();
     const reply = line.then(() => gate).then(() => server.client.updateTicket(key, input));
     line = reply.catch(() => undefined);
+
     return reply;
   });
   const rendered = renderTicket({
@@ -48,6 +49,7 @@ function openOnSlowConnection() {
     gates.slice(0, count).forEach((gate) => gate.resolve());
     await wait(100);
   };
+
   return { server, updateTicket, rendered, release };
 }
 
@@ -59,6 +61,7 @@ async function typeAndUndo(updateTicket: ReturnType<typeof vi.fn>) {
   await user.type(field, ' please');
   await waitFor(() => expect(updateTicket).toHaveBeenCalledTimes(2));
   await user.type(field, '{Backspace>7/}');
+
   return { user, field };
 }
 

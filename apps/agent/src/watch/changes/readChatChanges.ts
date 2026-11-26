@@ -31,6 +31,7 @@ async function diffOf(
   const left = files.filter((file) => still.has(file.path));
   if (left.length === 0) return { files: [], ...NONE };
   const { raw, cut } = await readDiff(cwd, { from, to, paths: left.map((f) => f.path) }, signal);
+
   return { files: left, ...prepareDiff(raw, cut) };
 }
 
@@ -44,6 +45,7 @@ export async function readChatChanges(
 ): Promise<ChatChangesBody> {
   const { files, diff, cut } = await diffOf(cwd, input.files, input.to, signal);
   const ready = await ghCheck(cwd);
+
   return {
     tree: input.to,
     diff,

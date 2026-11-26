@@ -26,5 +26,6 @@ export function expectedMatch(
     if (ticket[field] !== value) throw staleEdit();
     match[field] = value;
   }
+
   return match;
 }

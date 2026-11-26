@@ -22,6 +22,7 @@ export function createJsonLines({ onEvent, onText }: JsonLineHandlers) {
     if (event === undefined) onText(trimmed);
     else onEvent(event);
   };
+
   return {
     // Only the new chunk is split: a tool's result can be one line of megabytes.
     push(chunk: string) {

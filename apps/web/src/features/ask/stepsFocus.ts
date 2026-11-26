@@ -13,5 +13,6 @@ export function handStepsFocus(runId: string): void {
 export function takeStepsFocus(runId: string): boolean {
   if (pending !== runId) return false;
   pending = null;
+
   return true;
 }

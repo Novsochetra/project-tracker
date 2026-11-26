@@ -14,6 +14,7 @@ export const NO_LARGE_TITLE: LargeTitleSnapshot = { present: false, visible: fal
 export function createLargeTitleStore(): LargeTitleStore {
   let snapshot = NO_LARGE_TITLE;
   const listeners = new Set<() => void>();
+
   return {
     get: () => snapshot,
     set: (next) => {
@@ -23,6 +24,7 @@ export function createLargeTitleStore(): LargeTitleStore {
     },
     subscribe: (listener) => {
       listeners.add(listener);
+
       return () => listeners.delete(listener);
     },
   };

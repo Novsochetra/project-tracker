@@ -62,6 +62,7 @@ function setup(
     },
   });
   restore = rendered.restore;
+
   return rendered;
 }
 

@@ -25,12 +25,14 @@ function decodeName(header: string | undefined): string {
 
 function declaredSize(header: string | undefined): number | null {
   const size = Number(header);
+
   return header && Number.isSafeInteger(size) && size >= 0 ? size : null;
 }
 
 // The body is the file itself and is read as it arrives (services/attachments).
 function readUpload(c: Context<AppEnv>): UploadInput {
   const ticketKey = c.req.query('ticketKey')?.trim();
+
   return {
     body: c.req.raw.body,
     name: decodeName(c.req.header(FILE_NAME_HEADER)),
@@ -48,12 +50,15 @@ async function serveFile(c: Context<AppEnv>, ctx: ServiceContext): Promise<Respo
     await requireAttachmentFile(ctx, row);
     return c.body(null, 200, { ...headers, 'Content-Length': String(row.size) });
   }
+
   const range = parseByteRange(c.req.header('range'), row.size);
   if (range === 'unsatisfiable') {
     return c.body(null, 416, { 'Accept-Ranges': 'bytes', 'Content-Range': `bytes */${row.size}` });
   }
+
   const body = await readAttachmentFile(ctx, row, range ?? undefined);
   if (!range) return c.body(body, 200, { ...headers, 'Content-Length': String(row.size) });
+
   return c.body(body, 206, {
     ...headers,
     'Content-Length': String(range.end - range.start + 1),
@@ -69,5 +74,6 @@ export const attachmentRoutes = (ctx: ServiceContext) =>
     .get('/attachments/:id/file', (c) => serveFile(c, ctx))
     .delete('/attachments/:id', async (c) => {
       await deleteAttachment(userContext(ctx, c), c.req.param('id'));
+
       return c.body(null, 204);
     });

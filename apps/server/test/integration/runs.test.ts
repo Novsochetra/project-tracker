@@ -37,6 +37,7 @@ describe.each(DIALECTS)('Claude Code runs (%s)', (dialect) => {
     for (const title of ['Crash', 'Login']) {
       await person('POST', '/api/projects/MOB/tickets', { title });
     }
+
     expect(
       (await helper('PUT', `/api/runners/${runner}`, helperName('Dara’s MacBook'))).status,
     ).toBe(200);

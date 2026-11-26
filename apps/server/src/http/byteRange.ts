@@ -4,6 +4,7 @@ const SINGLE_RANGE = /^bytes=(\d*)-(\d*)$/i;
 
 function suffixRange(length: number, size: number): ByteRange | 'unsatisfiable' {
   if (length === 0 || size === 0) return 'unsatisfiable';
+
   return { start: Math.max(0, size - length), end: size - 1 };
 }
 
@@ -21,5 +22,6 @@ export function parseByteRange(
   const end = last === '' ? Infinity : Number(last);
   if (end < start) return null;
   if (start >= size) return 'unsatisfiable';
+
   return { start, end: Math.min(end, size - 1) };
 }

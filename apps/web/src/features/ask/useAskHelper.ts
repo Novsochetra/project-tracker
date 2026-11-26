@@ -15,5 +15,6 @@ export function useAskHelper(projectKey: string, run: Run | null | undefined): A
   const runners = useRunners();
   const [lastUsedId, choose] = useState(readLastHelper);
   const input = { runners: runners.data, projectKey, lastUsedId };
+
   return { footer: chatFooter({ ...input, run }), cardHelper: runHelper(input), choose };
 }

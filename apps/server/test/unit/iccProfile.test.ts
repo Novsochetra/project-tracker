@@ -5,6 +5,7 @@ import { iccProfile, withTagPastEnd } from '../helpers/iccProfiles';
 function withTail(profile: Buffer, tail: number[]): Buffer {
   const grown = Buffer.concat([profile, Buffer.from(tail)]);
   grown.writeUInt32BE(grown.length, 0);
+
   return grown;
 }
 
@@ -40,6 +41,7 @@ describe('isWellFormedIccProfile', () => {
     for (const broken of [shortened, unsigned, tableTooLong, withTagPastEnd(srgb)]) {
       expect(isWellFormedIccProfile(broken)).toBe(false);
     }
+
     expect(isWellFormedIccProfile(srgb.subarray(0, 100))).toBe(false);
   });
 });

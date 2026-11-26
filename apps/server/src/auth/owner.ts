@@ -37,6 +37,7 @@ export const ownerExists = async (db: Db): Promise<boolean> => (await findOwner(
 function parseOwner(input: OwnerInput): OwnerInput {
   const result = ownerInput.safeParse({ ...input, email: normalizeEmail(input.email) });
   if (!result.success) throw invalidInput(result.error.issues[0]?.message ?? 'Invalid input.');
+
   return result.data;
 }
 
@@ -69,6 +70,7 @@ export async function setOwner(
 ): Promise<SetOwnerResult> {
   const { email, password } = parseOwner(input);
   const passwordHash = await hashPassword(password, params);
+
   return db.transaction().execute(async (trx) => {
     const owner = await findOwner(trx);
     await refuseEmailOfAnother(trx, email, owner?.id);
@@ -76,7 +78,9 @@ export async function setOwner(
       await createOwner(trx, { email, passwordHash, now });
       return { email, created: true, signedOut: 0 };
     }
+
     await updateUserRow(trx, owner.id, { email, passwordHash, updatedAt: now });
+
     return { email, created: false, signedOut: await deleteUserSessions(trx, owner.id) };
   });
 }

@@ -33,6 +33,7 @@ export const DEFAULT_PORT = 4100;
 
 function parsePort(value: string | undefined): number {
   const port = Number(value);
+
   return Number.isInteger(port) && port > 0 && port < 65536 ? port : DEFAULT_PORT;
 }
 
@@ -41,6 +42,7 @@ function parsePublicUrl(value: string | undefined): string | null {
   if (!URL.canParse(text)) return null;
   const url = new URL(text);
   if (url.protocol !== 'http:' && url.protocol !== 'https:') return null;
+
   return `${url.origin}${url.pathname}`.replace(/\/+$/, '');
 }
 
@@ -51,6 +53,7 @@ export function loadConfig(given: NodeJS.ProcessEnv = process.env): Config {
   const env = withRailwayDefaults(given);
   const host = env.HOST || '127.0.0.1';
   const publicUrl = parsePublicUrl(env.PUBLIC_URL);
+
   return {
     port: parsePort(env.PORT),
     host,

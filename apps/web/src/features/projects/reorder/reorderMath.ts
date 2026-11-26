@@ -9,6 +9,7 @@ export function orderAfterDrop(
   const rest = ids.filter((id) => id !== movedId);
   const before = target.beforeId ? rest.indexOf(target.beforeId) : -1;
   const at = before < 0 ? rest.length : before;
+
   return [...rest.slice(0, at), movedId, ...rest.slice(at)];
 }
 
@@ -17,6 +18,7 @@ export function orderAfterDrop(
 export function slotStep(rows: readonly RowBox[], from: number): number {
   const [first, second] = rows;
   const gap = first && second ? second.top - first.top - first.height : 0;
+
   return (rows[from]?.height ?? 0) + gap;
 }
 
@@ -26,6 +28,7 @@ export function rowShifts(
   step: number,
 ): Map<string, number> {
   const nextIndex = new Map(next.map((id, index) => [id, index]));
+
   return new Map(
     ids.map((id, index) => [id, Math.sign((nextIndex.get(id) ?? index) - index) * step]),
   );
@@ -40,5 +43,6 @@ export function clampOffset(rows: readonly RowBox[], from: number, offset: numbe
   if (!row || !first || !last) return 0;
   const min = first.top - row.top;
   const max = last.top + last.height - (row.top + row.height);
+
   return Math.min(Math.max(offset, min), max);
 }

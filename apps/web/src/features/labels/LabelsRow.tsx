@@ -24,6 +24,7 @@ export function LabelsRow({
   const [open, setOpen] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const names = labelNames(labelsOf(labels, value));
+
   return (
     <>
       <PropertyRow

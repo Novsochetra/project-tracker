@@ -26,15 +26,19 @@ const sampleEveryFrame = (page: Page) =>
     const alpha = (color: string) => {
       const parts = color.match(/[\d.]+/g) ?? [];
       if (parts.length >= 4) return Number(parts[3]);
+
       return color === 'transparent' ? 0 : 1;
     };
+
     const painted = (from: Element, to: Element) => {
       let opacity = 1;
       for (let el: Element | null = from; el && el !== to; el = el.parentElement) {
         opacity *= Number(getComputedStyle(el).opacity);
       }
+
       return opacity;
     };
+
     const sample = () => {
       for (const bar of document.querySelectorAll('[data-stack-path] header[data-navbar]')) {
         const path = bar.closest<HTMLElement>('[data-stack-path]')?.dataset.stackPath ?? '';
@@ -45,8 +49,10 @@ const sampleEveryFrame = (page: Page) =>
           line: alpha(getComputedStyle(bar).borderBottomColor),
         });
       }
+
       requestAnimationFrame(sample);
     };
+
     requestAnimationFrame(sample);
   }, TITLES);
 
@@ -59,6 +65,7 @@ async function switchTo(page: Page, name: string, path: string) {
   await expect(page.getByRole('heading', { name, level: 1 })).toBeVisible();
   // 20 frames is at least 330 ms, past the 160 ms fades of the nav bar.
   await expect.poll(async () => (await framesOf(page, path)).length).toBeGreaterThan(20);
+
   return framesOf(page, path);
 }
 

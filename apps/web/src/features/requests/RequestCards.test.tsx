@@ -20,6 +20,7 @@ const answered = (request: RunRequest, more: Partial<RunRequest>): RunRequest =>
 
 function Cards({ runId }: { runId: string }) {
   const requests = useRequests(runId);
+
   return <RequestCards requests={requests.shown} now={requests.now} />;
 }
 
@@ -35,6 +36,7 @@ function setup(requests: RunRequest[], answerRunRequest = vi.fn()) {
       </ToastProvider>
     </Wrapper>,
   );
+
   return { listRunRequests, answerRunRequest };
 }
 

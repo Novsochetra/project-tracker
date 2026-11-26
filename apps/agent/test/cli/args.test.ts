@@ -23,6 +23,7 @@ function usageError(argv: string[]): UsageError {
     if (error instanceof UsageError) return error;
     throw error;
   }
+
   throw new Error(`Expected a usage error for: ${argv.join(' ')}`);
 }
 

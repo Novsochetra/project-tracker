@@ -24,6 +24,7 @@ function wholeLabel(name: string, input: ToolInput, folder: string): string | un
   if (name.startsWith('mcp__')) return withLines(mcpHead(name), argumentLines(input));
   const change = Object.hasOwn(changeLines, name) ? changeLines[name] : undefined;
   if (change) return withLines(toolLabel(name, input, folder), change(input));
+
   return Object.hasOwn(WHOLE, name) ? WHOLE[name]?.(input) : undefined;
 }
 
@@ -41,10 +42,12 @@ export function permissionLabel(name: string, input: ToolInput, folder: string):
   const sliced = label.length > LABEL_ROOM;
   if (!sliced && masked.length <= RUN_PERMISSION_LABEL_MAX) return { label: masked, cut: false };
   const shown = sliced ? `${masked}…` : masked;
+
   return { label: cutTo(shown, RUN_PERMISSION_LABEL_MAX), cut: true };
 }
 
 export function labelHead(label: string): string {
   const [first = '', ...rest] = label.split('\n');
+
   return cutTo(oneLine(rest.length > 0 ? `${first} …` : first), RUN_REQUEST_LABEL_MAX);
 }

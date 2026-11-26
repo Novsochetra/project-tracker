@@ -32,6 +32,7 @@ function mockTouchPhone(): () => void {
       removeEventListener: () => undefined,
     }),
   });
+
   return () => {
     if (previous) Object.defineProperty(window, 'matchMedia', previous);
     else Reflect.deleteProperty(window, 'matchMedia');
@@ -53,6 +54,7 @@ function TicketScreenStub({ children }: { children: ReactNode }) {
     () => ({ route: { name: 'ticket', key: 'MOB', num: 3 }, isTop: true, scrollRef, largeTitle }),
     [largeTitle],
   );
+
   return (
     <div ref={scrollRef} data-testid="scroller">
       <ScreenContext value={value}>{children}</ScreenContext>
@@ -82,6 +84,7 @@ function renderDescription(field: { top: number; bottom: number }, screenHeight:
   Object.defineProperty(bar, 'offsetHeight', { value: BAR_HEIGHT });
   const scrollTo = vi.fn();
   scroller.scrollTo = scrollTo as typeof scroller.scrollTo;
+
   return { description, bar, scrollTo };
 }
 

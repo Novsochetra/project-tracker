@@ -3,6 +3,7 @@ import { isTrackpadSwipeTarget } from './swipeTarget';
 
 function mount(html: string): HTMLElement {
   document.body.innerHTML = html;
+
   return document.getElementById('target')!;
 }
 

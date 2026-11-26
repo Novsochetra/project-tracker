@@ -40,6 +40,7 @@ export function markHidden(text: string): ShownPart[] {
     add(parts, char, kindOf(char, lookalikes.has(at)));
     at += char.length;
   }
+
   return parts;
 }
 

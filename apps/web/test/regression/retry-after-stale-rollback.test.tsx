@@ -33,6 +33,7 @@ it('sends a checked retry even when the cache still shows the typed text', async
   const updateTicket = vi.fn((_key: string, _input: UpdateTicketInput): Promise<unknown> => {
     const save = deferred<unknown>();
     saves.push(save);
+
     return save.promise;
   });
   const rendered = renderTicket({

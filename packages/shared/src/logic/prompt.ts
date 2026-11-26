@@ -54,6 +54,7 @@ function metaLine(ticket: PromptTicket, now: Date): string {
   if (ticket.assignee) meta.push(`Assignee: ${ticket.assignee}`);
   if (ticket.labels?.length)
     meta.push(`Labels: ${ticket.labels.map((label) => label.name).join(', ')}`);
+
   return meta.join(' · ');
 }
 
@@ -67,11 +68,13 @@ export function ticketBlock(ticket: PromptTicket, heading: string, now: Date = n
   if (ticket.notes.length > 0) {
     out.push('', 'Notes:', ...ticket.notes.map((note) => `- ${note.replace(/\s*\n+\s*/g, ' ')}`));
   }
+
   if (ticket.lastReport) out.push('', 'Your last report on this ticket:', ticket.lastReport);
   if (ticket.lastReview) {
     const { verdict, rating, text } = ticket.lastReview;
     out.push('', `Last review: ${VERDICT_LABELS[verdict]} · ${rating}/5`, text);
   }
+
   return out.join('\n');
 }
 
@@ -88,6 +91,7 @@ export const instructionLines = (
   labels?: readonly PromptLabel[],
 ): string[] => {
   const block = instructionsBlock(project, '##', labels);
+
   return block.length > 0 ? ['', ...block] : [];
 };
 
@@ -181,5 +185,6 @@ export function buildProjectPrompt(
     '',
     replyFormat(`${project.key}-<number>`),
   );
+
   return lines.join('\n');
 }

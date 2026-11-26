@@ -45,10 +45,12 @@ function slowUploads(surface: Surface, overrides: Parameters<Surface['show']>[0]
     uploadAttachment: vi.fn(() => {
       const answer = deferred<Attachment>();
       answers.push(answer);
+
       return answer.promise;
     }),
     ...overrides,
   });
+
   return answers;
 }
 
@@ -60,6 +62,7 @@ async function pickAndFinishBackwards(answers: Deferred<Attachment>[]) {
     answers[index]!.resolve(uploaded(NAMES[index]!));
     await waitFor(() => expect(tileNames()).toEqual(NAMES));
   }
+
   await waitFor(() => expect(within(shown!.area()).queryByRole('progressbar')).toBeNull());
   expect(tileNames()).toEqual(NAMES);
 }

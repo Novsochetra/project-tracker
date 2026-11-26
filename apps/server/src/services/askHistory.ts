@@ -10,6 +10,7 @@ export async function askHistory(db: Db, chatId: string): Promise<AskHistoryMess
   const cards = await listCardTicketRows(db, chatId);
   const files = await chatFilesByMessage(db, chatId);
   const messages = await listMessageRows(db, chatId);
+
   return messages.map(({ id, role, text }) => ({
     role,
     text,

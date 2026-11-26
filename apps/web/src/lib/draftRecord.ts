@@ -73,6 +73,7 @@ const isOptional = (value: unknown, type: 'boolean' | 'number'): boolean =>
 export function isStoredDraft(value: unknown): value is StoredDraft {
   if (typeof value !== 'object' || value === null) return false;
   const draft = value as Record<string, unknown>;
+
   return (
     isText(draft.ticketKey) &&
     FIELDS.has(draft.field) &&

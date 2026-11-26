@@ -14,6 +14,7 @@ export function formatDuration(ms: number): string {
   if (minutes < 60) return `${minutes} min`;
   const hours = Math.floor(minutes / 60);
   const rest = minutes % 60;
+
   return rest === 0 ? `${hours} h` : `${hours} h ${rest} min`;
 }
 
@@ -24,6 +25,7 @@ export function formatCost(micros: number): string {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   });
+
   return `about $${dollars}`;
 }
 

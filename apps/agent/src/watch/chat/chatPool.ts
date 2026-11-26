@@ -82,6 +82,7 @@ export function createChatPool<T extends PooledChat>(options: ChatPoolOptions = 
       forget(want.chatId, entry);
       throw error;
     }
+
     return entry;
   }
 
@@ -93,8 +94,10 @@ export function createChatPool<T extends PooledChat>(options: ChatPoolOptions = 
       clearTimeout(found.idle);
       return Promise.resolve(found);
     }
+
     close(want.chatId);
     makeRoom();
+
     return startFor(want);
   }
 

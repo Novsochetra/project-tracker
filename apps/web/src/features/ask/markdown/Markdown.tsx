@@ -7,6 +7,7 @@ import { parseMarkdown } from './parseMarkdown';
 export function Markdown({ text, className = '' }: { text: string; className?: string }) {
   const blocks = useMemo(() => parseMarkdown(text), [text]);
   if (blocks.length === 0) return null;
+
   return (
     <div className={`${styles.flow} ${styles.markdown} ${className}`}>
       <Blocks blocks={blocks} />

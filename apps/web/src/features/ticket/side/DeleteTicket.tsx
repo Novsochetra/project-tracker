@@ -34,6 +34,7 @@ export function DeleteTicket({ ticketKey }: { ticketKey: string }) {
       </Button>
     );
   }
+
   const confirm = () => {
     void deleteTicket.mutateAsync({ ticketKey }).then(
       () => {
@@ -45,6 +46,7 @@ export function DeleteTicket({ ticketKey }: { ticketKey: string }) {
       (error: unknown) => show(errorMessage(error), { kind: 'error' }),
     );
   };
+
   return (
     <ConfirmCard
       message={`Delete ${ticketKey}? This can't be undone.`}

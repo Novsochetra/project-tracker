@@ -6,6 +6,7 @@ const ID = 'comment-edit:c1';
 
 async function otherTab() {
   vi.resetModules();
+
   return import('./saveMarks');
 }
 

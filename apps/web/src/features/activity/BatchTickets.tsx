@@ -16,6 +16,7 @@ interface BatchTicketsProps {
 
 export function BatchTickets({ id, batch, onOpen }: BatchTicketsProps) {
   const query = useRunBatch(batch.runId);
+
   return (
     <div id={id} className={`${styles.tickets} fade-in`}>
       {query.data && (

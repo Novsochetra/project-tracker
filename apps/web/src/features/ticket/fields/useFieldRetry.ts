@@ -48,6 +48,7 @@ export function useFieldRetry(input: RetryInput) {
   const read = useFreshTicket(target.ticketKey);
   const checkingRef = useRef(false);
   const { show } = useToast();
+
   return (by: RetryBy) => {
     if (!draft.failed || draft.conflict || checkingRef.current) return;
     if (by === 'user' && savingWhere(id) === 'elsewhere') {
@@ -55,6 +56,7 @@ export function useFieldRetry(input: RetryInput) {
       retryOnceSettled(id);
       return;
     }
+
     // Saves on their way, also from before the field opened, settle the text, and the tracker
     // may already have one of them without having answered it. The retry waits for them: one
     // of older text landing leaves the field's newer text unsaved.
@@ -62,6 +64,7 @@ export function useFieldRetry(input: RetryInput) {
       retryOnceSettled(id);
       return;
     }
+
     checkingRef.current = true;
     const shown = draft.value;
     if (!storedDraft(id)) {
@@ -76,6 +79,7 @@ export function useFieldRetry(input: RetryInput) {
         });
       return;
     }
+
     void check(id, draft.landed?.text).then((result) => {
       checkingRef.current = false;
       if (result === 'unreachable' && by === 'user') show(NETWORK_ERROR_MESSAGE, { kind: 'error' });

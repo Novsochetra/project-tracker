@@ -34,6 +34,7 @@ function renderReport(activity: Activity) {
   const rendered = renderTicket({ detail: makeTicketDetail(undefined, { activity: [activity] }) });
   cleanups.push(rendered.restorePhone);
   const log = screen.getByRole('region', { name: 'Activity' });
+
   return within(log).getByRole('button', { name: 'Report options' }).closest('article')!;
 }
 

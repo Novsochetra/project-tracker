@@ -16,14 +16,17 @@ const gates = vi.hoisted(() => {
   const gate = () => {
     let open = () => undefined as void;
     const arrived = new Promise<void>((resolve) => (open = resolve));
+
     return { arrived, open: () => open() };
   };
+
   return { project: gate(), ticket: gate(), connect: gate() };
 });
 
 vi.mock('../features/project/ProjectScreen', async () => {
   await gates.project.arrived;
   const { createElement } = await import('react');
+
   return {
     ProjectScreen: ({ projectKey }: { projectKey: string }) =>
       createElement('p', null, `Project screen ${projectKey}`),
@@ -37,6 +40,7 @@ vi.mock('../features/project/projectScreens', async () =>
 vi.mock('../features/ticket/TicketScreen', async () => {
   await gates.ticket.arrived;
   const { createElement } = await import('react');
+
   return {
     TicketScreen: ({ projectKey, num }: { projectKey: string; num: number }) =>
       createElement('p', null, `Ticket screen ${projectKey}-${num}`),
@@ -46,6 +50,7 @@ vi.mock('../features/ticket/TicketScreen', async () => {
 vi.mock('../features/connect/ConnectSheet', async () => {
   await gates.connect.arrived;
   const { createElement } = await import('react');
+
   return {
     ConnectSheet: () => createElement('div', { role: 'dialog', 'aria-label': 'Connect' }),
   };
@@ -118,6 +123,7 @@ describe('screens whose code loads when opened', () => {
 
 function ConnectOpener() {
   const sheets = useSheets();
+
   return (
     <button type="button" onClick={() => sheets.open({ type: 'connect' })}>
       Connect

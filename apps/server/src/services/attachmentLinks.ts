@@ -54,5 +54,6 @@ export async function attachLaterUploads(
   if (later.length === 0) return { attached: false, leftOut };
   const target = { ticketId, activityId: null, uploader };
   await attachUploads(db, later, target, await nextTicketPosition(db, ticketId));
+
   return { attached: true, leftOut };
 }

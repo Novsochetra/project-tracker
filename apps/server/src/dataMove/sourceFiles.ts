@@ -12,6 +12,7 @@ export interface SourceFile {
 
 async function sizeOf(path: string): Promise<number | null> {
   const info = await stat(path).catch(() => null);
+
   return info?.isFile() ? info.size : null;
 }
 
@@ -31,6 +32,7 @@ export async function findSourceFiles(
   return Promise.all(
     rows.map(async (row) => {
       const path = join(dir, row.storageKey);
+
       return { row, path, size: isSafeKey(row.storageKey) ? await sizeOf(path) : null };
     }),
   );
@@ -51,11 +53,13 @@ export function sourceFileProblems(dir: string, files: readonly SourceFile[]): s
   if (missing.length > 0) {
     problems.push(`${missing.length} attachment file(s) are not in ${dir}: ${listed(missing)}.`);
   }
+
   if (resized.length > 0) {
     problems.push(
       `${resized.length} file(s) in ${dir} differ in size from their rows: ${listed(resized)}.`,
     );
   }
+
   return problems;
 }
 

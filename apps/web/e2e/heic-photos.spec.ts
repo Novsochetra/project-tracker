@@ -30,6 +30,7 @@ test.describe('HEIC photos', () => {
     const dataTransfer = await page.evaluateHandle((bytes) => {
       const data = new DataTransfer();
       data.items.add(new File([new Uint8Array(bytes)], 'IMG_0006.HEIC', { type: 'image/heic' }));
+
       return data;
     }, HEIC);
     const description = sheet.getByLabel('Description', { exact: true });

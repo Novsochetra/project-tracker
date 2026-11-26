@@ -25,7 +25,9 @@ export function readFence(cursor: Cursor): Block | null {
     body.push(line.slice(Math.min(fence.indent, leadingSpaces(line))));
     cursor.at += 1;
   }
+
   cursor.at += 1;
+
   return { kind: 'code', lang: fence.lang, text: body.join('\n') };
 }
 
@@ -33,12 +35,14 @@ export function readHeading(cursor: Cursor): Block | null {
   const heading = headingOf(lineAt(cursor));
   if (!heading) return null;
   cursor.at += 1;
+
   return { kind: 'heading', level: heading.level, content: parseInline(heading.text) };
 }
 
 export function readRule(cursor: Cursor): Block | null {
   if (!isRule(lineAt(cursor))) return null;
   cursor.at += 1;
+
   return { kind: 'rule' };
 }
 
@@ -56,6 +60,7 @@ function readRows(cursor: Cursor, width: number): string[][] {
     if (cells > MAX_TABLE_CELLS) break;
     rows.push(row);
   }
+
   return rows;
 }
 
@@ -64,6 +69,7 @@ export function readTable(cursor: Cursor): Block | null {
   if (!table) return null;
   cursor.at += 2;
   const rows = readRows(cursor, table.head.length);
+
   return {
     kind: 'table',
     align: table.align,
@@ -74,6 +80,7 @@ export function readTable(cursor: Cursor): Block | null {
 
 export const endsParagraph = (cursor: Cursor): boolean => {
   const line = lineAt(cursor);
+
   return (
     isBlank(line) || startsBlock(line, cursor.depth) || tableAt(cursor.lines, cursor.at) !== null
   );
@@ -87,5 +94,6 @@ export function readParagraph(cursor: Cursor): Block {
     lines.push(lineAt(cursor).trim());
     cursor.at += 1;
   }
+
   return { kind: 'paragraph', content: parseInline(lines.join('\n')) };
 }

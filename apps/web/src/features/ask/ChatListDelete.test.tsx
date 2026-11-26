@@ -21,6 +21,7 @@ function setup(phone: boolean, deleteChat = vi.fn().mockResolvedValue(undefined)
   const listChats = vi.fn().mockResolvedValue(CHATS);
   const rendered = renderAsk({ path: '/p/MOB/ask', phone, client: { listChats, deleteChat } });
   restore = rendered.restore;
+
   return { deleteChat, listChats };
 }
 

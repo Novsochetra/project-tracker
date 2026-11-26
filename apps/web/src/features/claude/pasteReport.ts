@@ -47,6 +47,7 @@ export function reportView(state: ReportState): ReportView {
   const hasText = state.text.trim().length > 0;
   const items = hasText ? (state.preview?.items ?? []) : [];
   const matched = (state.preview?.matchedCount ?? 0) > 0;
+
   return {
     text: state.text,
     items,
@@ -64,6 +65,7 @@ export interface PreviewRow {
 
 function outcomeOf(item: ReportPreviewItem): string {
   if (!item.toStatusName) return 'Add report';
+
   return `${item.fromStatusName ?? '—'} → ${item.toStatusName}`;
 }
 
@@ -76,6 +78,7 @@ export function previewRow(item: ReportPreviewItem): PreviewRow {
       skipped: true,
     };
   }
+
   return {
     keyLabel: item.ticketKey ?? item.key ?? '—',
     title: item.ticketTitle || 'Untitled',

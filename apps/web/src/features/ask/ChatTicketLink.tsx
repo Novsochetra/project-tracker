@@ -16,6 +16,7 @@ function TicketLink({ ticket }: { ticket: ChatTicket }) {
     event.preventDefault();
     push(route);
   };
+
   return (
     <a
       className={clsx(styles.link, 'press')}
@@ -35,6 +36,7 @@ function TicketLink({ ticket }: { ticket: ChatTicket }) {
 // A new chat has no ticket of its own yet: it shows the one its screen was opened from.
 function OpeningTicket({ ticketKey }: { ticketKey: string }) {
   const title = useTicket(ticketKey).data?.ticket.title;
+
   return <TicketLink ticket={{ key: ticketKey, title: title ?? '' }} />;
 }
 
@@ -47,5 +49,6 @@ export interface ChatTicketLinkProps {
 export function ChatTicketLink({ projectKey, detail, ticketNum }: ChatTicketLinkProps) {
   if (detail) return detail.chat.ticket && <TicketLink ticket={detail.chat.ticket} />;
   if (ticketNum === undefined) return null;
+
   return <OpeningTicket ticketKey={formatTicketKey(projectKey, ticketNum)} />;
 }

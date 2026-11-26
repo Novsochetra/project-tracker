@@ -7,6 +7,7 @@ import { queryKeys } from '../../api';
 // re-renders, so quick repeated drops and arrow presses plan from the latest order.
 export function useBoardReader(projectKey: string): () => ProjectBoard | undefined {
   const queryClient = useQueryClient();
+
   return useCallback(
     () => queryClient.getQueryData<ProjectBoard>(queryKeys.board(projectKey)),
     [queryClient, projectKey],

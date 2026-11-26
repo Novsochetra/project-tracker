@@ -36,6 +36,7 @@ export function ScreenLoading({ quiet = false }: ScreenLoadingProps) {
   const { route: current } = useNavigation();
   // A layer's own route, which it keeps while it slides away after a Back.
   const route = useOptionalScreen()?.route ?? current;
+
   // A deep link starts its screens' stylesheets as the app starts, and a stalled push its screen's.
   return (
     <div ref={styleNow} className={clsx(quiet && 'quiet-in')}>

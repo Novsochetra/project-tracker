@@ -25,8 +25,10 @@ export async function openPromptTool(
     const call = promptCallOf(args);
     const run = runNow();
     if (!call) return Promise.resolve(deny('The call could not be read.'));
+
     return run ? tool.ask(run, call, signal) : Promise.resolve(deny(NO_RUN));
   });
+
   return { args: promptToolArgs(tool.command, socket.path), close: socket.close };
 }
 

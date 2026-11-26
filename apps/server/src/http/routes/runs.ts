@@ -50,12 +50,14 @@ const runnerRoutes = (ctx: ServiceContext) =>
     )
     .delete('/runners/:id', async (c) => {
       await removeRunner(ctx, scope(c), c.req.param('id'));
+
       return c.body(null, 204);
     })
     .post('/runners/:id/next', helperOnly, queryParams(takeRunQuery), async (c) => {
       const { kind, batches } = c.req.valid('query');
       const take = { lane: kind, batches: batches === '1' };
       const job = await takeNextRun(ctx, scope(c), c.req.param('id'), take);
+
       return job ? c.json(job) : c.body(null, 204);
     });
 

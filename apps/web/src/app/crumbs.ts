@@ -24,6 +24,7 @@ function chatParentCrumb(route: Extract<Route, { name: 'chat' }>, key: string): 
   const num = route.ticketNum;
   if (num === undefined)
     return { level: 'chats', label: ASK_LABEL, target: { name: 'chats', key } };
+
   return { level: 'ticket', label: `${key}-${num}`, target: { name: 'ticket', key, num } };
 }
 
@@ -58,6 +59,7 @@ export function breadcrumbFor(
     color: project?.color,
     target: route.name === 'project' ? null : { name: 'project', key },
   };
+
   return [
     { level: 'projects', label: 'Projects', target: PROJECTS },
     projectCrumb,

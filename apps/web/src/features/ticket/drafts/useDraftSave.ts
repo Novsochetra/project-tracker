@@ -10,6 +10,7 @@ export type DraftSave = (draft: StoredDraft) => Promise<unknown>;
 export function useDraftSave(): DraftSave {
   const updateTicket = useUpdateTicket().mutateAsync;
   const updateComment = useUpdateComment().mutateAsync;
+
   return (draft) => {
     const { ticketKey, text, base } = draft;
     switch (draft.field) {

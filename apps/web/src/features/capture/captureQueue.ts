@@ -51,6 +51,7 @@ export const findWaiting = (queue: CaptureQueue, id: string): QueuedCapture | un
 
 export function markCreated(queue: CaptureQueue, id: string): CaptureQueue {
   const created = queue.created.includes(id) ? queue.created : [...queue.created, id];
+
   return {
     items: queue.items.filter((item) => item.id !== id),
     created: created.slice(-CREATED_MEMORY),
@@ -67,7 +68,9 @@ function toCapture(value: unknown): QueuedCapture[] {
   if (typeof id !== 'string' || typeof projectKey !== 'string' || typeof title !== 'string') {
     return [];
   }
+
   const sent = parseCaptureText(value.sent);
+
   return [
     {
       id,
@@ -89,10 +92,12 @@ export function parseQueue(text: string | null): CaptureQueue {
   } catch {
     return EMPTY_QUEUE;
   }
+
   if (!isRecord(value)) return EMPTY_QUEUE;
   const items = Array.isArray(value.items) ? value.items.flatMap(toCapture) : [];
   const created = Array.isArray(value.created)
     ? value.created.filter((id): id is string => typeof id === 'string')
     : [];
+
   return { items, created };
 }

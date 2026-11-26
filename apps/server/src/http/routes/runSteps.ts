@@ -13,10 +13,12 @@ export const runStepRoutes = (ctx: ServiceContext) =>
     .post('/runs/:id/steps', helperOnly, jsonBody(addRunStepsInput), async (c) => {
       const scope = requireScope(c.get('access'));
       await addRunSteps(ctx, scope, c.req.param('id'), c.req.valid('json'));
+
       return c.body(null, 204);
     })
     .get('/runs/:id/steps', personReadsSteps, queryParams(runStepsQuery), async (c) => {
       const scope = requireScope(c.get('access'));
       const { after } = c.req.valid('query');
+
       return c.json(await listRunSteps(ctx, scope, c.req.param('id'), after));
     });

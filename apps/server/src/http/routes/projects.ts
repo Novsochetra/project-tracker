@@ -33,6 +33,7 @@ export const projectRoutes = (ctx: ServiceContext) =>
     )
     .delete('/projects/:key', personEditsProjects, async (c) => {
       await deleteProject(userContext(ctx, c), c.req.param('key'));
+
       return c.body(null, 204);
     })
     .get('/projects/:key/board', async (c) =>

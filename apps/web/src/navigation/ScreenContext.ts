@@ -17,6 +17,7 @@ export const ScreenContext = createContext<ScreenState | null>(null);
 export function useScreen(): Screen {
   const screen = use(ScreenContext);
   if (!screen) throw new Error('useScreen() only works inside a screen of <StackNavigator>.');
+
   return screen;
 }
 

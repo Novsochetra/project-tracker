@@ -30,5 +30,6 @@ export function checkDraft(draft: StoredDraft, server: string | undefined): Draf
   if (server === undefined) return 'gone';
   const now = comparable(draft, server);
   if (now === comparable(draft, draft.text)) return 'saved';
+
   return now === comparable(draft, draft.base) ? 'unchanged' : 'changed';
 }

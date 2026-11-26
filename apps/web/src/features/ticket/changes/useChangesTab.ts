@@ -15,5 +15,6 @@ export function useChangesTab(ticketKey: string): ChangesTab {
   const changes = useTicketChanges(ticketKey).data?.changes ?? null;
   const files = useMemo(() => (changes ? parseDiff(changes.diff) : []), [changes]);
   const [tab, setTab] = useState<TicketTab>('ticket');
+
   return { changes, files, tab: changes ? tab : 'ticket', setTab };
 }

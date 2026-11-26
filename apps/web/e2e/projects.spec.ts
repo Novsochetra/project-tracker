@@ -64,6 +64,7 @@ test.describe('projects', () => {
     if (!isPhone(info.project.name)) {
       await expect(page.getByRole('complementary', { name: 'Projects' })).toContainText('Website');
     }
+
     await row.click();
     await expect(page).toHaveURL(/\/p\/WEB$/);
     await expect(page.getByText('No tickets yet')).toBeVisible();

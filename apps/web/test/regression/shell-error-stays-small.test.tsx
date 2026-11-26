@@ -17,6 +17,7 @@ import { mockPhone, skipAnimations } from '../../src/overlays/testing';
 
 vi.mock('../../src/features/project/ProjectScreen', async () => {
   const { createElement } = await import('react');
+
   return { ProjectScreen: () => createElement('p', null, 'Project screen') };
 });
 
@@ -94,6 +95,7 @@ describe('regression: the desktop sidebar with a projects answer it cannot read'
 
 function Opener() {
   const sheets = useSheets();
+
   return (
     <button type="button" onClick={() => sheets.open({ type: 'newProject' })}>
       Open

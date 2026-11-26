@@ -36,6 +36,7 @@ export function ReadyRow({ item, index, onOpen, onDone }: ReadyRowProps) {
   const isPhone = useIsPhone();
   const done = item.doneStatus;
   const main = <ReadyRowMain item={item} chevron={isPhone} onOpen={() => onOpen(item)} />;
+
   return (
     <div
       className={clsx(styles.row, 'rise')}
@@ -84,6 +85,7 @@ function ReadyRowMain({
   onOpen,
 }: ReadyRowMainProps) {
   const opening = useIsOpening({ name: 'ticket', key: project.key, num: ticket.num });
+
   return (
     <button
       type="button"

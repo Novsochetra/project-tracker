@@ -25,6 +25,7 @@ export interface GlideSettings {
 
 function guarded(onDone: (() => void) | undefined): { done: () => void; cancel: () => void } {
   let active = true;
+
   return {
     done: () => {
       if (active) onDone?.();
@@ -47,6 +48,7 @@ export function tween(
     ease: timing.ease,
     onComplete: guard.done,
   });
+
   return () => {
     guard.cancel();
     controls.stop();
@@ -72,6 +74,7 @@ export function spring(
     restSpeed: restDelta * 10,
     onComplete: guard.done,
   });
+
   return () => {
     guard.cancel();
     controls.stop();
@@ -92,6 +95,7 @@ export function momentumDuration(distance: number, settings: MomentumSettings): 
   const speed = towardTarget ? Math.abs(settings.velocity) : 0;
   const ideal =
     speed > 0 ? ((IOS_START_SLOPE * Math.abs(distance)) / speed) * 1000 : settings.maxMs;
+
   return Math.min(settings.maxMs, Math.max(settings.minMs, ideal));
 }
 
@@ -103,6 +107,7 @@ export function momentum(
   onDone?: () => void,
 ): Stop {
   const durationMs = momentumDuration(to - value.get(), settings);
+
   return tween(value, to, { durationMs, ease: EASE_IOS }, onDone);
 }
 
@@ -124,6 +129,7 @@ export function glide(
     restDelta: 0.5,
     onComplete: guard.done,
   });
+
   return () => {
     guard.cancel();
     controls.stop();

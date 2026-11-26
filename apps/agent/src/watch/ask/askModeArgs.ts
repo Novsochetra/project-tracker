@@ -27,5 +27,6 @@ const AUTO = ['--permission-mode', 'auto'];
 // mode or a name this helper doesn't know, falls back to read-only.
 export function askModeArgs(mode: unknown, permissionMode?: string): string[] {
   if (mode === 'auto') return [...AUTO];
+
   return mode === 'edit' ? editArgs(permissionMode) : [...READ_ONLY];
 }

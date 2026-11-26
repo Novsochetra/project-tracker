@@ -29,6 +29,7 @@ export function CaptureBar({ onClick }: { onClick: () => void }) {
 export function WaitingToSync() {
   const count = useWaitingCount();
   if (count === 0) return null;
+
   return (
     <p className={clsx(styles.waiting, 'fade-in')}>
       <Icon icon={CloudUpload} size={14} />

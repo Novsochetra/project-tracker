@@ -8,6 +8,7 @@ import { CaptureText } from './CaptureFields';
 function Text({ onEnter }: { onEnter: () => void }) {
   const [values, setValues] = useState<CaptureValues>(BLANK_CAPTURE);
   const titleRef = useRef<HTMLTextAreaElement>(null);
+
   return (
     <CaptureText
       values={values}

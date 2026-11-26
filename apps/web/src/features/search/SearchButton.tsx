@@ -7,6 +7,7 @@ import styles from './SearchButton.module.css';
 export function SearchButton() {
   const sheets = useSheets();
   const apple = isApplePlatform();
+
   return (
     <button
       type="button"

@@ -23,6 +23,7 @@ function StopButton({ runId, projectName }: { runId: string; projectName: string
   const toast = useToast();
   const onClick = () =>
     stop.mutate(runId, { onError: (error) => toast.show(errorMessage(error), { kind: 'error' }) });
+
   return (
     <Button
       size="sm"
@@ -40,6 +41,7 @@ export function BatchRow({ batch, now, onOpen }: BatchRowProps) {
   const [open, setOpen] = useState(false);
   const ticketsId = useId();
   const failed = failedKeysText(batch);
+
   return (
     <div>
       <div className={styles.batch}>

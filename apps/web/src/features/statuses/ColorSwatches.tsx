@@ -12,6 +12,7 @@ export interface ColorSwatchesProps {
 export function ColorSwatches({ value, onChange }: ColorSwatchesProps) {
   const labelId = useId();
   const name = useId();
+
   return (
     <div className={styles.colors}>
       <span id={labelId} className={styles.label}>

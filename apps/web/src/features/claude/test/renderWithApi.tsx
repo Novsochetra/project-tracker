@@ -14,11 +14,13 @@ export function renderWithApi(ui: ReactElement, overrides: ClientOverrides = {})
       <ToastProvider>{ui}</ToastProvider>
     </Wrapper>,
   );
+
   return { ...api, ...view };
 }
 
 export function sheetTestSetup(isPhone = false): () => void {
   const undo = [skipAnimations(), mockPhone(isPhone)];
+
   return () => undo.forEach((restore) => restore());
 }
 

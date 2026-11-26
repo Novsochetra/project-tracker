@@ -17,6 +17,7 @@ const onDisk = () => JSON.parse(localStorage.getItem(KEY) ?? '{}') as Record<str
 // Full storage refuses any write that would make it hold more than it does now.
 function fillStorage() {
   const setItem = Storage.prototype.setItem;
+
   return vi.spyOn(Storage.prototype, 'setItem').mockImplementation(function (
     this: Storage,
     key: string,
@@ -25,6 +26,7 @@ function fillStorage() {
     if (value.length > (this.getItem(key)?.length ?? 0)) {
       throw new DOMException('Full', 'QuotaExceededError');
     }
+
     setItem.call(this, key, value);
   });
 }

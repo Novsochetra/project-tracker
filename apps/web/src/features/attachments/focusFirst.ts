@@ -2,6 +2,7 @@ const CONTROLS = 'a[href], button, input, select, textarea, [tabindex]';
 
 const after = (element: Element, candidate: Element): boolean => {
   const position = element.compareDocumentPosition(candidate);
+
   return (
     (position & Node.DOCUMENT_POSITION_FOLLOWING) !== 0 &&
     (position & Node.DOCUMENT_POSITION_CONTAINED_BY) === 0

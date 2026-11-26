@@ -29,6 +29,7 @@ export async function getRunBatch(
   const batch = await requireRun(ctx, scope, id);
   if (batch.kind !== 'batch') throw notFound('That batch was not found.');
   const rows = await listBatchTicketRows(ctx.db, [batch.id]);
+
   return {
     runId: batch.id,
     projectKey: batch.projectKey,

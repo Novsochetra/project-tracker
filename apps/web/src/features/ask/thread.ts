@@ -8,6 +8,7 @@ export type ThreadItem = { kind: 'message'; message: ChatMessage } | { kind: 'st
 export function stoppedRunsOf(detail: Pick<ChatDetail, 'run' | 'stoppedRuns'> | null): Run[] {
   const latest = stoppedWithSteps(detail?.run);
   const listed = (detail?.stoppedRuns ?? []).filter(({ id }) => id !== latest?.id);
+
   return latest ? [...listed, latest] : listed;
 }
 
@@ -22,5 +23,6 @@ export function threadItems(messages: ChatMessage[], stoppedRuns: Run[]): Thread
     const before = items.findLastIndex((item) => timeOf(item) <= run.createdAt);
     items.splice(before + 1, 0, { kind: 'stopped', run });
   }
+
   return items;
 }

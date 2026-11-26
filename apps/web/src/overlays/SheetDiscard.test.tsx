@@ -9,6 +9,7 @@ import { mockPhone, readActionSheet, skipAnimations } from './testing';
 function Harness({ onClose }: { onClose: () => void }) {
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState('');
+
   return (
     <>
       <button
@@ -57,6 +58,7 @@ async function openSheet(isPhone: boolean) {
   const user = userEvent.setup();
   render(<Harness onClose={onClose} />);
   await user.click(screen.getByRole('button', { name: 'Open' }));
+
   return { onClose, user };
 }
 
@@ -90,6 +92,7 @@ function swipeDown(target: Element, distance = 400) {
 
 const offsetOf = (element: HTMLElement): number => {
   const match = /translateY\((-?[\d.]+)px\)/.exec(element.style.transform);
+
   return match ? Number(match[1]) : 0;
 };
 

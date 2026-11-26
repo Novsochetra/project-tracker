@@ -23,6 +23,7 @@ const RENEW_MS = 20_000;
 
 const once = (run: () => void): Release => {
   let done = false;
+
   return () => {
     if (done) return;
     done = true;
@@ -35,22 +36,26 @@ function heldUntilReleased(): { held: Promise<void>; release: Release } {
   const held = new Promise<void>((resolve) => {
     release = resolve;
   });
+
   return { held, release };
 }
 
 function holdWebLock(locks: LockManager, id: string): Release {
   const { held, release } = heldUntilReleased();
   locks.request(lockName(id), () => held).catch(() => undefined);
+
   return release;
 }
 
 // A lock request that fails would otherwise keep the capture waiting forever; it goes out unlocked.
 function claimWebLock(locks: LockManager, id: string): Promise<Release | null> {
   const { held, release } = heldUntilReleased();
+
   return new Promise((resolve) => {
     locks
       .request(lockName(id), { ifAvailable: true }, (lock) => {
         resolve(lock ? release : null);
+
         return lock ? held : undefined;
       })
       .catch(() => resolve(release));
@@ -74,6 +79,7 @@ function takeLease(storage: Storage, id: string, now: () => number): Release {
   const renew = () => tryStorage(write, undefined);
   renew();
   const timer = setInterval(renew, RENEW_MS);
+
   return () => {
     clearInterval(timer);
     tryStorage(() => storage.removeItem(leaseKey(id)), undefined);
@@ -84,6 +90,7 @@ function holdAcrossTabs(platform: LockPlatform, id: string): Release {
   const locks = platform.locks();
   if (locks) return holdWebLock(locks, id);
   const storage = platform.storage();
+
   return storage ? takeLease(storage, id, platform.now) : () => undefined;
 }
 
@@ -93,6 +100,7 @@ function claimAcrossTabs(platform: LockPlatform, id: string): Promise<Release | 
   const storage = platform.storage();
   if (!storage) return Promise.resolve(() => undefined);
   if (isLeased(storage, id, platform.now())) return Promise.resolve(null);
+
   return Promise.resolve(takeLease(storage, id, platform.now));
 }
 
@@ -105,9 +113,11 @@ export function createCaptureLocks(platform: LockPlatform): CaptureLocks {
       sending.delete(id);
       release();
     });
+
   return {
     hold: (id) => {
       sending.add(id);
+
       return tracked(id, holdAcrossTabs(platform, id));
     },
     claim: async (id) => {
@@ -116,6 +126,7 @@ export function createCaptureLocks(platform: LockPlatform): CaptureLocks {
       const release = await claimAcrossTabs(platform, id);
       if (release) return tracked(id, release);
       sending.delete(id);
+
       return null;
     },
   };

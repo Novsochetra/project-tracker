@@ -43,6 +43,7 @@ export function setViewMode(projectKey: string, mode: ViewMode): void {
 
 const subscribe = (listener: () => void) => {
   listeners.add(listener);
+
   return () => listeners.delete(listener);
 };
 

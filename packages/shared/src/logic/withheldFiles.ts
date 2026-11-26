@@ -8,6 +8,7 @@ export const keepsLocation = (mimeType: string): boolean =>
 
 export function withheldFilesNote(names: readonly string[]): string {
   const one = names.length === 1;
+
   return `${names.join(', ')} ${one ? 'was' : 'were'} not passed to you: the tracker cannot remove ${one ? 'its' : 'their'} location.`;
 }
 

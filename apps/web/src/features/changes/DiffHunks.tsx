@@ -37,6 +37,7 @@ function LineRow({ line, onSelect }: LineRowProps) {
       </div>
     );
   }
+
   return (
     <button
       type="button"
@@ -52,6 +53,7 @@ function LineRow({ line, onSelect }: LineRowProps) {
 export function DiffHunks({ file, onLineSelect, belowLine }: { file: DiffFile } & LineHandlers) {
   if (file.binary) return <p className={styles.note}>{BINARY_NOTE}</p>;
   if (file.hunks.length === 0) return <p className={styles.note}>{NO_LINES_NOTE}</p>;
+
   return (
     <div className={styles.hunks}>
       {file.hunks.map((hunk, index) => (

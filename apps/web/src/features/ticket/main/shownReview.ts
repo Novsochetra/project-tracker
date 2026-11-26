@@ -14,5 +14,6 @@ export function shownReview(
   const latest = items.findLast((item): item is ReviewItem => item.kind === 'review');
   if (!latest?.review) return null;
   const shown = category === 'reviewed' || isSentBack(latest.review, category);
+
   return shown ? { ...latest, review: latest.review } : null;
 }

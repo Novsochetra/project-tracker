@@ -8,6 +8,7 @@ import type { CommentEdit } from './useCommentEdit';
 
 function noteFor(edit: CommentEdit): string | null {
   if (edit.changed) return "The comment changed elsewhere while your edit wasn't saved.";
+
   return edit.failed ? "Your edit isn't saved yet." : null;
 }
 
@@ -30,6 +31,7 @@ export function CommentEditor({ edit }: { edit: CommentEdit }) {
   const save = () => {
     if (!blank) edit.save();
   };
+
   return (
     <form
       className={styles.editor}

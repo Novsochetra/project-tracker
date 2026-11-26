@@ -33,6 +33,7 @@ const textOrNull = (value: unknown): string | null => (typeof value === 'string'
 function identityOf(kept: SheetValues | undefined, values: CaptureValues): CaptureIdentity | null {
   const clientId = textOrNull(kept?.clientId);
   if (!clientId) return null;
+
   return { clientId, sent: parseCaptureText(kept?.sent) ?? captureTextOf(values) };
 }
 
@@ -42,6 +43,7 @@ export function keptCapture(): KeptCapture {
   const kept = sheetDraft(CAPTURE_DRAFT_ID);
   const { title, description, priority } = formFromDraft(kept);
   const values = { title, description, priority };
+
   return {
     values,
     projectKey: textOrNull(kept?.projectKey),
@@ -90,7 +92,9 @@ export function useCaptureId(kept: CaptureIdentity | null, empty: boolean): Capt
     // Stored before the request goes out, since the tab can be stopped any moment after it.
     keepCapture({ ...capture, identity: made });
     setIdentity(made);
+
     return made;
   };
+
   return { identity, take };
 }

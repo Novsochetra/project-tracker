@@ -30,6 +30,7 @@ function timeoutsOfStartedServer(): Promise<Timeouts> {
   });
   let output = '';
   child.stdout.on('data', (chunk: Buffer) => (output += chunk.toString()));
+
   return new Promise((resolve, reject) => {
     child.on('error', reject);
     child.on('close', () => {

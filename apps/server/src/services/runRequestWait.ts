@@ -24,8 +24,10 @@ export async function waitForRunRequest(
     if (found.run.runnerId !== runnerId) {
       throw forbidden('Only the helper that took this run waits for its requests.');
     }
+
     return found;
   };
+
   const { row } = await longPoll(ctx, {
     read,
     isOpen: (seen) => seen.row.status === 'open',
@@ -35,5 +37,6 @@ export async function waitForRunRequest(
     waitMs: (seen) => nextWaitMs(seen.row.expiresAt, ctx.now()),
     signal,
   });
+
   return toRunRequest(row);
 }

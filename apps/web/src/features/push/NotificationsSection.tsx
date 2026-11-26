@@ -10,6 +10,7 @@ const LABEL = 'Notifications on this device';
 export function NotificationsSection() {
   const { device, pending, error, toggle } = usePushSwitch();
   const ready = device?.support === 'ready';
+
   return (
     <section className={styles.section}>
       <GroupedCard>

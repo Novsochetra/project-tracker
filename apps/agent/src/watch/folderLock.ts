@@ -59,8 +59,10 @@ export function lockFolder(lockFolderPath: string, folder: string): () => void {
         holder,
       );
     }
+
     rmSync(path, { force: true });
     if (!tryCreate(path)) throw new FolderBusyError('tracker watch just started in this folder.');
   }
+
   return () => rmSync(path, { force: true });
 }

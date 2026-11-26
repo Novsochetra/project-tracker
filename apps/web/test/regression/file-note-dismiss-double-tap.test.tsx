@@ -52,6 +52,7 @@ async function pickWithRefusal(surface: Surface) {
   await waitFor(() => expect(area().queryByRole('progressbar')).toBeNull());
   expect(area().getByRole('alert')).toHaveTextContent("notes.svg can't be attached.");
   restore.push(stillClock());
+
   return user;
 }
 

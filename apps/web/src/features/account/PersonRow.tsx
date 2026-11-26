@@ -17,6 +17,7 @@ export function PersonRow({ user, making, onReset }: PersonRowProps) {
   const name = personName(user);
   const cancelLink = () =>
     cancel.mutate(user.id, { onSuccess: () => toast.show('Reset link cancelled') });
+
   return (
     <li className={styles.row}>
       <span className={styles.rowText}>

@@ -6,6 +6,7 @@ import { readableFiles, ticketFiles } from './readableFiles';
 const A1 = attachment('a1');
 const without = (field: keyof Attachment): Attachment => {
   const { [field]: _left, ...rest } = attachment(`no-${field}`);
+
   return rest as Attachment;
 };
 

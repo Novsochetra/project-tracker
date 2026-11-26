@@ -36,6 +36,7 @@ export async function addUser(
   await insertUser(db, { ...row, createdAt: now, updatedAt: now });
   const { secret } = await startSession(db, id, now);
   const token = await createApiToken(db, id, `${email} laptop`, now);
+
   return { id, person: { cookie: `${SESSION_COOKIE}=${secret}` }, helper: { token: token.secret } };
 }
 
@@ -55,6 +56,7 @@ export function caller(app: () => Hono<AppEnv>, auth: Auth) {
       ...(body === undefined ? {} : { body: JSON.stringify(body) }),
     });
     const text = await response.text();
+
     return { status: response.status, body: (text ? JSON.parse(text) : null) as T };
   };
 }

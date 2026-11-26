@@ -9,6 +9,7 @@ export function useStatusChange(): (ticket: TicketListItem, status: Status) => v
   const { mutateAsync } = useUpdateTicket();
   const { show } = useToast();
   const showMove = useMoveToast();
+
   return useCallback(
     (ticket, status) => {
       if (ticket.statusId === status.id) return;
@@ -25,6 +26,7 @@ export function useStatusChange(): (ticket: TicketListItem, status: Status) => v
 export function useLabelsChange(): (ticket: TicketListItem, labelIds: string[]) => void {
   const { mutateAsync } = useUpdateTicket();
   const { show } = useToast();
+
   return useCallback(
     (ticket, labelIds) => {
       const request = mutateAsync({ ticketKey: ticket.key, input: { labelIds } });
@@ -37,6 +39,7 @@ export function useLabelsChange(): (ticket: TicketListItem, labelIds: string[]) 
 export function useRemoveTicket(): (ticket: TicketListItem) => void {
   const { mutate } = useDeleteTicket();
   const { show } = useToast();
+
   return useCallback(
     (ticket) => {
       mutate(

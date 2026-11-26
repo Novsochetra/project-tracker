@@ -14,6 +14,7 @@ function hitMask(text: string, terms: readonly string[]): boolean[] | null {
       mask.fill(true, at, at + term.length);
     }
   }
+
   return mask;
 }
 
@@ -27,5 +28,6 @@ export function highlightParts(text: string, terms: readonly string[]): TextPart
     parts.push({ text: text.slice(start, index), hit: mask[start] ?? false });
     start = index;
   }
+
   return parts;
 }

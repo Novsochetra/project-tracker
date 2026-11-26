@@ -30,18 +30,23 @@ export function useProjectForm(initial: ProjectFormValues | undefined): ProjectF
     setStart(initial);
     setValues(initial);
   }
+
   const setField = (field: ProjectTextField, value: string) => {
     setValues((current) => ({ ...current, [field]: value }));
     setError(null);
   };
+
   const pickTemplate = (template: ProjectTemplateName) => {
     setValues((current) => withTemplate(current, template));
     setError(null);
   };
+
   const setSwitch = (field: ProjectSwitch, on: boolean) => {
     setValues((current) => ({ ...current, [field]: on }));
     setError(null);
   };
+
   const changed = projectFormChanged(values, start ?? EMPTY_PROJECT_FORM);
+
   return { values, changed, error, setField, pickTemplate, setSwitch, setError };
 }

@@ -50,6 +50,7 @@ function renderProjects() {
   });
   window.history.replaceState(null, '', '/');
   render(<TrackerApp client={client} queryClient={createTestQueryClient()} />);
+
   return client;
 }
 
@@ -58,6 +59,7 @@ const readyRow = (section: HTMLElement, key: string) => {
     .getByRole('button', { name: new RegExp(`^${key}\\b`) })
     .closest<HTMLElement>('[data-ready-row]');
   if (!row) throw new Error(`No ready row for ${key}`);
+
   return row;
 };
 

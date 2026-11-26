@@ -21,6 +21,7 @@ afterEach(() => {
 
 function Player({ onClose = () => undefined }: { onClose?: () => void }) {
   const [open, setOpen] = useState(true);
+
   return (
     <VideoViewer
       video={clip}

@@ -27,6 +27,7 @@ export function lockBodyScroll(): () => void {
   if (locks === 0) pinBody();
   locks += 1;
   let released = false;
+
   return () => {
     if (released) return;
     released = true;

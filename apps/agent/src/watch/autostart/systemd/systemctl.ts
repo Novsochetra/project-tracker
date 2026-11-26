@@ -60,6 +60,7 @@ export function uninstallUnit(systemd: Systemd, label: string): boolean {
   systemctl(systemd, ['disable', '--now', unitNameOf(label)]);
   rmSync(unitPathOf(systemd, label));
   systemctl(systemd, ['daemon-reload']);
+
   return true;
 }
 
@@ -73,8 +74,10 @@ export function unitState(systemd: Systemd, label: string): UnitState {
   } catch {
     return {};
   }
+
   const pid = Number(field(text, 'MainPID'));
   const lastExit = field(text, 'ExecMainStatus');
+
   return { ...(pid > 0 && { pid }), ...(lastExit !== undefined && { lastExit }) };
 }
 

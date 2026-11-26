@@ -20,6 +20,7 @@ export function DescriptionField({ ticketKey, value, onPaste }: DescriptionField
   const ref = useRef<HTMLTextAreaElement>(null);
   const fold = useFold(ref, isPhone, value);
   const id = useId();
+
   return (
     <>
       <AutosaveTextarea

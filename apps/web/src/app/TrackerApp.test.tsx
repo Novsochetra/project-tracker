@@ -13,6 +13,7 @@ import { TrackerApp } from './TrackerApp';
 
 vi.mock('../features/project/ProjectScreen', async () => {
   const { createElement } = await import('react');
+
   return {
     ProjectScreen: ({ projectKey }: { projectKey: string }) =>
       createElement('p', null, `Project screen ${projectKey}`),
@@ -25,6 +26,7 @@ vi.mock('../features/project/projectScreens', async () =>
 
 vi.mock('../features/ticket/TicketScreen', async () => {
   const { createElement } = await import('react');
+
   return {
     TicketScreen: ({ projectKey, num }: { projectKey: string; num: number }) =>
       createElement('p', null, `Ticket screen ${projectKey}-${num}`),
@@ -58,6 +60,7 @@ function renderApp(path: string, overrides: Partial<Record<keyof TrackerClient, 
     ...overrides,
   });
   render(<TrackerApp client={client} queryClient={createTestQueryClient()} />);
+
   return client;
 }
 

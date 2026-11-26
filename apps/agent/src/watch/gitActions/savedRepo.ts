@@ -20,6 +20,7 @@ const ENTRIES_MAX = CHAT_FILES_MAX * 4 * (DIFF_PATH_MAX + 100);
 
 async function out(cwd: string, args: readonly string[], signal: AbortSignal) {
   const { code, out: text } = await runTool('git', args, { cwd, signal });
+
   return code === 0 && text.trim() ? text.trim() : null;
 }
 
@@ -37,6 +38,7 @@ export async function saveRepo({ cwd, signal }: StepContext): Promise<SavedRepo>
   );
   const branch = await out(cwd, ['branch', '--show-current'], signal);
   const head = await out(cwd, ['rev-parse', '--verify', '-q', 'HEAD'], signal);
+
   return { index, copy: saved, folder, branch, head };
 }
 
@@ -50,6 +52,7 @@ async function leaveNewBranch(cwd: string, saved: SavedRepo, created: string, si
   // Only a branch with no commit of its own goes; one that holds work stays.
   const tip = await out(cwd, ['rev-parse', '--verify', '-q', `refs/heads/${created}`], signal);
   if (tip && tip === saved.head) await runTool('git', ['branch', '-D', created], { cwd, signal });
+
   return true;
 }
 
@@ -80,6 +83,7 @@ async function restoreEntries(
   const written = entries
     ? await runTool('git', ['update-index', '-z', '--index-info'], { cwd, signal, input: entries })
     : null;
+
   return (removed?.code ?? 0) === 0 && (written?.code ?? 0) === 0;
 }
 

@@ -9,6 +9,7 @@ const NAMES: Record<string, string> = {
 async function box(locator: Locator) {
   const b = await locator.boundingBox();
   expect(b).not.toBeNull();
+
   return b!;
 }
 
@@ -17,9 +18,11 @@ const apart = (a: { x: number; width: number }, b: { x: number; width: number })
 
 async function hits(page: Page, target: Locator, x: number, y: number) {
   const handle = await target.elementHandle();
+
   return page.evaluate(
     ([el, px, py]) => {
       const at = document.elementFromPoint(px, py);
+
       return at !== null && (el as Element).contains(at);
     },
     [handle, x, y] as const,
@@ -53,6 +56,7 @@ test.describe('phone nav bar with a long project name', () => {
           expect(apart(t, b), `${label} vs title`).toBe(true);
           expect(await hits(page, button, b.x + 12, b.y + b.height / 2), label).toBe(true);
         }
+
         if (name.length > 40) {
           expect(await title.evaluate((el) => el.scrollWidth > el.clientWidth)).toBe(true);
         }

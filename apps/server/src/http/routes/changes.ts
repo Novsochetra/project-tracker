@@ -16,6 +16,7 @@ export const changesRoutes = (ctx: ServiceContext) =>
     .post('/runs/:id/changes', helperOnly, jsonBody(addRunChangesInput), async (c) => {
       const scope = requireScope(c.get('access'));
       await addRunChanges(ctx, scope, c.req.param('id'), c.req.valid('json'));
+
       return c.body(null, 204);
     })
     .get('/tickets/:key/changes', async (c) =>
@@ -27,6 +28,7 @@ export const changesRoutes = (ctx: ServiceContext) =>
       jsonBody(viewedFileInput),
       async (c) => {
         await setFileViewed(userContext(ctx, c), c.req.param('key'), c.req.valid('json'));
+
         return c.body(null, 204);
       },
     )

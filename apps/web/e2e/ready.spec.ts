@@ -25,6 +25,7 @@ async function swipeRight(row: Locator): Promise<void> {
   for (let step = 1; step <= 12; step += 1) {
     await row.dispatchEvent('pointermove', at(start + step * 25));
   }
+
   await row.dispatchEvent('pointerup', at(start + 300));
 }
 

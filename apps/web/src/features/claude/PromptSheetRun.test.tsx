@@ -21,11 +21,13 @@ const studio = makeRunner({ id: 'h-studio', name: 'Studio' });
 
 function Harness() {
   const [open, setOpen] = useState(true);
+
   return <PromptSheet open={open} onClose={() => setOpen(false)} scope={scope} />;
 }
 
 function Opener() {
   const sheets = useSheets();
+
   return (
     <button type="button" onClick={() => sheets.open({ type: 'prompt', scope })}>
       Open sheet
@@ -36,6 +38,7 @@ function Opener() {
 function client(runners: Runner[], runs: Run[] = [], statusId: string = STATUS.todo) {
   const detail = makeTicketDetail(listItem(1, statusId, 0));
   const role = statusId === STATUS.review ? 'review' : 'work';
+
   return {
     getTicketPrompt: vi.fn().mockResolvedValue({ text: PROMPT, ticketCount: 1, role }),
     getTicket: vi.fn().mockResolvedValue(detail),

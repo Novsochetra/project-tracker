@@ -20,5 +20,6 @@ export function keepCallAlive(
       () => undefined,
     );
   }, every);
+
   return () => clearInterval(timer);
 }

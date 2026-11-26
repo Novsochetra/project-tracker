@@ -52,6 +52,7 @@ async function failLate(surface: Surface, names: string[]) {
   await user.upload(shown.input(), names.map(text));
   late.reject(new ApiError(408, 'http_error', 'Request Timeout'));
   const dismiss = await waitFor(() => within(area().getByRole('alert')).getByRole('button'));
+
   return { user, dismiss };
 }
 

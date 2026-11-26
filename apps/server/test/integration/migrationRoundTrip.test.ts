@@ -40,6 +40,7 @@ async function stepThrough(db: Db, dialect: TestDialect): Promise<SchemaShape[]>
     before = after;
     steps.push(again.portable);
   }
+
   return steps;
 }
 
@@ -134,6 +135,7 @@ describe.each(DIALECTS)('every migration up and down (%s)', (dialect) => {
           db,
         );
       }
+
       await sql`insert into attachments (id, file_name, mime_type, size, storage_key, created_at,
         position) values ('f', 'a.txt', 'text/plain', 5, 'f.txt', 1000, 0)`.execute(db);
 
@@ -216,6 +218,7 @@ describe.each(DIALECTS)('every migration up and down (%s)', (dialect) => {
           priority, assignee, due, created_at, updated_at) values (${id}, 'p', ${num}, 's', ${num},
           'T', '', 'medium', '', '', 1000, 1000)`.execute(db);
       }
+
       await sql`insert into chats (id, project_id, title, created_at, updated_at)
         values ('c', 'p', 'Q', 1000, 1000)`.execute(db);
       await sql`insert into chat_messages (id, chat_id, role, text, ticket_id, created_at) values

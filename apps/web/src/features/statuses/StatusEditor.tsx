@@ -54,12 +54,14 @@ export function StatusEditor(props: StatusEditorProps) {
     event.preventDefault();
     editor.save();
   };
+
   // The confirm is shorter than the editor it replaces, so Add status below moves up under the
   // finger, or the confirm's Delete lands there: a double tap's second tap pressed either.
   const askDelete = (event: MouseEvent<HTMLButtonElement>) => {
     if (event.detail !== 0) holdPresses(event.currentTarget);
     setDeleting(true);
   };
+
   return (
     <form
       ref={formRef}
@@ -92,6 +94,7 @@ interface EditorFieldsProps extends StatusEditorProps {
 function EditorFields({ editor, nameRef, status, statuses, onDone, onDelete }: EditorFieldsProps) {
   const { draft, change, issue } = editor;
   const deletable = canDeleteStatus(statuses);
+
   return (
     <>
       <div className={styles.nameRow}>

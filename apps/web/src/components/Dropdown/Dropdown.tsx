@@ -66,10 +66,12 @@ function Menu<T extends string>({
     anchorRef.current?.focus({ preventScroll: true });
     onClose();
   };
+
   const choose = (next: T) => {
     onSelect(next);
     close();
   };
+
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     const buttons = menuRef.current ? optionButtons(menuRef.current) : [];
     const index = buttons.findIndex((button) => button === document.activeElement);
@@ -80,12 +82,14 @@ function Menu<T extends string>({
       close();
       return;
     }
+
     if (event.key === 'Enter' || event.key === ' ') {
       event.preventDefault();
       const option = options[index];
       if (option) choose(option.value);
       return;
     }
+
     const next = nextIndex(event.key, index, buttons.length);
     if (next === null) return;
     event.preventDefault();
@@ -135,6 +139,7 @@ function position(menu: HTMLElement, anchor: DOMRect, itemCount: number) {
   });
   menu.style.width = `${place.width}px`;
   menu.style.maxHeight = `${place.maxHeight}px`;
+
   return place;
 }
 

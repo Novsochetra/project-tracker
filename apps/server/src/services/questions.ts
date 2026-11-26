@@ -34,6 +34,7 @@ export async function requireQuestion(
 ): Promise<QuestionRow> {
   const row = await findQuestionRow(ctx.db, scope, id);
   if (!row) throw notFound('That question was not found.');
+
   return row;
 }
 
@@ -63,10 +64,12 @@ export async function askQuestion(
       endedAt: null,
     };
     await insertQuestion(trx, row);
+
     return { ref, row };
   });
   notifyQuestion(ctx, ctx.scope, ref.project.id, ref.ticket.id);
   pushQuestion(ctx, actor, ref, row);
+
   return toQuestion(row);
 }
 
@@ -74,5 +77,6 @@ export async function askQuestion(
 export async function listQuestions(ctx: UserContext, key: string): Promise<TicketQuestion[]> {
   await settleQuestions(ctx);
   const { ticket } = await requireTicket(ctx.db, ctx.scope, key);
+
   return (await listTicketQuestionRows(ctx.db, ctx.scope, ticket.id)).map(toQuestion);
 }

@@ -10,6 +10,7 @@ export type MenuConfirmProps = Omit<ConfirmCardProps, 'variant'>;
 export function MenuConfirm(props: MenuConfirmProps) {
   const shield = useClickShield();
   useHoldCloseOnShow();
+
   return (
     <div role="presentation" onMouseDownCapture={shield} onClickCapture={shield}>
       <ConfirmCard variant="menu" {...props} />

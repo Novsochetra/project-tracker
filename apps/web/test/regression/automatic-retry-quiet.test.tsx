@@ -30,6 +30,7 @@ function countToasts(text: string): () => number {
   });
   observer.observe(document.body, { childList: true, subtree: true });
   cleanups.push(() => observer.disconnect());
+
   return () => count;
 }
 
@@ -42,6 +43,7 @@ function openWithWritesFailing() {
   const writes = { updateTicket: refuse(), updateComment: refuse() };
   const rendered = renderTicket({ detail: server.detail, client: { ...server.client, ...writes } });
   cleanups.push(rendered.restorePhone);
+
   return writes;
 }
 

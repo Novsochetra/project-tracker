@@ -28,6 +28,7 @@ async function downloadAll(
     await downloadFile(fetchFile, file, path, options);
     paths.push(path);
   }
+
   return paths;
 }
 

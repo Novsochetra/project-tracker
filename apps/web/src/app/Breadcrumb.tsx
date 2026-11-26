@@ -28,10 +28,12 @@ export function Breadcrumb({ crumbs }: { crumbs: Crumb[] }) {
     if (parent && routePath(parent) === routePath(target)) back();
     else push(target);
   };
+
   return (
     <nav aria-label="Breadcrumb" className={styles.breadcrumb}>
       {crumbs.map((crumb, index) => {
         const { target } = crumb;
+
         return (
           <Fragment key={crumb.level}>
             {index > 0 && <Icon icon={ChevronRight} size={14} className={styles.separator} />}

@@ -14,5 +14,6 @@ export const usageOfFinish = ({ usage }: FinishRunInput): RunUsageColumns => ({
 export function usageOfRow(row: RunUsage): RunUsage | null {
   const { costMicros, turns, durationMs } = row;
   if (costMicros === null && turns === null && durationMs === null) return null;
+
   return { costMicros, turns, durationMs };
 }

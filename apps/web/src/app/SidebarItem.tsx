@@ -10,6 +10,7 @@ export interface SidebarItemProps extends ButtonHTMLAttributes<HTMLButtonElement
 
 export function SidebarItem({ route, active, className, children, ...button }: SidebarItemProps) {
   const opening = useIsOpening(route);
+
   return (
     <button
       type="button"

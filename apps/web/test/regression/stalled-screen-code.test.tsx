@@ -25,13 +25,16 @@ const gates = vi.hoisted(() => {
       open = resolve;
       fail = () => reject(new Error('The chunk never came'));
     });
+
     return { arrived, open: () => open(), fail: () => fail() };
   };
+
   return { project: gate(), ticket: gate() };
 });
 
 vi.mock('../../src/features/project/ProjectScreen', async (importOriginal) => {
   await gates.project.arrived;
+
   return importOriginal();
 });
 
@@ -41,6 +44,7 @@ vi.mock('../../src/features/project/projectScreens', async () =>
 
 vi.mock('../../src/features/ticket/TicketScreen', async (importOriginal) => {
   await gates.ticket.arrived;
+
   return importOriginal();
 });
 

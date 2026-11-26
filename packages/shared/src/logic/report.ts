@@ -21,6 +21,7 @@ const STATUS_RULES: readonly (readonly [RegExp, StatusCategory])[] = [
 
 export function normalizeReportStatus(raw: string): StatusCategory | null {
   const value = raw.toLowerCase();
+
   return STATUS_RULES.find(([pattern]) => pattern.test(value))?.[1] ?? null;
 }
 
@@ -43,12 +44,15 @@ function splitBlocks(text: string): RawBlock[] {
       blocks.push(current);
       continue;
     }
+
     if (!current) {
       current = { key: null, lines: [] };
       blocks.push(current);
     }
+
     current.lines.push(line);
   }
+
   return blocks;
 }
 
@@ -56,9 +60,11 @@ export function parseReport(text: string): ParsedReportBlock[] {
   const blocks = splitBlocks(text);
   const keyed = blocks.filter((block) => block.key);
   const used = keyed.length > 0 ? keyed : blocks.filter((block) => block.lines.join('').trim());
+
   return used.map((block) => {
     const body = block.lines.join('\n').trim();
     const status = STATUS_LINE.exec(body)?.[1];
+
     return { key: block.key, category: status ? normalizeReportStatus(status) : null, text: body };
   });
 }
@@ -68,5 +74,6 @@ export function parseReport(text: string): ParsedReportBlock[] {
 export function reportBlockFor(text: string, ticketKey: string): string | null {
   const key = ticketKey.toUpperCase();
   const blocks = parseReport(text).filter((block) => block.key === key);
+
   return blocks.at(-1)?.text ?? null;
 }

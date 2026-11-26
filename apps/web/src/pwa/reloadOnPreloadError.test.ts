@@ -13,6 +13,7 @@ function focusField(): HTMLTextAreaElement {
   const field = document.createElement('textarea');
   document.body.append(field);
   field.focus();
+
   return field;
 }
 

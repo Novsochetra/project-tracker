@@ -60,22 +60,26 @@ export function NewTicketSheet({ open, onClose, projectKey, statusId }: NewTicke
     forgetKeptForm(projectKey);
     onClose();
   };
+
   // Closed without creating: the uploads have no ticket to wait for.
   const close = () => {
     files.discard(form.attachments);
     created();
   };
+
   const flow = useCreateTicketFlow({ projectKey, statuses, onCreated: created, onError: setError });
   const status = chosenStatusId(form, statuses, requested);
   const update = (patch: Partial<NewTicketForm>) => {
     setForm((current) => ({ ...current, ...patch }));
     setError('');
   };
+
   // Create waits for the files on their way, as its disabled button shows.
   const submit = () => {
     if (!form.title.trim()) setError(TITLE_REQUIRED);
     else if (!uploading) flow.submit(toCreateInput(form, status));
   };
+
   return (
     <Sheet
       open={open}

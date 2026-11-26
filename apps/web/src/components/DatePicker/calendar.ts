@@ -23,6 +23,7 @@ function toUtc(day: Ymd): Date {
   const utc = new Date(0);
   // setUTCFullYear, unlike Date.UTC, doesn't read years 0–99 as 1900–1999.
   utc.setUTCFullYear(year, month - 1, date);
+
   return utc;
 }
 
@@ -37,6 +38,7 @@ export const isYmd = (value: string): boolean =>
 export function addDays(day: Ymd, days: number): Ymd {
   const date = toUtc(day);
   date.setUTCDate(date.getUTCDate() + days);
+
   return fromUtc(date);
 }
 
@@ -47,6 +49,7 @@ export function addMonths(day: Ymd, months: number): Ymd {
   const lastDay = new Date(0);
   lastDay.setUTCFullYear(target.getUTCFullYear(), target.getUTCMonth() + 1, 0);
   target.setUTCDate(Math.min(date.getUTCDate(), lastDay.getUTCDate()));
+
   return fromUtc(target);
 }
 
@@ -63,6 +66,7 @@ export const weekEndOf = (day: Ymd, weekStart: number): Ymd =>
 // Always six weeks, so the calendar keeps its height from month to month.
 export function monthGrid(day: Ymd, weekStart: number): Ymd[][] {
   const first = weekStartOf(`${monthOf(day)}-01`, weekStart);
+
   return Array.from({ length: GRID_WEEKS }, (_, week) =>
     Array.from({ length: WEEK }, (_, weekday) => addDays(first, week * WEEK + weekday)),
   );
@@ -70,6 +74,7 @@ export function monthGrid(day: Ymd, weekStart: number): Ymd[][] {
 
 export function nextMonday(today: Ymd): Ymd {
   const ahead = (MONDAY - weekdayOf(today) + WEEK) % WEEK;
+
   return addDays(today, ahead === 0 ? WEEK : ahead);
 }
 
@@ -97,5 +102,6 @@ export interface WeekdayColumn {
 export const weekdayColumns = (weekStart: number): WeekdayColumn[] =>
   Array.from({ length: WEEK }, (_, index) => {
     const name = DAY_NAMES[(weekStart + index) % WEEK]!;
+
     return { name, initial: name.charAt(0) };
   });

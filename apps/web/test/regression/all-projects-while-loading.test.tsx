@@ -17,11 +17,13 @@ import { skipAnimations } from '../../src/overlays/testing';
 const gate = vi.hoisted(() => {
   let open = () => undefined as void;
   const arrived = new Promise<void>((resolve) => (open = resolve));
+
   return { arrived, open: () => open() };
 });
 
 vi.mock('../../src/features/project/ProjectScreen', async (importOriginal) => {
   await gate.arrived;
+
   return importOriginal();
 });
 

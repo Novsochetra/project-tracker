@@ -14,6 +14,7 @@ afterEach(() => {
 // A page of its own: a reload takes the page's memory with it, and the store reads storage again.
 async function openPage() {
   vi.resetModules();
+
   return {
     drafts: await import('../../src/lib/storedDrafts'),
     notes: await import('../../src/lib/draftStorage'),

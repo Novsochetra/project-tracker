@@ -13,6 +13,7 @@ const RECEIVER = {
 function rfcSender() {
   const sender = createECDH('prime256v1');
   sender.setPrivateKey(b64('yfWPiYE-n46HLnH0KqZOF1fJJU3MYrct3AELtAQ-oRw'));
+
   return sender;
 }
 

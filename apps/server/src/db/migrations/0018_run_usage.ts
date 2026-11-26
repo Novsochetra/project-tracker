@@ -16,6 +16,7 @@ export async function up(db: SchemaDb): Promise<void> {
   for (const [column, type] of COLUMNS) {
     await db.schema.alterTable('runs').addColumn(column, type).execute();
   }
+
   // The project's last 30 days in the ••• sheet.
   await db.schema
     .createIndex(PROJECT_ENDED)

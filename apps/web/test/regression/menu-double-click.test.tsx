@@ -60,6 +60,7 @@ describe('regression: the second click of a double-click stays on the ••• 
   // Like a comment card: the ••• button hides while the comment is being edited.
   function Comment({ onEdit, onOpen }: { onEdit: () => void; onOpen: () => void }) {
     const [editing, setEditing] = useState(false);
+
     return (
       <>
         <ItemMenu
@@ -84,6 +85,7 @@ describe('regression: the second click of a double-click stays on the ••• 
     renderWithApp(<Comment onEdit={onEdit} onOpen={onOpen} />);
     restore.push(stillClock());
     const below = screen.getByRole('button', { name: 'Open MOB-4' });
+
     return { user: userEvent.setup(), onEdit, onOpen, below };
   }
 

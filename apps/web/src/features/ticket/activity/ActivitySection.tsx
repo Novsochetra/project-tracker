@@ -20,6 +20,7 @@ function useRisePlan(items: readonly ActivityItem[]): RisePlan {
   const [plan, setPlan] = useState(() => firstRise(items));
   const next = nextRise(plan, items);
   if (next !== plan) setPlan(next);
+
   return next;
 }
 
@@ -34,6 +35,7 @@ export function ActivitySection({ detail, composerRef, className }: ActivitySect
   const now = useNow();
   const actions = useActivityActions(detail.ticket.key);
   const approvedColor = findStatusByCategory(detail.statuses, 'reviewed')?.color;
+
   return (
     <section aria-label="Activity" className={clsx(styles.section, className)}>
       <div className={styles.inner}>

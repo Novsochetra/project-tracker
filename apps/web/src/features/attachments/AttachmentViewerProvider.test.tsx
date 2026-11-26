@@ -29,6 +29,7 @@ afterEach(() => {
 
 function Grid({ attachments }: { attachments: Attachment[] }) {
   const viewer = useAttachmentViewer();
+
   return (
     <ThumbnailGrid attachments={attachments} onOpen={(index) => viewer.open(attachments, index)} />
   );
@@ -44,6 +45,7 @@ function renderGrid(fetchAttachmentText = vi.fn().mockResolvedValue('line one\nl
       </AttachmentViewerProvider>
     </Wrapper>,
   );
+
   return { ...api, user: userEvent.setup() };
 }
 

@@ -33,6 +33,7 @@ export function LatestRun({ ticketKey, onCancelled }: LatestRunProps) {
   const requests = useRequests(shown?.run.id ?? null);
   const cardsRef = useRevealWaiting(requests);
   if (!shown) return null;
+
   return (
     <section aria-label="Claude Code run" className={styles.latest}>
       <ActivityCard
@@ -63,6 +64,7 @@ function RunAction({ shown, ticketKey, onCancelled }: RunActionProps) {
   if (shown.run.batchId !== null) {
     return <p className={runStyles.batchNote}>Part of a Run all batch. Stop it from Activity.</p>;
   }
+
   return <CancelButton run={shown.run} onCancelled={onCancelled} />;
 }
 
@@ -78,6 +80,7 @@ function CancelButton({ run, onCancelled }: { run: Run; onCancelled: () => void 
       onError: (error) => toast.show(errorMessage(error), { kind: 'error' }),
     });
   };
+
   return (
     <Button size="lg" className={styles.action} disabled={cancel.isPending} onClick={onClick}>
       Cancel
@@ -87,6 +90,7 @@ function CancelButton({ run, onCancelled }: { run: Run; onCancelled: () => void 
 
 function TryAgainButton({ ticketKey }: { ticketKey: string }) {
   const sheets = useSheets();
+
   return (
     <Button size="lg" className={styles.action} onClick={() => sheets.open(promptSheet(ticketKey))}>
       Try again

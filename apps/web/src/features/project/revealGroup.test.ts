@@ -23,6 +23,7 @@ describe('revealGroupTop', () => {
     scroller.getBoundingClientRect = () => box(0);
     group.getBoundingClientRect = () => box(groupTop);
     scroller.scrollTop = 1000;
+
     return { scroller, group };
   };
 

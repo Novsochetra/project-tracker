@@ -14,6 +14,7 @@ describe.each(DIALECTS)('PUT /api/projects/order (%s)', (dialect) => {
     const ids = [];
     for (const name of names) ids.push((await api.client().createProject({ name })).project.id);
     api.events.length = 0;
+
     return ids;
   }
 
@@ -61,6 +62,7 @@ describe.each(DIALECTS)('PUT /api/projects/order (%s)', (dialect) => {
       expect(res.status).toBe(409);
       expect(res.body.error.message).toBe(PROJECTS_CHANGED);
     }
+
     expect((await api.put('/api/projects/order', { ids: [] })).status).toBe(400);
     expect((await api.put('/api/projects/order', {})).status).toBe(400);
     expect(await listed()).toEqual(['ALP', 'BET', 'GAM']);

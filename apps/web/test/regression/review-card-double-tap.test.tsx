@@ -35,6 +35,7 @@ function renderReviewedTicket(
   const detail = makeTicketDetail(listItem(3, STATUS.reviewed, 0), { activity: [approval] });
   const rendered = renderTicket({ detail, client: { updateTicket } });
   cleanups.push(rendered.restorePhone);
+
   return rendered;
 }
 

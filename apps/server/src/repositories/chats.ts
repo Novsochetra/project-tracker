@@ -161,6 +161,7 @@ export async function claimMessageBatch(db: Db, id: string, batchRunId: string):
     .where('id', '=', id)
     .where('batchRunId', 'is', null)
     .executeTakeFirst();
+
   return Number(result.numUpdatedRows) > 0;
 }
 

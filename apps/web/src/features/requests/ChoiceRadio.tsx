@@ -17,6 +17,7 @@ export interface ChoiceRadioProps {
 // A native radio, so a single choice reads as one of a set and arrow keys move within it.
 export function ChoiceRadio({ option, group, checked, disabled, onPick }: ChoiceRadioProps) {
   const id = useId();
+
   return (
     <label className={clsx(styles.choice, 'press', checked && styles.selected)}>
       <input

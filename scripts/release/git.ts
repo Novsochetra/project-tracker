@@ -13,6 +13,7 @@ export interface Git {
 export function createGit(cwd: string): Git {
   const git = (...args: string[]): string =>
     execFileSync('git', args, { cwd, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
+
   return {
     branch: () => git('branch', '--show-current').trim(),
     isClean: () => git('status', '--porcelain').trim() === '',

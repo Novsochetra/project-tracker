@@ -11,6 +11,7 @@ export async function up(db: SchemaDb): Promise<void> {
   for (const column of COLUMNS) {
     await db.schema.alterTable('runs').addColumn(column, 'text').execute();
   }
+
   // A chat keeps the last choice; the defaults stand for chats made before there was one.
   await db.schema
     .alterTable('chats')

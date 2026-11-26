@@ -33,6 +33,7 @@ export function TicketChanges({ detail, changes, files, className }: TicketChang
 
   const belowLine = (file: DiffFile, at: LineAt) => {
     const id = lineId(runId, file.path, at);
+
     return (
       <LineThread
         ticketKey={ticketKey}
@@ -46,6 +47,7 @@ export function TicketChanges({ detail, changes, files, className }: TicketChang
       />
     );
   };
+
   return (
     <div className={clsx(styles.panel, className)}>
       <div className={styles.inner}>

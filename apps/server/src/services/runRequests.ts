@@ -34,6 +34,7 @@ export async function requireRunRequest(ctx: ServiceContext, scope: UserScope, i
   const row = await findRunRequestRow(ctx.db, id);
   const run = row && (await findRunInScope(ctx.db, scope, row.runId));
   if (!row || !run) throw notFound('That request was not found.');
+
   return { row, run };
 }
 
@@ -47,6 +48,7 @@ export async function addRunRequest(
   if (run.runnerId !== input.runnerId) {
     throw forbidden('Only the helper that took this run asks in it.');
   }
+
   if (run.status !== 'running') throw conflict(`This run is not running (${run.status}).`);
   const now = ctx.now();
   const row: RunRequestRow = {
@@ -66,6 +68,7 @@ export async function addRunRequest(
   await insertRunRequest(ctx.db, row);
   notifyRunRequest(ctx, scope, run, row);
   pushRunRequest(ctx, scope, run, row);
+
   return toRunRequest(row);
 }
 
@@ -77,6 +80,7 @@ export async function listRunRequests(
 ): Promise<RunRequest[]> {
   await settleRequests(ctx);
   const run = await requireRun(ctx, scope, runId);
+
   return (await listRunRequestRows(ctx.db, run.id)).map(toRunRequest);
 }
 
@@ -100,5 +104,6 @@ export async function answerRunRequest(
   const after = (await requireRunRequest(ctx, scope, id)).row;
   if (!answered) throw conflict(after.status === 'open' ? ENDED.cancelled : ENDED[after.status]);
   notifyRunRequest(ctx, scope, run, after);
+
   return toRunRequest(after);
 }

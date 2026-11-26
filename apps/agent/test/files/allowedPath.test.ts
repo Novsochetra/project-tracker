@@ -88,8 +88,10 @@ describe('allowedRealPath', () => {
     const dotFile = (folder: string) => {
       mkdirSync(join(work, folder), { recursive: true });
       writeFileSync(join(work, folder, 'config.json'), '{}');
+
       return join(work, folder, 'config.json');
     };
+
     for (const folder of ['.ssh', '.aws', '.config/gh', 'out/.docker']) {
       const file = dotFile(folder);
       await expect(allowedRealPath(file, [work], home)).rejects.toThrow(

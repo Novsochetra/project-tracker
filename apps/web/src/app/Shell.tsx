@@ -30,6 +30,7 @@ export function Shell() {
   useNotificationOpen();
   const isPhone = useIsPhone();
   const unreachable = useApiUnreachable(reachability);
+
   // For the chat screens' files. Imported there, by a second lazy part beside the ticket screen,
   // the provider made Rolldown split the first load into 5 files; the ticket screen keeps its own
   // for the same reason.

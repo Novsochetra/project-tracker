@@ -28,6 +28,7 @@ export const errorOf = async (response: Response): Promise<string> =>
 
 export async function ownerCookie(api: TestServer): Promise<string> {
   await addOwner(api.db);
+
   return signIn(api.app);
 }
 
@@ -45,6 +46,7 @@ export async function invitePerson(
   expect(accepted.status).toBe(201);
   const users = (await (await send('GET', '/api/users', owner)).json()) as InvitedUser[];
   const id = users.find((user) => user.email === person.email)?.id ?? '';
+
   return { id, cookie: cookieOf(accepted) };
 }
 

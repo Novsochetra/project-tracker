@@ -25,6 +25,7 @@ function answersFor(call: PromptCall, request: RunRequest): Record<string, strin
     answers[typeof text === 'string' ? text : (request.questions?.[index]?.question ?? '')] =
       answer;
   });
+
   return answers;
 }
 
@@ -33,10 +34,12 @@ function answered(call: PromptCall, request: RunRequest): PromptDecision {
   const asked = request.kind === 'question';
   if (request.decision !== 'allow') return deny(asked ? DECLINED : DENIED);
   if (!asked) return { behavior: 'allow', updatedInput: call.input };
+
   return { behavior: 'allow', updatedInput: { ...call.input, answers: answersFor(call, request) } };
 }
 
 export function decisionOf(call: PromptCall, request: RunRequest): PromptDecision {
   if (request.status === 'answered') return answered(call, request);
+
   return deny(request.status === 'expired' ? NO_ANSWER : RUN_ENDED);
 }

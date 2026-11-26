@@ -30,6 +30,7 @@ function namesOrThrow({ error, results = [] }: MigrationResultSet): string[] {
       .filter((result) => result.status === 'Success')
       .map((result) => result.migrationName);
   }
+
   const failed = results.find((result) => result.status === 'Error')?.migrationName;
   const reason = error instanceof Error ? error.message : JSON.stringify(error);
   // The whole run is one transaction, so nothing of it is kept.
@@ -44,6 +45,7 @@ async function appliedRows(db: Db): Promise<{ name: string; timestamp: string }[
   if (!tables.some((table) => table.name === MIGRATION_TABLE)) return [];
   const { rows } = await sql<{ name: string; timestamp: string }>`
     select name, timestamp from ${sql.table(MIGRATION_TABLE)}`.execute(db.withoutPlugins());
+
   return rows;
 }
 
@@ -57,11 +59,13 @@ export async function readMigrationState(
   const known = Object.keys(migrations).sort();
   const states = known.map((name): MigrationState => {
     const appliedAt = applied.get(name) ?? null;
+
     return { name, status: appliedAt === null ? 'pending' : 'applied', appliedAt };
   });
   const unknown = [...applied]
     .filter(([name]) => !(name in migrations))
     .sort(([a], [b]) => a.localeCompare(b));
+
   return [
     ...states,
     ...unknown.map(([name, appliedAt]): MigrationState => ({ name, status: 'unknown', appliedAt })),
@@ -89,6 +93,7 @@ export async function migrateToLatest(
   migrations: Migrations = MIGRATIONS,
 ): Promise<string[]> {
   await assertNoUnknown(db, migrations);
+
   return namesOrThrow(await createMigrator(db, migrations).migrateToLatest());
 }
 
@@ -98,5 +103,6 @@ export async function rollbackLast(
   migrations: Migrations = MIGRATIONS,
 ): Promise<string | null> {
   await assertNoUnknown(db, migrations);
+
   return namesOrThrow(await createMigrator(db, migrations).migrateDown())[0] ?? null;
 }

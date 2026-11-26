@@ -13,10 +13,12 @@ export function HomeTabs() {
   const isPhone = useIsPhone();
   const { route, replace } = useNavigation();
   if (!isPhone) return null;
+
   return (
     <nav aria-label="Home" className={styles.tabs}>
       {TABS.map((tab) => {
         const active = tab.route.name === route.name;
+
         return (
           <button
             key={tab.label}

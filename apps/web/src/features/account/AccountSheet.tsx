@@ -20,6 +20,7 @@ export function AccountSheet({ open, onClose }: SheetProps) {
   const error = logout.error ?? everywhere.error;
   // The sign-in screen takes over once the session says signed out; the sheet goes with it.
   const signOut = (mutation: typeof logout) => mutation.mutate(undefined, { onSuccess: onClose });
+
   return (
     <Sheet
       open={open}

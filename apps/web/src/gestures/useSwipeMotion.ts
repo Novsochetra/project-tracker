@@ -25,6 +25,7 @@ export function useSwipeMotion(): SwipeMotion {
         spring(x, target, { ...SNAP, velocity }, onDone);
         return;
       }
+
       x.set(target);
       onDone?.();
     },
@@ -37,5 +38,6 @@ export function useSwipeMotion(): SwipeMotion {
     },
     [full],
   );
+
   return useMemo(() => ({ x, full, fullRef, moveTo, setFull }), [x, full, moveTo, setFull]);
 }

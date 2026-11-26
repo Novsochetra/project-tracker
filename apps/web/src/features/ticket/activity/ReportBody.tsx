@@ -23,6 +23,7 @@ export function ReportBody({ text, statuses }: ReportBodyProps) {
       </p>
     );
   }
+
   return (
     <>
       {sections.status && <StatusLine status={sections.status} statuses={statuses} />}
@@ -82,6 +83,7 @@ interface StatusLineProps {
 // it did. Other words stay as written.
 function StatusLine({ status: { category, text }, statuses }: StatusLineProps) {
   const color = category ? findStatusByCategory(statuses, category)?.color : undefined;
+
   return (
     <p className={styles.status}>
       {category && color && (

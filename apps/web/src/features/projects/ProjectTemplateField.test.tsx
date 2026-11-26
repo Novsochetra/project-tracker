@@ -28,6 +28,7 @@ function renderNewSheet() {
   const onClose = vi.fn();
   renderWithApp(<ProjectSheet open onClose={onClose} />, { client: { createProject: create } });
   const dialog = screen.getByRole('dialog', { name: 'New project' });
+
   return {
     create,
     onClose,

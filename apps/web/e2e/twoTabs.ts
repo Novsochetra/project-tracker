@@ -10,6 +10,7 @@ export async function open(context: BrowserContext, existing?: Page): Promise<Pa
   const page = existing ?? (await context.newPage());
   await page.goto('/p/MOB/1');
   await expect(titleOf(page)).toHaveValue('Ticket 1');
+
   return page;
 }
 
@@ -35,11 +36,13 @@ export async function hold(page: Page, method: string, path: (url: URL) => boole
     if (how === 'fail') await route.abort('failed').catch(() => undefined);
     else await route.continue().catch(() => undefined);
   });
+
   return release;
 }
 
 // Holds the page's saves of the ticket until released.
 export async function holdSaves(page: Page): Promise<() => void> {
   const release = await hold(page, 'PATCH', (url) => url.pathname === '/api/tickets/MOB-1');
+
   return () => release('go');
 }

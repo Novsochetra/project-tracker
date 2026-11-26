@@ -21,6 +21,7 @@ export function useViewerValues(): ViewerValues {
   const backdrop = useMotionValue(1);
   const opacity = useMotionValue(0);
   const stageScale = useMotionValue(0.96);
+
   return useMemo(
     () => ({ track, scale, x, y, backdrop, opacity, stageScale }),
     [track, scale, x, y, backdrop, opacity, stageScale],
@@ -53,11 +54,13 @@ export function animateZoom(values: ViewerValues, target: ZoomState, reduced: bo
     setZoom(values, target);
     return () => undefined;
   }
+
   const stops = [
     spring(values.scale, target.scale, ZOOM),
     spring(values.x, target.x, PAN),
     spring(values.y, target.y, PAN),
   ];
+
   return () => stopAll(stops);
 }
 

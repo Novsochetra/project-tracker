@@ -20,6 +20,7 @@ describe.each(DIALECTS)('API tokens (%s)', (dialect) => {
   const create = async (name: string) => {
     const res = await asOwner('POST', '/api/tokens', { name });
     expect(res.status).toBe(201);
+
     return (await res.json()) as CreatedApiToken;
   };
 
@@ -104,6 +105,7 @@ describe.each(DIALECTS)('API tokens (%s)', (dialect) => {
       const res = await asOwner('POST', '/api/tokens', { name });
       expect(res.status, JSON.stringify(name)).toBe(400);
     }
+
     expect(await list()).toEqual([]);
   });
 
@@ -122,6 +124,7 @@ describe.each(DIALECTS)('API tokens (%s)', (dialect) => {
       });
       expect(res.status, `${method} ${path}`).toBe(403);
     }
+
     expect(await list()).toHaveLength(1);
   });
 
@@ -139,6 +142,7 @@ describe.each(DIALECTS)('API tokens (%s)', (dialect) => {
         const headers = new Headers(init?.headers);
         headers.set('cookie', cookie);
         const url = input instanceof Request ? input.url : String(input);
+
         return Promise.resolve(api.app.request(url, { ...init, headers }));
       },
     });

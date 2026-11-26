@@ -38,6 +38,7 @@ describe.each(DIALECTS)('http surface (%s)', (dialect) => {
     for (const assignee of ['Sophea', '', 'Dara', 'Sophea', ' Bo ']) {
       await client.createTicket('MA', { title: 'x', assignee });
     }
+
     const res = await api.get<string[]>('/api/people');
     expect(res.body).toEqual(['Bo', 'Dara', 'Sophea']);
     expect(await client.listPeople()).toEqual(['Bo', 'Dara', 'Sophea']);
@@ -88,6 +89,7 @@ describe.each(DIALECTS)('http surface (%s)', (dialect) => {
       ] as const) {
         expect(await api.db.selectFrom(table).select('id').execute(), table).toEqual([]);
       }
+
       expect(api.storage.files.size).toBe(0);
       // Every user is gone with the rows, so no stream is left to tell.
       expect(api.events).toEqual([]);

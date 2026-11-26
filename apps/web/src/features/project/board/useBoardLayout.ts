@@ -13,6 +13,7 @@ function offsetWithin(element: HTMLElement, ancestor: HTMLElement): number {
     top += node.offsetTop;
     node = node.offsetParent instanceof HTMLElement ? node.offsetParent : null;
   }
+
   return top;
 }
 
@@ -21,8 +22,10 @@ function observeSizes(elements: readonly Element[], onResize: () => void): () =>
     window.addEventListener('resize', onResize);
     return () => window.removeEventListener('resize', onResize);
   }
+
   const observer = new ResizeObserver(onResize);
   elements.forEach((element) => observer.observe(element));
+
   return () => observer.disconnect();
 }
 
@@ -31,6 +34,7 @@ function siblingsAbove(element: Element): Element[] {
   for (let node = element.previousElementSibling; node; node = node.previousElementSibling) {
     above.push(node);
   }
+
   return above;
 }
 
@@ -47,7 +51,9 @@ export function useFillHeight(
       const height = Math.floor(scroller.clientHeight - offsetWithin(frame, scroller));
       frame.style.setProperty('--board-height', `${Math.max(height, MIN_BOARD_HEIGHT)}px`);
     };
+
     fit();
+
     return observeSizes([scroller, ...siblingsAbove(frame)], fit);
   }, [frameRef, scrollRef]);
 }
@@ -63,8 +69,10 @@ export function useBoardPage(
     if (!board || !enabled) return;
     const update = () => setPage(measurePage(board));
     board.addEventListener('scroll', update, { passive: true });
+
     return () => board.removeEventListener('scroll', update);
   }, [boardRef, enabled]);
+
   return Math.min(page, Math.max(count - 1, 0));
 }
 
@@ -81,7 +89,9 @@ export function useRevealFocusedCard(boardRef: RefObject<HTMLElement | null>): v
       const view = { left: left + REVEAL_MARGIN, right: right - REVEAL_MARGIN };
       board.scrollLeft += revealDistance(spanOf(card), view);
     };
+
     board.addEventListener('focusin', reveal);
+
     return () => board.removeEventListener('focusin', reveal);
   }, [boardRef]);
 }

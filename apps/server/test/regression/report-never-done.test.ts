@@ -14,6 +14,7 @@ describe.each(DIALECTS)('reports never set Done (%s)', (dialect) => {
         await api.delete(`/api/statuses/${status.id}`);
       }
     }
+
     await api.post('/api/projects/MA/tickets', { title: 'Crash' });
     const text = 'TICKET: MA-1\nSTATUS: approved';
 

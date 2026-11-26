@@ -16,6 +16,7 @@ interface Box {
 
 async function boxOf(locator: Locator): Promise<Box> {
   const box = (await locator.boundingBox())!;
+
   return { top: box.y, bottom: box.y + box.height, left: box.x, right: box.x + box.width };
 }
 
@@ -28,6 +29,7 @@ async function emptyContent(page: Page, title: string): Promise<Box> {
   await settled(empty);
   const tile = await boxOf(empty.locator(':scope > :first-child'));
   const text = await boxOf(empty.locator(':scope > :last-child'));
+
   return { top: tile.top, bottom: text.bottom, left: tile.left, right: tile.right };
 }
 
@@ -35,12 +37,14 @@ async function freeBottom(page: Page, path: string): Promise<number> {
   if (await usesPhoneLayout(page)) {
     return (await boxOf(layer(page, path).locator('[data-bottom-bar]'))).top;
   }
+
   return (await boxOf(layer(page, path))).bottom;
 }
 
 async function freeArea(page: Page, path: string, above?: Locator): Promise<Box> {
   const screen = await boxOf(layer(page, path));
   const top = above ? (await boxOf(above)).bottom : screen.top;
+
   return { top, bottom: await freeBottom(page, path), left: screen.left, right: screen.right };
 }
 
@@ -74,6 +78,7 @@ async function openEmptyProject(page: Page): Promise<Box> {
   await expect(page.getByText('Create the first ticket for Website.')).toBeVisible();
   // The header's (desktop) or the nav bar's (phone) New ticket is the one way to act.
   await expect(page.getByRole('button', { name: 'New ticket', exact: true })).toHaveCount(1);
+
   return content;
 }
 
@@ -81,12 +86,14 @@ async function openEmptyChats(page: Page): Promise<Box> {
   await page.goto('/p/WEB/ask');
   const content = await emptyContent(page, 'No chats yet');
   await expect(page.getByRole('button', { name: 'New chat', exact: true })).toHaveCount(1);
+
   return content;
 }
 
 async function chatsFreeArea(page: Page): Promise<Box> {
   const path = '/p/WEB/ask';
   const phone = await usesPhoneLayout(page);
+
   return freeArea(page, path, phone ? layer(page, path).locator('[data-navbar]') : undefined);
 }
 

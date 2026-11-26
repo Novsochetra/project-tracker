@@ -24,8 +24,10 @@ describe.each(DIALECTS)('a chat waiting for the person (%s)', (dialect) => {
   const waiting = async () => {
     const list = (await person<Chat[]>('GET', '/api/projects/MOB/chats')).body;
     const detail = (await person<ChatDetail>('GET', `/api/chats/${chatId}`)).body;
+
     return [list.map((chat) => chat.waiting), detail.chat.waiting];
   };
+
   const asks = async () =>
     (
       await helper<RunRequest>('POST', `/api/runs/${run.id}/requests`, {

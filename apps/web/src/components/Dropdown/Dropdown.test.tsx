@@ -14,6 +14,7 @@ type Value = (typeof STATUSES)[number]['value'];
 
 function Harness({ onChange }: { onChange?: (value: Value) => void }) {
   const [value, setValue] = useState<Value>('doing');
+
   return (
     <SelectRow
       label="Status"
@@ -32,6 +33,7 @@ async function openMenu() {
   render(<Harness />);
   const trigger = screen.getByRole('button', { name: 'Status In progress' });
   await user.click(trigger);
+
   return { user, trigger };
 }
 

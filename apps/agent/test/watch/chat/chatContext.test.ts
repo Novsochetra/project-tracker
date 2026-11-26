@@ -43,6 +43,7 @@ async function turn(
   child.begin();
   events.forEach((event) => child.print(event));
   child.state('idle');
+
   return exit;
 }
 

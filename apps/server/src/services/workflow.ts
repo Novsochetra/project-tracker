@@ -38,6 +38,7 @@ export async function transition(
   move: { target: StatusRow; verb: WorkflowVerb },
 ): Promise<PlannedChange> {
   if (move.target.id === scope.status.id) return { changes: {}, entries: [eventEntry(move.verb)] };
+
   return {
     changes: await enterStatus(trx, actor, move.target),
     entries: [eventEntry(workflowMoveText(move.verb, move.target.name))],
@@ -47,6 +48,7 @@ export async function transition(
 async function finishDetail(ctx: UserContext, written: WrittenTicket): Promise<TicketDetail> {
   notify(ctx, written.ticket.projectId, written.ticket.id);
   await chainHeldTickets(ctx, ctx.scope, written.heldDone);
+
   return getTicketDetailById(ctx.db, ctx.scope, written.ticket.id);
 }
 
@@ -65,9 +67,11 @@ export async function markSent(
       verb: WORKFLOW_VERBS.send,
     });
     const written = await writeTicket(trx, ctx.now, { ticket: scope.ticket, actor, ...plan });
+
     return ticketOut(trx, written.ticket, scope.project.key);
   });
   notify(ctx, ticket.projectId, ticket.id);
+
   return ticket;
 }
 
@@ -80,10 +84,12 @@ async function claimInScope(
   if (!CLAIMABLE.has(scope.status.category)) {
     throw conflict(`${ticketKeyOf(scope)} is in ${scope.status.name} and can't be claimed.`);
   }
+
   const target =
     scope.status.category === 'todo' ? resolveStatus(scope.statuses, 'in_progress') : scope.status;
   const plan = await transition(trx, actor, scope, { target, verb: WORKFLOW_VERBS.claim });
   const takesOver = actor.kind === 'agent' && !scope.ticket.assignee;
+
   return writeTicket(trx, ctx.now, {
     ticket: scope.ticket,
     actor,
@@ -101,6 +107,7 @@ export async function claimTicket(
   const written = await inTransaction(ctx, async (trx) =>
     claimInScope(trx, ctx, actor, await requireTicketScope(trx, ctx.scope, key)),
   );
+
   return finishDetail(ctx, written);
 }
 
@@ -115,8 +122,10 @@ export async function claimNext(
     const ticket = pickNextTicket(await listTicketRows(trx, project.id), statuses);
     const status = statuses.find((candidate) => candidate.id === ticket?.statusId);
     if (!ticket || !status) return null;
+
     return claimInScope(trx, ctx, actor, { ticket, project, statuses, status });
   });
+
   return written ? finishDetail(ctx, written) : null;
 }
 
@@ -141,6 +150,7 @@ export async function submitWork(
     const scope = await requireTicketScope(trx, ctx.scope, key);
     const target = resolveStatus(scope.statuses, 'in_review');
     const plan = await transition(trx, actor, scope, { target, verb: WORKFLOW_VERBS.submit });
+
     return writeTicket(trx, ctx.now, {
       ticket: scope.ticket,
       actor,
@@ -151,6 +161,7 @@ export async function submitWork(
       ],
     });
   });
+
   return finishDetail(ctx, written);
 }
 
@@ -165,6 +176,7 @@ export async function reviewTicket(
     if (scope.status.category !== 'in_review') {
       throw conflict(`${ticketKeyOf(scope)} is not waiting for review.`);
     }
+
     const approved = input.verdict === 'approved';
     const target = resolveStatus(scope.statuses, approved ? 'reviewed' : 'todo');
     const plan = await transition(trx, actor, scope, {
@@ -178,8 +190,10 @@ export async function reviewTicket(
       changes: plan.changes,
       entries: [{ type: 'review', text: input.summary, review }, ...plan.entries],
     });
+
     return { written: ticket, ready: readyPush(actor, scope, { target, rating: input.rating }) };
   });
   if (ready) pushToUser(ctx, ctx.scope, ready);
+
   return finishDetail(ctx, written);
 }

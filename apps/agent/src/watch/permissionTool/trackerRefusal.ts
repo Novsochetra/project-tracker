@@ -24,5 +24,6 @@ export function refusalOf(error: unknown): string | undefined {
   if (isUnknownRoute(error)) return TRACKER_OUTDATED;
   if (error.status === 404) return RUN_GONE;
   if (error.status === 409) return NOT_RUNNING;
+
   return undefined;
 }

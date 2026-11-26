@@ -36,6 +36,7 @@ function mockWindowWidth() {
       removeEventListener: (_type: string, listener: () => void) => listeners.delete(listener),
     }),
   });
+
   return () => {
     if (previous) Object.defineProperty(window, 'matchMedia', previous);
     else Reflect.deleteProperty(window, 'matchMedia');

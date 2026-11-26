@@ -16,12 +16,14 @@ async function sentByCheckHealth(): Promise<Request> {
     baseUrl: ORIGIN,
     fetch: (input, init) => {
       requests.push(new Request(input, init));
+
       return Promise.resolve(Response.json({ ok: true }));
     },
   });
   await client.checkHealth({ signal: new AbortController().signal });
   const [request] = requests;
   if (!request) throw new Error('The client sent nothing.');
+
   return request;
 }
 

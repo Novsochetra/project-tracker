@@ -20,6 +20,7 @@ const isPending = (row: AttachmentRow): boolean =>
 export function withoutPendingUploads(rows: TableRows): CopiedRows {
   const attachments = rows.attachments.filter((row) => !isPending(row) && !isChatFile(row));
   const chatFilesLeftOut = rows.attachments.filter(isChatFile).length;
+
   return {
     rows: { ...rows, attachments },
     pendingLeftOut: rows.attachments.length - attachments.length - chatFilesLeftOut,
@@ -35,11 +36,13 @@ export function leftOutLines({ pendingLeftOut, chatFilesLeftOut }: CopiedRows): 
         'ticket or comment not created yet, or an upload cut off when the tracker stopped).',
     );
   }
+
   if (chatFilesLeftOut > 0) {
     lines.push(
       `Not copied: ${chatFilesLeftOut} file(s) sent with questions in chats with Claude Code, ` +
         'which stay on this tracker.',
     );
   }
+
   return lines;
 }

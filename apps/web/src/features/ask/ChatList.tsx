@@ -8,6 +8,7 @@ import { useChatDeleteSheet } from './useChatDeleteSheet';
 export function ChatList({ chats, projectKey }: { chats: Chat[]; projectKey: string }) {
   const now = useNow();
   const { sheet, show, close } = useChatDeleteSheet();
+
   return (
     <>
       <ListCard as="section" aria-label="Chats">

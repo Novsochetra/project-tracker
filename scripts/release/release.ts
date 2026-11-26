@@ -27,6 +27,7 @@ function checkReady(git: Git, current: string, next: string): string[] {
   if (branch !== RELEASE_BRANCH) {
     throw new Error(`Release from ${RELEASE_BRANCH}, not ${branch || 'a detached HEAD'}.`);
   }
+
   if (!git.isClean()) throw new Error('Commit or stash your changes first.');
   const from = tagOf(current);
   if (!git.hasTag(from)) {
@@ -35,9 +36,11 @@ function checkReady(git: Git, current: string, next: string): string[] {
         `(git tag -a ${from} -m "Release ${from}" <commit>), then run this again.`,
     );
   }
+
   if (git.hasTag(tagOf(next))) throw new Error(`Tag ${tagOf(next)} already exists.`);
   const subjects = git.subjectsSince(from);
   if (subjects.length === 0) throw new Error(`Nothing was committed since ${from}.`);
+
   return subjects;
 }
 
@@ -54,6 +57,7 @@ function writeFiles(cwd: string, version: string, entry: string): Originals {
   const lock = originals.get('package-lock.json');
   if (lock === null || lock === undefined) originals.delete('package-lock.json');
   else writeFileSync(path('package-lock.json'), setLockVersion(lock, version));
+
   return originals;
 }
 
@@ -86,5 +90,6 @@ export function release({ cwd, part, day, git = createGit(cwd) }: ReleaseOptions
   const tag = tagOf(version);
   commitOrRestore(git, cwd, originals, `Release ${tag}`);
   git.tag(tag, `Release ${tag}`);
+
   return { version, tag, subjects };
 }

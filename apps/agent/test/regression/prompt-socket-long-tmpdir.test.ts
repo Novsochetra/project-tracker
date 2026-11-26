@@ -33,6 +33,7 @@ describe('regression: the prompt socket under a long TMPDIR', () => {
     } finally {
       socket.close();
     }
+
     expect(() => statSync(dirname(socket.path))).toThrow();
   });
 

@@ -5,5 +5,6 @@ export function fileDigest(text: string): string {
     hash ^= text.charCodeAt(index);
     hash = Math.imul(hash, 0x01000193) >>> 0;
   }
+
   return `${text.length.toString(36)}-${hash.toString(36)}`;
 }

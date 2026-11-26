@@ -12,6 +12,7 @@ function nextBlock(cursor: Cursor): Block {
     const block = read(cursor);
     if (block) return block;
   }
+
   return readParagraph(cursor);
 }
 
@@ -22,6 +23,7 @@ function parseBlocks(lines: readonly string[], depth: number): Block[] {
     if (isBlank(lines[cursor.at]!)) cursor.at += 1;
     else blocks.push(nextBlock(cursor));
   }
+
   return blocks;
 }
 

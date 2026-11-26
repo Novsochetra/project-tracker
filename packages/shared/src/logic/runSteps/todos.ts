@@ -8,6 +8,7 @@ const statusOf = (value: unknown): RunTodo['status'] =>
 function todoOf(item: unknown): RunTodo[] {
   if (!isJson(item) || typeof item.content !== 'string') return [];
   const text = stepLabel(item.content);
+
   return text ? [{ text, status: statusOf(item.status) }] : [];
 }
 
@@ -15,5 +16,6 @@ function todoOf(item: unknown): RunTodo[] {
 // and only so many items are read, since each one is masked in stdout's listener.
 export function todosOf(input: Json): RunTodo[] {
   const items: unknown[] = Array.isArray(input.todos) ? input.todos : [];
+
   return items.slice(0, RUN_TODOS_MAX).flatMap(todoOf);
 }

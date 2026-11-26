@@ -7,6 +7,7 @@ import { isEntry, isList } from '../../lib/entries';
 function isReadableFile(entry: unknown): entry is Attachment {
   if (!isEntry(entry)) return false;
   const { id, mimeType, fileName, url } = entry as Record<string, unknown>;
+
   return [id, mimeType, fileName, url].every((value) => typeof value === 'string');
 }
 

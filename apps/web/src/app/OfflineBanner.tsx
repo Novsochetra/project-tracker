@@ -13,8 +13,10 @@ export function OfflineBanner() {
   const message = useShowsSavedData() ? SAVED_DATA_MESSAGE : NETWORK_ERROR_MESSAGE;
   useEffect(() => {
     announce(message);
+
     return () => clearAnnouncement(message);
   }, [message]);
+
   return (
     <div ref={styleNow} className={styles.banner}>
       <Icon icon={WifiOff} size={14} />

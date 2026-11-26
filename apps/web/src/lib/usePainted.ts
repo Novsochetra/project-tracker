@@ -7,7 +7,9 @@ export function usePainted(): boolean {
     let frame = requestAnimationFrame(() => {
       frame = requestAnimationFrame(() => setPainted(true));
     });
+
     return () => cancelAnimationFrame(frame);
   }, []);
+
   return painted;
 }

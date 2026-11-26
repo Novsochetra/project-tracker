@@ -76,6 +76,7 @@ describe('attachments stored in S3', () => {
       body: bytes,
     });
     expect(res.status).toBe(201);
+
     return (await res.json()) as Attachment;
   }
 
@@ -92,6 +93,7 @@ describe('attachments stored in S3', () => {
         res.on('end', () => resolve({ status: res.statusCode ?? 0, body: JSON.parse(text) }));
       });
     });
+
     return { req, answer };
   }
 
@@ -157,6 +159,7 @@ describe('attachments stored in S3', () => {
     for (const method of ['GET', 'HEAD']) {
       expect((await fetch(`${base}${file.url}`, { method })).status, method).toBe(401);
     }
+
     expect(fake.calls).toEqual([]);
   });
 
@@ -173,6 +176,7 @@ describe('attachments stored in S3', () => {
     for (let sent = 0; sent < 40 && !answered; sent += 1) {
       if (!req.write(chunk)) await Promise.race([once(req, 'drain'), answer]);
     }
+
     const { status, body } = await answer;
     req.destroy();
     expect(status).toBe(400);
@@ -202,6 +206,7 @@ describe('attachments stored in S3', () => {
       await new Promise((resolve) => setTimeout(resolve, 20));
       rows = await rowCount();
     }
+
     expect(rows).toBe(0);
   });
 });

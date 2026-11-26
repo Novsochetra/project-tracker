@@ -56,6 +56,7 @@ export async function queueSize(db: Db, chatId: string) {
     ])
     .where('chatId', '=', chatId)
     .executeTakeFirstOrThrow();
+
   return { count: Number(row.count), next: row.last === null ? 0 : Number(row.last) + 1 };
 }
 
@@ -87,6 +88,7 @@ export async function lastMessageAt(db: Db, chatId: string): Promise<number | nu
     .where('chatMessages.chatId', '=', chatId)
     .where(notQueued)
     .executeTakeFirst();
+
   return row?.last === null || row?.last === undefined ? null : Number(row.last);
 }
 

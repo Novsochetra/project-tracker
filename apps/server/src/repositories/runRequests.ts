@@ -37,6 +37,7 @@ export async function markRequestAnswered(db: Db, id: string, answer: Answered) 
       eb.selectFrom('runs').select('runs.id').where('runs.status', '=', 'running'),
     )
     .executeTakeFirst();
+
   return Number(result.numUpdatedRows) > 0;
 }
 
@@ -47,6 +48,7 @@ export async function markRequestCancelled(db: Db, id: string, endedAt: number) 
     .where('id', '=', id)
     .where('status', '=', 'open')
     .executeTakeFirst();
+
   return Number(result.numUpdatedRows) > 0;
 }
 

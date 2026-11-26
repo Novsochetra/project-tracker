@@ -6,5 +6,6 @@ export const formatStatusLine = (status: Status): string =>
 
 export function formatStatuses(statuses: readonly Status[]): string {
   if (statuses.length === 0) return 'No statuses.';
+
   return sortStatuses(statuses).map(formatStatusLine).join('\n');
 }

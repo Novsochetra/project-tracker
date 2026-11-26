@@ -15,12 +15,14 @@ function useLeaveWhenMissing(missing: boolean, route: Route) {
 function ProjectCheck({ route }: { route: Extract<Route, { name: 'project' }> }) {
   const { error } = useBoard(route.key);
   useLeaveWhenMissing(isNotFound(error), route);
+
   return null;
 }
 
 function TicketCheck({ route }: { route: Extract<Route, { name: 'ticket' }> }) {
   const { error } = useTicket(`${route.key}-${route.num}`);
   useLeaveWhenMissing(isNotFound(error), route);
+
   return null;
 }
 

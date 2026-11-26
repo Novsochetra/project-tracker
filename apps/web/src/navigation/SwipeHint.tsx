@@ -16,6 +16,7 @@ export function SwipeHint({ progress, direction }: TrackpadSwipeHint) {
   useMotionValueEvent(progress, 'change', (value) => setReady(value >= 1));
   const side = direction === 'forward' ? 1 : -1;
   const x = useTransform(progress, (value) => side * TRAVEL_PX * (1 - value));
+
   return (
     <MotionScope>
       <m.div

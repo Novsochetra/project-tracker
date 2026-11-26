@@ -10,6 +10,7 @@ export const byRank = (a: Rankable, b: Rankable): number => a.rank - b.rank || b
 
 export function topRank(group: readonly Rankable[]): number {
   if (group.length === 0) return 0;
+
   return Math.min(...group.map((ticket) => ticket.rank)) - RANK_STEP;
 }
 

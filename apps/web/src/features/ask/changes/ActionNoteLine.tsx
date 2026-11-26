@@ -6,6 +6,7 @@ import styles from './ChatChanges.module.css';
 export function ActionNoteLine({ action }: { action: ChatGitAction | null }) {
   const note = actionNote(action);
   if (!note) return null;
+
   return (
     <p
       role={note.tone === 'failed' ? 'alert' : 'status'}

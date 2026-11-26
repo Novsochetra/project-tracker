@@ -48,12 +48,14 @@ function setup(answer: ChatChangesAnswer, phone = false) {
   };
   const rendered = renderAsk({ phone, client });
   restore = rendered.restore;
+
   return client;
 }
 
 const openChanges = async () => {
   const user = userEvent.setup();
   await user.click(await screen.findByRole('button', { name: 'Changes 2' }));
+
   return { user, sheet: await screen.findByRole('dialog', { name: 'Changes' }) };
 };
 

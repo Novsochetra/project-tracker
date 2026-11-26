@@ -33,6 +33,7 @@ export function useLabelPicker(
   const toggle = (id: string) => {
     if (canAdd(valueRef.current, id)) onChange(toggled(valueRef.current, id));
   };
+
   // Set before the request, as `creating` turns true only a render later, so a quick double
   // Enter or tap sends one create, not a second one the server refuses as a duplicate.
   const inFlightRef = useRef(false);
@@ -47,6 +48,7 @@ export function useLabelPicker(
     setQuery((current) => (current.trim() === name ? '' : current));
     onChange([...valueRef.current, label.id]);
   };
+
   const onEnter = () => {
     const choice = enterChoice(labels, query);
     if (!choice) return;
@@ -54,9 +56,11 @@ export function useLabelPicker(
       void addNew(choice.name);
       return;
     }
+
     toggle(choice.id);
     setQuery('');
   };
+
   const onKeyDown = (event: KeyboardEvent<HTMLElement>) => {
     const inField = event.target instanceof HTMLInputElement;
     if (inField && event.key === 'Enter') {
@@ -64,6 +68,7 @@ export function useLabelPicker(
       onEnter();
       return;
     }
+
     if (inField && !fieldKeys.has(event.key)) return;
     const items = itemsOf(rootRef.current);
     const index = items.findIndex((item) => item === document.activeElement);

@@ -11,6 +11,7 @@ import { useTicketSearch } from './useTicketSearch';
 function useOpenRoute(onClose: () => void) {
   const { route, push } = useNavigation();
   const prefetchBoard = usePrefetchBoard();
+
   return (target: Route) => {
     onClose();
     if (routePath(target) === routePath(route)) return;
@@ -41,6 +42,7 @@ function usePaletteList(text: string) {
   // Results still for older text, or on their way for this text.
   const pending = searched !== text.trim() || query.isPlaceholderData || query.isPending;
   const direct = pending ? keyRoute(text, projects ?? []) : null;
+
   return { sections, items: paletteItems(sections), query, pending, direct };
 }
 
@@ -52,6 +54,7 @@ function tabToStart(event: KeyboardEvent<HTMLInputElement>): boolean {
   if (!first) return false;
   event.preventDefault();
   first.focus();
+
   return true;
 }
 
@@ -63,6 +66,7 @@ function useHighlight(items: readonly PaletteItem[]) {
   const activeIndex = items.length === 0 ? -1 : Math.max(kept, 0);
   const step = (by: 1 | -1) =>
     setHighlightId(items[stepIndex(activeIndex, items.length, by)]?.id ?? null);
+
   return { activeIndex, activeItem: items[activeIndex], setHighlightId, step };
 }
 
@@ -76,10 +80,12 @@ export function useSearchPalette(onClose: () => void) {
     setText(event.target.value);
     highlight.setHighlightId(null);
   };
+
   const openActive = () => {
     const target = list.direct ?? highlight.activeItem?.route;
     if (target) openRoute(target);
   };
+
   const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
     if (tabToStart(event)) return;
     const action = paletteAction(event.nativeEvent, isApplePlatform());
@@ -88,6 +94,7 @@ export function useSearchPalette(onClose: () => void) {
     if (action === 'open') openActive();
     else highlight.step(action === 'next' ? 1 : -1);
   };
+
   return {
     text,
     terms: searchTerms(text),

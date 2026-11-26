@@ -31,6 +31,7 @@ function setup(detail: ChatDetail | ChatDetail[], listRunSteps: ReturnType<typeo
     },
   });
   restore = rendered.restore;
+
   return rendered;
 }
 

@@ -15,5 +15,6 @@ export function useWorkingMessage(run: Run | null | undefined) {
   const requests = useRequests(runId);
   const requestsKey = requests.shown.map(({ id, status }) => `${id}:${status}`).join();
   useFollowEnd(threadRef, `${rows.at(-1)?.seq}|${requestsKey}`);
+
   return { threadRef, rows, requests };
 }

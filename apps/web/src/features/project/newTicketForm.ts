@@ -50,6 +50,7 @@ export function formFromDraft(
 ): NewTicketForm {
   const blank = blankForm();
   if (!values) return blank;
+
   return {
     title: textOf(values.title),
     description: textOf(values.description),
@@ -69,6 +70,7 @@ export function hasChanges(form: NewTicketForm, defaultStatus: string | undefine
   if (hasText(form.title) || hasText(form.description) || hasText(form.assignee)) return true;
   if (form.attachments.length > 0 || form.labelIds.length > 0) return true;
   const statusPicked = form.statusId !== null && form.statusId !== defaultStatus;
+
   return statusPicked || form.priority !== blank.priority || form.due !== blank.due;
 }
 
@@ -77,6 +79,7 @@ export function defaultStatusId(
   requested: string | undefined,
 ): string | undefined {
   if (requested && statuses.some((status) => status.id === requested)) return requested;
+
   return sortStatuses(statuses)[0]?.id;
 }
 
@@ -88,6 +91,7 @@ export function chosenStatusId(
 ): string | undefined {
   const picked = form.statusId;
   if (picked !== null && statuses.some((status) => status.id === picked)) return picked;
+
   return defaultStatusId(statuses, requested);
 }
 
@@ -96,6 +100,7 @@ export function chosenStatusId(
 export function withoutGoneStatus(form: NewTicketForm, statuses: readonly Status[]): NewTicketForm {
   const { statusId } = form;
   if (statusId === null || statuses.some((status) => status.id === statusId)) return form;
+
   return { ...form, statusId: null };
 }
 

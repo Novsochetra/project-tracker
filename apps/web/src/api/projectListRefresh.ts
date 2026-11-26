@@ -12,6 +12,7 @@ export function refreshProjectList(queryClient: QueryClient): void {
     void queryClient.invalidateQueries(LIST);
     return;
   }
+
   if (waiting.has(queryClient)) return;
   waiting.add(queryClient);
   void queryClient.refetchQueries(LIST, { cancelRefetch: false }).finally(() => {

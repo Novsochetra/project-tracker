@@ -3,6 +3,7 @@ import type { Route } from '../../navigation';
 
 export const ticketRoute = (projectKey: string, ticketKey: string): Route => {
   const num = parseTicketKey(ticketKey)?.num;
+
   return num ? { name: 'ticket', key: projectKey, num } : { name: 'project', key: projectKey };
 };
 

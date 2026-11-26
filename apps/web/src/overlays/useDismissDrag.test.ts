@@ -33,6 +33,7 @@ function renderDrag(open: boolean) {
   drag.onStart();
   drag.onMove(300);
   drag.onEnd(1200);
+
   return { y, releaseVelocityRef, onClose };
 }
 

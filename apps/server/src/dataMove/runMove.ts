@@ -56,6 +56,7 @@ const textsOf = (rows: TableRows): string[] => [
 function refuse(say: (line: string) => void, problems: readonly string[], dryRun: boolean) {
   say(dryRun ? 'The move would stop here:' : 'Nothing was moved:');
   for (const problem of problems) say(`  ${problem}`);
+
   return false;
 }
 
@@ -71,6 +72,7 @@ function reportFiles(
 
 function dryRun(say: (line: string) => void): boolean {
   say('Dry run: nothing was written.');
+
   return true;
 }
 
@@ -82,6 +84,7 @@ async function apply({ rows, files }: Source, target: Mover): Promise<boolean> {
   const progress = (count: number) => {
     if (count % 25 === 0 || count === files.length) say(`Files: ${count} of ${files.length}.`);
   };
+
   const moved = await copyFiles(files, storage, progress);
   reportFiles(say, rows, moved, false);
   const owner = await findOwner(db);
@@ -98,7 +101,9 @@ async function apply({ rows, files }: Source, target: Mover): Promise<boolean> {
     for (const problem of problems) say(`  ${problem}`);
     return false;
   }
+
   say(checkedLine(rowCounts(rows)));
+
   return true;
 }
 
@@ -108,6 +113,7 @@ async function readSource(db: Db, options: MoveOptions, say: MoveTarget['say']):
   const files = await findSourceFiles(options.uploads, rows.attachments);
   const plan = planLines(rowCounts(rows), { count: files.length, bytes: totalBytes(files) });
   for (const line of [...plan, ...leftOutLines(copied)]) say(line);
+
   return { rows, files };
 }
 
@@ -119,6 +125,7 @@ async function checkFiles({ rows, files }: Source, options: MoveOptions, say: Mo
   if (missing.length > 0) return missing;
   const checked = await copyFiles(files, null);
   if (options.dryRun) reportFiles(say, rows, checked, true);
+
   return refusedImageProblems(checked, placeOf(rows));
 }
 
@@ -131,6 +138,7 @@ async function moveFrom(source: Source, options: MoveOptions, target: Mover) {
   const state = await readTargetState(db, source.rows);
   const issues = [...fileIssues, ...schemaIssues, ...targetProblems(state, options.allowExisting)];
   if (issues.length > 0) return refuse(say, issues, options.dryRun);
+
   return options.dryRun ? dryRun(say) : apply(source, target);
 }
 
@@ -140,6 +148,7 @@ async function moveCopy(options: MoveOptions, target: Mover): Promise<boolean> {
     if (copy.migrated.length > 0) {
       target.say(`Migrated a copy of ${options.from} (not the file): ${copy.migrated.join(', ')}.`);
     }
+
     return await moveFrom(await readSource(copy.db, options, target.say), options, target);
   } finally {
     await copy.close();
@@ -153,6 +162,7 @@ export async function runMove(options: MoveOptions, target: MoveTarget): Promise
     phase = next;
     target.onPhase?.(next);
   };
+
   try {
     return await moveCopy(options, { ...target, setPhase });
   } catch (error) {

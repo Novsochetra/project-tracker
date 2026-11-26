@@ -27,6 +27,7 @@ export const chatRoutes = (ctx: ServiceContext) =>
     .get('/chats/:id', async (c) => c.json(await getChat(ctx, scope(c), c.req.param('id'))))
     .delete('/chats/:id', personDeletesChats, async (c) => {
       await deleteChat(ctx, scope(c), c.req.param('id'));
+
       return c.body(null, 204);
     })
     .post('/chats/:id/messages', personOnly, jsonBody(askInput), async (c) =>
@@ -48,6 +49,7 @@ export const chatRoutes = (ctx: ServiceContext) =>
       async (c) => {
         const person = { scope: scope(c), actor: c.get('actor') };
         const ref = { chatId: c.req.param('id'), messageId: c.req.param('messageId') };
+
         return c.json(await createCardTicket(ctx, person, ref, c.req.valid('json')));
       },
     );

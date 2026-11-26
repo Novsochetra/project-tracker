@@ -33,6 +33,7 @@ function renderSheet() {
   // The board's refetch after a new label has it, as the server's would.
   const createLabel = vi.fn(() => {
     board = { ...board, labels: [bug, release] };
+
     return Promise.resolve(release);
   });
   const api = setupApi({
@@ -50,6 +51,7 @@ function renderSheet() {
       </ToastProvider>
     </Wrapper>,
   );
+
   return { createTicket, createLabel, user: userEvent.setup() };
 }
 

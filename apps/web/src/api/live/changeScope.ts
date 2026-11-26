@@ -40,6 +40,7 @@ const FULL_REFRESH_ONLY = new Set<unknown>([
 function refOf(value: unknown): Ref[] {
   if (!isRecord(value) || typeof value.id !== 'string' || typeof value.key !== 'string') return [];
   const projectId = typeof value.projectId === 'string' ? value.projectId : null;
+
   return [{ id: value.id, key: value.key.toUpperCase(), projectId }];
 }
 
@@ -48,6 +49,7 @@ const refsOf = (values: unknown): Ref[] => (Array.isArray(values) ? values.flatM
 function collect(data: unknown): { projects: Ref[]; tickets: Ref[] } {
   if (Array.isArray(data)) return { projects: refsOf(data), tickets: [] };
   if (!isRecord(data)) return { projects: [], tickets: [] };
+
   return {
     projects: refOf(data.project),
     tickets: [...refsOf(data.tickets), ...refOf(data.ticket)],
@@ -62,6 +64,7 @@ function indexCache(entries: readonly CachedEntry[]): CacheIndex {
     for (const project of projects) index.projectKeys.set(project.id, project.key);
     for (const ticket of tickets) index.tickets.set(ticket.id, ticket);
   }
+
   return index;
 }
 
@@ -81,6 +84,7 @@ export function changeScope(
   const projectId = event.projectId ?? ticket?.projectId ?? null;
   const projectKey = projectId ? index.projectKeys.get(projectId) : undefined;
   const ticketKeys = event.ticketId ? (ticket ? [ticket.key] : []) : ticketKeysIn(index, projectId);
+
   return {
     all: false,
     projectKeys: new Set(projectKey ? [projectKey] : []),
@@ -97,5 +101,6 @@ export function isAffected(queryKey: QueryKey, scope: ChangeScope): boolean {
   const key = scopeOf(queryKey) ?? '';
   if (root === 'project') return scope.all || scope.projectKeys.has(key);
   if (root === 'ticket') return scope.all || scope.ticketKeys.has(key);
+
   return false;
 }

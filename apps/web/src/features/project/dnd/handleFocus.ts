@@ -24,6 +24,7 @@ export function requestHandleFocus(ticketId: string): () => void {
   pending = request;
   document.addEventListener('focusin', forgetUnlessHandle, true);
   document.addEventListener('pointerdown', forgetUnlessHandle, true);
+
   return () => {
     if (pending === request) clearHandleFocus();
   };
@@ -35,5 +36,6 @@ export function wantsHandleFocus(ticketId: string): boolean {
 
 export function rowHasFocus(ticketId: string): boolean {
   const row = dropRowOf(document.activeElement);
+
   return row !== null && dropRowId(row) === ticketId;
 }

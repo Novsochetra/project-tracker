@@ -84,6 +84,7 @@ describe('routePath', () => {
     ]) {
       expect(parseRoute(routePath(route))).toEqual(route);
     }
+
     for (const route of [{ name: 'project', key: 'A B' } as Route]) {
       expect(parseRoute(routePath(route))).toEqual(route);
     }

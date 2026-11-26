@@ -32,6 +32,7 @@ export function OrderedListRow(props: OrderedListRowProps) {
   const { item, editor, transition, onDragEnd } = props;
   const controls = useDragControls();
   const [dragging, setDragging] = useState(false);
+
   return (
     <Reorder.Item
       as="li"
@@ -76,6 +77,7 @@ function RowContent({
     event.preventDefault();
     onMove(delta);
   };
+
   return (
     <>
       <button

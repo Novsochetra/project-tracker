@@ -8,10 +8,13 @@ export function useJustChanged(value: unknown, ms: number): boolean {
     setSeen(value);
     setChanged(true);
   }
+
   useEffect(() => {
     if (!changed) return;
     const timer = setTimeout(() => setChanged(false), ms);
+
     return () => clearTimeout(timer);
   }, [changed, seen, ms]);
+
   return changed;
 }

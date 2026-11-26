@@ -15,6 +15,7 @@ async function replay(name: string, code: number) {
     onOutput: (text) => (window += text),
     onEvent: (event) => steps.push(...read(event)),
   });
+
   return {
     exit,
     steps: steps.map(({ kind, label }) => `${kind}: ${label.split('\n')[0]}`),
@@ -26,6 +27,7 @@ async function handBack(texts: string[]) {
   const tracker = fakeTracker([]);
   const deps = { api: tracker.api, log: () => undefined, describe: String };
   await handBackReport(deps, job('r-1', 'MOB-1'), texts);
+
   return tracker.reports;
 }
 

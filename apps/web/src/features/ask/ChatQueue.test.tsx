@@ -35,6 +35,7 @@ function setup(detail: ChatDetail, client: Record<string, unknown> = {}, after =
     },
   });
   restore = rendered.restore;
+
   return rendered;
 }
 

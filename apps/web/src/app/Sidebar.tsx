@@ -24,6 +24,7 @@ interface ReadyProjectsProps {
 
 function ReadyProjects({ projects, scroller }: ReadyProjectsProps) {
   const ready = readyCounts(readyItems(useReadyForYou().data, projects));
+
   return <SidebarProjects projects={projects} ready={ready} scroller={scroller} />;
 }
 
@@ -33,6 +34,7 @@ export function Sidebar() {
   const projects = useProjects().data ?? [];
   const readyList = useReadyForYou().data;
   const scroller = useRef<HTMLElement>(null);
+
   return (
     <aside ref={scroller} aria-label="Projects" className={styles.sidebar}>
       <div className={styles.brand}>

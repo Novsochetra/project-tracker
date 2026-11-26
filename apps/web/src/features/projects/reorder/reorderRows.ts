@@ -10,6 +10,7 @@ export function rowsIn(list: HTMLElement | null): RowElements {
   for (const row of list.querySelectorAll<HTMLElement>(`[${REORDER_ROW_ATTRIBUTE}]`)) {
     rows.set(row.getAttribute(REORDER_ROW_ATTRIBUTE) ?? '', row);
   }
+
   return rows;
 }
 
@@ -34,10 +35,12 @@ export function settleRows(rows: RowElements, shown: ReadonlyMap<string, number>
     row.setAttribute(STILL_ATTRIBUTE, '');
     moveRow(row, 0);
   }
+
   applyStyles(rows);
   const moved = glide
     ? [...rows].flatMap(([id, row]) => {
         const offset = (shown.get(id) ?? 0) - row.getBoundingClientRect().top;
+
         return Math.abs(offset) < 0.5 ? [] : [{ row, offset }];
       })
     : [];

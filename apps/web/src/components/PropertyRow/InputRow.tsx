@@ -19,6 +19,7 @@ export function InputRow({
   ...rest
 }: InputRowProps) {
   const listId = useId();
+
   return (
     <label className={clsx('ring-inside', styles.row, styles.field, className)}>
       <span className={styles.icon}>{icon}</span>

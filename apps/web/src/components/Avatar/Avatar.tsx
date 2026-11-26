@@ -22,6 +22,7 @@ const sizeClass = (size: AvatarSize) => (size === 20 ? styles.small : styles.med
 
 export function Avatar({ name, size = 24, decorative = false, className }: AvatarProps) {
   const trimmed = name.trim();
+
   return (
     <span
       role={decorative ? undefined : 'img'}

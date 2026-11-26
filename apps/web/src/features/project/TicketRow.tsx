@@ -30,6 +30,7 @@ export function TicketRow(props: TicketRowProps) {
   const content = (
     <TicketRowContent ticket={ticket} status={status} dragged={dragged} callbacks={callbacks} />
   );
+
   return (
     <div
       className={clsx(styles.row, rise !== null && styles.rise)}

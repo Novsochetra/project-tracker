@@ -64,6 +64,7 @@ const sidesOf = (sheet: Locator) =>
       .filter((box) => box.width > 2 && box.height > 2);
     const header = element.querySelector('header')!.getBoundingClientRect();
     const panel = element.getBoundingClientRect();
+
     return {
       controls: [Math.min(...boxes.map((box) => box.left)), Math.max(...boxes.map((b) => b.right))],
       sheet: [panel.left, panel.right],

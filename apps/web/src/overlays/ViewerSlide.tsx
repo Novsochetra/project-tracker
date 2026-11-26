@@ -26,8 +26,10 @@ function ViewerSlideImpl(props: ViewerSlideProps) {
       onNaturalSize(image.id, { width: naturalWidth, height: naturalHeight });
     }
   };
+
   const zoom: MotionStyle = current ? { x: values.x, y: values.y, scale: values.scale } : AT_REST;
   const size = fitted.width > 0 ? { width: fitted.width, height: fitted.height } : {};
+
   return (
     <div className={styles.slide} style={{ left, width }} aria-hidden={current ? undefined : true}>
       {near && (

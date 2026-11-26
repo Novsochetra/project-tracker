@@ -47,6 +47,7 @@ export function uninstallAgent(label: string): boolean {
   stopJob(label);
   if (!isInstalled(label)) return false;
   rmSync(plistPathOf(label));
+
   return true;
 }
 

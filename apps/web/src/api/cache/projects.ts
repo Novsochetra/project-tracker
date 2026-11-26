@@ -39,6 +39,7 @@ export function reorderProjectSummaries(
 ): ProjectSummary[] {
   const order = new Map(ids.map((id, index) => [id, index]));
   const place = (item: ProjectSummary, index: number) => order.get(item.id) ?? ids.length + index;
+
   return list
     .map((item, index) => ({ item, at: place(item, index) }))
     .sort((a, b) => a.at - b.at)

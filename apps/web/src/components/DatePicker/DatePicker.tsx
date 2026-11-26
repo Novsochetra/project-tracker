@@ -45,6 +45,7 @@ function DatePickerPanel({ open, anchorRef, value, label, onPick, onClose }: Dat
     onPick(day);
     close();
   };
+
   return (
     <FloatingPanel
       open={open}

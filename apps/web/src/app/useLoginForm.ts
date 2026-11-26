@@ -12,6 +12,7 @@ export function useLoginForm() {
     set(value);
     if (login.isError) login.reset();
   };
+
   const submit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (login.isPending) return;
@@ -20,12 +21,14 @@ export function useLoginForm() {
     if (password === '') return passwordRef.current?.focus();
     login.mutate({ email, password });
   };
+
   // Return in the email field moves on to the password, as the keyboard's Next key says.
   const nextOnReturn = (event: KeyboardEvent<HTMLInputElement>) => {
     if (event.key !== 'Enter' || password !== '' || email.trim() === '') return;
     event.preventDefault();
     passwordRef.current?.focus();
   };
+
   return {
     email,
     password,

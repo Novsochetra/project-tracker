@@ -17,6 +17,7 @@ export interface ChoiceButtonProps {
 
 export function ChoiceButton({ option, toggle, selected, disabled, onClick }: ChoiceButtonProps) {
   const id = useId();
+
   return (
     <button
       type="button"

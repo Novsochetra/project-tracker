@@ -48,6 +48,7 @@ async function startTracker() {
     server.close();
     await db.destroy();
   };
+
   return { url, port: portOf(server), person: new TrackerClient({ baseUrl: url }), close };
 }
 
@@ -60,10 +61,12 @@ async function cuttableLink(targetPort: number) {
       socket.on('close', () => sockets.delete(socket));
       socket.on('error', () => undefined);
     }
+
     inbound.pipe(outbound).pipe(inbound);
   });
   link.listen(0, '127.0.0.1');
   await once(link, 'listening');
+
   return {
     url: `http://127.0.0.1:${portOf(link)}`,
     cut: () => sockets.forEach((socket) => socket.destroy()),
@@ -118,6 +121,7 @@ describe('tracker watch against a real tracker', () => {
     ]) {
       await person.createTicket('MOB', { title });
     }
+
     helper = new TrackerClient({
       baseUrl: link.url,
       actor: { kind: 'agent', name: 'Claude' },
@@ -244,6 +248,7 @@ describe('tracker watch against a real tracker', () => {
       open = (await person.listRunRequests(runId)).find(({ status }) => status === 'open');
       expect(open).toBeDefined();
     }, settle);
+
     return open!;
   };
 
@@ -252,6 +257,7 @@ describe('tracker watch against a real tracker', () => {
     const runId = (await person.getChat(chat.id)).run!.id;
     const answer = async () =>
       (await person.getChat(chat.id)).messages.find(({ role }) => role === 'claude')?.text;
+
     return { chatId: chat.id, runId, answer };
   };
 

@@ -48,6 +48,7 @@ function endedRun(run: Run): ShownRun | null {
     const text = reason ? `${AUTO_REVIEW_STOPPED}. ${reason}` : `${AUTO_REVIEW_STOPPED}.`;
     return { state: 'stopped', run, text };
   }
+
   return run.usage ? { state: 'finished', run, text: finishedText(run) } : null;
 }
 
@@ -81,6 +82,7 @@ export function runFooter({ runners, runs, projectKey, lastUsedId }: RunFooterIn
   if (!runners || !projectKey) return { kind: 'copy' };
   const helpers = helpersFor(runners, projectKey);
   const helper = pickHelper(helpers, lastUsedId);
+
   return helper ? { kind: 'run', helpers, helper } : { kind: 'setup' };
 }
 
@@ -91,5 +93,6 @@ export function shownRun(runs: readonly Run[] | undefined, now: number): ShownRu
   if (!latest) return null;
   if (isWorking(latest)) return { state: 'working', run: latest, text: workingText(latest) };
   if (now - runTime(latest) >= STOPPED_SHOWN_MS) return null;
+
   return endedRun(latest);
 }

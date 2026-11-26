@@ -25,7 +25,9 @@ export function FieldNote({ draft, subject, id }: FieldNoteProps) {
       />
     );
   }
+
   if (!draft.failed) return null;
   const retry = { label: 'Retry', name: `Retry saving ${field}`, onClick: draft.retry };
+
   return <UnsavedNote id={id} message={`${subject} isn't saved yet.`} actions={[retry]} />;
 }

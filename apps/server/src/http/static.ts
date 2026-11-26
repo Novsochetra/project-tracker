@@ -61,6 +61,7 @@ function notModified(headers: Headers): Response {
     const value = headers.get(name);
     if (value !== null) kept.set(name, value);
   }
+
   return new Response(null, { status: 304, headers: kept });
 }
 
@@ -75,6 +76,7 @@ async function withETag(c: Context<AppEnv>, response: Response, file: string): P
   headers.set('ETag', etag);
   if (etagMatches(c.req.header('If-None-Match'), etag)) return notModified(headers);
   headers.set('Content-Length', String(bytes.length));
+
   return new Response(c.req.method === 'HEAD' ? null : bytes, { status: 200, headers });
 }
 
@@ -88,6 +90,7 @@ function webFiles(root: string, path?: string): MiddlewareHandler<AppEnv> {
     precompressed: true,
     onFound: (file, c) => void served.set(c, file),
   });
+
   return async (c, next) => {
     if (COMPRESSED_COPY.test(c.req.path)) return c.notFound();
     rewriteAcceptEncoding(c.req.raw.headers);
@@ -99,6 +102,7 @@ function webFiles(root: string, path?: string): MiddlewareHandler<AppEnv> {
     setCacheHeaders(response, c.req.path);
     const file = served.get(c);
     if (!file || response.status !== 200 || isHashedPath(c.req.path)) return response;
+
     return withETag(c, response, file);
   };
 }

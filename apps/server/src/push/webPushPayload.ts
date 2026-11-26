@@ -15,6 +15,7 @@ export interface Ephemeral {
 export function newEphemeral(): Ephemeral {
   const sender = createECDH('prime256v1');
   sender.generateKeys();
+
   return { sender, salt: randomBytes(16) };
 }
 
@@ -26,6 +27,7 @@ export function pushIkm(receiver: ReceiverKeys, sender: ECDH): Buffer {
     sender.getPublicKey(),
   ]);
   const secret = sender.computeSecret(receiverPublic);
+
   return Buffer.from(
     hkdfSync('sha256', secret, Buffer.from(receiver.auth, 'base64url'), keyInfo, 32),
   );
@@ -37,5 +39,6 @@ export function encryptPushPayload(
   { sender, salt }: Ephemeral = newEphemeral(),
 ): Buffer {
   const ikm = pushIkm(receiver, sender);
+
   return encryptContent({ ikm, salt, keyId: sender.getPublicKey(), plaintext });
 }

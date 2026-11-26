@@ -29,6 +29,7 @@ export function LineCommentBox({ ticketKey, line, lineId, focus, onClose }: Line
     setText(next);
     keepLineDraft(ticketKey, lineId, next);
   };
+
   const send = () => {
     const sent = text.trim();
     if (!sent) return;
@@ -41,6 +42,7 @@ export function LineCommentBox({ ticketKey, line, lineId, focus, onClose }: Line
       keepLineDraft(ticketKey, lineId, sent);
     });
   };
+
   return (
     <form
       className={styles.box}

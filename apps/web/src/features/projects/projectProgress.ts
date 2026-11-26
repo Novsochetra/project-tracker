@@ -25,6 +25,7 @@ export function projectProgress(counts: Counts, readyCount: number): ProjectProg
   const { totalCount: total, doneCount: done, openCount } = counts;
   const open = openNotReviewed(openCount, readyCount);
   const ready = openCount - open;
+
   return {
     total,
     done,
@@ -42,5 +43,6 @@ export function progressParts({ done, ready, open }: ProjectProgress): ProgressP
     { kind: 'ready', count: ready },
     { kind: 'open', count: open },
   ];
+
   return parts.filter((part) => part.count > 0);
 }

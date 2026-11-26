@@ -47,6 +47,7 @@ export interface RequestOptions extends ReadOptions {
 
 const isErrorBody = (value: unknown): value is ErrorBody => {
   const error = (value as Partial<ErrorBody> | null)?.error;
+
   return typeof error?.code === 'string' && typeof error.message === 'string';
 };
 
@@ -63,12 +64,14 @@ function toApiError({ status, statusText, text }: Answer): ApiError {
   const { code, message } = isErrorBody(data)
     ? data.error
     : { code: 'http_error', message: statusText };
+
   return new ApiError(status, code, message);
 }
 
 function parseAnswer<T>(answer: Answer, allowEmpty: boolean): T {
   if (answer.status === 204) return (allowEmpty ? null : undefined) as T;
   if (answer.status < 200 || answer.status > 299) throw toApiError(answer);
+
   return (answer.text ? JSON.parse(answer.text) : null) as T;
 }
 
@@ -77,7 +80,9 @@ function buildQuery(query: Query | undefined): string {
   for (const [name, value] of Object.entries(query ?? {})) {
     if (value !== undefined && value !== '') params.set(name, value);
   }
+
   const text = params.toString();
+
   return text ? `?${text}` : '';
 }
 
@@ -100,6 +105,7 @@ export class Http {
       headers.set('x-actor-kind', this.options.actor.kind);
       headers.set('x-actor-name', encodeURIComponent(this.options.actor.name));
     }
+
     return headers;
   }
 
@@ -114,6 +120,7 @@ export class Http {
       ...(options.fresh ? { cache: 'no-store' as const } : {}),
       ...(options.signal ? { signal: options.signal } : {}),
     });
+
     return this.read<T>(response, options.allowEmpty ?? false);
   }
 
@@ -127,12 +134,14 @@ export class Http {
     if (options.onProgress && canReportProgress()) {
       return parseAnswer<T>(await postWithProgress(url, headers, file.blob, options), false);
     }
+
     const response = await this.fetchImpl(url, {
       method: 'POST',
       headers,
       body: file.blob,
       ...(options.signal ? { signal: options.signal } : {}),
     });
+
     return this.read<T>(response, false);
   }
 
@@ -142,12 +151,14 @@ export class Http {
       ...(signal ? { signal } : {}),
     });
     if (!response.ok) await this.read(response, false);
+
     return response;
   }
 
   private async read<T>(response: Response, allowEmpty: boolean): Promise<T> {
     const { status, statusText } = response;
     const text = status === 204 ? '' : await response.text();
+
     return parseAnswer<T>({ status, statusText, text }, allowEmpty);
   }
 }

@@ -27,6 +27,7 @@ function PreviewBody({ attachment }: { attachment: Attachment }) {
       </div>
     );
   }
+
   if (query.data === undefined) {
     return (
       <div className={styles.state}>
@@ -34,7 +35,9 @@ function PreviewBody({ attachment }: { attachment: Attachment }) {
       </div>
     );
   }
+
   const preview = textPreview(query.data);
+
   return (
     <>
       <pre className={styles.text}>{preview.text}</pre>
@@ -57,6 +60,7 @@ function PreviewBody({ attachment }: { attachment: Attachment }) {
 
 export function TextPreviewSheet({ attachment, open, onClose }: TextPreviewSheetProps) {
   if (!attachment) return null;
+
   return (
     <Sheet
       open={open}

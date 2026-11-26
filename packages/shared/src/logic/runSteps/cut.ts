@@ -9,5 +9,6 @@ export const sliceWhole = (text: string, end: number): string =>
 
 export function cutTo(text: string, max: number): string {
   if (text.length <= max) return text;
+
   return `${sliceWhole(text, max - ELLIPSIS.length).trimEnd()}${ELLIPSIS}`;
 }

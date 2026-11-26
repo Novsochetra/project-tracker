@@ -14,6 +14,7 @@ function setup(getTicket = vi.fn().mockResolvedValue(theirs)) {
   const api = setupApi({ getTicket });
   seedTicket(api.queryClient);
   const { result } = renderHook(() => useDraftCheck('MOB-1'), { wrapper: api.wrapper });
+
   return { ...api, check: result.current };
 }
 

@@ -14,6 +14,7 @@ import { useAnswer, type Answer } from './useAnswer';
 function OpenRequest({ request, answer }: { request: RunRequest; answer: Answer }) {
   if (request.kind === 'plan') return <PlanAsk request={request} answer={answer} />;
   if (request.kind === 'permission') return <PermissionAsk request={request} answer={answer} />;
+
   return <QuestionAsk questions={request.questions} answer={answer} />;
 }
 
@@ -21,6 +22,7 @@ export function RequestCard({ request, now }: { request: RunRequest; now: number
   const cardRef = useRef<HTMLElement>(null);
   const answer = useAnswer(request, cardRef);
   const open = isOpen(request, now);
+
   return (
     <section
       ref={cardRef}

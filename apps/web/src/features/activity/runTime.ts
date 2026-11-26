@@ -7,6 +7,7 @@ export function formatElapsed(ms: number): string {
   if (minutes < 1) return 'under 1m';
   if (minutes < 60) return `${minutes}m`;
   const hours = Math.floor(minutes / 60);
+
   return `${hours}h ${minutes % 60}m`;
 }
 

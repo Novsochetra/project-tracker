@@ -8,6 +8,7 @@ function scrollsSideways(element: Element): boolean {
   if (element.scrollWidth <= element.clientWidth + 1) return false;
   if (isField(element)) return true;
   const { overflowX } = getComputedStyle(element);
+
   return overflowX === 'auto' || overflowX === 'scroll';
 }
 
@@ -15,6 +16,7 @@ function insideSidewaysScroller(target: Element): boolean {
   for (let node: Element | null = target; node; node = node.parentElement) {
     if (scrollsSideways(node)) return true;
   }
+
   return false;
 }
 
@@ -23,5 +25,6 @@ function insideSidewaysScroller(target: Element): boolean {
 // open is meant for that, not for the page behind it.
 export function isTrackpadSwipeTarget(target: EventTarget | null): boolean {
   if (!(target instanceof Element) || isNoSwipeTarget(target)) return false;
+
   return !insideSidewaysScroller(target) && !hasOpenOverlay(document);
 }

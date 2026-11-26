@@ -20,6 +20,7 @@ export interface FoldBox {
 // 21px), so the fold ends where the last line that fits does, instead of through the next one.
 function lastLineEnd(limit: number, lineEnds: readonly number[]): number {
   const within = lineEnds.filter((end) => end <= limit);
+
   return within.length > 0 ? Math.max(...within) : limit;
 }
 
@@ -27,6 +28,7 @@ export function foldedHeight({ text, lineHeight, frame, lineEnds = [] }: FoldBox
   if (!(lineHeight > 0)) return null;
   const shown = FOLD_LINES * lineHeight;
   if (text <= shown + SLACK_LINES * lineHeight) return null;
+
   return Math.round(lastLineEnd(shown, lineEnds) + frame);
 }
 
@@ -34,5 +36,6 @@ export function lineHeightOf(lineHeight: string, fontSize: string): number {
   const height = Number.parseFloat(lineHeight);
   if (Number.isFinite(height)) return height;
   const size = Number.parseFloat(fontSize);
+
   return Number.isFinite(size) ? size * NORMAL_LINE_HEIGHT : BODY_LINE;
 }

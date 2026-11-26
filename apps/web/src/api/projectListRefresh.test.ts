@@ -9,6 +9,7 @@ function watchedList() {
   const read = vi.fn(() => {
     const answer = deferred<string[]>();
     answers.push(answer);
+
     return answer.promise;
   });
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
@@ -23,12 +24,14 @@ function watchedList() {
       expect(queryClient.getQueryData(queryKeys.projects())).toEqual([`read ${index}`]),
     );
   };
+
   const fail = async (index: number) => {
     answers[index]?.reject(new TypeError('Failed to fetch'));
     await vi.waitFor(() =>
       expect(queryClient.getQueryState(queryKeys.projects())?.errorUpdateCount).toBe(1),
     );
   };
+
   return { queryClient, read, answer, fail, stop };
 }
 

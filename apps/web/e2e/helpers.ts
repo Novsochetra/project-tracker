@@ -50,6 +50,7 @@ export async function swipeLeft(row: Locator, distance = 120): Promise<void> {
   for (let step = 1; step <= distance / 10; step += 1) {
     await row.dispatchEvent('pointermove', at(start - step * 10));
   }
+
   await row.dispatchEvent('pointerup', at(start - distance));
 }
 
@@ -113,11 +114,13 @@ export async function resting(read: () => Promise<number>): Promise<number> {
         const value = await read();
         const still = value === last;
         last = value;
+
         return still;
       },
       { intervals: [100] },
     )
     .toBe(true);
+
   return last;
 }
 
@@ -136,19 +139,23 @@ export async function settled(locator: Locator): Promise<void> {
           : `script animation "${animation.id}"`;
     const where = (animation: Animation) => {
       const target = animation.effect instanceof KeyframeEffect ? animation.effect.target : null;
+
       return target ? [target.tagName.toLowerCase(), ...target.classList].join('.') : 'no element';
     };
+
     const running = () => {
       const animations = element.getAnimations({ subtree: true });
       for (let node = element.parentElement; node; node = node.parentElement) {
         animations.push(...node.getAnimations());
       }
+
       return animations.filter(
         (animation) =>
           animation.playState === 'running' &&
           animation.effect?.getComputedTiming().endTime !== Infinity,
       );
     };
+
     await document.fonts.ready;
     const deadline = performance.now() + limit;
     for (let left = running(); left.length > 0; left = running()) {
@@ -158,6 +165,7 @@ export async function settled(locator: Locator): Promise<void> {
       const ended = Promise.all(left.map((animation) => animation.finished.catch(() => null)));
       await Promise.race([ended, new Promise((resolve) => setTimeout(resolve, rest))]);
     }
+
     return [];
   }, SETTLE_MS);
   if (moving.length > 0) {

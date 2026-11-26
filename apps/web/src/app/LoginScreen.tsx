@@ -22,6 +22,7 @@ export function LoginScreen({ setupRequired }: LoginScreenProps) {
   useEffect(() => {
     if (!isPhone) emailRef.current?.focus();
   }, [isPhone, emailRef]);
+
   return (
     <main className={styles.screen}>
       <form className={styles.form} onSubmit={submit} noValidate aria-label="Sign in">

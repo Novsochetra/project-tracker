@@ -34,6 +34,7 @@ const directionOf = (dx: number): SwipeDirection => (dx < 0 ? 'back' : 'forward'
 // go, so a first event on the first screen or over a board still reaches the browser.
 function wait(dx: number, dy: number, at: number, canTrack: CanTrack): TrackpadSwipe {
   const leans = dx !== 0 && Math.abs(dx) >= Math.abs(dy) && canTrack(directionOf(dx));
+
   return { phase: leans ? 'leaning' : 'undecided', dx, dy, at };
 }
 
@@ -41,6 +42,7 @@ function decide(dx: number, dy: number, at: number, canTrack: CanTrack): Trackpa
   if (Math.max(Math.abs(dx), Math.abs(dy)) < DECIDE_PX) return wait(dx, dy, at, canTrack);
   if (!isSideways(dx, dy)) return { phase: 'vertical', dx: 0, dy: 0, at };
   const phase = canTrack(directionOf(dx)) ? 'tracking' : 'refused';
+
   return { phase, dx: phase === 'tracking' ? dx : 0, dy: 0, at };
 }
 
@@ -52,6 +54,7 @@ const isClearlySideways = ({ dx, dy }: WheelStep) =>
 
 function startsOver(swipe: TrackpadSwipe, wheel: WheelStep): boolean {
   if (wheel.at - swipe.at > GESTURE_GAP_MS) return true;
+
   return swipe.phase === 'vertical' && isClearlySideways(wheel);
 }
 
@@ -68,10 +71,13 @@ export function stepSwipe(
   if (swipe.phase === 'done' && isClearlyVertical(wheel)) {
     return { phase: 'refused', dx: 0, dy: 0, at: wheel.at };
   }
+
   if (swipe.phase === 'undecided' || swipe.phase === 'leaning') {
     return decide(swipe.dx + wheel.dx, swipe.dy + wheel.dy, wheel.at, canTrack);
   }
+
   if (swipe.phase === 'tracking') return { ...swipe, dx: swipe.dx + wheel.dx, at: wheel.at };
+
   return { ...swipe, at: wheel.at };
 }
 

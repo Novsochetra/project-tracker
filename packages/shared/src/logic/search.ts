@@ -18,6 +18,7 @@ export function searchWords(query: string): string[] {
     seen.add(lower);
     words.push(word);
   }
+
   return words.slice(0, SEARCH_TERMS_MAX);
 }
 
@@ -31,6 +32,7 @@ export interface KeyQuery {
 
 const toNum = (digits: string): number | null => {
   const num = Number.parseInt(digits, 10);
+
   return num >= 1 && num <= MAX_TICKET_NUMBER ? num : null;
 };
 
@@ -42,9 +44,11 @@ export function parseKeyQuery(query: string): KeyQuery | null {
     const num = toNum(bare[1]);
     return num === null ? null : { projectKey: null, num };
   }
+
   const keyed = /^([A-Za-z0-9]+?)(?:[\s-]+|(?<=[A-Za-z])(?=\d))(\d+)$/.exec(text);
   if (!keyed?.[1] || !keyed[2]) return null;
   const num = toNum(keyed[2]);
+
   return num === null ? null : { projectKey: keyed[1].toUpperCase(), num };
 }
 
@@ -62,6 +66,7 @@ export function searchMatchOf(
   if (keyHit) return 'key';
   if (terms.length === 0) return 'recent';
   const lower = title.toLowerCase();
+
   return terms.every((term) => lower.includes(term)) ? 'title' : 'description';
 }
 
@@ -71,6 +76,7 @@ function firstHit(lower: string, terms: readonly string[]): { index: number; len
     const index = lower.indexOf(term);
     if (index >= 0 && (best.index < 0 || index < best.index)) best = { index, length: term.length };
   }
+
   return best;
 }
 
@@ -78,6 +84,7 @@ function firstHit(lower: string, terms: readonly string[]): { index: number; len
 function snippetStart(flat: string, index: number): number {
   if (index <= SNIPPET_LEAD) return 0;
   const space = flat.indexOf(' ', index - SNIPPET_LEAD - 1);
+
   return space >= 0 && space < index ? space + 1 : index;
 }
 
@@ -93,5 +100,6 @@ export function searchSnippet(text: string, terms: readonly string[]): string | 
   const end = Math.min(flat.length, start + SNIPPET_LENGTH);
   const head = start > 0 ? '…' : '';
   const tail = end < flat.length ? '…' : '';
+
   return `${head}${flat.slice(start, end).trim()}${tail}`;
 }

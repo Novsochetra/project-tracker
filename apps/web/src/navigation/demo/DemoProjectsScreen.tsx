@@ -22,6 +22,7 @@ export function DemoProjectsScreen() {
   const demo = useDemo();
   const { push } = useNavigation();
   const { scrollRef } = useScreen();
+
   return (
     <>
       <NavBar

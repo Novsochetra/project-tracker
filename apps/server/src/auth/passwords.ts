@@ -18,6 +18,7 @@ const PREFIX = 'scrypt';
 function derive(password: string, salt: Buffer, { N, r, p }: ScryptParams): Promise<Buffer> {
   // Node refuses anything over 32 MiB by default, which is exactly what N=2^15, r=8 needs.
   const options: ScryptOptions = { N, r, p, maxmem: 256 * N * r };
+
   return new Promise((resolve, reject) => {
     scrypt(password.normalize('NFC'), salt, KEY_LENGTH, options, (error, key) => {
       if (error) reject(error);
@@ -32,6 +33,7 @@ export async function hashPassword(
 ): Promise<string> {
   const salt = randomBytes(SALT_BYTES);
   const key = await derive(password, salt, params);
+
   return [
     PREFIX,
     params.N,
@@ -55,6 +57,7 @@ function parseHash(stored: string): ParsedHash | null {
   const params = { N: Number(n), r: Number(r), p: Number(p) };
   if (prefix !== PREFIX || !salt || !key) return null;
   if (!Object.values(params).every((value) => Number.isInteger(value) && value > 0)) return null;
+
   return { params, salt: Buffer.from(salt, 'base64url'), key: Buffer.from(key, 'base64url') };
 }
 
@@ -62,5 +65,6 @@ export async function verifyPassword(password: string, stored: string): Promise<
   const parsed = parseHash(stored);
   if (!parsed || parsed.key.length !== KEY_LENGTH) return false;
   const key = await derive(password, parsed.salt, parsed.params);
+
   return timingSafeEqual(key, parsed.key);
 }

@@ -40,5 +40,6 @@ export async function pollUntilEnded<T>(options: PollOptions<T>): Promise<PollEn
       failures += 1;
     }
   }
+
   return { kind: 'aborted' };
 }

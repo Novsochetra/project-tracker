@@ -22,12 +22,14 @@ export function visibleStatuses<T extends Status>(
 ): T[] {
   const sorted = sortStatuses(statuses);
   const picked = sorted.filter((status) => status.id === filter);
+
   return picked.length > 0 ? picked : sorted;
 }
 
 export function matchesSearch(ticket: { title: string; key: string }, query: string): boolean {
   const q = query.trim().toLowerCase();
   if (!q) return true;
+
   return ticket.title.toLowerCase().includes(q) || ticket.key.toLowerCase().includes(q);
 }
 
@@ -43,6 +45,7 @@ export function filterTabs<T extends Status>(
 ): FilterTab<T>[] {
   const counts = new Map<string, number>();
   for (const { statusId } of tickets) counts.set(statusId, (counts.get(statusId) ?? 0) + 1);
+
   return [
     { value: ALL_TICKETS, status: null, count: tickets.length },
     ...sortStatuses(statuses).map((status) => ({
@@ -66,6 +69,7 @@ export function collapseGroup<T>(
   const long = items.length > GROUP_LIMIT + 1;
   if (!long || options.searching) return { shown: [...items], hiddenCount: 0, hasToggle: false };
   if (options.expanded) return { shown: [...items], hiddenCount: 0, hasToggle: true };
+
   return {
     shown: items.slice(0, GROUP_LIMIT),
     hiddenCount: items.length - GROUP_LIMIT,

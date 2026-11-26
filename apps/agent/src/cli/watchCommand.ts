@@ -30,16 +30,19 @@ export function checkWatchArgs(parsed: ParsedArgs): void {
   if (parsed.args.length > 1) {
     throw new UsageError(`Unexpected argument "${parsed.args[1]}".`, WATCH_USAGE);
   }
+
   const unknown = Object.keys(parsed.options).find((name) => !WATCH_OPTIONS.has(name));
   if (unknown) throw new UsageError(`"watch" has no --${unknown} option.`, WATCH_USAGE);
   const turns = parsed.options['max-turns'];
   if (turns !== undefined && !TURNS.test(turns)) {
     throw new UsageError('Use a whole number of turns for --max-turns, like 50.', WATCH_USAGE);
   }
+
   const { install: installing, uninstall: removing, check: checking } = parsed.flags;
   if ([installing, removing, checking].filter(Boolean).length > 1) {
     throw new UsageError('Use one of --install, --uninstall and --check.', WATCH_USAGE);
   }
+
   const choices = parsed.args.length + Object.keys(parsed.options).length;
   const { 'no-keep-awake': noKeepAwake, approvals } = parsed.flags;
   if ((removing || checking) && (choices > 0 || noKeepAwake || approvals)) {
@@ -48,6 +51,7 @@ export function checkWatchArgs(parsed: ParsedArgs): void {
       WATCH_USAGE,
     );
   }
+
   const problem = approvalsProblem({
     approvals,
     permissionMode: parsed.options['permission-mode'],
@@ -59,6 +63,7 @@ function run(parsed: ParsedArgs, args: WatchArgs, io: WatchIo): Promise<void> {
   if (parsed.flags.install) return install(parsed.global, args, io);
   if (parsed.flags.uninstall) return Promise.resolve(uninstall(io));
   if (parsed.flags.check) return check(parsed.global, io);
+
   return watch(parsed.global, args, io);
 }
 
@@ -69,6 +74,7 @@ export function lineFormat(
 ): (text: string) => string {
   const { install: installing, uninstall: removing, check: checking } = parsed.flags;
   const logged = !inTerminal && !installing && !removing && !checking;
+
   return (text) => (logged ? stampLines(text, new Date()) : text);
 }
 

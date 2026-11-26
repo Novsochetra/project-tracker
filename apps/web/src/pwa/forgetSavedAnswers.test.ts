@@ -9,6 +9,7 @@ function fakeStorage() {
     delete: vi.fn(() => Promise.resolve(true)),
     open: vi.fn(() => Promise.resolve({ put })),
   };
+
   return { storage, put };
 }
 

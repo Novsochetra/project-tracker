@@ -24,8 +24,10 @@ function windowsOf(windows: unknown) {
     const window = windows[name];
     if (!isJson(window)) return [];
     const read = { usedPercent: percentOf(window.utilization), resetsAt: msOf(window.resetsAt) };
+
     return planWindowInput.safeParse(read).success ? [[name, read] as const] : [];
   });
+
   return found.length > 0 ? { windows: Object.fromEntries(found) } : {};
 }
 
@@ -44,5 +46,6 @@ export function planLimitsOf(event: unknown): PlanLimitsInput | null {
     ...fitting('isUsingOverage', info.isUsingOverage),
   };
   if (Object.keys(limits).length === 0) return null;
+
   return planLimitsInput.safeParse(limits).data ?? null;
 }

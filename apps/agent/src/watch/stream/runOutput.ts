@@ -29,6 +29,7 @@ export function createRunOutput({ onOutput, onEvent }: ClaudeListeners) {
     output = (output + text).slice(-KEPT_OUTPUT);
     onOutput(text);
   };
+
   return {
     say,
     event(event: unknown): ClaudeResult | null {
@@ -40,6 +41,7 @@ export function createRunOutput({ onOutput, onEvent }: ClaudeListeners) {
       if (!found) return null;
       results.push(found);
       if (found.text) say(`${found.text}\n`);
+
       return found;
     },
     noteError: (message: string) => {

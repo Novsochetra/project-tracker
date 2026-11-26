@@ -20,6 +20,7 @@ async function renderExpandedTodo() {
   renderProject({ board: makeBoard(tickets) });
   const todo = await screen.findByRole('region', { name: 'To do' });
   await user.click(within(todo).getByRole('button', { name: 'Show 7 more' }));
+
   return { user, todo };
 }
 

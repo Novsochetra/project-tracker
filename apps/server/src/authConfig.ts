@@ -15,6 +15,7 @@ export function parseTrustProxy(value: string | undefined): number {
   const text = value?.trim().toLowerCase() ?? '';
   if (text === 'true') return 1;
   const hops = Number(text);
+
   return Number.isInteger(hops) && hops > 0 && hops < 10 ? hops : 0;
 }
 
@@ -25,6 +26,7 @@ export function loadAuthConfig(env: NodeJS.ProcessEnv, host: string): AuthConfig
   const trustedProxies = parseTrustProxy(env.TRUST_PROXY);
   const legacyToken = Boolean(env.TRACKER_TOKEN);
   const local = isLoopbackHost(host) && trustedProxies === 0 && !legacyToken;
+
   return {
     openWithoutOwner: local ? 'local' : false,
     trustedProxies,

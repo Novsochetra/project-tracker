@@ -20,6 +20,7 @@ export function parseOwnerArgs(argv: readonly string[]): OwnerArgs {
   if (argv.some((arg) => arg.startsWith('--password'))) {
     return { error: 'Type the password when asked, or pipe it in; never pass it as an argument.' };
   }
+
   return { email };
 }
 

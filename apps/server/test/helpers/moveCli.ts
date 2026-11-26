@@ -61,6 +61,7 @@ export function startMoveCli(
     child.on('error', reject);
     child.on('close', (code, signal) => resolve({ code, signal, stdout, stderr }));
   });
+
   return { child, stdout: () => stdout, done };
 }
 

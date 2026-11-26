@@ -49,6 +49,7 @@ describe('regression: a ticket reopened while its cached requests are stale', ()
 
     await act(() => {
       runs.resolve([running]);
+
       return runs.promise;
     });
     const card = await screen.findByRole('region', { name: 'Claude asks: Edit src/rotate.ts' });

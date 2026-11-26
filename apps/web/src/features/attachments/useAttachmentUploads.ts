@@ -34,6 +34,7 @@ export interface AttachmentUploads {
 
 function previewOf({ file, kind }: AdmittedFile): string | null {
   if (kind !== 'image' && kind !== 'video') return null;
+
   return typeof URL.createObjectURL === 'function' ? URL.createObjectURL(file) : null;
 }
 
@@ -65,11 +66,13 @@ const ends = (item: UploadingFile, signal: AbortSignal, { forget, fail }: Upload
       if (!signal.aborted) return { item, attachment, failed: false };
       // It got there before the stop did, so it goes again.
       forget(attachment);
+
       return { item, attachment: null, failed: false };
     },
     (error: unknown): Finished => {
       if (signal.aborted) return { item, attachment: null, failed: false };
       fail(item, error);
+
       return { item, attachment: null, failed: true };
     },
   ] as const;
@@ -105,6 +108,7 @@ export function useAttachmentUploads(options: AttachmentUploadOptions = {}): Att
   // Files waiting for a form that is gone have no home; ones for a ticket still belong to it.
   useEffect(() => {
     const running = controllers.current;
+
     return () => {
       if (!ticketKey) running.forEach((controller) => controller.abort());
     };

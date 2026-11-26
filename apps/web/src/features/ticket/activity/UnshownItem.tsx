@@ -69,6 +69,7 @@ interface UnshownCardProps {
 
 function UnshownCard({ item, title, tone, menu, dimmed, editor, children }: UnshownCardProps) {
   const text = plainText(item);
+
   return (
     <ActivityCard
       avatar={<ActorAvatar actor={item.actor} />}

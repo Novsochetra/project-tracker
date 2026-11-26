@@ -33,6 +33,7 @@ export function movedAttachmentRow(
   if (!compressed) return { ...row, width, height };
   const extension = storedExtension(compressed.mimeType);
   const name = renamedFor(row.fileName, row.mimeType as AttachmentMimeType, compressed.mimeType);
+
   return {
     ...row,
     fileName: fileNameOf(name, extension),
@@ -57,5 +58,6 @@ export function textsNamingOldFiles(
     .filter(isRenamed)
     .flatMap(({ before }) => [before.fileName, before.storageKey])
     .filter((name) => name.trim().length > 0);
+
   return texts.filter((text) => oldNames.some((name) => text.includes(name))).length;
 }

@@ -31,6 +31,7 @@ function setup(item = listItem(3, STATUS.progress, 0), client = {}) {
     client: { updateTicket, ...client },
   });
   cleanups.push(rendered.restorePhone);
+
   return rendered;
 }
 

@@ -10,6 +10,7 @@ export const workflowRoutes = (ctx: ServiceContext) =>
   new Hono<AppEnv>()
     .post('/projects/:key/claim', async (c) => {
       const detail = await claimNext(userContext(ctx, c), c.get('actor'), c.req.param('key'));
+
       return detail ? c.json(detail) : c.body(null, 204);
     })
     .post('/tickets/:key/claim', async (c) =>

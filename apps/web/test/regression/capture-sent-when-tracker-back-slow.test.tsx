@@ -36,8 +36,10 @@ function network() {
       request,
       cachedResponse: Response.json(PROJECTS),
     });
+
     return saved ?? bare502();
   };
+
   const fetch = (path: string, init?: RequestInit): Promise<Response> => {
     const request = new Request(`${ORIGIN}${path}`, init);
     const url = new URL(request.url);
@@ -49,8 +51,10 @@ function network() {
       const { commentCount: _c, attachmentCount: _a, ...ticket } = listItem(7, STATUS.todo, 0);
       return Promise.resolve(Response.json(ticket, { status: 201 }));
     }
+
     return Promise.resolve(Response.json({ ok: true }));
   };
+
   return { fetch, posts, set: (next: Tracker) => void (tracker = next) };
 }
 
@@ -59,11 +63,13 @@ function renderShell(net: ReturnType<typeof network>) {
   const api = apiWrapper(new TrackerClient({ baseUrl: '' }), createTestQueryClient());
   const wrapper = ({ children }: { children: ReactNode }) =>
     createElement(api, null, createElement(ToastProvider, null, children));
+
   return renderHook(
     () => {
       useProjects();
       const reachability = useReachability();
       useCaptureSync(reachability);
+
       return useApiUnreachable(reachability);
     },
     { wrapper },

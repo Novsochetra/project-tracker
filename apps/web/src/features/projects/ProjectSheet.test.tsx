@@ -30,6 +30,7 @@ function renderNewSheet(create = vi.fn(createProject)) {
   const view = renderWithApp(<ProjectSheet open onClose={onClose} />, {
     client: { createProject: create },
   });
+
   return { ...view, onClose, create, dialog: screen.getByRole('dialog', { name: 'New project' }) };
 }
 
@@ -160,6 +161,7 @@ describe('Edit project sheet', () => {
       client: { updateProject },
       projects: [website],
     });
+
     return { onClose, dialog: screen.getByRole('dialog', { name: 'Edit project' }) };
   }
 

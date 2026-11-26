@@ -123,6 +123,7 @@ describe('regression: comments on a ticket with an activity entry it cannot read
     );
     const rendered = renderTicket({ detail, client: { updateComment, addComment, ...client } });
     cleanups.push(rendered.restorePhone);
+
     return { updateComment, addComment };
   }
 

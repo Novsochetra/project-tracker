@@ -14,6 +14,7 @@ export const LIMIT_MESSAGE = `A ticket can have up to ${TICKET_LABELS_MAX} label
 export function matchingLabels(labels: readonly Label[], query: string): Label[] {
   const wanted = query.trim().toLowerCase();
   const sorted = sortLabels(labels);
+
   return wanted ? sorted.filter((label) => label.name.toLowerCase().includes(wanted)) : sorted;
 }
 
@@ -21,6 +22,7 @@ export function matchingLabels(labels: readonly Label[], query: string): Label[]
 export function creatableName(labels: readonly Label[], query: string): string | null {
   const name = query.trim().slice(0, LABEL_NAME_MAX);
   if (!name || findLabelByName(labels, name)) return null;
+
   return name;
 }
 
@@ -31,6 +33,7 @@ export function enterChoice(labels: readonly Label[], query: string): EnterChoic
   const exact = findLabelByName(labels, query);
   if (exact) return { kind: 'toggle', id: exact.id };
   const name = creatableName(labels, query);
+
   return name ? { kind: 'create', name } : null;
 }
 

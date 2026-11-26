@@ -17,9 +17,11 @@ export async function addChatChanges(
   if (run.runnerId !== input.runnerId) {
     throw forbidden('Only the helper that took this run sends its changes.');
   }
+
   if (run.kind !== 'ask' || run.chatId === null || !changesFolder(run.askMode)) {
     throw conflict("Only an Edit or Auto question keeps its chat's changes.");
   }
+
   if (run.status !== 'running') throw conflict(`This run is not running (${run.status}).`);
   await saveChatChanges(ctx.db, {
     chatId: run.chatId,

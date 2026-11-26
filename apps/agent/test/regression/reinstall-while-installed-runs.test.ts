@@ -32,6 +32,7 @@ describe('regression: installing again while the installed helper runs', () => {
     let asked = false;
     requireFreeFolder(locks, '/code/web', () => {
       asked = true;
+
       return undefined;
     });
     expect(asked).toBe(false);

@@ -3,6 +3,7 @@ const field = (state: string, name: string): string | undefined =>
 
 export function pidFrom(state: string | undefined): number | undefined {
   const pid = state === undefined ? undefined : field(state, 'pid');
+
   return pid === undefined ? undefined : Number(pid);
 }
 

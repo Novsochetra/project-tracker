@@ -26,13 +26,16 @@ function trackerLeavingOut(leftOut: string[]) {
     if (createTicket.mock.calls.length === 1) return Promise.reject(LOST_ANSWER);
     const answer: CreatedTicket =
       leftOut.length > 0 ? { ...ticket, leftOutAttachmentIds: leftOut } : ticket;
+
     return Promise.resolve(answer);
   });
+
   return { createTicket, updateTicket: vi.fn() };
 }
 
 function Opener() {
   const sheets = useSheets();
+
   return (
     <button type="button" onClick={() => sheets.open({ type: 'capture' })}>
       Capture
@@ -53,12 +56,14 @@ function loadApp(client: ReturnType<typeof trackerLeavingOut>) {
         listProjects: vi.fn().mockResolvedValue(PROJECTS),
         uploadAttachment: vi.fn(() => {
           uploads += 1;
+
           return Promise.resolve(attachment(`shot-${uploads}`, { ticketId: null }));
         }),
         deleteAttachment: vi.fn(),
       },
     },
   );
+
   return userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
 }
 

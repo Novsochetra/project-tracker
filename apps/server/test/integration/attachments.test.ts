@@ -29,6 +29,7 @@ function streamOf(bytes: number, chunkBytes = MB) {
     },
     { highWaterMark: 0 },
   );
+
   return { body, counter };
 }
 
@@ -185,6 +186,7 @@ describe.each(DIALECTS)('attachments (%s)', (dialect) => {
       expect(res.status, name).toBe(201);
       expect(res.body, name).toMatchObject({ fileName: name, mimeType: type, size: 5 });
     }
+
     expect(storedExtensions()).toEqual(files.map(([, , extension]) => extension));
   });
 
@@ -208,6 +210,7 @@ describe.each(DIALECTS)('attachments (%s)', (dialect) => {
       expect(res.status, name).toBe(201);
       expect(res.body.mimeType, name).toBe(stored);
     }
+
     expect(storedExtensions()).toEqual(['txt', 'md', 'csv', 'heic', 'mov']);
   });
 
@@ -222,6 +225,7 @@ describe.each(DIALECTS)('attachments (%s)', (dialect) => {
       expect(res.status, name).toBe(201);
       expect(res.body.mimeType, name).toBe(stored);
     }
+
     expect(storedExtensions()).toEqual(['txt', 'csv', 'jpg']);
   });
 
@@ -243,6 +247,7 @@ describe.each(DIALECTS)('attachments (%s)', (dialect) => {
         error: { code: 'invalid_input', message: UNSUPPORTED_ATTACHMENT_MESSAGE },
       });
     }
+
     expect(api.storage.files.size).toBe(0);
   });
 

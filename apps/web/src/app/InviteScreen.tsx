@@ -16,6 +16,7 @@ const InviteProblem = ({ message }: { message: string }) => (
 // A new account here would leave the signed-in person's data in this browser's offline copy.
 function SignOutFirst({ email }: { email: string | undefined }) {
   const logout = useLogout();
+
   return (
     <LinkLayout label="Invite">
       <h1 className={styles.title}>Join Tracker</h1>
@@ -38,6 +39,7 @@ function SignOutFirst({ email }: { email: string | undefined }) {
 function InviteForm({ secret, expiresAt }: { secret: string; expiresAt: number }) {
   const form = useInviteForm(secret);
   const { accept, errorId } = form;
+
   return (
     <main className={styles.screen}>
       <form
@@ -113,5 +115,6 @@ export function InviteScreen() {
       </LinkLayout>
     );
   }
+
   return <InviteForm secret={secret} expiresAt={check.data.expiresAt} />;
 }

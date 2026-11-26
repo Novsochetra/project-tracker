@@ -19,6 +19,7 @@ describe.each(DIALECTS)('regression: a question that names no options (%s)', (di
     await helper('POST', `/api/runs/${job.body.run.id}/finish`, { status: 'done', answer: 'A' });
     clock.advance(1_000);
   };
+
   const ask = (chatId: string, options: object) =>
     person<ChatDetail>('POST', `/api/chats/${chatId}/messages`, {
       runnerId: runner,

@@ -61,6 +61,7 @@ function attachAxisDrag(target: HTMLElement, read: () => AxisDragOptions): () =>
       session.engaged = true;
       read().onStart();
     }
+
     session.tracker.add(event.timeStamp, event.clientX, event.clientY);
     read().onMove(along(delta));
   };
@@ -71,6 +72,7 @@ function attachAxisDrag(target: HTMLElement, read: () => AxisDragOptions): () =>
       read().onEnd(along(session.tracker.velocity(event.timeStamp)));
       suppressNextClick();
     }
+
     end();
   };
 
@@ -81,6 +83,7 @@ function attachAxisDrag(target: HTMLElement, read: () => AxisDragOptions): () =>
   };
 
   target.addEventListener('pointerdown', onDown);
+
   return () => {
     target.removeEventListener('pointerdown', onDown);
     end();
@@ -95,6 +98,7 @@ export function useAxisDrag(targetRef: RefObject<HTMLElement | null>, options: A
   useEffect(() => {
     const target = targetRef.current;
     if (!target) return;
+
     return attachAxisDrag(target, () => optionsRef.current);
   }, [targetRef]);
 }

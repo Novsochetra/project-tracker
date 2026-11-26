@@ -43,6 +43,7 @@ const noSteps = () => undefined;
 
 const ask = async (prompt: string, resume: string | null = null, mode: AskMode = 'ask') => {
   const job = { ...askJob('r-1', 'c-1', resume, { ...DEFAULT_ASK_OPTIONS, mode }), prompt };
+
   return askOutcomeOf(await claude.runAsk(job, new AbortController().signal, noSteps), false);
 };
 
@@ -167,6 +168,7 @@ describe('regression: an ask runs Claude read-only', () => {
       );
       expect(argsOf(outcome.answer)).toEqual([...READ_ONLY_ARGS, ...PROMPT_TOOL_ARGS, ...ADD_DIR]);
     }
+
     const ticket = await noMode.runClaude(
       job('r-2', 'MOB-1'),
       new AbortController().signal,
@@ -211,6 +213,7 @@ describe('regression: an ask runs Claude read-only', () => {
       );
       expect(argsOf(outcome.answer)).toEqual([...READ_ONLY_ARGS, ...PROMPT_TOOL_ARGS, ...ADD_DIR]);
     }
+
     expect(askPerson).not.toHaveBeenCalled();
     approving.closeChats();
   });
@@ -249,6 +252,7 @@ describe('regression: an ask runs Claude read-only', () => {
       expect(sent).toBeDefined();
       expect(existsSync(dirname(sent!.slice(2)))).toBe(false);
     }
+
     withFiles.closeChats();
   });
 

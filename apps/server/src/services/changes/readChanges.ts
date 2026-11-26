@@ -28,6 +28,7 @@ export async function readTicketChanges(
   const { ticket } = await requireTicket(ctx.db, ctx.scope, key);
   const row = await latestTicketChanges(ctx.db, ticket.id);
   if (!row) return { changes: null };
+
   return { changes: toChanges(row, await listViewedFiles(ctx.db, ticket.id)) };
 }
 
@@ -52,5 +53,6 @@ export async function setFileViewed(
   } else {
     await unmarkFileViewed(ctx.db, ticket.id, input.path);
   }
+
   notify(ctx, project.id, ticket.id);
 }

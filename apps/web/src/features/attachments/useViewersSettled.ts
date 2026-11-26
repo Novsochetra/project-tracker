@@ -12,9 +12,11 @@ export function useViewersSettled(wanted: boolean): boolean {
     void settleViewers().then(() => {
       if (live) setSettled(true);
     });
+
     return () => {
       live = false;
     };
   }, [wanted]);
+
   return settled || viewersLoaded();
 }

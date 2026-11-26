@@ -92,12 +92,14 @@ export function connectLiveUpdates(
     clearTimeout(retry);
     retry = undefined;
   };
+
   const close = () => {
     source?.close();
     cancelRetry();
     clearTimeout(silence);
     setReconnecting(true);
   };
+
   const reopenLater = () => {
     close();
     retry = setTimeout(connect, retryDelay(reopenings));
@@ -105,10 +107,12 @@ export function connectLiveUpdates(
     failedTries += 1;
     reportPending();
   };
+
   const alive = () => {
     clearTimeout(silence);
     silence = setTimeout(reopenLater, LIVE_STALE_MS);
   };
+
   const onOpen = () => {
     alive();
     reopenings = 0;
@@ -117,6 +121,7 @@ export function connectLiveUpdates(
     setReconnecting(false);
     if (missed) handlers.onReconnect();
   };
+
   const onMessage = relay(alive, parseChangeEvent, handlers.onChange);
   const named = namedListeners(alive, handlers);
   const onError = () => {
@@ -125,10 +130,12 @@ export function connectLiveUpdates(
       handlers.onRefused();
       return;
     }
+
     // The browser tries a dropped stream again by itself, and each try that fails counts too.
     failedTries += 1;
     setReconnecting(true);
   };
+
   function connect() {
     cancelRetry();
     source = new EventSource(url);
@@ -155,6 +162,7 @@ export function connectLiveUpdates(
   // Resuming opens a new stream like any reconnect, so the page catches up on what it missed.
   const stopWatching = pauseWhileHidden({ pause: close, resume: connect });
   const stopFollowing = tracker?.subscribe(reopenNow);
+
   return () => {
     stopWatching();
     stopFollowing?.();

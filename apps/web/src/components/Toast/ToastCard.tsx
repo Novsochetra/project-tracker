@@ -19,6 +19,7 @@ function useToastHold(store: ToastStore, id: number) {
     Object.assign(holders.current, change);
     store.hold(id, holders.current.hovered || holders.current.focused);
   };
+
   return {
     handlers: {
       onPointerEnter: () => set({ hovered: true }),
@@ -28,6 +29,7 @@ function useToastHold(store: ToastStore, id: number) {
           const from = event.relatedTarget;
           cameFrom.current = from instanceof HTMLElement ? from : null;
         }
+
         set({ focused: true });
       },
       onBlur: (event: FocusEvent<HTMLElement>) => {
@@ -48,6 +50,7 @@ export function ToastCard({ toast, store }: { toast: ToastMessage; store: ToastS
     if (event.currentTarget === document.activeElement) hold.returnFocus();
     store.undo(toast.id);
   };
+
   // A toast can show on its own while a part's stylesheet loads, as after reconnecting.
   return (
     <div

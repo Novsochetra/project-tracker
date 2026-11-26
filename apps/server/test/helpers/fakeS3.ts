@@ -70,12 +70,14 @@ function operationOf({ method, query }: Request): S3Operation | null {
   if (method === 'DELETE') return multipart ? 'AbortMultipartUpload' : 'DeleteObject';
   if (method === 'GET') return query.has('list-type') ? 'ListObjectsV2' : 'GetObject';
   if (method === 'HEAD') return 'HeadObject';
+
   return null;
 }
 
 async function bodyOf(req: IncomingMessage): Promise<Buffer> {
   const chunks: Buffer[] = [];
   for await (const chunk of req) chunks.push(chunk as Buffer);
+
   return Buffer.concat(chunks);
 }
 
@@ -101,6 +103,7 @@ function listPage(bucket: string, keys: [string, number, number][], query: URLSe
     )
     .join('');
   const token = truncated ? `<NextContinuationToken>${next}</NextContinuationToken>` : '';
+
   return `<ListBucketResult><Name>${bucket}</Name><Prefix>${prefix}</Prefix><KeyCount>${page.length}</KeyCount><IsTruncated>${truncated}</IsTruncated>${token}${contents}</ListBucketResult>`;
 }
 
@@ -113,6 +116,7 @@ function sendObject(res: ServerResponse, bytes: Buffer, rangeHeader: string | un
     res.end(bytes);
     return;
   }
+
   const start = Number(match[1]);
   const end = Math.min(Number(match[2]), bytes.byteLength - 1);
   res.writeHead(206, {
@@ -224,6 +228,7 @@ export async function startFakeS3(bucket = 'tracker-test'): Promise<FakeS3> {
       req.resume();
       return error(res, 403, refusal.code, refusal.details);
     }
+
     void Promise.resolve(handlers[operation](req, res, request)).catch((failure: unknown) => {
       res.destroy(failure as Error);
     });

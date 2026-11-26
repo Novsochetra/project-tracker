@@ -30,6 +30,7 @@ async function run(command: (db: Db, args: string[]) => Promise<CommandResult>, 
     console.error(problem);
     return 1;
   }
+
   const url = databaseUrlOf(process.env);
   process.stdout.write(`Database: ${describeDatabase(url)}\n`);
   // A migration may rewrite a whole table, which the server's statement timeout would cut short.

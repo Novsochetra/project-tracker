@@ -46,6 +46,7 @@ interface ActivityOutcome {
 
 function finish(ctx: UserContext, outcome: ActivityOutcome): Activity {
   notify(ctx, outcome.ref.project.id, outcome.ref.ticket.id);
+
   return outcome.activity;
 }
 
@@ -67,8 +68,10 @@ export async function addComment(
     if (!row) throw new Error('The comment was not written.');
     const target = { ticketId: ref.ticket.id, activityId: row.id, uploader: ctx.scope };
     await attachUploads(trx, input.attachmentIds, target);
+
     return { ref, activity: toActivity(row, await listActivityAttachments(trx, row.id)) };
   });
+
   return finish(ctx, outcome);
 }
 
@@ -95,8 +98,10 @@ export async function updateComment(
     await writeEdit(trx, row, edit, input.expected?.text);
     await updateTicketRow(trx, row.ticketId, { updatedAt: edit.editedAt });
     const activity = toActivity({ ...row, ...edit }, await listActivityAttachments(trx, id));
+
     return { ref: await requireTicketById(trx, ctx.scope, row.ticketId), activity };
   });
+
   return finish(ctx, outcome);
 }
 
@@ -107,6 +112,7 @@ export async function deleteActivity(ctx: UserContext, id: string): Promise<void
     const files = await storageKeysOfActivity(trx, id);
     await deleteActivityRow(trx, id);
     await updateTicketRow(trx, row.ticketId, { updatedAt: ctx.now() });
+
     return { ref: await requireTicketById(trx, ctx.scope, row.ticketId), files };
   });
   await removeFiles(ctx.storage, removed.files);

@@ -10,6 +10,7 @@ export function stepRows(steps: readonly RunStep[]): StepRow[] {
   const refused = new Set(
     steps.flatMap(({ kind, toolId }) => (kind === 'denied' && toolId ? [toolId] : [])),
   );
+
   return steps.map((step) => ({
     ...step,
     refused: step.kind !== 'denied' && step.toolId !== null && refused.has(step.toolId),

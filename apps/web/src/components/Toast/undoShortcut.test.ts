@@ -20,6 +20,7 @@ const element = (html: string): Element => {
   // jsdom does not implement isContentEditable, so set it the way a browser would.
   const editable = created.getAttribute('contenteditable') === 'true';
   Object.defineProperty(created, 'isContentEditable', { value: editable });
+
   return created;
 };
 

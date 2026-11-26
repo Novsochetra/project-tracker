@@ -38,6 +38,7 @@ function renderPhoneTicket(statusId: string, review: Activity) {
     (first.compareDocumentPosition(second) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0;
   const near = follows(details, latest) && follows(latest, screen.getByLabelText('Description'));
   const bar = document.querySelector<HTMLElement>('[data-bottom-bar]')!;
+
   return { latest, near, bar };
 }
 

@@ -38,6 +38,7 @@ function Body({
       />
     );
   }
+
   if (sheet.step === 'pull_request') {
     return (
       <PullRequestConfirm
@@ -48,6 +49,7 @@ function Body({
       />
     );
   }
+
   return (
     <ChangesOverview
       answer={answer}
@@ -71,6 +73,7 @@ export function ChatChangesSheet({
     sheet.back();
     onClose();
   };
+
   return (
     <Sheet
       open={open}

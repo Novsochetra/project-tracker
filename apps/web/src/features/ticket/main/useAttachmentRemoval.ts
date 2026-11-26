@@ -20,6 +20,7 @@ export interface AttachmentRemoval {
 
 function nounOf(attachment: Attachment): string {
   const kind = attachmentKind(attachment.mimeType);
+
   return kind === 'image' || kind === 'video' ? kind : 'file';
 }
 
@@ -29,6 +30,7 @@ export function useAttachmentRemoval(ticketKey: string): AttachmentRemoval {
   const askedFromRef = useRef<HTMLElement | null>(null);
   const removeAttachment = useDeleteAttachment();
   const { show } = useToast();
+
   return {
     target,
     asking,

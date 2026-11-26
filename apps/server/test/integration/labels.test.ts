@@ -225,6 +225,7 @@ describe.each(DIALECTS)('labels (%s)', (dialect) => {
       expect(res.status).toBe(403);
       expect(res.body.error.message).toBe('Only a person changes labels.');
     }
+
     const ticket = await api.post<Ticket>(
       '/api/projects/MA/tickets',
       { title: 'Crash', labelIds: [bug.id] },

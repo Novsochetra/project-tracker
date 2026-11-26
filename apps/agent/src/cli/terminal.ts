@@ -9,6 +9,7 @@ export const untilSignal = (): Promise<void> =>
       for (const signal of STOP_SIGNALS) process.off(signal, stop);
       resolve();
     };
+
     for (const signal of STOP_SIGNALS) process.on(signal, stop);
   });
 

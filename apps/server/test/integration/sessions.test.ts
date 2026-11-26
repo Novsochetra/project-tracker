@@ -198,6 +198,7 @@ describe.each(DIALECTS)('sessions (%s)', (dialect) => {
       clock.advance(DAY);
       expect((await read(cookie)).status).toBe(200);
     }
+
     clock.advance(DAY);
     const last = await read(cookie);
     expect(last.status).toBe(200);
@@ -237,6 +238,7 @@ describe.each(DIALECTS)('sessions (%s)', (dialect) => {
       expect(res.status, site).toBe(403);
       expect(((await res.json()) as ErrorBody).error.code).toBe('forbidden');
     }
+
     expect((await write('same-origin')).status).toBe(201);
     const read = await app().request('/api/projects', {
       headers: { cookie, 'sec-fetch-site': 'cross-site' },

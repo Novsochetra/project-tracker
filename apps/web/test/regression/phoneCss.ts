@@ -26,8 +26,10 @@ function rulesOf(css: string): Rule[] {
       const media = preludes.join(' ');
       if (!selector.startsWith('@')) rules.push({ selector, body: css.slice(start, index), media });
     }
+
     start = index + 1;
   }
+
   return rules;
 }
 
@@ -37,6 +39,7 @@ function appliesAt(rule: Rule, width: number): boolean {
   const below = /^@media \(width < (\d+)px\)(?:,|$)/.exec(rule.media);
   if (below) return width < Number(below[1]);
   const maxWidth = /^@media \(max-width: (\d+)px\)(?:,|$)/.exec(rule.media);
+
   return maxWidth !== null && width <= Number(maxWidth[1]);
 }
 
@@ -50,6 +53,7 @@ function declarations(rule: Rule): [string, string][] {
 function phoneTokens(width: number): Map<string, string> {
   const rules = rulesOf(readCss('design/tokens.css'));
   const roots = rules.filter((rule) => rule.selector === ':root' && appliesAt(rule, width));
+
   return new Map(roots.flatMap(declarations).filter(([name]) => name.startsWith('--')));
 }
 
@@ -58,12 +62,14 @@ function resolve(value: string, tokens: Map<string, string>): string {
     /var\((--[\w-]+)\)/g,
     (_match, name: string) => tokens.get(name) ?? '',
   );
+
   return next === value ? value : resolve(next, tokens);
 }
 
 const styles = (selector: string, element: Element): boolean =>
   selector.split(',').some((part) => {
     const match = /^[a-z]*\.([\w-]+)$/.exec(part.trim());
+
     return match !== null && element.classList.contains(match[1]!);
   });
 
@@ -80,6 +86,7 @@ export function phoneStyle(
     if (!appliesAt(rule, width) || !styles(rule.selector, element)) continue;
     for (const [name, value] of declarations(rule)) style.set(name, resolve(value, tokens));
   }
+
   return style;
 }
 
@@ -96,6 +103,7 @@ export function phoneRule(
     if (!appliesAt(rule, width) || rule.selector !== selector) continue;
     for (const [name, value] of declarations(rule)) style.set(name, resolve(value, tokens));
   }
+
   return style;
 }
 
@@ -106,5 +114,6 @@ export function edges(value: string | undefined): [number, number, number, numbe
     .trim()
     .split(/\s+/)
     .map(pixels);
+
   return [top, right, bottom, left];
 }

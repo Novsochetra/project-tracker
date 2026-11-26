@@ -15,6 +15,7 @@ export function oneLineInsert(text: string, before: string, after: string): stri
   let insert = text;
   if (EMPTY_OR_SPACE_AT_END.test(before)) insert = insert.replace(LEADING_BREAK, '');
   if (SPACE_AT_START.test(after)) insert = insert.replace(TRAILING_BREAK, '');
+
   return oneLine(insert);
 }
 
@@ -27,5 +28,6 @@ export function keepOneLine(field: HTMLTextAreaElement): string {
   const caret = oneLine(value.slice(0, selectionEnd)).length;
   field.value = flat;
   field.setSelectionRange(caret, caret);
+
   return flat;
 }

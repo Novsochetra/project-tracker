@@ -65,6 +65,7 @@ const LOSSLESS_SOURCES: ReadonlySet<AttachmentMimeType> = new Set(['image/png'])
 
 function outputPixels({ width, height }: ImageFacts, { longSide }: ImagePlan): number {
   if (longSide === null) return width * height;
+
   return longSide * Math.ceil((Math.min(width, height) * longSide) / Math.max(width, height));
 }
 
@@ -77,6 +78,7 @@ export function wholePixels(facts: ImageFacts, plan: ImagePlan): number {
   if (readWhole) return pixels;
   if (facts.orientation < 5) return 0;
   if (facts.format !== 'jpeg') return pixels;
+
   return Math.min(pixels, Math.max(4 * outputPixels(facts, plan), pixels / 64));
 }
 
@@ -91,6 +93,7 @@ export function planImage(mimeType: AttachmentMimeType, facts: ImageFacts): Imag
   const mustReencode = longSide !== null || facts.hasMetadata || facts.orientation > 1;
   const plan = { lossless, longSide, mustReencode };
   const tooBig = wholePixels(facts, plan) > MAX_WHOLE_DECODE_PIXELS;
+
   return tooBig || workBytes(facts, plan) > MAX_WORK_BYTES ? null : plan;
 }
 
@@ -98,10 +101,12 @@ export function planImage(mimeType: AttachmentMimeType, facts: ImageFacts): Imag
 export function workBytes(facts: ImageFacts, plan: ImagePlan): number {
   const decode = wholePixels(facts, plan) * facts.channels * 2;
   const perPixel = plan.lossless ? LOSSLESS_BYTES_PER_PIXEL : LOSSY_BYTES_PER_PIXEL;
+
   return BASE_WORK_BYTES + decode + outputPixels(facts, plan) * perPixel;
 }
 
 export function isWorthStoring(originalBytes: number, encodedBytes: number): boolean {
   const saving = originalBytes - encodedBytes;
+
   return saving >= MIN_SAVING_BYTES && saving >= originalBytes * MIN_SAVING_RATIO;
 }

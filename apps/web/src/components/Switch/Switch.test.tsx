@@ -6,6 +6,7 @@ import { Switch } from './Switch';
 
 function Harness() {
   const [checked, setChecked] = useState(true);
+
   return (
     <Switch checked={checked} onChange={setChecked} aria-label="Move to In progress when sent" />
   );

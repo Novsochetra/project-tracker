@@ -38,6 +38,7 @@ export function buildColumns({
   const matching = tickets.filter(
     (ticket) => matchesSearch(ticket, query) && (!label || hasLabel(ticket, label)),
   );
+
   return visibleStatuses(statuses, filter).map((status) => ({
     status,
     tickets: matching.filter((ticket) => ticket.statusId === status.id).sort(byRank),
@@ -51,6 +52,7 @@ export function buildGroups({ dragging, ...input }: GroupsInput): TicketGroupDat
 export function nextStatus(statuses: readonly Status[], statusId: string): Status | null {
   const ordered = sortStatuses(statuses);
   const index = ordered.findIndex((status) => status.id === statusId);
+
   return index < 0 ? null : (ordered[index + 1] ?? null);
 }
 
@@ -63,5 +65,6 @@ export const groupRiseDelay = (index: number): number =>
 
 export function revealedRowDelay(index: number, groupSize: number): number | null {
   if (groupSize <= GROUP_LIMIT + 1 || index < GROUP_LIMIT) return null;
+
   return Math.min(index - GROUP_LIMIT, MAX_STAGGER) * ROW_RISE_MS;
 }

@@ -20,6 +20,7 @@ function pngChunk(type: string, data: Buffer): Buffer {
   const body = Buffer.concat([Buffer.from(type, 'ascii'), data]);
   const checksum = Buffer.alloc(4);
   checksum.writeUInt32BE(crc32(body));
+
   return Buffer.concat([length, body, checksum]);
 }
 
@@ -38,6 +39,7 @@ export function pngBytes(width = 3, height = 2): Uint8Array {
     pngChunk('IDAT', deflateSync(pixels)),
     pngChunk('IEND', Buffer.alloc(0)),
   ]);
+
   return new Uint8Array(png);
 }
 
@@ -59,6 +61,7 @@ export function fileUpload(options: FileUploadOptions = {}): FileUpload {
   const bytes = options.bytes ?? new TextEncoder().encode('hello');
   const type = options.type ?? 'text/plain';
   const query = options.ticketKey ? `?ticketKey=${encodeURIComponent(options.ticketKey)}` : '';
+
   return {
     path: `/api/attachments${query}`,
     init: {
@@ -82,6 +85,7 @@ export function statusOf(
 ): Status {
   const status = detail.statuses.find((candidate) => candidate.category === category);
   if (!status) throw new Error(`No ${category} status`);
+
   return status;
 }
 

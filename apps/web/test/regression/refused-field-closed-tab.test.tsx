@@ -47,6 +47,7 @@ function typeOverRefused() {
   const getTicket = vi.fn().mockResolvedValue(makeTicketDetail());
   const rendered = renderTicket({ client: { updateTicket, getTicket } });
   cleanups.push(rendered.restorePhone);
+
   return { user, updateTicket };
 }
 

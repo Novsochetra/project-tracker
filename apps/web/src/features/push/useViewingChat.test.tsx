@@ -15,6 +15,7 @@ function renderViewing(chatId: string | null, permission: NotificationPermission
     wrapper: api.wrapper,
     initialProps: { id: chatId },
   });
+
   return { ...view, viewChat: api.client.viewChat as ReturnType<typeof vi.fn> };
 }
 

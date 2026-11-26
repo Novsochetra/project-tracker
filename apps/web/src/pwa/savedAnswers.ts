@@ -18,6 +18,7 @@ export function noteAnswer(response: Response): void {
 
 export function subscribeSavedAnswers(listener: () => void): () => void {
   listeners.add(listener);
+
   return () => listeners.delete(listener);
 }
 
@@ -28,8 +29,10 @@ export function watchSavedAnswers(scope: { fetch: typeof fetch }): () => void {
   scope.fetch = async (input, init) => {
     const response = await fetchAnswer.call(scope, input, init);
     noteAnswer(response);
+
     return response;
   };
+
   return () => {
     scope.fetch = fetchAnswer;
   };

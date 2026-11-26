@@ -65,9 +65,11 @@ export async function createStatus(
     };
     await insertStatuses(trx, [row]);
     await touchProject(ctx, trx, project.id);
+
     return row;
   });
   notify(ctx, status.projectId);
+
   return toStatus(status);
 }
 
@@ -83,11 +85,14 @@ export async function updateStatus(
     if (changes.name !== undefined) {
       assertUniqueName(await listStatusRows(trx, current.projectId), changes.name, id);
     }
+
     await updateStatusRow(trx, id, changes);
     await touchProject(ctx, trx, current.projectId);
+
     return { status: { ...current, ...changes }, changed: true };
   });
   if (outcome.changed) notify(ctx, outcome.status.projectId);
+
   return toStatus(outcome.status);
 }
 
@@ -103,11 +108,14 @@ export async function reorderStatuses(
     if (!exact || !ids.every((id) => known.has(id))) {
       throw invalidInput('Send every status of this project exactly once.');
     }
+
     for (const [position, id] of ids.entries()) await updateStatusRow(trx, id, { position });
     await touchProject(ctx, trx, project.id);
+
     return { projectId: project.id, statuses: await listStatusRows(trx, project.id) };
   });
   notify(ctx, result.projectId);
+
   return result.statuses.map(toStatus);
 }
 
@@ -115,6 +123,7 @@ function moveTarget(statuses: readonly StatusRow[], deleted: StatusRow, moveTo?:
   if (!moveTo) throw conflict('This status has tickets. Choose a status to move them to.');
   const target = statuses.find((status) => status.id === moveTo && status.id !== deleted.id);
   if (!target) throw invalidInput('Choose another status of this project for its tickets.');
+
   return target;
 }
 
@@ -134,6 +143,7 @@ export async function deleteStatus(
     });
     await deleteStatusRow(trx, id);
     await touchProject(ctx, trx, current.projectId);
+
     return current;
   });
   notify(ctx, status.projectId);

@@ -47,6 +47,7 @@ export async function emptyPgliteDataDir(): Promise<Blob> {
 export async function createTestDatabase(dialect: TestDialect): Promise<Db> {
   const db = openEmptyDatabase(dialect);
   await migrateToLatest(db);
+
   return db;
 }
 
@@ -78,7 +79,9 @@ function requestInit(method: string, options: RequestOptions): RequestInit {
     headers.set('x-actor-kind', options.actor.kind);
     headers.set('x-actor-name', encodeURIComponent(options.actor.name));
   }
+
   if (options.body !== undefined) headers.set('content-type', 'application/json');
+
   return {
     method,
     headers,
@@ -89,6 +92,7 @@ function requestInit(method: string, options: RequestOptions): RequestInit {
 async function readBody(response: Response): Promise<unknown> {
   const text = await response.text();
   if (!text) return null;
+
   return response.headers.get('content-type')?.includes('json') ? JSON.parse(text) : text;
 }
 
@@ -101,6 +105,7 @@ export function useTestServer(dialect: TestDialect, deps: TestDeps = {}) {
 
   const current = () => {
     if (!state) throw new Error('The test server is not ready yet.');
+
     return state;
   };
 
@@ -121,6 +126,7 @@ export function useTestServer(dialect: TestDialect, deps: TestDeps = {}) {
 
   const send = async <T>(path: string, init: RequestInit): Promise<TestResponse<T>> => {
     const response = await current().app.request(path, init);
+
     return {
       status: response.status,
       headers: response.headers,

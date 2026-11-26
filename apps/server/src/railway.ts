@@ -11,6 +11,7 @@ function onVolume(env: NodeJS.ProcessEnv, path: string): boolean {
   const mount = env.RAILWAY_VOLUME_MOUNT_PATH?.trim();
   if (!mount) return false;
   const inside = relative(resolve(mount), resolve(path));
+
   return !inside.startsWith('..') && !isAbsolute(inside);
 }
 
@@ -22,7 +23,9 @@ export function railwayDatabaseProblem(env: NodeJS.ProcessEnv): string | null {
   if (!url.trim()) {
     return 'DATABASE_URL is not set: on Railway set it to ${{Postgres.DATABASE_URL}}, or the data is lost on the next deploy.';
   }
+
   if (isPostgresUrl(url) || onVolume(env, url)) return null;
+
   return (
     'DATABASE_URL is not a postgres:// URL (its value is not shown): set it to ${{Postgres.DATABASE_URL}}, ' +
     "without quotes or a name in front. A SQLite file works only on the service's volume; anywhere else the next deploy loses it."
@@ -35,7 +38,9 @@ function railwayStorageProblem(env: NodeJS.ProcessEnv): string | null {
   if (!dir.trim()) {
     return "S3_BUCKET is not set: on Railway files go to S3 (docs/s3-storage.md), or to UPLOADS_DIR on the service's volume, or they are lost on the next deploy.";
   }
+
   if (onVolume(env, dir)) return null;
+
   return "UPLOADS_DIR is not on the service's volume, so the next deploy loses its files: set S3_BUCKET (docs/s3-storage.md), or put UPLOADS_DIR on the volume.";
 }
 
@@ -43,6 +48,7 @@ function railwayStorageProblem(env: NodeJS.ProcessEnv): string | null {
 // be missed after the next one.
 export function railwayProblems(env: NodeJS.ProcessEnv): string[] {
   if (!onRailway(env)) return [];
+
   return [railwayDatabaseProblem(env), railwayStorageProblem(env)].filter(
     (problem): problem is string => problem !== null,
   );
@@ -56,6 +62,7 @@ export function withRailwayDefaults(env: NodeJS.ProcessEnv): NodeJS.ProcessEnv {
   const problems = railwayProblems(env);
   if (problems.length > 0) throw new Error(problems.join('\n'));
   const domain = env.RAILWAY_PUBLIC_DOMAIN?.trim();
+
   return {
     ...env,
     HOST: env.HOST || '0.0.0.0',

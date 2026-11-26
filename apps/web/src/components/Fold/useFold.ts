@@ -22,6 +22,7 @@ function measureText(element: HTMLElement): number | null {
   const style = getComputedStyle(element);
   const padding = px(style.paddingTop) + px(style.paddingBottom);
   const border = px(style.borderTopWidth) + px(style.borderBottomWidth);
+
   return foldedHeight({
     text: element.scrollHeight - padding,
     lineHeight: lineHeightOf(style.lineHeight, style.fontSize),
@@ -63,6 +64,7 @@ export function useFold(
     if (!element || !enabled || typeof ResizeObserver === 'undefined') return;
     const observer = new ResizeObserver(() => setHeight(measure(element)));
     observer.observe(element);
+
     return () => observer.disconnect();
   }, [ref, enabled, measure]);
 
@@ -75,6 +77,7 @@ export function useFold(
   // A window that grows past phone width turns folding off; the height measured before would
   // leave a Show more under the whole text.
   const shownHeight = enabled ? height : null;
+
   return {
     height: shownHeight,
     expanded,

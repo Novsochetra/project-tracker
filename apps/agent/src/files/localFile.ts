@@ -26,6 +26,7 @@ async function isSameFile(handle: FileHandle, realPath: string): Promise<boolean
     stat(realPath).catch(() => null),
     realpath(realPath).catch(() => null),
   ]);
+
   return real === realPath && now !== null && opened.dev === now.dev && opened.ino === now.ino;
 }
 
@@ -41,6 +42,7 @@ async function openChecked(path: string, realPath: string): Promise<FileHandle> 
     await handle.close();
     throw error;
   }
+
   await handle.close();
   throw changedError(path);
 }
@@ -52,6 +54,7 @@ async function measure(path: string, realPath: string, handle: FileHandle) {
   const name = basename(realPath);
   const check = checkAttachment({ type: '', name, size: info.size });
   if (!check.ok) throw new Error(`Can't attach ${name}. ${check.message}`);
+
   return { name, mimeType: check.mimeType, size: info.size };
 }
 
@@ -75,6 +78,7 @@ export async function readLocalBytes(file: LocalFile): Promise<Uint8Array<ArrayB
     if (bytesRead === 0) break;
     filled += bytesRead;
   }
+
   return bytes.subarray(0, filled);
 }
 

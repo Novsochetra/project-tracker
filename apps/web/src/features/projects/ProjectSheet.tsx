@@ -17,6 +17,7 @@ export function ProjectSheet({ open, onClose }: SheetProps) {
       form.setError(NAME_REQUIRED);
       return;
     }
+
     if (create.isPending) return;
     create.mutate(createProjectInput(form.values), {
       onSuccess: ({ project }) => {
@@ -27,6 +28,7 @@ export function ProjectSheet({ open, onClose }: SheetProps) {
       onError: (error) => form.setError(errorMessage(error)),
     });
   };
+
   return (
     <ProjectFormSheet
       mode="new"

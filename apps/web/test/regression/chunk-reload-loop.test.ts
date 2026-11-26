@@ -39,6 +39,7 @@ describe('regression: a chunk that keeps failing reloads the page once', () => {
       failChunk();
       vi.advanceTimersByTime(500);
     }
+
     expect(reload).toHaveBeenCalledTimes(1);
     expect(console.warn).toHaveBeenCalledWith(expect.any(String), expect.any(TypeError));
   });

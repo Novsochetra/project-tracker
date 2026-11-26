@@ -14,6 +14,7 @@ afterEach(() => {
 
 function Part({ fails }: { fails: boolean }) {
   if (fails) throw new Error('Part crashed');
+
   return <p>Part</p>;
 }
 

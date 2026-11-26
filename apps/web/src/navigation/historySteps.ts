@@ -21,8 +21,10 @@ export function historySteps(input: HistoryStepsInput): HistorySteps {
   const { history, entryBehind, go, backToParent } = input;
   const hasEntry = (direction: SwipeDirection) => {
     if (direction === 'forward') return history.nextPath() !== null;
+
     return history.previousPath() !== null || entryBehind();
   };
+
   return {
     canStep: (direction) => hasEntry(direction) || (direction === 'back' && backToParent !== null),
     step: (direction) => {

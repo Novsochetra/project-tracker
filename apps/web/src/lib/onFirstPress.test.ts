@@ -18,6 +18,7 @@ describe('onFirstPress', () => {
     for (const type of ['pointerover', 'pointerdown', 'keydown', 'pointerdown']) {
       target.dispatchEvent(new Event(type));
     }
+
     expect(run).toHaveBeenCalledTimes(1);
   });
 

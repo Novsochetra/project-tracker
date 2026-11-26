@@ -16,6 +16,7 @@ export interface SweepOptions {
 async function isStale(path: string, before: number): Promise<boolean> {
   const info = await lstat(path).catch(() => null);
   const ours = info !== null && info.uid === process.getuid?.();
+
   return ours && info.isDirectory() && info.mtimeMs < before;
 }
 
@@ -34,5 +35,6 @@ export async function sweepAskFolders({
       () => undefined,
     );
   }
+
   return removed;
 }

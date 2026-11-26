@@ -245,6 +245,7 @@ test.describe('quick capture', () => {
       await expect(sheet.getByText(name)).toBeVisible();
       await expect(sheet.getByRole('progressbar')).toHaveCount(0);
     };
+
     await sheet.getByLabel('Ticket title').fill('Crash with logs');
     await addFile('first.log');
     await sheet.getByRole('button', { name: 'Create' }).click();

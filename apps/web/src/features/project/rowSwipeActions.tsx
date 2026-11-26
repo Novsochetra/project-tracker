@@ -44,5 +44,6 @@ export function rowSwipeActions(
       onTrigger: () => callbacks.confirmDelete(ticket),
     },
   ];
+
   return { leading, trailing };
 }

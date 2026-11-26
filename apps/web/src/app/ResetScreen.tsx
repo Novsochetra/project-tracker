@@ -34,6 +34,7 @@ function ResetForm({ secret, email, expiresAt }: ResetFormProps) {
   const form = useResetForm(secret);
   const { reset, errorId } = form;
   if (reset.isSuccess) return <PasswordSet />;
+
   return (
     <main className={styles.screen}>
       <form className={styles.form} onSubmit={form.submit} noValidate aria-label={TITLE}>
@@ -85,5 +86,6 @@ export function ResetScreen() {
       </LinkLayout>
     );
   }
+
   return <ResetForm secret={secret} {...check.data} />;
 }

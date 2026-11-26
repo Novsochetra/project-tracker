@@ -25,12 +25,15 @@ async function placeOfRun(
     const ticket = await findTicketById(ctx.db, ticketId);
     return ticket ? { ticket: { projectKey, num: ticketNum, title: ticket.title } } : null;
   }
+
   const chat = chatId ? await findChatInScope(ctx.db, scope, chatId, ctx.now()) : undefined;
+
   return chat ? { chat: pushChatOf(chat) } : null;
 }
 
 function pushOf(row: RunRequestRow, place: PushPlace): PushMessage {
   if (row.kind === 'question') return questionPush(place);
+
   return row.kind === 'plan' ? planPush(place) : permissionPush(place, row.label);
 }
 
@@ -45,6 +48,7 @@ export function pushRunRequest(
     const now = await findRunRequestRow(ctx.db, row.id);
     const place = now?.status === 'open' ? await placeOfRun(ctx, scope, run) : null;
     if (!place) return null;
+
     return pushOf(row, place);
   });
 }

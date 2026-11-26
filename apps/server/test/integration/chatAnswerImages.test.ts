@@ -31,24 +31,30 @@ describe.each(DIALECTS)("pictures in Claude's answer (%s)", (dialect) => {
       body: bytes,
     });
     expect(response.status).toBe(201);
+
     return (await response.json()) as Attachment;
   };
+
   const askAndTake = async () => {
     const started = await person<ChatDetail>('POST', '/api/projects/MOB/chats', {
       runnerId: runner,
       text: 'Show me the home screen',
     });
     const job = (await helper<RunJob>('POST', `/api/runners/${runner}/next?kind=ask`)).body;
+
     return { chatId: started.body.chat.id, runId: job.run.id };
   };
+
   const finish = (runId: string, attachmentIds: string[]) => {
     clock.advance(1_000);
+
     return helper('POST', `/api/runs/${runId}/finish`, {
       status: 'done',
       answer: ANSWER,
       attachmentIds,
     });
   };
+
   const claudeMessage = async (chatId: string) =>
     (await person<ChatDetail>('GET', `/api/chats/${chatId}`)).body.messages.at(-1);
 

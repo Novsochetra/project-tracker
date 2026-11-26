@@ -9,6 +9,7 @@ const PLUGIN = 'plugin:';
 export function shownName(name: string): string {
   if (name.startsWith(CONNECTOR)) return name.slice(CONNECTOR.length);
   if (name.startsWith(PLUGIN)) return name.slice(name.lastIndexOf(':') + 1);
+
   return name;
 }
 

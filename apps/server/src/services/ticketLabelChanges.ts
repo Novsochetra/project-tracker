@@ -23,6 +23,7 @@ export async function chosenLabels(
   const labels = await listLabelRows(db, projectId);
   const known = new Set(labels.map((label) => label.id));
   if (!wanted.every((id) => known.has(id))) throw invalidInput('Choose labels of this project.');
+
   return labels.filter((label) => wanted.includes(label.id));
 }
 
@@ -39,6 +40,8 @@ export async function labelChange(
   if (labelIds.length > Math.max(TICKET_LABELS_MAX, current.length)) {
     throw invalidInput(TOO_MANY_LABELS);
   }
+
   const names = labels.map((label) => label.name).join(', ');
+
   return { labelIds, entry: eventEntry(names ? `set labels to ${names}` : 'removed the labels') };
 }

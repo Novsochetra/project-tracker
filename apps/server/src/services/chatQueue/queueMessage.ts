@@ -9,6 +9,7 @@ import { insertQuestion, saveChatChoice, type AskRequest } from '../askRuns';
 
 export async function chatIsBusy(db: Db, scope: UserScope, chatId: string): Promise<boolean> {
   const run = await latestChatRunRow(db, scope, chatId);
+
   return ACTIVE_RUN_STATUSES.some((status) => status === run?.status);
 }
 

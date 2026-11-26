@@ -48,6 +48,7 @@ function TicketPromptSheet({ open, onClose, ticketKey }: SheetProps & { ticketKe
   // Run leaves the switch to Copy and Share: Claude claims the ticket itself when it starts.
   const target = sendTarget(ticket.data);
   const key = ticket.data?.ticket.key ?? ticketKey;
+
   return (
     <PromptView
       open={open}
@@ -76,6 +77,7 @@ function ProjectPromptSheet({ open, onClose, projectKey }: SheetProps & { projec
   const draft = usePromptDraft(query);
   const project = useProject(projectKey);
   const count = draft.result?.ticketCount;
+
   return (
     <PromptView
       open={open}

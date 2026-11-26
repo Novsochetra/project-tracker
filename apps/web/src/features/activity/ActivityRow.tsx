@@ -23,6 +23,7 @@ const ticketRoute = (run: ActivityRun): Route => ({
 export function ActivityRow({ run, now, onOpen }: ActivityRowProps) {
   const route = ticketRoute(run);
   const opening = useIsOpening(route);
+
   return (
     <ListRow data-opening={opening || undefined} onClick={() => onOpen(route)}>
       <span className={styles.text}>

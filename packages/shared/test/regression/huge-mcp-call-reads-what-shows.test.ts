@@ -13,10 +13,12 @@ describe('a huge MCP call', () => {
         enumerable: true,
         get: () => {
           reads += 1;
+
           return 'value';
         },
       });
     }
+
     const { label, cut } = permissionLabel('mcp__db__query', input, '/r');
     expect(cut).toBe(true);
     expect(label.length).toBe(RUN_PERMISSION_LABEL_MAX);

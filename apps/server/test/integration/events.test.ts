@@ -22,6 +22,7 @@ async function readUntil(reader: Reader, pattern: RegExp): Promise<string> {
     if (chunk.done) throw new Error(`Stream ended before ${String(pattern)}: ${text}`);
     text += decoder.decode(chunk.value, { stream: true });
   }
+
   return text;
 }
 
@@ -97,6 +98,7 @@ describe.each(DIALECTS)('change events (%s)', (dialect) => {
         async () => {
           await person.createTicket('MA', { title: 'Next' });
           api.events.length = 0;
+
           return worker.claimNext('MA');
         },
         'next',

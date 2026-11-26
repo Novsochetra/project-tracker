@@ -31,10 +31,12 @@ function parseBody(body: readonly string[]): TicketCard | null {
     const field = FIELD.exec(line.trim());
     if (field?.[1] && field[2] !== undefined) fields.set(field[1].toLowerCase(), field[2].trim());
   }
+
   const title = fields.get('title')?.slice(0, TICKET_TITLE_MAX).trim();
   if (!title) return null;
   const priority = fields.get('priority')?.toLowerCase();
   const description = split === -1 ? '' : body.slice(split + 1).join('\n');
+
   return {
     title,
     priority: isPriority(priority) ? priority : 'medium',
@@ -61,7 +63,9 @@ export function splitTicketCards(text: string): CardSegment[] {
     index += 1;
     from = fence.end + 1;
   }
+
   pushText(segments, lines.slice(from));
+
   return segments;
 }
 

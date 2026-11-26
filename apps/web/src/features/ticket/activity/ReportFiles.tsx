@@ -9,6 +9,7 @@ import styles from './ReportBody.module.css';
 export function ReportFiles({ files }: { files: readonly string[] }) {
   const [expanded, setExpanded] = useState(false);
   const { shown, hiddenCount, hasToggle } = collapseGroup(files, { expanded, searching: false });
+
   return (
     <>
       <ul className={styles.files}>

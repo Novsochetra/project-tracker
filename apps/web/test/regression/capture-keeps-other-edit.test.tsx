@@ -41,6 +41,7 @@ function trackerLosingFirstAnswer() {
     const ticket = tracker.create(projectKey, input);
     if (createTicket.mock.calls.length > 1) return Promise.resolve(ticket);
     offline = true;
+
     return Promise.reject(LOST_ANSWER);
   });
   const updateTicket = vi.fn((ticketKey: string, input: UpdateTicketInput) =>
@@ -49,7 +50,9 @@ function trackerLosingFirstAnswer() {
   const goOnline = () => {
     offline = false;
   };
+
   const ticket = () => tracker.search('MOB')[0];
+
   return { tracker, createTicket, updateTicket, goOnline, ticket };
 }
 
@@ -57,6 +60,7 @@ type Sent = Pick<ReturnType<typeof trackerLosingFirstAnswer>, 'createTicket' | '
 
 function Opener() {
   const sheets = useSheets();
+
   return (
     <button type="button" onClick={() => sheets.open({ type: 'capture' })}>
       Capture
@@ -82,6 +86,7 @@ function loadApp({ createTicket, updateTicket }: Sent) {
       },
     },
   );
+
   return userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
 }
 

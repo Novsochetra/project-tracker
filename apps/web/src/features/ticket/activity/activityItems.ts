@@ -38,6 +38,7 @@ const ACTOR_KIND_SET: ReadonlySet<unknown> = new Set(ACTOR_KINDS);
 function isActor(actor: unknown): actor is Actor {
   if (typeof actor !== 'object' || actor === null) return false;
   const { kind, name } = actor as Record<string, unknown>;
+
   return ACTOR_KIND_SET.has(kind) && typeof name === 'string';
 }
 
@@ -81,6 +82,7 @@ const order = (activity: Activity): number =>
 export function activityItems(activity: readonly Activity[]): ActivityItem[] {
   const sorted = readableEntries(activity).sort((a, b) => order(a) - order(b));
   const keys = uniqueKeys(sorted.map((item) => item.id));
+
   return sorted.map((item, index) => toItem(item, keys[index] ?? item.id));
 }
 
@@ -88,6 +90,7 @@ export function lastReportAt(activity: readonly Activity[]): number | null {
   const times = readableEntries(activity)
     .filter((item) => item.type === 'report')
     .map((item) => item.createdAt);
+
   return times.length > 0 ? Math.max(...times) : null;
 }
 

@@ -9,12 +9,14 @@ const quoteOf = (text: string): string => (/^(["']).+\1$/s.test(text) ? (text[0]
 
 export const isLiteralWord = (text: string): boolean => {
   const quote = quoteOf(text);
+
   return LITERAL.test(quote ? text.slice(1, -1) : text);
 };
 
 // Its quotes stay, so the label keeps every character the shell reads but the secret.
 export const maskedWord = (word: string): string => {
   const quote = quoteOf(word);
+
   return `${quote}${MASK}${quote}`;
 };
 
@@ -32,6 +34,7 @@ export function maskForPermission(text: string): string {
         if (result === match) return match;
         const hidden = match.slice(result.length - MASK.length);
         if (!result.endsWith(MASK) || !isLiteralWord(hidden)) return match;
+
         return `${result.slice(0, -MASK.length)}${maskedWord(hidden)}`;
       }),
     text,

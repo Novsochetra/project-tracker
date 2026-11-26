@@ -20,6 +20,7 @@ export function shouldCompleteBack({ distance, width, velocity }: SwipeRelease):
   if (distance <= 0) return false;
   if (velocity >= FLICK_VELOCITY) return true;
   if (velocity <= -FLICK_VELOCITY) return false;
+
   return distance >= width * COMPLETE_RATIO;
 }
 

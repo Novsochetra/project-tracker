@@ -51,6 +51,7 @@ async function listBatches(db: Db, scope: UserScope, since: number): Promise<Act
   );
   const batches = rows.map((row): ActivityBatch => {
     const tickets = held.filter(({ batchId }) => batchId === row.runId);
+
     return {
       runId: row.runId,
       projectKey: row.projectKey,
@@ -66,6 +67,7 @@ async function listBatches(db: Db, scope: UserScope, since: number): Promise<Act
     };
   });
   const shown: ReadonlySet<RunStatus> = new Set(['queued', 'running', 'failed']);
+
   return batches.filter(
     (batch, index) => shown.has(rows[index]?.status ?? 'done') || batch.failedKeys.length > 0,
   );
@@ -76,6 +78,7 @@ export async function listRunActivity(ctx: ServiceContext, scope: UserScope): Pr
   const since = ctx.now() - FAILED_RUN_SHOWN_MS;
   const rows = await listActivityRunRows(ctx.db, scope, since);
   const runs = rows.map(toActivityRun);
+
   return {
     runs,
     batches: await listBatches(ctx.db, scope, since),

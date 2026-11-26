@@ -10,6 +10,7 @@ const place = vi.fn(() => ({ top: 40, left: 20, up: false, originX: 100 }));
 function Panel({ open, onClose }: { open: boolean; onClose: () => void }) {
   const anchorRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
+
   return (
     <>
       <button ref={anchorRef} type="button">
@@ -35,6 +36,7 @@ function Panel({ open, onClose }: { open: boolean; onClose: () => void }) {
 
 function Harness({ onClose = () => undefined }: { onClose?: () => void }) {
   const [open, setOpen] = useState(true);
+
   return (
     <Panel
       open={open}

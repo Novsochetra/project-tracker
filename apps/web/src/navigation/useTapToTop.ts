@@ -14,13 +14,16 @@ function scrollToTop(scroller: HTMLElement, target: EventTarget | null): void {
 // the keyboard has Home in the scroller.
 export function useTapToTop(): RefCallback<HTMLElement> {
   const scrollRef = useOptionalScreen()?.scrollRef;
+
   return useCallback(
     (bar: HTMLElement | null) => {
       if (!bar || !scrollRef) return;
       const onClick = (event: MouseEvent) => {
         if (scrollRef.current) scrollToTop(scrollRef.current, event.target);
       };
+
       bar.addEventListener('click', onClick);
+
       return () => bar.removeEventListener('click', onClick);
     },
     [scrollRef],

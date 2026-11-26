@@ -8,5 +8,6 @@ export const runCommand: Run = (command, args) =>
 
 export const failureOf = (error: unknown): string => {
   const failed = error as { stderr?: string; message?: string };
+
   return (failed.stderr || failed.message || '').trim();
 };

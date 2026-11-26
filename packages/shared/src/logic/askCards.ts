@@ -21,5 +21,6 @@ export const markedText = ({ text, cardTickets = [] }: AskHistoryMessage): strin
 export const madeCardLines = (history: readonly AskHistoryMessage[]): string[] =>
   history.flatMap(({ text, cardTickets = [] }) => {
     const cards = ticketCards(text);
+
     return cardTickets.map((link) => `${cardMark(link)} ${cards[link.index]?.title ?? ''}`.trim());
   });

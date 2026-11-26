@@ -38,6 +38,7 @@ const handed = vi.hoisted(() => [] as PromptTool[]);
 vi.mock('../../src/watch/permissionTool/withPromptTool', () => ({
   openPromptTool: (tool: PromptTool) => {
     handed.push(tool);
+
     return Promise.resolve({ args: [], close: () => undefined });
   },
   withPromptTool: (
@@ -46,6 +47,7 @@ vi.mock('../../src/watch/permissionTool/withPromptTool', () => ({
     start: (args: string[]) => Promise<unknown>,
   ) => {
     handed.push(tool);
+
     return start([]);
   },
 }));

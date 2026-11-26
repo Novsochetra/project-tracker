@@ -38,6 +38,7 @@ function keyboardMove(
 ) {
   const target = keyboardMoveTarget(tickets, id, direction, order);
   if (!target) return null;
+
   return { statusId: target.statusId, order: orderOf(planMove(tickets, id, target)) };
 }
 

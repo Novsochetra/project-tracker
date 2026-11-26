@@ -14,6 +14,7 @@ import { ticketRoute } from './batchTicketText';
 function LatestStep({ runId }: { runId: string }) {
   const latest = latestStep(useStepRows(runId));
   if (!latest) return null;
+
   return (
     <span key={latest.seq} className={clsx(styles.step, 'fade-in')}>
       <Icon icon={stepIcon(latest)} size={14} className={styles.stepIcon} />
@@ -31,6 +32,7 @@ interface BatchTicketRowProps {
 export function BatchTicketRow({ projectKey, ticket, onOpen }: BatchTicketRowProps) {
   const route = ticketRoute(projectKey, ticket.ticketKey);
   const opening = useIsOpening(route);
+
   return (
     <ListRow
       className={styles.ticket}

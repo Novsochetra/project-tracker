@@ -9,6 +9,7 @@ function focusField(parent: HTMLElement = document.body): HTMLTextAreaElement {
   const field = document.createElement('textarea');
   parent.append(field);
   field.focus();
+
   return field;
 }
 
@@ -16,6 +17,7 @@ function openSheet(): HTMLElement {
   const sheet = document.createElement('div');
   sheet.setAttribute('role', 'dialog');
   document.body.append(sheet);
+
   return sheet;
 }
 
@@ -29,6 +31,7 @@ function waitingReload() {
   reloadWhenSafe(reload);
   vi.advanceTimersByTime(10_000);
   expect(reload).not.toHaveBeenCalled();
+
   return reload;
 }
 

@@ -14,6 +14,7 @@ async function holdProjectScreen(page: Page): Promise<() => void> {
     await released;
     await route.continue();
   });
+
   return release;
 }
 
@@ -30,6 +31,7 @@ const pressedColor = (page: Page) =>
     document.body.append(probe);
     const color = getComputedStyle(probe).backgroundColor;
     probe.remove();
+
     return color;
   });
 

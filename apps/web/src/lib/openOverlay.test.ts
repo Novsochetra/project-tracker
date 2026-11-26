@@ -5,6 +5,7 @@ describe('hasOpenOverlay', () => {
   const page = (html: string) => {
     const root = document.createElement('div');
     root.innerHTML = html;
+
     return root;
   };
 

@@ -28,6 +28,7 @@ describe.each(DIALECTS)('password reset links (%s)', (dialect) => {
   async function resetLink(owner: string, userId: string): Promise<CreatedResetLink> {
     const response = await send('POST', `/api/users/${userId}/reset-link`, owner);
     expect(response.status).toBe(201);
+
     return (await response.json()) as CreatedResetLink;
   }
 
@@ -96,6 +97,7 @@ describe.each(DIALECTS)('password reset links (%s)', (dialect) => {
       expect(response.status).toBe(404);
       expect(await errorOf(response)).toBe(FAILED);
     }
+
     const asInvite = await send('POST', '/api/invites/check', undefined, { secret: second.secret });
     expect(asInvite.status).toBe(404);
     expect((await use(second.secret)).status).toBe(204);

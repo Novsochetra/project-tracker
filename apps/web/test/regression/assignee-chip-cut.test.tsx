@@ -29,6 +29,7 @@ afterEach(() => cleanups.forEach((undo) => undo()));
 function renderChips(assignee: string) {
   const detail = makeTicketDetail(listItem(1, STATUS.progress, 0, { assignee }));
   cleanups.push(renderTicket({ detail, phone: true }).restorePhone);
+
   return screen.getByRole('group', { name: 'Details' });
 }
 

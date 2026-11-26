@@ -7,6 +7,7 @@ export function labelsByName(
   names: readonly string[],
 ): Label[] {
   const known = sortLabels(labels ?? []);
+
   return names.map((name) => {
     const label = findLabelByName(known, name);
     if (label) return label;

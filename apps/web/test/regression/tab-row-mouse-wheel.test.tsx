@@ -26,6 +26,7 @@ function renderRow(left: number) {
   });
   const scrollTo = vi.fn();
   track.scrollTo = scrollTo;
+
   return { track, scrollTo };
 }
 

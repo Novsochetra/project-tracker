@@ -31,6 +31,7 @@ function readsOf<T>() {
   const read = vi.fn(() => {
     const next = deferred<T>();
     reads.push(next);
+
     return next.promise;
   });
   const land = (index: number, value: T) =>
@@ -38,14 +39,17 @@ function readsOf<T>() {
       reads[index]?.resolve(value);
       await reads[index]?.promise;
     });
+
   return { read, land };
 }
 
 function watch<T>(overrides: Parameters<typeof setupApi>[0], useScreen: () => T) {
   const api = setupApi(overrides);
+
   return renderHook(
     () => {
       useLiveUpdates();
+
       return useScreen();
     },
     { wrapper: api.wrapper },

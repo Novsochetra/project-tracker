@@ -23,6 +23,7 @@ function stubCaches() {
   const remove = vi.fn((_name: string) => Promise.resolve(true));
   const put = vi.fn((_request: Request, _response: Response) => Promise.resolve());
   vi.stubGlobal('caches', { delete: remove, open: () => Promise.resolve({ put }) });
+
   return Object.assign(remove, { put });
 }
 
@@ -99,6 +100,7 @@ describe('recheckSession', () => {
     const { client, queryClient } = setupApi({ getSession: vi.fn(getSession) });
     queryClient.setQueryData(queryKeys.session(), open);
     await recheckSession(client, queryClient);
+
     return queryClient.getQueryData(queryKeys.session());
   }
 
@@ -209,6 +211,7 @@ describe('signed out by the server', () => {
       const { result } = renderHook(() => useSession(), { wrapper });
       await waitFor(() => expect(result.current.data).toEqual(session));
     }
+
     expect(removed).not.toHaveBeenCalled();
   });
 });

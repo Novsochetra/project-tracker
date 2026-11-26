@@ -52,6 +52,7 @@ async function serve(socket: Socket, answer: Answer, stopped: AbortSignal): Prom
   } catch {
     decision = deny('The call could not be read.');
   }
+
   if (!socket.destroyed) socket.end(`${JSON.stringify(decision)}\n`);
 }
 
@@ -71,6 +72,7 @@ async function listenIn({ dir, path }: SocketFolder, answer: Answer): Promise<Pr
     server.close();
     rmSync(dir, { recursive: true, force: true });
   };
+
   try {
     await new Promise<void>((resolve, reject) => {
       server.once('error', reject);
@@ -80,6 +82,7 @@ async function listenIn({ dir, path }: SocketFolder, answer: Answer): Promise<Pr
     close();
     throw error;
   }
+
   return { path, close };
 }
 

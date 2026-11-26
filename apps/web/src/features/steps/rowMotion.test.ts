@@ -14,6 +14,7 @@ describe('foldMotion', () => {
     for (const px of [144, 500, 1_300, 3_000]) {
       expect(steepestPxPerFrame(px)).toBeLessThanOrEqual(24.001);
     }
+
     expect(foldMotion(1_300).duration).toBeCloseTo(1_505, 0);
   });
 });

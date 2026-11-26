@@ -9,11 +9,14 @@ export function uniqueKeys(ids: readonly unknown[]): string[] {
   let count = 0;
   const spare = (): string => {
     const key = `${SPARE_PREFIX}${count++}`;
+
     return taken.has(key) ? spare() : key;
   };
+
   return ids.map((id) => {
     if (typeof id !== 'string' || keyed.has(id)) return spare();
     keyed.add(id);
+
     return id;
   });
 }

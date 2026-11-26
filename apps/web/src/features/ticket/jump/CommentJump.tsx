@@ -29,8 +29,10 @@ function useFarBelow(box: BoxRef, scroller: ScrollerRef): boolean {
       { root, rootMargin: NEAR_MARGIN },
     );
     observer.observe(target);
+
     return () => observer.disconnect();
   }, [box, scroller]);
+
   return far;
 }
 
@@ -41,8 +43,10 @@ function useScrolledDown(scroller: ScrollerRef): boolean {
     if (!root) return;
     const update = () => setDown(isScrolledDown(root.scrollTop, root.clientHeight));
     root.addEventListener('scroll', update, { passive: true });
+
     return () => root.removeEventListener('scroll', update);
   }, [scroller]);
+
   return down;
 }
 
@@ -69,6 +73,7 @@ export function CommentJump({ boxRef }: { boxRef: BoxRef }) {
   const toastShowing = useToastShowing();
   const editing = useEditingText();
   if (!far || !down || toastShowing || editing) return null;
+
   return (
     <button
       type="button"

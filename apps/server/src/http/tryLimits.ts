@@ -16,6 +16,7 @@ export type TryKey = (c: Context<AppEnv>) => string;
 export function limitTries({ now, options }: AuthDeps, what: string, keyOf?: TryKey) {
   const limiter = createRateLimiter(options.loginLimits.perAddress);
   const key = keyOf ?? ((c: Context<AppEnv>) => clientAddress(c, options.trustedProxies));
+
   return createMiddleware<AppEnv>(async (c, next) => {
     const tries = key(c);
     const at = now();

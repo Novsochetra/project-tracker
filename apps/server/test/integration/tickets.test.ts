@@ -20,6 +20,7 @@ describe.each(DIALECTS)('tickets (%s)', (dialect) => {
 
   const ranks = async (statusId: string) => {
     const board = await api.client().getBoard('MA');
+
     return board.tickets.filter((t) => t.statusId === statusId).map((t) => t.key);
   };
 

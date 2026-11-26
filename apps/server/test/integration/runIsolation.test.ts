@@ -20,6 +20,7 @@ describe.each(DIALECTS)("one user's runs stay theirs (%s)", (dialect) => {
 
   async function side(email: string, createdAt: number): Promise<Side> {
     const user = await addUser(api.db, email, createdAt);
+
     return {
       person: caller(() => api.app, user.person),
       helper: caller(() => api.app, user.helper),
@@ -65,6 +66,7 @@ describe.each(DIALECTS)("one user's runs stay theirs (%s)", (dialect) => {
       expect((await as('GET', `/api/runs/${aRun.id}`)).status).toBe(404);
       expect((await as('POST', `/api/runs/${aRun.id}/cancel`)).status).toBe(404);
     }
+
     const finish = await b.helper('POST', `/api/runs/${aRun.id}/finish`, { status: 'done' });
     expect(finish.status).toBe(404);
     expect((await a.person<Run>('GET', `/api/runs/${aRun.id}`)).body.status).toBe('queued');

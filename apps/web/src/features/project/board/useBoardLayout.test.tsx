@@ -7,6 +7,7 @@ function Screen() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const frameRef = useRef<HTMLDivElement>(null);
   useFillHeight(frameRef, scrollRef);
+
   return (
     <div ref={scrollRef} data-testid="scroller">
       <div data-testid="filters" />

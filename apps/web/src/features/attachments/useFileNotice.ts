@@ -26,10 +26,12 @@ export function useFileNotice(): FileNotices {
   const mounted = useRef(true);
   useEffect(() => {
     mounted.current = true;
+
     return () => {
       mounted.current = false;
     };
   }, []);
+
   return {
     notices,
     picked: (refused) => setNotices({ refused: refusalNotice(refused), failed: null }),

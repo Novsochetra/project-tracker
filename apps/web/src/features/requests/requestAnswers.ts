@@ -43,10 +43,12 @@ export function togglePick(question: RunQuestion, pick: QuestionPick, label: str
   if (!question.multiSelect) {
     return { chosen: pick.chosen[0] === label ? [] : [label], other: '' };
   }
+
   const labels = new Set(pick.chosen);
   if (labels.has(label)) labels.delete(label);
   else labels.add(label);
   const chosen = inOptionOrder(question, labels);
+
   // A choice added after long own words shortens them in the box, where the person sees it.
   return { chosen, other: pick.other.slice(0, otherRoom(chosen)) };
 }
@@ -65,6 +67,7 @@ export const answerOf = ({ chosen, other }: QuestionPick): string =>
 export function questionAnswers(picks: readonly QuestionPick[]): AnswerRunRequestInput | null {
   const answers = picks.map(answerOf);
   if (answers.length === 0 || answers.some((answer) => !answer)) return null;
+
   return { decision: 'allow', answers };
 }
 
@@ -80,5 +83,6 @@ export const approvePlan = (mode: PlanMode): AnswerRunRequestInput => ({
 
 export function keepPlanning(note: string): AnswerRunRequestInput {
   const text = note.trim();
+
   return text ? { decision: 'deny', answers: [text] } : { decision: 'deny' };
 }

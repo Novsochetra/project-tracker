@@ -21,6 +21,7 @@ export function createWorkLimiter(capacity: number): WorkLimiter {
       next.start();
     }
   };
+
   return async (cost, task) => {
     if (waiting.length === 0 && fits(cost)) used += cost;
     else await new Promise<void>((start) => waiting.push({ cost, start }));
@@ -35,5 +36,6 @@ export function createWorkLimiter(capacity: number): WorkLimiter {
 
 export function createLimiter(max: number): Limiter {
   const limit = createWorkLimiter(max);
+
   return (task) => limit(1, task);
 }

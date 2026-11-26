@@ -19,6 +19,7 @@ describe('prepareUpload', () => {
     ]) {
       await expect(prepareUpload(file)).resolves.toEqual({ blob: file, fileName: file.name });
     }
+
     expect(decode).not.toHaveBeenCalled();
   });
 

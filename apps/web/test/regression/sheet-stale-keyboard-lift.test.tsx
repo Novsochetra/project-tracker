@@ -22,6 +22,7 @@ function staleViewport(): () => void {
     scale: 1,
   });
   Object.defineProperty(window, 'visualViewport', { configurable: true, value: viewport });
+
   return () => {
     if (previous) Object.defineProperty(window, 'visualViewport', previous);
     else Reflect.deleteProperty(window, 'visualViewport');
@@ -41,6 +42,7 @@ function touchPhone(): () => void {
       removeEventListener: () => undefined,
     }),
   });
+
   return () => {
     if (previous) Object.defineProperty(window, 'matchMedia', previous);
     else Reflect.deleteProperty(window, 'matchMedia');
@@ -66,6 +68,7 @@ function renderSheet() {
   );
   const overlay = document.querySelector<HTMLElement>('[data-sheet]');
   if (!overlay) throw new Error('No sheet.');
+
   return overlay;
 }
 

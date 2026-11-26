@@ -54,6 +54,7 @@ function planPng(source: SourceImage): ImagePlan | null {
   const fits = pixelsOf(source) <= MAX_LOSSLESS_PIXELS;
   if (fits && source.bytes <= ATTACHMENT_KINDS.image.maxBytes) return null;
   const encodings = fits ? [asPhoto(source)] : [asScreenshot(source), asPhoto(source)];
+
   return { encodings, mustConvert: true };
 }
 
@@ -63,6 +64,7 @@ function planPng(source: SourceImage): ImagePlan | null {
 function planPhoto(source: SourceImage): ImagePlan | null {
   const pixels = pixelsOf(source);
   if (pixels <= MAX_PHOTO_PIXELS && source.bytes <= MAX_UNTOUCHED_PHOTO_BYTES) return null;
+
   return { encodings: [asPhoto(source)], mustConvert: pixels > MAX_WHOLE_DECODE_PIXELS };
 }
 
@@ -73,5 +75,6 @@ export function planImage(source: SourceImage): ImagePlan | null {
   if (source.type === 'image/gif') return null;
   if (source.type === 'image/png') return planPng(source);
   if (!source.contentIsJpegOrWebp) return { encodings: [asPhoto(source)], mustConvert: true };
+
   return planPhoto(source);
 }

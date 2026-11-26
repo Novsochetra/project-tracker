@@ -20,6 +20,7 @@ const sendButton = (projectName: string) =>
 const isCut = (row: Locator) =>
   row.evaluate((element) => {
     const value = element.lastElementChild?.previousElementSibling as HTMLElement;
+
     return value.scrollWidth > value.clientWidth;
   });
 

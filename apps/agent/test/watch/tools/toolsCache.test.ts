@@ -11,6 +11,7 @@ const found = (servers: string[] | null, commands: string[] = []): FoundTools =>
 function cacheWith(read: () => Promise<FoundTools>, first = found(['GitHub'])) {
   let time = 0;
   const cache = createToolsCache({ first, read, every: 1_000, now: () => time });
+
   return { cache, later: (ms: number) => (time += ms) };
 }
 

@@ -10,6 +10,7 @@ const viewTop = (region: Locator) =>
   region.evaluate((node) => {
     const scroller = node.closest('[data-stack-scroller]')!;
     const navBar = scroller.querySelector('[data-navbar]');
+
     return (navBar ?? scroller).getBoundingClientRect()[navBar ? 'bottom' : 'top'];
   });
 
@@ -76,8 +77,10 @@ test('focus stays clear of a stuck header and lands on Show more after the heade
   await footerLess.focus();
   const headerBottom = async () => {
     const box = (await headerLess.locator('..').boundingBox())!;
+
     return box.y + box.height;
   };
+
   for (let press = 0; press < 12; press++) {
     await page.keyboard.press('Shift+Tab');
     const focusedTop = await page.evaluate(

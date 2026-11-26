@@ -6,6 +6,7 @@ import type { TrackerMutation, TrackerQuery } from '../types';
 
 export function useApiTokens(): TrackerQuery<ApiToken[]> {
   const client = useApi();
+
   return useQuery({ queryKey: queryKeys.apiTokens(), queryFn: () => client.listApiTokens() });
 }
 
@@ -21,6 +22,7 @@ function patchTokens(queryClient: QueryClient, change: (tokens: ApiToken[]) => A
 export function useCreateApiToken(): TrackerMutation<CreatedApiToken, CreateApiTokenInput> {
   const client = useApi();
   const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: (input: CreateApiTokenInput) => client.createApiToken(input),
     gcTime: 0,
@@ -32,6 +34,7 @@ export function useCreateApiToken(): TrackerMutation<CreatedApiToken, CreateApiT
 export function useRevokeApiToken(): TrackerMutation<void, string> {
   const client = useApi();
   const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: (id: string) => client.revokeApiToken(id),
     onSuccess: (_answer, id) =>

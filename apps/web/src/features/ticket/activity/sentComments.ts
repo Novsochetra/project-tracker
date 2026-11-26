@@ -38,6 +38,7 @@ export const backIdsOf = (ticketKey: string): string[] => backsOf(ticketKey).map
 export function keptComment(ticketKey: string): string | undefined {
   const typed = storedDraft(draftIdOf(boxOf(ticketKey)))?.text ?? '';
   const texts = [...backsOf(ticketKey).map(([, draft]) => draft.text), typed];
+
   return keptForm(texts.filter((text) => keptForm(text)).join('\n'));
 }
 
@@ -93,6 +94,7 @@ export function startSend(ticketKey: string, text: string, seen: number): Commen
   const send = { id, sendId, number: startSave(id, text), ticketKey, text };
   if (onTheirWay.size === 0) window.addEventListener('pagehide', onPageGone);
   onTheirWay.set(id, send);
+
   return send;
 }
 
@@ -122,5 +124,6 @@ export function settleLeftSend(id: string, draft: StoredDraft, detail: TicketDet
   if (commentsWithText(detail, draft.text) <= (Number(draft.base) || 0)) {
     handBackComment(draft.ticketKey, draft.text, draft.activityId);
   }
+
   forgetDraft(id);
 }

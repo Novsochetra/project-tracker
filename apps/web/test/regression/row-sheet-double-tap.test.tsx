@@ -36,6 +36,7 @@ function swipeAction(key: string, label: string): HTMLElement {
   if (!(row instanceof HTMLElement)) throw new Error(`No row for ${key}`);
   const action = within(row).getByText(label).closest('button');
   if (!action) throw new Error(`No ${label} action on ${key}`);
+
   return action;
 }
 
@@ -47,6 +48,7 @@ async function doubleTap(label: string, sheetName: string, row: string, gap: num
   if (gap > 0) await advance(gap);
   const sheet = screen.getByRole('dialog', { name: sheetName });
   await tap(user, within(sheet).getByRole('button', { name: row }));
+
   return sheet;
 }
 

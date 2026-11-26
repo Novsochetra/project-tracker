@@ -27,6 +27,7 @@ async function holdViewerPart(page: Page): Promise<() => void> {
     sheet.href = '/held-viewers.css';
     document.head.append(sheet);
   });
+
   return release;
 }
 
@@ -38,6 +39,7 @@ const markAnimations = (page: Page) =>
       (status) => status.textContent === 'Opening',
     );
     const mark = label?.closest('.quiet-in');
+
     return mark ? mark.getAnimations({ subtree: true }).length : -1;
   });
 

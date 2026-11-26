@@ -36,6 +36,7 @@ const refusal = (path: string, folder: string) =>
 const attach = async (path: string, folders: string[]): Promise<string> => {
   const file = await checkLocalFile(path, folders);
   await closeLocalFiles([file]);
+
   return file.realPath;
 };
 

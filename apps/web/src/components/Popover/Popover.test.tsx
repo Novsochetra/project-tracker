@@ -8,6 +8,7 @@ import { Popover } from './Popover';
 
 function Harness({ onEdit }: { onEdit: () => void }) {
   const [open, setOpen] = useState(false);
+
   return (
     <Popover
       open={open}

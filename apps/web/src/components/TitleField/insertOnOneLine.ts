@@ -16,6 +16,7 @@ function insertAtSelection(field: HTMLTextAreaElement, text: string): void {
   if (focused && typeof document.execCommand === 'function') {
     if (document.execCommand('insertText', false, text)) return;
   }
+
   const room =
     maxLength < 0 ? text.length : maxLength - value.length + selectionEnd - selectionStart;
   field.setRangeText(text.slice(0, Math.max(room, 0)), selectionStart, selectionEnd, 'end');
@@ -36,6 +37,7 @@ export function insertOnOneLine(event: InputEvent): void {
     insertAtSelection(field, oneLineInsert('\n', before, ''));
     return;
   }
+
   const text = TEXT_INPUTS.has(event.inputType) ? textOf(event) : null;
   if (text === null || !hasLineBreak(text)) return;
   event.preventDefault();
@@ -47,6 +49,7 @@ export function useOneLineInserts(ref: RefObject<HTMLTextAreaElement | null>): v
     const field = ref.current;
     if (!field) return;
     field.addEventListener('beforeinput', insertOnOneLine);
+
     return () => field.removeEventListener('beforeinput', insertOnOneLine);
   }, [ref]);
 }

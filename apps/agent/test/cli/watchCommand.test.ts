@@ -19,6 +19,7 @@ async function cli(argv: string[]) {
     stderr: (text) => stderr.push(text),
     untilStopped: () => new Promise<void>(() => undefined),
   });
+
   return { code, stderr: stderr.join('\n') };
 }
 
@@ -81,6 +82,7 @@ describe('tracker watch', () => {
         ),
       });
     }
+
     expect((await cli(['watch', '--check', '--approvals'])).stderr).toContain(
       '--check takes no project or other options',
     );

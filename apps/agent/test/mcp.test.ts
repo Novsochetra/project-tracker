@@ -34,6 +34,7 @@ async function connect(tracker: TrackerApi): Promise<Client> {
     createMcpServer(tracker).connect(serverTransport),
     client.connect(clientTransport),
   ]);
+
   return client;
 }
 
@@ -132,6 +133,7 @@ describe('MCP server', () => {
     for (const words of ['returned as images', 'Text files', '20,000', 'Videos and PDFs']) {
       expect(description).toContain(words);
     }
+
     expect(description).toContain('API token');
   });
 

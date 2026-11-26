@@ -17,6 +17,7 @@ import type { Db } from './schema';
 export function migratesOnStart(url: string, env: NodeJS.ProcessEnv): boolean {
   if (env.MIGRATE_ON_START === '1') return true;
   if (env.MIGRATE_ON_START === '0') return false;
+
   return !isPostgresUrl(url);
 }
 
@@ -51,6 +52,7 @@ export async function prepareDatabase(
       ? migrateWithoutTimeout(db, migrations)
       : migrateToLatest(db, migrations);
   }
+
   const states = await readMigrationState(db, migrations);
   const unknown = namesWith(states, 'unknown');
   if (unknown.length > 0) throw new Error(unknownMigrationsMessage(unknown));
@@ -61,5 +63,6 @@ export async function prepareDatabase(
         'Run db:migrate first (the pre-deploy command), or start with MIGRATE_ON_START=1.',
     );
   }
+
   return [];
 }

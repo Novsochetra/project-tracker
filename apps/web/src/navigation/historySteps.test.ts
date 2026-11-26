@@ -6,6 +6,7 @@ function historyAt(paths: string[], index: number): SessionHistory {
   const history = new SessionHistory();
   paths.forEach((path, i) => history.record(`k${i}`, path, i === 0 ? 'POP' : 'PUSH'));
   history.record(`k${index}`, paths[index]!, 'POP');
+
   return history;
 }
 

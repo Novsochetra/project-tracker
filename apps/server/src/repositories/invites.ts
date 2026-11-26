@@ -38,6 +38,7 @@ export async function deleteOpenInvite(db: Db, createdBy: string, id: string): P
     .where('createdBy', '=', createdBy)
     .where('usedAt', 'is', null)
     .executeTakeFirst();
+
   return Number(result.numDeletedRows);
 }
 
@@ -48,6 +49,7 @@ export async function deleteOpenResets(db: Db, userId: string): Promise<number> 
     .where('userId', '=', userId)
     .where('usedAt', 'is', null)
     .executeTakeFirst();
+
   return Number(result.numDeletedRows);
 }
 
@@ -64,5 +66,6 @@ export async function useLinkRow(
     .where('usedAt', 'is', null)
     .where('expiresAt', '>', used.usedAt)
     .executeTakeFirst();
+
   return Number(result.numUpdatedRows) > 0;
 }

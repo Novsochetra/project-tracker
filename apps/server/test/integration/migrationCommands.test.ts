@@ -69,6 +69,7 @@ describe.each(DIALECTS)('migration commands (%s)', (dialect) => {
       for (const [index, name] of NAMES.entries()) {
         expect(after.lines[index]).toMatch(new RegExp(`^${name} +applied \\d{4}-\\d\\d-\\d\\dT`));
       }
+
       expect(after.lines.at(-1)).toBe('Up to date.');
     });
   });

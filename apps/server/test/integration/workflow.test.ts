@@ -15,6 +15,7 @@ describe.each(DIALECTS)('agent workflow (%s)', (dialect) => {
 
   const keysIn = async (category: Parameters<typeof statusOf>[1]) => {
     const statusId = statusOf(project, category).id;
+
     return (await api.client().getBoard('MA')).tickets
       .filter((t) => t.statusId === statusId)
       .map((t) => t.key);
@@ -88,6 +89,7 @@ describe.each(DIALECTS)('agent workflow (%s)', (dialect) => {
         expect(res.status, category).toBe(409);
         expect(res.body.error.code).toBe('conflict');
       }
+
       expect((await api.post('/api/tickets/MA-99/claim')).status).toBe(404);
     });
   });

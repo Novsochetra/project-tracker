@@ -14,11 +14,13 @@ export interface RunRequests {
 export function useRequests(runId: string | null): RunRequests {
   const { data: requests, isFetching } = useRunRequests(runId);
   const now = useNow();
+
   return useMemo(() => {
     const all = runId ? (requests ?? []) : [];
     // Requests cached from an earlier visit may be stale (a request event only marks them so);
     // they count as read once the read they get on mount is back.
     const loaded = runId !== null && requests !== undefined && !isFetching;
+
     return { shown: shownRequests(all, now), waiting: isWaiting(all, now), now, loaded };
   }, [runId, requests, isFetching, now]);
 }

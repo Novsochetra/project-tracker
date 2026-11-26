@@ -31,6 +31,7 @@ function sqliteDialect(file: string): Dialect {
   database.pragma('foreign_keys = ON');
   database.pragma('busy_timeout = 5000');
   registerUnicodeLower(database);
+
   return new TrackerSqliteDialect(database);
 }
 
@@ -44,6 +45,7 @@ export function createDatabase(url: string, env: NodeJS.ProcessEnv = process.env
       'DATABASE_URL is neither a postgres:// URL nor a file path (its value is not shown): it should start with postgres:// or postgresql://, without quotes or a name in front. A file path can’t hold a colon followed by an @.',
     );
   }
+
   return createKysely(
     isPostgresUrl(url)
       ? new PostgresDialect({ pool: createPostgresPool(url, env) })

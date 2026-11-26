@@ -109,6 +109,7 @@ export const UNSUPPORTED_ATTACHMENT_MESSAGE =
 
 export function tooLargeMessage(kind: AttachmentKind): string {
   const { label, maxBytes } = ATTACHMENT_KINDS[kind];
+
   return `${label} can be up to ${maxBytes / MB} MB.`;
 }
 
@@ -122,6 +123,7 @@ export const storedExtension = (mimeType: AttachmentMimeType): string =>
 
 export function typeFromFileName(fileName: string): AttachmentMimeType | null {
   const extension = /\.([^.]+)$/.exec(fileName.trim())?.[1]?.toLowerCase() ?? '';
+
   return TYPE_OF_EXTENSION.get(extension) ?? null;
 }
 
@@ -131,6 +133,7 @@ export function resolveAttachmentType(type: string, fileName: string): Attachmen
   if (TYPES.has(declared)) return declared as AttachmentMimeType;
   const alias = TYPE_ALIASES.get(declared);
   if (alias) return alias;
+
   return UNCLEAR_TYPES.has(declared) ? typeFromFileName(fileName) : null;
 }
 
@@ -151,6 +154,7 @@ export function checkAttachment(file: FileFacts): AttachmentCheck {
   if (file.size > ATTACHMENT_KINDS[kind].maxBytes) {
     return { ok: false, message: tooLargeMessage(kind) };
   }
+
   return { ok: true, mimeType, kind };
 }
 

@@ -29,6 +29,7 @@ async function lockedRow(db: Db, { chatId, messageId }: QueuedRef) {
   await lockChat(db, chatId);
   const row = await findQueuedRow(db, chatId, messageId);
   if (!row) throw conflict(QUEUED_GONE);
+
   return row;
 }
 
@@ -48,9 +49,11 @@ export async function sendQueuedNow(
     const trx = { ...ctx, db };
     const project = { id: chat.projectId, key: chat.projectKey };
     const runner = await requireRunnerFor(trx, scope, row.runnerId, project);
+
     return startQueuedIn(trx, scope, chat, { row, runner });
   });
   notifyRun(ctx, scope, run);
+
   return getChat(ctx, scope, id);
 }
 
@@ -65,6 +68,7 @@ export async function editQueued(
     const row = await lockedRow(db, { ...ref, chatId: id });
     await updateQueuedText(db, row.messageId, text);
   });
+
   return getChat(ctx, scope, id);
 }
 
@@ -79,8 +83,10 @@ export async function removeQueued(
     const row = await lockedRow(db, { ...ref, chatId: id });
     const files = await listMessageAttachmentRows(db, row.messageId);
     await deleteMessage(db, row.messageId);
+
     return files.map((file) => file.storageKey);
   });
   await removeFiles(ctx.storage, keys);
+
   return getChat(ctx, scope, id);
 }

@@ -114,6 +114,7 @@ function createApi(ctx: ServiceContext, deps: AppDeps): Hono<AppEnv> {
       ),
     );
   if (deps.testReset) api.route('/', testResetRoutes(ctx));
+
   return api;
 }
 
@@ -135,5 +136,6 @@ export function createApp(deps: AppDeps): Hono<AppEnv> {
   app.use(securityHeaders(), unbufferedStreams);
   app.route('/api', createApi(ctx, deps));
   if (deps.webDist && existsSync(deps.webDist)) mountWebApp(app, deps.webDist);
+
   return app;
 }

@@ -51,6 +51,7 @@ function MessageBody({ chatId, projectKey, message, cards, runAll, helper }: Cla
       </>
     );
   }
+
   return cards ? (
     <CardThread chatId={chatId} message={message} cards={cards} helper={helper} />
   ) : (
@@ -60,6 +61,7 @@ function MessageBody({ chatId, projectKey, message, cards, runAll, helper }: Cla
 
 function ClaudeMessage(props: ClaudeMessageProps) {
   const { message } = props;
+
   return (
     <article className={styles.claude} aria-label="Claude">
       <ClaudeFrom />
@@ -85,11 +87,13 @@ export function MessageList({
   const cards = useMemo(() => messageCards(messages), [messages]);
   const runAllCards = useMemo(() => messageRunAllCards(messages), [messages]);
   const items = useMemo(() => threadItems(messages, stoppedRuns), [messages, stoppedRuns]);
+
   return (
     <ol className={styles.messages} aria-label="Messages">
       {items.map((item) => {
         if (item.kind === 'stopped') return <StoppedSteps key={item.run.id} run={item.run} />;
         const { message } = item;
+
         return (
           <li key={message.id} className={`${styles.item} rise`}>
             {message.role === 'person' ? (

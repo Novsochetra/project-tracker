@@ -13,6 +13,7 @@ import { advance, stillClock } from './stillClock';
 
 function Screen({ onBehind }: { onBehind: () => void }) {
   const [open, setOpen] = useState(true);
+
   return (
     <>
       <button type="button" onClick={onBehind}>
@@ -45,6 +46,7 @@ async function renderScreen() {
   cleanups.push(stillClock());
   // Its rows take taps once a person could have read them (PT-80).
   await advance(CLICK_SHIELD_MS);
+
   return { onBehind, user: userEvent.setup() };
 }
 

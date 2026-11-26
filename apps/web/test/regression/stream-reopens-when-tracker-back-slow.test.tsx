@@ -35,6 +35,7 @@ function fakeServer() {
     vi.fn(async () => {
       if (tracker === 'slow') await pause(WORKER_WAIT_MS);
       noteAnswer(tracker === 'up' ? new Response('[]') : savedAnswer());
+
       return answer();
     });
   const routes = {
@@ -45,6 +46,7 @@ function fakeServer() {
       tracker === 'down' ? Promise.reject(BARE_502) : Promise.resolve({ ok: true }),
     ),
   };
+
   return { client: fakeClient(routes), set: (next: Tracker) => void (tracker = next) };
 }
 
@@ -53,6 +55,7 @@ function renderApp(path: string) {
   const queryClient: QueryClient = createTestQueryClient();
   window.history.replaceState(null, '', path);
   render(<TrackerApp client={server.client} queryClient={queryClient} />);
+
   return { server, queryClient };
 }
 
@@ -68,6 +71,7 @@ async function streamRefusedFor(ms: number) {
       refused.add(source);
       act(() => source.fail(true));
     }
+
     await advance(STEP_MS);
   }
 }

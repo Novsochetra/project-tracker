@@ -32,6 +32,7 @@ describe('stripJpeg', () => {
     for (const text of ['iPhone 15 Pro', 'Phnom Penh', 'taken by Sok']) {
       expect(containsText(stripped, text), text).toBe(false);
     }
+
     const meta = await metadataOf(stripped);
     expect([meta.exif, meta.iptc, meta.xmp]).toEqual([undefined, undefined, undefined]);
     expect((await rawPixelsOf(stripped)).equals(await rawPixelsOf(photo))).toBe(true);

@@ -13,6 +13,7 @@ function markToken(source: string, char: Mark, start: number, length: number): M
   const after = source[start + length];
   // "_" inside a word, as in snake_case_names, is text; "*" there still marks emphasis.
   const inWord = char === '_';
+
   return {
     kind: 'mark',
     char,
@@ -34,12 +35,15 @@ export function splitMarks(source: string, token: TextToken): Array<TextToken | 
     if (match.index > from) {
       tokens.push({ kind: 'text', text: text.slice(from, match.index), start: start + from });
     }
+
     const at = start + match.index;
     if (mark.startsWith('\\')) tokens.push({ kind: 'text', text: mark.slice(1), start: at + 1 });
     else tokens.push(markToken(source, mark[0] as Mark, at, mark.length));
     from = match.index + mark.length;
   }
+
   if (from < text.length)
     tokens.push({ kind: 'text', text: text.slice(from), start: start + from });
+
   return tokens;
 }

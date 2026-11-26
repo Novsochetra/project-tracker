@@ -17,6 +17,7 @@ it('takes only the push services themselves, on the https port', () => {
   ]) {
     expect(isPushServiceUrl(refused), refused).toBe(false);
   }
+
   for (const taken of [
     'https://fcm.googleapis.com/fcm/send/x',
     'https://fcm.googleapis.com:443/fcm/send/x',

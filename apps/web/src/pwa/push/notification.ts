@@ -17,7 +17,9 @@ export function notificationOf(read: () => unknown): ShownNotification {
   } catch {
     // Not JSON: the plain notification below.
   }
+
   const tag = text(data.tag);
+
   return {
     title: text(data.title) || 'Tracker',
     options: {

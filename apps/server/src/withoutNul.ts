@@ -20,10 +20,12 @@ export function withoutNulInJson(value: unknown): unknown {
         node[key] = withoutNul(item);
         continue;
       }
+
       const copy = (Array.isArray(item) ? [...item] : { ...item }) as Container;
       node[key] = copy;
       pending.push(copy);
     }
   }
+
   return root.value;
 }

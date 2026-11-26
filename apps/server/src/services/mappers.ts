@@ -104,6 +104,7 @@ function lineOf(row: ActivityRow): { line?: LineRef } {
   const { lineRunId, linePath, lineSide, lineNumber } = row;
   if (lineRunId === null || linePath === null || lineSide === null || lineNumber === null)
     return {};
+
   return { line: { runId: lineRunId, path: linePath, side: lineSide, line: lineNumber } };
 }
 

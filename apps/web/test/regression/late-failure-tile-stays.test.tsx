@@ -43,6 +43,7 @@ function showWithLateFailure(surface: Surface) {
         : Promise.resolve(attachment(fileName, { fileName, mimeType: 'text/plain' })),
     ),
   });
+
   return () => late.reject(new ApiError(408, 'http_error', 'Request Timeout'));
 }
 
@@ -59,6 +60,7 @@ async function failLate(surface: Surface) {
   await waitFor(() => expect(area().getByTitle('a.txt')).toBeInTheDocument());
   fail();
   await waitFor(() => expect(failedTile()).toBeInTheDocument());
+
   return user;
 }
 
@@ -111,6 +113,7 @@ describe('a late failure in New ticket', () => {
 const showing = (found: () => Element) => {
   document.elementFromPoint = () => found();
 };
+
 const said = () => screen.queryAllByText("late.txt didn't upload.");
 
 // The same at 320×568: from the middle of 16 files, or from the Add tile at the bottom of the

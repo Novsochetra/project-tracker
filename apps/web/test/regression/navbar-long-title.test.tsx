@@ -34,6 +34,7 @@ function renderBar() {
   );
   const back = screen.getByRole('button', { name: 'Back to Projects' });
   const title = screen.getByText(NAME);
+
   return { bar: back.closest('header')!, back, label: screen.getByText('Projects'), title };
 }
 
@@ -47,11 +48,13 @@ function columns(bar: Element): { back: string; title: string; actions: string }
   const style = phoneStyle(bar, MODULE);
   expect(style.get('display')).toBe('grid');
   const [back, title, actions] = tracks(style.get('grid-template-columns')).map(minOf);
+
   return { back: back ?? '', title: title ?? '', actions: actions ?? '' };
 }
 
 const ellipsizes = (element: Element) => {
   const style = phoneStyle(element, MODULE);
+
   return [style.get('overflow'), style.get('text-overflow'), style.get('white-space')];
 };
 

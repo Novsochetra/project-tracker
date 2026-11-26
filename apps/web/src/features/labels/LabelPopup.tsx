@@ -14,5 +14,6 @@ export function LabelPopup({ subtitle, anchorRef, manageable = false, ...props }
   const onManage = useManageLabels(props.projectKey, props.onClose);
   const picker = { ...props, onManage: manageable ? onManage : undefined };
   if (isPhone) return <LabelSheet subtitle={subtitle} {...picker} />;
+
   return <LabelMenu anchorRef={anchorRef} {...picker} />;
 }

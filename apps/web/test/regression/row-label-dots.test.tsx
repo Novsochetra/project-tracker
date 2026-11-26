@@ -54,6 +54,7 @@ function renderRow(due: string) {
       />
     </ProjectLabelsContext>,
   );
+
   return screen.getByRole('button', { name: /^MOB-18/ });
 }
 

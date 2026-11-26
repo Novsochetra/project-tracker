@@ -26,6 +26,7 @@ const toInvite = ({ id, createdAt, expiresAt }: InviteRow): Invite => ({
 export async function createInvite(db: Db, ownerId: string, now: number): Promise<CreatedInvite> {
   const link = { kind: 'invite' as const, createdBy: ownerId, userId: null, ttlMs: INVITE_TTL_MS };
   const { row, secret } = await insertLink(db, link, now);
+
   return { invite: toInvite(row), secret };
 }
 

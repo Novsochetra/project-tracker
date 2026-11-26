@@ -14,11 +14,13 @@ function drag(type: 'dragover' | 'drop', types = ['Files']) {
   const dataTransfer: FakeTransfer = { types, files: [], items: [], dropEffect: 'copy' };
   const event = new Event(type, { bubbles: true, cancelable: true });
   Object.defineProperty(event, 'dataTransfer', { value: dataTransfer });
+
   return { event, dataTransfer };
 }
 
 function Zone({ onFiles }: { onFiles: (files: File[]) => void }) {
   const drop = useFileDrop(onFiles);
+
   return <div data-testid="zone" {...drop.handlers} />;
 }
 

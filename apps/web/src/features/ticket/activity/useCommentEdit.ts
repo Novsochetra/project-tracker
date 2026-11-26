@@ -60,6 +60,7 @@ export function useCommentEdit(
     forgetDraft(id);
     setEdit((current) => withPhase(current, 'closed'));
   };
+
   const save = () => {
     switch (saveStep(edit, text, comment.text)) {
       case 'ignore':

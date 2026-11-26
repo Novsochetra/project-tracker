@@ -6,6 +6,7 @@ const KB = 1024;
 const heicBytes = (size: number) => {
   const bytes = new Uint8Array(size);
   bytes.set([0, 0, 0, 0x20, ...new TextEncoder().encode('ftypheic')]);
+
   return bytes;
 };
 

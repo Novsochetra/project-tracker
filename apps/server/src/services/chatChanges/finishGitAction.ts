@@ -39,6 +39,7 @@ export async function finishGitAction(
   if (action.runnerId !== input.runnerId) {
     throw forbidden('Only the helper that took it says how it ended.');
   }
+
   const ending = {
     status: input.status,
     error: input.status === 'failed' ? (input.error ?? 'It failed.') : null,
@@ -49,5 +50,6 @@ export async function finishGitAction(
   if (input.changes) {
     await saveLeft(ctx, { chatId: chat.id, version: id, runnerId: action.runnerId }, input.changes);
   }
+
   notifyGitAction(ctx, scope, { ...action, ...ending }, chat.projectId);
 }

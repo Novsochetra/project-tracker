@@ -40,6 +40,7 @@ export function useDismissDrag(input: DismissDragInput): DragHandlers {
         springBack(velocity);
         return;
       }
+
       releaseVelocityRef.current = Math.max(0, velocity);
       onClose();
       // The owner may refuse to close (unsaved changes); then the panel must come back up, and a

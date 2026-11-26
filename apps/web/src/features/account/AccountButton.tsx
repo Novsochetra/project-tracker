@@ -9,12 +9,14 @@ import styles from './AccountButton.module.css';
 function useAccount() {
   const email = useKnownSession()?.email;
   const sheets = useSheets();
+
   return { email, open: () => sheets.open({ type: 'account' }) };
 }
 
 export function AccountButton() {
   const { email, open } = useAccount();
   if (!email) return null;
+
   return (
     <NavBarButton aria-label="Account" onClick={open}>
       <Icon icon={CircleUser} size={20} />
@@ -25,6 +27,7 @@ export function AccountButton() {
 export function AccountRow() {
   const { email, open } = useAccount();
   if (!email) return null;
+
   return (
     <button type="button" className={styles.row} aria-label="Account" onClick={open}>
       <Icon icon={CircleUser} className={styles.icon} />

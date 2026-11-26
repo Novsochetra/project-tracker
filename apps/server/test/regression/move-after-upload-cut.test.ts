@@ -38,6 +38,7 @@ async function sourceWithCutUpload(writeWhole: boolean) {
   void app.request(path, init);
   while (!reached) await new Promise((r) => setTimeout(r, 5));
   await db.destroy();
+
   return source;
 }
 
@@ -50,6 +51,7 @@ async function sourceWithPendingUpload() {
   const { path, init } = fileUpload({ name: 'picked.txt' });
   const { id } = (await (await app.request(path, init)).json()) as { id: string };
   await db.destroy();
+
   return { source, id };
 }
 

@@ -42,6 +42,7 @@ export async function openSourceCopy(file: string): Promise<SourceCopy> {
     await rm(dir, { recursive: true, force: true });
     openCopies.delete(dir);
   };
+
   let db: Db | null = null;
   try {
     const copy = join(dir, 'source.db');

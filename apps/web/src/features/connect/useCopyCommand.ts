@@ -23,6 +23,8 @@ export function useCopyCommand() {
     setBlocked(copied ? null : messages.blocked);
     if (copied) toast.show(messages.copied);
   };
+
   const handler: CopyHandler = (text, messages = COMMAND_MESSAGES) => void copy(text, messages);
+
   return { blocked, copy: handler };
 }

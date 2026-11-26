@@ -62,6 +62,7 @@ export function SwipeActions({
   const contentRef = useRef<HTMLDivElement>(null);
   const row = useSwipeRow({ rootRef, contentRef, leading, trailing, disabled });
   const strip = { x: row.x, full: row.full, onPress: row.press };
+
   return (
     <MotionScope>
       <div

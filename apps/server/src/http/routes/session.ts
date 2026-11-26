@@ -25,6 +25,7 @@ async function stateFor(deps: AuthDeps, access: Access | null): Promise<SessionS
   if (user) return signedInState(user);
   if (access) return { authRequired: true, authenticated: true };
   if (await ownerExists(deps.db)) return { authRequired: true, authenticated: false };
+
   return { authRequired: true, authenticated: false, setupRequired: true };
 }
 
@@ -43,6 +44,7 @@ async function signIn(
   if (!user) throw new AppError('unauthorized', LOGIN_FAILED_MESSAGE);
   limits.succeeded(input);
   await signInAs(c, deps, user.id);
+
   return c.json(signedInState(user));
 }
 
@@ -52,6 +54,7 @@ async function signOut(c: Context<AppEnv>, deps: AuthDeps) {
   clearSessionCookie(c, deps.options);
   c.header('Clear-Site-Data', CLEAR_SITE_DATA);
   const access = c.get('access');
+
   return c.json(await stateFor(deps, access?.kind === 'open' ? access : null));
 }
 
@@ -60,19 +63,23 @@ async function signOutEverywhere(c: Context<AppEnv>, deps: AuthDeps) {
   if (access?.kind !== 'session') {
     throw forbidden('Sign in with your email and password to sign out everywhere.');
   }
+
   await endAllSessions(deps.db, access.userId);
   clearSessionCookie(c, deps.options);
   c.header('Clear-Site-Data', CLEAR_SITE_DATA);
+
   return c.json(await stateFor(deps, null));
 }
 
 export function sessionRoutes(deps: AuthDeps) {
   const limits = createLoginLimits(deps.options.loginLimits);
+
   return new Hono<AppEnv>()
     .get('/session', async (c) => c.json(await stateFor(deps, c.get('access'))))
     .post('/session', jsonBodyAsSent(loginInput), async (c) => {
       const { email, password } = c.req.valid('json');
       const address = clientAddress(c, deps.options.trustedProxies);
+
       return signIn(c, deps, limits, { address, email, password });
     })
     .delete('/session', (c) => signOut(c, deps))

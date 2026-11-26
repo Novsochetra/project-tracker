@@ -38,6 +38,7 @@ interface ChainLink extends ChainEnd {
 async function chainTicket(ctx: ServiceContext, run: RunWithKey): Promise<TicketScope | null> {
   if (run.kind !== 'ticket' || run.status !== 'done' || !run.ticketId) return null;
   const ref = await requireTicketById(ctx.db, run.userId, run.ticketId);
+
   return ref.project.autoReview === 1 ? loadTicketScope(ctx.db, ref) : null;
 }
 
@@ -76,7 +77,9 @@ async function queueChainRun(
     if (isUniqueViolation(error)) return false;
     throw error;
   }
+
   notifyRun(ctx, run.userId, row);
+
   return true;
 }
 
@@ -101,6 +104,7 @@ async function chainStep(ctx: ServiceContext, run: RunWithKey): Promise<boolean>
   if (step.kind === 'queue' && runner) {
     return queueChainRun(ctx, { run, ticket, runner, prompt }, step);
   }
+
   return step.kind === 'stop';
 }
 

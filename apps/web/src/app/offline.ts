@@ -16,6 +16,7 @@ export interface CacheAction {
 // An error the server answered with still proves it can be reached.
 export function signalOfError(error: unknown): ApiSignal | null {
   if (isNetworkError(error)) return error instanceof ApiError ? 'unsure' : 'unreachable';
+
   return error instanceof ApiError ? 'reachable' : null;
 }
 
@@ -24,5 +25,6 @@ export function signalOfError(error: unknown): ApiSignal | null {
 export function signalOf(action: CacheAction, fromCache = false): ApiSignal | null {
   if (action.type === 'error') return signalOfError(action.error);
   if (action.type !== 'success' || action.manual) return null;
+
   return fromCache ? 'saved' : 'reachable';
 }

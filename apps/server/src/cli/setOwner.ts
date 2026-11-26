@@ -10,6 +10,7 @@ const say = (text: string) => process.stdout.write(`${text}\n`);
 function summary({ email, created, signedOut }: SetOwnerResult): string {
   if (created) return `Owner account created for ${email}. Sign in to the tracker with it.`;
   const devices = signedOut === 1 ? '1 device' : `${signedOut} devices`;
+
   return `Owner account updated to ${email}. Signed out ${devices}; API tokens still work.`;
 }
 
@@ -19,10 +20,12 @@ async function run(): Promise<number> {
     say(OWNER_USAGE);
     return 0;
   }
+
   if ('error' in args) {
     console.error(`${args.error}\n\n${OWNER_USAGE}`);
     return 1;
   }
+
   const password = await readPassword();
   const { databaseUrl } = loadConfig();
   const db = createDatabase(databaseUrl);

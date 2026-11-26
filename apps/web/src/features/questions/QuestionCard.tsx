@@ -29,6 +29,7 @@ export function QuestionCard({ ticketKey, request, now }: QuestionCardProps) {
     cardRef,
   );
   const open = isOpen(request, now);
+
   return (
     <section
       ref={cardRef}

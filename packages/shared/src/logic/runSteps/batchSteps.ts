@@ -20,6 +20,7 @@ const CLAIM = /\bclaim/i;
 export function ticketRunIn(label: string, tickets: readonly BatchTicketRun[]): string | null {
   const said = new Set((label.match(KEY) ?? []).map((key) => key.toUpperCase()));
   const named = tickets.filter(({ ticketKey }) => said.has(ticketKey.toUpperCase()));
+
   return named.length === 1 && named[0] ? named[0].runId : null;
 }
 
@@ -56,6 +57,7 @@ export function batchTicketSteps(
       starts.get(toolId) ?? { kind: 'agent', label: 'Start sub agent', subAgent: false, toolId },
     );
   };
+
   for (const step of steps) {
     if (isStart(step) && step.toolId) {
       starts.set(step.toolId, step);
@@ -63,6 +65,7 @@ export function batchTicketSteps(
       if (runId) own(step.toolId, runId);
       continue;
     }
+
     const parent = step.parentToolId;
     if (!parent) continue;
     // Only a call claims: Claude's words may name a ticket it chose not to take.
@@ -72,5 +75,6 @@ export function batchTicketSteps(
     const owner = owners.get(parent);
     if (owner) give(owner, step);
   }
+
   return routed;
 }

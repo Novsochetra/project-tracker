@@ -8,6 +8,7 @@ export function boardChanges(
   update: (board: ProjectBoard) => ProjectBoard,
 ): CacheChange[] {
   const projectKey = projectOfTicket(ticketKey);
+
   return projectKey ? [cacheChange<ProjectBoard>(queryKeys.board(projectKey), update)] : [];
 }
 

@@ -48,12 +48,15 @@ async function requireQuiet({ ctx, scope }: Person, chat: Chat, version: string)
   if (isActive(await latestGitAction(ctx.db, chat.id))) {
     throw conflict('The last commit or pull request is still going on.');
   }
+
   const run = await latestChatRunRow(ctx.db, scope, chat.id);
   if (run && (ACTIVE_RUN_STATUSES as readonly string[]).includes(run.status)) {
     throw conflict('Wait until Claude finishes in this chat.');
   }
+
   const runner = await requireRunner(ctx, scope, changes.runnerId);
   if (!isOnline(runner.lastSeenAt, ctx.now())) throw conflict(HELPER_OFFLINE);
+
   return changes;
 }
 
@@ -78,6 +81,7 @@ async function queue(
   };
   await insertGitAction(ctx.db, row);
   notifyGitAction(ctx, scope, row, chat.projectId);
+
   return readChatChanges(ctx, scope, chat.id);
 }
 
@@ -103,7 +107,9 @@ export async function queueCommit(
   if (branch && isProtectedBranch(branch, changes.defaultBranch)) {
     throw invalidInput(`Pick another name: ${branch} is the main branch.`);
   }
+
   const paths = [...new Set(input.paths)];
+
   return queue(person, chat, changes, {
     kind: 'commit',
     input: { message: input.message, paths, branch, tree: changes.tree },
@@ -123,5 +129,6 @@ export async function queuePullRequest(
   if (changes.branch === null || isProtectedBranch(changes.branch, changes.defaultBranch)) {
     throw conflict(PROTECTED_BRANCH);
   }
+
   return queue(person, chat, changes, { kind: 'pull_request', input: { title: input.title } });
 }

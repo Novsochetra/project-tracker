@@ -26,6 +26,7 @@ export function ConfirmCard({
   // The button that opened the confirm is gone, so focus moves to the safe choice.
   useEffect(() => cancelRef.current?.focus({ preventScroll: true }), []);
   const size = variant === 'menu' ? 'sm' : 'md';
+
   return (
     <div role="alert" className={clsx(styles.confirm, styles[variant], className)}>
       <p className={styles.message}>{message}</p>

@@ -25,6 +25,7 @@ export function passwordRoutes(deps: AuthDeps) {
   // Counted per account, not per address: whoever guesses already holds its session, and an
   // address is cheap to change.
   const limited = limitTries(deps, 'tries to change the password', (c) => sessionOf(c).userId);
+
   return new Hono<AppEnv>().post(
     '/password',
     passwordSession,
@@ -33,6 +34,7 @@ export function passwordRoutes(deps: AuthDeps) {
     async (c) => {
       const { userId, sessionId } = sessionOf(c);
       await changePassword(deps.db, { userId, sessionId, ...c.req.valid('json') }, deps.now());
+
       return c.body(null, 204);
     },
   );

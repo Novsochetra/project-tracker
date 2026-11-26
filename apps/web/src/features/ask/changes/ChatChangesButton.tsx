@@ -23,6 +23,7 @@ export function ChatChangesButton({ chatId, chatTitle }: ChatChangesButtonProps)
   const { data } = useChatChanges(chatId);
   const [open, setOpen] = useState(false);
   if (!shown(data)) return null;
+
   return (
     <>
       <Button className={styles.open} icon={FileDiff} onClick={() => setOpen(true)}>
@@ -42,5 +43,6 @@ export function ChatChangesButton({ chatId, chatTitle }: ChatChangesButtonProps)
 // Before the first question there is no chat to have changes.
 export function ChatChangesArea({ detail }: { detail: ChatDetail | null }) {
   if (!detail) return null;
+
   return <ChatChangesButton chatId={detail.chat.id} chatTitle={detail.chat.title} />;
 }

@@ -55,6 +55,7 @@ export const NEW_TICKET: Surface = {
         </ToastProvider>
       </Wrapper>,
     );
+
     return sheetSurface(api.client, restorePhone);
   },
 };
@@ -72,6 +73,7 @@ export const CAPTURE: Surface = {
         ...overrides,
       },
     });
+
     return sheetSurface(app.client, restorePhone);
   },
 };
@@ -81,6 +83,7 @@ export const TICKET_SCREEN: Surface = {
   show: (overrides = {}, phone = true) => {
     const shown = renderTicket({ phone, client: overrides });
     const input = () => screen.getByLabelText('Add files to ticket');
+
     return {
       client: shown.client,
       input,
@@ -98,6 +101,7 @@ export const COMMENT_BOX: Surface = {
       client: { deleteAttachment: vi.fn().mockResolvedValue(undefined), ...overrides },
     });
     const input = () => screen.getByLabelText('Attach files to comment');
+
     return {
       client: shown.client,
       input,

@@ -44,6 +44,7 @@ function groupByActivity(attachments: readonly AttachmentRow[]): Map<string, Att
     if (!attachment.activityId) continue;
     groups.set(attachment.activityId, [...(groups.get(attachment.activityId) ?? []), attachment]);
   }
+
   return groups;
 }
 
@@ -53,6 +54,7 @@ export async function loadTicketDetail(db: Db, ref: TicketRef): Promise<TicketDe
   const attachments = await listTicketAttachments(db, ref.ticket.id);
   const byActivity = groupByActivity(attachments);
   const labelIds = await labelIdsOfTicket(db, ref.ticket.id);
+
   return {
     ticket: toTicket(scope.ticket, scope.project.key, labelIds),
     project: toProject(scope.project),
@@ -76,6 +78,7 @@ export function sortForBoard<T extends TicketRow>(
 ): T[] {
   const order = new Map(statuses.map((status, index) => [status.id, index]));
   const position = (ticket: T) => order.get(ticket.statusId) ?? statuses.length;
+
   return [...tickets].sort((a, b) => position(a) - position(b) || byRank(a, b));
 }
 
@@ -86,6 +89,7 @@ export async function getBoard(ctx: UserContext, projectKey: string): Promise<Pr
   const statuses = await listStatusRows(ctx.db, project.id);
   const tickets = await listTicketItemRows(ctx.db, readerOf(ctx), project.id);
   const labelIds = await labelIdsInProject(ctx.db, project.id);
+
   return {
     project: toProject(project),
     statuses: statuses.map(toStatus),
@@ -101,6 +105,7 @@ type StatusFields = Pick<Status, 'id' | 'name' | 'category'>;
 // Names are unique within a project, so across projects a name can match one status in each.
 function allowedStatusIds(statuses: readonly StatusFields[], query: ListTicketsQuery): string[] {
   const name = query.status ? query.status.trim().toLowerCase() : null;
+
   return statuses
     .filter((status) => name === null || status.name.toLowerCase() === name)
     .filter((status) => !query.category || status.category === query.category)
@@ -112,6 +117,7 @@ function labelFilter(labels: readonly Label[], query: ListTicketsQuery) {
   if (query.label === undefined) return () => true;
   const name = query.label.trim().toLowerCase();
   const ids = labels.filter((label) => label.name.toLowerCase() === name).map((label) => label.id);
+
   return (ticket: TicketListItem) => ids.some((id) => hasLabel(ticket, id));
 }
 
@@ -123,6 +129,7 @@ export async function listTickets(
   const board = await getBoard(ctx, projectKey);
   const allowed = new Set(allowedStatusIds(board.statuses, query));
   const labeled = labelFilter(board.labels ?? [], query);
+
   return board.tickets.filter(
     (ticket) =>
       allowed.has(ticket.statusId) && labeled(ticket) && matchesSearch(ticket, query.q ?? ''),
@@ -148,6 +155,7 @@ export async function listAllTickets(
     )
     .filter((ticket) => labeled(ticket) && matchesSearch(ticket, query.q ?? ''));
   const listed = new Set(tickets.map((ticket) => ticket.projectId));
+
   return {
     tickets,
     statuses: sortStatuses(statuses.filter((status) => listed.has(status.projectId))).map(toStatus),

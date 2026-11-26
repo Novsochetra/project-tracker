@@ -19,9 +19,11 @@ async function cli(argv: string[], tracker: TrackerApi = fakeClient({}), env: En
     stderr: (text) => stderr.push(text),
     connect: (config) => {
       configs.push(config);
+
       return tracker;
     },
   });
+
   return { code, stdout: stdout.join('\n'), stderr: stderr.join('\n'), configs };
 }
 
@@ -47,12 +49,15 @@ describe('tracker help', () => {
     for (const command of ['projects', 'statuses', 'tickets', 'show', 'create', 'update', 'move']) {
       expect(USAGE).toContain(`\n  ${command}`);
     }
+
     for (const command of ['comment', 'attach', 'claim', 'submit', 'review', 'help']) {
       expect(USAGE).toContain(`\n  ${command}`);
     }
+
     for (const flag of ['--url URL', '--as NAME', '--token TOKEN', '--json', '--version']) {
       expect(USAGE).toContain(flag);
     }
+
     expect(USAGE).toContain('\n  login [--url URL]\n');
     expect(USAGE).toContain('\n  logout [--url URL]\n');
     expect(USAGE).toContain('TRACKER_API_TOKEN');
@@ -208,6 +213,7 @@ describe('configuration', () => {
     store.read = () => {
       throw new Error('/home/dara/.config/project-tracker/config.json is not valid JSON.');
     };
+
     const stderr: string[] = [];
     const code = await runCli(['projects'], {
       env: {},

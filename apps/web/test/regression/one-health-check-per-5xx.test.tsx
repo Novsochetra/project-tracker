@@ -13,6 +13,7 @@ import { useTicketDrafts } from '../../src/features/ticket/drafts/useTicketDraft
 function Watchers() {
   useTicketDrafts(true);
   useReachability();
+
   return null;
 }
 

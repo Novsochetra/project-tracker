@@ -31,6 +31,7 @@ export function usePushSwitch(): PushSwitch {
     void readDevicePush().then((read) => {
       if (live) setDevice(read);
     });
+
     return () => {
       live = false;
     };

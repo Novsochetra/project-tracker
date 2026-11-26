@@ -23,6 +23,7 @@ export async function doubleTap(page: Page, target: Locator, touch: boolean): Pr
     await page.touchscreen.tap(x, y);
     return;
   }
+
   await page.mouse.click(x, y);
   await page.waitForTimeout(150);
   await page.mouse.down({ clickCount: 2 });

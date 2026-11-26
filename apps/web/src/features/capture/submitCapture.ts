@@ -35,6 +35,7 @@ function within(request: Promise<CreatedTicket>, ms: number | null): Promise<Set
   const late = new Promise<'late'>((resolve) => {
     timer = setTimeout(() => resolve('late'), ms);
   });
+
   return Promise.race([settle(request), late]).finally(() => clearTimeout(timer));
 }
 
@@ -44,6 +45,7 @@ function afterSettled(draft: CaptureDraft, settled: Settled, deps: SubmitDeps): 
   if (!isNetworkError(error)) return { kind: 'failed', message: errorMessage(error) };
   // Attachments only live on the server, so a capture with them can't wait on the phone.
   if (draft.attachmentIds.length > 0) return { kind: 'needsConnection' };
+
   return deps.save(draft.capture)
     ? { kind: 'saved' }
     : { kind: 'failed', message: NETWORK_ERROR_MESSAGE };
@@ -61,6 +63,7 @@ async function keepSending(
     untrack();
     return afterSettled(draft, settled, deps);
   }
+
   // Unmarked only once the result is recorded, so no tab sends the queued copy in between.
   void settle(request).then((settled) => {
     try {
@@ -69,6 +72,7 @@ async function keepSending(
       untrack();
     }
   });
+
   return { kind: 'saved' };
 }
 
@@ -81,5 +85,6 @@ export async function submitCapture(draft: CaptureDraft, deps: SubmitDeps): Prom
   const first = await within(request, draft.attachmentIds.length > 0 ? null : deps.timeoutMs);
   if (first === 'late') return keepSending(draft, request, deps, untrack);
   untrack();
+
   return afterSettled(draft, first, deps);
 }

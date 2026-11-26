@@ -27,6 +27,7 @@ function maxLength(schema: unknown): number | null {
   if (schema instanceof z.ZodOptional || schema instanceof z.ZodDefault) {
     return maxLength(schema.unwrap());
   }
+
   return schema instanceof z.ZodString ? schema.maxLength : null;
 }
 

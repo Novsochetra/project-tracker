@@ -47,6 +47,7 @@ describe.each(DIALECTS)('messages queued while Claude answers (%s)', (dialect) =
     });
     await next();
     clock.advance(1_000);
+
     return started.body.chat.id;
   }
 
@@ -57,6 +58,7 @@ describe.each(DIALECTS)('messages queued while Claude answers (%s)', (dialect) =
       headers: { ...headers, 'x-file-name': name },
       body: bytes,
     });
+
     return (await response.json()) as Attachment;
   };
 
@@ -177,6 +179,7 @@ describe.each(DIALECTS)('messages queued while Claude answers (%s)', (dialect) =
     for (let index = 0; index < CHAT_QUEUE_MAX; index += 1) {
       expect((await ask(chatId, `Question ${index}?`)).status).toBe(200);
     }
+
     const refused = await ask(chatId, 'One more?');
     expect(refused.status).toBe(409);
     expect(refused.body).toMatchObject({ error: { message: CHAT_QUEUE_FULL } });

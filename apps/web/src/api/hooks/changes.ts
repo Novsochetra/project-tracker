@@ -15,6 +15,7 @@ import type { TrackerMutation, TrackerQuery } from '../types';
 // changes arrive and when a tick or a verdict changes them.
 export function useTicketChanges(ticketKey: string): TrackerQuery<TicketChangesAnswer> {
   const client = useApi();
+
   return useQuery({
     queryKey: queryKeys.ticketChanges(ticketKey),
     queryFn: () => client.getTicketChanges(ticketKey),
@@ -30,6 +31,7 @@ function withViewed(answer: TicketChangesAnswer, input: ViewedFileInput): Ticket
   if (!answer.changes) return answer;
   const { [input.path]: _dropped, ...rest } = answer.changes.viewed;
   const viewed = input.viewed ? { ...rest, [input.path]: input.digest } : rest;
+
   return { changes: { ...answer.changes, viewed } };
 }
 
@@ -41,6 +43,7 @@ export interface ViewedVariables {
 export function useSetFileViewed(): TrackerMutation<void, ViewedVariables> {
   const client = useApi();
   const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: ({ ticketKey, input }: ViewedVariables) => client.setFileViewed(ticketKey, input),
     onMutate: ({ ticketKey, input }) =>
@@ -63,6 +66,7 @@ export interface VerdictVariables {
 export function useChangesVerdict(): TrackerMutation<TicketDetail, VerdictVariables> {
   const client = useApi();
   const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: ({ ticketKey, runId, verdict }: VerdictVariables) =>
       client.sendChangesVerdict(ticketKey, { runId, verdict }),

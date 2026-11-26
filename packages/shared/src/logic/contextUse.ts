@@ -30,6 +30,7 @@ function mainMessageOf(event: Json): Json | undefined {
   if (event.type !== 'assistant' || event.parent_tool_use_id || !isJson(event.message)) {
     return undefined;
   }
+
   return isSynthetic(event, event.message) ? undefined : event.message;
 }
 
@@ -50,11 +51,13 @@ function windowOf(modelUsage: unknown, model: string | undefined): number | unde
   const mine = entries.filter(({ key, entry }) => isModel(key, entry, model));
   const windows = (mine.length > 0 ? mine : entries).map(({ entry }) => count(entry.contextWindow));
   const widest = Math.max(0, ...windows);
+
   return widest > 0 ? widest : undefined;
 }
 
 function compactedTo(event: Json): number {
   const metadata = isJson(event.compact_metadata) ? event.compact_metadata : {};
+
   return count(metadata.post_tokens);
 }
 
@@ -66,11 +69,13 @@ export function readContext(reading: ContextReading, event: unknown): ContextRea
     const model = typeof message.model === 'string' ? message.model : reading.model;
     return { ...reading, used: promptTokens(message.usage), ...(model ? { model } : {}) };
   }
+
   if (isCompaction(event)) return { ...reading, used: compactedTo(event) };
   if (event.type === 'result') {
     const window = windowOf(event.modelUsage, reading.model);
     return window === undefined ? reading : { ...reading, window };
   }
+
   return reading;
 }
 
@@ -83,11 +88,13 @@ export const contextPercent = ({ used, window }: ContextUse): number =>
 
 export function contextLevel(percent: number): ContextLevel {
   if (percent >= CONTEXT_CRITICAL_PERCENT) return 'critical';
+
   return percent >= CONTEXT_FULL_PERCENT ? 'full' : 'ok';
 }
 
 // What a turn read and wrote: the result's usage covers Claude's main conversation for that turn.
 export function turnTokensOf(event: unknown): number | undefined {
   if (!isJson(event) || event.type !== 'result' || !isJson(event.usage)) return undefined;
+
   return promptTokens(event.usage) + count(event.usage.output_tokens);
 }

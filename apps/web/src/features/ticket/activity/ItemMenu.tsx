@@ -67,6 +67,7 @@ export function ItemMenu({ hidden = false, triggerRef, ...props }: ItemMenuProps
       </>
     );
   }
+
   return <ItemPopover {...props} {...state} trigger={!hidden && trigger} />;
 }
 
@@ -85,6 +86,7 @@ function ItemPopover({
     close();
     action();
   };
+
   return (
     <Popover
       open={open}
@@ -124,17 +126,20 @@ function ItemSheet({
     close();
     action();
   };
+
   // The sheet belongs to the card being deleted; removing the card first would cut its exit short.
   const deleteAfterExit = () => {
     close();
     setTimeout(onDelete, reducedMotion ? 0 : DURATION.sheetOut);
   };
+
   const actions: ActionSheetAction[] = confirming
     ? [{ label: 'Delete', tone: 'danger', bold: true, onSelect: deleteAfterExit }]
     : [
         ...(onEdit ? [{ label: `Edit ${noun}`, onSelect: run(onEdit) }] : []),
         { label: `Delete ${noun}`, tone: 'danger', onSelect: confirm },
       ];
+
   return (
     <ActionSheet
       open={open}

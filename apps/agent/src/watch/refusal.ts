@@ -10,12 +10,15 @@ const projectRefusal = ({ run }: RunJob, projectKey: string): string | undefined
     if (run.projectKey === projectKey) return undefined;
     return `This helper only answers about ${projectKey}, not ${run.projectKey}.`;
   }
+
   if (run.kind === 'batch') {
     if (run.projectKey === projectKey) return undefined;
     return `This helper only runs ${projectKey} tickets, not a ${run.projectKey} batch.`;
   }
+
   if (!run.ticketKey) return 'This ticket run has no ticket.';
   if (run.ticketKey.startsWith(`${projectKey}-`)) return undefined;
+
   return `This helper only runs ${projectKey} tickets, not ${run.ticketKey}.`;
 };
 
@@ -26,5 +29,6 @@ export function refusalOf(job: RunJob, { projectKey, kind }: Lane): string | und
   const lane = laneOf(job.run.kind, job.run.askOptions);
   if (lane !== kind)
     return `This helper's ${kind} lane does not take runs of the "${String(lane)}" lane.`;
+
   return projectRefusal(job, projectKey);
 }

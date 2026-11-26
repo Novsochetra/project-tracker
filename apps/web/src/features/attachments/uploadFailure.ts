@@ -17,5 +17,6 @@ export function uploadFailureReason(error: unknown): string {
   if (error instanceof ApiError && error.status === 408) return TOO_SLOW_MESSAGE;
   if (error instanceof ApiError && error.status === 413) return TOO_BIG_FOR_SERVER_MESSAGE;
   if (isBare5xx(error)) return NOT_SAVED_MESSAGE;
+
   return errorMessage(error);
 }

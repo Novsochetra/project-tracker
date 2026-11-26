@@ -27,10 +27,12 @@ vi.mock('../../src/lib/linkify', async () => {
   const actual = await vi.importActual<{ linkParts: (text: string) => LinkPart[] }>(
     '../../src/lib/linkify',
   );
+
   return {
     ...actual,
     linkParts: (text: string) => {
       if (text.includes(CRASH)) throw new Error('Link parser crashed');
+
       return actual.linkParts(text);
     },
   };
@@ -40,10 +42,12 @@ vi.mock('../../src/features/ticket/activity/reportSections', async () => {
   const actual = await vi.importActual<{ reportSections: (text: string) => ReportSections | null }>(
     '../../src/features/ticket/activity/reportSections',
   );
+
   return {
     ...actual,
     reportSections: (text: string) => {
       if (text.includes(CRASH)) throw new Error('Report reader crashed');
+
       return actual.reportSections(text);
     },
   };
@@ -106,6 +110,7 @@ function setup({ phone = false, statusId = STATUS.todo, activity }: SetupOptions
   });
   cleanups.push(rendered.restorePhone);
   expect(screen.queryByText('Something went wrong')).toBeNull();
+
   return rendered;
 }
 

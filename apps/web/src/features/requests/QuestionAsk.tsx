@@ -35,6 +35,7 @@ export function QuestionAsk({ questions, answer }: QuestionAskProps) {
   const sendReady = (event?: MouseEvent<HTMLElement>) => {
     if (ready) answer.send(ready, event);
   };
+
   return (
     <>
       <RequestHead icon={MessageCircleQuestion} text={QUESTION_HEAD} />
@@ -44,6 +45,7 @@ export function QuestionAsk({ questions, answer }: QuestionAskProps) {
           setPick(index, togglePick(question, pick, label));
           if (atOnce) answer.send(choiceAnswer(label), event);
         };
+
         return (
           <QuestionBlock
             key={`${index}:${question.question}`}

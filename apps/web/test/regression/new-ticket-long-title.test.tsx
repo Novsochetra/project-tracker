@@ -48,6 +48,7 @@ function openNewTicket() {
       </ToastProvider>
     </Wrapper>,
   );
+
   return { createTicket, user: userEvent.setup() };
 }
 
@@ -56,6 +57,7 @@ const titleField = () => screen.getByRole('textbox', { name: 'Ticket title' });
 function phoneFontSize(element: Element, cssModule: string): number {
   const style = phoneStyle(element, cssModule);
   const font = style.get('font');
+
   return pixels(style.get('font-size') ?? (font ? /(\d+(?:\.\d+)?px)/.exec(font)?.[1] : ''));
 }
 

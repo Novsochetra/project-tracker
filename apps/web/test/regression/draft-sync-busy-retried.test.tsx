@@ -9,6 +9,7 @@ import { keepDraft, storedDraft } from '../../src/lib/storedDrafts';
 
 function Drafts() {
   useTicketDrafts(true);
+
   return null;
 }
 
@@ -33,6 +34,7 @@ function renderDrafts() {
       </ToastProvider>
     </api.wrapper>,
   );
+
   return client;
 }
 

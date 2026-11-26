@@ -26,6 +26,7 @@ describe.each(DIALECTS)('project instructions (%s)', (dialect) => {
   const prompt = async (path: string) => (await person<PromptResult>('GET', path)).body.text;
   const askJob = async () => {
     await person<ChatDetail>('POST', '/api/projects/BLOG/chats', { runnerId: runner, text: 'Q' });
+
     return (await helper<RunJob | null>('POST', `/api/runners/${runner}/next?kind=ask`)).body;
   };
 

@@ -32,6 +32,7 @@ function renderGhost() {
   render(<DragGhost drag={drag} ghostRef={() => undefined} />);
   const title = screen.getByText(ticket.title);
   const face = title.parentElement!;
+
   return {
     face,
     title,
@@ -47,6 +48,7 @@ function renderRowButton() {
   render(
     <TicketRowContent ticket={ticket} status={status} dragged={false} callbacks={callbacks} />,
   );
+
   return screen.getByRole('button', { name: /^MOB-18/ });
 }
 

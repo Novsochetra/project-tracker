@@ -6,6 +6,7 @@ function visited(): SessionHistory {
   history.record('a', '/', 'POP');
   history.record('b', '/p/PT', 'PUSH');
   history.record('c', '/p/PT/1', 'PUSH');
+
   return history;
 }
 

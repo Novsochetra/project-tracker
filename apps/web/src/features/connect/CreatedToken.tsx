@@ -27,6 +27,7 @@ export function CreatedToken({ created, onDone }: CreatedTokenProps) {
       behavior: prefersReducedMotionNow() ? 'instant' : 'smooth',
     });
   }, []);
+
   return (
     <div
       ref={cardRef}

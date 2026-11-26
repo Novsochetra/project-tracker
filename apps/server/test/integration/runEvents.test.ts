@@ -15,6 +15,7 @@ async function readUntil(reader: Reader, pattern: RegExp): Promise<string> {
     if (chunk.done) throw new Error(`Stream ended before ${String(pattern)}: ${text}`);
     text += decoder.decode(chunk.value, { stream: true });
   }
+
   return text;
 }
 
@@ -40,6 +41,7 @@ describe.each(DIALECTS)('run events (%s)', (dialect) => {
     const reader = response.body!.getReader();
     readers.push(reader);
     await readUntil(reader, /: connected\n\n/);
+
     return reader;
   }
 
@@ -52,6 +54,7 @@ describe.each(DIALECTS)('run events (%s)', (dialect) => {
     await person('POST', '/api/projects', { name: 'Web', key: 'WEB' });
     await person('POST', '/api/projects/WEB/tickets', { title: 'Home' });
     await helper('PUT', `/api/runners/${runner}`, { name: 'B Mac', projectKeys: ['WEB'] });
+
     return (
       await person<Run>('POST', '/api/tickets/WEB-1/runs', { runnerId: runner, prompt: 'Go' })
     ).body;

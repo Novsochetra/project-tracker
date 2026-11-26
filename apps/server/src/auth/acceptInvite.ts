@@ -41,5 +41,6 @@ export async function acceptInvite(
     if (isUniqueViolation(error)) throw conflict(EMAIL_TAKEN);
     throw error;
   }
+
   return user;
 }

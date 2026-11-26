@@ -31,6 +31,7 @@ interface StorageUnderTest {
 
 function disk(): Promise<StorageUnderTest> {
   const dir = mkdtempSync(join(tmpdir(), 'tracker-images-'));
+
   return Promise.resolve({
     storage: createDiskStorage(dir),
     close: () => Promise.resolve(rmSync(dir, { recursive: true, force: true })),
@@ -39,6 +40,7 @@ function disk(): Promise<StorageUnderTest> {
 
 async function s3(): Promise<StorageUnderTest> {
   const fake = await startFakeS3();
+
   return {
     storage: createS3Storage({ client: fake.client(), bucket: fake.bucket }),
     close: () => fake.close(),
@@ -75,6 +77,7 @@ describe.each(STORAGES)('image uploads stored on %s', (_kind, open) => {
     const { path, init } = fileUpload({ bytes, name, type });
     const res = await app.request(path, init);
     expect(res.status).toBe(201);
+
     return (await res.json()) as Attachment;
   }
 

@@ -37,6 +37,7 @@ describe.each(DIALECTS)('push when Claude waits on the person (%s)', (dialect) =
   const subscribe = async (as: Caller) => {
     const device = newDevice();
     expect((await as('PUT', '/api/push/subscription', device.subscription)).status).toBe(204);
+
     return device;
   };
 
@@ -52,11 +53,13 @@ describe.each(DIALECTS)('push when Claude waits on the person (%s)', (dialect) =
       kind === 'permission'
         ? { runnerId: runner, kind, label, labelCut: false, questions: null }
         : { runnerId: runner, kind, label, labelCut: false, questions };
+
     return agent<RunRequest>('POST', `/api/runs/${runId}/requests`, input);
   };
 
   async function ticketRun(): Promise<string> {
     await person('POST', '/api/tickets/MOB-12/runs', { runnerId: runner, prompt: 'Go' });
+
     return (await agent<RunJob>('POST', `/api/runners/${runner}/next?kind=ticket`)).body.run.id;
   }
 
@@ -73,6 +76,7 @@ describe.each(DIALECTS)('push when Claude waits on the person (%s)', (dialect) =
     for (let num = 1; num <= 12; num += 1) {
       await person('POST', '/api/projects/MOB/tickets', { title: `Ticket ${num}` });
     }
+
     await agent('PUT', `/api/runners/${runner}`, helperName('Mac'));
     phone = await subscribe(person);
     samPhone = await subscribe(samPerson);

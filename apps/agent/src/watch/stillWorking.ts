@@ -5,6 +5,7 @@ export function spanOf(ms: number): string {
   const minutes = Math.floor(seconds / 60);
   const rest = seconds % 60;
   if (minutes === 0) return `${rest}s`;
+
   return rest === 0 ? `${minutes}m` : `${minutes}m ${rest}s`;
 }
 
@@ -24,5 +25,6 @@ export function showStillWorking(
     log(`Still working on ${ticketKey}… (${spanOf(Date.now() - started)})`);
   }, every);
   timer.unref();
+
   return () => clearInterval(timer);
 }

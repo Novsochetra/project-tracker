@@ -17,6 +17,7 @@ export function Composer({ ticketKey, ref }: ComposerProps) {
   const { attachments, files } = composer;
   const drop = useFileDrop(files.add);
   const inputRef = useRef<HTMLInputElement>(null);
+
   return (
     <form
       ref={ref}

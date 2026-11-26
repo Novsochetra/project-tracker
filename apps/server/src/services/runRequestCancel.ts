@@ -20,8 +20,10 @@ export async function cancelRunRequest(
   if (run.runnerId !== runnerId) {
     throw forbidden('Only the helper that took this run ends its requests.');
   }
+
   const cancelled = await markRequestCancelled(ctx.db, row.id, ctx.now());
   const after = (await requireRunRequest(ctx, scope, id)).row;
   if (cancelled) notifyRunRequest(ctx, scope, run, after);
+
   return toRunRequest(after);
 }

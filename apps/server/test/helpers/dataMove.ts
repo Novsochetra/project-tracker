@@ -70,9 +70,11 @@ async function laterColumns(db: Db, migration: string) {
   if (migration >= '0002') {
     await sql`update tickets set client_id = 'capture-1' where id = 't1'`.execute(raw);
   }
+
   if (migration >= '0003') {
     await sql`update attachments set position = 2 where id = 'f-photo'`.execute(raw);
   }
+
   if (migration >= '0023') {
     await sql`insert into labels (id, project_id, name, color, template, instructions, position,
       created_at) values ('l-bug', 'p1', 'Bug', '#B42318', '## Steps', 'Reproduce it first.', 0,
@@ -101,10 +103,12 @@ export async function writeMoveSource(migration = '0003_attachment_position'): P
   } finally {
     await db.destroy();
   }
+
   await mkdir(source.uploads);
   await writeFile(join(source.uploads, 'f-photo.jpg'), files.photo);
   await writeFile(join(source.uploads, 'f-notes.txt'), files.notes);
   await writeFile(join(source.uploads, 'f-tiny.png'), files.tiny);
+
   return source;
 }
 
@@ -118,6 +122,7 @@ export interface MoveTarget {
 const tempDir = async (prefix: string) => {
   const dir = await mkdtemp(join(tmpdir(), prefix));
   onTestFinished(() => rm(dir, { recursive: true, force: true }));
+
   return dir;
 };
 
@@ -139,6 +144,7 @@ export async function openMoveTarget(
       );
     return { db, storage, stored };
   }
+
   const dir = await tempDir('move-target-');
   const stored = async () =>
     new Map(
@@ -146,6 +152,7 @@ export async function openMoveTarget(
         (await readdir(dir)).map(async (key) => [key, await readFile(join(dir, key))] as const),
       ),
     );
+
   return { db, storage: createDiskStorage(dir), stored };
 }
 
@@ -163,6 +170,7 @@ export async function moveData(
       say: (line) => lines.push(line),
     },
   );
+
   return { ok, lines };
 }
 
@@ -172,6 +180,7 @@ export async function tableCounts(db: Db): Promise<Record<string, number>> {
     const query = sql<{ n: number | string }>`select count(*) as n from ${sql.table(table)}`;
     counts[table] = Number((await query.execute(db)).rows[0]!.n);
   }
+
   return counts;
 }
 

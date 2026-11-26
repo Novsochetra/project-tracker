@@ -30,15 +30,18 @@ export function ChatOptionsMenu({
     close();
     triggerRef.current?.focus();
   };
+
   const toggle = () => {
     setConfirming(false);
     remove.reset();
     setOpen(!open);
   };
+
   const deleted = () => {
     close();
     onDeleted?.();
   };
+
   return (
     <Popover
       open={open}

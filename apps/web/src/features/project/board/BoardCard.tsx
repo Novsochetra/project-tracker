@@ -24,6 +24,7 @@ export interface BoardCardProps {
 export function BoardCard({ ticket, status, dragged, dropEdge, callbacks }: BoardCardProps) {
   const flashing = useIsFlashing(ticket.key);
   const opening = useIsOpeningTicket(ticket);
+
   return (
     <div className={styles.card} {...{ [DROP_ROW_ATTRIBUTE]: ticket.id }}>
       <DragHandle

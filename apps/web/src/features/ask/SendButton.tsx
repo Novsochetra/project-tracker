@@ -41,6 +41,7 @@ export function SendButton({ stoppableRun, hasDraft, canSend, onSend }: SendButt
           onClick: (event: MouseEvent<HTMLButtonElement>) => stop(event, stoppableRun),
         }
       : { icon: ArrowUp, label: SEND_LABEL, disabled: !canSend, onClick: onSend };
+
   return (
     <Button
       variant="primary"

@@ -24,7 +24,9 @@ export function schemaVerdict(states: readonly MigrationState[], tables: number)
         'database. Check DATABASE_URL.',
     };
   }
+
   if (pending.length === 0) return { migrate: [] };
+
   return {
     problem:
       `The target is behind this build: it lacks ${pending.join(', ')}. Deploy this same commit ` +
@@ -48,5 +50,6 @@ export async function prepareTargetSchema(
   } else {
     say(`Migrated the empty target: ${(await migrateToLatest(db)).join(', ')}.`);
   }
+
   return [];
 }

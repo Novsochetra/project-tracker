@@ -15,9 +15,11 @@ export function lazyWithPreload<P extends object>(
   const preload = () =>
     (loading ??= load().then((component) => {
       loaded = component;
+
       return { default: component };
     }));
   const Lazy = lazy(preload);
   const Part = (props: P) => createElement(loaded ?? Lazy, props);
+
   return Object.assign(Part, { preload, isLoaded: () => loaded !== null });
 }

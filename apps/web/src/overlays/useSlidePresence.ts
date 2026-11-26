@@ -14,6 +14,7 @@ export function useBottomPanelValues(): BottomPanelValues {
   const scrim = useTransform<number, number>([y, travel], (values) =>
     scrimOpacity(values[0] ?? 0, values[1] ?? 0),
   );
+
   return useMemo(() => ({ y, travel, opacity, scrim }), [y, travel, opacity, scrim]);
 }
 
@@ -39,9 +40,11 @@ export function useSlidePresence(input: SlidePresenceInput): void {
       enteredRef.current = true;
       return stop;
     }
+
     const velocity = releaseVelocityRef.current;
     releaseVelocityRef.current = 0;
     values.travel.set(travel);
+
     return slideOut(values, velocity, reducedMotion, onExited);
   }, [enabled, open, reducedMotion, values, measureTravel, releaseVelocityRef, onExited]);
 }

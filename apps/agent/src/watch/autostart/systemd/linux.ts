@@ -53,11 +53,13 @@ export function linuxAutostart(setup: LinuxSetup = defaults()): Autostart {
     runningPid: (label) => unitState(setup, label).pid,
     statusLines: (label) => {
       const { pid, lastExit } = unitState(setup, label);
+
       return [...runningLines(pid, lastExit, logCommand(label)), bootLine(setup)];
     },
     install: (job) => {
       installUnit(setup, job);
       const atBoot = turnOnLinger(setup);
+
       return {
         starts: `it starts when ${atBoot ? 'this computer starts' : 'you log in'}, and again if it crashes`,
         notes: [

@@ -30,6 +30,7 @@ describe('live stream after access ends', () => {
     expect(res.status).toBe(200);
     const reader = res.body!.getReader();
     await readFor(reader, 20);
+
     return reader;
   }
 

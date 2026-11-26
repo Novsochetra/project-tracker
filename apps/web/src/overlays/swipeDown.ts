@@ -47,12 +47,14 @@ export function createSwipeDown(read: () => SwipeDownContext): SwipeDown {
         pointerId = null;
         return;
       }
+
       dismissing = true;
       const target = event.currentTarget;
       if (target instanceof Element && typeof target.setPointerCapture === 'function') {
         target.setPointerCapture(event.pointerId);
       }
     }
+
     moveDismiss(read(), dx, dy);
   };
 

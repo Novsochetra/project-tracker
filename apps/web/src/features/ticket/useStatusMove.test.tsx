@@ -32,6 +32,7 @@ function setup(item: TicketListItem, board: ProjectBoard) {
   });
   rendered.queryClient.setQueryData(queryKeys.board('MOB'), board);
   cleanups.push(rendered.restorePhone);
+
   return server;
 }
 

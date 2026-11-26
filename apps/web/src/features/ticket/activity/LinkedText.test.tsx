@@ -25,6 +25,7 @@ function setup(activity: Activity[], statusId: string = STATUS.todo, description
   const item = listItem(1, statusId, 0, { description });
   const rendered = renderTicket({ detail: makeTicketDetail(item, { activity }) });
   cleanups.push(rendered.restorePhone);
+
   return rendered;
 }
 
@@ -45,6 +46,7 @@ describe('links in activity', () => {
       expect(link).toHaveAttribute('target', '_blank');
       expect(link).toHaveAttribute('rel', 'noopener noreferrer');
     }
+
     expect(within(log()).getByRole('link', { name: PR })).toHaveTextContent(PR);
     expect(log()).toHaveTextContent(`Opened a PR: ${PR} - preview build at ${BUILD}`);
   });

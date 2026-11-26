@@ -29,6 +29,7 @@ export function CommentCard({ item, edit, now, actions, rise }: CommentCardProps
     </>
   );
   const line = commentLine(item.source);
+
   return (
     <ActivityCard
       avatar={<ActorAvatar actor={item.actor} />}

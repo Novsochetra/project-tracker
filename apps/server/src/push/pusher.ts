@@ -29,8 +29,10 @@ export function createPusher(db: Db, now: Clock, options: PushOptions): Pusher {
   const targetsOf = async (userId: UserScope, message: PushMessage) => {
     const chatId = chatOfTag(message.tag);
     const all = await listUserSubscriptions(db, userId);
+
     return all.filter((target) => !viewers.shows(target.sessionId, chatId));
   };
+
   let loading: Promise<Sender> | null = null;
   // Loaded once; a failed load is tried again next time instead of failing every push after it.
   const sender = () => {
@@ -38,8 +40,10 @@ export function createPusher(db: Db, now: Clock, options: PushOptions): Pusher {
       loading = null;
       throw error;
     });
+
     return loading;
   };
+
   return {
     publicKey: async () => (await sender()).publicKey,
     send: async (userId, message) => {

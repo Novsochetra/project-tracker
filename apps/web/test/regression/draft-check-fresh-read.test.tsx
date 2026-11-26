@@ -50,15 +50,19 @@ function slowTracker() {
       });
       if (saved) return saved;
     }
+
     if (request.method === 'PATCH') {
       writes.push(`${request.method} ${url.pathname}`);
       const input = (await request.json()) as UpdateTicketInput;
       detail = { ...detail, ticket: { ...detail.ticket, ...input } };
       return Response.json(detail.ticket);
     }
+
     return Response.json(detail);
   };
+
   const client = new TrackerClient({ baseUrl: ORIGIN, fetch });
+
   return {
     client: { getTicket: client.getTicket, updateTicket: client.updateTicket },
     writes,
@@ -73,6 +77,7 @@ function open(tracker: ReturnType<typeof slowTracker>, closed = false) {
     ...(closed ? { children: <p>Project screen</p> } : {}),
   });
   cleanups.push(rendered.restorePhone);
+
   return rendered;
 }
 

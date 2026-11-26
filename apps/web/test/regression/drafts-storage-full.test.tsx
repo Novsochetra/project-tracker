@@ -27,6 +27,7 @@ function fillStorage() {
     if (value.length > (this.getItem(key)?.length ?? 0)) {
       throw new DOMException('The quota has been exceeded.', 'QuotaExceededError');
     }
+
     setItem.call(this, key, value);
   });
 }
@@ -34,6 +35,7 @@ function fillStorage() {
 // A page of its own: a reload takes the page's memory with it, and the stores read storage again.
 async function openPage() {
   vi.resetModules();
+
   return {
     drafts: await import('../../src/lib/storedDrafts'),
     sheets: await import('../../src/lib/sheetDrafts'),
@@ -64,8 +66,10 @@ it('says so when typed text can only be kept while the page stays open', async (
   const api = setupApi();
   function Drafts() {
     useTicketDrafts(true);
+
     return null;
   }
+
   render(
     <api.wrapper>
       <ToastProvider>

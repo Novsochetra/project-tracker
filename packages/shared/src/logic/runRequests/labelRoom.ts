@@ -17,5 +17,6 @@ export function linesWithin<T>(items: readonly T[], linesOf: (item: T) => string
       length += line.length + 1;
     }
   }
+
   return lines;
 }

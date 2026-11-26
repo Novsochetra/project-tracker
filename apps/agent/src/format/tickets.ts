@@ -23,6 +23,7 @@ export function formatTicketLine(
   if (names) parts.push(`labels: ${names}`);
   if (ticket.assignee) parts.push(`@${ticket.assignee}`);
   if (ticket.due) parts.push(`due ${ticket.due}`);
+
   return parts.join(SEP);
 }
 
@@ -36,6 +37,7 @@ export function formatTicketList(
   labels: readonly Label[] = [],
 ): string {
   if (tickets.length === 0) return 'No tickets found.';
+
   return tickets
     .map((ticket) => formatTicketLine(ticket, statusNameOf(statuses, ticket.statusId), labels))
     .join('\n');

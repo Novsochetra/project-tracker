@@ -8,5 +8,6 @@ export interface CaptureFiles extends AttachmentList {
 
 export function useCaptureFiles(): CaptureFiles {
   const [items, setItems] = useState<Attachment[]>([]);
+
   return { ...useAttachmentList(setItems, { owner: 'ticket', attached: items.length }), items };
 }

@@ -26,16 +26,19 @@ export function chatRoute(
   ticketNum: number | undefined,
 ): Route {
   const route: Route = { name: 'chat', key: projectKey, chatId };
+
   return ticketNum === undefined ? route : { ...route, ticketNum };
 }
 
 export function ticketRoute(ticketKey: string): Route | null {
   const parsed = parseTicketKey(ticketKey);
+
   return parsed ? { name: 'ticket', key: parsed.projectKey, num: parsed.num } : null;
 }
 
 export function newTicketChatRoute(ticketKey: string): Route | null {
   const parsed = parseTicketKey(ticketKey);
+
   return parsed && { name: 'chat', key: parsed.projectKey, chatId: null, ticketNum: parsed.num };
 }
 

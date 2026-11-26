@@ -7,6 +7,7 @@ const sameKey = (a: unknown, b: string): boolean =>
 const movesAway = (ticket: unknown, ticketKey: string, statusId: string): boolean => {
   if (!isEntry(ticket)) return false;
   const { key, statusId: now } = ticket as Partial<TicketListItem>;
+
   return sameKey(key, ticketKey) && now !== statusId;
 };
 
@@ -20,6 +21,7 @@ export function withoutMovedTicket(
 ): TicketsAcrossProjects {
   if (statusId === undefined || !isEntry(list) || !isList(list.tickets)) return list;
   const tickets = list.tickets.filter((ticket) => !movesAway(ticket, ticketKey, statusId));
+
   return tickets.length === list.tickets.length ? list : { ...list, tickets };
 }
 

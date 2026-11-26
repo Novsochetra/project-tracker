@@ -28,6 +28,7 @@ export const reviewTicket = defineTool({
   async handler(client, { ticket, ...review }) {
     const detail = await client.reviewTicket(ticket, review);
     const verdictText = formatVerdict(review);
+
     return {
       text: `Reviewed ${detail.ticket.key}: ${verdictText}. It is now in ${detail.status.name}.`,
       data: detail,

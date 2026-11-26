@@ -27,6 +27,7 @@ export function EditProjectSheet({
       form.setError(NAME_REQUIRED);
       return;
     }
+
     if (update.isPending) return;
     const input = updateProjectInput(form.values);
     update.mutate(
@@ -40,6 +41,7 @@ export function EditProjectSheet({
       },
     );
   };
+
   return (
     <ProjectFormSheet
       mode="edit"

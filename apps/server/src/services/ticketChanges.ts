@@ -24,6 +24,7 @@ const differs = <T>(next: T | undefined, current: T): next is T =>
 
 function priorityChange(ticket: TicketRow, priority: Priority | undefined): PlannedChange {
   if (!differs(priority, ticket.priority)) return NO_CHANGE;
+
   return {
     changes: { priority },
     entries: [eventEntry(`set priority to ${PRIORITY_LABELS[priority]}`)],
@@ -34,12 +35,14 @@ function assigneeChange(ticket: TicketRow, raw: string | undefined): PlannedChan
   const assignee = raw?.trim();
   if (!differs(assignee, ticket.assignee)) return NO_CHANGE;
   const text = assignee ? `assigned the ticket to ${assignee}` : 'removed the assignee';
+
   return { changes: { assignee }, entries: [eventEntry(text)] };
 }
 
 function dueChange(ticket: TicketRow, due: string | undefined, today: Date): PlannedChange {
   if (!differs(due, ticket.due)) return NO_CHANGE;
   const text = due ? `set the due date to ${formatShortDay(due, today)}` : 'removed the due date';
+
   return { changes: { due }, entries: [eventEntry(text)] };
 }
 
@@ -47,6 +50,7 @@ function deviceChange(ticket: TicketRow, needsDevice: boolean | undefined): Plan
   const next = needsDevice === undefined ? undefined : Number(needsDevice);
   if (!differs(next, ticket.needsDevice)) return NO_CHANGE;
   const text = needsDevice ? 'marked the ticket as needing a device' : 'cleared the device mark';
+
   return { changes: { needsDevice: next }, entries: [eventEntry(text)] };
 }
 
@@ -54,6 +58,7 @@ function textChanges(ticket: TicketRow, input: FieldInput): TicketChanges {
   const changes: TicketChanges = {};
   if (differs(input.title, ticket.title)) changes.title = input.title;
   if (differs(input.description, ticket.description)) changes.description = input.description;
+
   return changes;
 }
 

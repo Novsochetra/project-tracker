@@ -19,6 +19,7 @@ const GIT_ENV = { GIT_TERMINAL_PROMPT: '0', GIT_PAGER: 'cat', GIT_OPTIONAL_LOCKS
 
 export function gitOutput(cwd: string, args: readonly string[], options: GitOptions) {
   const { maxChars, signal, env = {} } = options;
+
   return new Promise<GitOutput>((resolve, reject) => {
     const child = spawn('git', [...args], {
       cwd,

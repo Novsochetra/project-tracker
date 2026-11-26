@@ -9,6 +9,7 @@ export function useRevealPressed(trackRef: RefObject<HTMLElement | null>, value:
     if (track && pressed) {
       revealTab(track, pressed, shownRef.current ? tabScrollBehavior() : 'instant');
     }
+
     shownRef.current = true;
   }, [trackRef, value]);
 }

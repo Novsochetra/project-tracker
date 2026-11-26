@@ -170,6 +170,7 @@ describe('what the web app sends as it is', () => {
       .withExif(CAMERA_EXIF)
       .toBuffer();
     const at = png.indexOf('eXIf') - 4;
+
     return png.subarray(at, at + 12 + png.readUInt32BE(at));
   }
 

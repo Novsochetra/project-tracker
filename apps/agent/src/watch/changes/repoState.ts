@@ -10,6 +10,7 @@ const GH_CHECK_MS = 10_000;
 async function line(cwd: string, args: readonly string[], signal: AbortSignal) {
   const { text, code } = await gitOutput(cwd, args, { maxChars: SMALL, signal });
   const value = text.trim();
+
   return code === 0 && value ? value : null;
 }
 
@@ -40,6 +41,7 @@ export async function defaultBranch(
 ): Promise<string | null> {
   const remote = ghIsReady ? await ghDefault(cwd, signal) : null;
   if (remote) return remote;
+
   return (await line(cwd, ORIGIN_HEAD, signal))?.replace(/^origin\//, '') ?? null;
 }
 

@@ -10,6 +10,7 @@ export function InviteRow({ invite }: { invite: Invite }) {
   const toast = useToast();
   const cancel = () =>
     revoke.mutate(invite.id, { onSuccess: () => toast.show('Invite cancelled') });
+
   return (
     <li className={styles.row}>
       <span className={styles.rowText}>

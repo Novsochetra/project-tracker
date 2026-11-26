@@ -31,9 +31,11 @@ export function measureUpload(
           if (limits.expectedBytes !== null && size !== limits.expectedBytes) {
             throw limits.incomplete();
           }
+
           controller.close();
           return;
         }
+
         if (size + value.byteLength > limits.maxBytes) throw limits.tooLarge();
         size += value.byteLength;
         controller.enqueue(value);
@@ -42,6 +44,7 @@ export function measureUpload(
     },
     { highWaterMark: 0 },
   );
+
   return { body, size: () => size };
 }
 
@@ -49,5 +52,6 @@ export function measureUpload(
 export async function readWhole(body: ReadableStream<Uint8Array>): Promise<Uint8Array> {
   const chunks: Uint8Array[] = [];
   for await (const chunk of body) chunks.push(chunk);
+
   return Buffer.concat(chunks);
 }

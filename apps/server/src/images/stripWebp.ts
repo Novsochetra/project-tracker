@@ -22,6 +22,7 @@ const typeOf = (chunk: Buffer) => chunk.toString('latin1', 0, 4);
 function isKept(type: string, chunk: Buffer): boolean {
   if (type === 'VP8X') return true;
   if (type === 'ICCP') return isWellFormedIccProfile(chunk.subarray(8, 8 + chunk.readUInt32LE(4)));
+
   return PICTURE.has(type);
 }
 
@@ -29,6 +30,7 @@ function isKept(type: string, chunk: Buffer): boolean {
 function withoutDroppedFlags(header: Buffer, icc: boolean): Buffer {
   const copy = Buffer.from(header);
   copy[8] = copy[8]! & ~(EXIF_FLAG | XMP_FLAG | (icc ? 0 : ICC_FLAG));
+
   return copy;
 }
 
@@ -46,6 +48,7 @@ function walk(buffer: Buffer): Walk {
     found.whole ||= IMAGE_DATA.has(type);
     at = end;
   }
+
   return found;
 }
 
@@ -63,5 +66,6 @@ export function stripWebp(bytes: Uint8Array): Uint8Array | null {
   header.write('RIFF', 0, 'latin1');
   header.writeUInt32LE(body.length + 4, 4);
   header.write('WEBP', 8, 'latin1');
+
   return Buffer.concat([header, body]);
 }

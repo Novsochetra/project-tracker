@@ -24,10 +24,12 @@ export function readyItems(
   const { tickets, statuses } = list ?? NOTHING_READY;
   const byId = new Map(projects.map((project) => [project.id, project]));
   const known = readableEntries(statuses);
+
   return readableEntries(tickets).flatMap((ticket) => {
     const project = byId.get(ticket.projectId);
     if (!project) return [];
     const own = known.filter((status) => status.projectId === project.id);
+
     return [
       {
         ticket,
@@ -45,11 +47,13 @@ export function readyColors(items: readonly ReadyItem[]): ReadonlyMap<string, st
   for (const { project, statusColor } of items) {
     if (statusColor && !colors.has(project.id)) colors.set(project.id, statusColor);
   }
+
   return colors;
 }
 
 export function readyCounts(items: readonly ReadyItem[]): ReadonlyMap<string, number> {
   const counts = new Map<string, number>();
   for (const { project } of items) counts.set(project.id, (counts.get(project.id) ?? 0) + 1);
+
   return counts;
 }

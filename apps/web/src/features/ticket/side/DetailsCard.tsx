@@ -14,6 +14,7 @@ export function DetailsCard({ detail }: { detail: TicketDetail }) {
   const { assignee } = fields;
   const labels = detail.labels ?? [];
   const noteId = useId();
+
   return (
     <div className={styles.section}>
       <span className={styles.label}>Details</span>

@@ -43,8 +43,10 @@ function jobOf(row: ChatGitActionRow, files: ChatChangedFile[]): GitActionJob {
     const { title } = JSON.parse(row.input) as { title: string };
     return { ...base, kind: 'pull_request', title, keep: files };
   }
+
   const input = JSON.parse(row.input) as CommitInput;
   const taken = new Set(input.paths);
+
   return { ...base, kind: 'commit', ...input, keep: files.filter((f) => !taken.has(f.path)) };
 }
 
@@ -63,5 +65,6 @@ export async function takeGitAction(
   if (!next || !(await markGitActionRunning(ctx.db, next.id))) return null;
   const changes = await findChatChanges(ctx.db, next.chatId);
   await tell(ctx, scope, { ...next, status: 'running' });
+
   return jobOf(next, changes ? filesOf(changes) : []);
 }

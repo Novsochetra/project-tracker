@@ -12,12 +12,14 @@ afterEach(() => {
 function watch() {
   const drop = vi.fn();
   stop = watchMovingOn(drop);
+
   return drop;
 }
 
 const field = () => {
   const input = document.createElement('input');
   document.body.append(input);
+
   return input;
 };
 

@@ -33,6 +33,7 @@ function open() {
   );
   const rendered = renderTicket({ detail: server.detail, client: server.client });
   cleanups.push(rendered.restorePhone);
+
   return server;
 }
 
@@ -41,6 +42,7 @@ type Saved = ReturnType<FakeTicketServer['client']['updateComment']>;
 // Like the tracker: a save typed over other text than the comment has now is refused.
 function refusesStale(server: FakeTicketServer, save: () => Saved, expected?: { text: string }) {
   if (expected && expected.text !== server.detail.activity[0]?.text) return Promise.reject(STALE);
+
   return save();
 }
 
@@ -91,10 +93,12 @@ it('sends a save again when it was refused only because the edit’s earlier sav
   server.client.updateComment
     .mockImplementationOnce((id, input) => {
       firstLanded = release.promise.then(() => plain(id, input));
+
       return firstLanded;
     })
     .mockImplementationOnce(async (id, input, expected?: { text: string }) => {
       await firstLanded;
+
       return refusesStale(server, () => plain(id, input), expected);
     });
   await saveTwice();

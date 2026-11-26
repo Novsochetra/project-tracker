@@ -10,6 +10,7 @@ import { useTapCatcher } from './useTapCatcher';
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [store] = useState(createToastStore);
   useEffect(() => () => store.dispose(), [store]);
+
   return (
     <ToastContext.Provider value={store}>
       {children}
@@ -29,7 +30,9 @@ function useUndoShortcut(store: ToastStore, toast: ToastMessage | null): void {
       event.preventDefault();
       store.undo(id);
     };
+
     window.addEventListener('keydown', onKeyDown);
+
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [store, id]);
 }
@@ -38,6 +41,7 @@ function ToastViewport({ store }: { store: ToastStore }) {
   const { toast, raised, shielded } = useSyncExternalStore(store.subscribe, store.getSnapshot);
   useUndoShortcut(store, toast);
   const catchTaps = useTapCatcher(shielded);
+
   return (
     <div
       ref={catchTaps}

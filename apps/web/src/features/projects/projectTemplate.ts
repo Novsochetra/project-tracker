@@ -18,6 +18,7 @@ export function withTemplate(
   const typed = values.instructions.trim();
   const untouched = typed === '' || typed === PROJECT_TEMPLATES[values.template].instructions;
   const instructions = untouched ? PROJECT_TEMPLATES[template].instructions : values.instructions;
+
   return { ...values, template, instructions };
 }
 

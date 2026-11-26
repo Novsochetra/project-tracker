@@ -15,6 +15,7 @@ const sidewaysBody = (): string => {
     .replace(/\/\*[\s\S]*?\*\//g, '')
     .replace(/\s+/g, ' ');
   const at = css.indexOf(`@media ${SIDEWAYS_QUERY} {`);
+
   return at === -1 ? '' : css.slice(at);
 };
 

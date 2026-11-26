@@ -180,6 +180,7 @@ describe('reportMayMove', () => {
       expect(reportMayMove('reviewed', to)).toBe(false);
       expect(reportMayMove('done', to)).toBe(false);
     }
+
     expect(reportMayMove('done', 'reviewed')).toBe(false);
   });
 

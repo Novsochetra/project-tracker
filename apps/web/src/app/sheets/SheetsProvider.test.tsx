@@ -18,6 +18,7 @@ afterEach(() => {
 
 function Opener() {
   const sheets = useSheets();
+
   return (
     <>
       <button type="button" onClick={() => sheets.open({ type: 'newProject' })}>

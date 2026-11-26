@@ -10,5 +10,6 @@ export const TODO_STATUS_TEXT: Readonly<Record<RunTodoStatus, string>> = {
 
 export function todoSummary(todos: readonly RunTodo[]): string {
   const done = todos.filter(({ status }) => status === 'completed').length;
+
   return `To-do list, ${done} of ${todos.length} done`;
 }

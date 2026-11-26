@@ -6,6 +6,7 @@ const ORIGIN = 'http://localhost:5173';
 
 function matches(path: string, headers: Record<string, string> = {}, sameOrigin = true) {
   const request = new Request(`${ORIGIN}${path}`, { headers });
+
   return isSavedApiRead({ url: new URL(request.url), request, sameOrigin });
 }
 

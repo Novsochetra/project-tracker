@@ -15,6 +15,7 @@ export function UploadProgress({ progress, label, overMedia }: UploadProgressPro
   const percent = Math.round(progress * 100);
   const known = percent > 0;
   const shown = known ? progress : WAITING_ARC;
+
   return (
     <span
       role="progressbar"

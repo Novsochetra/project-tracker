@@ -11,6 +11,7 @@ import { useIsOpening, useNavigation } from './useNavigation';
 function OpenButton({ name, route }: { name: string; route: Route }) {
   const { push } = useNavigation();
   const opening = useIsOpening(route);
+
   return (
     <button type="button" data-opening={opening || undefined} onClick={() => push(route)}>
       {name}
@@ -32,6 +33,7 @@ function Projects() {
 
 function Project() {
   const { route, back } = useNavigation();
+
   return (
     <>
       <p>Project {route.name === 'project' ? route.key : ''}</p>
@@ -44,6 +46,7 @@ function Project() {
 
 function Probe() {
   const navigate = useNavigate();
+
   return (
     <>
       <output aria-label="Location">{useLocation().pathname}</output>
@@ -60,6 +63,7 @@ function heldProjectScreen() {
   const arrived = new Promise<void>((resolve) => (open = resolve));
   const Screen = lazy<ComponentType>(async () => {
     await arrived;
+
     return { default: Project };
   });
   const arrive = () =>
@@ -67,6 +71,7 @@ function heldProjectScreen() {
       open();
       await arrived;
     });
+
   return { Screen, arrive };
 }
 
@@ -82,6 +87,7 @@ function renderStack() {
       <Probe />
     </MemoryRouter>,
   );
+
   return held;
 }
 

@@ -12,15 +12,18 @@ function spoken(records: MutationRecord[]): string[] {
       ? [record.target.textContent ?? '']
       : [...record.addedNodes].map((node) => node.textContent ?? ''),
   );
+
   return texts.filter((text) => text !== '');
 }
 
 function listen(region: HTMLElement): () => string[] {
   const observer = new MutationObserver(() => undefined);
   observer.observe(region, { childList: true, subtree: true, characterData: true });
+
   return () => {
     const heard = spoken(observer.takeRecords());
     observer.disconnect();
+
     return heard;
   };
 }

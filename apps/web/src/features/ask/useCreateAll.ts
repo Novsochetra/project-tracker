@@ -25,6 +25,7 @@ export function useCreateAll(chatId: string, messageId: string): CreateAll {
       for (const card of pending) {
         await create.mutateAsync({ chatId, messageId, input: cardInput(card) });
       }
+
       setState({ busy: false, error: null });
     } catch (error) {
       setState({ busy: false, error });
@@ -32,5 +33,6 @@ export function useCreateAll(chatId: string, messageId: string): CreateAll {
       running.current = false;
     }
   };
+
   return { ...state, run };
 }

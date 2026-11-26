@@ -21,6 +21,7 @@ async function openPage() {
     told: 0,
   };
   page.notes.onDraftsNotKept(() => (page.told += 1));
+
   return page;
 }
 
@@ -43,6 +44,7 @@ function limitStorage(limit: number) {
     if (usedSize() - freed + key.length + value.length > limit) {
       throw new DOMException('The quota has been exceeded.', 'QuotaExceededError');
     }
+
     setItem.call(this, key, value);
   });
 }
@@ -62,6 +64,7 @@ it("doesn't say text can't be kept when the record it outdates makes room for it
     text += 'y';
     page.drafts.keepDraft(ID, { ...TITLE, text }, 'Ticket 1');
   }
+
   expect(page.told).toBe(0);
 
   const reloaded = await openPage();

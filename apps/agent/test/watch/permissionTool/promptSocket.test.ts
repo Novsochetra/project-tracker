@@ -21,6 +21,7 @@ describe('the prompt socket', () => {
     } finally {
       socket.close();
     }
+
     expect(existsSync(dirname(socket.path))).toBe(false);
   });
 
@@ -60,6 +61,7 @@ describe('the prompt socket', () => {
     let waiting: AbortSignal | undefined;
     const socket = await openPromptSocket((_args, signal) => {
       waiting = signal;
+
       return new Promise(() => undefined);
     });
     try {

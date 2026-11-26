@@ -29,6 +29,7 @@ function renderSheet(
   act(() => {
     view.queryClient.setQueryData(queryKeys.session(), session);
   });
+
   return view;
 }
 

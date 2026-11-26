@@ -17,6 +17,7 @@ export function DetailChips({ detail }: { detail: TicketDetail }) {
   const { assignee } = fields;
   const labels = detail.labels ?? [];
   const noteId = useId();
+
   return (
     <>
       <div role="group" aria-label="Details" className={styles.chips}>

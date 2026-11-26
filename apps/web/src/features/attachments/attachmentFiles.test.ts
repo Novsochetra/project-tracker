@@ -9,11 +9,13 @@ const file = (name: string, type: string) => new File(['x'], name, { type });
 function sized(name: string, type: string, size: number): File {
   const big = file(name, type);
   Object.defineProperty(big, 'size', { value: size });
+
   return big;
 }
 
 function transfer(files: File[], options: { asItems?: boolean; types?: string[] } = {}) {
   const items = files.map((item) => ({ kind: 'file', getAsFile: () => item }));
+
   return {
     files: options.asItems ? [] : files,
     items: [...items, { kind: 'string', getAsFile: () => null }],

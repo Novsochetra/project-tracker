@@ -21,6 +21,7 @@ function watched() {
   const fetch = vi.fn((..._args: unknown[]) => Promise.resolve(Response.json({})));
   const scope = { fetch: fetch as unknown as typeof globalThis.fetch };
   stops.push(tagLiveReads(scope));
+
   return { scope, fetch };
 }
 

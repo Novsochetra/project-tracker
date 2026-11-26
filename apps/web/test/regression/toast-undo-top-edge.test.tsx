@@ -10,6 +10,7 @@ import { TOAST_SHIELD_MS } from '../../src/components/Toast/toastStore';
 
 function Trigger({ undo }: { undo: () => void }) {
   const toast = useToast();
+
   return (
     <button type="button" onClick={() => toast.show('MOB-3 moved to In progress', { undo })}>
       Move
@@ -34,6 +35,7 @@ beforeEach(() => {
       const listeners = ownClickListeners.get(this) ?? new Set();
       ownClickListeners.set(this, listeners.add(args[1]));
     }
+
     addListener.apply(this, args);
   });
   vi.spyOn(EventTarget.prototype, 'removeEventListener').mockImplementation(function (

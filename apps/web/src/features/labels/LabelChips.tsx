@@ -12,6 +12,7 @@ export interface LabelChipsProps {
 
 export function LabelChips({ labels, compact = false, className }: LabelChipsProps) {
   if (labels.length === 0) return null;
+
   return (
     <span className={clsx(styles.chips, compact && styles.compact, className)}>
       {labels.map((label) => (
@@ -32,6 +33,7 @@ const chipColor = (label: Label, compact: boolean): CSSProperties | undefined =>
 // The phone's Labels chip has no room for the names, but screen readers still need them.
 export function LabelDots({ labels, className }: LabelChipsProps) {
   if (labels.length === 0) return null;
+
   return (
     <span className={clsx(styles.dots, className)}>
       {labels.map((label) => (

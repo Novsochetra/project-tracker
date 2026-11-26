@@ -13,6 +13,7 @@ const going = (answer: ChatChangesAnswer | undefined): boolean =>
 // Read again on the chat's run and chat-git events (api/live).
 export function useChatChanges(chatId: string | null): TrackerQuery<ChatChangesAnswer> {
   const client = useApi();
+
   return useQuery({
     queryKey: queryKeys.chatChanges(chatId ?? ''),
     queryFn: () => client.getChatChanges(chatId ?? ''),
@@ -26,6 +27,7 @@ function useGitMutation<T>(
   send: (input: T) => Promise<ChatChangesAnswer>,
 ): TrackerMutation<ChatChangesAnswer, T> {
   const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: send,
     onSuccess: (answer) => queryClient.setQueryData(queryKeys.chatChanges(chatId), answer),
@@ -35,6 +37,7 @@ function useGitMutation<T>(
 
 export function useCommitChat(chatId: string): TrackerMutation<ChatChangesAnswer, ChatCommitInput> {
   const client = useApi();
+
   return useGitMutation(chatId, (input: ChatCommitInput) => client.commitChat(chatId, input));
 }
 
@@ -42,6 +45,7 @@ export function useOpenPullRequest(
   chatId: string,
 ): TrackerMutation<ChatChangesAnswer, ChatPullRequestInput> {
   const client = useApi();
+
   return useGitMutation(chatId, (input: ChatPullRequestInput) =>
     client.openChatPullRequest(chatId, input),
   );

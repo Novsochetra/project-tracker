@@ -15,5 +15,6 @@ export function SheetActionButton({ className, type = 'button', ...rest }: Butto
 
 export function SheetCancelButton({ children = 'Cancel' }: { children?: ReactNode }) {
   const cancel = useSheetCancel();
+
   return <SheetTextButton onClick={cancel}>{children}</SheetTextButton>;
 }

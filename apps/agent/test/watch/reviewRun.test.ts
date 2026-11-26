@@ -21,6 +21,7 @@ function watcherWith(api: WatchApi, exit: ClaudeExit) {
     { api, runClaude, runAsk: noAsks, log: (text) => log.push(text), retryDelay: () => 1 },
     { runnerId: RUNNER, name: 'Mac', projectKey: 'MOB', trackerUrl: 'http://tracker.test' },
   );
+
   return { watcher, log, runClaude };
 }
 

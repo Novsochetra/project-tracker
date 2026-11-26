@@ -36,8 +36,10 @@ function useLeaving(): [Shown | null, (shown: Shown) => void] {
   useEffect(() => {
     if (!leaving) return;
     const timer = setTimeout(() => setLeaving(null), LEAVE_AFTER_MS);
+
     return () => clearTimeout(timer);
   }, [leaving]);
+
   return [leaving, setLeaving];
 }
 
@@ -62,6 +64,7 @@ export function LatestReview({ detail, done }: LatestReviewProps) {
     <DoneButton done={moveToDone} size="lg" className={styles.done} />
   );
   const item = shown.review;
+
   // Outside the activity list's boundaries, so it has its own; its stand-in keeps Delete and Move
   // to Done. Keyed by review, so a newer one never inherits a failure.
   return (

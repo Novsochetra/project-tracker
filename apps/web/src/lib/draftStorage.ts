@@ -12,6 +12,7 @@ const notKeptListeners = new Set<() => void>();
 // Called when storage starts refusing drafts a store holds, so the user can be told.
 export function onDraftsNotKept(listener: () => void): () => void {
   notKeptListeners.add(listener);
+
   return () => notKeptListeners.delete(listener);
 }
 
@@ -33,6 +34,7 @@ function writeWhatFits<T>(stored: StoredMapAccess<T>, drafts: StoredMap<T>): Sto
   const unchanged = pick(drafts, (id, draft) => sameDraft(before[id], draft));
   if (stored.write(unchanged)) return unchanged;
   stored.write({});
+
   return {};
 }
 
@@ -52,5 +54,6 @@ export function draftStorage<T>(
     unstored = pick(drafts, (id) => !(id in kept));
     if (allKept && hasUnstored()) draftsNotKept();
   };
+
   return { load, store, hasUnstored };
 }

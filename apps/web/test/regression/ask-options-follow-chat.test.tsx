@@ -34,6 +34,7 @@ describe('regression: the options row and the chat’s saved choice', () => {
     restore = rendered.restore;
     const save = (options: Partial<AskOptions>) =>
       act(() => rendered.queryClient.setQueryData(queryKeys.chat('c-1'), savedAs(options)));
+
     return save;
   }
 

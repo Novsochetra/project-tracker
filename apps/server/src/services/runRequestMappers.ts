@@ -19,6 +19,7 @@ function inputOf({ kind, label, labelCut, questions }: RunRequestRow): RunReques
   if (kind === 'question') {
     return { kind, label, labelCut: cut, questions: parsed<RunQuestion[]>(questions) ?? [] };
   }
+
   return { kind, label, labelCut: cut, questions: null };
 }
 

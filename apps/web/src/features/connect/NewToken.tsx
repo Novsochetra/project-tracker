@@ -20,6 +20,7 @@ export function NewToken() {
     if (!trimmed || create.isPending) return;
     create.mutate({ name: trimmed }, { onSuccess: () => setName('') });
   };
+
   return (
     <form className={styles.form} onSubmit={submit} noValidate aria-label="New API token">
       <div className={styles.formRow}>

@@ -8,6 +8,7 @@ afterEach(() => {
 
 function Trigger() {
   const toast = useToast();
+
   return (
     <button type="button" onClick={() => toast.show('1 ticket added')}>
       Sync

@@ -20,6 +20,7 @@ export function LiveSteps({ rows, hideTodos = false }: LiveStepsProps) {
   const visible = visibleSteps(rows, expanded, { hideTodos });
   const { leaving, onLeft } = useLeavingRows(visible.shown);
   useFoldLeaving(ref, leaving, onLeft);
+
   return (
     <div ref={ref} className={styles.steps}>
       {visible.canExpand && (

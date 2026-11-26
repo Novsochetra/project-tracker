@@ -26,6 +26,7 @@ function setup(deleteChat = vi.fn()) {
     },
   });
   restore = rendered.restore;
+
   return rendered;
 }
 

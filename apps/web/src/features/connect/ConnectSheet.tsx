@@ -22,6 +22,7 @@ export function ConnectSheet({ open, onClose }: SheetProps) {
       <ConnectSteps />
     </>
   );
+
   return (
     <Sheet
       open={open}
@@ -48,6 +49,7 @@ function MetaState({ query }: { query: TrackerQuery<ServerMeta> }) {
       </div>
     );
   }
+
   return (
     <>
       <p role="alert" className={styles.error}>

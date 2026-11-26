@@ -41,6 +41,7 @@ export async function startSession(db: Db, userId: string, now: number): Promise
     lastSeenAt: now,
     expiresAt,
   });
+
   return { secret, expiresAt };
 }
 
@@ -55,11 +56,13 @@ export async function resumeSession(
     await deleteSessionRow(db, row.id);
     return null;
   }
+
   const renewed = now - row.lastSeenAt >= SESSION_RENEW_AFTER_MS;
   const expiresAt = renewed
     ? Math.min(now + SESSION_IDLE_MS, row.createdAt + SESSION_MAX_MS)
     : row.expiresAt;
   if (renewed) await renewSessionRow(db, row.id, { lastSeenAt: now, expiresAt });
+
   return { sessionId: row.id, userId: row.userId, email: row.email, expiresAt, renewed };
 }
 

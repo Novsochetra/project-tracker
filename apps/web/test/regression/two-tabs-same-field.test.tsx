@@ -32,6 +32,7 @@ function openTicket() {
   const server = fakeTicketServer(makeTicketDetail());
   const rendered = renderTicket({ detail: server.detail, client: server.client });
   cleanups.push(rendered.restorePhone);
+
   return { server, rendered };
 }
 

@@ -26,10 +26,12 @@ function insertionIndex(group: readonly Placeable[], target: DropTarget): number
     const index = group.findIndex((t) => t.id === target.beforeId);
     return index < 0 ? group.length : index;
   }
+
   if (target.afterId) {
     const index = group.findIndex((t) => t.id === target.afterId);
     return index < 0 ? group.length : index + 1;
   }
+
   return group.length;
 }
 
@@ -48,6 +50,7 @@ export function planMove(
     const current = sortedGroup(tickets, moved.statusId).map((t) => t.id);
     if (current.join() === order.join()) return null;
   }
+
   return { statusChanged, ranks: evenRanks(order) };
 }
 
@@ -63,7 +66,9 @@ function moveWithinGroup(
   if (direction === 'up') {
     return index > 0 ? { statusId, beforeId: own[index - 1]?.id ?? null } : null;
   }
+
   if (index >= own.length - 1) return null;
+
   return { statusId, beforeId: own[index + 2]?.id ?? null, afterId: own[index + 1]?.id ?? null };
 }
 
@@ -80,6 +85,7 @@ function moveAcrossGroups(
   const group = sortedGroup(tickets, neighbor, ticket.id);
   if (direction === 'up')
     return { statusId: neighbor, beforeId: null, afterId: group.at(-1)?.id ?? null };
+
   return { statusId: neighbor, beforeId: group[0]?.id ?? null, afterId: null };
 }
 
@@ -93,6 +99,7 @@ export function keyboardMoveTarget(
   if (!ticket) return null;
   const own = sortedGroup(tickets, ticket.statusId);
   const index = own.findIndex((t) => t.id === ticketId);
+
   return (
     moveWithinGroup(own, index, direction) ??
     moveAcrossGroups(tickets, ticket, direction, statusOrder)

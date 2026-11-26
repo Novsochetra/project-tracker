@@ -27,6 +27,7 @@ export function expandGroup(projectKey: string, statusId: string): void {
 
 const subscribe = (listener: () => void) => {
   listeners.add(listener);
+
   return () => listeners.delete(listener);
 };
 

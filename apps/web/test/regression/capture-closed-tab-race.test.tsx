@@ -46,6 +46,7 @@ function renderTabs() {
       inFlight.push({ projectKey, input, answer });
       return answer.promise;
     }
+
     return Promise.resolve(tracker.create(projectKey, input));
   });
   renderWithApp(
@@ -63,6 +64,7 @@ function renderTabs() {
       },
     },
   );
+
   return { tracker, inFlight, createTicket };
 }
 

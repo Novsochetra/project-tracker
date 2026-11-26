@@ -22,6 +22,7 @@ export function OptionChip<T extends string>({
   const [open, setOpen] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const current = options.find((option) => option.value === value);
+
   return (
     <>
       <button

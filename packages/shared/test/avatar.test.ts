@@ -6,6 +6,7 @@ const AV = ['#5B5BD6', '#B4540A', '#18794E', '#C2298A', '#0B68CB', '#6E56CF'];
 const prototypeHue = (name: string): string => {
   let h = 0;
   for (let i = 0; i < name.length; i++) h = (h + name.charCodeAt(i)) % AV.length;
+
   return AV[h] ?? '';
 };
 

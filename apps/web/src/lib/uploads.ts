@@ -18,6 +18,7 @@ async function prepareImage(file: File, type: AttachmentMimeType): Promise<Prepa
   if (prepared.blob.size > ATTACHMENT_KINDS.image.maxBytes) {
     throw new ApiError(400, 'invalid_input', tooLargeMessage('image'));
   }
+
   return prepared;
 }
 
@@ -26,5 +27,6 @@ export async function prepareUpload(file: File): Promise<PreparedUpload> {
   if (type && attachmentKind(type) === 'image') return prepareImage(file, type);
   // A form part without a file name isn't sent as a file.
   const fallback = type ? `attachment.${storedExtension(type)}` : 'attachment';
+
   return { blob: file, fileName: file.name || fallback };
 }

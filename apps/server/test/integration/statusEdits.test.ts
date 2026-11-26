@@ -51,6 +51,7 @@ describe.each(DIALECTS)("who changes a project's statuses (%s)", (dialect) => {
         body: REFUSED,
       });
     }
+
     expect(await statuses()).toEqual(before);
   });
 

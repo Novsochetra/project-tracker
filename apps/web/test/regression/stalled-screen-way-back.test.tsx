@@ -20,13 +20,16 @@ const gates = vi.hoisted(() => {
   const gate = () => {
     let open = () => undefined as void;
     const arrived = new Promise<void>((resolve) => (open = resolve));
+
     return { arrived, open: () => open() };
   };
+
   return { project: gate(), ticket: gate() };
 });
 
 vi.mock('../../src/features/project/ProjectScreen', async (importOriginal) => {
   await gates.project.arrived;
+
   return importOriginal();
 });
 
@@ -36,6 +39,7 @@ vi.mock('../../src/features/project/projectScreens', async () =>
 
 vi.mock('../../src/features/ticket/TicketScreen', async (importOriginal) => {
   await gates.ticket.arrived;
+
   return importOriginal();
 });
 

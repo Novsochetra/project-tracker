@@ -35,6 +35,7 @@ export function ProjectList({ projects, ready }: ProjectListProps) {
       </ListCard>
     );
   }
+
   return (
     <ul className={styles.grid}>
       {projects.map((project, index) => (

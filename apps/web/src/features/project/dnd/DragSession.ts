@@ -91,6 +91,7 @@ export class DragSession {
       if (moved < DRAG_START_DISTANCE) return;
       this.start();
     }
+
     event.preventDefault();
     this.schedule();
   };

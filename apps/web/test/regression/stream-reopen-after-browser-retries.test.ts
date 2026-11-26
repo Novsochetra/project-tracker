@@ -29,6 +29,7 @@ function connect() {
   };
   stop = connectLiveUpdates('/api/events', handlers);
   MockEventSource.latest().open();
+
   return handlers;
 }
 
@@ -42,6 +43,7 @@ function waitForReopen(): number {
     vi.advanceTimersByTime(STEP_MS);
     waited += STEP_MS;
   }
+
   return waited;
 }
 
@@ -85,6 +87,7 @@ describe('regression: the browser’s own tries don’t slow the app’s reopeni
     connect();
     const waits = [0, 1, 2].map(() => {
       outageUntilSilenceCheck();
+
       return waitForReopen();
     });
 

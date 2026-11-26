@@ -24,6 +24,7 @@ interface Props extends SheetProps {
 // Each request gets a host of its own, so a sheet that failed is tried afresh when opened again.
 export function SheetHost({ request, open, onClose }: Props) {
   if (!request) return null;
+
   return (
     <ErrorBoundary
       name={`Sheet ${request.type}`}

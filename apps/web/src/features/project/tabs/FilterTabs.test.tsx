@@ -18,6 +18,7 @@ interface HarnessProps {
 
 function Harness({ initial = ALL_TICKETS, onChange = () => undefined }: HarnessProps) {
   const [value, setValue] = useState(initial);
+
   return (
     <>
       <FilterTabs
@@ -54,6 +55,7 @@ const BOXES = [
 const boxOf = (element: HTMLElement) => {
   const row = element.parentElement;
   if (element.tagName !== 'BUTTON' || !row) return undefined;
+
   return BOXES[[...row.querySelectorAll(':scope > button')].indexOf(element)];
 };
 
@@ -90,6 +92,7 @@ function layOutTrack(scrollLeft = 0) {
   });
   const scrollTo = vi.fn();
   track.scrollTo = scrollTo as typeof track.scrollTo;
+
   return scrollTo;
 }
 

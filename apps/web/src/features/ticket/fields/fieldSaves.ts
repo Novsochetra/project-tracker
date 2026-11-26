@@ -37,6 +37,7 @@ export function saveStep(saves: SentSaves, request: SaveRequest): SaveStep {
   if (checked) return 'send';
   if (carries(saves, value)) return 'skip';
   const settled = saves.onTheirWay.size === 0 && !sentElsewhere;
+
   return settled && value === shown && value === base ? 'unchanged' : 'send';
 }
 
@@ -47,6 +48,7 @@ export const typedOver = (saves: SentSaves, base: string): string =>
 
 export function sendSave(saves: SentSaves, value: string): SentSaves {
   const latest = saves.latest + 1;
+
   return { ...saves, latest, onTheirWay: new Map(saves.onTheirWay).set(latest, value) };
 }
 
@@ -66,6 +68,7 @@ export function settleSave(saves: SentSaves, number: number, saved: boolean): Se
   onTheirWay.delete(number);
   if (!saved || number < saves.landed) return { saves: { ...saves, onTheirWay }, outcome: 'keep' };
   const outcome = number === saves.latest ? 'done' : 'rebase';
+
   return { saves: { ...saves, onTheirWay, landed: number }, outcome };
 }
 
@@ -87,6 +90,7 @@ export type SavingWhere = 'here' | 'elsewhere' | 'nowhere';
 
 export function savingWhere(id: string): SavingWhere {
   if (isSaving(id)) return 'here';
+
   return isSavingElsewhere(id) ? 'elsewhere' : 'nowhere';
 }
 
@@ -102,6 +106,7 @@ function update(id: string, saves: SentSaves): void {
 export function startSave(id: string, value: string): number {
   const saves = sendSave(savesOf(id), value);
   update(id, saves);
+
   return saves.latest;
 }
 
@@ -124,6 +129,7 @@ export function whenSettled(id: string, run: () => void): void {
     run();
     return;
   }
+
   if (waiting.has(id)) return;
   const stop = subscribeSaves(() => {
     if (isSavingAnywhere(id)) return;
@@ -137,6 +143,7 @@ export function whenSettled(id: string, run: () => void): void {
 export function subscribeSaves(listener: () => void): () => void {
   listeners.add(listener);
   const stopMarks = onOtherTabsMarks(listener);
+
   return () => {
     listeners.delete(listener);
     stopMarks();

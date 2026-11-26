@@ -10,6 +10,7 @@ const decode = (part: string): unknown => JSON.parse(Buffer.from(part, 'base64ur
 
 function publicKeyOf(raw: string) {
   const point = Buffer.from(raw, 'base64url');
+
   return createPublicKey({
     format: 'jwk',
     key: {

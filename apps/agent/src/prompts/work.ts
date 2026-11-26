@@ -12,6 +12,7 @@ export const workPrompt: PromptDefinition = {
     'Worker loop: claim the next To do ticket, do the work in this repository, verify it and submit it for review.',
   text(rawProject) {
     const project = normalizeProject(rawProject);
+
     return [
       'Work on a ticket from my project tracker, using the tracker MCP tools.',
       findProjectStep(project),

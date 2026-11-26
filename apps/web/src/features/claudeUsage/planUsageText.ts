@@ -48,6 +48,7 @@ export function formatResetTime(at: number, now: number): string {
     Math.abs(at - now) < WEEK_MS
       ? date.toLocaleDateString(LOCALE, { weekday: 'short' })
       : date.toLocaleDateString(LOCALE, { month: 'short', day: 'numeric' });
+
   return `${day} ${time}`;
 }
 
@@ -56,7 +57,9 @@ function meterOf(name: string, { usedPercent, resetsAt }: PlanWindow, now: numbe
     const detail = `Reset ${formatResetTime(resetsAt, now)}; the next run updates it`;
     return { name, usedPercent: null, detail };
   }
+
   const detail = `${usedPercent}% used · resets ${formatResetTime(resetsAt, now)}`;
+
   return { name, usedPercent, detail };
 }
 
@@ -64,11 +67,13 @@ function meterOf(name: string, { usedPercent, resetsAt }: PlanWindow, now: numbe
 export function usageMeters(limits: PlanLimits, now: number): UsageMeter[] {
   const windows = PLAN_WINDOWS.flatMap((name) => {
     const window = limits.windows?.[name];
+
     return window ? [meterOf(LIMIT_NAMES[name], window, now)] : [];
   });
   if (windows.length > 0) return windows;
   const { rateLimitType, usedPercent, resetsAt } = limits;
   if (!rateLimitType || usedPercent === undefined || resetsAt === undefined) return [];
+
   return [meterOf(LIMIT_NAMES[rateLimitType], { usedPercent, resetsAt }, now)];
 }
 
@@ -82,6 +87,7 @@ function limitedText(limits: PlanLimits, now: number): string {
   if (resetsAt === undefined)
     return limits.rateLimitType ? `Limited by ${limitName(limits)}` : 'Limited';
   const at = formatResetTime(resetsAt, now);
+
   return resetsAt > now ? `Limited until ${at}` : `Was limited until ${at}`;
 }
 
@@ -104,11 +110,13 @@ function planStatusText(limits: PlanLimits, now: number): string | null {
     overageText(limits, now),
   ];
   const said = parts.filter((part) => part !== null);
+
   return said.length > 0 ? said.join(' · ') : null;
 }
 
 const quietText = (limits: PlanLimits, meters: readonly UsageMeter[]) => {
   if (meters.length > 0) return null;
+
   return limits.status === 'allowed' ? WITHIN_LIMITS : NO_FIGURES;
 };
 
@@ -117,5 +125,6 @@ export function planUsageView({ limits, seenAt }: HelperPlanUsage, now: number):
   const meters = usageMeters(limits, now);
   const status = planStatusText(limits, now) ?? quietText(limits, meters);
   const seen = seenAt === null ? null : `As of a run that ended ${formatRelative(seenAt, now)}`;
+
   return { status, meters, seen };
 }

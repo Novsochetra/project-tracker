@@ -17,15 +17,18 @@ function lazyBody(total: number) {
         sent = 1;
         return;
       }
+
       if (sent >= total) {
         controller.enqueue(new TextEncoder().encode('"}'));
         controller.close();
         return;
       }
+
       controller.enqueue(chunk);
       sent += chunk.length;
     },
   });
+
   return { stream, read: () => sent };
 }
 

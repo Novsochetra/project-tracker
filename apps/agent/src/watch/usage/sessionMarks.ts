@@ -12,6 +12,7 @@ const KEPT = 500;
 // it can take them off (ownCostUsd).
 export function createSessionMarks() {
   const marks = new Map<string, SessionMark>();
+
   return {
     get: (sessionId: string): SessionMark | undefined => marks.get(sessionId),
     note(sessionId: string | undefined, { costUsd, readTokens }: ResultUsage) {

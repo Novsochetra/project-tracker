@@ -16,6 +16,7 @@ export function useQueuedActions(chatId: string, messageId: string): QueuedActio
   const toast = useToast();
   const onError = (error: Error) => toast.show(errorMessage(error), { kind: 'error' });
   const ref = { chatId, messageId };
+
   return {
     edit: (text, onSaved) => edits.mutate({ ...ref, text }, { onSuccess: onSaved, onError }),
     remove: () => removes.mutate(ref, { onError }),

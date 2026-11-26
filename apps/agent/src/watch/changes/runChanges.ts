@@ -48,6 +48,7 @@ export async function trackRunChanges(deps: ChangesDeps, job: RunJob): Promise<S
   if (!tracks(job)) return NOTHING;
   const start = await startSnapshot(deps, job.run);
   if (!start) return NOTHING;
+
   return async (outcome) => {
     // The person's cancel has ended the run on the tracker already.
     if (outcome.status === 'cancelled') return;

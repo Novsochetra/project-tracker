@@ -26,12 +26,14 @@ function memoryCaches() {
   const open = (name: string) => {
     const store = stores.get(name) ?? new Map<string, Response>();
     stores.set(name, store);
+
     return Promise.resolve({
       match: (request: Request | string) => Promise.resolve(store.get(urlOf(request))?.clone()),
       put: (request: Request | string, response: Response) =>
         Promise.resolve(void store.set(urlOf(request), response)),
     });
   };
+
   const match = (request: Request | string) =>
     Promise.resolve(
       [...stores.values()]
@@ -39,6 +41,7 @@ function memoryCaches() {
         ?.get(urlOf(request))
         ?.clone(),
     );
+
   return { open, match };
 }
 
@@ -53,6 +56,7 @@ async function read(headers: HeadersInit = {}): Promise<Response> {
   const request = new Request(URL_READ, { headers });
   const response = await handle({ request, url: new URL(URL_READ), event });
   await Promise.allSettled(event.work);
+
   return response;
 }
 

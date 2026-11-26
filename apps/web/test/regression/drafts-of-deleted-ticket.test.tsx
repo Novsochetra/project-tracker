@@ -13,6 +13,7 @@ import { skipAnimations } from '../../src/overlays/testing';
 
 function Drafts() {
   useTicketDrafts(true);
+
   return null;
 }
 
@@ -45,6 +46,7 @@ function syncDrafts() {
       </ToastProvider>
     </api.wrapper>,
   );
+
   return api.client;
 }
 
@@ -58,6 +60,7 @@ const asksBeforeUnload = () => {
   const event = new Event('beforeunload', { cancelable: true });
   window.dispatchEvent(event);
   stop();
+
   return event.defaultPrevented;
 };
 

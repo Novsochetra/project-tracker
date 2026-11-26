@@ -19,12 +19,14 @@ const listOf = (value: unknown): Json[] => (Array.isArray(value) ? value.filter(
 function optionOf(option: Json): RunQuestionOption | null {
   const label = textOf(option.label, RUN_QUESTION_OPTION_MAX);
   if (!label) return null;
+
   return { label, description: textOf(option.description, RUN_QUESTION_OPTION_DESCRIPTION_MAX) };
 }
 
 function questionOf(question: Json): RunQuestion | null {
   const text = textOf(question.question, RUN_QUESTION_MAX);
   if (!text) return null;
+
   return {
     question: text,
     header: textOf(question.header, RUN_QUESTION_HEADER_MAX),
@@ -41,5 +43,6 @@ export function questionsOf(input: unknown): RunQuestion[] {
   if (!isJson(input)) return [];
   const all = listOf(input.questions).map(questionOf);
   if (all.some((question) => question === null)) return [];
+
   return (all as RunQuestion[]).slice(0, RUN_QUESTIONS_MAX);
 }

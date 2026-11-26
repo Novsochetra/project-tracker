@@ -32,6 +32,7 @@ function trimLink(candidate: string): string {
     else if (!TRAILING.has(char)) break;
     end -= 1;
   }
+
   return candidate.slice(0, end);
 }
 
@@ -46,6 +47,8 @@ export function linkParts(text: string): LinkPart[] {
     parts.push({ kind: 'link', text: link, href: link });
     start = match.index + link.length;
   }
+
   if (start < text.length) parts.push({ kind: 'text', text: text.slice(start) });
+
   return parts;
 }

@@ -20,6 +20,7 @@ type Plan = (box: Edges, view: Edges, barHeight: number) => number;
 export const scrollToClearBar: Plan = (box, view, barHeight) => {
   const limit = view.bottom - barHeight - GAP_ABOVE_BAR;
   const fits = box.bottom - box.top <= limit - view.top;
+
   return fits && box.bottom > limit ? Math.ceil(box.bottom - limit) : 0;
 };
 
@@ -64,6 +65,7 @@ export function useKeepFieldInSight(
       if (field && view?.contains(field))
         keepInSight(boxOf(field), element, view, scrollAfterEditing);
     });
+
     return () => cancelAnimationFrame(frame);
   }, [bar, scroller, editing]);
 }
@@ -86,8 +88,10 @@ function holdInSight(form: HTMLElement, bar: HTMLElement, scroller: HTMLElement)
     scroller.removeEventListener('pointerdown', release, true);
     scroller.removeEventListener('wheel', release, true);
   }
+
   scroller.addEventListener('pointerdown', release, true);
   scroller.addEventListener('wheel', release, { capture: true, passive: true });
+
   return release;
 }
 
@@ -107,7 +111,9 @@ export function useKeepSentFormInSight(
       if (event.target instanceof HTMLFormElement)
         release = holdInSight(event.target, element, view);
     };
+
     view.addEventListener('submit', sent);
+
     return () => {
       view.removeEventListener('submit', sent);
       release();

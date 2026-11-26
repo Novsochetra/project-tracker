@@ -38,6 +38,7 @@ async function leftOver(context: StepContext, job: GitActionJob) {
 function failure(error: unknown, signal: AbortSignal): string {
   if (error instanceof GitActionError) return error.message;
   if (signal.aborted) return TIMED_OUT;
+
   return "Git or gh couldn't run on your computer.";
 }
 

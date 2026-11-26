@@ -8,5 +8,6 @@ export const ASK_PERSON_CALL_MS = RUN_REQUEST_DEADLINE_MS + 5 * 60_000;
 export function claudeEnv(env: NodeJS.ProcessEnv): NodeJS.ProcessEnv {
   const set = Number(env.MCP_TOOL_TIMEOUT);
   if (!env.MCP_TOOL_TIMEOUT || !(set < ASK_PERSON_CALL_MS)) return env;
+
   return { ...env, MCP_TOOL_TIMEOUT: String(ASK_PERSON_CALL_MS) };
 }

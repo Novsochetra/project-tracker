@@ -46,6 +46,7 @@ export async function openChat(
     prompt?.close();
     if (folder) void rm(folder, { recursive: true, force: true });
   };
+
   const folder = await mkdtemp(join(tmpdir(), ASK_FOLDER_PREFIX)).catch((error: unknown) => {
     cleanUp();
     throw error;
@@ -69,5 +70,6 @@ export async function openChat(
   // A background shell still running may start a turn after idle that nobody watches; in a chat
   // that changes the folder it could do so while a ticket run holds the lane. The next resumes.
   const leavesWork = () => changesFolder(job.run.askOptions?.mode) && chat.tasksRunning() > 0;
+
   return { ...chat, folder, reusable: () => !leavesWork() };
 }

@@ -7,6 +7,7 @@ import { applySignIn } from './session';
 
 export function useInvites(): TrackerQuery<Invite[]> {
   const client = useApi();
+
   return useQuery({ queryKey: queryKeys.invites(), queryFn: () => client.listInvites() });
 }
 
@@ -21,6 +22,7 @@ function patchInvites(queryClient: QueryClient, change: (invites: Invite[]) => I
 export function useCreateInvite(): TrackerMutation<CreatedInvite, void> {
   const client = useApi();
   const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: () => client.createInvite(),
     gcTime: 0,
@@ -31,6 +33,7 @@ export function useCreateInvite(): TrackerMutation<CreatedInvite, void> {
 export function useRevokeInvite(): TrackerMutation<void, string> {
   const client = useApi();
   const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: (id: string) => client.revokeInvite(id),
     onSuccess: (_answer, id) =>
@@ -40,6 +43,7 @@ export function useRevokeInvite(): TrackerMutation<void, string> {
 
 export function useCheckInvite(secret: string): TrackerQuery<{ expiresAt: number }> {
   const client = useApi();
+
   return useQuery({
     queryKey: queryKeys.inviteCheck(secret),
     queryFn: () => client.checkInvite({ secret }),
@@ -53,6 +57,7 @@ export function useCheckInvite(secret: string): TrackerQuery<{ expiresAt: number
 export function useAcceptInvite(): TrackerMutation<SessionState, AcceptInviteInput> {
   const client = useApi();
   const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: (input: AcceptInviteInput) => client.acceptInvite(input),
     onSuccess: (session) => applySignIn(client, queryClient, session),

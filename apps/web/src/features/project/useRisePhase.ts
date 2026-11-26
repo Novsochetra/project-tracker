@@ -9,5 +9,6 @@ export function useRisePhase(filter: string): RisePhase {
   if (seen.filter === filter) return seen.phase;
   const next = { filter, phase: seen.phase === 'a' ? 'b' : 'a' } as const;
   setSeen(next);
+
   return next.phase;
 }

@@ -27,6 +27,7 @@ export function swipeOffset(raw: number, geometry: SwipeGeometry): number {
   const max = geometry.leadingCount > 0 ? geometry.rowWidth : 0;
   const min = geometry.trailingCount > 0 ? -geometry.rowWidth : 0;
   if ((raw > 0 && max === 0) || (raw < 0 && min === 0)) return 0;
+
   return rubberBandClamp(raw, min, max, geometry.rowWidth / 2);
 }
 
@@ -34,12 +35,14 @@ export function swipeOffset(raw: number, geometry: SwipeGeometry): number {
 // of a phone row, and a small drag to close it would trigger the first action (PT-261).
 export function fullSwipeAt(side: SwipeSide, geometry: SwipeGeometry): number {
   const open = openWidth(countFor(side, geometry));
+
   return Math.max(geometry.rowWidth * FULL_SWIPE_RATIO, open + ACTION_WIDTH / 2);
 }
 
 export function isFullSwipe(offset: number, geometry: SwipeGeometry): boolean {
   const side = sideOf(offset);
   if (side === null || geometry.rowWidth <= 0 || countFor(side, geometry) === 0) return false;
+
   return Math.abs(offset) >= fullSwipeAt(side, geometry);
 }
 
@@ -56,12 +59,14 @@ export function swipeOutcome(
   if (isFullSwipe(offset, geometry)) return { kind: 'full', side };
   if (towardOpen > OPEN_VELOCITY) return { kind: 'open', side };
   const width = openWidth(countFor(side, geometry));
+
   return Math.abs(offset) > width / 2 ? { kind: 'open', side } : { kind: 'close' };
 }
 
 export function restingOffset(outcome: SwipeOutcome, geometry: SwipeGeometry): number {
   if (outcome.kind !== 'open') return 0;
   const width = openWidth(countFor(outcome.side, geometry));
+
   return outcome.side === 'leading' ? width : -width;
 }
 
@@ -70,6 +75,7 @@ export function restingOffset(outcome: SwipeOutcome, geometry: SwipeGeometry): n
 export function actionEdge(reveal: number, index: number, count: number, full: number): number {
   if (count <= 0) return 0;
   const share = (Math.max(0, reveal) / count) * (index + 1);
+
   return index === 0 ? lerp(share, Math.max(0, reveal), full) : share;
 }
 
@@ -81,5 +87,6 @@ export function actionLabelOffset(
 ): number {
   const slice = count <= 0 ? 0 : Math.max(0, reveal) / count;
   const centred = (slice - ACTION_WIDTH) / 2;
+
   return index === 0 ? lerp(centred, 0, full) : centred;
 }

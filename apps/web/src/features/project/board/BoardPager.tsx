@@ -9,6 +9,7 @@ export interface BoardPagerProps {
 export function BoardPager({ columns, page }: BoardPagerProps) {
   const current = columns[page];
   if (!current) return null;
+
   // The columns are labelled regions already; this only mirrors the scroll position.
   return (
     <div className={styles.pager} aria-hidden="true" data-board-pager="">

@@ -50,6 +50,7 @@ const inLatinWord =
 function markOf(word: string, latinToken: boolean): (char: string) => boolean {
   if (LATIN.test(word)) return inLatinWord(amongLatin(word));
   const reads = scriptCount(word) > 1 || (latinToken && passesForLatin(word));
+
   return reads ? inScripts : () => false;
 }
 
@@ -66,5 +67,6 @@ export function lookalikesOf(text: string): Set<number> {
       }
     }
   }
+
   return marked;
 }

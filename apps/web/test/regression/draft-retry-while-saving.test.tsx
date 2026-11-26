@@ -39,6 +39,7 @@ function slowFirstRead(server: FakeTicketServer) {
       await new Promise((resolve) => setTimeout(resolve, 0));
       window.dispatchEvent(new Event('online'));
     });
+
   return { getTicket, answerThenSyncAgain };
 }
 

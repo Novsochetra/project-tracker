@@ -39,6 +39,7 @@ interface OpenTurn {
 
 const sessionOf = (event: unknown): string | undefined => {
   const id = (event as { session_id?: unknown } | null)?.session_id;
+
   return isSessionId(id) ? id : undefined;
 };
 
@@ -56,11 +57,13 @@ export function startChatProcess(child: ChatChild, onClose: () => void) {
     if (started) tasks.add(started);
     tasks.delete(taskEndedOf(event) ?? '');
   };
+
   const finish = (ending: Ending) => {
     const ended = turn;
     turn = undefined;
     ended?.done(ended.output.exit(ending));
   };
+
   const read = (event: unknown, now: OpenTurn) => {
     if (replayOf(event) === now.uuid) now.started = true;
     else if (saysState && !now.started) return;
@@ -71,6 +74,7 @@ export function startChatProcess(child: ChatChild, onClose: () => void) {
       if (!saysState) child.stdin.end();
     }
   };
+
   const lines = createJsonLines({
     onText: (line) => turn?.output.say(`${line}\n`),
     onEvent: (event) => {
@@ -87,6 +91,7 @@ export function startChatProcess(child: ChatChild, onClose: () => void) {
     finish({ code, signal });
     onClose();
   };
+
   child.stdout.setEncoding('utf8');
   child.stdout.on('data', (chunk: string) => lines.push(chunk));
   child.stderr.setEncoding('utf8');
@@ -104,12 +109,14 @@ export function startChatProcess(child: ChatChild, onClose: () => void) {
   function send({ run, prompt, stop, listeners }: ChatTurn): Promise<ClaudeExit> {
     if (!open) return Promise.reject(new Error(CHAT_CLOSED));
     if (turn) return Promise.reject(new Error(CHAT_BUSY));
+
     return new Promise((resolve) => {
       stop.addEventListener('abort', kill, { once: true });
       const done = (exit: ClaudeExit) => {
         stop.removeEventListener('abort', kill);
         resolve(exit);
       };
+
       const uuid = randomUUID();
       turn = { run, uuid, output: createRunOutput(listeners), started: false, results: 0, done };
       if (stop.aborted) kill();

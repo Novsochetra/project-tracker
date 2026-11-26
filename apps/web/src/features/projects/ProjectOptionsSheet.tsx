@@ -30,6 +30,7 @@ function menuActions(options: ProjectOptions, { close, confirm }: SheetActions) 
     { label: 'Connect Claude Code', onSelect: afterClose(close, options.connect) },
     { label: 'Delete project', tone: 'danger', onSelect: confirm },
   ];
+
   return actions;
 }
 
@@ -43,6 +44,7 @@ export function ProjectOptionsSheet({ projectKey }: { projectKey: string }) {
     options.resetDelete();
     setOpen(true);
   };
+
   const deleteAction: ActionSheetAction = {
     label: 'Delete project',
     tone: 'danger',
@@ -59,6 +61,7 @@ export function ProjectOptionsSheet({ projectKey }: { projectKey: string }) {
       <ProjectUsageNote projectKey={projectKey} className={styles.usage} />
     </>
   );
+
   return (
     <>
       <NavBarButton aria-label="Project options" onClick={show}>

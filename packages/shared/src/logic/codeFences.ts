@@ -14,6 +14,7 @@ export interface CodeFence {
 function opening(line: string): { marker: string; info: string } | null {
   const [, , marker = '', info = ''] = OPEN.exec(line) ?? [];
   if (!marker || (marker.startsWith('`') && info.includes('`'))) return null;
+
   return { marker, info: info.trim() };
 }
 
@@ -22,6 +23,7 @@ function closingLine(lines: readonly string[], from: number, marker: string): nu
     const close = CLOSE.exec(lines[i] ?? '')?.[1];
     if (close && close[0] === marker[0] && close.length >= marker.length) return i;
   }
+
   return -1;
 }
 
@@ -35,5 +37,6 @@ export function codeFences(lines: readonly string[]): CodeFence[] {
     if (end === -1) break;
     i = end;
   }
+
   return found;
 }

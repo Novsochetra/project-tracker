@@ -42,6 +42,7 @@ function checkWith(
   if (result !== 'changed' || typedOver === undefined) return result;
   if (checkDraft({ ...draft, base: typedOver }, now) !== 'unchanged') return result;
   rebaseDraft(id, typedOver);
+
   return 'unchanged';
 }
 
@@ -53,6 +54,7 @@ function checkWith(
 export function useFreshTicket(ticketKey: string): () => Promise<TicketDetail> {
   const client = useApi();
   const queryClient = useQueryClient();
+
   return useCallback(async () => {
     const since = Date.now();
     const detail = await queryClient.fetchQuery({
@@ -63,6 +65,7 @@ export function useFreshTicket(ticketKey: string): () => Promise<TicketDetail> {
       retry: false,
     });
     showOnScreen(queryClient, ticketKey, detail, since);
+
     return detail;
   }, [client, queryClient, ticketKey]);
 }
@@ -72,6 +75,7 @@ export function useDraftCheck(
   ticketKey: string,
 ): (id: string, typedOver?: string) => Promise<CheckResult> {
   const read = useFreshTicket(ticketKey);
+
   return useCallback(
     async (id: string, typedOver?: string) => {
       const draft = storedDraft(id);

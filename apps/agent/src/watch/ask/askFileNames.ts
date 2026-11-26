@@ -11,6 +11,7 @@ function localName(name: string, index: number): string {
   const plain = name.replace(UNSAFE, '_').trim().replace(LEADING_DOTS, '');
   const fallback = `file-${index + 1}${EXTENSION.exec(plain)?.[0] ?? ''}`;
   if (plain === '' || Buffer.byteLength(plain) > MAX_NAME_BYTES) return fallback;
+
   return plain;
 }
 
@@ -22,15 +23,18 @@ function unusedName(name: string, index: number, used: ReadonlySet<string>): str
   for (let prefix = index + 1; used.has(nameKey(candidate)); prefix += 1) {
     candidate = `${prefix}-${name}`;
   }
+
   return candidate;
 }
 
 // Two files of one question can share a name, so a later one gets a number in front.
 export function localNames(names: readonly string[]): string[] {
   const used = new Set<string>();
+
   return names.map((name, index) => {
     const unique = unusedName(localName(name, index), index, used);
     used.add(nameKey(unique));
+
     return unique;
   });
 }

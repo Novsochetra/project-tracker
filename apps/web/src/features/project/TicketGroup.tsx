@@ -37,6 +37,7 @@ export function TicketGroup(props: TicketGroupProps) {
   const unfolded = expanded && collapsed.hasToggle;
   const target = drag?.target?.statusId === status.id ? drag.target : null;
   const tint = target !== null && drag?.ticket.statusId !== status.id;
+
   return (
     <section
       ref={ref}

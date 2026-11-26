@@ -11,6 +11,7 @@ async function openEditProject(page: Page) {
   await page.getByRole('button', { name: 'Project options' }).first().click();
   await readActionSheet(page);
   await page.getByRole('button', { name: 'Edit project' }).click();
+
   return page.getByRole('dialog', { name: 'Edit project' });
 }
 
@@ -31,8 +32,10 @@ test('a project that hides its name shows its key on every screen but Edit proje
     for (const text of [NAME, DESCRIPTION, REPO]) {
       await expect(page.locator('body')).not.toContainText(text);
     }
+
     await expect(page.locator(`[title*="${REPO}"]`)).toHaveCount(0);
   }
+
   await page.screenshot({ path: info.outputPath('hidden-name-ticket.png') });
 
   const again = await openEditProject(page);

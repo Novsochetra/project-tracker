@@ -49,6 +49,7 @@ describe.each(DIALECTS)("a batch's steps on its tickets (%s)", (dialect) => {
     for (const title of ['Crash', 'Login']) {
       await person('POST', '/api/projects/MOB/tickets', { title });
     }
+
     await helper('PUT', `/api/runners/${runner}`, { ...helperName(runner), projectKeys: ['MOB'] });
     const all = await person<RunAllResult>('POST', '/api/projects/MOB/run-all', {
       runnerId: runner,
@@ -71,6 +72,7 @@ describe.each(DIALECTS)("a batch's steps on its tickets (%s)", (dialect) => {
       if (chunk.done) throw new Error(`Stream ended before ${String(pattern)}: ${text}`);
       text += decoder.decode(chunk.value, { stream: true });
     }
+
     return text;
   }
 
@@ -97,6 +99,7 @@ describe.each(DIALECTS)("a batch's steps on its tickets (%s)", (dialect) => {
       );
       expect((await send(steps)).status).toBe(204);
     }
+
     await send([sub('toolu_a', 'Run npm test')]);
     const shown = await labels(ticketRuns.get('MOB-1'));
     expect(shown).toHaveLength(RUN_STEPS_KEPT);

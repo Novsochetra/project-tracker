@@ -31,6 +31,7 @@ async function openChat(page: Page, api: TrackerClient): Promise<string> {
   await page.getByRole('button', { name: 'Send', exact: true }).click();
   await expect(page).toHaveURL(/\/p\/MOB\/ask\/[\w-]+$/);
   await expect(page.getByText(`Claude is thinking on ${HELPER}…`)).toBeVisible();
+
   return helperId;
 }
 

@@ -30,6 +30,7 @@ describe('on Railway, data and files stay off the deployment disk', () => {
       expect(message, url).toMatch(/DATABASE_URL/);
       expect(message, url).not.toContain('Sup3rSecretPW');
     }
+
     expect(startError(RAILWAY)).toBe('');
   });
 

@@ -22,9 +22,11 @@ function recordAnnouncements(): () => string[] {
   const records: MutationRecord[] = [];
   const observer = new MutationObserver((batch) => records.push(...batch));
   observer.observe(region, { childList: true, subtree: true, characterData: true });
+
   return () => {
     records.push(...observer.takeRecords());
     observer.disconnect();
+
     return records
       .flatMap((record) => [...record.addedNodes].map((node) => node.textContent ?? ''))
       .filter((text) => text !== '');

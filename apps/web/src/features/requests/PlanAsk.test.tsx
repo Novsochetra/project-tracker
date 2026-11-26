@@ -20,6 +20,7 @@ const answered = (request: RunRequest, more: Partial<RunRequest>): RunRequest =>
 
 function Cards() {
   const requests = useRequests('r-1');
+
   return <RequestCards requests={requests.shown} now={requests.now} />;
 }
 
@@ -34,6 +35,7 @@ function setup(requests: RunRequest[], answerRunRequest = vi.fn()) {
       </ToastProvider>
     </Wrapper>,
   );
+
   return userEvent.setup();
 }
 
@@ -49,6 +51,7 @@ describe('a plan request', () => {
     for (const name of ['Approve and edit', 'Approve and auto', 'Keep planning']) {
       expect(within(shown).getByRole('button', { name })).toBeEnabled();
     }
+
     expect(within(shown).queryByText(/goes on past what is shown/)).toBeNull();
     expect(screen.getByText('Claude has a plan: Rename the queue')).toBeInTheDocument();
   });

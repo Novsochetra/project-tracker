@@ -36,6 +36,7 @@ export function laterText(ticket: CaptureText, capture: SentCapture): UpdateTick
   if (changed('title')) changes.title = capture.title;
   if (changed('description')) changes.description = capture.description;
   if (changed('priority')) changes.priority = capture.priority;
+
   return Object.keys(changes).length > 0 ? changes : null;
 }
 
@@ -43,6 +44,7 @@ export function laterText(ticket: CaptureText, capture: SentCapture): UpdateTick
 // stays as it is, so a text-only capture still waits offline and its sync saves the text later.
 function plainly(error: unknown, ticketKey: string): unknown {
   if (!(error instanceof ApiError) || isNetworkError(error)) return error;
+
   return new TextNotSavedError(error, ticketKey);
 }
 

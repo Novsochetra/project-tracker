@@ -31,9 +31,11 @@ export function untilWoken(
       signal.removeEventListener('abort', stop);
       resolve();
     };
+
     signal.addEventListener('abort', stop);
     if (signal.aborted) stop();
   });
+
   return { woken, stop: () => stop() };
 }
 
@@ -59,6 +61,8 @@ export async function longPoll<T>(ctx: ServiceContext, poll: LongPoll<T>): Promi
     wait.stop();
     throw error;
   }
+
   await wait.woken;
+
   return poll.read();
 }

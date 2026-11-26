@@ -142,6 +142,7 @@ describe('parseMarkdown', () => {
       blocks = blocks[0].blocks;
       levels += 1;
     }
+
     expect(levels).toBe(MAX_DEPTH);
     expect(blocks).toEqual([paragraph('> > > x')]);
   });

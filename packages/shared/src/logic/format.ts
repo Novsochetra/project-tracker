@@ -29,6 +29,7 @@ export function formatRelative(timestamp: number, now: number = Date.now()): str
   if (hours < 24) return `${hours}h ago`;
   const days = Math.round(hours / 24);
   if (days < 7) return `${days}d ago`;
+
   return formatFullDate(timestamp);
 }
 
@@ -37,6 +38,7 @@ function formatDay(ymd: string, now: Date, options: Intl.DateTimeFormatOptions):
   if (Number.isNaN(date.getTime())) return ymd;
   const withYear =
     date.getFullYear() === now.getFullYear() ? options : { ...options, year: 'numeric' as const };
+
   return date.toLocaleDateString(LOCALE, withYear);
 }
 
@@ -52,5 +54,6 @@ export const isOverdue = (due: string, isDone: boolean, today: string = todayYmd
 export function formatBytes(bytes: number): string {
   if (bytes < KB) return `${bytes} B`;
   if (bytes < MB) return `${Math.round(bytes / KB)} KB`;
+
   return `${(bytes / MB).toFixed(1)} MB`;
 }

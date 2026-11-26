@@ -24,6 +24,7 @@ function parsePlanLimits({ planLimits }: Pick<RunnerRow, 'planLimits'>) {
 
 const toPlanUsage = (row: RunnerRow): HelperPlanUsage => {
   const stored = parsePlanLimits(row);
+
   return {
     runnerId: row.id,
     runnerName: row.name,

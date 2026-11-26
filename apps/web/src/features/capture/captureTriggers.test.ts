@@ -24,6 +24,7 @@ const element = <K extends keyof HTMLElementTagNameMap>(
 ) => {
   const el = document.createElement(tag);
   setup?.(el);
+
   return el;
 };
 

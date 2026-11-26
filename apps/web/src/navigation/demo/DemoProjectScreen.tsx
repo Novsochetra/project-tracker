@@ -46,12 +46,14 @@ function rowActions(demo: DemoActions, key: string, ticket: DemoTicket) {
       onTrigger: () => demo.notify(`${key}-${ticket.num} is ${STATUS_LABEL[ticket.status]}`),
     },
   ];
+
   return { leading, trailing };
 }
 
 function TicketRows({ project }: { project: DemoProject }) {
   const demo = useDemo();
   const { push } = useNavigation();
+
   return (
     <div className={styles.group}>
       {project.tickets.map((ticket) => (
@@ -86,6 +88,7 @@ export function DemoProjectScreen({ projectKey }: { projectKey: string }) {
   const { scrollRef } = useScreen();
   const project = demo.projects.find((candidate) => candidate.key === projectKey);
   if (!project) return <p className={styles.page}>This project was deleted.</p>;
+
   return (
     <>
       <NavBar

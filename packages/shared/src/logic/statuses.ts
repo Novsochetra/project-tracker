@@ -32,10 +32,12 @@ export function resolveStatus<T extends Status>(
     const found = findStatusByCategory(statuses, candidate);
     if (found) return found;
   }
+
   const sorted = sortStatuses(statuses);
   // Reports and agents must never move a ticket to Done, so the last resort skips done statuses.
   const fallback = sorted.find((status) => !isDoneCategory(status.category)) ?? sorted[0];
   if (!fallback) throw new Error('A project always has at least one status.');
+
   return fallback;
 }
 
@@ -44,6 +46,7 @@ export function findStatusByName<T extends Status>(
   name: string,
 ): T | undefined {
   const wanted = name.trim().toLowerCase();
+
   return statuses.find((status) => status.name.toLowerCase() === wanted);
 }
 

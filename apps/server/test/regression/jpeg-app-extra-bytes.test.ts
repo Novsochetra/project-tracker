@@ -20,6 +20,7 @@ function withExtraBytes(jpeg: Buffer, marker: number, extra: Buffer): Buffer {
   const end = at + 2 + jpeg.readUInt16BE(at + 2);
   const stuffed = Buffer.concat([jpeg.subarray(0, end), extra, jpeg.subarray(end)]);
   stuffed.writeUInt16BE(end - at - 2 + extra.length, at + 2);
+
   return stuffed;
 }
 
@@ -29,8 +30,10 @@ function withRepeatedHeaders(jpeg: Buffer, marker: number, name: string, tail: n
   const end = at + 2 + jpeg.readUInt16BE(at + 2);
   const repeats = ['GPS 11.', '55N 104', '.92E   '].map((part) => {
     const data = Buffer.concat([Buffer.from(name + part, 'latin1'), Buffer.from(tail)]);
+
     return Buffer.concat([Buffer.from([0xff, marker, 0, data.length + 2]), data]);
   });
+
   return Buffer.concat([jpeg.subarray(0, end), ...repeats, jpeg.subarray(end)]);
 }
 

@@ -10,12 +10,14 @@ export function usePasswordChange(onChanged: () => void) {
     set(value);
     if (change.isError) change.reset();
   };
+
   // The server checks both and says what is wrong, as it does for invites.
   const submit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (change.isPending) return;
     change.mutate({ currentPassword, newPassword }, { onSuccess: onChanged });
   };
+
   return {
     currentPassword,
     newPassword,

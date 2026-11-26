@@ -39,6 +39,7 @@ function renderOptions(
     client: { deleteProject, getProjectUsage },
     projects: [projectSummary({ totalCount: 4 })],
   });
+
   return { ...view, deleteProject };
 }
 

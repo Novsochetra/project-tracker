@@ -20,6 +20,7 @@ export function useDetailFields(detail: TicketDetail): DetailFields {
   const update = useTicketUpdate(ticket.key);
   const moveTo = useStatusMove(detail);
   const assignee = useFieldDraft(ticket.assignee, { ticketKey: ticket.key, field: 'assignee' });
+
   return {
     assignee,
     overdue: isOverdue(ticket.due, isDoneCategory(detail.status.category)),

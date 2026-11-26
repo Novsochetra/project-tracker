@@ -31,6 +31,7 @@ describe.each(DIALECTS)('Run all from a chat card (%s)', (dialect) => {
     for (const title of ['Crash', 'Login']) {
       await person('POST', '/api/projects/MOB/tickets', { title });
     }
+
     await helper('PUT', `/api/runners/${runner}`, helperName('Dara’s MacBook'));
     const started = await person<ChatDetail>('POST', '/api/projects/MOB/chats', {
       runnerId: runner,

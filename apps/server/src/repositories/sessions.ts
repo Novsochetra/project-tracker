@@ -35,6 +35,7 @@ export async function deleteSessionRow(db: Db, id: string): Promise<void> {
 
 export async function deleteUserSessions(db: Db, userId: string): Promise<number> {
   const result = await db.deleteFrom('sessions').where('userId', '=', userId).executeTakeFirst();
+
   return Number(result.numDeletedRows);
 }
 

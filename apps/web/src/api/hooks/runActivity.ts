@@ -9,6 +9,7 @@ import { WORKING_RUN_REFRESH_MS } from '../workingRun';
 // the tracker only ends when asked.
 export function useRunActivity(): TrackerQuery<RunActivity> {
   const client = useApi();
+
   return useQuery({
     queryKey: queryKeys.runActivity(),
     queryFn: () => client.listRunActivity(),

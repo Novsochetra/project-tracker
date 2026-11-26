@@ -35,11 +35,13 @@ async function prepareImage(file: SourceFile): Promise<PreparedFile> {
   if (kept) return { moved: unchanged(file.row), body };
   const compressed: CompressedFile = { mimeType, width, height, size: image.bytes.byteLength };
   const after = movedAttachmentRow(file.row, compressed);
+
   return { moved: { before: file.row, after, compressed: true, refusal: null }, body };
 }
 
 function prepareFile(file: SourceFile): Promise<PreparedFile> | PreparedFile {
   if (attachmentKind(file.row.mimeType) === 'image') return prepareImage(file);
+
   return { moved: unchanged(file.row), body: () => streamOf(file.path) };
 }
 
@@ -61,5 +63,6 @@ export async function copyFiles(
     moved.push(prepared.moved);
     onCopied(moved.length);
   }
+
   return moved;
 }

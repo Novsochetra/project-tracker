@@ -13,6 +13,7 @@ const BATCH = ['claim_ticket', 'submit_for_review'];
 
 const toolsOf = (run: Pick<Run, 'kind' | 'role'>): readonly string[] => {
   if (run.kind === 'batch') return BATCH;
+
   return run.kind === 'ticket' ? BY_ROLE[run.role] : [];
 };
 
@@ -20,5 +21,6 @@ const toolsOf = (run: Pick<Run, 'kind' | 'role'>): readonly string[] => {
 // for permission, so ask_person showed "Claude asks for permission" before its own question.
 export function trackerAllowedArgs(run: Pick<Run, 'kind' | 'role'>): string[] {
   const tools = [...EVERY_RUN, ...toolsOf(run)];
+
   return ['--allowedTools', tools.map((tool) => `mcp__${TRACKER_MCP}__${tool}`).join(',')];
 }

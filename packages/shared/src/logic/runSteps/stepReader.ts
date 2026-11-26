@@ -18,6 +18,7 @@ export function createStepReader(folder: string): (event: unknown) => RunStepInp
       if (!asked) return [];
       const label = stepLabel(`Not allowed: ${asked.label}`);
       const { subAgent, parentToolId } = asked;
+
       return [{ kind: 'denied', label, subAgent, ...(parentToolId && { parentToolId }), toolId }];
     });
   }
@@ -29,8 +30,10 @@ export function createStepReader(folder: string): (event: unknown) => RunStepInp
       for (const step of steps) if (step.toolId) open.set(step.toolId, step);
       return steps;
     }
+
     const steps = denied(event);
     for (const toolId of answeredToolIds(event)) open.delete(toolId);
+
     return steps;
   };
 }

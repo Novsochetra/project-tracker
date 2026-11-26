@@ -32,6 +32,7 @@ afterEach(() => {
 function open(server: FakeTicketServer, options: RenderTicketOptions = {}) {
   const rendered = renderTicket({ detail: server.detail, client: server.client, ...options });
   cleanups.push(rendered.restorePhone);
+
   return rendered;
 }
 
@@ -133,6 +134,7 @@ async function typeOfflineThenAgentEdits(server: FakeTicketServer) {
   expect(
     await screen.findByText("Description changed elsewhere while yours wasn't saved."),
   ).toBeInTheDocument();
+
   return user;
 }
 
@@ -166,8 +168,10 @@ it('asks before the page unloads while typed text is not saved', async () => {
   const unload = () => {
     const event = new Event('beforeunload', { cancelable: true });
     window.dispatchEvent(event);
+
     return event.defaultPrevented;
   };
+
   expect(unload()).toBe(false);
   await user.type(screen.getByLabelText('Title'), '!');
   await user.tab();

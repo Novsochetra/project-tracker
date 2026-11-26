@@ -103,6 +103,7 @@ function StackView({
   // code isn't in showed the boundary above the stack instead, a spinner in place of the whole
   // stack (PT-108).
   const loadsInPlace = loading !== undefined && model.id > 0;
+
   return (
     <div ref={rootRef} className={clsx(styles.root, className)} data-stack-navigator="">
       {model.layers.map((layer) => (
@@ -127,12 +128,14 @@ function StackView({
 
 function StackFromContext(props: StackNavigatorProps) {
   const navigation = use(NavigationContext);
+
   return navigation ? <StackView {...props} navigation={navigation} /> : null;
 }
 
 export function StackNavigator(props: StackNavigatorProps) {
   const navigation = use(NavigationContext);
   if (navigation) return <StackView {...props} navigation={navigation} />;
+
   return (
     <NavigationProvider>
       <StackFromContext {...props} />

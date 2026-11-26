@@ -27,6 +27,7 @@ afterEach(() => {
 function Gallery({ onClose = () => undefined }: { onClose?: () => void }) {
   const [index, setIndex] = useState(1);
   const [open, setOpen] = useState(true);
+
   return (
     <ImageViewer
       images={images}

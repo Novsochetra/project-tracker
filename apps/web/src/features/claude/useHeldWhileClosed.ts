@@ -5,5 +5,6 @@ import { useState } from 'react';
 export function useHeldWhileClosed<T>(open: boolean, value: T): T {
   const [held, setHeld] = useState(() => value);
   if (open && !Object.is(held, value)) setHeld(() => value);
+
   return open ? value : held;
 }

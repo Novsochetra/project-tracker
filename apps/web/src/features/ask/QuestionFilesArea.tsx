@@ -6,6 +6,7 @@ import type { QuestionFiles } from './useQuestionFiles';
 
 export function QuestionFilesArea({ question }: { question: QuestionFiles }) {
   const { attachments, files } = question;
+
   return (
     <>
       {(attachments.length > 0 || files.uploading.length > 0) && (

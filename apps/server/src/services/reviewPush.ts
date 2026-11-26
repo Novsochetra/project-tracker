@@ -10,6 +10,7 @@ export function readyPush(
 ): PushMessage | null {
   if (actor.kind !== 'agent' || review.target.category !== 'reviewed') return null;
   const { project, ticket } = scope;
+
   return reviewedPush(
     { projectKey: project.key, num: ticket.num, title: ticket.title },
     review.rating,

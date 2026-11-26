@@ -18,9 +18,11 @@ export function appHeader(bytes: Buffer, { marker, start, end }: JpegSegment): B
   if (!header || data.length < header.size || !data.subarray(0, 5).equals(header.name)) {
     return null;
   }
+
   const segment = Buffer.from(bytes.subarray(start, start + 4 + header.size));
   segment.writeUInt16BE(2 + header.size, 2);
   // A thumbnail size with no thumbnail after it would send a reader past the segment's end.
   if (marker === APP0) segment.fill(0, segment.length - 2);
+
   return segment;
 }

@@ -60,6 +60,7 @@ describe('a Write or Edit permission', () => {
       expect(label.startsWith('Write package.json\n+ x')).toBe(true);
       expect(cut).toBe(true);
     }
+
     const edits = Array.from({ length: 100_000 }, () => ({ old_string: 'a', new_string: 'b' }));
     expect(permissionLabel('MultiEdit', { file_path: path, edits }, FOLDER).cut).toBe(true);
   });

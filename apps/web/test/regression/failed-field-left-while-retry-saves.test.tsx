@@ -29,6 +29,7 @@ function openWithHeldSaves() {
   const updateTicket = vi.fn((key: string, input: UpdateTicketInput): Promise<unknown> => {
     const save = deferred<unknown>();
     saves.push(save);
+
     return save.promise.then(() => server.client.updateTicket(key, input));
   });
   const rendered = renderTicket({
@@ -43,6 +44,7 @@ function openWithHeldSaves() {
       else save?.reject(new TypeError('Failed to fetch'));
       await save?.promise.catch(() => undefined);
     });
+
   return { server, updateTicket, answer };
 }
 

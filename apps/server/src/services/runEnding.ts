@@ -25,5 +25,6 @@ export function endingOf(run: Pick<RunRow, 'kind'>, input: FinishRunInput): RunE
     sessionId: input.sessionId ?? null,
     attachmentIds: input.attachmentIds ?? [],
   };
+
   return { status: 'done', error: null, answer };
 }

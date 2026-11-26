@@ -23,6 +23,7 @@ afterEach(() => {
 // Tab A: the same modules with memory of their own, as in another tab.
 async function otherTab() {
   vi.resetModules();
+
   return {
     drafts: await import('../../src/lib/storedDrafts'),
     saves: await import('../../src/features/ticket/fields/fieldSaves'),
@@ -53,12 +54,14 @@ async function anotherTabSends(field: Field, before: string, text: string) {
     tabA.saves.finishSave(id, save, true);
     heard(DRAFTS_STORAGE_KEY, SAVE_MARKS_STORAGE_KEY);
   };
+
   return { updateTicket, land };
 }
 
 async function anotherTabSaved(field: Field, before: string, text: string) {
   const { updateTicket, land } = await anotherTabSends(field, before, text);
   land();
+
   return updateTicket;
 }
 

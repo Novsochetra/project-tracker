@@ -15,6 +15,7 @@ function listen(win: Window, onTouch: (event: Event) => void, onResize: () => vo
   TOUCH_EVENTS.forEach((type) => win.addEventListener(type, onTouch, LISTEN));
   win.addEventListener('resize', onResize);
   win.visualViewport?.addEventListener('resize', onResize);
+
   return () => {
     TOUCH_EVENTS.forEach((type) => win.removeEventListener(type, onTouch, LISTEN));
     win.removeEventListener('resize', onResize);
@@ -39,28 +40,34 @@ export function watchStatusBarTap(
     resting = win.scrollY === RESTING_Y;
     stuck = !resting;
   };
+
   const changed = () => {
     settlesAt = Date.now() + SETTLE_MS;
     stuck = false;
   };
+
   const onTouch = (event: Event) => {
     touching = (event as TouchEvent).touches.length > 0;
     if (touching) return;
     changed();
     if (win.scrollY === 0 && !isLocked()) rest();
   };
+
   const onScroll = () => {
     if (isLocked()) return;
     if (touching || win.scrollY !== 0) {
       resting = !touching && win.scrollY === RESTING_Y;
       return;
     }
+
     if (resting && Date.now() >= settlesAt) onTap();
     if (!stuck) rest();
   };
+
   const unlisten = listen(win, onTouch, changed);
   win.addEventListener('scroll', onScroll, { passive: true });
   if (!isLocked()) rest();
+
   return () => {
     unlisten();
     win.removeEventListener('scroll', onScroll);

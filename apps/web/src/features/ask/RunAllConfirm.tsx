@@ -52,6 +52,7 @@ export function RunAllConfirm({
       },
     );
   };
+
   return (
     <section className={styles.card} aria-label="Run all card">
       <RunAllHead />

@@ -25,6 +25,7 @@ export function labelParts(label: string): LabelParts {
   const verb = CODE_VERBS.find((known) => label.startsWith(`${known} `));
   if (verb) return { verb, detail: label.slice(verb.length + 1) };
   const [head = '', ...rest] = label.split('\n');
+
   return { verb: head, detail: rest.join('\n') };
 }
 
@@ -34,6 +35,7 @@ const planTitle = (label: string): string =>
 
 function subjectText(request: RunRequest): string {
   if (request.kind === 'question') return request.questions[0]?.question ?? request.label;
+
   return request.kind === 'plan' ? planTitle(request.label) : labelHead(request.label);
 }
 
@@ -48,6 +50,7 @@ const ANSWERED: Readonly<Record<RunRequestKind, { allow: Outcome; deny: Outcome 
 
 export function requestOutcome(request: RunRequest, now: number): Outcome {
   if (requestState(request, now) === 'ended') return 'none';
+
   return ANSWERED[request.kind][request.decision === 'deny' ? 'deny' : 'allow'];
 }
 
@@ -57,14 +60,17 @@ export function answerLines(request: RunRequest): string[] {
   if (request.kind !== 'question' || !request.answers) return [];
   const { questions, answers } = request;
   if (questions.length === 1) return answers.slice(0, 1);
+
   return answers.map((answer, index) => {
     const question = questions[index];
+
     return question ? `${nameOf(question)}: ${answer}` : answer;
   });
 }
 
 function approvedLines(request: RunRequest): string[] {
   const mode = planModeOf(request.answers);
+
   return [mode ? approvedText(mode) : OUTCOME_TEXT.approved];
 }
 
@@ -74,6 +80,7 @@ export const outcomeLines = (request: RunRequest, now: number): string[] => {
   if (outcome === 'approved') return approvedLines(request);
   if (outcome === 'planning')
     return [OUTCOME_TEXT.planning, ...(request.answers ?? []).slice(0, 1)];
+
   return [OUTCOME_TEXT[outcome]];
 };
 

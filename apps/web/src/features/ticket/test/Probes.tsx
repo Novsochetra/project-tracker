@@ -4,6 +4,7 @@ import { useSheets } from '../../../app/sheets/context';
 export function Probes() {
   const { pathname } = useLocation();
   const sheet = useSheets().current;
+
   return (
     <>
       <output aria-label="Location">{pathname}</output>

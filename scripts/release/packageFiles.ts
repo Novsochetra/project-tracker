@@ -5,12 +5,14 @@ const write = (json: Json): string => `${JSON.stringify(json, null, 2)}\n`;
 
 function withVersionAfterName(json: Json, version: string): Json {
   const { name, version: _old, ...rest } = json;
+
   return name === undefined ? { version, ...rest } : { name, version, ...rest };
 }
 
 export const readVersion = (packageText: string): string => {
   const { version } = JSON.parse(packageText) as Json;
   if (typeof version !== 'string') throw new Error('package.json has no version.');
+
   return version;
 };
 
@@ -22,5 +24,6 @@ export function setLockVersion(lockText: string, version: string): string {
   const root = lock.packages?.[''];
   const packages = root ? { ...lock.packages, '': withVersionAfterName(root, version) } : undefined;
   const updated = withVersionAfterName(lock, version);
+
   return write(packages ? { ...updated, packages } : updated);
 }

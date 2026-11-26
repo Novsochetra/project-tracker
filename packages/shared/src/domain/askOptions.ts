@@ -36,6 +36,7 @@ export const changesFolder = (mode: unknown): boolean => mode === 'edit' || mode
 // folder at once.
 export function laneOf(kind: RunKind, askOptions: AskOptions | null): RunLane {
   if (kind === 'ask') return changesFolder(askOptions?.mode) ? 'ticket' : 'ask';
+
   // A kind from a newer tracker stays a lane of its own, so no lane of this helper takes it.
   return kind === 'batch' ? 'ticket' : kind;
 }

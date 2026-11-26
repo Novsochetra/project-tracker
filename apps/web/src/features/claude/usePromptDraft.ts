@@ -19,6 +19,7 @@ export function usePromptDraft(query: TrackerQuery<PromptResult>): PromptDraft {
   const fresh = query.isFetchedAfterMount && query.isSuccess ? query.data : undefined;
   const [seeded, setSeeded] = useState<Seeded | null>(null);
   if (!seeded && fresh) setSeeded({ result: fresh, text: fresh.text });
+
   return {
     result: seeded?.result ?? null,
     text: seeded?.text ?? '',

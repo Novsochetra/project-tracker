@@ -39,12 +39,14 @@ let draftCount = 0;
 
 function nextDraftId(): string {
   draftCount += 1;
+
   return `${TEMPORARY_ID_PREFIX}${draftCount}`;
 }
 
 export function useAddComment(): TrackerMutation<Activity, AddCommentVariables> {
   const client = useApi();
   const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: ({ ticketKey, text, attachments = [], line }: AddCommentVariables) =>
       client.addComment(ticketKey, {
@@ -63,6 +65,7 @@ export function useAddComment(): TrackerMutation<Activity, AddCommentVariables> 
       await applyOptimistic(queryClient, [
         ticketChange(ticketKey, (detail) => appendActivity(detail, draftComment(detail, draft))),
       ]);
+
       return draft.id;
     },
     onSuccess: (activity, { ticketKey }, draftId) =>
@@ -80,6 +83,7 @@ export function useAddComment(): TrackerMutation<Activity, AddCommentVariables> 
 export function useUpdateComment(): TrackerMutation<Activity, UpdateCommentVariables> {
   const client = useApi();
   const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: ({ activityId, text, expected }: UpdateCommentVariables) =>
       expected === undefined
@@ -99,6 +103,7 @@ export function useUpdateComment(): TrackerMutation<Activity, UpdateCommentVaria
 export function useDeleteActivity(): TrackerMutation<void, DeleteActivityVariables> {
   const client = useApi();
   const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: ({ activityId }: DeleteActivityVariables) => client.deleteActivity(activityId),
     onMutate: ({ ticketKey, activityId }) =>

@@ -14,6 +14,7 @@ export function ContextMeter({ context }: { context: ChatContext }) {
   const detailsId = useId();
   const percent = contextPercent(context);
   const level = contextLevel(percent);
+
   return (
     <div className={clsx(styles.context, styles[level])}>
       <div className={styles.row}>

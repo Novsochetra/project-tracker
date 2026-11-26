@@ -33,6 +33,7 @@ function placeLabelMenu(menu: HTMLElement, anchor: DOMRect, itemCount: number) {
   const spot = placeMenu({ triggerRect: anchor, viewport, itemCount, isPhone: isPhoneNow() });
   menu.style.width = `${spot.width}px`;
   menu.style.maxHeight = `${spot.maxHeight}px`;
+
   return spot;
 }
 
@@ -47,6 +48,7 @@ function Menu({ open, anchorRef, onClose, ...picker }: LabelMenuProps) {
     anchorRef.current?.focus({ preventScroll: true });
     onClose();
   };
+
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     if (event.key !== 'Escape' && event.key !== 'Tab') return;
     // Marked as handled so a parent sheet listening for Escape stays open.
@@ -54,6 +56,7 @@ function Menu({ open, anchorRef, onClose, ...picker }: LabelMenuProps) {
     event.stopPropagation();
     close();
   };
+
   return (
     <FloatingPanel
       open={open}

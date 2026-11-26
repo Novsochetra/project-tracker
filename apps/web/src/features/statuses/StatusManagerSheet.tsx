@@ -23,6 +23,7 @@ export const STATUSES_HELP =
 export function StatusManagerSheet({ open, onClose, projectKey }: StatusManagerSheetProps) {
   const board = useBoard(projectKey);
   const [unsavedEdit, setUnsavedEdit] = useState(false);
+
   return (
     <Sheet
       open={open}
@@ -77,6 +78,7 @@ function StatusManagerBody({ projectKey, board, onDirtyChange }: StatusManagerBo
     flushSync(() => inPlace(update));
     focusRow(focusId);
   };
+
   const open = (next: Editing) => inPlace(() => setEditing(next));
   const finish = (focusId?: string) => close(() => setEditing(null), focusId);
   const removed = (id: string) =>
@@ -95,6 +97,7 @@ function StatusManagerBody({ projectKey, board, onDirtyChange }: StatusManagerBo
       onDirtyChange={onDirtyChange}
     />
   );
+
   return (
     <>
       <OrderedList

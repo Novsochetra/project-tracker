@@ -39,6 +39,7 @@ const reachable = (project: ProjectRow | undefined, scope: UserScope): ProjectRo
 export async function requireProject(db: Db, scope: UserScope, key: string): Promise<ProjectRow> {
   const project = reachable(await findProjectByKey(db, key.trim().toUpperCase()), scope);
   if (!project) throw notFound(`Project ${key} was not found.`);
+
   return project;
 }
 
@@ -51,12 +52,14 @@ export async function findTicketRef(
   if (!parsed) return null;
   const project = reachable(await findProjectByKey(db, parsed.projectKey), scope);
   const ticket = project ? await findTicketByNum(db, project.id, parsed.num) : undefined;
+
   return project && ticket ? { ticket, project } : null;
 }
 
 export async function requireTicket(db: Db, scope: UserScope, key: string): Promise<TicketRef> {
   const ref = await findTicketRef(db, scope, key);
   if (!ref) throw notFound(`Ticket ${key} was not found.`);
+
   return ref;
 }
 
@@ -65,12 +68,14 @@ async function findTicketRefById(db: Db, scope: UserScope, id: string) {
   const project = ticket
     ? reachable(await findProjectById(db, ticket.projectId), scope)
     : undefined;
+
   return ticket && project ? { ticket, project } : null;
 }
 
 export async function requireTicketById(db: Db, scope: UserScope, id: string): Promise<TicketRef> {
   const ref = await findTicketRefById(db, scope, id);
   if (!ref) throw notFound('Ticket was not found.');
+
   return ref;
 }
 
@@ -80,6 +85,7 @@ export async function requireStatus(db: Db, scope: UserScope, id: string): Promi
     ? reachable(await findProjectById(db, status.projectId), scope)
     : undefined;
   if (!status || !project) throw notFound('Status was not found.');
+
   return status;
 }
 
@@ -87,6 +93,7 @@ export async function requireLabel(db: Db, scope: UserScope, id: string): Promis
   const label = await findLabelById(db, id);
   const project = label ? reachable(await findProjectById(db, label.projectId), scope) : undefined;
   if (!label || !project) throw notFound('Label was not found.');
+
   return label;
 }
 
@@ -94,12 +101,14 @@ export async function requireActivity(db: Db, scope: UserScope, id: string): Pro
   const activity = await findActivityById(db, id);
   const ref = activity ? await findTicketRefById(db, scope, activity.ticketId) : null;
   if (!activity || !ref) throw notFound('That activity item was not found.');
+
   return activity;
 }
 
 // A file on no ticket yet is only its uploader's.
 async function canReachFile(db: Db, scope: UserScope, row: AttachmentRow): Promise<boolean> {
   if (row.ticketId === null) return inScope(row.userId, scope);
+
   return (await findTicketRefById(db, scope, row.ticketId)) !== null;
 }
 
@@ -109,12 +118,14 @@ export async function findReachableAttachment(
   id: string,
 ): Promise<AttachmentRow | undefined> {
   const row = await findAttachmentById(db, id);
+
   return row && (await canReachFile(db, scope, row)) ? row : undefined;
 }
 
 export function requireStatusIn(statuses: readonly StatusRow[], id: string): StatusRow {
   const status = statuses.find((candidate) => candidate.id === id);
   if (!status) throw notFound('Status was not found in this project.');
+
   return status;
 }
 
@@ -122,6 +133,7 @@ export async function loadTicketScope(db: Db, ref: TicketRef): Promise<TicketSco
   const statuses = await listStatusRows(db, ref.project.id);
   const status = statuses.find((candidate) => candidate.id === ref.ticket.statusId);
   if (!status) throw new Error(`Ticket ${ref.ticket.id} has no status.`);
+
   return { ...ref, statuses, status };
 }
 

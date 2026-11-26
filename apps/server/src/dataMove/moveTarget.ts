@@ -18,6 +18,7 @@ export function moveTargetSettings(env: NodeJS.ProcessEnv): MoveTargetSettings {
       "Set DATABASE_URL to the Postgres service's DATABASE_PUBLIC_URL (with PGSSLMODE=require).",
     );
   }
+
   if (!isPostgresUrl(databaseUrl)) {
     throw new Error(
       'DATABASE_URL is not a postgres:// URL (its value is not shown). The move goes only into ' +
@@ -25,6 +26,7 @@ export function moveTargetSettings(env: NodeJS.ProcessEnv): MoveTargetSettings {
         'or a name in front.',
     );
   }
+
   const s3 = loadS3Config(env);
   if (!s3) {
     throw new Error(
@@ -32,5 +34,6 @@ export function moveTargetSettings(env: NodeJS.ProcessEnv): MoveTargetSettings {
         'bucket the online tracker reads, never to a folder on this computer.',
     );
   }
+
   return { databaseUrl, s3 };
 }

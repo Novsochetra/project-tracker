@@ -24,6 +24,7 @@ describe.skipIf(DECODES_HEIC).each(DIALECTS)('a HEIC sent with a question (%s)',
       body: bytes,
     });
     expect(response.status).toBe(201);
+
     return (await response.json()) as Attachment;
   };
 

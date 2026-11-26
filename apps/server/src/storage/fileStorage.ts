@@ -22,6 +22,7 @@ const SAFE_KEY = /^[A-Za-z0-9][A-Za-z0-9._-]*$/;
 
 export function checkedKey(key: string): string {
   if (!SAFE_KEY.test(key)) throw new Error(`Invalid storage key: ${key}`);
+
   return key;
 }
 
@@ -35,5 +36,6 @@ export async function removeFiles(storage: FileStorage, keys: readonly string[])
     const reason = result.reason instanceof Error ? result.reason.message : String(result.reason);
     console.warn(`File ${keys[index]} stays in storage and must be removed by hand: ${reason}`);
   });
+
   return results.filter((result) => result.status === 'fulfilled').length;
 }

@@ -25,16 +25,19 @@ export interface Reachability {
 function createFlag(): ReachabilityFlag {
   let unreachable = false;
   const listeners = new Set<() => void>();
+
   return {
     isUnreachable: () => unreachable,
     subscribe: (listener) => {
       listeners.add(listener);
+
       return () => listeners.delete(listener);
     },
     setUnreachable: (next) => {
       if (next === unreachable) return false;
       unreachable = next;
       listeners.forEach((listener) => listener());
+
       return true;
     },
   };
@@ -83,6 +86,7 @@ export function watchApiTraffic(
     const trackerBack = becameReachable(reachability.tracker, !state.answers);
     if ((bannerGone || trackerBack) && source !== 'projects') refreshProjects();
   };
+
   // Unreachable already, a bare 5xx changes nothing.
   const confirm = () => {
     if (checking || reachability.banner.isUnreachable()) return;
@@ -92,6 +96,7 @@ export function watchApiTraffic(
       if (!stopped) settle(signal, 'check');
     });
   };
+
   const apply = (signal: ApiSignal | null, source: Source) =>
     signal === 'unsure' ? confirm() : settle(signal, source);
   const recheck = () =>
@@ -113,6 +118,7 @@ export function watchApiTraffic(
   const stopMutations = queryClient.getMutationCache().subscribe((event) => {
     if (event.type === 'updated') apply(signalOf(event.action), 'request');
   });
+
   return () => {
     stopped = true;
     stopQueries();

@@ -23,6 +23,7 @@ function tagSpans(profile: Buffer): Span[] | null {
     if (start < tableEnd || end > profile.length) return null;
     spans.push({ start, end });
   }
+
   return spans.sort((a, b) => a.start - b.start);
 }
 
@@ -36,6 +37,7 @@ function hasOnlyPaddingOutside(profile: Buffer, spans: Span[]): boolean {
     if (start > covered && !isPadding(profile.subarray(covered, start))) return false;
     covered = Math.max(covered, end);
   }
+
   return isPadding(profile.subarray(covered));
 }
 
@@ -45,5 +47,6 @@ export function isWellFormedIccProfile(profile: Buffer): boolean {
   if (profile.length < HEADER_BYTES || profile.readUInt32BE(0) !== profile.length) return false;
   if (!profile.subarray(36, 40).equals(ACSP)) return false;
   const spans = tagSpans(profile);
+
   return spans !== null && hasOnlyPaddingOutside(profile, spans);
 }

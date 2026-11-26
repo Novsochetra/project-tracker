@@ -18,6 +18,7 @@ function closers(runs: readonly Run[]): number[] {
     found[i] = next.get(length) ?? -1;
     next.set(length, i);
   }
+
   return found;
 }
 
@@ -25,6 +26,7 @@ function closers(runs: readonly Run[]): number[] {
 function codeText(raw: string): string {
   const text = raw.replace(/\n/g, ' ');
   const padded = text.length > 2 && text.startsWith(' ') && text.endsWith(' ');
+
   return padded && text.trim() ? text.slice(1, -1) : text;
 }
 
@@ -43,6 +45,8 @@ export function codeSpans(text: string): Piece[] {
     plain = end.start + end.length;
     i = j;
   }
+
   if (plain < text.length) pieces.push({ kind: 'plain', start: plain, end: text.length });
+
   return pieces;
 }

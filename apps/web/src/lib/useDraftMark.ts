@@ -6,6 +6,7 @@ export function useDraftMark(id: string, active: boolean): void {
   useEffect(() => {
     if (!active) return;
     markDraft(id);
+
     return () => clearDraft(id);
   }, [id, active]);
 }

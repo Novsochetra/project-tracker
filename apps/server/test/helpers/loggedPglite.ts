@@ -12,10 +12,13 @@ export async function loggedPglite(sql: string[]): Promise<Kysely<Database>> {
     const query = target.query.bind(target);
     target.query = ((text: string, ...rest: unknown[]) => {
       sql.push(text);
+
       return query(text, ...(rest as []));
     }) as T['query'];
+
     return target;
   };
+
   logged(pglite);
   // Kysely's PGlite driver runs a transaction's queries on PGlite's own transaction object.
   const transaction = pglite.transaction.bind(pglite);
@@ -33,6 +36,7 @@ export async function loggedPglite(sql: string[]): Promise<Kysely<Database>> {
     plugins: [new CamelCasePlugin(), new StripNulPlugin()],
   });
   await migrateToLatest(db);
+
   return db;
 }
 
@@ -44,5 +48,6 @@ export function inOrderInOneTransaction(sql: readonly string[], first: RegExp, t
   const a = firstIndex(sql, first);
   const b = firstIndex(sql, then);
   const begin = sql.lastIndexOf('begin', a);
+
   return a > -1 && b > a && begin > -1 && !sql.slice(begin, b).includes('commit');
 }

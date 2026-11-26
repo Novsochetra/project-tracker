@@ -13,6 +13,7 @@ const isK = ({ key, code }: Pick<PaletteKey, 'key' | 'code'>): boolean =>
 export function isPaletteShortcut(event: PaletteKey, apple: boolean): boolean {
   if (event.repeat || event.isComposing || event.altKey || event.shiftKey) return false;
   const modifier = apple ? event.metaKey && !event.ctrlKey : event.ctrlKey && !event.metaKey;
+
   return modifier && isK(event);
 }
 
@@ -20,5 +21,6 @@ export const shortcutHint = (apple: boolean): string => (apple ? '⌘K' : 'Ctrl 
 
 export function isApplePlatform(): boolean {
   if (typeof navigator === 'undefined') return false;
+
   return /Mac|iPhone|iPad|iPod/.test(navigator.platform || navigator.userAgent);
 }

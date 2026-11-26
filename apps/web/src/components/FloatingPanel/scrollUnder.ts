@@ -13,6 +13,7 @@ interface Axis {
 function canScrollAxis({ overflow, offset, room, by }: Axis, isPage: boolean): boolean {
   const scrolls = SCROLLS.has(overflow) || (isPage && overflow !== 'hidden');
   if (by === 0 || !scrolls) return false;
+
   return by < 0 ? offset > 0 : offset < room;
 }
 
@@ -31,6 +32,7 @@ export function canScroll(element: Element, x: number, y: number): boolean {
     room: element.scrollWidth - element.clientWidth,
     by: x,
   };
+
   return canScrollAxis(vertical, isPage) || canScrollAxis(horizontal, isPage);
 }
 
@@ -38,6 +40,7 @@ export function scrollerFor(start: Element | undefined, x: number, y: number): E
   for (let element = start ?? null; element; element = element.parentElement) {
     if (canScroll(element, x, y)) return element;
   }
+
   return null;
 }
 

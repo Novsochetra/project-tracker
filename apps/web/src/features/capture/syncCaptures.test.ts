@@ -43,9 +43,11 @@ function memoryQueue(items: QueuedCapture[], created: string[] = []) {
     update: (change) => {
       if (failWrites) return false;
       queue = change(queue);
+
       return true;
     },
   };
+
   return {
     access,
     current: () => queue,
@@ -154,6 +156,7 @@ describe('syncCaptures', () => {
         sending.add('late');
         store.access.update((queue) => addCapture(queue, capture('late', 2)));
       }
+
       return Promise.resolve(ticketFor(item));
     });
 
@@ -186,6 +189,7 @@ describe('syncCaptures', () => {
     const claim = vi.fn((id: string) => {
       // While this run waited for the lock, another tab created 'b'.
       if (id === 'b') store.access.update((queue) => ({ ...queue, created: ['b'] }));
+
       return Promise.resolve(() => undefined);
     });
     const sync = deps(store.access, { claim });
@@ -276,6 +280,7 @@ describe('syncCaptures', () => {
     const store = memoryQueue([capture('a', 1)]);
     const send = vi.fn((item: QueuedCapture) => {
       if (item.id === 'a') store.access.update((queue) => addCapture(queue, capture('b', 2)));
+
       return Promise.resolve(ticketFor(item));
     });
 

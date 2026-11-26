@@ -20,6 +20,7 @@ export function branchNameProblem(name: string): string | null {
   ) {
     return "That name isn't a branch name git takes.";
   }
+
   return null;
 }
 
@@ -35,5 +36,6 @@ export function proposedBranch(title: string): string {
     .replace(/[^a-z0-9]+/g, '-')
     .slice(0, SLUG_MAX)
     .replace(/^-+|-+$/g, '');
+
   return `chat/${slug || 'changes'}`;
 }

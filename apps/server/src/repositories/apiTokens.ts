@@ -30,5 +30,6 @@ export async function deleteApiTokenRow(db: Db, id: string, userId: string): Pro
     .where('id', '=', id)
     .where('userId', '=', userId)
     .executeTakeFirst();
+
   return Number(result.numDeletedRows);
 }

@@ -14,11 +14,13 @@ function tokensOf(source: string): Token[] {
       tokens.push({ kind: 'atom', inline: { kind: 'code', text: piece.text } });
       continue;
     }
+
     for (const token of linkTokens(source, piece.start, piece.end)) {
       if (token.kind === 'atom') tokens.push(token);
       else for (const part of splitMarks(source, token)) tokens.push(part);
     }
   }
+
   return tokens;
 }
 
@@ -29,5 +31,6 @@ export function parseInline(source: string): Inline[] {
   if (!SYNTAX.test(source)) return source ? [{ kind: 'text', text: source }] : [];
   const tokens = tokensOf(source);
   matchMarks(tokens);
+
   return buildInline(tokens);
 }

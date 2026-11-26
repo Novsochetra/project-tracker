@@ -35,6 +35,7 @@ function openNewTicket(board = makeBoard()) {
       </ToastProvider>
     </Wrapper>,
   );
+
   return { user: userEvent.setup(), createTicket };
 }
 

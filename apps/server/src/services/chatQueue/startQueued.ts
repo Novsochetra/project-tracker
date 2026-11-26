@@ -30,6 +30,7 @@ export async function usableRunner(
   row: QueuedRow,
 ): Promise<RunnerRow | null> {
   const project = { id: chat.projectId, key: chat.projectKey };
+
   return requireRunnerFor(trx, scope, row.runnerId, project).catch((error: unknown) => {
     if (error instanceof AppError) return null;
     throw error;
@@ -55,5 +56,6 @@ export async function startQueuedIn(
   const options = { model: row.askModel, mode: row.askMode, effort: row.askEffort };
   const queued = { scope, runner, projectId: project.id, now };
   const request = { queued, project, chat, history, ticket, question: row.text, options };
+
   return queueAskRun(trx.db, request, { id: row.messageId, files: files.map((f) => f.fileName) });
 }

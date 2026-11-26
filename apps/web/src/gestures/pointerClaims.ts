@@ -22,18 +22,22 @@ export function swallowTapClick(pointerId: number): void {
     event.stopPropagation();
     cleanup();
   };
+
   const onUp = (event: PointerEvent) => {
     if (event.pointerId === pointerId) timer = window.setTimeout(cleanup, TAP_CLICK_MS);
   };
+
   const onCancel = (event: PointerEvent) => {
     if (event.pointerId === pointerId) cleanup();
   };
+
   function cleanup() {
     window.clearTimeout(timer);
     window.removeEventListener('click', block, true);
     window.removeEventListener('pointerup', onUp, true);
     window.removeEventListener('pointercancel', onCancel, true);
   }
+
   window.addEventListener('click', block, true);
   window.addEventListener('pointerup', onUp, true);
   window.addEventListener('pointercancel', onCancel, true);
@@ -47,10 +51,12 @@ export function suppressNextClick(): void {
     event.stopPropagation();
     cleanup();
   };
+
   const timer = window.setTimeout(() => cleanup(), 0);
   function cleanup() {
     window.clearTimeout(timer);
     window.removeEventListener('click', block, true);
   }
+
   window.addEventListener('click', block, true);
 }

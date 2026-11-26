@@ -18,8 +18,10 @@ async function whyEnded(ctx: ServiceContext, row: ChatGitActionRow): Promise<str
   if (row.status === 'queued') {
     return now - row.createdAt >= GIT_ACTION_WAIT_MS ? GIT_ACTION_NOT_TAKEN : null;
   }
+
   if (row.status !== 'running') return null;
   const runner = await findRunnerRow(ctx.db, row.runnerId);
+
   return runner && isOnline(runner.lastSeenAt, now) ? null : GIT_ACTION_LOST;
 }
 

@@ -17,6 +17,7 @@ export interface UploadThumbnailProps {
 function LocalPreview({ file }: { file: UploadingFile }) {
   if (!file.preview) return null;
   if (file.kind === 'video') return <VideoFace src={file.preview} playBadge={false} />;
+
   return <ImageFace src={file.preview} />;
 }
 
@@ -31,6 +32,7 @@ function UploadStatus({ file, overMedia }: { file: UploadingFile; overMedia: boo
       />
     );
   }
+
   return (
     <span
       role="img"
@@ -45,6 +47,7 @@ function UploadStatus({ file, overMedia }: { file: UploadingFile; overMedia: boo
 export function UploadThumbnail({ file, onCancel }: UploadThumbnailProps) {
   const wide = isWide(file.kind);
   const progress = <UploadStatus file={file} overMedia={!wide} />;
+
   return (
     <div className={clsx(styles.tile, wide && styles.wide, file.failed && styles.failed)}>
       {wide ? (

@@ -35,7 +35,9 @@ export function ChatScreen({ projectKey, chatId, ticketNum }: ChatScreenProps) {
       <ChatView projectKey={projectKey} chatId={chatId} detail={detail} ticketNum={ticketNum} />
     );
   }
+
   const failed = query.error !== null && !isNotFound(query.error);
+
   return (
     <>
       <ChatLoadingBar projectKey={projectKey} chatId={chatId} ticketNum={ticketNum} />

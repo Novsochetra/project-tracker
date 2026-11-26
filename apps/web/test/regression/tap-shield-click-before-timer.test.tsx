@@ -23,6 +23,7 @@ function renderDiscard() {
   render(<DiscardChangesSheet open onKeep={vi.fn()} onDiscard={onDiscard} />);
   // The timer after a pointerup waits, as on a busy page.
   vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+
   return { onDiscard, row: screen.getByRole('button', { name: 'Discard changes' }) };
 }
 

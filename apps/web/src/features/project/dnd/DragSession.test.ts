@@ -25,6 +25,7 @@ function rowWithButton() {
   const button = document.createElement('button');
   row.append(button);
   document.body.append(row);
+
   return button;
 }
 
@@ -43,6 +44,7 @@ function startSession(immediate = false, scrolls = false) {
     env,
     listener,
   );
+
   return { session, listener, env };
 }
 

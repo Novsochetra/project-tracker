@@ -17,6 +17,7 @@ export interface PriorityBarsProps {
 
 export function PriorityBars({ priority, className }: PriorityBarsProps) {
   const level = LEVEL[priority];
+
   return (
     <svg
       width="16"

@@ -7,6 +7,7 @@ afterEach(() => {
 
 function page(html: string) {
   document.body.innerHTML = html;
+
   return document.getElementById('note')!;
 }
 

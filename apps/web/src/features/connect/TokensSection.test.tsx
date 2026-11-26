@@ -56,6 +56,7 @@ function renderTokens(tokens: ApiToken[] = [laptop, desktop], overrides = {}) {
     ...overrides,
   };
   renderWithApi(<TokensSection />, server);
+
   return { server, user: userEvent.setup() };
 }
 

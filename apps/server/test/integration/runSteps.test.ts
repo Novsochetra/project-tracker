@@ -122,6 +122,7 @@ describe.each(DIALECTS)('run steps (%s)', (dialect) => {
     for (let from = 1; from <= total; from += RUN_STEPS_BATCH_MAX) {
       expect((await send(batch(from, RUN_STEPS_BATCH_MAX))).status).toBe(204);
     }
+
     const { body } = await read();
     expect(body).toHaveLength(RUN_STEPS_KEPT);
     expect(body[0]).toMatchObject({ seq: RUN_STEPS_BATCH_MAX + 1, label: 'Read 101.ts' });

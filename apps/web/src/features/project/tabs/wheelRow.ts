@@ -21,6 +21,7 @@ export function rowScrollFor(row: RowScroll, wheel: RowWheel): number | null {
   const { y } = wheelPixels(wheel, row.clientWidth);
   const room = row.scrollWidth - row.clientWidth;
   const canMove = y < 0 ? row.scrollLeft > TOLERANCE : row.scrollLeft < room - TOLERANCE;
+
   return canMove ? y : null;
 }
 
@@ -41,6 +42,7 @@ export function bufferWheel(buffer: WheelBuffer, y: number, now: number) {
   const fresh = now - buffer.at > PAUSE_MS || Math.sign(buffer.delta) !== Math.sign(y);
   const delta = (fresh ? 0 : buffer.delta) + y;
   if (Math.abs(delta) < STEP) return { buffer: { delta, at: now }, scroll: null };
+
   return { buffer: { delta: 0, at: now }, scroll: delta };
 }
 
@@ -51,12 +53,14 @@ export function nextStop(stops: readonly number[], from: number, step: number, m
     step > 0
       ? (stops.find((stop) => stop > from + TOLERANCE) ?? max)
       : (stops.findLast((stop) => stop < from - TOLERANCE) ?? 0);
+
   return Math.min(Math.max(next, 0), max);
 }
 
 // The row snaps each tab's start to its padding, which is where the first tab starts.
 function tabStops(row: HTMLElement): number[] {
   const starts = tabButtons(row).map((tab) => tab.offsetLeft);
+
   return starts.map((start) => start - (starts[0] ?? 0));
 }
 
@@ -76,7 +80,9 @@ export function useWheelScrollsRow(rowRef: RefObject<HTMLElement | null>): void 
       const max = row.scrollWidth - row.clientWidth;
       row.scrollTo({ left: nextStop(tabStops(row), row.scrollLeft, next.scroll, max) });
     };
+
     row.addEventListener('wheel', onWheel, { passive: false });
+
     return () => row.removeEventListener('wheel', onWheel);
   }, [rowRef]);
 }

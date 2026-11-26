@@ -7,5 +7,6 @@ const MOVES: Readonly<Record<string, (index: number, count: number) => number>> 
 
 export function tabIndexForKey(key: string, index: number, count: number): number | null {
   const move = MOVES[key];
+
   return move && count > 0 ? move(index, count) : null;
 }

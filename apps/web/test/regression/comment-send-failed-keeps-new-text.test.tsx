@@ -30,6 +30,7 @@ function sendFailsLater() {
       sending.reject(new TypeError('Failed to fetch'));
       await sending.promise.catch(() => undefined);
     });
+
   return { addComment, fail };
 }
 

@@ -17,8 +17,10 @@ export function fakeClient(overrides: ClientOverrides = {}): TrackerClient {
           vi.fn(() => Promise.reject(new Error(`${name} is not stubbed`))),
         );
       }
+
       return stubs.get(name);
     },
   };
+
   return new Proxy(methods, handler) as unknown as TrackerClient;
 }

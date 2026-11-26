@@ -11,6 +11,7 @@ import { LEFT_SAVE_WAIT_MS, RETRY_GAP_MS, useTicketDrafts } from './useTicketDra
 
 function Drafts({ enabled }: { enabled: boolean }) {
   useTicketDrafts(enabled);
+
   return null;
 }
 
@@ -28,6 +29,7 @@ function setup(overrides: Parameters<typeof setupApi>[0], enabled = true) {
     </api.wrapper>
   );
   const view = render(ui(enabled));
+
   return { ...api, enable: () => view.rerender(ui(true)) };
 }
 

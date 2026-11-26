@@ -25,7 +25,9 @@ function toolStep(name: string, toolId: string | null, input: Json, from: Source
     };
     return name === 'TodoWrite' && !from.subAgent ? { ...step, todos: todosOf(input) } : step;
   }
+
   const description = typeof input.description === 'string' ? input.description : '';
+
   return { kind: 'agent', label: stepLabel(`Start sub agent: ${description}`), toolId };
 }
 
@@ -37,8 +39,10 @@ function stepOfBlock(block: unknown, from: Source): Step[] {
     const label = cutTo(masked(text), RUN_STEP_TEXT_MAX);
     return text ? [{ kind: 'text', label, toolId: null }] : [];
   }
+
   if (block.type !== 'tool_use' || typeof block.name !== 'string') return [];
   const toolId = typeof block.id === 'string' ? block.id : null;
+
   return [toolStep(block.name, toolId, isJson(block.input) ? block.input : {}, from)];
 }
 
@@ -48,6 +52,7 @@ export function messageSteps(event: Json, folder: string): RunStepInput[] {
   const parentToolId =
     typeof event.parent_tool_use_id === 'string' ? event.parent_tool_use_id : null;
   const subAgent = parentToolId !== null;
+
   return content
     .flatMap((block) => stepOfBlock(block, { folder, subAgent }))
     .map((step) => (subAgent ? { ...step, subAgent, parentToolId } : { ...step, subAgent }));

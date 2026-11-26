@@ -15,6 +15,7 @@ export async function countMoreTicketSteps(
     .where('status', 'in', ACTIVE_RUN_STATUSES)
     .returning('stepCount')
     .executeTakeFirst();
+
   return row?.stepCount;
 }
 

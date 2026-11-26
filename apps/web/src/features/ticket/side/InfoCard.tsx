@@ -9,6 +9,7 @@ import styles from './SidePanel.module.css';
 
 export function InfoCard({ detail, now }: { detail: TicketDetail; now: number }) {
   const { ticket, project } = detail;
+
   return (
     <GroupedCard>
       <InfoRow label="Project">

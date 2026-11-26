@@ -12,6 +12,7 @@ const isSize = (value: unknown): boolean => value === null || isNumber(value);
 function isAttachment(value: unknown): value is Attachment {
   if (typeof value !== 'object' || value === null) return false;
   const entry = value as Record<string, unknown>;
+
   return (
     [entry.id, entry.fileName, entry.mimeType, entry.url].every(isText) &&
     isNumber(entry.size) &&
@@ -24,5 +25,6 @@ function isAttachment(value: unknown): value is Attachment {
 // Storage may hold what an older build wrote, so each entry is checked.
 export function keptAttachments(value: unknown, now: number): Attachment[] {
   if (!Array.isArray(value)) return [];
+
   return value.filter(isAttachment).filter((entry) => now - entry.createdAt < KEEP_FOR_MS);
 }

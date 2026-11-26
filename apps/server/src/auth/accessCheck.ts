@@ -17,6 +17,7 @@ export async function accessStillValid(
       const session = await findSessionRow(db, access.sessionId);
       return session !== undefined && session.expiresAt > now;
     }
+
     case 'token':
       return (await findApiTokenById(db, access.tokenId)) !== undefined;
     case undefined:

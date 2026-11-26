@@ -166,6 +166,7 @@ test.describe('statuses', () => {
     for (const name of ['To do', 'In progress', 'Need review', 'Reviewed', 'Done']) {
       await expect(sheet.getByText(name, { exact: true })).toBeVisible();
     }
+
     await sheet.getByRole('button', { name: 'Add status' }).click();
     await sheet.getByLabel('Status name').fill('Blocked');
     await sheet.getByRole('button', { name: 'Save status' }).click();

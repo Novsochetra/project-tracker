@@ -28,6 +28,7 @@ afterEach(() => {
 function open(server: FakeTicketServer, options: RenderTicketOptions = {}) {
   const rendered = renderTicket({ detail: server.detail, client: server.client, ...options });
   cleanups.push(rendered.restorePhone);
+
   return rendered;
 }
 
@@ -42,6 +43,7 @@ async function typeAnEditAndLeave() {
   await user.type(screen.getByLabelText('Edit comment'), ' half-written');
   first.unmount();
   expect(hasDrafts()).toBe(true);
+
   return { user, server };
 }
 

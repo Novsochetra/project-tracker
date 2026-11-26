@@ -28,6 +28,7 @@ function setup() {
         current ? { ...current, ticket: { ...current.ticket, ...fields } } : current,
       );
     });
+
   return { ...rendered, agentChanges };
 }
 

@@ -11,6 +11,7 @@ async function storedKeys(db: Db, now: number): Promise<VapidKeys> {
   await storeKeysOnce(db, { ...generateVapidKeys(), createdAt: now });
   const stored = await findStoredKeys(db);
   if (!stored) throw new Error('The VAPID keys could not be stored.');
+
   return stored;
 }
 
@@ -21,6 +22,7 @@ export interface SenderSettings {
 
 export async function loadSender(db: Db, settings: SenderSettings, now: number): Promise<Sender> {
   const { publicKey, privateKey } = settings.keys ?? (await storedKeys(db, now));
+
   return {
     publicKey,
     signingKey: signingKeyOf({ publicKey, privateKey }),

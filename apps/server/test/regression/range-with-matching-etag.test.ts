@@ -18,6 +18,7 @@ describe('a ranged request for a file with an ETag', () => {
     writeFileSync(join(dist, path), SCRIPT);
     writeFileSync(join(dist, `${path}.br`), brotliCompressSync(SCRIPT));
   }
+
   const api = useTestServer('sqlite', { webDist: dist });
   afterAll(() => rmSync(dist, { recursive: true, force: true }));
 

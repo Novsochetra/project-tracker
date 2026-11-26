@@ -12,6 +12,7 @@ export interface PickedOrder<T> {
 // With inOrder, each finished file is released once those picked before it are; without, at once.
 export function usePickedOrder<T>(inOrder: boolean, release: (value: T) => void): PickedOrder<T> {
   const slots = useRef<PickedSlot<T>[]>([]);
+
   return {
     pick: (key) => {
       if (inOrder) slots.current = addSlot(slots.current, key);
@@ -27,6 +28,7 @@ export function usePickedOrder<T>(inOrder: boolean, release: (value: T) => void)
     clear: () => {
       const held = slots.current.flatMap((slot) => (slot.value === null ? [] : [slot.value]));
       slots.current = [];
+
       return held;
     },
   };

@@ -8,6 +8,7 @@ const LINE_HEIGHT = 20;
 
 function Controlled() {
   const [value, setValue] = useState('');
+
   return (
     <AutoTextarea
       aria-label="Description"

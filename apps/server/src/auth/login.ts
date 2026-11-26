@@ -20,6 +20,7 @@ export async function checkLogin(
 ): Promise<SignedInUser | null> {
   const user = await findUserByEmail(db, normalizeEmail(email));
   const passwordOk = await verifyPassword(password, await hashToCheck(user?.passwordHash));
+
   return user && passwordOk
     ? { id: user.id, email: user.email, name: user.name, role: user.role }
     : null;

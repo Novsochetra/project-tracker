@@ -4,5 +4,6 @@
 export function onOfflineHint(target: Window, hint: () => void): () => void {
   if (target.navigator.onLine === false) hint();
   target.addEventListener('offline', hint);
+
   return () => target.removeEventListener('offline', hint);
 }

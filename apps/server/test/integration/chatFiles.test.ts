@@ -28,8 +28,10 @@ describe.each(DIALECTS)('files sent with a chat question (%s)', (dialect) => {
       body: bytes,
     });
     expect(response.status).toBe(201);
+
     return (await response.json()) as Attachment;
   };
+
   const uploadBoth = async () => ({
     notes: await upload(NOTES, 'notes.txt', 'text/plain'),
     photo: await upload(board, 'board.png', 'image/png'),

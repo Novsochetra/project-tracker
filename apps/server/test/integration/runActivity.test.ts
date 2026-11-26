@@ -30,6 +30,7 @@ describe.each(DIALECTS)('run activity (%s)', (dialect) => {
     for (const title of ['Crash', 'Login']) {
       await person('POST', '/api/projects/MOB/tickets', { title });
     }
+
     await person('POST', '/api/projects/WEB/tickets', { title: 'Search' });
     await helper('PUT', `/api/runners/${runner}`, {
       ...helperName('A Mac'),

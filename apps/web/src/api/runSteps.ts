@@ -9,5 +9,6 @@ export function mergeSteps(have: RunStep[], page: readonly RunStep[]): RunStep[]
   const known = new Set(have.map(({ seq }) => seq));
   const added = page.filter(({ seq }) => !known.has(seq));
   if (added.length === 0) return have;
+
   return [...have, ...added].sort((first, second) => first.seq - second.seq).slice(-RUN_STEPS_KEPT);
 }

@@ -26,6 +26,7 @@ interface StorageUnderTest {
 // Sends `bytes` a megabyte at a time when asked, then ends or fails.
 function streamOf(bytes: Uint8Array, failure?: Error): ReadableStream<Uint8Array> {
   let sent = 0;
+
   return new ReadableStream<Uint8Array>({
     pull(controller) {
       if (sent < bytes.byteLength) {
@@ -45,6 +46,7 @@ const textOf = async (stream: Promise<ReadableStream<Uint8Array> | null>) =>
 
 function memory(): StorageUnderTest {
   const storage = createMemoryStorage();
+
   return {
     storage,
     leftovers: () => [...storage.files.keys()],
@@ -63,6 +65,7 @@ function disk(): StorageUnderTest {
       return [];
     }
   };
+
   return {
     storage: createDiskStorage(files),
     leftovers,
@@ -73,6 +76,7 @@ function disk(): StorageUnderTest {
 
 async function s3(): Promise<StorageUnderTest> {
   const fake = await startFakeS3();
+
   return {
     storage: createS3Storage({ client: fake.client(), bucket: fake.bucket }),
     leftovers: () => [
@@ -167,6 +171,7 @@ describe.each(KINDS)('%s file storage', (kind, open) => {
       await expect(storage().stat(key), key).rejects.toThrow('Invalid storage key');
       await expect(storage().remove(key), key).rejects.toThrow('Invalid storage key');
     }
+
     expect(stored()).toEqual([]);
   });
 });
@@ -242,6 +247,7 @@ describe('S3 file storage', () => {
       await reader.read();
       await reader.cancel();
     }
+
     expect(await textOf(storage.read('big.mp4', { start: 0, end: 2 }))).toBe('\x00\x01\x02');
   });
 

@@ -7,6 +7,7 @@ type Name = (typeof STREAMS)[number];
 
 const stepsOf = (events: unknown[]): RunStepInput[] => {
   const read = createStepReader(STREAM_FOLDER);
+
   return events.flatMap((event) => read(event));
 };
 
@@ -26,6 +27,7 @@ type Block = Record<string, unknown>;
 
 const blocksOf = (event: unknown): Block[] => {
   const content = (event as { message?: { content?: unknown } }).message?.content;
+
   return Array.isArray(content) ? (content as Block[]) : [];
 };
 
@@ -47,6 +49,7 @@ function privateTexts(events: unknown[]): string[] {
         if (block.type === 'thinking') return strings(block.thinking);
         if (block.type !== 'tool_use') return [];
         const { content, prompt, message, new_string: added } = block.input as Block;
+
         return strings([content, prompt, message, added]);
       }),
     ])
@@ -135,6 +138,7 @@ describe('createStepReader', () => {
     for (const event of [null, 'text', 42, [], { type: 'assistant' }, { type: 'result' }]) {
       expect(read(event)).toEqual([]);
     }
+
     const odd = { type: 'assistant', message: { content: [null, { type: 'text', text: '  ' }] } };
     expect(read(odd)).toEqual([]);
   });

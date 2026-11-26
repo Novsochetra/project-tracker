@@ -30,6 +30,7 @@ export async function finishAttachmentRow(
     .set(done)
     .where('id', '=', id)
     .executeTakeFirst();
+
   return Number(result.numUpdatedRows) > 0;
 }
 
@@ -81,6 +82,7 @@ export async function reachableAttachmentIds(
     .where((eb) => {
       const mine = (column: 'attachments.userId' | 'projects.ownerId') =>
         scope === null ? eb(column, 'is', null) : eb(column, '=', scope);
+
       return eb.or([
         eb.and([
           eb('attachments.ticketId', 'is', null),
@@ -91,6 +93,7 @@ export async function reachableAttachmentIds(
       ]);
     })
     .execute();
+
   return new Set(rows.map((row) => row.id));
 }
 
@@ -101,6 +104,7 @@ export async function nextTicketPosition(db: Db, ticketId: string): Promise<numb
     .where('ticketId', '=', ticketId)
     .where('activityId', 'is', null)
     .executeTakeFirst();
+
   return row?.last === null || row?.last === undefined ? 0 : Number(row.last) + 1;
 }
 
@@ -124,6 +128,7 @@ export async function linkAttachments(
       .executeTakeFirst();
     linked += Number(result.numUpdatedRows);
   }
+
   return linked;
 }
 

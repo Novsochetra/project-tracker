@@ -59,19 +59,23 @@ async function sessionAccess(c: Context, { db, now, options }: AuthDeps, secret:
     clearSessionCookie(c, options);
     return null;
   }
+
   if (session.renewed) setSessionCookie(c, secret, session.expiresAt - at, options);
   const { userId, sessionId, email } = session;
+
   return { kind: 'session', userId, sessionId, email } satisfies Access;
 }
 
 async function tokenAccess({ db, now }: AuthDeps, secret: string): Promise<Access | null> {
   const owner = await authenticateApiToken(db, secret, now());
+
   return owner && { kind: 'token', ...owner };
 }
 
 async function openAccess(c: Context, { db, options }: AuthDeps): Promise<Access | null> {
   const { openWithoutOwner } = options;
   const open = openWithoutOwner === 'any' || (openWithoutOwner === 'local' && isLocalRequest(c));
+
   return open && !(await ownerExists(db)) ? OPEN_ACCESS : null;
 }
 
@@ -83,6 +87,7 @@ export async function resolveAccess(c: Context, deps: AuthDeps): Promise<Access 
   if (token) return token;
   const secret = readSessionCookie(c);
   const session = secret ? await sessionAccess(c, deps, secret) : null;
+
   return session ?? openAccess(c, deps);
 }
 

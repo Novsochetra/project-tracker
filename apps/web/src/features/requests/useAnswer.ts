@@ -34,11 +34,13 @@ export function useAnswerWith(
       if (!isSettledElsewhere(error)) toast.show(errorMessage(error), { kind: 'error' });
     });
   };
+
   return { pending: sender.pending, focusAnswer, send };
 }
 
 export function useAnswer(request: RunRequest, cardRef: RefObject<HTMLElement | null>): Answer {
   const mutation = useAnswerRunRequest();
+
   return useAnswerWith(
     {
       pending: mutation.isPending,

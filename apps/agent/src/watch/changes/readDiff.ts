@@ -33,5 +33,6 @@ export async function readDiff(
     env: { GIT_LITERAL_PATHSPECS: '1' },
   });
   if (diff.code !== 0) throw new Error(`git diff exited with ${diff.code}.`);
+
   return { raw: diff.text, cut: diff.cut };
 }

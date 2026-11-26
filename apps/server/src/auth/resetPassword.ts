@@ -26,6 +26,7 @@ export async function resetPassword(
     if (!(await useLinkRow(trx, link.id, { usedBy: userId, usedAt: now }))) {
       throw notFound(RESET_USED);
     }
+
     await updateUserRow(trx, userId, { passwordHash, updatedAt: now });
     await deleteUserSessions(trx, userId);
   });

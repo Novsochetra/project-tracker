@@ -34,6 +34,7 @@ const SETUP_COMMANDS = new Set(['login', 'logout']);
 
 function usageErrorText(error: UsageError): string {
   const hint = error.usage ? `Usage: tracker ${error.usage}` : 'Run "tracker help" for usage.';
+
   return `${error.message}\n${hint}`;
 }
 
@@ -56,6 +57,7 @@ function checkSetupArgs(parsed: ParsedArgs): void {
   if (parsed.args.length > 0) {
     throw new UsageError(`Unexpected argument "${parsed.args[0]}".`, usage);
   }
+
   const flag = setFlagOf(parsed);
   if (flag) throw new UsageError(`"${parsed.command}" has no --${flag} option.`, usage);
   if (parsed.global.token !== undefined) {
@@ -86,10 +88,12 @@ export async function runCli(argv: readonly string[], io: CliIo): Promise<number
       io.stdout(USAGE);
       return EXIT_OK;
     }
+
     if (parsed.global.version) {
       io.stdout(APP_VERSION);
       return EXIT_OK;
     }
+
     if (SETUP_COMMANDS.has(parsed.command ?? '')) checkSetupArgs(parsed);
     else if (parsed.command === 'watch') checkWatchArgs(parsed);
     else prepared = prepareCommand(parsed);
@@ -98,6 +102,8 @@ export async function runCli(argv: readonly string[], io: CliIo): Promise<number
     io.stderr(usageErrorText(error));
     return EXIT_USAGE;
   }
+
   if (prepared) return execute(prepared, parsed, io);
+
   return parsed.command === 'watch' ? watchCommand(parsed, io) : setup(parsed, io);
 }

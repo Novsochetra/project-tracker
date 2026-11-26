@@ -24,11 +24,13 @@ describe.each(DIALECTS)('invites (%s)', (dialect) => {
   async function invite(cookie: string): Promise<CreatedInvite> {
     const response = await send('POST', '/api/invites', cookie);
     expect(response.status).toBe(201);
+
     return (await response.json()) as CreatedInvite;
   }
 
   async function ownerCookie(): Promise<string> {
     await addOwner(api.db);
+
     return signIn(api.app);
   }
 
@@ -95,6 +97,7 @@ describe.each(DIALECTS)('invites (%s)', (dialect) => {
       expect(response.status).toBe(404);
       expect(await errorOf(response)).toBe('This invite link does not work. Ask for a new one.');
     }
+
     expect((await send('POST', '/api/invites/check', undefined, { secret: 'x' })).status).toBe(404);
   });
 
@@ -171,6 +174,7 @@ describe.each(DIALECTS)('invite links tried too often (%s)', (dialect) => {
       });
       expect(typo.status).toBe(400);
     }
+
     const check = () =>
       api.app.request('/api/invites/check', {
         method: 'POST',

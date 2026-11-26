@@ -7,6 +7,8 @@ export async function pushManager(): Promise<PushManager | null> {
   ) {
     return null;
   }
+
   const registration = await navigator.serviceWorker.getRegistration();
+
   return registration?.pushManager ?? null;
 }

@@ -25,12 +25,14 @@ async function swipeRight(row: Locator): Promise<void> {
   for (let step = 1; step <= 12; step += 1) {
     await row.dispatchEvent('pointermove', at(start + step * 25));
   }
+
   await row.dispatchEvent('pointerup', at(start + 300));
 }
 
 async function savedOrder(api: TrackerClient, statusName: string): Promise<string[]> {
   const board = await api.getBoard('MOB');
   const status = board.statuses.find((candidate) => candidate.name === statusName);
+
   return board.tickets
     .filter((ticket) => ticket.statusId === status?.id)
     .sort(byRank)
@@ -60,6 +62,7 @@ async function moveOnBoard(page: Page): Promise<Locator> {
   await handle.focus();
   await page.keyboard.press('ArrowRight');
   await expect(toast(page, 'MOB-2 moved to In progress')).toBeVisible();
+
   return handle;
 }
 
@@ -190,6 +193,7 @@ test.describe('a double tap on Undo runs it once and opens nothing behind the to
       await moveOnBoard(page);
       const undo = page.getByRole('button', { name: 'Undo' });
       await settled(undo);
+
       return (await undo.boundingBox())!;
     };
 
@@ -243,6 +247,7 @@ async function sidebarRightAfterUndo(
 
   await expect(page).toHaveURL(new RegExp(`/p/SD${side}$`));
   const [first, second] = await clickTimes(page);
+
   return { inTime: second! - first! < TOAST_SHIELD_MS, caught };
 }
 
@@ -253,6 +258,7 @@ async function expectSidebarRightAfterUndo(
   for (let tries = 1; !pressed.inTime && tries < 3; tries += 1) {
     pressed = await sidebarRightAfterUndo(...args);
   }
+
   expect(pressed.inTime, `the sidebar's press within ${TOAST_SHIELD_MS} ms, in 3 tries`).toBe(true);
   expect(pressed.caught, 'the content column caught presses meanwhile').toBe(true);
 }
@@ -278,6 +284,7 @@ async function undoOnList(page: Page): Promise<Box & { x: number; width: number 
   await view.getByRole('button', { name: 'List' }).click();
   const undo = page.getByRole('button', { name: 'Undo' });
   await settled(undo);
+
   return (await undo.boundingBox())!;
 }
 

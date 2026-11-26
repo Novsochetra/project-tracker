@@ -10,6 +10,7 @@ function emptyTags(count: number): Buffer {
   profile.write('acsp', 36, 'latin1');
   profile.writeUInt32BE(count, 128);
   for (let at = 132; at < tableEnd; at += 12) profile.writeUInt32BE(tableEnd, at + 4);
+
   return profile;
 }
 

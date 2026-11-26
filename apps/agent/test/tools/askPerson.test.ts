@@ -23,10 +23,12 @@ const ended = (change: Partial<TicketQuestion>): TicketQuestion => ({ ...open, .
 
 function tracker(...waits: (TicketQuestion | Error)[]) {
   const answers = [...waits];
+
   return {
     askQuestion: vi.fn(returns(open)),
     waitForQuestion: vi.fn(() => {
       const next = answers.shift() ?? open;
+
       return next instanceof Error ? Promise.reject(next) : Promise.resolve(next);
     }),
     cancelQuestion: vi.fn(returns(ended({ status: 'cancelled' }))),
@@ -91,6 +93,7 @@ describe('ask_person', () => {
     const stop = new AbortController();
     api.waitForQuestion.mockImplementation(() => {
       stop.abort();
+
       return Promise.reject(new DOMException('aborted', 'AbortError'));
     });
     const reply = await askPerson.handler(

@@ -16,6 +16,7 @@ export function LinkLayout({ label, children }: { label: string; children: React
 
 export function GoToSignIn() {
   const navigate = useNavigate();
+
   return (
     <Button size="lg" fullWidth onClick={() => void navigate('/', { replace: true })}>
       Go to sign in

@@ -20,6 +20,7 @@ function refreshTicketRuns(queryClient: QueryClient, ticketId: string, projectId
     void refreshLive(queryClient, { predicate: ({ queryKey }) => isTicketRuns(queryKey) });
     return;
   }
+
   for (const ticketKey of ticketKeys) {
     void refreshLive(queryClient, { queryKey: queryKeys.ticketRuns(ticketKey), exact: true });
   }
@@ -46,6 +47,7 @@ export function refreshForRun(queryClient: QueryClient, event: RunEvent): void {
     refreshWaiting(queryClient, event.projectId, event.ticketId);
     refreshTicketQuestions(queryClient, event.ticketId, event.projectId);
   }
+
   if (event.chatId) {
     void refreshLive(queryClient, { queryKey: queryKeys.chat(event.chatId), exact: true });
     // An Edit turn sends its changes just before its end.
@@ -53,6 +55,7 @@ export function refreshForRun(queryClient: QueryClient, event: RunEvent): void {
     // An answer moves its chat to the top of the list.
     void refreshLive(queryClient, { queryKey: queryKeys.allChats() });
   }
+
   // The helper sends a run's last steps before its end, so a missed step event is caught up here.
   void refreshRunSteps(queryClient, event.runId);
   // A run's end also ends its open requests, which the tracker settles when they are next read.

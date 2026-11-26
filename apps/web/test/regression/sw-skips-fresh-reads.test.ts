@@ -12,12 +12,14 @@ async function sent(read: (client: TrackerClient) => Promise<unknown>): Promise<
     baseUrl: ORIGIN,
     fetch: (input, init) => {
       requests.push(new Request(input, init));
+
       return Promise.resolve(Response.json({}));
     },
   });
   await read(client);
   const [request] = requests;
   if (!request) throw new Error('The client sent nothing.');
+
   return request;
 }
 

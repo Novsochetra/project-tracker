@@ -8,6 +8,7 @@ export function Sheet(props: SheetProps) {
   const isPhone = useIsPhone();
   const { mounted, onExited } = usePresence(props.open);
   if (!mounted) return null;
+
   return createPortal(
     <SheetPanel
       key={isPhone ? 'phone' : 'desktop'}

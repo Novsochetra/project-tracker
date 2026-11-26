@@ -17,6 +17,7 @@ import { mockPhone, skipAnimations } from '../../src/overlays/testing';
 
 function PopoverMenu() {
   const [open, setOpen] = useState(false);
+
   return (
     <Popover
       open={open}
@@ -38,6 +39,7 @@ function PopoverMenu() {
 
 function DropdownMenu() {
   const [priority, setPriority] = useState('medium');
+
   return (
     <SelectRow
       label="Priority"
@@ -53,6 +55,7 @@ function DropdownMenu() {
 
 function ActionSheetMenu() {
   const [open, setOpen] = useState(false);
+
   return (
     <>
       <button type="button" onClick={() => setOpen(true)}>

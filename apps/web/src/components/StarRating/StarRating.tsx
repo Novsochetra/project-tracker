@@ -13,6 +13,7 @@ export interface StarRatingProps {
 
 export function StarRating({ value, size = 14, className }: StarRatingProps) {
   const rating = Math.max(0, Math.min(5, Math.round(value)));
+
   return (
     <span
       role="img"

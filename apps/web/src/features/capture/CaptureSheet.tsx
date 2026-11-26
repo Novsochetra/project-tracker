@@ -33,6 +33,7 @@ export function CaptureSheet({ open, onClose }: SheetProps) {
     forgetKeptCapture();
     onClose();
   };
+
   const flow = useCaptureSubmit({
     values,
     project: project.current,
@@ -50,15 +51,18 @@ export function CaptureSheet({ open, onClose }: SheetProps) {
     setValues((current) => ({ ...current, ...patch }));
     flow.clearError();
   };
+
   const removeFile = (attachmentId: string) => {
     files.remove(attachmentId);
     flow.clearError();
   };
+
   // Closed without creating: the uploads have no ticket to wait for.
   const close = () => {
     files.discard(files.items);
     finish();
   };
+
   return (
     <Sheet
       open={open}

@@ -69,6 +69,7 @@ export async function enterStatus(
   status: StatusRow,
 ): Promise<Pick<TicketRow, 'statusId' | 'rank'>> {
   assertMayEnter(actor, status);
+
   return { statusId: status.id, rank: topRank(await listGroupRanks(db, status.id)) };
 }
 
@@ -87,6 +88,7 @@ async function saveChanges(db: Db, write: TicketWrite, changes: TicketChanges): 
     if (!(await updateTicketMatching(db, write.ticket.id, write.match, changes))) throw staleEdit();
     return;
   }
+
   if (!write.guardStatus) return updateTicketRow(db, write.ticket.id, changes);
   const saved = await updateTicketInStatus(db, write.ticket.id, write.ticket.statusId, changes);
   if (!saved) throw conflict('Someone else changed this ticket at the same time. Try again.');
@@ -96,6 +98,7 @@ async function saveChanges(db: Db, write: TicketWrite, changes: TicketChanges): 
 async function followStatus(db: Db, write: TicketWrite, changes: TicketChanges, at: number) {
   if (!changes.statusId || changes.statusId === write.ticket.statusId) return [];
   const status = await findStatusById(db, changes.statusId);
+
   return status ? advanceBatchTicket(db, write.ticket.id, status.category, at) : [];
 }
 
@@ -122,5 +125,6 @@ export async function writeTicket(
     activityRow({ ...entry, ticketId: write.ticket.id, actor: write.actor, at: at + index }),
   );
   for (const row of activities) await insertActivity(db, row);
+
   return { ticket: { ...write.ticket, ...changes }, activities, heldDone };
 }

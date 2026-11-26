@@ -11,6 +11,7 @@ import { noisyPixels, rawImage } from '../helpers/images';
 async function withStrayBytes(): Promise<Uint8Array> {
   const jpeg = await rawImage(noisyPixels(64, 48), 64, 48).jpeg({ quality: 80 }).toBuffer();
   const sof = jpeg.indexOf(Buffer.from([0xff, 0xc0]));
+
   return Buffer.concat([
     jpeg.subarray(0, sof),
     Buffer.from([0x12, 0x34, 0x56]),

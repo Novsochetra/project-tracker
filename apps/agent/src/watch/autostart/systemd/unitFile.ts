@@ -12,6 +12,7 @@ function oneLine(text: string): string {
   if ([...text].some(isControl)) {
     throw new AutostartError(`${JSON.stringify(text)} has a line break or control character.`);
   }
+
   return text;
 }
 
@@ -28,6 +29,7 @@ export function systemdUnit(job: HelperJob): string {
   const environment = Object.entries(job.environment).map(
     ([key, value]) => `Environment=${quoted(`${key}=${value}`)}`,
   );
+
   return [
     '[Unit]',
     `Description=tracker watch in ${literal(job.folder)}`,
@@ -55,5 +57,6 @@ const unescape = (word: string): string => word.replaceAll('%%', '%').replaceAll
 export function unitUrl(unit: string): string | undefined {
   const execStart = /^ExecStart=(.*)$/m.exec(unit)?.[1] ?? '';
   const url = /(?:^|\s)"?--url=([^\s"]+)/.exec(execStart)?.[1];
+
   return url === undefined ? undefined : unescape(url);
 }

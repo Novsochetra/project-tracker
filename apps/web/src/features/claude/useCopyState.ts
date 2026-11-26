@@ -15,9 +15,11 @@ export function useCopyState(): [CopyOutcome | null, (outcome: CopyOutcome) => v
       () => setState((current) => ({ ...current, outcome: null })),
       COPIED_MS,
     );
+
     return () => clearTimeout(timer);
   }, [state]);
   const report = (outcome: CopyOutcome) =>
     setState((current) => ({ outcome, attempt: current.attempt + 1 }));
+
   return [state.outcome, report];
 }

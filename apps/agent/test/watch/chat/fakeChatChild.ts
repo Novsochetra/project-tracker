@@ -74,6 +74,7 @@ export class FakeChatChild extends EventEmitter {
   kill = () => {
     this.killed = true;
     this.exit(null, 'SIGTERM');
+
     return true;
   };
 }
@@ -83,7 +84,9 @@ export function fakeSpawn({ legacy = false } = {}) {
   const spawn = (command: ClaudeCommand) => {
     const child = new FakeChatChild(command, legacy);
     children.push(child);
+
     return child as unknown as ChatChild;
   };
+
   return { spawn, children };
 }

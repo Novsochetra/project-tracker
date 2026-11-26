@@ -33,6 +33,7 @@ const mark = (scope: Locator) => scope.getByText('Waiting for you', { exact: tru
 async function box(locator: Locator) {
   const found = await locator.boundingBox();
   if (!found) throw new Error('The element is not rendered.');
+
   return found;
 }
 
@@ -63,6 +64,7 @@ async function startWaitingRun(api: TrackerClient, projectKey = 'MOB') {
     questions: null,
   };
   const ask = (input: AddRunRequestInput = question) => api.addRunRequest(runId, input);
+
   return { runnerId, runId, ask, permission };
 }
 
@@ -145,6 +147,7 @@ test.describe('Claude waiting for the person', () => {
     } else {
       await expect(asked).toBeInViewport({ ratio: 1 });
     }
+
     await settledScreenshot(page, info.outputPath(`waiting-ticket-${info.project.name}.png`));
 
     await asked.getByRole('button', { name: /^layout\.ts/ }).click();

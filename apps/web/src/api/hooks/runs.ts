@@ -17,6 +17,7 @@ export interface StartRunVariables {
 
 export function useRunners({ enabled = true }: { enabled?: boolean } = {}): TrackerQuery<Runner[]> {
   const client = useApi();
+
   return useQuery({
     queryKey: queryKeys.runners(),
     queryFn: () => client.listRunners(),
@@ -28,6 +29,7 @@ export function useRunners({ enabled = true }: { enabled?: boolean } = {}): Trac
 
 export function useTicketRuns(ticketKey: string): TrackerQuery<Run[]> {
   const client = useApi();
+
   return useQuery({
     queryKey: queryKeys.ticketRuns(ticketKey),
     queryFn: () => client.listTicketRuns(ticketKey),
@@ -54,6 +56,7 @@ export const invalidateRuns = (queryClient: QueryClient, ticketKey: string | nul
 export function useStartRun(): TrackerMutation<Run, StartRunVariables> {
   const client = useApi();
   const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: ({ ticketKey, input }: StartRunVariables) => client.startRun(ticketKey, input),
     onSuccess: (run) => showRun(queryClient, run),
@@ -65,6 +68,7 @@ export function useStartRun(): TrackerMutation<Run, StartRunVariables> {
 export function useCancelRun(): TrackerMutation<Run, Run> {
   const client = useApi();
   const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: (run: Run) => client.cancelRun(run.id),
     onSuccess: (run) => showRun(queryClient, run),
@@ -80,6 +84,7 @@ export interface RunAllVariables {
 export function useRunAllTodo(): TrackerMutation<RunAllResult, RunAllVariables> {
   const client = useApi();
   const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: ({ projectKey, input }: RunAllVariables) => client.runAllTodo(projectKey, input),
     // Each ticket's own run list refreshes when its run event arrives.

@@ -13,6 +13,7 @@ export function toChatContext(
   tokens: string | number | bigint | null,
 ): ChatContext | undefined {
   if (!latest || latest.contextTokens === null || !latest.contextWindow) return undefined;
+
   return {
     used: Number(latest.contextTokens),
     window: Number(latest.contextWindow),
@@ -24,5 +25,6 @@ export async function chatContextOf(db: Db, chatId: string): Promise<ChatContext
   const latest = await latestContextRow(db, chatId);
   if (!latest) return undefined;
   const { tokens } = await chatTokensRow(db, chatId);
+
   return toChatContext(latest, tokens);
 }

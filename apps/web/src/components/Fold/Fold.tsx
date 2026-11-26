@@ -20,6 +20,7 @@ export function Fold({ enabled, children, className }: FoldProps) {
   const onFocus = (event: FocusEvent<HTMLDivElement>) => {
     if (fold.folded && pastFold(event.target, event.currentTarget)) fold.expand();
   };
+
   return (
     <>
       <div

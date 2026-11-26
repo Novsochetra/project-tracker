@@ -17,6 +17,7 @@ export function RowLabelSheet({ sheet, board, onClose }: RowLabelSheetProps) {
   const onManage = useManageLabels(board.project.key, onClose);
   const ticket = sheet?.ticket;
   const live = ticket && board.tickets.find((item) => item.id === ticket.id);
+
   return (
     <LabelSheet
       open={sheet?.kind === 'labels' && sheet.open}

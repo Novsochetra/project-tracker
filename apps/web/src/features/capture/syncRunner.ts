@@ -11,6 +11,7 @@ const captureLocks = createCaptureLocks(browserLockPlatform);
 function withTabLock(run: () => Promise<SyncReport>): Promise<SyncReport> {
   const locks = typeof navigator === 'undefined' ? undefined : navigator.locks;
   if (!locks) return run();
+
   return locks.request(LOCK_NAME, { ifAvailable: true }, (lock) => (lock ? run() : NOTHING));
 }
 
@@ -19,6 +20,7 @@ export function runCaptureSync(run: () => Promise<SyncReport>): Promise<SyncRepo
   running ??= withTabLock(run).finally(() => {
     running = null;
   });
+
   return running;
 }
 

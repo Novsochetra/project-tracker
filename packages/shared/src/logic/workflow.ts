@@ -11,6 +11,7 @@ interface WorkItem {
 
 const categoryOf = (statuses: readonly Status[]) => {
   const byId = new Map(statuses.map((status) => [status.id, status.category]));
+
   return (statusId: string): StatusCategory | undefined => byId.get(statusId);
 };
 
@@ -23,6 +24,7 @@ export function pickNextTicket<T extends WorkItem>(
 ): T | null {
   const category = categoryOf(statuses);
   const ready = tickets.filter((ticket) => category(ticket.statusId) === 'todo');
+
   return [...ready].sort(byPriorityThenRank)[0] ?? null;
 }
 
@@ -32,9 +34,11 @@ export function workableTickets<T extends WorkItem>(
 ): T[] {
   const category = categoryOf(statuses);
   const stage = (ticket: T): number => (category(ticket.statusId) === 'in_progress' ? 0 : 1);
+
   return tickets
     .filter((ticket) => {
       const value = category(ticket.statusId);
+
       return value === 'todo' || value === 'in_progress';
     })
     .sort(

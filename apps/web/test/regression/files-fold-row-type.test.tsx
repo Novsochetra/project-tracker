@@ -24,6 +24,7 @@ beforeEach(() => {
   ) {
     const grid = this.closest('.grid.removable');
     const index = [...(grid?.children ?? [])].findIndex((child) => child.contains(this));
+
     return index < 0
       ? new DOMRect(0, 0, 343, 192)
       : new DOMRect(0, Math.floor(index / 4) * 96, 72, 72);

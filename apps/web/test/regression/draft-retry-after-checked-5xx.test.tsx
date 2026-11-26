@@ -17,6 +17,7 @@ const kept = () => storedDrafts().map(([id]) => id);
 
 function Drafts() {
   useTicketDrafts(true);
+
   return null;
 }
 
@@ -37,6 +38,7 @@ function setup(checkHealth: () => Promise<unknown>) {
       </ToastProvider>
     </api.wrapper>,
   );
+
   return { updateTicket, api };
 }
 

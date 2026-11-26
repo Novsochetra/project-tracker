@@ -40,6 +40,7 @@ function setup(read: () => Promise<RunRequest[]>) {
     client: { listTicketRuns, listRunRequests },
   });
   cleanups.push(rendered.restorePhone);
+
   return rendered;
 }
 

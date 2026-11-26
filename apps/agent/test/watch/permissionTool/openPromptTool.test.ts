@@ -11,6 +11,7 @@ const socketOf = (args: string[]): string => {
   const config = JSON.parse(args[1] ?? '{}') as {
     mcpServers: Record<string, { args: string[] }>;
   };
+
   return Object.values(config.mcpServers)[0]?.args.at(-1) ?? '';
 };
 

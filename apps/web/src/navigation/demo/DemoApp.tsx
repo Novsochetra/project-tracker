@@ -43,6 +43,7 @@ function ProjectOptions({
     replace('/');
     close();
   };
+
   return (
     <ActionSheet
       open={options.open}
@@ -71,6 +72,7 @@ function ProjectOptions({
 
 function DemoToast({ message }: { message: { id: number; text: string } | null }) {
   const raised = useBottomBarVisible();
+
   return (
     <div role="status" className={clsx(styles.toastRegion, raised && styles.toastRaised)}>
       {message && (
@@ -111,6 +113,7 @@ export function DemoApp({ onExit }: { onExit: () => void }) {
     const statusOf = (key: string, num: number) =>
       projects.find((project) => project.key === key)?.tickets.find((ticket) => ticket.num === num)
         ?.status;
+
     return {
       projects,
       advance: (key, num) => {

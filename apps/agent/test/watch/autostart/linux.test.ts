@@ -26,8 +26,10 @@ function fakeRun(answers: Record<string, Answer> = {}) {
     calls.push(line);
     const found = Object.entries(answers).find(([start]) => line.startsWith(start))?.[1] ?? '';
     if (found instanceof Error) throw found;
+
     return found;
   };
+
   return { run, calls };
 }
 

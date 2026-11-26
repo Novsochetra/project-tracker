@@ -14,6 +14,7 @@ describe.each(DIALECTS)('a ticket over the label cap (%s)', (dialect) => {
     for (let index = 0; index < 13; index += 1) {
       ids.push((await api.client().createLabel('MA', { name: `L${index}` })).id);
     }
+
     const ticket = await api.client().createTicket('MA', { title: 'Crash' });
     await setTicketLabels(api.db, ticket.id, ids.slice(0, 12), Date.now());
 
@@ -41,6 +42,7 @@ describe.each(DIALECTS)('a ticket over the label cap (%s)', (dialect) => {
     for (let index = 0; index < 11; index += 1) {
       labels.push(await api.client().createLabel('MA', { name: `L${index}` }));
     }
+
     const res = await api.post<ErrorBody>('/api/projects/MA/tickets', {
       title: 'x',
       labelIds: labels.map((label) => label.id),

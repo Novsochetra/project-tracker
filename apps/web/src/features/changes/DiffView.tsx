@@ -16,6 +16,7 @@ const toggled = (open: ReadonlySet<string>, path: string, on: boolean): Readonly
   const next = new Set(open);
   if (on) next.add(path);
   else next.delete(path);
+
   return next;
 };
 
@@ -28,6 +29,7 @@ export function DiffView({
   belowLine,
 }: DiffViewProps) {
   const [open, setOpen] = useState<ReadonlySet<string>>(() => new Set());
+
   return (
     <ul className={styles.files} aria-label="Changed files">
       {files.map((file) => (

@@ -13,7 +13,9 @@ export function useNotificationOpen(): void {
       const path = openPathOf(event.data);
       if (path) push.current(path);
     };
+
     worker.addEventListener('message', onMessage);
+
     return () => worker.removeEventListener('message', onMessage);
   }, [push]);
 }

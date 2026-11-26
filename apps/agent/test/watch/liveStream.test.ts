@@ -35,6 +35,7 @@ async function sseServer() {
   });
   server.listen(0, '127.0.0.1');
   await once(server, 'listening');
+
   return {
     url: `http://127.0.0.1:${(server.address() as AddressInfo).port}`,
     headers,

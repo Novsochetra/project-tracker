@@ -26,41 +26,49 @@ export function recheckWhileUnreachable(
     clearTimeout(timer);
     timer = undefined;
   };
+
   const ended = () => {
     running = false;
     schedule();
   };
+
   const run = () => {
     cancel();
     if (running || !due()) return;
     running = true;
     void recheck().then(ended, ended);
   };
+
   function schedule() {
     cancel();
     if (!due()) return;
     timer = setTimeout(run, recheckDelay(rechecks));
     rechecks += 1;
   }
+
   const startOver = () => {
     rechecks = 0;
     if (!running) schedule();
   };
+
   const runNow = () => {
     rechecks = 0;
     run();
   };
+
   // Back on the page, the person wants to know now.
   const onVisibilityChange = () => {
     if (isHidden()) cancel();
     else runNow();
   };
+
   const stopListening = reachability.subscribe(startOver);
   document.addEventListener('visibilitychange', onVisibilityChange);
   // Only a hint, like offline (app/offlineHint), but the tracker may well answer now.
   window.addEventListener('online', runNow);
   // Started during an outage, as by a watcher made again for a new client, no change would start it.
   schedule();
+
   return () => {
     stopped = true;
     cancel();

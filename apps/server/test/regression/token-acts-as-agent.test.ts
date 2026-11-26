@@ -21,6 +21,7 @@ describe('regression: an API token always acts as an agent', () => {
       headers: { ...JSON_HEADERS, ...headers },
       ...(body === undefined ? {} : { body: JSON.stringify(body) }),
     });
+
     return { status: res.status, body: (await res.json()) as T };
   };
 

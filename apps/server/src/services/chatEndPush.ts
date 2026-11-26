@@ -30,6 +30,7 @@ export function pushChatEnd(ctx: ServiceContext, scope: UserScope, run: RunWithK
   pushToUser(ctx, scope, async () => {
     const chat = await findChatInScope(ctx.db, scope, chatId, ctx.now());
     if (!chat) return null;
+
     return status === 'done'
       ? chatAnsweredPush(pushChatOf(chat))
       : chatFailedPush(pushChatOf(chat));

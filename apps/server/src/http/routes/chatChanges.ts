@@ -23,14 +23,17 @@ const helperRoutes = (ctx: ServiceContext) =>
   new Hono<AppEnv>()
     .post('/runs/:id/chat-changes', helperOnly, jsonBody(addChatChangesInput), async (c) => {
       await addChatChanges(ctx, scope(c), c.req.param('id'), c.req.valid('json'));
+
       return c.body(null, 204);
     })
     .post('/runners/:id/git-actions/next', helperOnly, async (c) => {
       const job = await takeGitAction(ctx, scope(c), c.req.param('id'));
+
       return job ? c.json(job) : c.body(null, 204);
     })
     .post('/git-actions/:id/finish', helperOnly, jsonBody(finishGitActionInput), async (c) => {
       await finishGitAction(ctx, scope(c), c.req.param('id'), c.req.valid('json'));
+
       return c.body(null, 204);
     });
 

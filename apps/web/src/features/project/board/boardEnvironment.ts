@@ -17,14 +17,17 @@ function scrollColumn(column: Element | undefined, y: number, bottomZone: number
   const rect = body.getBoundingClientRect();
   const bottom = Math.min(rect.bottom, window.innerHeight);
   const zones = { start: COLUMN_EDGE_ZONE, end: bottomZone, capped: true };
+
   return scrollAlong(body, 'y', edgeScrollStep(y, rect.top, bottom, zones));
 }
 
 function columnUnder(board: HTMLElement, x: number): Element | undefined {
   const spans = columnElements(board).map((element) => {
     const { left, right } = element.getBoundingClientRect();
+
     return { element, left, right };
   });
+
   return columnAt(spans, x)?.element;
 }
 
@@ -51,6 +54,7 @@ export function desktopBoardEnvironment(
       const { left, right } = element.getBoundingClientRect();
       const zones = { start: BOARD_SIDE_ZONE, end: BOARD_SIDE_ZONE, capped: true };
       const sideways = scrollAlong(element, 'x', edgeScrollStep(point.x, left, right, zones));
+
       return scrollColumn(columnUnder(element, point.x), point.y, COLUMN_EDGE_ZONE) || sideways;
     },
   };
@@ -62,10 +66,12 @@ export function phoneBoardEnvironment(
   press: Point,
 ): DragEnvironment {
   let paging = startEdgePaging(press.x, window.innerWidth);
+
   return {
     targetAt: (point) => {
       const element = board.current;
       const column = element ? measureGroups(element)[measurePage(element)] : undefined;
+
       return column ? targetInGroup(column, point.y, ticketId) : null;
     },
     autoScroll: (point, now) => {
@@ -75,6 +81,7 @@ export function phoneBoardEnvironment(
       paging = step.paging;
       if (step.page !== 0) pageBoard(element, step.page);
       const column = columnElements(element)[measurePage(element)];
+
       return scrollColumn(column, point.y, AUTO_SCROLL_BOTTOM_PHONE);
     },
   };

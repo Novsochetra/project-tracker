@@ -44,5 +44,6 @@ export function renderProject({ path = '/p/MOB', board, client }: RenderProjectO
       </ApiWrapper>
     </MemoryRouter>,
   );
+
   return { ...api, sheets, view };
 }

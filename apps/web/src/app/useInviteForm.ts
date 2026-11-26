@@ -13,6 +13,7 @@ export function useInviteForm(secret: string) {
     set(value);
     if (accept.isError) accept.reset();
   };
+
   // The server checks every field and says what is wrong, as it does for owner-set.
   const submit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -20,6 +21,7 @@ export function useInviteForm(secret: string) {
     const input = { secret, name, email: email.trim(), password };
     accept.mutate(input, { onSuccess: () => void navigate('/', { replace: true }) });
   };
+
   return {
     name,
     email,

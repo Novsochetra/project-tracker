@@ -18,6 +18,7 @@ async function alreadyOnTheTicket(
 ): Promise<boolean> {
   const since = run.startedAt ?? run.createdAt;
   const { activity } = await api.getTicket(ticketKey, { fresh: true });
+
   return activity.some((entry) => entry.type === 'report' && entry.createdAt >= since);
 }
 

@@ -6,11 +6,13 @@ import type { TrackerMutation, TrackerQuery } from '../types';
 
 export function useInvitedUsers(): TrackerQuery<InvitedUser[]> {
   const client = useApi();
+
   return useQuery({ queryKey: queryKeys.invitedUsers(), queryFn: () => client.listInvitedUsers() });
 }
 
 function useRefreshUsers() {
   const queryClient = useQueryClient();
+
   return () => void queryClient.invalidateQueries({ queryKey: queryKeys.invitedUsers() });
 }
 
@@ -18,6 +20,7 @@ function useRefreshUsers() {
 export function useMakeResetLink(): TrackerMutation<CreatedResetLink, string> {
   const client = useApi();
   const refresh = useRefreshUsers();
+
   return useMutation({
     mutationFn: (userId: string) => client.makeResetLink(userId),
     gcTime: 0,
@@ -28,6 +31,7 @@ export function useMakeResetLink(): TrackerMutation<CreatedResetLink, string> {
 export function useCancelResetLink(): TrackerMutation<void, string> {
   const client = useApi();
   const refresh = useRefreshUsers();
+
   return useMutation({
     mutationFn: (userId: string) => client.cancelResetLink(userId),
     onSuccess: refresh,

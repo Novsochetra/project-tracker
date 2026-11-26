@@ -25,6 +25,7 @@ function batcher(send: (batch: RunStepInput[]) => Promise<void>, every = NEVER) 
     describe: (error) => (error as Error).message,
     every,
   });
+
   return { batches, sent, log };
 }
 

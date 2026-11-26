@@ -22,11 +22,13 @@ function locate(columns: readonly TicketGroupData[], ticketId: string): Place | 
     const row = tickets.findIndex((ticket) => ticket.id === ticketId);
     if (row >= 0) return { column, row };
   }
+
   return null;
 }
 
 function slotIn(column: TicketGroupData, ticketId: string, index: number): DropTarget {
   const ids = column.tickets.map((ticket) => ticket.id).filter((id) => id !== ticketId);
+
   return {
     statusId: column.status.id,
     beforeId: ids[index] ?? null,

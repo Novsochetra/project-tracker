@@ -31,6 +31,7 @@ export function createLoginLimits(options: LoginLimitOptions = DEFAULT_LOGIN_LIM
   const addresses = createRateLimiter(options.perAddress);
   const accounts = createRateLimiter(options.perAccount);
   const account = (attempt: LoginAttempt) => normalizeEmail(attempt.email);
+
   return {
     waitFor: (attempt, now) =>
       Math.max(addresses.waitFor(attempt.address, now), accounts.waitFor(account(attempt), now)),

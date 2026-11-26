@@ -34,5 +34,6 @@ export function createChatRunner(setup: ChatRunnerSetup) {
           }),
         ),
     );
+
   return { ask, closeAll: chats.closeAll };
 }

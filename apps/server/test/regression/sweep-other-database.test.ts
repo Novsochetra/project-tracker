@@ -50,6 +50,7 @@ describe('a server started on a bucket another database uses', () => {
       fake.objects.set(`attachments/${id}.webp`, Buffer.from('a photo the online tracker has'));
       fake.modified.set(`attachments/${id}.webp`, Date.now() - TWO_HOURS_MS);
     }
+
     const args = [
       '--import',
       'tsx',
@@ -83,6 +84,7 @@ describe('a server started on a bucket another database uses', () => {
     await until(() => {
       const quiet = fake.calls.length === seen;
       seen = fake.calls.length;
+
       return quiet;
     }, 'S3 to go quiet');
     await new Promise((resolve) => setTimeout(resolve, 500));

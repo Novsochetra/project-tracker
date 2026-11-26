@@ -21,6 +21,7 @@ describe('pollUntilEnded', () => {
     let time = 0;
     const waitOnce = vi.fn(() => {
       time += 400;
+
       return Promise.reject(new ApiError(503, 'http_error', 'Service Unavailable'));
     });
     const end = await pollUntilEnded({

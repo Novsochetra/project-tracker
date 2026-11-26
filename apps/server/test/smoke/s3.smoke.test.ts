@@ -17,6 +17,7 @@ const BIG = Buffer.alloc(11 * MB, PATTERN);
 
 function streamOf(bytes: Uint8Array, failure?: Error): ReadableStream<Uint8Array> {
   let sent = 0;
+
   return new ReadableStream<Uint8Array>({
     pull(controller) {
       if (sent < bytes.byteLength) {
@@ -37,6 +38,7 @@ describe.skipIf(!ENABLED)('the real S3 bucket', () => {
   const keyFor = (extension: string) => {
     const key = `smoke-${randomUUID()}.${extension}`;
     keys.push(key);
+
     return key;
   };
 
@@ -58,6 +60,7 @@ describe.skipIf(!ENABLED)('the real S3 bucket', () => {
     if (!config.s3) {
       throw new Error('Set S3_BUCKET, AWS_REGION and the AWS keys (see .env.example).');
     }
+
     storage = await openFileStorage(config);
   });
 

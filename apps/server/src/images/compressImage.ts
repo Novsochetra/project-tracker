@@ -77,6 +77,7 @@ async function factsOf(
     .metadata()
     .catch(() => null);
   if (meta?.format !== format || !meta.width || !meta.height) return null;
+
   return {
     width: meta.width,
     height: meta.height,
@@ -96,7 +97,9 @@ function encode(original: Uint8Array, plan: ImagePlan) {
   if (plan.longSide) {
     image.resize({ width: plan.longSide, height: plan.longSide, fit: 'inside' });
   }
+
   const options = plan.lossless ? { lossless: true } : { quality: PHOTO_QUALITY };
+
   return image.webp(options).toBuffer({ resolveWithObject: true });
 }
 
@@ -111,6 +114,7 @@ async function compressed(
   const cost = workBytes(facts, plan);
   const { data, info } = await laneFor(cost)(cost, () => encode(original, plan));
   if (!plan.mustReencode && !isWorthStoring(original.byteLength, data.byteLength)) return null;
+
   return { bytes: data, mimeType: 'image/webp', width: info.width, height: info.height };
 }
 
@@ -128,6 +132,7 @@ export async function compressImage(
     const refusal = UNSUPPORTED_ATTACHMENT_MESSAGE;
     return { bytes: original, mimeType: declared, width: null, height: null, refusal };
   }
+
   const recognized = sniffed !== null && attachmentKind(sniffed) === 'image';
   const mimeType = recognized ? sniffed : declared;
   const facts = await factsOf(original, mimeType);
@@ -137,5 +142,6 @@ export async function compressImage(
   } catch (error) {
     console.warn(`Image kept as uploaded: ${(error as Error).message}`);
   }
+
   return keptAsItCame(original, mimeType, facts, recognized);
 }

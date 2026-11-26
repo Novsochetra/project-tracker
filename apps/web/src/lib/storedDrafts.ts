@@ -35,8 +35,10 @@ export function storedDrafts(): Array<[string, StoredDraft]> {
     const id = draftIdOf(held.record);
     byId.set(id, [...(byId.get(id) ?? []), held]);
   }
+
   return [...byId].flatMap(([id, held]) => {
     const latest = latestRecord(held);
+
     return latest ? [[id, latest] as [string, StoredDraft]] : [];
   });
 }

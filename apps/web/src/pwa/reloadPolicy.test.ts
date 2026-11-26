@@ -13,6 +13,7 @@ function add<K extends keyof HTMLElementTagNameMap>(
   const element = document.createElement(tag);
   for (const [name, value] of Object.entries(attributes)) element.setAttribute(name, value);
   parent.append(element);
+
   return element;
 }
 

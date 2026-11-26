@@ -23,6 +23,7 @@ export function Lifted({ className, children }: { className?: string; children: 
 function RowFace({ drag: { ticket, status } }: { drag: DragState }) {
   const isDone = isDoneCategory(status.category);
   const waiting = useStillWaiting(ticket.waitingUntil);
+
   return (
     <Lifted className={styles.row}>
       <span className={styles.grip}>
@@ -52,6 +53,7 @@ function RowFace({ drag: { ticket, status } }: { drag: DragState }) {
 export function DragGhost({ drag, ghostRef, children }: DragGhostProps) {
   if (!drag) return null;
   const { origin } = drag;
+
   // Portalled so no transformed ancestor offsets its fixed position.
   return createPortal(
     <div

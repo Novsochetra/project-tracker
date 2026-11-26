@@ -30,6 +30,7 @@ export function LabelPicker({ layout, focusField = false, onManage, ...input }: 
     if (focusField) fieldRef.current?.focus({ preventScroll: true });
   }, [focusField]);
   const empty = input.labels.length === 0 && !picker.query.trim();
+
   return (
     <div ref={rootRef} className={clsx(styles.picker, styles[layout])}>
       <div className={styles.fieldRow}>

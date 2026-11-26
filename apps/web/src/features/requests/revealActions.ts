@@ -17,11 +17,13 @@ export function revealDistance(
   roomAbove = Infinity,
 ) {
   const limit = Math.min(visibleBottom, ...coverTops) - GAP;
+
   return Math.max(0, Math.min(Math.ceil(bottom - limit), Math.floor(roomAbove)));
 }
 
 const visibleBottom = (): number => {
   const viewport = window.visualViewport;
+
   return viewport ? viewport.offsetTop + viewport.height : window.innerHeight;
 };
 

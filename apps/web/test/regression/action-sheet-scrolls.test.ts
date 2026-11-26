@@ -20,6 +20,7 @@ function values(shorthand: string): string[] {
       if (parts.at(-1) !== '') parts.push('');
     } else parts[parts.length - 1] += char;
   }
+
   return parts;
 }
 

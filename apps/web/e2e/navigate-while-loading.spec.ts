@@ -18,6 +18,7 @@ async function holdScreen(page: Page, file: string): Promise<() => void> {
     await released;
     await route.continue();
   });
+
   return release;
 }
 
@@ -163,6 +164,7 @@ test.describe('a screen whose code stalls', () => {
       const sidebar = page.getByRole('complementary', { name: 'Projects' });
       await expect(sidebar.getByRole('button', { name: /^Mobile app/ })).toBeVisible();
     }
+
     release();
   });
 

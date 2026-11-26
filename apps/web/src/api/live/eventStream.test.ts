@@ -24,6 +24,7 @@ function connect(tracker?: TrackerReachability) {
   };
   const stop = connectLiveUpdates('/api/events', handlers, tracker);
   connections.push(stop);
+
   return { stop, ...handlers, source: MockEventSource.latest() };
 }
 
@@ -40,10 +41,12 @@ function lostTracker() {
     unreachable = next;
     listeners.forEach((listener) => listener());
   };
+
   return {
     isUnreachable: () => unreachable,
     subscribe: (listener: () => void) => {
       listeners.add(listener);
+
       return () => void listeners.delete(listener);
     },
     listening: () => listeners.size,
@@ -228,6 +231,7 @@ describe('connectLiveUpdates', () => {
         vi.advanceTimersByTime(500);
         waited += 500;
       }
+
       return waited;
     };
 
@@ -261,6 +265,7 @@ describe('connectLiveUpdates', () => {
       if (beat % 2) source.emit(event);
       else source.emit('', 'ping');
     }
+
     expect(source.readyState).toBe(MockEventSource.OPEN);
     expect(MockEventSource.instances).toHaveLength(1);
   });
@@ -375,6 +380,7 @@ describe('connectLiveUpdates', () => {
       vi.advanceTimersByTime(retryDelay(attempt - 1));
       MockEventSource.latest().fail(true);
     }
+
     expect(onRefreshPending).toHaveBeenLastCalledWith(false);
     vi.advanceTimersByTime(retryDelay(LIVE_WAIT_ATTEMPTS - 1));
     MockEventSource.latest().fail(true);

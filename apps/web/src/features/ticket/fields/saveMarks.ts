@@ -128,18 +128,22 @@ export function onOtherTabsMarks(listener: (news: MarksNews) => void): () => voi
     if (marks.length === 0) return;
     timer = setTimeout(() => hear('left'), Math.min(...marks.map((mark) => mark.until)) - now);
   };
+
   const hear = (news: MarksNews) => {
     wakeAtNextEnd();
     listener(news);
   };
+
   const onStorage = (event: StorageEvent) => {
     if (event.key !== null && !isMarkKey(event.key)) return;
     hear('changed');
   };
+
   const onPageLeft = () => hear('left');
   window.addEventListener('storage', onStorage);
   pageLeft.add(onPageLeft);
   wakeAtNextEnd();
+
   return () => {
     clearTimeout(timer);
     window.removeEventListener('storage', onStorage);

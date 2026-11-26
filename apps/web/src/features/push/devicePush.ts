@@ -22,6 +22,7 @@ export async function readDevicePush(): Promise<DevicePush> {
     standalone: isStandalone(),
   });
   const subscribed = (await manager?.getSubscription()) ?? null;
+
   return { support, on: support === 'ready' && permission === 'granted' && subscribed !== null };
 }
 
@@ -29,6 +30,7 @@ export class PushRefused extends Error {}
 
 const inputOf = (subscription: PushSubscription) => {
   const { endpoint, keys } = subscription.toJSON();
+
   return { endpoint: endpoint ?? '', keys: { p256dh: keys?.p256dh ?? '', auth: keys?.auth ?? '' } };
 };
 

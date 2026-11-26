@@ -79,6 +79,7 @@ describe('the Postgres pool', () => {
         statement_timeout: DEFAULT_STATEMENT_TIMEOUT_MS,
       });
     }
+
     expect(postgresPoolConfig(RAILWAY, { DATABASE_POOL_MAX: '0' }).max).toBe(DEFAULT_POOL_MAX);
   });
 

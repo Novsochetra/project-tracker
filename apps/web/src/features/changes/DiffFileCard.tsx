@@ -30,6 +30,7 @@ const withBreaks = (path: string) =>
 function FileName({ file }: { file: DiffFile }) {
   const word = STATUS_WORDS[file.status];
   const name = file.status === 'renamed' ? `${file.oldPath} → ${file.path}` : file.path;
+
   return (
     <span className={styles.name}>
       <span className={styles.path} title={name}>
@@ -60,6 +61,7 @@ function Counts({ file }: { file: DiffFile }) {
 function useTick(viewed: boolean) {
   const [tick, setTick] = useState({ viewed, checked: viewed });
   if (tick.viewed !== viewed) setTick({ viewed, checked: viewed });
+
   return [tick.checked, (checked: boolean) => setTick({ viewed, checked })] as const;
 }
 
@@ -72,6 +74,7 @@ export function DiffFileCard({
   ...lines
 }: DiffFileCardProps) {
   const [checked, setChecked] = useTick(viewed);
+
   return (
     <section className={styles.file} data-viewed={checked || undefined}>
       <div className={styles.fileHeader}>

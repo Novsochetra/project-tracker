@@ -38,6 +38,7 @@ export function SidebarProjects({ projects, ready, scroller }: SidebarProjectsPr
     const name = projectDisplayName(project);
     announce(`${name} moved to position ${next.indexOf(project.id) + 1} of ${next.length}`);
   };
+
   return (
     <div ref={list} className={styles.projects}>
       <span id={hintId} className="visually-hidden">

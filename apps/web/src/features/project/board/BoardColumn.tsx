@@ -25,6 +25,7 @@ interface EmptyColumnProps {
 
 function EmptyColumn({ name, searching, dragging, targeted }: EmptyColumnProps) {
   if (dragging) return <DropZone name={name} targeted={targeted} />;
+
   return <p className={styles.empty}>{searching ? 'No matches' : 'No tickets'}</p>;
 }
 
@@ -33,6 +34,7 @@ export function BoardColumn(props: BoardColumnProps) {
   const { status, tickets } = column;
   const target = drag?.target?.statusId === status.id ? drag.target : null;
   const tint = target !== null && drag?.ticket.statusId !== status.id;
+
   return (
     <section
       aria-label={status.name}

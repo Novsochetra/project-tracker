@@ -21,6 +21,7 @@ export interface PixelSize {
 export function longSideWithin(width: number, height: number, maxPixels: number): number | null {
   const pixels = width * height;
   if (pixels <= maxPixels) return null;
+
   return Math.floor(Math.max(width, height) * Math.sqrt(maxPixels / pixels));
 }
 
@@ -33,6 +34,7 @@ export function sizeWithin(width: number, height: number, maxPixels: number): Pi
     1,
     Math.floor((Math.min(width, height) * longSide) / Math.max(width, height)),
   );
+
   return width >= height
     ? { width: longSide, height: shortSide }
     : { width: shortSide, height: longSide };

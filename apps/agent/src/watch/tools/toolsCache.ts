@@ -44,8 +44,10 @@ export function createToolsCache({
       reading = true;
       void refresh();
     }
+
     return tools;
   };
+
   return { current };
 }
 

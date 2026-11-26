@@ -69,6 +69,7 @@ const tiffScan = async () =>
 
 async function cutPhoto(): Promise<Uint8Array> {
   const photo = await jpegPhoto({ width: 64, height: 48, camera: true });
+
   return photo.subarray(0, Buffer.from(photo).indexOf(Buffer.from([0xff, 0xda])) - 10);
 }
 
@@ -79,6 +80,7 @@ async function unstorableSource(): Promise<{ source: MoveSource; scan: Uint8Arra
     { id: 'f-scan', name: 'scan.jpg', type: 'image/jpeg', bytes: scan },
     { id: 'f-cut', name: 'cut.jpg', type: 'image/jpeg', bytes: await cutPhoto(), activityId: 'a2' },
   ]);
+
   return { source, scan };
 }
 

@@ -14,11 +14,13 @@ import { TrackerApp } from './TrackerApp';
 const gate = vi.hoisted(() => {
   let open = () => undefined as void;
   const arrived = new Promise<void>((resolve) => (open = resolve));
+
   return { arrived, open: () => open() };
 });
 
 vi.mock('../features/project/ProjectScreen', async (importOriginal) => {
   await gate.arrived;
+
   return importOriginal();
 });
 
@@ -48,6 +50,7 @@ function renderApp() {
     getBoard,
   });
   render(<TrackerApp client={client} queryClient={createTestQueryClient()} />);
+
   return { getBoard };
 }
 

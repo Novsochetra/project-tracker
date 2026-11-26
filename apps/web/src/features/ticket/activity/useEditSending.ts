@@ -44,10 +44,12 @@ function useMounted(): RefObject<boolean> {
   const mounted = useRef(true);
   useEffect(() => {
     mounted.current = true;
+
     return () => {
       mounted.current = false;
     };
   }, []);
+
   return mounted;
 }
 
@@ -65,12 +67,15 @@ function useEditSend(input: SendingInput) {
     const shown = latest.current.text;
     keepDraft(id, { ...target, text: shown.trim() ? shown : sent, changed: true }, base);
   };
+
   const request = (text: string, by: SentBy): Promise<SendResult> => {
     const expected = storedDraft(id)?.base ?? base;
+
     return by === 'app'
       ? saveDraft({ ...target, text, base: expected }).then(() => 'saved' as const, resultOf)
       : editComment(text, expected);
   };
+
   const settle = (text: string, result: SendResult) => {
     // Another tab's edit landed first. This one is kept, without Save pressed for it, so it
     // isn't sent for the user again: they pick a version (afterSave).
@@ -79,6 +84,7 @@ function useEditSend(input: SendingInput) {
     else if (result === 'failed' && !storedDraft(id)) submit(text);
     setEdit((current) => afterSave(current, result));
   };
+
   // Saves are counted per draft (fieldSaves), so an editor opened again and the app-wide sync
   // know of the saves a gone editor still has on their way. An older save's answer only says what
   // the tracker had: the latest save decides. One refused because an older save of the edit
@@ -94,11 +100,13 @@ function useEditSend(input: SendingInput) {
       else settle(text, result);
     });
   };
+
   const send: Send = (text, by) => {
     submit(text);
     setEdit((current) => withPhase(current, 'saving'));
     dispatch(text, by);
   };
+
   return { submit, send };
 }
 
@@ -108,6 +116,7 @@ function useEditCheck(input: SendingInput & { send: Send }): (by: SentBy) => voi
   const latest = useLatest(input);
   const retryingRef = useRef(false);
   const { show } = useToast();
+
   return (by) => {
     if (by === 'app' && retryingRef.current) return;
     if (by === 'app') retryingRef.current = true;
@@ -127,6 +136,7 @@ function useEditCheck(input: SendingInput & { send: Send }): (by: SentBy) => voi
 export function useEditSending(input: SendingInput): EditSending {
   const { submit, send } = useEditSend(input);
   const checkThenSend = useEditCheck({ ...input, send });
+
   return {
     send: (text) => send(text, 'user'),
     sendChecked: (text) => {

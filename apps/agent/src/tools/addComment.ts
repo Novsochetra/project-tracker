@@ -20,6 +20,7 @@ export const addComment = defineTool({
   readOnly: false,
   async handler(client, { ticket, text }) {
     const comment = await client.addComment(ticket, { text });
+
     return { text: `Added a comment to ${ticket}.`, data: comment };
   },
 });

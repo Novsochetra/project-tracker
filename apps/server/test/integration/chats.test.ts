@@ -44,6 +44,7 @@ describe.each(DIALECTS)('chats with Claude Code (%s)', (dialect) => {
     const job = (await next(runnerId)).body;
     clock.advance(1_000);
     await finish(job?.run.id ?? '', { status: 'done', answer, sessionId: SESSION });
+
     return started.body.chat.id;
   }
 

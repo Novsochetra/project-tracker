@@ -24,8 +24,10 @@ export function useViewingChat(chatId: string | null): void {
       say(visible ? shown : null);
       if (visible) timer = setInterval(() => say(shown), VIEWING_REPEAT_MS);
     };
+
     update();
     document.addEventListener('visibilitychange', update);
+
     return () => {
       document.removeEventListener('visibilitychange', update);
       clearInterval(timer);

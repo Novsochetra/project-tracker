@@ -98,6 +98,7 @@ export function screensOnTheirWay(route: Route): Promise<unknown> | null {
   const waiting = routeStack(route)
     .map((level) => SCREENS[level.name])
     .filter((screen): screen is Part => screen !== null && !screen.isLoaded());
+
   return waiting.length > 0 ? Promise.all(waiting.map(preloadQuietly)) : null;
 }
 

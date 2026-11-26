@@ -44,6 +44,7 @@ async function typeWhileSaving() {
       save.reject(NETWORK_DOWN);
       await Promise.resolve();
     });
+
   return { user, server, rendered, fail };
 }
 

@@ -7,6 +7,7 @@ export interface MemoryStorage extends FileStorage {
 export function createMemoryStorage(): MemoryStorage {
   const files = new Map<string, Uint8Array>();
   const bytesOf = (key: string) => files.get(checkedKey(key));
+
   return {
     files,
     async write(key, body) {
@@ -17,12 +18,14 @@ export function createMemoryStorage(): MemoryStorage {
       return Promise.resolve().then(() => {
         const bytes = bytesOf(key);
         const part = bytes && range ? bytes.subarray(range.start, range.end + 1) : bytes;
+
         return part ? new Blob([part]).stream() : null;
       });
     },
     stat(key) {
       return Promise.resolve().then(() => {
         const bytes = bytesOf(key);
+
         return bytes ? { size: bytes.byteLength } : null;
       });
     },

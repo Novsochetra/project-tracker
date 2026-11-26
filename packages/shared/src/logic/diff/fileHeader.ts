@@ -5,6 +5,7 @@ export const FILE_START = 'diff --git ';
 
 export function newFile(line: string): DiffFile {
   const path = headerPath(line.slice(FILE_START.length));
+
   return {
     path,
     oldPath: path,

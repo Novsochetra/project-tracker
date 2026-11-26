@@ -9,7 +9,9 @@ export function useStillWaiting(until: number | null): boolean {
   useEffect(() => {
     if (until === null) return;
     const timer = setTimeout(() => setEnded(until), until - Date.now());
+
     return () => clearTimeout(timer);
   }, [until]);
+
   return until !== null && until !== ended && until > mountedAt;
 }

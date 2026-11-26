@@ -20,6 +20,7 @@ export function ClaudeSection({ detail, now, offersDone }: ClaudeSectionProps) {
   const { ticket, project } = detail;
   const askClaude = useAskClaude(ticket.key);
   const reportAt = lastReportAt(detail.activity);
+
   return (
     <div className={styles.section}>
       <span className={styles.label}>Claude Code</span>

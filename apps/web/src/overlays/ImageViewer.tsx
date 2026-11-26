@@ -25,6 +25,7 @@ function fittedSize(image: ViewerImage | undefined, natural: Record<string, Size
   if (!image) return NO_SIZE;
   const known =
     image.width && image.height ? { width: image.width, height: image.height } : natural[image.id];
+
   return known ? fitSize(known, viewport) : NO_SIZE;
 }
 
@@ -66,6 +67,7 @@ function ViewerPanel(props: ImageViewerProps & { onExited: () => void }) {
   const go = (next: number) => {
     if (next >= 0 && next < count && next !== index) onIndexChange(next);
   };
+
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     trapKeys(event);
     if (event.key === 'ArrowLeft') go(index - 1);
@@ -73,6 +75,7 @@ function ViewerPanel(props: ImageViewerProps & { onExited: () => void }) {
   };
 
   const stride = pageStride(viewport);
+
   return (
     <m.div
       ref={panelRef}
@@ -118,6 +121,7 @@ function ViewerPanel(props: ImageViewerProps & { onExited: () => void }) {
 export function ImageViewer(props: ImageViewerProps) {
   const { mounted, onExited } = usePresence(props.open && props.images.length > 0);
   if (!mounted) return null;
+
   return createPortal(
     <MotionScope>
       <ViewerPanel {...props} onExited={onExited} />

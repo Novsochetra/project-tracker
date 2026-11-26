@@ -13,6 +13,7 @@ export const promptToolCommand = (
 export function promptToolArgs(command: readonly string[], socketPath: string): string[] {
   const [program, ...args] = command;
   const server = { type: 'stdio', command: program, args: [...args, socketPath] };
+
   return [
     '--mcp-config',
     JSON.stringify({ mcpServers: { [PROMPT_SERVER]: server } }),

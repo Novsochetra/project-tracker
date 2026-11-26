@@ -25,6 +25,7 @@ export function AutoTextarea({
   useLayoutEffect(() => {
     if (innerRef.current) fitHeight(innerRef.current);
   }, [value]);
+
   return (
     <textarea
       ref={innerRef}

@@ -5,6 +5,7 @@ import type { NewTicketForm } from './newTicketForm';
 
 export function withoutGoneLabels(form: NewTicketForm, labels: readonly Label[]): NewTicketForm {
   const known = form.labelIds.filter((id) => labels.some((label) => label.id === id));
+
   return known.length === form.labelIds.length ? form : { ...form, labelIds: known };
 }
 
@@ -17,5 +18,6 @@ export function withLabels(
   const added = labelsOf(labels, labelIds).filter((label) => !form.labelIds.includes(label.id));
   const template = added.find((label) => label.template.trim())?.template;
   if (!template || form.description.trim()) return { labelIds };
+
   return { labelIds, description: template };
 }

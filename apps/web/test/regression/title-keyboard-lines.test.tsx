@@ -39,6 +39,7 @@ function openNewTicket() {
       </ToastProvider>
     </Wrapper>,
   );
+
   return userEvent.setup();
 }
 

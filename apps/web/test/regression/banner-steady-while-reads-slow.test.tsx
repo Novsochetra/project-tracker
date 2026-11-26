@@ -34,16 +34,20 @@ function network() {
       request,
       cachedResponse: Response.json(PROJECTS),
     });
+
     return saved ?? bare502();
   };
+
   // The client always asks with a path.
   const fetch = (path: string, init?: RequestInit): Promise<Response> => {
     const request = new Request(`${ORIGIN}${path}`, init);
     const url = new URL(request.url);
     if (url.pathname === '/api/projects') listReads.push(Date.now());
     if (isSavedApiRead({ url, request, sameOrigin: true })) return read(request);
+
     return Promise.resolve(tracker === 'down' ? bare502() : Response.json({ ok: true }));
   };
+
   return { fetch, listReads, set: (next: Tracker) => void (tracker = next) };
 }
 
@@ -58,10 +62,12 @@ function renderShell(net: Network) {
       useProjects();
       const unreachable = useApiUnreachable(useReachability());
       if (shown.at(-1) !== unreachable) shown.push(unreachable);
+
       return unreachable;
     },
     { wrapper },
   );
+
   return { ...view, shown };
 }
 

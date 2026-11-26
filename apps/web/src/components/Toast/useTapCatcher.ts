@@ -11,6 +11,7 @@ export function useTapCatcher(catching: boolean): RefCallback<HTMLElement> {
     (band: HTMLElement | null) => {
       if (!band || !catching) return;
       band.addEventListener('click', keepTap);
+
       return () => band.removeEventListener('click', keepTap);
     },
     [catching],

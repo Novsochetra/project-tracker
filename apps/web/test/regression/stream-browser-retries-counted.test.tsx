@@ -40,6 +40,7 @@ async function openStaleStream() {
   act(() => MockEventSource.latest().open());
   // Short of the 35 s silence check, so only the browser's own tries happen.
   await advance(STALE_MS - 3 * BROWSER_RETRY_MS);
+
   return server;
 }
 

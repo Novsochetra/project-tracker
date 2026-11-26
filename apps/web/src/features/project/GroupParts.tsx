@@ -17,6 +17,7 @@ export interface GroupHeaderProps {
 
 export function GroupHeader(props: GroupHeaderProps) {
   const { status, count, tint, onAdd, onCollapse, className } = props;
+
   return (
     <div className={clsx(styles.header, className)} data-tint={tint || undefined}>
       <StatusGlyph category={status.category} color={status.color} />

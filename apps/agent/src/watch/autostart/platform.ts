@@ -20,11 +20,13 @@ export interface Autostart {
 export function autostartOn(platform: NodeJS.Platform = process.platform): Autostart | undefined {
   if (platform === 'darwin') return macAutostart;
   if (platform === 'linux') return linuxAutostart();
+
   return undefined;
 }
 
 export function requireAutostart(platform: NodeJS.Platform = process.platform): Autostart {
   const autostart = autostartOn(platform);
   if (!autostart) throw new AutostartError('Starting by itself works on macOS and Linux only.');
+
   return autostart;
 }

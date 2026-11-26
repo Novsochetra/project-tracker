@@ -16,6 +16,7 @@ export interface TicketSidePanelProps {
 // Desktop only: phones show the details as chips under the title and the rest after the activity.
 export function TicketSidePanel({ detail, offersDone, className }: TicketSidePanelProps) {
   const now = useNow();
+
   return (
     <aside aria-label="Ticket details" className={clsx(styles.panel, className)}>
       <ClaudeSection detail={detail} now={now} offersDone={offersDone} />

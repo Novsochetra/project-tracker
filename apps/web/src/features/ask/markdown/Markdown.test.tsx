@@ -41,6 +41,7 @@ describe('Markdown', () => {
       expect(link).toHaveAttribute('target', '_blank');
       expect(link).toHaveAttribute('rel', 'noopener noreferrer');
     }
+
     expect(screen.getByRole('link', { name: 'the docs' })).toHaveAttribute(
       'href',
       'https://x.dev/docs',

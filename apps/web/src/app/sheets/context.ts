@@ -12,5 +12,6 @@ export const SheetsContext = createContext<SheetsApi | null>(null);
 export function useSheets(): SheetsApi {
   const api = useContext(SheetsContext);
   if (!api) throw new Error('useSheets needs a SheetsProvider');
+
   return api;
 }

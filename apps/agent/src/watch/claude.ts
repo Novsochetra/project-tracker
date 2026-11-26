@@ -32,12 +32,14 @@ function collect(listeners: ClaudeListeners) {
       seen.event(event);
     },
   });
+
   return {
     say: seen.say,
     push: (chunk: string) => lines.push(chunk),
     noteError: seen.noteError,
     exit: (code: number | null, signal: NodeJS.Signals | null): ClaudeExit => {
       lines.end();
+
       return seen.exit({ code, signal });
     },
   };
@@ -57,6 +59,7 @@ export function runClaude(
       if (!ended) resolve(seen.exit(code, exitSignal));
       ended = true;
     };
+
     const child = spawn(command, [...args], {
       cwd,
       signal,

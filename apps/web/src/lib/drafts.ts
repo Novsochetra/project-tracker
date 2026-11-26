@@ -31,5 +31,6 @@ function askBeforeUnload(event: BeforeUnloadEvent): void {
 
 export function guardUnload(): () => void {
   window.addEventListener('beforeunload', askBeforeUnload);
+
   return () => window.removeEventListener('beforeunload', askBeforeUnload);
 }

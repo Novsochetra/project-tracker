@@ -36,11 +36,13 @@ const ticketIn = (projectKey: string, num: number, input: CreateTicketInput): Ti
     description: input.description ?? '',
     priority: input.priority ?? 'medium',
   });
+
   return ticket;
 };
 
 function Opener() {
   const sheets = useSheets();
+
   return (
     <button type="button" onClick={() => sheets.open({ type: 'capture' })}>
       Capture
@@ -61,6 +63,7 @@ function renderCapture(client: HarnessOptions['client'] = {}, projects = PROJECT
       client: { listProjects: vi.fn().mockResolvedValue(projects), createTicket, ...client },
     },
   );
+
   return { ...app, createTicket, user: userEvent.setup() };
 }
 
@@ -72,6 +75,7 @@ const toast = (text: string) => screen.findByText(text, { exact: true });
 
 async function openCapture(user: ReturnType<typeof userEvent.setup>) {
   await user.click(screen.getByRole('button', { name: 'Capture' }));
+
   return dialog();
 }
 

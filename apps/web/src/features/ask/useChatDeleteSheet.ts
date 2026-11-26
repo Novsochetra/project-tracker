@@ -14,5 +14,6 @@ export function useChatDeleteSheet() {
     () => setSheet((current) => current && { ...current, open: false }),
     [],
   );
+
   return { sheet, show, close };
 }

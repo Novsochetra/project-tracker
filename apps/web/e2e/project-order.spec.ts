@@ -7,6 +7,7 @@ const NAMES = ['Alpha', 'Beta', 'Gamma'];
 async function makeProjects(api: TrackerClient): Promise<string[]> {
   const ids = [];
   for (const name of NAMES) ids.push((await api.createProject({ name })).project.id);
+
   return ids;
 }
 
@@ -55,6 +56,7 @@ function watchList(page: Page): Promise<void> {
 const listChanges = (page: Page) =>
   page.evaluate(() => {
     const own = window as unknown as { listChanges: { nodes: number; styles: number } };
+
     return own.listChanges;
   });
 

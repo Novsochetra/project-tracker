@@ -34,5 +34,6 @@ export function errorMessage(error: unknown): string {
   if (isNetworkError(error)) return NETWORK_ERROR_MESSAGE;
   if (isApiError(error) && error.message) return error.message;
   if (error instanceof PromptTooLongError) return error.message;
+
   return FALLBACK_ERROR_MESSAGE;
 }

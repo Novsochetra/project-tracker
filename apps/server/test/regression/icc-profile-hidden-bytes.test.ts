@@ -99,6 +99,7 @@ function withIccpData(webp: Buffer, data: Buffer): Buffer {
   data.copy(chunk, 8);
   const bytes = Buffer.concat([webp.subarray(0, at), chunk, webp.subarray(end + (end % 2))]);
   bytes.writeUInt32LE(bytes.length - 8, 4);
+
   return bytes;
 }
 

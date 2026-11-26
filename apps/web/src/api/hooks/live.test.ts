@@ -195,6 +195,7 @@ describe('useLiveUpdates', () => {
     const { result } = renderHook(
       () => {
         useLiveUpdates();
+
         return useUpdateTicket();
       },
       { wrapper },
@@ -269,6 +270,7 @@ describe('useLiveUpdates', () => {
       isUnreachable: () => unreachable,
       subscribe: (listener: () => void) => {
         listeners.add(listener);
+
         return () => void listeners.delete(listener);
       },
     };

@@ -14,6 +14,7 @@ import { useSheets } from './sheets/context';
 // The chat screen's own options: a header with other options took over the shared query (PT-250).
 function useChatTitle(route: Route): string | undefined {
   const chat = useChat(route.name === 'chat' ? route.chatId : null);
+
   return chat.data?.chat.title;
 }
 
@@ -59,6 +60,7 @@ export function DesktopHeader() {
   const routeKey = projectKeyOf(route) ?? '';
   const project = useProjectSummary(routeKey);
   const chatTitle = useChatTitle(route);
+
   return (
     <header className={styles.header}>
       <Breadcrumb crumbs={breadcrumbFor(route, project, chatTitle)} />

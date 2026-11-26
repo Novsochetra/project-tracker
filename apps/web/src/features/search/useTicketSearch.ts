@@ -27,5 +27,6 @@ export function useTicketSearch(text: string): TicketSearch {
     staleTime: 0,
     gcTime: FORGET_AFTER_MS,
   });
+
   return { query, searched };
 }

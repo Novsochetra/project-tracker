@@ -50,6 +50,7 @@ function renderTab() {
       },
     },
   );
+
   return { tracker, createTicket };
 }
 

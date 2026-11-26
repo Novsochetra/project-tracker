@@ -16,6 +16,7 @@ describe('permissionSubject', () => {
     for (const command of ['TOKEN=abc123 npm test', '"$(cat key)" go', '$TOOL run', '(cd x)']) {
       expect(permissionSubject(`Run ${command}`)).toBeNull();
     }
+
     expect(permissionSubject('Run')).toBeNull();
   });
 

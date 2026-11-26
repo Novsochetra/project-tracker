@@ -91,6 +91,7 @@ function attachTrackpadSwipe({ progress, setDirection, read }: SwipeOutput): () 
   };
 
   window.addEventListener('wheel', onWheel, { passive: false });
+
   return () => {
     window.removeEventListener('wheel', onWheel);
     window.clearTimeout(fadeTimer);
@@ -109,5 +110,6 @@ export function useTrackpadSwipe(input: TrackpadSwipeInput): TrackpadSwipeHint {
     () => attachTrackpadSwipe({ progress, setDirection, read: () => inputRef.current }),
     [progress],
   );
+
   return { progress, direction };
 }

@@ -80,6 +80,7 @@ describe.each(DIALECTS)('uploads stream to disk (%s)', (dialect) => {
         res.on('end', () => resolve({ status: res.statusCode ?? 0, body: JSON.parse(text) }));
       });
     });
+
     return { req, answer };
   }
 
@@ -128,6 +129,7 @@ describe.each(DIALECTS)('uploads stream to disk (%s)', (dialect) => {
     for (let sent = 0; sent < 40 && !answered; sent += 1) {
       if (!req.write(chunk)) await Promise.race([once(req, 'drain'), answer]);
     }
+
     const { status, body } = await answer;
     req.destroy();
     expect(status).toBe(400);

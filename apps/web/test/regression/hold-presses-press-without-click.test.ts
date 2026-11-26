@@ -27,6 +27,7 @@ const pointer = (type: string, target: Element) =>
 const click = () => {
   const event = new MouseEvent('click', { bubbles: true, cancelable: true, detail: 1 });
   button.dispatchEvent(event);
+
   return event;
 };
 

@@ -45,6 +45,7 @@ export function useProjectOptions(projectKey: string): ProjectOptions {
       },
     );
   };
+
   return {
     name,
     ticketCount: project?.totalCount ?? 0,

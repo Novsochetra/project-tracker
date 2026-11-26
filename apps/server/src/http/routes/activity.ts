@@ -24,5 +24,6 @@ export const activityRoutes = (ctx: ServiceContext) =>
     )
     .delete('/activity/:id', async (c) => {
       await deleteActivity(userContext(ctx, c), c.req.param('id'));
+
       return c.body(null, 204);
     });

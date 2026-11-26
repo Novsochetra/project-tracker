@@ -6,6 +6,7 @@ const FULL = 100;
 
 export function UsageMeterLine({ meter }: { meter: UsageMeter }) {
   const { name, usedPercent, detail } = meter;
+
   return (
     <span className={styles.meter}>
       <span className={styles.meterText}>

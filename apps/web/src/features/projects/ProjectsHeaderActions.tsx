@@ -9,6 +9,7 @@ import styles from './ProjectsHeaderActions.module.css';
 export function ProjectsHeaderActions() {
   const sheets = useSheets();
   const capture = canCapture(useProjects().data);
+
   return (
     <div className={styles.actions}>
       <Button icon={Plus} onClick={() => sheets.open({ type: 'newProject' })}>

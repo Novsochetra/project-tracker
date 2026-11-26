@@ -38,6 +38,7 @@ export function TitleField({ value, onChange, onEnter, className, ref, ...rest }
     event.preventDefault();
     onEnter();
   };
+
   return (
     <AutoTextarea
       enterKeyHint="done"

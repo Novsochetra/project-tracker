@@ -51,11 +51,13 @@ export function AskComposer({
       forget();
     });
   };
+
   // Stop takes Send's place, and the second tap of a double tap must not stop the question.
   const onSend = (event: MouseEvent<HTMLButtonElement>) => {
     if (event.detail !== 0) holdPresses(event.currentTarget);
     send();
   };
+
   return (
     <form
       className={styles.composer}

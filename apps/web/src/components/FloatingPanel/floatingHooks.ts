@@ -19,6 +19,7 @@ export function useFloatingPresence(open: boolean): FloatingPresence {
       session: open ? state.session + 1 : state.session,
     });
   }
+
   const leaving = state.mounted && !open;
   useEffect(() => {
     if (!leaving) return;
@@ -26,8 +27,10 @@ export function useFloatingPresence(open: boolean): FloatingPresence {
       () => setState((current) => ({ ...current, mounted: current.open })),
       CLICK_SHIELD_MS,
     );
+
     return () => window.clearTimeout(timer);
   }, [leaving]);
+
   return { mounted: state.mounted, session: state.session };
 }
 
@@ -53,12 +56,14 @@ export function useFloatingPlacement(
       panel.style.transformOrigin = `${placement.originX}px ${placement.up ? '100%' : '0'}`;
       panel.dataset.up = String(placement.up);
     };
+
     apply();
     window.addEventListener('resize', apply);
     // A ••• menu that turns into its delete confirm changes size, and one above its button must
     // grow away from it.
     const observer = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(apply);
     if (panelRef.current) observer?.observe(panelRef.current);
+
     return () => {
       window.removeEventListener('resize', apply);
       observer?.disconnect();
@@ -84,7 +89,9 @@ export function useCloseOnScroll(
       if (event.target instanceof Node && panelRef.current?.contains(event.target)) return;
       close.current();
     };
+
     window.addEventListener('scroll', onScroll, true);
+
     return () => window.removeEventListener('scroll', onScroll, true);
   }, [panelRef, active, close]);
 }

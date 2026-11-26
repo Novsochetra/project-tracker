@@ -13,5 +13,6 @@ export function armClickGuard(): void {
 export function consumeClickGuard(): boolean {
   const blocked = armed;
   armed = false;
+
   return blocked;
 }

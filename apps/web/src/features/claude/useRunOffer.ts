@@ -38,5 +38,6 @@ export function useRunOffer({ ticketKey, projectKey, open, onStarted }: RunOffer
       },
     );
   };
+
   return { footer, choose, start, starting: startRun.isPending, error: startRun.error };
 }

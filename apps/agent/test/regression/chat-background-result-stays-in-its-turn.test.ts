@@ -12,6 +12,7 @@ function setUp(legacy = false) {
   const { spawn, children } = fakeSpawn({ legacy });
   const chats = createChatRunner({ command: 'claude', cwd: '/repo', limit: [], spawn });
   running.push(chats);
+
   return { chats, children };
 }
 
@@ -26,6 +27,7 @@ const ask = (chats: ReturnType<typeof setUp>['chats'], id: string, resume?: stri
     return undefined;
   });
   void exit.finally(() => (settled.done = true));
+
   return { exit, settled };
 };
 

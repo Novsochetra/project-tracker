@@ -44,11 +44,13 @@ function useReportForm({ open, onClose, scope }: ReportSheetProps) {
     setText(next);
     setError(null);
   };
+
   const paste = async () => {
     const result = await readClipboardText();
     if (result.ok) changeText(result.text);
     else setError(result.message);
   };
+
   const submit = (event: FormEvent) => {
     event.preventDefault();
     if (!view.canApply) return;
@@ -65,6 +67,7 @@ function useReportForm({ open, onClose, scope }: ReportSheetProps) {
       },
     );
   };
+
   return { ...view, changeText, paste, submit, dirty: text.trim() !== '' };
 }
 
@@ -72,6 +75,7 @@ export function ReportSheet(props: ReportSheetProps) {
   const { open, onClose, scope } = props;
   const form = useReportForm(props);
   const project = useProject(scope.projectKey);
+
   return (
     <Sheet
       open={open}

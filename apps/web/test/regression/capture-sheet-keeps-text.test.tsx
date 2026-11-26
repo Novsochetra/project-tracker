@@ -30,6 +30,7 @@ const scrimOf = (dialog: HTMLElement) =>
 
 function Opener() {
   const sheets = useSheets();
+
   return (
     <button type="button" onClick={() => sheets.open({ type: 'capture' })}>
       Capture
@@ -46,6 +47,7 @@ const ticket = (title: string): Ticket => {
     key: 'MOB-7',
     title,
   });
+
   return rest;
 };
 
@@ -75,6 +77,7 @@ async function openCapture(isPhone: boolean, client: HarnessOptions['client'] = 
   );
   const user = userEvent.setup();
   await user.click(screen.getByRole('button', { name: 'Capture' }));
+
   return user;
 }
 

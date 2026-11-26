@@ -15,6 +15,7 @@ const isOlderTracker = (error: unknown) =>
 // Between the ticket lane's runs, so no Claude changes the folder while git commits in it.
 export function createGitActions(deps: TakeGitActionsDeps) {
   let older = false;
+
   return async function takeGitActions(): Promise<void> {
     if (older) return;
     try {

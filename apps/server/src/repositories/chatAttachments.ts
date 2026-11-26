@@ -28,6 +28,7 @@ export async function linkChatAttachments(
     const result = await update.executeTakeFirst();
     linked += Number(result.numUpdatedRows);
   }
+
   return linked;
 }
 
@@ -65,5 +66,6 @@ export async function storageKeysOfChats(
     .select('attachments.storageKey')
     .where(`chats.${column}`, '=', value)
     .execute();
+
   return rows.map((row) => row.storageKey);
 }

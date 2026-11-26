@@ -15,11 +15,13 @@ function sidePadding(value: string | undefined, inset: number): number {
   const lengths = (value ?? '0px')
     .replace(/env\(safe-area-inset-(?:left|right), 0px\)/g, `${inset}px`)
     .match(/-?\d+(?:\.\d+)?px/g);
+
   return (lengths ?? []).reduce((sum, length) => sum + Number.parseFloat(length), 0);
 }
 
 const sides = (part: string): [number, number] => {
   const [, right, , left] = edges(phoneRule(SHEET, part).get('padding') ?? '0');
+
   return [left, right];
 };
 

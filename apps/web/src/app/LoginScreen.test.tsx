@@ -18,6 +18,7 @@ afterEach(() => {
 function renderLogin(login: unknown = vi.fn().mockResolvedValue(OWNER), setupRequired = false) {
   const { wrapper } = setupApi({ login, getSession: vi.fn().mockResolvedValue(OWNER) });
   render(<LoginScreen setupRequired={setupRequired} />, { wrapper });
+
   return {
     email: screen.getByLabelText('Email'),
     password: screen.getByLabelText('Password'),

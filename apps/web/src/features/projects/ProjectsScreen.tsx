@@ -21,6 +21,7 @@ export function ProjectsScreen() {
   const openNew = () => sheets.open({ type: 'newProject' });
   const openCapture = () => sheets.open({ type: 'capture' });
   const capture = canCapture(projects.data);
+
   return (
     <>
       <NavBar
@@ -74,6 +75,7 @@ interface ProjectsAndReadyProps {
 
 function ProjectsAndReady({ query, ready, onNew }: ProjectsAndReadyProps) {
   const items = readyItems(ready, query.data ?? []);
+
   return (
     <>
       <ProjectsBody query={query} ready={items} onNew={onNew} />
@@ -106,7 +108,9 @@ function ProjectsBody({ query, ready, onNew }: ProjectsBodyProps) {
       />
     );
   }
+
   if (!query.error) return null;
+
   return (
     <div className={styles.loadError}>
       <p role="alert">{errorMessage(query.error)}</p>

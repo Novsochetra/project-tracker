@@ -274,6 +274,7 @@ describe('watchApiTraffic', () => {
         refreshes = vi.fn();
         vi.spyOn(queryClient, 'invalidateQueries').mockImplementation(() => {
           refreshes();
+
           return Promise.resolve();
         });
       });

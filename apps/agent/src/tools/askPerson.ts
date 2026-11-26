@@ -54,6 +54,7 @@ export const askPerson = defineTool({
       signal,
     });
     if (end.kind !== 'ended') await endOnTracker(client, asked.id);
+
     return { text: replyText(end), data: end.kind === 'ended' ? end.value : asked };
   },
 });

@@ -44,10 +44,12 @@ export function parseCliArgs(argv: readonly string[]): ParsedArgs {
   } catch (error) {
     throw new UsageError(error instanceof Error ? error.message : String(error));
   }
+
   const { url, as, token, json = false, help = false, version = false, ...rest } = parsed.values;
   const { install, uninstall, check, 'no-keep-awake': noKeepAwake, approvals, ...options } = rest;
   const flags = { install, uninstall, check, 'no-keep-awake': noKeepAwake, approvals };
   const [command, ...args] = parsed.positionals;
+
   return { command, args, global: { url, as, token, json, help, version }, options, flags };
 }
 
@@ -58,6 +60,7 @@ function checkArgs(command: Command, parsed: ParsedArgs): void {
   const fail = (message: string) => {
     throw new UsageError(message, command.usage);
   };
+
   const names = Object.keys(parsed.options) as CommandOption[];
   const unknown = names.find((name) => !command.options.includes(name)) ?? setFlagOf(parsed);
   if (unknown) fail(`"${command.name}" has no --${unknown} option.`);
@@ -82,6 +85,7 @@ function validate(plan: Plan, command: Command): Prepared {
   if (!result.success) {
     throw new UsageError(result.error.issues.map(formatIssue).join('\n'), command.usage);
   }
+
   return { tool: plan.tool, input: result.data };
 }
 
@@ -90,5 +94,6 @@ export function prepareCommand(parsed: ParsedArgs): Prepared {
   const command = findCommand(parsed.command);
   if (!command) throw new UsageError(`Unknown command "${parsed.command}".`);
   checkArgs(command, parsed);
+
   return validate(command.plan(parsed.args, parsed.options), command);
 }

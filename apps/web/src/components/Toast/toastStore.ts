@@ -58,10 +58,12 @@ export function createToastStore(): ToastStore {
     state = { ...state, ...patch };
     listeners.forEach((listener) => listener());
   };
+
   const after = (ms: number, run: () => void) => {
     clearTimeout(timer);
     timer = setTimeout(run, ms);
   };
+
   const current = (id: number) => (state.toast?.id === id ? state.toast : null);
   const showing = (id: number) => (current(id)?.leaving ? null : current(id));
 
@@ -84,6 +86,7 @@ export function createToastStore(): ToastStore {
       waiting = { text, options };
       return;
     }
+
     const toast = { id: nextId++, text, kind, undo: undo ?? null, important, leaving: false };
     held = false;
     update({ toast });
@@ -119,6 +122,7 @@ export function createToastStore(): ToastStore {
   const raise = () => {
     let active = true;
     update({ raised: state.raised + 1 });
+
     return () => {
       if (!active) return;
       active = false;
@@ -129,6 +133,7 @@ export function createToastStore(): ToastStore {
   return {
     subscribe: (listener) => {
       listeners.add(listener);
+
       return () => listeners.delete(listener);
     },
     getSnapshot: () => state,

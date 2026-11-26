@@ -16,5 +16,6 @@ export function ticketFields(input: UpdateTicketInput): Partial<Ticket> {
     const value = input[name];
     if (value !== undefined) Object.assign(fields, { [name]: value });
   }
+
   return fields;
 }

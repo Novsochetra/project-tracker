@@ -32,15 +32,18 @@ async function cli({ argv, typed = SECRET, tracker, env = {}, saved = NO_SAVED_C
     stderr: (text) => stderr.push(text),
     readSecret: (prompt) => {
       prompts.push(prompt);
+
       return Promise.resolve(typed);
     },
     connect: (config) => {
       configs.push(config);
+
       return tracker ?? fakeClient({ getSession: returns(SIGNED_IN) });
     },
   });
   const out = stdout.join('\n');
   const err = stderr.join('\n');
+
   return { code, stdout: out, stderr: err, configs, prompts, saved: store.saved };
 }
 

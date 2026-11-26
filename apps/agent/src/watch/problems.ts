@@ -5,6 +5,7 @@ export type ProblemSource = RunLane | 'check-in';
 // Check-ins and each lane report apart, so one's success can't hide another's failure.
 export function createProblemLog(log: (text: string) => void) {
   const problems = new Map<ProblemSource, string>();
+
   return (source: ProblemSource, problem: string | undefined) => {
     const known = [...problems.values()];
     if (problem) problems.set(source, problem);

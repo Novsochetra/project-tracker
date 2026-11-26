@@ -45,9 +45,11 @@ function storedRecords(): Held[] {
     const raw = localStorage.getItem(key) ?? '';
     const record = parsed.has(raw) ? parsed.get(raw) : parse(raw);
     seen.set(raw, record);
+
     return record ? [{ key, record }] : [];
   });
   parsed = seen;
+
   return held;
 }
 
@@ -88,6 +90,7 @@ function storeUnstored(): void {
     if (!write(key, record)) break;
     unstored.delete(key);
   }
+
   hearOtherTabs();
 }
 
@@ -109,6 +112,7 @@ function removeStored(key: string): void {
     if (dropped) shared.write(rest);
     return;
   }
+
   try {
     localStorage.removeItem(key);
   } catch {
@@ -123,6 +127,7 @@ export function dropRecord(key: string): void {
     hearOtherTabs();
     return;
   }
+
   removeStored(key);
   storeUnstored();
 }
@@ -145,6 +150,7 @@ function onOutsideChange(event: Event): void {
   if (event instanceof StorageEvent && event.key !== null) {
     if (event.key !== DRAFTS_STORAGE_KEY && !event.key.startsWith(PREFIX)) return;
   }
+
   notifyRecords();
 }
 
@@ -153,7 +159,9 @@ export function subscribeRecords(listener: () => void): () => void {
     window.addEventListener('storage', onOutsideChange);
     document.addEventListener('visibilitychange', onOutsideChange);
   }
+
   listeners.add(listener);
+
   return () => {
     listeners.delete(listener);
     if (listeners.size > 0) return;

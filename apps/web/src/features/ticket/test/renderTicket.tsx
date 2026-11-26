@@ -56,5 +56,6 @@ export function renderTicket({
       </ApiProvider>
     </MemoryRouter>,
   );
+
   return { ...api, ...view, restorePhone };
 }

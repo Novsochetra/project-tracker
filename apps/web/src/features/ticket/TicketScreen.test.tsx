@@ -21,6 +21,7 @@ afterEach(() => {
 function setup(options: Parameters<typeof renderTicket>[0] = {}) {
   const rendered = renderTicket(options);
   cleanups.push(rendered.restorePhone);
+
   return rendered;
 }
 

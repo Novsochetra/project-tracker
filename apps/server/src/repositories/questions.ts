@@ -59,6 +59,7 @@ export async function markQuestionEnded(db: Db, id: string, end: QuestionEnd): P
       ]),
     )
     .executeTakeFirst();
+
   return Number(result.numUpdatedRows) > 0;
 }
 
@@ -69,6 +70,7 @@ export async function markQuestionCancelled(db: Db, id: string, endedAt: number)
     .where('id', '=', id)
     .where('status', '=', 'open')
     .executeTakeFirst();
+
   return Number(result.numUpdatedRows) > 0;
 }
 

@@ -25,6 +25,7 @@ function ProjectOptions({ onEdit, onDelete }: { onEdit: () => void; onDelete: ()
         { label: 'Edit project', onSelect: () => (onEdit(), close()) },
         { label: 'Delete project', tone: 'danger' as const, onSelect: () => setConfirming(true) },
       ];
+
   return (
     <ActionSheet
       open={open}

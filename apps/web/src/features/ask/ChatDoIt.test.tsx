@@ -18,6 +18,7 @@ const answered = (mode: AskMode = 'plan'): ChatDetail => {
     endedAt: Date.now(),
     askOptions: { ...options, mode },
   });
+
   return makeChatDetail({
     chat: makeChat({ options: { ...options, mode } }),
     messages: [
@@ -44,6 +45,7 @@ function setup(detail: ChatDetail, runner = makeRunner()) {
     },
   });
   restore = [rendered.restore];
+
   return rendered;
 }
 

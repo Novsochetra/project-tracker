@@ -25,6 +25,7 @@ export function AutosaveTextarea({
   const draft = useFieldDraft(value, target);
   const autosave = useAutosave(draft.save);
   const noteId = useId();
+
   return (
     <>
       <AutoTextarea
@@ -48,6 +49,7 @@ export function AutosaveTextarea({
             draft.retry();
             return;
           }
+
           // What was typed is what the field shows, so it is saved even if the server moved on
           // after the last autosave; an untouched field catches up with the server instead.
           if (draft.edited) autosave.commit(draft.value);

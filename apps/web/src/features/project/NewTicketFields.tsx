@@ -37,6 +37,7 @@ export function NewTicketFields(props: NewTicketFieldsProps) {
   const people = usePeople().data;
   const status = statuses.find((candidate) => candidate.id === statusId);
   const isDone = status ? isDoneCategory(status.category) : false;
+
   return (
     <>
       <div className={styles.text}>

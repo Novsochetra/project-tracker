@@ -12,6 +12,7 @@ function cut(text: string, max: number): string {
   const part = text.slice(0, max);
   const lineEnd = part.lastIndexOf('\n');
   if (lineEnd >= max / 2) return part.slice(0, lineEnd + 1);
+
   return ENDS_IN_HIGH_SURROGATE.test(part) ? part.slice(0, -1) : part;
 }
 
@@ -39,5 +40,6 @@ export async function loadTextFiles(
     if (text.status === 'shown') room -= text.text.length;
     texts.set(file.id, text);
   }
+
   return texts;
 }

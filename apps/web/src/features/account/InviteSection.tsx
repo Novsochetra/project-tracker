@@ -10,6 +10,7 @@ import styles from './Invites.module.css';
 function OpenInvites() {
   const invites = useInvites();
   if (!invites.data?.length) return null;
+
   return (
     <GroupedCard>
       <ul className={styles.rows} aria-label="Open invite links">
@@ -24,6 +25,7 @@ function OpenInvites() {
 export function InviteSection() {
   const create = useCreateInvite();
   const headingId = useId();
+
   return (
     <section aria-labelledby={headingId} className={styles.section}>
       <h2 id={headingId} className={styles.heading}>

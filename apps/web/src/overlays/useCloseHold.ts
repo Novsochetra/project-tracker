@@ -16,12 +16,15 @@ export function useCloseHold(open: boolean, enabled = true) {
     if (enabled && closedByClick(clickedAt.current, performance.now())) {
       holdPresses(document.body);
     }
+
     clickedAt.current = null;
   }, [open, enabled]);
+
   return useMemo(() => {
     const forget = () => {
       clickedAt.current = null;
     };
+
     return {
       onPointerDownCapture: forget,
       onKeyDownCapture: forget,

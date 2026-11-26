@@ -59,6 +59,7 @@ export function createStepBatcher({
     sending ??= sendWaiting().finally(() => {
       sending = undefined;
     });
+
     return sending;
   };
 

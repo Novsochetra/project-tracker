@@ -15,6 +15,7 @@ describe('markHidden', () => {
     for (const char of [...chars, '\u000B', '\u0085', ' ', ' ', '\r', '؜']) {
       expect(hasHidden(`a${char}b`), JSON.stringify(char)).toBe(true);
     }
+
     expect(showHidden('a\r\nb\u001B[31m')).toBe('a\\u{D}\nb\\u{1B}[31m');
   });
 
@@ -41,6 +42,7 @@ describe('markHidden', () => {
       const marks = markHidden(`a${chars}b`).filter((part) => part.kind === 'hidden');
       expect(marks, name).toHaveLength([...chars].length);
     }
+
     expect(showHidden('a\u{E0001}\u{E0041}\u{E007F}b')).toBe('a\\u{E0001}\\u{E0041}\\u{E007F}b');
     expect(showHidden('x\u{E0100}\u{E01EF}')).toBe('x\\u{E0100}\\u{E01EF}');
   });

@@ -24,10 +24,12 @@ function DoItOffer({ projectKey, chat, plan }: DoItOfferProps) {
     if (!away) return null;
     return <p className={styles.note}>{doItAway(plan.runnerName, away, projectKey)}</p>;
   }
+
   const confirm = () => {
     setOpen(false);
     doIt.go(helper);
   };
+
   return (
     <div className={styles.doIt}>
       {doIt.error && (
@@ -58,6 +60,7 @@ function DoItOffer({ projectKey, chat, plan }: DoItOfferProps) {
 
 export function DoIt({ projectKey, detail }: { projectKey: string; detail: ChatDetail | null }) {
   const plan = planToDo(detail);
+
   return plan && detail ? (
     <DoItOffer projectKey={projectKey} chat={detail.chat} plan={plan} />
   ) : null;

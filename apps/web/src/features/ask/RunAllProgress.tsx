@@ -9,6 +9,7 @@ export function RunAllProgress({ runId }: { runId: string }) {
   const batch = useRunBatch(runId);
   const shown = batch.data;
   const end = shown ? batchEndText(shown.status) : null;
+
   return (
     <section className={styles.card} aria-label="Run all progress">
       <RunAllHead />

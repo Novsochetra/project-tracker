@@ -20,6 +20,7 @@ export function CreateAllButton({ pending, createAll }: CreateAllButtonProps) {
     if (event.detail !== 0) holdPresses(event.currentTarget);
     void createAll.run(pending);
   };
+
   return (
     <div className={styles.createAll}>
       {createAll.error !== null && (

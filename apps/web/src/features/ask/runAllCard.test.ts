@@ -13,8 +13,10 @@ const CARD = 'Ready:\n```run-all\nlimit: 3\n```\nTap Confirm.';
 let next = 0;
 const message = (role: ChatMessage['role'], text: string, batchRunId: string | null = null) => {
   next += 1;
+
   return makeMessage({ id: `m-${next}`, role, text, batchRunId });
 };
+
 const preview = { tickets: [], skippedActive: 0, skippedDevice: 0, leftOver: 0, maxParallel: null };
 const ticket = (state: BatchTicket['state'], num: number): BatchTicket => ({
   runId: `r-${num}`,

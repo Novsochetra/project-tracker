@@ -41,6 +41,7 @@ export function useLayerVisual(refs: LayerRefs, motion: LayerMotion): void {
     const apply = (value: number) =>
       applyVisual(refs, layerVisual(platform, animation, role, value), moving);
     apply(progress.get());
+
     return progress.on('change', apply);
   }, [refs, platform, animation, role, progress]);
 }

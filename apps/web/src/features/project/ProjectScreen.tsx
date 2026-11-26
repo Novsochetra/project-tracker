@@ -27,6 +27,7 @@ function ProjectView({ board, onRefresh }: ProjectViewProps) {
   const { scrollRef } = useScreen();
   const { project } = board;
   const viewMode = useViewMode(project.key);
+
   return (
     <ProjectLabelsContext value={board.labels ?? NO_LABELS}>
       <ProjectNavBar project={project} />
@@ -73,6 +74,7 @@ export function ProjectScreen({ projectKey }: { projectKey: string }) {
   useFreshListView(projectKey);
   useLeaveMissingProject(error);
   if (data) return <ProjectView board={data} onRefresh={() => refetch()} />;
+
   return (
     <>
       <ProjectLoadingBar />

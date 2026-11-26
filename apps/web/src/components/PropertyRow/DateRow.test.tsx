@@ -7,6 +7,7 @@ import { DateRow } from './DateRow';
 
 function Harness({ initial, onChange }: { initial: string; onChange: (value: string) => void }) {
   const [value, setValue] = useState(initial);
+
   return (
     <DateRow
       value={value}

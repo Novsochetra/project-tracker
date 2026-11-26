@@ -24,6 +24,7 @@ export interface CommentDraft {
 
 export function withTicket(detail: TicketDetail, ticket: Ticket): TicketDetail {
   const status = detail.statuses.find((item) => item.id === ticket.statusId) ?? detail.status;
+
   return { ...detail, ticket, status };
 }
 
@@ -84,6 +85,7 @@ const matchesFile = (item: Attachment, attachmentId: string): boolean =>
 // a file added is its first.
 export function addTicketAttachment(detail: TicketDetail, attachment: Attachment): TicketDetail {
   const files = isList(detail.attachments) ? detail.attachments : [];
+
   return files.some((item) => matchesFile(item, attachment.id))
     ? detail
     : { ...detail, attachments: [...files, attachment] };
@@ -94,6 +96,7 @@ export function removeAttachment(detail: TicketDetail, attachmentId: string): Ti
   const keep = (attachment: Attachment) => !matchesFile(attachment, attachmentId);
   const holdsIt = (item: Activity) =>
     isEntry(item) && isList(item.attachments) && !item.attachments.every(keep);
+
   return {
     ...detail,
     attachments: isList(detail.attachments) ? detail.attachments.filter(keep) : detail.attachments,

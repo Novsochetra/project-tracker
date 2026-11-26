@@ -49,6 +49,7 @@ const fileOpened =
 function openId(images: ImagesState, video: FileState, text: FileState): string | null {
   if (images.open) return images.images[images.index]?.id ?? null;
   if (video.open) return video.attachment?.id ?? null;
+
   return text.open ? (text.attachment?.id ?? null) : null;
 }
 
@@ -67,6 +68,7 @@ export function AttachmentViewerProvider({ children }: { children: ReactNode }) 
       setVideo(target.kind === 'video' ? fileOpened(target.attachment) : closed);
       setText(target.kind === 'text' ? fileOpened(target.attachment) : closed);
     };
+
     return {
       open: (attachments, index) => {
         const target = viewerTarget(attachments, index);
@@ -87,6 +89,7 @@ export function AttachmentViewerProvider({ children }: { children: ReactNode }) 
   // layout phase, so the watch ends before an arriving viewer takes focus, which would drop it.
   useLayoutEffect(() => (pending ? watchMovingOn(drop) : undefined), [pending, drop]);
   const playing = video.attachment;
+
   return (
     <AttachmentViewerContext value={api}>
       <ViewerOpeningContext value={opening}>{children}</ViewerOpeningContext>

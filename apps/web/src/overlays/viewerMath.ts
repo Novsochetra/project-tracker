@@ -25,6 +25,7 @@ export function pageTarget({ offset, velocity, stride, index, count }: PageRelea
       ? Math.ceil(position)
       : Math.floor(position)
     : Math.round(position);
+
   return clamp(target, Math.max(0, index - 1), Math.min(count - 1, index + 1));
 }
 
@@ -32,6 +33,7 @@ export function shouldDismissViewer(dy: number, velocityY: number, height: numbe
   if (dy <= 0) return false;
   if (velocityY >= DISMISS_FLICK) return true;
   if (velocityY < 0) return false;
+
   return dy >= Math.min(140, height * 0.18);
 }
 

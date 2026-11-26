@@ -12,8 +12,10 @@ export async function openFileStorage(settings: StorageSettings): Promise<FileSt
     await removePartialFiles(settings.uploadsDir);
     return createDiskStorage(settings.uploadsDir);
   }
+
   // Loaded only when used: the AWS SDK is large, and local runs keep files on disk.
   const { createS3Client, createS3Storage } = await import('./s3Storage');
+
   return createS3Storage({ client: createS3Client(settings.s3), bucket: settings.s3.bucket });
 }
 

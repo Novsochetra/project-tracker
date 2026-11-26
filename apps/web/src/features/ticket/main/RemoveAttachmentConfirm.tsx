@@ -19,6 +19,7 @@ export function RemoveAttachmentConfirm({ removal }: { removal: AttachmentRemova
       />
     );
   }
+
   return removal.asking ? <InlineConfirm message={message} removal={removal} /> : null;
 }
 
@@ -28,6 +29,7 @@ function InlineConfirm({ message, removal }: { message: string; removal: Attachm
   useEffect(() => {
     ref.current?.scrollIntoView?.({ block: 'nearest' });
   }, []);
+
   // Escape cancels, as it closes the app's other confirms and sheets; it bubbles up from the
   // card's buttons, so the wrapper only listens and adds no meaning of its own. One something used
   // first, like one that dropped a file's viewer still on its way (PT-114), keeps the confirm.

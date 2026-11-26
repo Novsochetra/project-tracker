@@ -18,6 +18,7 @@ export function AnswerImage({ image, label, onOpen }: AnswerImageProps) {
   const viewer = use(AttachmentViewerContext);
   const opening = use(ViewerOpeningContext) === image.id;
   const [failed, setFailed] = useState(false);
+
   return (
     <button
       type="button"

@@ -22,6 +22,7 @@ export function mockPhone(isPhone: boolean): () => void {
     writable: true,
     value: (query: string) => fakeQueryList(query, query === PHONE_QUERY && isPhone),
   });
+
   return () => {
     if (previous) Object.defineProperty(window, 'matchMedia', previous);
     else Reflect.deleteProperty(window, 'matchMedia');
@@ -30,6 +31,7 @@ export function mockPhone(isPhone: boolean): () => void {
 
 export function skipAnimations(): () => void {
   MotionGlobalConfig.skipAnimations = true;
+
   return () => {
     MotionGlobalConfig.skipAnimations = false;
   };

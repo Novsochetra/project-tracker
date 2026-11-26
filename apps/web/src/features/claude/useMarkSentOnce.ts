@@ -29,5 +29,6 @@ export function useMarkSentOnce(ticketKey: string): MarkSentOnce {
     },
     [mutate, ticketKey],
   );
+
   return { sent, mark, error };
 }

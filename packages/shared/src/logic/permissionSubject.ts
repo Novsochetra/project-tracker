@@ -31,6 +31,7 @@ function ranProgram(command: string): string | null {
   const [program = '', next = ''] = command.trim().split(/\s+/);
   const name = PROGRAM.test(program) ? program.split('/').pop() : '';
   if (!name) return null;
+
   return WITH_SUBCOMMANDS.has(name) && SUBCOMMAND.test(next) ? `${name} ${next}` : name;
 }
 
@@ -60,5 +61,6 @@ export function permissionSubject(label: string): string | null {
   const verb = first.slice(0, space);
   const subject = Object.hasOwn(SUBJECTS, verb) ? SUBJECTS[verb] : undefined;
   const detail = subject && space > 0 ? subject(first.slice(space + 1).trim()) : null;
+
   return detail ? `${verb.toLowerCase()} ${detail}` : null;
 }

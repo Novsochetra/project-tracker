@@ -34,6 +34,7 @@ export async function deliver(
     await deleteSubscriptionAt(db, target.endpoint);
     return;
   }
+
   const reason = (await response.text().catch(() => '')).slice(0, 200);
   throw new Error(`Push to ${hostOf(target.endpoint)} failed: ${response.status} ${reason}`);
 }

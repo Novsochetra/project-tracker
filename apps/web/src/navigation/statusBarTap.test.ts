@@ -29,6 +29,7 @@ function watch(win = new FakeWindow()) {
     onTap,
     isLocked: () => win.pinned,
   });
+
   return { win, onTap, stop };
 }
 

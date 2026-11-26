@@ -10,6 +10,7 @@ export type FoundTools = Omit<RunnerTools, 'servers'> & { servers: string[] | nu
 export async function readTools(listText: string, folder: string): Promise<FoundTools> {
   const servers = parseMcpList(listText);
   const [commands, skills] = await Promise.all([commandNames(folder), skillNames(folder)]);
+
   return {
     servers: servers.length === 0 ? null : boundNames(connectedServerNames(servers)),
     commands: boundNames(commands),

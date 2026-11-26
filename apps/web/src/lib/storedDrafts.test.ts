@@ -20,6 +20,7 @@ const TITLE_ID = 'title:MOB-3';
 // The same module with memory of its own, as in another tab (or the page after a reload).
 async function otherTab() {
   vi.resetModules();
+
   return import('./storedDrafts');
 }
 

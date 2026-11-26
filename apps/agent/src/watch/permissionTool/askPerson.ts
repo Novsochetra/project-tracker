@@ -78,11 +78,13 @@ async function untilEnded(
       failures += 1;
     }
   }
+
   // Claude closing one call leaves the run going, so the window mustn't say the run stopped.
   const closed = signal.reason === CALL_CLOSED;
   const note = closed
     ? 'Claude stopped waiting for an answer.'
     : 'the run stopped before an answer.';
+
   return { gaveUp: RUN_ENDED, note };
 }
 
@@ -123,14 +125,17 @@ async function ask(deps: AskPersonDeps, run: Run, call: PromptCall, signal: Abor
     deps.log(`Couldn't ask on the phone for ${runName(run)}: ${deps.describe(error)}`);
     return deny(refusalOf(error) ?? UNREACHABLE);
   }
+
   deps.log(`${runName(run)}: ${askedText(request)}`);
   const ending = await untilEnded(deps, request, signal);
   if ('request' in ending) {
     deps.log(`${runName(run)}: ${ENDINGS[ending.request.status]}.`);
     return decisionOf(call, ending.request);
   }
+
   await endOnTracker(deps, request);
   deps.log(`${runName(run)}: ${ending.note}`);
+
   return deny(ending.gaveUp);
 }
 

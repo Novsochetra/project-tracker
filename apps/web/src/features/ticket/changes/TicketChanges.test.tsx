@@ -41,6 +41,7 @@ function setup({
     getTicketChanges: vi.fn(() => Promise.resolve({ changes: saved })),
     setFileViewed: vi.fn((_key: string, input: { path: string; digest: string }) => {
       if (saved) saved = { ...saved, viewed: { ...saved.viewed, [input.path]: input.digest } };
+
       return Promise.resolve();
     }),
     sendChangesVerdict: vi.fn().mockResolvedValue(detail),
@@ -50,12 +51,14 @@ function setup({
   };
   const rendered = renderTicket({ detail, client, phone });
   cleanups.push(rendered.restorePhone);
+
   return { ...rendered, calls: client };
 }
 
 const openChanges = async () => {
   await userEvent.click(await screen.findByRole('button', { name: 'Changes 2' }));
 };
+
 const openCodeFile = () => userEvent.click(screen.getByRole('button', { name: /^src\/a\.ts/ }));
 
 describe('the Changes tab', () => {

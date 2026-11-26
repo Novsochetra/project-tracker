@@ -46,6 +46,7 @@ export function paletteSections(input: PaletteInput): PaletteSection[] {
     { label: empty ? 'Recent tickets' : 'Tickets', items: tickets.map(ticketItem) },
   ];
   const keyFirst = tickets[0]?.match === 'key';
+
   return (keyFirst ? sections.reverse() : sections).filter((section) => section.items.length > 0);
 }
 
@@ -62,5 +63,6 @@ export function keyRoute(
   const projectKey = key?.projectKey;
   if (!key || !projectKey) return null;
   const known = projects.some((project) => project.key.toUpperCase() === projectKey);
+
   return known ? { name: 'ticket', key: projectKey, num: key.num } : null;
 }

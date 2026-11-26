@@ -36,6 +36,7 @@ export function ChangesHeader({ detail, changes, files, commentCount }: ChangesH
         onError: (error) => show(errorMessage(error), { kind: 'error' }),
       },
     );
+
   return (
     <div className={styles.header}>
       <div className={styles.summary}>

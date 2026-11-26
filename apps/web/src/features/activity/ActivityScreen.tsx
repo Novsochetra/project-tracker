@@ -29,6 +29,7 @@ function ActivityList({ activity }: { activity: RunActivity }) {
       />
     );
   }
+
   return (
     <>
       {batches.length > 0 && (
@@ -52,6 +53,7 @@ function ActivityList({ activity }: { activity: RunActivity }) {
 export function ActivityScreen() {
   const query = useRunActivity();
   const { scrollRef } = useScreen();
+
   return (
     <>
       <NavBar title="Activity" left={<AccountButton />} />

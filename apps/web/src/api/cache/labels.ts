@@ -11,6 +11,7 @@ export const withLabels = <T extends WithLabels>(
 
 export function reorderLabelList(labels: readonly Label[], ids: readonly string[]): Label[] {
   const order = new Map(ids.map((id, index) => [id, index]));
+
   return sortLabels(
     labels.map((label) => ({
       ...label,

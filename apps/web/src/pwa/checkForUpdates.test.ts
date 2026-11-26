@@ -5,6 +5,7 @@ let stop: () => void = () => undefined;
 
 function start(update = vi.fn(() => Promise.resolve())) {
   stop = checkForUpdates({ update });
+
   return update;
 }
 
@@ -49,6 +50,7 @@ describe('checkForUpdates', () => {
     stop = checkForUpdates({
       update: () => {
         checks += 1;
+
         return Promise.reject(new TypeError('Failed to fetch'));
       },
     });

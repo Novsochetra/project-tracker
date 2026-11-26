@@ -28,6 +28,7 @@ function nextRun({ role, round }: EndedChainRun, category: StatusCategory): Chai
   if (role === 'review' && category === 'todo') {
     return { kind: 'queue', role: 'work', round: round + 1 };
   }
+
   return NONE;
 }
 
@@ -39,6 +40,7 @@ export function nextChainStep(facts: ChainFacts): ChainStep {
   if (next.round > AUTO_REVIEW_ROUNDS) return { kind: 'stop', reason: 'rounds' };
   if (!facts.helperOnline) return { kind: 'stop', reason: 'offline' };
   if (facts.promptLength > RUN_PROMPT_MAX) return { kind: 'stop', reason: 'too_long' };
+
   return next;
 }
 

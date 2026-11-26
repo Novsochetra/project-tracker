@@ -40,6 +40,7 @@ class Builder {
       this.frames.push({ children: this.top.children, literal });
       return;
     }
+
     const node: Inline = { kind, children: [] };
     this.top.children.push(node);
     this.frames.push({ children: node.children, literal: null });
@@ -68,5 +69,6 @@ export function buildInline(tokens: readonly Token[]): Inline[] {
     else if (token.kind === 'atom') builder.atom(token.inline);
     else builder.mark(token);
   }
+
   return builder.root;
 }

@@ -46,6 +46,7 @@ function cssFiles(dir: string): string[] {
   return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
     const path = join(dir, entry.name);
     if (entry.isDirectory()) return cssFiles(path);
+
     return entry.name.endsWith('.css') ? [path] : [];
   });
 }
@@ -61,6 +62,7 @@ const isModule = (file: string): boolean => file.endsWith('.module.css');
 
 function withoutCalls(value: string): string {
   const next = value.replace(/[\w-]+\([^()]*\)/g, ' ');
+
   return next === value ? value : withoutCalls(next);
 }
 
@@ -76,6 +78,7 @@ function listItems(value: string): string[] {
       start = index + 1;
     }
   }
+
   return [...items, value.slice(start)];
 }
 
@@ -86,6 +89,7 @@ function animationsInItem(file: string, item: string): Animation[] {
   const locals = words.filter(
     (word) => !KEYWORDS.has(word.toLowerCase()) && !/^[-+]?[\d.]/.test(word),
   );
+
   return [
     ...globals.map((name) => ({ file, name, isGlobal: true, fill })),
     ...locals.map((name) => ({ file, name, isGlobal: !isModule(file), fill })),
@@ -104,8 +108,10 @@ const where = ({ file, name }: Animation): string => `${file} uses "${name}"`;
 
 function unseenKeyframes(sheets: Sheet[]): string[] {
   const globals = sheets.filter(({ file }) => !isModule(file)).flatMap(keyframesOf);
+
   return sheets.flatMap((source) => {
     const locals = keyframesOf(source);
+
     return animationsOf(source)
       .filter(({ name, isGlobal }) => !(isGlobal ? globals : locals).includes(name))
       .map(where);

@@ -66,6 +66,7 @@ describe('capture queue', () => {
     for (let index = 0; index < 60; index += 1) {
       queue = markCreated(addCapture(queue, capture(`c${index}`, index)), `c${index}`);
     }
+
     expect(queue.items).toEqual([]);
     expect(queue.created).toHaveLength(50);
     expect(queue.created[0]).toBe('c10');

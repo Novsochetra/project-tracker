@@ -34,6 +34,7 @@ function chunk(type: string, data: Buffer): Buffer {
   head.write(type, 4, 'latin1');
   const checksum = Buffer.alloc(4);
   checksum.writeUInt32BE(crc32(Buffer.concat([head.subarray(4), data])));
+
   return Buffer.concat([head, data, checksum]);
 }
 
@@ -55,6 +56,7 @@ function walk(buffer: Buffer): Walk {
     at = end;
     if (type === 'IEND') break;
   }
+
   return { chunks, types };
 }
 
@@ -67,5 +69,6 @@ export function stripPng(bytes: Uint8Array, orientation: number): Uint8Array | n
   if (!types.has('IHDR') || !types.has('IDAT')) return null;
   const [header, ...rest] = chunks;
   const upright = hasOrientation(orientation) ? [chunk('eXIf', orientationExif(orientation))] : [];
+
   return Buffer.concat([SIGNATURE, ...(header ? [header] : []), ...upright, ...rest]);
 }

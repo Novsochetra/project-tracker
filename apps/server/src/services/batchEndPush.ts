@@ -14,6 +14,7 @@ export function pushBatchEnd(ctx: ServiceContext, scope: UserScope, batch: RunWi
     const notDoneKeys = tickets
       .filter((ticket) => ticket.status !== 'done')
       .map((ticket) => formatTicketKey(projectKey, ticket.ticketNum));
+
     return batchEndedPush({ runId: id, projectKey, total: tickets.length, notDoneKeys }, status);
   });
 }

@@ -26,6 +26,7 @@ export function pushRequest(
     subject: sender.subject,
     now: sender.now,
   });
+
   return {
     method: 'POST',
     // A redirect would take the signed message past the list of push services (isPushServiceUrl).

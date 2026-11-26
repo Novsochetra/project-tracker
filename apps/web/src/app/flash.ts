@@ -19,6 +19,7 @@ export function flashRows(ids: readonly string[]): void {
 
 const subscribe = (listener: () => void) => {
   listeners.add(listener);
+
   return () => listeners.delete(listener);
 };
 

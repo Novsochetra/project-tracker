@@ -10,6 +10,7 @@ function removeTarget() {
   const [top, right, bottom, left] = edges(phoneRule(MODULE, '.remove::before').get('inset'));
   const size = { width: pixels(x.get('width')), height: pixels(x.get('height')) };
   const overhang = { top: -pixels(x.get('top')), right: -pixels(x.get('right')) };
+
   return {
     width: size.width - left - right,
     height: size.height - top - bottom,

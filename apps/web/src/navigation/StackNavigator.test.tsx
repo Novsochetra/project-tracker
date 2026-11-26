@@ -11,6 +11,7 @@ import { useNavigation } from './useNavigation';
 function Screen({ route }: { route: Route }) {
   const { push, back, canGoBack } = useNavigation();
   const { isTop } = useScreen();
+
   return (
     <div>
       <p>
@@ -38,6 +39,7 @@ function Screen({ route }: { route: Route }) {
 function Probe() {
   const { pathname } = useLocation();
   const navigate = useNavigate();
+
   return (
     <>
       <output aria-label="Location">{pathname}</output>

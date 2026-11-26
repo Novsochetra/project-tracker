@@ -17,6 +17,7 @@ function removeTarget(): { across: Span; down: Span } {
   const [top, right, bottom, left] = edges(phoneRule(MODULE, '.remove::before').get('inset'));
   const fromRight = pixels(x.get('right'));
   const fromTop = pixels(x.get('top'));
+
   return {
     across: { from: fromRight + right, to: fromRight + pixels(x.get('width')) - left },
     down: { from: fromTop + top, to: fromTop + pixels(x.get('height')) - bottom },

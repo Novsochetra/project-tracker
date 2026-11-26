@@ -13,6 +13,7 @@ function setup(overrides: Parameters<typeof setupApi>[0] = {}) {
   api.queryClient.setQueryData(queryKeys.board('MOB'), makeBoard());
   api.queryClient.setQueryData(queryKeys.board('WEB'), { ...makeBoard([]), project: otherProject });
   api.queryClient.setQueryData(queryKeys.ticket('MOB-1'), makeTicketDetail());
+
   return api;
 }
 

@@ -46,6 +46,7 @@ export function placeFloating({
   const wanted = up ? anchor.top - gap - height : anchor.bottom + gap;
   // A panel that can't shrink enough covers part of its row rather than leave the screen.
   const top = clamp(wanted, EDGE, viewport.height - EDGE - height);
+
   return {
     top: Math.round(top),
     left: Math.round(left),

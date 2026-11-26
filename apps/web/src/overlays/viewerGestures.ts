@@ -36,6 +36,7 @@ export function createViewerGestures(read: () => ViewerGestureContext): ViewerGe
       );
       return;
     }
+
     lastTap = tap;
     // A single tap waits to be sure it is not the first half of a double tap.
     tapTimer = window.setTimeout(() => {

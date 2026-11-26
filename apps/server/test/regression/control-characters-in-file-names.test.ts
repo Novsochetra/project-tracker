@@ -10,6 +10,7 @@ describe.each(DIALECTS)('control characters in file names (%s)', (dialect) => {
   async function uploadNamed(name: string) {
     const res = await api.upload(fileUpload({ name }));
     const row = await api.db.selectFrom('attachments').select('fileName').executeTakeFirst();
+
     return { status: res.status, fileName: res.body.fileName, stored: row?.fileName };
   }
 

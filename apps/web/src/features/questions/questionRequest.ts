@@ -19,6 +19,7 @@ const DECISION = { answered: 'allow', skipped: 'deny' } as const;
 
 export function asRunRequest(question: TicketQuestion): RunRequest {
   const { status } = question;
+
   return {
     kind: 'question',
     label: question.text,
@@ -45,5 +46,6 @@ export function asRunRequest(question: TicketQuestion): RunRequest {
 // The card's Skip is a deny; its answer is the one question's.
 export const questionAnswer = (input: AnswerRunRequestInput): AnswerQuestionInput => {
   const answer = input.answers?.[0];
+
   return input.decision === 'allow' && answer ? { answer } : { skip: true };
 };

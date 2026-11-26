@@ -22,11 +22,13 @@ const toggled = (picks: ReadonlySet<string>, path: string, on: boolean) => {
   const next = new Set(picks);
   if (on) next.add(path);
   else next.delete(path);
+
   return next;
 };
 
 function fileNote(file: ChatChangedFile): string | null {
   if (file.dirtyBefore) return DIRTY_NOTE;
+
   return isSecretPath(file.path) ? SECRET_NOTE : null;
 }
 
@@ -36,6 +38,7 @@ function FileChoice({
   onChange,
 }: Omit<CommitFormProps, 'files' | 'error'> & { file: ChatChangedFile }) {
   const note = fileNote(file);
+
   return (
     <label className={styles.file}>
       <input

@@ -6,6 +6,7 @@ import { useNavigation } from '../../navigation';
 export function useOpenProject(): (projectKey: string) => void {
   const { push } = useNavigation();
   const prefetchBoard = usePrefetchBoard();
+
   return (projectKey) => {
     prefetchBoard(projectKey);
     push({ name: 'project', key: projectKey });

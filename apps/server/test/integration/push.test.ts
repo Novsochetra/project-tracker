@@ -129,8 +129,10 @@ describe.each(DIALECTS)('push notifications (%s)', (dialect) => {
       const review = async (as: Caller, verdict: string) => {
         await helper('POST', '/api/tickets/MOB-1/claim');
         await helper('POST', '/api/tickets/MOB-1/submit', { summary: 'Done.' });
+
         return as('POST', '/api/tickets/MOB-1/review', { verdict, rating: 4, summary: 'Ok' });
       };
+
       expect((await review(helper, 'changes_requested')).status).toBe(200);
       expect((await review(person, 'approved')).status).toBe(200);
       await new Promise((resolve) => setTimeout(resolve, 50));
@@ -161,6 +163,7 @@ describe.each(DIALECTS)('push notifications (%s)', (dialect) => {
       .select('id')
       .where('category', '=', category as 'in_review')
       .executeTakeFirstOrThrow();
+
     return row.id;
   }
 

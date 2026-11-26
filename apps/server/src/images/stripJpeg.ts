@@ -24,6 +24,7 @@ function orientationSegment(orientation: number): Buffer {
   const exif = Buffer.concat([Buffer.from('Exif\0\0', 'latin1'), orientationExif(orientation)]);
   const header = Buffer.from([0xff, 0xe1, 0, 0]);
   header.writeUInt16BE(exif.length + 2, 2);
+
   return Buffer.concat([header, exif]);
 }
 
@@ -68,8 +69,10 @@ function walk(bytes: Buffer): Walk {
     found.scanned ||= segment.marker === SOS;
     place(bytes, segment, found);
   }
+
   if (found.iccChunks.length === 0 || isWholeIccProfile(found.iccChunks)) return found;
   const icc = new Set<Piece>(found.iccChunks);
+
   return { ...found, pieces: found.pieces.filter((piece) => !icc.has(piece)) };
 }
 
@@ -79,6 +82,7 @@ function withUpright(pieces: Piece[], orientation: number): Piece[] {
   const [first, ...rest] = pieces;
   const upright = orientationSegment(orientation);
   const jfif = Buffer.isBuffer(first) && first[1] === APP0;
+
   return jfif ? [first, upright, ...rest] : [upright, ...pieces];
 }
 
@@ -92,5 +96,6 @@ export function stripJpeg(bytes: Uint8Array, orientation: number): Uint8Array | 
   const parts = withUpright(pieces, orientation).map((piece) =>
     Buffer.isBuffer(piece) ? piece : buffer.subarray(piece.start, piece.end),
   );
+
   return Buffer.concat([buffer.subarray(0, 2), ...parts]);
 }

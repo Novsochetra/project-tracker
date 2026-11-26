@@ -13,6 +13,7 @@ function setUp(pool: { idleMs?: number; max?: number } = {}) {
   const { spawn, children } = fakeSpawn();
   const chats = createChatRunner({ command: 'claude', cwd: '/repo', limit: [], spawn, pool });
   running.push(chats);
+
   return { chats, children };
 }
 
@@ -35,6 +36,7 @@ async function answeredBy(
     setup.children.find((child) => !child.exited && child.messages().at(-1) === job.prompt);
   await vi.waitFor(() => expect(asked()).toBeDefined());
   asked()!.answer(text);
+
   return askOutcomeOf(await exit, false);
 }
 

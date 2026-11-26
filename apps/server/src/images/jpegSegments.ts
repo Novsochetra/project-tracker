@@ -14,6 +14,7 @@ export interface JpegSegment {
 function nextMarker(bytes: Buffer, from: number): number {
   let at = bytes.indexOf(0xff, from);
   while (at !== -1 && bytes[at + 1] === 0xff) at += 1;
+
   return at !== -1 && at + 1 < bytes.length ? at : -1;
 }
 
@@ -25,6 +26,7 @@ function scanEnd(bytes: Buffer, from: number): number {
     if (next === undefined) break;
     if (next !== 0x00 && next !== 0xff && (next < 0xd0 || next > 0xd7)) return at;
   }
+
   return bytes.length;
 }
 
@@ -47,10 +49,12 @@ export function* jpegSegments(bytes: Buffer): Generator<JpegSegment> {
       yield { marker, start: at, end: at + 2 };
       return;
     }
+
     if (hasNoLength(marker)) {
       at = nextMarker(bytes, at + 2);
       continue;
     }
+
     if (at + 4 > bytes.length) return;
     const header = headerEnd(bytes, at);
     if (header > bytes.length) return;
@@ -64,5 +68,6 @@ export function countJpegScans(bytes: Uint8Array): number {
   let scans = 0;
   const buffer = asBuffer(bytes);
   for (const { marker } of jpegSegments(buffer)) if (marker === SOS) scans += 1;
+
   return scans;
 }

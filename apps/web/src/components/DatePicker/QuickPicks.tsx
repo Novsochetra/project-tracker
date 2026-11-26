@@ -14,6 +14,7 @@ export function QuickPicks({ value, today, onPick }: QuickPicksProps) {
     { label: 'Tomorrow', day: addDays(today, 1) },
     { label: 'Next week', day: nextMonday(today) },
   ];
+
   return (
     <div className={styles.quick}>
       {picks.map(({ label, day }) => (

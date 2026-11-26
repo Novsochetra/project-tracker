@@ -132,6 +132,7 @@ export async function activeRunTicketIds(db: Db, ticketIds: readonly string[]): 
     .where('ticketId', 'in', ticketIds)
     .where('status', 'in', ACTIVE_RUN_STATUSES)
     .execute();
+
   return rows.flatMap((row) => (row.ticketId ? [row.ticketId] : []));
 }
 
@@ -154,6 +155,7 @@ export async function markRunStarted(
     .where('status', '=', 'queued')
     .where(underLimit)
     .executeTakeFirst();
+
   return Number(result.numUpdatedRows) > 0;
 }
 
@@ -171,6 +173,7 @@ export async function markRunEnded(
     .where('id', '=', id)
     .where('status', 'in', ACTIVE_RUN_STATUSES)
     .executeTakeFirst();
+
   return Number(result.numUpdatedRows) > 0;
 }
 

@@ -53,6 +53,7 @@ async function openConnection(): Promise<Connection> {
   socket.on('data', (chunk: Buffer) => (received += chunk.toString()));
   socket.on('close', () => (closed = true));
   socket.on('error', () => undefined);
+
   return {
     send: (text) => {
       if (!socket.destroyed) socket.write(text);
@@ -69,6 +70,7 @@ async function waitFor(condition: () => boolean, ms: number): Promise<boolean> {
     if (Date.now() > deadline) return false;
     await sleep(10);
   }
+
   return true;
 }
 

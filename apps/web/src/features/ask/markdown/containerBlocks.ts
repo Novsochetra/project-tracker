@@ -19,6 +19,7 @@ export function readQuote(cursor: Cursor): Block | null {
     inner.push(line.slice(prefix.length));
     cursor.at += 1;
   }
+
   return inner.length ? { kind: 'quote', blocks: cursor.parse(inner, cursor.depth + 1) } : null;
 }
 
@@ -34,12 +35,14 @@ function itemLines(cursor: Cursor, item: ItemStart): string[] {
       blanks += 1;
       continue;
     }
+
     if (leadingSpaces(line) >= item.indent) {
       for (; blanks > 0; blanks -= 1) out.push('');
       out.push(line.slice(item.indent));
     } else if (blanks === 0 && !startsBlock(line, cursor.depth)) out.push(line.trim());
     else break;
   }
+
   return out;
 }
 
@@ -50,6 +53,7 @@ function nextItem(cursor: Cursor, ordered: boolean): ItemStart | null {
   const item = itemOf(cursor.lines[at] ?? '');
   if (item?.ordered !== ordered) return null;
   cursor.at = at;
+
   return item;
 }
 
@@ -60,5 +64,6 @@ export function readList(cursor: Cursor): Block | null {
   for (let item: ItemStart | null = first; item; item = nextItem(cursor, first.ordered)) {
     items.push(cursor.parse(itemLines(cursor, item), cursor.depth + 1));
   }
+
   return { kind: 'list', ordered: first.ordered, start: first.number, items };
 }

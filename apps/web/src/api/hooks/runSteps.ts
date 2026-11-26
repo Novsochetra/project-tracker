@@ -14,10 +14,12 @@ export function useRunSteps(
   const client = useApi();
   const queryClient = useQueryClient();
   const queryKey = queryKeys.runSteps(runId);
+
   return useQuery({
     queryKey,
     queryFn: async () => {
       const have = queryClient.getQueryData<RunStep[]>(queryKey) ?? [];
+
       return mergeSteps(have, await client.listRunSteps(runId, { after: lastSeq(have) }));
     },
     enabled,

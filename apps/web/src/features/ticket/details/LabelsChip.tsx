@@ -28,6 +28,7 @@ export function LabelsChip({
   const [open, setOpen] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const picked = labelsOf(labels, value);
+
   return (
     <>
       <button

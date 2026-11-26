@@ -9,6 +9,7 @@ import { chatBackLabel } from './ticketChat';
 export function ChatsLoadingBar({ projectKey }: { projectKey: string }) {
   const project = useProject(projectKey).data?.project;
   const backLabel = project ? projectDisplayName(project) : projectKey.toUpperCase();
+
   return <NavBar title={ASK_LABEL} backLabel={backLabel} right={<NavBarSpacer />} />;
 }
 
@@ -22,5 +23,6 @@ export interface ChatLoadingBarProps {
 export function ChatLoadingBar({ projectKey, chatId, ticketNum }: ChatLoadingBarProps) {
   const title = chatId === null ? NEW_CHAT_LABEL : undefined;
   const backLabel = chatBackLabel(projectKey, ticketNum);
+
   return <NavBar title={title} backLabel={backLabel} right={<NavBarSpacer />} />;
 }

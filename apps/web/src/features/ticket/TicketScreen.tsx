@@ -21,6 +21,7 @@ export function TicketScreen({ projectKey, num }: TicketScreenProps) {
   useTicketOnScreen(ticketKey);
   useLeaveWhenMissing(query.error, ticketKey, projectKey);
   if (query.data) return <TicketView detail={query.data} />;
+
   return (
     <>
       <TicketLoadingBar projectKey={projectKey} num={num} />
@@ -55,6 +56,7 @@ interface TicketPlaceholderProps {
 
 function TicketPlaceholder({ ticketKey, error, onRetry }: TicketPlaceholderProps) {
   const failed = error !== null && !isNotFound(error);
+
   return failed ? (
     <EmptyState
       icon={CircleAlert}

@@ -13,6 +13,7 @@ export function forwardedAddress(
     .split(',')
     .map((entry) => entry.trim())
     .filter(Boolean);
+
   return entries.at(-Math.min(trustedProxies, entries.length)) ?? null;
 }
 
@@ -28,5 +29,6 @@ function socketAddress(c: Context): string {
 export function clientAddress(c: Context, trustedProxies: number): string {
   const forwarded =
     trustedProxies > 0 ? forwardedAddress(c.req.header('x-forwarded-for'), trustedProxies) : null;
+
   return forwarded ?? socketAddress(c);
 }

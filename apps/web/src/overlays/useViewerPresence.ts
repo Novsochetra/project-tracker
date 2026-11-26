@@ -26,6 +26,7 @@ function exitAfterSwipe(
     spring(values.y, fall, { velocity, visualDuration: 0.3, restDelta: 1 }),
     tween(values.opacity, 0, { durationMs: DURATION.base, ease: EASE_OUT }, onExited),
   ];
+
   return () => stopAll(stops);
 }
 
@@ -39,6 +40,7 @@ function fade(values: ViewerValues, open: boolean, reduced: boolean, onExited: (
     tween(values.opacity, open ? 1 : 0, timing, open ? undefined : onExited),
     tween(values.stageScale, open ? 1 : 0.96, timing),
   ];
+
   return () => stopAll(stops);
 }
 
@@ -50,6 +52,7 @@ export function useViewerPresence(input: ViewerPresenceInput): void {
     dismissVelocityRef.current = null;
     if (velocity !== null && !reducedMotion)
       return exitAfterSwipe(values, viewport, velocity, onExited);
+
     return fade(values, false, reducedMotion, onExited);
   }, [open, values, viewport, reducedMotion, dismissVelocityRef, onExited]);
 }

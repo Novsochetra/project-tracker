@@ -82,6 +82,7 @@ export function useFieldSave(input: SaveInput): SaveField {
   const { ticketKey, field } = target;
   const { show } = useToast();
   const latest = useLatest({ ...input, saveDraft: useDraftSave(), show });
+
   return async (value, { checked = false, quiet = false } = {}) => {
     const id = draftIdOf({ ticketKey, field });
     const { landed: typedOverLanded } = latest.current;
@@ -95,6 +96,7 @@ export function useFieldSave(input: SaveInput): SaveField {
       setDraft((current) => markSaved(current, value));
       return;
     }
+
     // Kept until the tracker has it, so leaving or reloading during the request loses nothing.
     if (!storedDraft(id)) keepDraft(id, { ticketKey, field, text: value }, shown);
     // A checked save names what the check found; another, the newest text it may be typed over.

@@ -33,6 +33,7 @@ function Thinking({ run, waiting }: { run: Run; waiting: boolean }) {
       </p>
     );
   }
+
   return (
     <p className={styles.statusLine}>
       <span aria-hidden="true" className={styles.spinner}>
@@ -46,6 +47,7 @@ function Thinking({ run, waiting }: { run: Run; waiting: boolean }) {
 function RunOn({ helper }: { helper: AskHelper }) {
   const { footer, choose } = helper;
   if (footer.kind !== 'ask' || footer.helpers.length < 2) return null;
+
   return (
     <GroupedCard className={styles.runOn}>
       <SelectRow
@@ -68,6 +70,7 @@ export function ChatFooterArea(props: ChatFooterAreaProps) {
   // It takes the bottom bar's place, so toasts rise above it as they do above the bar.
   useRegisterBottomBar(isPhone && isTop);
   const stopped = footer.kind === 'ask' || footer.kind === 'setup' ? footer.stopped : null;
+
   return (
     <div className={styles.footer} data-bottom-cover="">
       <div className={styles.footerInner}>

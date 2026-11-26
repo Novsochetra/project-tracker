@@ -16,5 +16,6 @@ export function clipTitle(text: string, maxWidth: number): string {
     if (room < 0) break;
     kept.push(character);
   }
+
   return `${kept.join('').trimEnd()}…`;
 }

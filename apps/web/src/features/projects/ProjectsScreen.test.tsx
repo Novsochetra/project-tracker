@@ -39,6 +39,7 @@ function renderWithReady(
   client: Record<string, unknown> = {},
 ) {
   const web = projectSummary({ ...otherProject, openCount: 0, totalCount: 0, doneCount: 0 });
+
   return renderWithApp(stack, {
     client: {
       listProjects: vi.fn().mockResolvedValue([projectSummary({ openCount: 3 }), web]),

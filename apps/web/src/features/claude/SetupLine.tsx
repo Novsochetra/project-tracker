@@ -4,6 +4,7 @@ import styles from './PromptSheet.module.css';
 
 export function SetupLine() {
   const sheets = useSheets();
+
   return (
     <p className={styles.setupLine}>
       Run Claude Code from here:{' '}

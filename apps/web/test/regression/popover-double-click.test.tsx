@@ -34,6 +34,7 @@ function mockDesktopCalendar(): () => void {
       dispatchEvent: () => false,
     }),
   });
+
   return () => {
     if (previous) Object.defineProperty(window, 'matchMedia', previous);
     else Reflect.deleteProperty(window, 'matchMedia');
@@ -72,6 +73,7 @@ describe('regression: the second click of a double-click stays on the popover', 
         </ToastProvider>
       </Wrapper>,
     );
+
     return userEvent.setup();
   }
 
@@ -117,6 +119,7 @@ describe('regression: the second click of a double-click stays on the popover', 
   function Fields({ onDelete }: { onDelete: () => void }) {
     const [due, setDue] = useState('');
     const [priority, setPriority] = useState('medium');
+
     return (
       <>
         <DateRow value={due} onChange={setDue} />
@@ -140,6 +143,7 @@ describe('regression: the second click of a double-click stays on the popover', 
     const onDelete = vi.fn();
     render(<Fields onDelete={onDelete} />);
     const below = screen.getByRole('button', { name: 'Delete MOB-3' });
+
     return { user: userEvent.setup(), onDelete, below };
   }
 

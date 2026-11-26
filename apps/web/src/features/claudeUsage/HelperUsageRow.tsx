@@ -10,6 +10,7 @@ export interface HelperUsageRowProps {
 
 export function HelperUsageRow({ usage, now }: HelperUsageRowProps) {
   const { status, meters, seen } = planUsageView(usage, now);
+
   return (
     <li className={styles.row} aria-label={usage.runnerName}>
       <span className={styles.name}>{usage.runnerName}</span>

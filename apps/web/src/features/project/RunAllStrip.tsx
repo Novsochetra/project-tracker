@@ -28,6 +28,7 @@ export function RunAllStrip({ project }: { project: Project }) {
       },
     );
   };
+
   return (
     <div className={styles.strip}>
       <span className={styles.counts}>

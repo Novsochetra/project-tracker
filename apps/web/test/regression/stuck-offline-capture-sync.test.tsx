@@ -14,6 +14,7 @@ import { useCaptureSync } from '../../src/features/capture/useCaptureSync';
 
 function created(): Ticket {
   const { commentCount: _c, attachmentCount: _a, ...ticket } = listItem(1, STATUS.todo, 0);
+
   return ticket;
 }
 

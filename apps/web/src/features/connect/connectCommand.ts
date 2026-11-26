@@ -30,6 +30,7 @@ function hostOf(url: string): { host: string; hostname: string } | null {
 // server's own address stands.
 export function trackerAddress(serverUrl: string, pageOrigin: string): string {
   const server = hostOf(serverUrl);
+
   return server && server.host === hostOf(pageOrigin)?.host ? pageOrigin : serverUrl;
 }
 

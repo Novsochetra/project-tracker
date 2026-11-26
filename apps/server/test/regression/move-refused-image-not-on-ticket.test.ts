@@ -21,6 +21,7 @@ async function addScan(source: MoveSource, id: string, ticketId: string | null):
   } finally {
     db.close();
   }
+
   await writeFile(join(source.uploads, `${id}.jpg`), tiff);
 }
 

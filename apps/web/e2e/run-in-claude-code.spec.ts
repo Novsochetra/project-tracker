@@ -117,6 +117,7 @@ test("reviews Claude's work automatically when the project says so, up to 2 roun
     await api.finishRun(review!.run.id, { status: 'done' });
     job = await api.takeNextRun(helperId, 'ticket');
   }
+
   expect(job).toBeNull();
   await expect(card).toContainText(
     'Automatic review stopped. The review still asks for changes after 2 rounds.',
@@ -138,6 +139,7 @@ test('says why a prompt is too long to run and runs it once shortened', async ({
     const instructions = 'l'.repeat(LABEL_INSTRUCTIONS_MAX);
     labelIds.push((await api.createLabel('MOB', { name: `Label ${index}`, instructions })).id);
   }
+
   await api.updateTicket('MOB-1', { labelIds });
   await api.registerRunner(randomUUID(), { name: HELPER, projectKeys: ['MOB'] });
   await page.goto('/p/MOB/1');
@@ -400,6 +402,7 @@ test('answers what Claude asks during a ticket run, and the run goes on', async 
   const lefts = await args.nth(3).evaluate((line) => {
     const range = document.createRange();
     range.selectNodeContents(line);
+
     return [...range.getClientRects()].map((rect) => Math.round(rect.left));
   });
   expect(lefts.length).toBeGreaterThan(1);

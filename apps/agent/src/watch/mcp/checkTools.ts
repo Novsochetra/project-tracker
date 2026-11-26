@@ -18,6 +18,7 @@ export async function requireTrackerTools({ listOutput, log }: ToolsCheck): Prom
     log("Couldn't read Claude Code's MCP servers (claude mcp list), so they weren't checked.");
     return;
   }
+
   const problem = trackerToolsProblem(servers);
   if (problem) throw new TrackerToolsError(`${problem} Refusing runs until that works.`);
 }

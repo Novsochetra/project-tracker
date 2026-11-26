@@ -42,6 +42,7 @@ test('approves a plan from the chat and Claude carries it out in the picked mode
   };
   const asks = async () => {
     const request = await api.addRunRequest(runId, plan);
+
     return api.waitForRunRequest(request.id, { runnerId });
   };
 

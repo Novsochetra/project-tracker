@@ -30,9 +30,11 @@ export const tokenRoutes = ({ db, now }: AuthDeps) =>
     .get('/tokens', async (c) => c.json(await listApiTokens(db, ownerId(c))))
     .post('/tokens', ownerOnly, jsonBody(createApiTokenInput), async (c) => {
       const { name } = c.req.valid('json');
+
       return c.json(await createApiToken(db, ownerId(c), name, now()), 201);
     })
     .delete('/tokens/:id', async (c) => {
       await revokeApiToken(db, ownerId(c), c.req.param('id'));
+
       return c.body(null, 204);
     });

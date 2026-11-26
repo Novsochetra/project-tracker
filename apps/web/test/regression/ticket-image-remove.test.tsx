@@ -24,6 +24,7 @@ function setup(phone: boolean) {
     client: { deleteAttachment },
   });
   cleanups.push(rendered.restorePhone);
+
   return rendered;
 }
 

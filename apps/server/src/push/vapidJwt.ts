@@ -20,6 +20,7 @@ export function vapidToken(key: KeyObject, { endpoint, subject, now }: VapidClai
   const unsigned = `${encode({ typ: 'JWT', alg: 'ES256' })}.${encode(claims)}`;
   // JWS wants r and s side by side, not the DER that sign() gives by default.
   const signature = sign('sha256', Buffer.from(unsigned), { key, dsaEncoding: 'ieee-p1363' });
+
   return `${unsigned}.${signature.toString('base64url')}`;
 }
 

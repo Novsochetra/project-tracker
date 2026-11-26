@@ -12,6 +12,7 @@ import { ASK_INTRO } from './copy';
 
 function useNewChat(projectKey: string): () => void {
   const { push } = useNavigation();
+
   return () => push({ name: 'chat', key: projectKey, chatId: null });
 }
 
@@ -35,10 +36,12 @@ function ChatsBody({ projectKey }: { projectKey: string }) {
       </div>
     );
   }
+
   // No New chat of its own: it is already in the header on desktop and the bottom bar on phones.
   if (chats.data) {
     return <EmptyState fill icon={MessageCircle} title="No chats yet" text={ASK_INTRO} />;
   }
+
   if (chats.error && !isNotFound(chats.error)) {
     return (
       <EmptyState
@@ -49,6 +52,7 @@ function ChatsBody({ projectKey }: { projectKey: string }) {
       />
     );
   }
+
   return (
     <div className={`${styles.loading} quiet-in`}>
       <Spinner label="Loading the chats" />
@@ -59,6 +63,7 @@ function ChatsBody({ projectKey }: { projectKey: string }) {
 export function ChatsScreen({ projectKey }: { projectKey: string }) {
   const project = useProject(projectKey).data?.project;
   const newChat = useNewChat(projectKey);
+
   return (
     <>
       <NavBar

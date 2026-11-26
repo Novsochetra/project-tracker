@@ -38,6 +38,7 @@ function seedProject(queryClient: QueryClient, detail: ProjectDetail): Promise<v
   queryClient.removeQueries({ predicate: ({ queryKey }) => belongsToProject(queryKey, key) });
   queryClient.setQueryData<ProjectDetail>(queryKeys.project(key), detail);
   queryClient.setQueryData<ProjectBoard>(queryKeys.board(key), { ...detail, tickets: [] });
+
   return patchCaches(queryClient, [
     cacheChange<ProjectSummary[]>(queryKeys.projects(), (list) =>
       appendProjectSummary(list, detail.project),
@@ -54,6 +55,7 @@ const projectChanges = (project: Project) => [
 export function useCreateProject(): TrackerMutation<ProjectDetail, CreateProjectInput> {
   const client = useApi();
   const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: (input: CreateProjectInput) => client.createProject(input),
     onSuccess: (detail) => seedProject(queryClient, detail),
@@ -64,6 +66,7 @@ export function useCreateProject(): TrackerMutation<ProjectDetail, CreateProject
 export function useUpdateProject(): TrackerMutation<Project, UpdateProjectVariables> {
   const client = useApi();
   const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: ({ projectKey, input }: UpdateProjectVariables) =>
       client.updateProject(projectKey, input),
@@ -76,6 +79,7 @@ export function useUpdateProject(): TrackerMutation<Project, UpdateProjectVariab
 export function useDeleteProject(): TrackerMutation<void, DeleteProjectVariables> {
   const client = useApi();
   const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: ({ projectKey }: DeleteProjectVariables) => client.deleteProject(projectKey),
     onSuccess: (_result, { projectKey }) => {
@@ -84,6 +88,7 @@ export function useDeleteProject(): TrackerMutation<void, DeleteProjectVariables
         predicate: ({ queryKey }) => belongsToProject(queryKey, projectKey),
         type: 'inactive',
       });
+
       return patchCaches(queryClient, [
         cacheChange<ProjectSummary[]>(queryKeys.projects(), (list) =>
           removeProjectSummary(list, projectKey),
@@ -97,6 +102,7 @@ export function useDeleteProject(): TrackerMutation<void, DeleteProjectVariables
 export function useReorderProjects(): TrackerMutation<ProjectSummary[], string[]> {
   const client = useApi();
   const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: (ids: string[]) => client.reorderProjects(ids),
     onMutate: (ids) =>

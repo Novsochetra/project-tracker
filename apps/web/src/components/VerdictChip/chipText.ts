@@ -17,5 +17,6 @@ export function chipTextColor(color: string): string {
   const tint = painted(mix(base, WHITE, TINT));
   const shade = (amount: number) => painted(mix(base, BLACK, amount));
   const amount = SHADES.find((step) => contrast(shade(step), tint) >= AA_TEXT) ?? 0;
+
   return amount === 1 ? color : toHex(shade(amount));
 }

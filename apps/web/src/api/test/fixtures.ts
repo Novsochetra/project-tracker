@@ -131,5 +131,6 @@ export function makeTicketDetail(
 ): TicketDetail {
   const { commentCount: _comments, attachmentCount: _attachments, ...ticket } = item;
   const status = statuses.find((candidate) => candidate.id === ticket.statusId) ?? statuses[0]!;
+
   return { ticket, project, status, statuses, activity: [], attachments: [], ...overrides };
 }

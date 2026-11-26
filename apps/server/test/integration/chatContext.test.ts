@@ -28,6 +28,7 @@ describe.each(DIALECTS)("a chat's context (%s)", (dialect) => {
       text: 'Where are runs queued?',
     });
     await answer(usage);
+
     return started.body.chat.id;
   }
 

@@ -24,8 +24,10 @@ export function describeDatabase(url: string): string {
     const { hostname, port, pathname } = new URL(url);
     return `Postgres ${decodeURIComponent(pathname.slice(1))} on ${hostname}:${port || '5432'}`;
   }
+
   if (isPostgresUrl(url)) return 'Postgres (DATABASE_URL could not be read)';
   if (looksLikeUrl(url)) return 'DATABASE_URL that is neither postgres:// nor a file path';
+
   return `SQLite ${url}`;
 }
 
@@ -36,6 +38,7 @@ export async function migrateCommand(
   const ran = await migrateToLatest(db, migrations);
   if (ran.length === 0)
     return { ok: true, lines: ['Nothing to migrate: the database is up to date.'] };
+
   return { ok: true, lines: [...ran.map((name) => `Applied ${name}`), 'Up to date.'] };
 }
 
@@ -61,14 +64,17 @@ export async function rollbackCommand(
       ],
     };
   }
+
   const undone = await rollbackLast(db, migrations);
   const now = lastApplied(await readMigrationState(db, migrations)) ?? 'no migrations';
+
   return { ok: true, lines: [`Undid ${undone}.`, `The database is now at ${now}.`] };
 }
 
 function describeState(state: MigrationState): string {
   if (state.status === 'pending') return 'pending';
   const applied = `applied ${state.appliedAt}`;
+
   return state.status === 'applied' ? applied : `${applied}, by a build that has it and this lacks`;
 }
 
@@ -76,6 +82,7 @@ function statusSummary(states: readonly MigrationState[]): string {
   const unknown = namesWith(states, 'unknown');
   if (unknown.length > 0) return unknownMigrationsMessage(unknown);
   const pending = namesWith(states, 'pending').length;
+
   return pending === 0 ? 'Up to date.' : `${pending} pending: db:migrate applies them.`;
 }
 
@@ -85,6 +92,7 @@ export async function statusCommand(
 ): Promise<CommandResult> {
   const states = await readMigrationState(db, migrations);
   const width = Math.max(...states.map((state) => state.name.length));
+
   return {
     ok: true,
     lines: [

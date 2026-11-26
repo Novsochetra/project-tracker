@@ -18,16 +18,19 @@ export function createOpeningStore(): OpeningStore {
     current = next;
     if (changed) listeners.forEach((listener) => listener());
   };
+
   return {
     get: () => current?.path ?? null,
     open: (path) => {
       const entry = { path };
       change(entry);
+
       return () => current === entry;
     },
     clear: () => change(null),
     subscribe: (listener) => {
       listeners.add(listener);
+
       return () => listeners.delete(listener);
     },
   };
@@ -43,7 +46,9 @@ export function useOpeningStore(locationKey: string): OpeningStore {
   useEffect(() => {
     const clear = () => store.clear();
     window.addEventListener('popstate', clear);
+
     return () => window.removeEventListener('popstate', clear);
   }, [store]);
+
   return store;
 }

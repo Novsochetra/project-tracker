@@ -40,6 +40,7 @@ function findToken(env: Env, overrides: ConfigOverrides, saved: SavedConfig, url
     ['tracker login', savedToken(saved, url)],
   ];
   const found = candidates.find(([, value]) => clean(value) !== undefined);
+
   return found ? { token: clean(found[1]), tokenSource: found[0] } : { token: undefined };
 }
 
@@ -52,6 +53,7 @@ export function loadConfig(
   const token = findToken(env, overrides, saved, url);
   const problem = token.token === undefined ? undefined : plainHttpProblem(url);
   if (problem) throw new PlainHttpError(problem);
+
   return {
     url,
     ...token,

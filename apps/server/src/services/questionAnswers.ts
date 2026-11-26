@@ -46,13 +46,16 @@ export async function answerQuestion(
       actor,
       entries: [eventEntry(eventOf(row, end))],
     });
+
     return ref;
   });
   if (!ref) {
     await settleQuestions(ctx);
     throw conflict(ENDED[(await requireQuestion(ctx, ctx.scope, id)).status]);
   }
+
   notifyQuestion(ctx, ctx.scope, ref.project.id, ref.ticket.id);
+
   return toQuestion(await requireQuestion(ctx, ctx.scope, id));
 }
 
@@ -65,5 +68,6 @@ export async function cancelQuestion(ctx: UserContext, id: string): Promise<Tick
     const ref = await requireTicketById(ctx.db, ctx.scope, row.ticketId);
     notifyQuestion(ctx, ctx.scope, ref.project.id, ref.ticket.id);
   }
+
   return toQuestion(await requireQuestion(ctx, ctx.scope, id));
 }

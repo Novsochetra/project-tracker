@@ -24,12 +24,14 @@ async function openConnect(page: Page): Promise<Locator> {
   const sheet = page.getByRole('dialog', { name: 'Connect Claude Code' });
   await expect(sheet.getByRole('button', { name: 'Copy MCP command' })).toBeVisible();
   await settled(sheet);
+
   return sheet;
 }
 
 const box = async (locator: Locator) => {
   const rect = await locator.boundingBox();
   if (!rect) throw new Error('Not rendered.');
+
   return rect;
 };
 

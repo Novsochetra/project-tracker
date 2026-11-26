@@ -24,6 +24,7 @@ function renderShell(checkHealth: HealthRead) {
         .mutate()
         .catch(() => undefined),
     );
+
   return { ...view, loseTracker };
 }
 

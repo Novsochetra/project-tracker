@@ -23,6 +23,7 @@ export function AnswerSteps({ runId, count, answer }: AnswerStepsProps) {
   useLayoutEffect(() => {
     if (takeStepsFocus(runId)) ref.current?.querySelector('button')?.focus();
   }, [runId]);
+
   return (
     <div ref={ref} className={styles.answerSteps}>
       <ShowMoreButton

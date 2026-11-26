@@ -25,6 +25,7 @@ export function CardThread({ chatId, message, cards, helper }: CardThreadProps) 
     setDrafts((shown) => shown.map((card, at) => (at === index ? { ...card, ...patch } : card)));
   const cardView = (index: number, card: TicketCard) => {
     const ticketKey = cardTicketKey(message, index);
+
     return (
       <TicketCardView
         chatId={chatId}
@@ -40,6 +41,7 @@ export function CardThread({ chatId, message, cards, helper }: CardThreadProps) 
       />
     );
   };
+
   return (
     <>
       {cards.segments.map((segment, at) =>

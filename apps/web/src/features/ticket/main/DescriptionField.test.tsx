@@ -30,6 +30,7 @@ afterEach(() => cleanups.forEach((undo) => undo()));
 function setup(description: string, phone = true) {
   const detail = makeTicketDetail(listItem(1, STATUS.todo, 0, { description }));
   cleanups.push(renderTicket({ detail, phone }).restorePhone);
+
   return screen.getByLabelText('Description');
 }
 

@@ -11,6 +11,7 @@ const onAdd = vi.fn();
 
 function Screen({ route }: { route: Route }) {
   if (route.name !== 'project') return <NavBar title="Projects" />;
+
   return (
     <NavBar
       title="Mobile app"
@@ -41,6 +42,7 @@ function mockMedia(matching: string[]): () => void {
       removeEventListener: () => undefined,
     }),
   });
+
   return () => {
     if (previous) Object.defineProperty(window, 'matchMedia', previous);
     else Reflect.deleteProperty(window, 'matchMedia');
@@ -59,6 +61,7 @@ function renderProject() {
   scroller.scrollTop = 1200;
   const scrollTo = vi.fn();
   scroller.scrollTo = scrollTo;
+
   return { scrollTo, bar: screen.getByRole('banner') };
 }
 

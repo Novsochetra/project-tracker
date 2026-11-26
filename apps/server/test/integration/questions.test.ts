@@ -199,6 +199,7 @@ describe.each(DIALECTS)('questions on a ticket (%s)', (dialect) => {
         await checkIn();
         expect((await person<Run>('GET', `/api/runs/${run.id}`)).body.status).toBe('running');
       }
+
       expect((await wait(question.id)).body).toMatchObject({ status: 'expired' });
       expect((await person<Run>('GET', `/api/runs/${run.id}`)).body.status).toBe('running');
     });

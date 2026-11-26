@@ -28,6 +28,7 @@ function renderWide(onClose = () => undefined) {
       <p>Long setup</p>
     </Sheet>,
   );
+
   return screen.getByText('Long setup').parentElement;
 }
 

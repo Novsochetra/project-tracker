@@ -12,6 +12,7 @@ const isActive = (batch: RunBatch | undefined): boolean =>
 // Events refresh a batch as its tickets move; the timer is for a helper that went silent.
 export function useRunBatch(runId: string | null): TrackerQuery<RunBatch> {
   const client = useApi();
+
   return useQuery({
     queryKey: queryKeys.runBatch(runId ?? ''),
     queryFn: () => client.getRunBatch(runId ?? ''),
@@ -22,6 +23,7 @@ export function useRunBatch(runId: string | null): TrackerQuery<RunBatch> {
 
 export function useRunAllPreview(projectKey: string, enabled = true): TrackerQuery<RunAllPreview> {
   const client = useApi();
+
   return useQuery({
     queryKey: queryKeys.runAllPreview(projectKey),
     queryFn: () => client.previewRunAll(projectKey),
@@ -40,6 +42,7 @@ export interface CardRunAllVariables {
 export function useRunAllFromCard(): TrackerMutation<RunAllResult, CardRunAllVariables> {
   const client = useApi();
   const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: ({ chatId, messageId, input }: CardRunAllVariables) =>
       client.runAllFromCard(chatId, messageId, input),

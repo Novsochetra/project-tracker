@@ -62,6 +62,7 @@ function attachEdgeSwipe(root: HTMLElement, read: () => EdgeSwipeHandlers): () =
       session.engaged = true;
       read().onBegin();
     }
+
     session.tracker.add(event.timeStamp, event.clientX, event.clientY);
     read().onProgress(swipeBackProgress(dx, session.width));
   };
@@ -74,6 +75,7 @@ function attachEdgeSwipe(root: HTMLElement, read: () => EdgeSwipeHandlers): () =
       read().onRelease({ distance, width: session.width, velocity });
       suppressNextClick();
     }
+
     end();
   };
 
@@ -84,6 +86,7 @@ function attachEdgeSwipe(root: HTMLElement, read: () => EdgeSwipeHandlers): () =
   };
 
   root.addEventListener('pointerdown', onDown, { capture: true });
+
   return () => {
     root.removeEventListener('pointerdown', onDown, { capture: true });
     end();
@@ -98,6 +101,7 @@ export function useEdgeSwipe(rootRef: RefObject<HTMLElement | null>, handlers: E
   useEffect(() => {
     const root = rootRef.current;
     if (!root) return;
+
     return attachEdgeSwipe(root, () => handlersRef.current);
   }, [rootRef]);
 }

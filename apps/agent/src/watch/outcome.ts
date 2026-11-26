@@ -28,6 +28,7 @@ export function lastLines(text: string, max = RUN_ERROR_MAX): string {
   if (trimmed.length <= max) return trimmed;
   const tail = trimmed.slice(-max);
   const lineStart = tail.indexOf('\n');
+
   return lineStart === -1 ? tail : tail.slice(lineStart + 1);
 }
 
@@ -38,6 +39,7 @@ export function reasonOf({
 }: Pick<ClaudeExit, 'code' | 'signal' | 'turnEnded'>): string {
   if (turnEnded) return 'Claude Code answered with an error.';
   if (code !== null) return `Claude Code exited with ${code}.`;
+
   return signal ? `Claude Code was stopped (${signal}).` : 'Claude Code did not start.';
 }
 
@@ -46,11 +48,13 @@ export function reasonOf({
 export function failureOf(exit: ClaudeExit): FinishRunInput {
   const result = finalResult(exit.results);
   const said = result?.isError && result.text ? result.text : exit.output;
+
   return { status: 'failed', error: lastLines(`${reasonOf(exit)}\n${said}`) };
 }
 
 export function ticketOutcomeOf(exit: ClaudeExit, cancelled: boolean): FinishRunInput {
   if (cancelled) return { status: 'cancelled' };
   if (exit.code === 0 && !finalResult(exit.results)?.isError) return { status: 'done' };
+
   return failureOf(exit);
 }

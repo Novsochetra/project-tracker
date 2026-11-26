@@ -31,6 +31,7 @@ export const batchRunRoutes = (ctx: ServiceContext) =>
       jsonBody(runAllCardInput),
       async (c) => {
         const ref = { chatId: c.req.param('id'), messageId: c.req.param('messageId') };
+
         return c.json(await runAllFromCard(ctx, scope(c), ref, c.req.valid('json')), 201);
       },
     )

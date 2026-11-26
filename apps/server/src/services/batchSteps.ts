@@ -33,6 +33,7 @@ async function stepsSoFar(trx: Db, batchId: string, ticketRunIds: string[], pare
   const owners = new Map(owned.map((row) => [row.toolId ?? '', row.runId]));
   const unowned = parents.filter((toolId) => !owners.has(toolId));
   const starts = await listBatchStarts(trx, batchId, unowned);
+
   return { owners, starts: new Map(starts.map((row) => [row.toolId ?? '', startOf(row)])) };
 }
 
@@ -62,5 +63,6 @@ export async function addBatchTicketSteps(
     const run = { id: runId, projectId: batch.projectId, ticketId: row.ticketId, chatId: null };
     counts.push({ run, count });
   }
+
   return counts;
 }

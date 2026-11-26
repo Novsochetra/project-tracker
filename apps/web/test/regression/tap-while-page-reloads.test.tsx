@@ -32,11 +32,13 @@ const chunk = vi.hoisted(() => {
       reject(new TypeError('Failed to fetch dynamically imported module'));
     };
   });
+
   return { loaded, fail: () => fail() };
 });
 
 vi.mock('../../src/features/project/ProjectScreen', async (importOriginal) => {
   await chunk.loaded;
+
   return importOriginal();
 });
 

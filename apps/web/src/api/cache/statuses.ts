@@ -11,6 +11,7 @@ export const withStatuses = <T extends WithStatuses>(
 
 export function reorderStatusList(statuses: readonly Status[], ids: readonly string[]): Status[] {
   const order = new Map(ids.map((id, index) => [id, index]));
+
   return sortStatuses(
     statuses.map((status) => ({
       ...status,

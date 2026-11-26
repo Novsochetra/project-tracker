@@ -57,6 +57,7 @@ function setup(statusId: string, activity: Activity[], options: SetupOptions = {
     client: options.client ?? {},
   });
   cleanups.push(rendered.restorePhone);
+
   return rendered;
 }
 
@@ -155,8 +156,10 @@ describe('the phone bottom bar', () => {
   const bar = () => {
     const element = document.querySelector<HTMLElement>('[data-bottom-bar]');
     if (!element) throw new Error('No bottom bar');
+
     return element;
   };
+
   const labels = () =>
     within(bar())
       .getAllByRole('button')

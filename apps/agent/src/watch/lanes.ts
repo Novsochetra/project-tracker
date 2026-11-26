@@ -4,6 +4,7 @@ import { createRunLoop, type RunLoopDeps, type RunLoopSettings } from './runLoop
 // One run of each lane at a time, so a question is answered while a ticket run works.
 export function createLanes(deps: RunLoopDeps, settings: Omit<RunLoopSettings, 'kind'>) {
   const lanes = RUN_LANES.map((kind) => createRunLoop(deps, { ...settings, kind }));
+
   return {
     lookForWork: async () => {
       await Promise.all(lanes.map((lane) => lane.lookForWork()));

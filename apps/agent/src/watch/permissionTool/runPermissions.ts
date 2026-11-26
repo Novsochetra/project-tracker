@@ -14,5 +14,6 @@ export interface RunPermissions {
 export function runPermissions(run: Run, prompts: PromptTool | undefined): RunPermissions {
   const changesFolder = laneOf(run.kind, run.askOptions) === 'ticket';
   const tool = prompts && (changesFolder ? prompts : questionsOnly(prompts));
+
   return { allowed: changesFolder ? trackerAllowedArgs(run) : [], tool };
 }

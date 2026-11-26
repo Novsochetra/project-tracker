@@ -14,6 +14,7 @@ function serverFrom(line: string): McpServer | undefined {
   const mark = line.lastIndexOf(MARK);
   if (colon === -1 || mark <= colon) return undefined;
   const state = line.slice(mark + MARK.length).trim();
+
   return {
     name: line.slice(0, colon).trim(),
     detail: line.slice(colon + 2, mark).trim(),
@@ -28,5 +29,6 @@ export function parseMcpList(text: string): McpServer[] {
     const server = serverFrom(line);
     if (server) servers.push(server);
   }
+
   return servers;
 }

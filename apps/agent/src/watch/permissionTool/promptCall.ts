@@ -12,6 +12,7 @@ export type PromptDecision =
 
 export function promptCallOf(args: unknown): PromptCall | null {
   if (!isJson(args) || typeof args.tool_name !== 'string') return null;
+
   return { toolName: args.tool_name, input: isJson(args.input) ? args.input : {} };
 }
 

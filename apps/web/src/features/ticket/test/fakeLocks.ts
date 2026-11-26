@@ -13,9 +13,12 @@ export function fakeLocks() {
       name,
       turn.catch(() => undefined),
     );
+
     return turn;
   };
+
   Object.defineProperty(navigator, 'locks', { value: { request }, configurable: true });
+
   return {
     pagesGo: () => {
       const go = letGo;

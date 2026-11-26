@@ -17,6 +17,7 @@ const message = (
   cardTickets: ChatMessage['cardTickets'] = [],
 ): ChatMessage => {
   next += 1;
+
   return {
     id: `m-${next}`,
     chatId: 'c-1',
@@ -31,6 +32,7 @@ const message = (
     createdAt: next,
   };
 };
+
 const card = (title: string) =>
   ['```ticket', `Title: ${title}`, 'Priority: high', '---', 'Why.', '```'].join('\n');
 const made = (index: number, ticketKey: string) => ({ index, ticketKey });

@@ -20,6 +20,7 @@ function shown(queryKey: QueryKey, data?: string) {
   const queryFn = vi.fn(() => {
     const read = deferred<string>();
     reads.push(read);
+
     return read.promise;
   });
   if (data !== undefined) queryClient.setQueryData(queryKey, data);
@@ -29,7 +30,9 @@ function shown(queryKey: QueryKey, data?: string) {
     reads[index]?.resolve(value);
     await settle();
   };
+
   const refresh = () => refreshLive(queryClient, { queryKey, exact: true });
+
   return { queryClient, queryFn, land, refresh, data: () => queryClient.getQueryData(queryKey) };
 }
 

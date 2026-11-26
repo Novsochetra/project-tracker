@@ -42,6 +42,7 @@ export function ThumbnailGrid({
   const keys = uniqueKeys(attachments.map((attachment) => attachment.id));
   const removable = onRemove !== undefined || (onCancel !== undefined && uploading.length > 0);
   const shield = useRemoveShield();
+
   return (
     <div
       className={clsx(styles.grid, styles[size], removable && styles.removable, className)}

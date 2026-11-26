@@ -27,6 +27,7 @@ function setup(detail: TicketDetail = makeTicketDetail()) {
   server.setReachable(false);
   const rendered = renderTicket({ detail, client: server.client });
   cleanups.push(rendered.restorePhone);
+
   return { ...rendered, server };
 }
 

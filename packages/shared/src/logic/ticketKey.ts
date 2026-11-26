@@ -12,5 +12,6 @@ export function parseTicketKey(key: string): ParsedTicketKey | null {
   if (!match?.[1] || !match[2]) return null;
   const num = Number.parseInt(match[2], 10);
   if (num < 1 || num > MAX_TICKET_NUMBER) return null;
+
   return { projectKey: match[1].toUpperCase(), num };
 }

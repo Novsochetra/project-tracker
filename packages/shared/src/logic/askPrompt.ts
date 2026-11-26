@@ -106,6 +106,7 @@ function historyBlocks(history: AskPromptInput['history'], resumed: boolean): st
   if (!resumed)
     return history.length > 0 ? [`Earlier in this chat:\n\n${transcript(history)}`] : [];
   const made = madeCardLines(history);
+
   return made.length > 0 ? [`Your cards that are tickets now:\n${made.join('\n')}`] : [];
 }
 
@@ -126,6 +127,7 @@ export function buildAskPrompt({
   parts.push(...historyBlocks(history, resumed));
   parts.push(`Question:\n${question}${sentWith(files)}`);
   if (plan) parts.push(approvedPlanBlock(plan));
+
   return parts.join(PART);
 }
 
@@ -134,6 +136,7 @@ export function buildAskPrompt({
 export function withSentFiles(prompt: string, paths: readonly string[]): string {
   if (paths.length === 0) return prompt;
   const list = paths.map((path) => `- ${path}`).join('\n');
+
   return [
     prompt,
     `They sent these files with the question. Read them before you answer; the Read tool opens images and PDFs too. They are copies that are removed after this answer.\n${list}`,

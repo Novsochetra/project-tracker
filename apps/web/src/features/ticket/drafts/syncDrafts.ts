@@ -49,6 +49,7 @@ function closedTicketDrafts(scope: SyncScope): Map<string, Entry[]> {
     if (!inScope(draft.ticketKey, scope) || isSettledElsewhere(id, draft)) continue;
     byTicket.set(draft.ticketKey, [...(byTicket.get(draft.ticketKey) ?? []), [id, draft]]);
   }
+
   return byTicket;
 }
 
@@ -94,7 +95,9 @@ async function save([id, draft]: Entry, run: Run): Promise<boolean> {
     else if (!endsRun(error) && !isStaleEdit(error)) refused.set(id, draft.text);
     return !endsRun(error);
   }
+
   finishSave(id, number, true);
+
   return true;
 }
 
@@ -106,22 +109,27 @@ async function syncDraft(entry: Entry, detail: TicketDetail, run: Run): Promise<
     settleLeftSend(id, draft, detail);
     return true;
   }
+
   const check = checkDraft(draft, serverText(detail, draft));
   if (check === 'gone') {
     forgetDraft(id);
     return true;
   }
+
   if (check === 'saved') {
     draftSaved(id, draft.text);
     return true;
   }
+
   // The ticket may have opened while it was read.
   if (!isSentForUser(draft) || isLeftToScreen(id, draft.ticketKey)) return true;
   if (check === 'changed') {
     run.report.changed.push(entry);
     return true;
   }
+
   if (refused.get(id) === draft.text) return true;
+
   return save(entry, run);
 }
 
@@ -133,9 +141,11 @@ async function syncTicket(ticketKey: string, entries: Entry[], run: Run): Promis
     if (isNotFound(error)) forgetTicketDrafts(ticketKey);
     return !endsRun(error);
   }
+
   for (const entry of entries) {
     if (!(await syncDraft(entry, detail, run))) return false;
   }
+
   return true;
 }
 
@@ -150,6 +160,7 @@ export async function syncDrafts(
   for (const [ticketKey, entries] of closedTicketDrafts(scope)) {
     if (!(await syncTicket(ticketKey, entries, run))) break;
   }
+
   return run.report;
 }
 
@@ -162,12 +173,14 @@ export function runDraftSync(sync: () => Promise<void>): void {
     again = true;
     return;
   }
+
   const loop = async () => {
     do {
       again = false;
       await sync();
     } while (again);
   };
+
   running = loop().finally(() => {
     running = null;
   });

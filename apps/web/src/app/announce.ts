@@ -33,6 +33,7 @@ export function clearAnnouncement(text: string): void {
 
 const subscribe = (listener: () => void) => {
   listeners.add(listener);
+
   return () => listeners.delete(listener);
 };
 

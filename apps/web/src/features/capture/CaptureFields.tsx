@@ -18,6 +18,7 @@ export interface CaptureTextProps {
 
 export function CaptureText({ values, titleRef, onChange, onEnter, onFiles }: CaptureTextProps) {
   const onPaste = (event: ClipboardEvent<HTMLElement>) => pasteFiles(event, onFiles);
+
   return (
     <div className={styles.text}>
       <TitleField
@@ -60,6 +61,7 @@ export function CaptureDetails({
   onProject,
 }: CaptureDetailsProps) {
   const noProjects = project.choices.length === 0;
+
   return (
     <div className={styles.details}>
       <GroupedCard>

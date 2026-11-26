@@ -20,6 +20,7 @@ async function approvedPlan(ctx: ServiceContext, runId: string): Promise<Approve
   const last = rows.filter((row) => row.kind === 'plan').at(-1);
   if (last?.status !== 'answered' || last.decision !== 'allow') return null;
   const mode = planModeOf(toRunRequest(last).answers);
+
   return mode ? { mode, plan: last.label } : null;
 }
 

@@ -52,6 +52,7 @@ async function pickTodo(db: Db, project: ProjectRow): Promise<RunAllPick> {
   );
   const free = todo.filter(({ id }) => !active.has(id));
   const workable = free.filter(({ needsDevice }) => !needsDevice);
+
   return {
     tickets: workable.slice(0, BATCH_TICKETS_MAX),
     skippedActive: todo.length - free.length,
@@ -74,6 +75,7 @@ export async function previewRunAll(
   await expireSilentRuns(ctx);
   const project = await requireProject(ctx.db, scope, projectKey);
   const pick = await pickTodo(ctx.db, project);
+
   return {
     tickets: pick.tickets.map((ticket) => ({
       ticketKey: formatTicketKey(project.key, ticket.num),
@@ -124,6 +126,7 @@ function batchRows(
       { ...target, kind: 'ticket', ticketId: ticket.id, batchId, prompt: '', askEffort: null },
     ),
   );
+
   return { batch, held };
 }
 
@@ -171,11 +174,13 @@ export async function runAllTodo(
     const rows = batchRows(queued, project, pick.tickets, maxParallel);
     await insertBatch(trx, rows);
     await onQueued?.(trx, rows.batch.id);
+
     return { pick, rows };
   });
   if (outcome.rows) {
     for (const row of [outcome.rows.batch, ...outcome.rows.held]) notifyRun(ctx, scope, row);
   }
+
   return {
     runId: outcome.rows?.batch.id ?? null,
     queued: outcome.pick.tickets.length,

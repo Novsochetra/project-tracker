@@ -37,6 +37,7 @@ export async function markGitActionRunning(db: Db, id: string): Promise<boolean>
     .where('id', '=', id)
     .where('status', '=', 'queued')
     .executeTakeFirst();
+
   return Number(result.numUpdatedRows) > 0;
 }
 
@@ -74,5 +75,6 @@ export async function endGitAction(
     .where('id', '=', id)
     .where('status', '=', from)
     .executeTakeFirst();
+
   return Number(result.numUpdatedRows) > 0;
 }

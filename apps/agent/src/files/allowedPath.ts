@@ -17,6 +17,7 @@ const realOrNull = (path: string): Promise<string | null> => realpath(path).catc
 
 const isInside = (folder: string, file: string): boolean => {
   const path = relative(folder, file);
+
   return path !== '' && path !== '..' && !path.startsWith(`..${sep}`) && !isAbsolute(path);
 };
 
@@ -71,6 +72,7 @@ const unsafeError = (path: string, folder: string, home: string, temp: boolean):
 
 async function realFolders(folders: readonly string[]): Promise<string[]> {
   const reals = await Promise.all(folders.map(realOrNull));
+
   return reals.filter((folder): folder is string => folder !== null);
 }
 

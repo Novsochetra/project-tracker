@@ -18,6 +18,7 @@ export const listTicketActivities = (db: Db, ticketId: string) =>
 
 export async function listActivitiesOfTickets(db: Db, ticketIds: string[]): Promise<ActivityRow[]> {
   if (ticketIds.length === 0) return [];
+
   return db
     .selectFrom('activities')
     .selectAll()
@@ -49,6 +50,7 @@ export async function updateActivityMatching(
     .where('id', '=', id)
     .where('text', '=', text)
     .executeTakeFirst();
+
   return Number(result.numUpdatedRows) > 0;
 }
 

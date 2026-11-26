@@ -48,6 +48,7 @@ describe.each(DIALECTS)('GET /api/search (%s)', (dialect) => {
       const res = await search(q);
       expect(res.tickets[0], q).toMatchObject({ key: 'WEB-2', match: 'key' });
     }
+
     expect(keys(await search('2'))).toEqual(['WEB-2', 'MOB-2']);
   });
 

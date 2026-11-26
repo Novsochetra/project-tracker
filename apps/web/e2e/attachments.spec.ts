@@ -119,11 +119,13 @@ const failLate = (page: Page) =>
   page.route('**/api/attachments*', async (route) => {
     if (route.request().headers()[FILE_NAME_HEADER] !== 'late.png') return route.continue();
     await new Promise((resolve) => setTimeout(resolve, 2500));
+
     return route.fulfill({ status: 500, contentType: 'application/json', body: '{}' });
   });
 
 const spotOf = async (locator: Locator) => {
   const box = (await locator.boundingBox())!;
+
   return { x: box.x + box.width / 2, y: box.y + box.height / 2 };
 };
 
@@ -132,6 +134,7 @@ const spotOf = async (locator: Locator) => {
 const isSeen = (element: Element) => {
   const box = element.getBoundingClientRect();
   const hit = document.elementFromPoint(box.x + box.width / 2, box.y + box.height / 2);
+
   return hit !== null && element.contains(hit);
 };
 
@@ -139,12 +142,14 @@ const isSeen = (element: Element) => {
 const controlAt = (page: Page, spot: { x: number; y: number }) =>
   page.evaluate(({ x, y }) => {
     const control = document.elementFromPoint(x, y)?.closest('button, textarea, input, a');
+
     return control ? (control.getAttribute('aria-label') ?? control.textContent) : null;
   }, spot);
 
 // Whether the page took the second click within CLICK_SHIELD_MS of the first, by its clock.
 async function secondInTime(page: Page): Promise<boolean> {
   const [first, second] = await clickTimes(page);
+
   return first !== undefined && second !== undefined && second - first < CLICK_SHIELD_MS;
 }
 
@@ -165,7 +170,9 @@ async function heldInThreeTries(
     await startOver();
     tapped = await doubleTap();
   }
+
   expect(tapped.held, `the second tap within ${CLICK_SHIELD_MS} ms, in 3 tries`).toBe(true);
+
   return tapped;
 }
 
@@ -202,6 +209,7 @@ async function doubleTapFirstX(page: Page, area: Locator, input: string): Promis
   expect(await controlAt(page, spot)).toBe('Remove image 1');
   await page.touchscreen.tap(spot.x, spot.y);
   await page.waitForTimeout(600);
+
   return { spot, held: await secondInTime(page) };
 }
 
@@ -229,6 +237,7 @@ async function doubleTapDismiss(
   await page.waitForTimeout(gap);
   await page.touchscreen.tap(spot.x, spot.y);
   await page.waitForTimeout(700);
+
   return { spot, held: await secondInTime(page) };
 }
 
@@ -253,6 +262,7 @@ async function tapJustAfterDismiss(page: Page, control: Locator): Promise<Double
   await page.waitForTimeout(150);
   await page.touchscreen.tap(target.x, target.y);
   await expect.poll(async () => (await clickTimes(page)).length).toBe(2);
+
   return { spot: target, held: await secondInTime(page) };
 }
 
@@ -263,6 +273,7 @@ async function swipeDown(page: Page): Promise<void> {
   for (let step = 1; step <= 8; step += 1) {
     await page.mouse.move(width / 2, height / 2 + step * 40);
   }
+
   await page.mouse.up();
 }
 
@@ -465,6 +476,7 @@ test.describe('attachments', () => {
         await seedProject(api, 'Mobile app', 'MOB', [{ title: 'Existing ticket' }]);
         await surface.open(page);
       };
+
       await setUp();
 
       const { spot } = await heldInThreeTries(
@@ -529,10 +541,12 @@ test.describe('attachments', () => {
         // The photo picker closes the keyboard, so no field has focus when the note comes.
         await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
       };
+
       const startOver = async () => {
         chooser = 0;
         await startAfresh(page, request, setUp);
       };
+
       await setUp();
 
       for (const gap of [0, 60, 120, 200]) {
@@ -580,6 +594,7 @@ test.describe('attachments', () => {
       // The file picker takes focus from the field.
       await field.blur();
     };
+
     await setUp();
 
     for (const gap of [0, 60, 120, 200]) {
@@ -787,6 +802,7 @@ test.describe('attachments', () => {
     const dataTransfer = await page.evaluateHandle(() => {
       const data = new DataTransfer();
       data.items.add(new File(['# Notes\nFrom the desktop'], 'notes.md', { type: '' }));
+
       return data;
     });
     const description = sheet.getByLabel('Description', { exact: true });

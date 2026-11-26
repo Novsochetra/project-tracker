@@ -33,11 +33,14 @@ export function createRateLimiter({ max, windowMs }: RateLimit): RateLimiter {
   const current = (key: string, now: number): Window | undefined => {
     const window = windows.get(key);
     if (window && window.endsAt <= now) windows.delete(key);
+
     return window && window.endsAt > now ? window : undefined;
   };
+
   return {
     waitFor: (key, now) => {
       const window = current(key, now);
+
       return window && window.count >= max ? window.endsAt - now : 0;
     },
     fail: (key, now) => {
@@ -46,6 +49,7 @@ export function createRateLimiter({ max, windowMs }: RateLimit): RateLimiter {
         window.count += 1;
         return;
       }
+
       if (windows.size >= MAX_KEYS) dropOld(windows, now);
       windows.set(key, { count: 1, endsAt: now + windowMs });
     },

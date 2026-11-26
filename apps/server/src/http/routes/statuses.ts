@@ -30,5 +30,6 @@ export const statusRoutes = (ctx: ServiceContext) =>
     .delete('/statuses/:id', personEditsStatuses, queryParams(deleteStatusQuery), async (c) => {
       const { moveTo } = c.req.valid('query');
       await deleteStatus(userContext(ctx, c), c.get('actor'), c.req.param('id'), moveTo);
+
       return c.body(null, 204);
     });

@@ -29,6 +29,7 @@ export interface ActivityRowProps extends RowContext {
 // ticket stays usable. It is tried again once its activity changes, as after an edit saves.
 export function ActivityRow({ item, ...context }: ActivityRowProps) {
   if (item.kind === 'comment') return <CommentRow item={item} {...context} />;
+
   return (
     <ErrorBoundary
       name={`Activity item ${item.id}`}
@@ -45,6 +46,7 @@ export function ActivityRow({ item, ...context }: ActivityRowProps) {
 // open editor would take its focus.
 function CommentRow({ item, now, actions, rise }: RowContext & { item: CommentItem }) {
   const edit = useCommentEdit(item, actions.editComment, actions.ticketKey);
+
   return (
     <ErrorBoundary
       name={`Activity item ${item.id}`}

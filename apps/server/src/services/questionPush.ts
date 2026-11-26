@@ -17,6 +17,7 @@ export function pushQuestion(
   const ticket = { projectKey: ref.project.key, num: ref.ticket.num, title: ref.ticket.title };
   pushToUser(ctx, ctx.scope, async () => {
     const now = await findQuestionRow(ctx.db, ctx.scope, row.id);
+
     return now?.status === 'open' ? questionPush({ ticket }) : null;
   });
 }

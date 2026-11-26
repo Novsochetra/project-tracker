@@ -12,6 +12,7 @@ describe('precompress', () => {
   const newFolder = () => {
     const folder = mkdtempSync(join(tmpdir(), 'tracker-precompress-'));
     folders.push(folder);
+
     return folder;
   };
 
@@ -24,6 +25,7 @@ describe('precompress', () => {
     for (const name of ['index.html', 'sw.js', 'a-1.css', 'favicon.svg', 'manifest.webmanifest']) {
       expect(isTextFile(name), name).toBe(true);
     }
+
     for (const name of ['icon.png', 'geist.woff2', 'clip.mp4', 'a-1.js.br', 'a-1.js.gz']) {
       expect(isTextFile(name), name).toBe(false);
     }

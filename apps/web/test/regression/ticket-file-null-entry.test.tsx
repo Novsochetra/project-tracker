@@ -44,6 +44,7 @@ function open(phone: boolean, client: RenderTicketOptions['client'] = {}) {
   cleanups.push(rendered.restorePhone);
   const cached = () =>
     rendered.queryClient.getQueryData<TicketDetail>(queryKeys.ticket('MOB-1'))?.attachments;
+
   return { ...rendered, cached };
 }
 

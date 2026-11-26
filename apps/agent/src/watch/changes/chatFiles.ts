@@ -17,5 +17,6 @@ export function mergeChatFiles(
     .filter((path) => !known.has(path))
     .map((path) => ({ path, dirtyBefore: dirtyAtStart.has(path) }));
   const all = [...previous, ...added];
+
   return { files: all.slice(0, CHAT_FILES_MAX), cut: all.length > CHAT_FILES_MAX };
 }

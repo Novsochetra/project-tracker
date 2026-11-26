@@ -36,6 +36,7 @@ function fillStorage() {
     if (value.length > (this.getItem(key)?.length ?? 0)) {
       throw new DOMException('The quota has been exceeded.', 'QuotaExceededError');
     }
+
     setItem.call(this, key, value);
   });
 }

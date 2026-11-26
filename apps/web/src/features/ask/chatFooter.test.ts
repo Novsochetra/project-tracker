@@ -25,6 +25,7 @@ describe('chatFooter', () => {
       expect(footer).toEqual({ kind: 'thinking', run, helper: null });
       expect(stoppableRunOf(footer)).toBe(run);
     }
+
     expect(thinkingText(ask())).toBe(`Claude is thinking on ${DARA}…`);
   });
 
@@ -105,6 +106,7 @@ describe('cancelledText', () => {
         cancelledText({ askOptions: { model: 'opus', mode, effort: 'default' }, startedAt: 2 }),
       ).toBe(STOPPED_TEXT);
     }
+
     expect(cancelledText({ askOptions: edit, startedAt: null })).toBe(STOPPED_TEXT);
     expect(cancelledText({ askOptions: null, startedAt: 2 })).toBe(STOPPED_TEXT);
   });
@@ -123,6 +125,7 @@ describe('stoppedWithSteps', () => {
     for (const status of ['queued', 'running', 'done'] as const) {
       expect(stoppedWithSteps(ask({ status, stepCount: 3 }))).toBeNull();
     }
+
     expect(stoppedWithSteps(null)).toBeNull();
     expect(stoppedWithSteps(undefined)).toBeNull();
   });

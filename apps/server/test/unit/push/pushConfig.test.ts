@@ -36,6 +36,7 @@ describe('loadPushSettings', () => {
         'VAPID_SUBJECT must be',
       );
     }
+
     expect(loadPushSettings({ VAPID_SUBJECT: 'https://tracker.example.com' }, null).subject).toBe(
       'https://tracker.example.com',
     );

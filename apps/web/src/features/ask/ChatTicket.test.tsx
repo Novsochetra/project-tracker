@@ -28,6 +28,7 @@ function setup(path: string, detail: ChatDetail | null, client: Record<string, u
     },
   });
   restore = rendered.restore;
+
   return rendered;
 }
 

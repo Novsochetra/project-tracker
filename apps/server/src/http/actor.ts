@@ -19,6 +19,7 @@ export function parseActor(kind: string | undefined, rawName: string | undefined
     .trim()
     .slice(0, MAX_ACTOR_NAME);
   if (kind?.trim().toLowerCase() === 'agent') return { kind: 'agent', name: name || 'Agent' };
+
   return { kind: 'human', name };
 }
 

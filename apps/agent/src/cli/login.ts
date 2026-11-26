@@ -43,6 +43,7 @@ const OPEN_NOTE =
 // A token in the environment wins over the saved one, so the saved one would go unused.
 const envTokenNote = (env: Env): string | undefined => {
   const name = ['TRACKER_API_TOKEN', 'TRACKER_TOKEN'].find((key) => env[key]?.trim());
+
   return name && `${name} is set here and is used instead of the saved token. Unset it.`;
 };
 
@@ -63,18 +64,22 @@ export async function login(global: GlobalValues, io: LoginIo): Promise<number> 
     io.stderr(`Error: ${insecure}`);
     return EXIT_USAGE;
   }
+
   const token = (await io.readSecret(`Paste the API token for ${url}: `)).trim();
   if (!token || !isTokenShaped(token)) {
     io.stderr(token ? 'That is not a token: it has spaces in it.' : NO_TOKEN_GIVEN);
     return EXIT_USAGE;
   }
+
   const check = await checkToken(url, token, io);
   if ('problem' in check) {
     io.stderr(`Error: ${check.problem}`);
     return EXIT_ERROR;
   }
+
   io.store.write(withToken(saved, url, token));
   io.stdout(savedText(url, io.store.path, [check.open && OPEN_NOTE, envTokenNote(io.env)]));
+
   return EXIT_OK;
 }
 
@@ -85,9 +90,11 @@ export function logout(global: GlobalValues, io: LoginIo): number {
     io.stdout(`No token is saved for ${url}.`);
     return EXIT_OK;
   }
+
   io.store.write(withoutToken(saved, url));
   io.stdout(
     `Removed the token saved for ${url}. It still works until you revoke it in Connect Claude Code → API tokens.`,
   );
+
   return EXIT_OK;
 }

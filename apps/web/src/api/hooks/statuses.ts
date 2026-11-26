@@ -56,6 +56,7 @@ const settleStatuses = (queryClient: QueryClient, variables: { projectKey: strin
 export function useCreateStatus(): TrackerMutation<Status, CreateStatusVariables> {
   const client = useApi();
   const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: ({ projectKey, input }: CreateStatusVariables) =>
       client.createStatus(projectKey, input),
@@ -71,6 +72,7 @@ export function useCreateStatus(): TrackerMutation<Status, CreateStatusVariables
 export function useUpdateStatus(): TrackerMutation<Status, UpdateStatusVariables> {
   const client = useApi();
   const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: ({ statusId, input }: UpdateStatusVariables) =>
       client.updateStatus(statusId, input),
@@ -86,6 +88,7 @@ export function useUpdateStatus(): TrackerMutation<Status, UpdateStatusVariables
 export function useReorderStatuses(): TrackerMutation<Status[], ReorderStatusesVariables> {
   const client = useApi();
   const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: ({ projectKey, ids }: ReorderStatusesVariables) =>
       client.reorderStatuses(projectKey, ids),
@@ -102,6 +105,7 @@ export function useReorderStatuses(): TrackerMutation<Status[], ReorderStatusesV
 export function useDeleteStatus(): TrackerMutation<void, DeleteStatusVariables> {
   const client = useApi();
   const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: ({ statusId, moveTo }: DeleteStatusVariables) =>
       client.deleteStatus(statusId, moveTo),

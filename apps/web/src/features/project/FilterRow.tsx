@@ -27,6 +27,7 @@ export function FilterRow({ board }: FilterRowProps) {
   const view = useListView(project.key);
   const { filter, query } = view;
   const viewMode = useViewMode(project.key);
+
   return (
     <div className={styles.filters}>
       <div className={styles.statusFilters}>

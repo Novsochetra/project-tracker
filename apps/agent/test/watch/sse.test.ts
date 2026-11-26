@@ -5,6 +5,7 @@ const parse = (...chunks: string[]): SseMessage[] => {
   const messages: SseMessage[] = [];
   const feed = createSseParser((message) => messages.push(message));
   chunks.forEach(feed);
+
   return messages;
 };
 

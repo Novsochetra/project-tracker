@@ -19,6 +19,7 @@ const PLACEHOLDER = 'Unassigned';
 export function AssigneeChip({ draft, describedBy }: AssigneeChipProps) {
   const people = usePeople().data;
   const listId = useId();
+
   return (
     <label className={clsx(styles.chip, styles.field)}>
       <Avatar name={draft.value} size={20} decorative />

@@ -11,10 +11,13 @@ export const handleError: ErrorHandler = (error, c) => {
   if (error instanceof AppError) {
     return errorJson(c, error.code, error.message, ERROR_STATUS[error.code]);
   }
+
   if (error instanceof HTTPException && error.status < 500) {
     return errorJson(c, 'invalid_input', error.message || 'Invalid request.', 400);
   }
+
   console.error(error);
+
   return errorJson(c, 'internal', 'Something went wrong on the server.', 500);
 };
 

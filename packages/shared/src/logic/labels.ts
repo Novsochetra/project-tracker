@@ -9,11 +9,13 @@ export function findLabelByName<T extends Pick<Label, 'name'>>(
   name: string,
 ): T | undefined {
   const wanted = name.trim().toLowerCase();
+
   return labels.find((label) => label.name.toLowerCase() === wanted);
 }
 
 export function labelsOf<T extends Label>(labels: readonly T[], ids: readonly string[] = []): T[] {
   const wanted = new Set(ids);
+
   return sortLabels(labels.filter((label) => wanted.has(label.id)));
 }
 

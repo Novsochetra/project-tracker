@@ -40,6 +40,7 @@ const preview: ReportPreview = {
 
 function Harness({ scope }: { scope: ReportScope }) {
   const [open, setOpen] = useState(true);
+
   return <ReportSheet open={open} onClose={() => setOpen(false)} scope={scope} />;
 }
 
@@ -59,6 +60,7 @@ async function enterReport(text: string) {
   const user = userEvent.setup();
   await user.click(screen.getByRole('textbox', { name: 'Report' }));
   await user.paste(text);
+
   return user;
 }
 

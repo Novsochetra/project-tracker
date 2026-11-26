@@ -23,6 +23,7 @@ const RESET_MESSAGES: LinkMessages = {
 async function requireInvitedUser(db: Db, userId: string): Promise<UserRow> {
   const user = await findUserById(db, userId);
   if (user?.role !== 'user') throw notFound('That account was not found.');
+
   return user;
 }
 
@@ -39,6 +40,7 @@ export async function createResetLink(
     return await db.transaction().execute(async (trx) => {
       await deleteOpenResets(trx, userId);
       const { row, secret } = await insertLink(trx, link, now);
+
       return { expiresAt: row.expiresAt, secret };
     });
   } catch (error) {
@@ -60,5 +62,6 @@ export async function checkResetLink(db: Db, secret: string, now: number): Promi
   const link = await requireUsableReset(db, secret, now);
   const user = await findUserById(db, link.userId ?? '');
   if (!user) throw notFound(RESET_LINK_FAILED);
+
   return { email: user.email, expiresAt: link.expiresAt };
 }

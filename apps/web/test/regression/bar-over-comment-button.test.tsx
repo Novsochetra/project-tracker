@@ -37,6 +37,7 @@ function mockTouchPhone(): () => void {
       removeEventListener: () => undefined,
     }),
   });
+
   return () => {
     if (previous) Object.defineProperty(window, 'matchMedia', previous);
     else Reflect.deleteProperty(window, 'matchMedia');
@@ -82,6 +83,7 @@ function TicketScreenStub({ children }: { children: ReactNode }) {
     () => ({ route: { name: 'ticket', key: 'MOB', num: 3 }, isTop: true, scrollRef, largeTitle }),
     [largeTitle],
   );
+
   return (
     <div ref={scrollRef} data-testid="scroller">
       <ScreenContext value={value}>{children}</ScreenContext>
@@ -122,6 +124,7 @@ function renderCommentBox(start = BOX_AT_BOTTOM) {
   Object.defineProperty(scroller, 'scrollTop', { get: () => scrollTop });
   const scrollTo = vi.fn((options: ScrollToOptions) => steps.push(`scrolled to ${options.top}`));
   scroller.scrollTo = scrollTo as typeof scroller.scrollTo;
+
   return {
     field: screen.getByRole('textbox', { name: 'Comment' }),
     send: screen.getByRole('button', { name: 'Comment' }),
@@ -227,6 +230,7 @@ it('lands the box 8px above the bar when the sent comment arrives during the fir
   }) as typeof scroller.scrollBy;
   scrollTo.mockImplementation(({ top = 0 }: ScrollToOptions) => {
     endsAt = top;
+
     return 0;
   });
   tapCommentWhileTyping(field, send);

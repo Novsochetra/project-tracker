@@ -18,6 +18,7 @@ async function readSession(client: TrackerClient): Promise<SessionState> {
 
 export function useSession(): TrackerQuery<SessionState> {
   const client = useApi();
+
   return useQuery({
     queryKey: queryKeys.session(),
     queryFn: () => readSession(client),
@@ -29,6 +30,7 @@ export function useSession(): TrackerQuery<SessionState> {
 // failed to load (offline) would fetch it again, and the gate blanks the app while it fetches.
 export function useKnownSession(): SessionState | undefined {
   const client = useApi();
+
   return useQuery({
     queryKey: queryKeys.session(),
     queryFn: () => readSession(client),
@@ -54,6 +56,7 @@ export function applySignIn(
 export function useLogin(): TrackerMutation<SessionState, LoginInput> {
   const client = useApi();
   const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: ({ email, password }: LoginInput) =>
       client.login({ email: email.trim(), password }),
@@ -79,6 +82,7 @@ function useSignOutWith(
 ): TrackerMutation<SessionState, void> {
   const client = useApi();
   const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: () => signOut(client),
     onSuccess: (session) => queryClient.setQueryData(queryKeys.session(), session),

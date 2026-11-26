@@ -21,6 +21,7 @@ export async function sendChatFiles(
   if ((await linkChatAttachments(db, unique, target)) !== unique.length) {
     throw invalidInput('Some files could not be sent. Upload them again.');
   }
+
   return (await listMessageAttachmentRows(db, target.messageId)).map((row) => row.fileName);
 }
 
@@ -33,6 +34,7 @@ export async function chatFilesByMessage(
     if (row.chatMessageId === null) continue;
     byMessage.set(row.chatMessageId, [...(byMessage.get(row.chatMessageId) ?? []), row]);
   }
+
   return byMessage;
 }
 
@@ -45,6 +47,7 @@ export interface RunFiles {
 export async function runFiles(db: Db, run: RunRow): Promise<RunFiles> {
   if (run.questionId === null) return { files: [], withheld: [] };
   const rows = await listMessageAttachmentRows(db, run.questionId);
+
   return {
     files: rows.filter((row) => !keepsLocation(row.mimeType)).map(toAttachment),
     withheld: rows.filter((row) => keepsLocation(row.mimeType)).map((row) => row.fileName),

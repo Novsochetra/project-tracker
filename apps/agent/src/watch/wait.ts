@@ -6,6 +6,7 @@ export const wait = (ms: number, signal?: AbortSignal): Promise<void> =>
       signal?.removeEventListener('abort', done);
       resolve();
     };
+
     const timer = setTimeout(done, ms);
     signal?.addEventListener('abort', done, { once: true });
   });

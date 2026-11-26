@@ -8,6 +8,7 @@ const PROJECT_KEY = /^[A-Za-z0-9]{1,20}$/;
 
 export const field = (input: ToolInput, name: string): string => {
   const value = input[name];
+
   return typeof value === 'string' ? value.trim() : '';
 };
 
@@ -18,28 +19,33 @@ const pathIn =
   (verb: string, name = 'file_path'): Label =>
   (input, folder) => {
     const path = field(input, name);
+
     return said(verb, path && shownPath(path, folder));
   };
 
 const where = (input: ToolInput, folder: string): string => {
   const path = field(input, 'path');
+
   return path ? ` in ${shownPath(path, folder)}` : '';
 };
 
 // Only the first line: the rest of a heredoc is a file's contents.
 const run: Label = (input) => {
   const [first = '', ...rest] = field(input, 'command').split('\n');
+
   return said('Run', rest.length > 0 ? `${first.trim()} …` : first);
 };
 
 const ask: Label = (input) => {
   const [first] = Array.isArray(input.questions) ? (input.questions as unknown[]) : [];
   const question = typeof first === 'object' && first !== null ? (first as ToolInput) : {};
+
   return said('Ask:', field(question, 'question'));
 };
 
 export function mcpHead(name: string): string {
   const [, server = '', ...tool] = name.split('__');
+
   return `Use ${server}: ${tool.join('__')}`;
 }
 
@@ -48,6 +54,7 @@ function mcpLabel(name: string, input: ToolInput): string {
   const ticket = field(input, 'ticket');
   const project = field(input, 'project');
   const key = parseTicketKey(ticket) ? ticket : PROJECT_KEY.test(project) ? project : '';
+
   return said(mcpHead(name), key);
 }
 
@@ -73,5 +80,6 @@ const LABELS: Readonly<Record<string, Label>> = {
 export function toolLabel(name: string, input: ToolInput, folder: string): string {
   const label = Object.hasOwn(LABELS, name) ? LABELS[name] : undefined;
   if (label) return label(input, folder);
+
   return name.startsWith('mcp__') ? mcpLabel(name, input) : `Use ${name}`;
 }

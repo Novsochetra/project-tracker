@@ -12,6 +12,7 @@ export interface SessionSnapshot {
 export function linkPageOf(pathname: string): LinkPage | undefined {
   if (pathname === INVITE_PATH) return 'invite';
   if (pathname === RESET_PATH) return 'reset';
+
   return undefined;
 }
 
@@ -21,6 +22,7 @@ export function gateFor({ data, fetchStatus }: SessionSnapshot, linkPage?: LinkP
   if (!data && fetchStatus === 'fetching') return 'loading';
   if (linkPage) return linkPage;
   if (data) return data.authRequired && !data.authenticated ? 'login' : 'app';
+
   // Offline the session request pauses or fails; the app still works from the offline cache.
   return 'app';
 }

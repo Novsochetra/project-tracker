@@ -65,6 +65,7 @@ function PickNote({ notice, onDismiss, focusTo }: NoteProps) {
     if (notice) ref.current?.scrollIntoView?.({ block: 'nearest' });
   }, [notice]);
   if (!notice) return null;
+
   return (
     <FileNote
       ref={ref}
@@ -83,6 +84,7 @@ function LateNote({ notice, onDismiss, focusTo }: NoteProps) {
   const ref = useRef<HTMLDivElement>(null);
   useToastIfUnseen(ref, notice);
   if (!notice) return null;
+
   return (
     <FileNote
       ref={ref}
@@ -117,6 +119,7 @@ export function AttachmentPicker({
   const onFocus = (event: FocusEvent<HTMLDivElement>) => {
     if (fold.folded && pastFold(event.target, event.currentTarget)) fold.expand();
   };
+
   return (
     <div className={clsx(styles.picker, className)}>
       <PickNote

@@ -24,6 +24,7 @@ async function staleViewport(page: Page): Promise<void> {
 const bottomOf = async (locator: Locator): Promise<number> => {
   const box = await locator.boundingBox();
   if (!box) throw new Error('Not rendered.');
+
   return Math.round(box.y + box.height);
 };
 
@@ -34,6 +35,7 @@ async function openConnect(page: Page): Promise<Locator> {
   await page.getByRole('button', { name: 'Connect Claude Code' }).click();
   const sheet = page.getByRole('dialog', { name: 'Connect Claude Code' });
   await expect(sheet.getByRole('button', { name: 'Copy CLI command' })).toBeAttached();
+
   return sheet;
 }
 

@@ -13,9 +13,11 @@ function withoutOwner(config: AuthConfig): string {
       `using one: ${SETUP_COMMAND}`
     );
   }
+
   const why = config.legacyToken
     ? 'TRACKER_TOKEN is set and there is no owner account'
     : 'No owner account yet';
+
   return `${why}, so every request is refused. Run ${SETUP_COMMAND}`;
 }
 
@@ -24,5 +26,6 @@ export async function authNotice(db: Db, config: AuthConfig): Promise<string[]> 
     ? ['TRACKER_TOKEN is no longer read by the server: agents use API tokens the owner creates.']
     : [];
   if (await ownerExists(db)) return [...lines, 'Sign-in required (owner account set).'];
+
   return [...lines, withoutOwner(config)];
 }

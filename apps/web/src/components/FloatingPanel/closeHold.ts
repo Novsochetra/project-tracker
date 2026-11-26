@@ -24,6 +24,7 @@ export function useCloseLayer(onClose: () => void) {
   }, []);
   const isHeld = (event: MouseEvent) =>
     heldAt.current !== null && isShielded(event.detail, heldAt.current, performance.now());
+
   return {
     hold,
     // Focus stays on what the panel's new step focused.

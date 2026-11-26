@@ -53,8 +53,10 @@ export function toRunner(
 ): Runner {
   const projectKeys = parseProjectIds(row).flatMap((id) => {
     const key = keysById.get(id);
+
     return key ? [key] : [];
   });
+
   return {
     id: row.id,
     name: row.name,

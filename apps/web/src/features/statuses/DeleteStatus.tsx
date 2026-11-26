@@ -26,6 +26,7 @@ export function DeleteStatus(props: DeleteStatusProps) {
       { projectKey, statusId: status.id, moveTo: count > 0 ? moveTo : undefined },
       { onSuccess: onDeleted },
     );
+
   return (
     <div className={styles.confirm}>
       {count > 0 && (

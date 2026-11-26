@@ -16,6 +16,7 @@ export class MockEventSource {
   static latest(): MockEventSource {
     const source = MockEventSource.instances.at(-1);
     if (!source) throw new Error('No EventSource was created.');
+
     return source;
   }
 

@@ -9,6 +9,7 @@ import { keepDraft } from '../../src/lib/storedDrafts';
 
 function Drafts() {
   useTicketDrafts(true);
+
   return null;
 }
 
@@ -45,6 +46,7 @@ it('reads a closed ticket with kept text again only after a change in its projec
     await act(() => api.queryClient.invalidateQueries({ queryKey: queryKeys.projects() }));
     await act(() => vi.advanceTimersByTimeAsync(RETRY_GAP_MS));
   }
+
   expect(getTicket).toHaveBeenCalledTimes(1);
 
   await act(() => api.queryClient.invalidateQueries({ queryKey: queryKeys.project('MOB') }));

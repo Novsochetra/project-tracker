@@ -10,7 +10,9 @@ export function useNow(intervalMs = 60_000): number {
     const onVisibility = () => {
       if (document.visibilityState === 'visible') tick();
     };
+
     document.addEventListener('visibilitychange', onVisibility);
+
     return () => {
       clearInterval(timer);
       document.removeEventListener('visibilitychange', onVisibility);

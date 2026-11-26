@@ -8,9 +8,11 @@ function setClipboard(value: Partial<Clipboard> | undefined) {
 function setExecCommand(result: boolean | Error) {
   const execCommand = vi.fn(() => {
     if (result instanceof Error) throw result;
+
     return result;
   });
   Object.defineProperty(document, 'execCommand', { value: execCommand, configurable: true });
+
   return execCommand;
 }
 
@@ -18,6 +20,7 @@ function promptBox(text: string): HTMLTextAreaElement {
   const box = document.createElement('textarea');
   box.value = text;
   document.body.append(box);
+
   return box;
 }
 
@@ -64,6 +67,7 @@ describe('copyText', () => {
     const execCommand = vi.fn(() => {
       const field = document.activeElement as HTMLTextAreaElement;
       copied = field.value.slice(field.selectionStart, field.selectionEnd);
+
       return true;
     });
     Object.defineProperty(document, 'execCommand', { value: execCommand, configurable: true });

@@ -94,6 +94,7 @@ export function useCaptureSubmit(input: CaptureSubmitInput): CaptureSubmit {
       setError(outcome.kind === 'failed' ? outcome.message : FILES_NEED_CONNECTION);
       return;
     }
+
     rememberProject(chosen);
     if (outcome.kind === 'created') {
       flashRows([outcome.ticket.key]);
@@ -101,6 +102,7 @@ export function useCaptureSubmit(input: CaptureSubmitInput): CaptureSubmit {
     } else {
       show(SAVED_ON_PHONE);
     }
+
     onDone();
   };
 
@@ -109,6 +111,7 @@ export function useCaptureSubmit(input: CaptureSubmitInput): CaptureSubmit {
       setError(TITLE_REQUIRED);
       return;
     }
+
     if (!project || uploading > 0 || busy.current) return;
     busy.current = true;
     setPending(true);

@@ -45,10 +45,12 @@ export const ticketRoutes = (ctx: ServiceContext) =>
     .patch('/tickets/:key', jsonBody(updateTicketRequest), async (c) => {
       const { expected, ...input } = c.req.valid('json');
       const update = { actor: c.get('actor'), key: c.req.param('key'), input, expected };
+
       return c.json(await updateTicket(userContext(ctx, c), update));
     })
     .delete('/tickets/:key', async (c) => {
       await deleteTicket(userContext(ctx, c), c.req.param('key'));
+
       return c.body(null, 204);
     })
     .post('/tickets/:key/move', jsonBody(moveTicketInput), async (c) =>

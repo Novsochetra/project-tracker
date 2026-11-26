@@ -35,6 +35,7 @@ const slow: QueuedCapture = {
 
 const ticket = (title: string): Ticket => {
   const { commentCount: _c, attachmentCount: _a, ...rest } = listItem(1, STATUS.todo, 0, { title });
+
   return rest;
 };
 
@@ -55,11 +56,13 @@ function tabWithWebLocks(id: string): OtherTab {
   cleanups.push(installLockManager(locks));
   const done = deferred<void>();
   void locks.request(lockName(id), () => done.promise);
+
   return { release: () => done.resolve() };
 }
 
 function tabWithLease(id: string, until = Date.now() + 60_000): OtherTab {
   window.localStorage.setItem(leaseKey(id), String(until));
+
   return { release: () => window.localStorage.removeItem(leaseKey(id)) };
 }
 
@@ -77,6 +80,7 @@ function renderTabB() {
     </SheetsProvider>,
     { projects: [projectSummary()], client: { createTicket } },
   );
+
   return { createTicket };
 }
 

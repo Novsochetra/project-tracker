@@ -26,6 +26,7 @@ interface DateFaceProps {
 export function DateFace({ value, label, overdue, mutedIcon, nameOf }: DateFaceProps) {
   const tone = overdue ? styles.overdue : value ? styles.set : styles.unset;
   const hidden = nameOf ? true : undefined;
+
   return (
     <>
       <span className={clsx(styles.icon, mutedIcon && !overdue ? styles.mutedIcon : tone)}>
@@ -49,6 +50,7 @@ interface ClearOrChevronProps {
 
 export function ClearOrChevron({ value, label, onClear }: ClearOrChevronProps) {
   if (!value) return <Icon icon={ChevronDown} className={styles.chevron} />;
+
   return (
     <button
       type="button"

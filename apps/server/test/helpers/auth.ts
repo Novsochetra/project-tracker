@@ -32,6 +32,7 @@ export const cookieOf = (response: Response): string =>
 export async function signIn(app: Hono<AppEnv>, base = ''): Promise<string> {
   const response = await app.request(`${base}/api/session`, loginRequest());
   expect(response.status).toBe(200);
+
   return cookieOf(response);
 }
 
@@ -43,6 +44,7 @@ export interface TestClock {
 
 export function testClock(start = 1_000_000): TestClock {
   let time = start;
+
   return {
     now: () => time,
     set: (value) => {

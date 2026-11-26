@@ -35,6 +35,7 @@ export function OrderedList<T extends OrderedItem>(props: OrderedListProps<T>) {
     order.commit(next);
     announce(`${item.name} moved to position ${next.indexOf(item.id) + 1} of ${next.length}`);
   };
+
   return (
     <>
       <span id={hintId} className="visually-hidden">

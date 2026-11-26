@@ -44,6 +44,7 @@ function layout(element: Element): DOMRect {
   const index = rows.findIndex((row) => row === element || row.contains(element));
   if (index >= 0) return box(LIST_TOP + index * (ROW + GAP), ROW);
   if (element.contains(rows[0] ?? null)) return box(LIST_TOP, rows.length * (ROW + GAP) - GAP);
+
   return box(0, 0);
 }
 

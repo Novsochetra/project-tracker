@@ -22,6 +22,7 @@ export function DueChip({ value, overdue, onChange }: DueChipProps) {
     onChange('');
     inputRef.current?.focus({ preventScroll: true });
   };
+
   return (
     <label className={clsx(styles.chip, styles.due, overdue && styles.late)}>
       <Icon icon={Calendar} className={clsx(styles.icon, tone)} />

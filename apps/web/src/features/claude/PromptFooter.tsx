@@ -54,6 +54,7 @@ interface RunActionsProps {
 // Phones stack the buttons with Run on top, so it comes first for focus and screen readers too.
 function RunActions({ runOn, action, copy }: RunActionsProps) {
   const isPhone = useIsPhone();
+
   return (
     <div className={styles.actions}>
       {runOn}
@@ -74,6 +75,7 @@ interface CopyButtonProps {
 
 function CopyButton({ copied, disabled, primary, onClick }: CopyButtonProps) {
   const isPhone = useIsPhone();
+
   return (
     <Button
       variant={primary ? 'primary' : 'secondary'}
@@ -91,6 +93,7 @@ function CopyButton({ copied, disabled, primary, onClick }: CopyButtonProps) {
 
 function RunButton({ disabled, onClick }: { disabled: boolean; onClick: () => void }) {
   const isPhone = useIsPhone();
+
   return (
     <Button
       variant="primary"

@@ -22,6 +22,7 @@ describe.each(DIALECTS)('files keep the order they were picked (%s)', (dialect) 
     const c = await uploadNamed('c.txt');
     const a = await uploadNamed('a.txt');
     const b = await uploadNamed('b.txt');
+
     return [a.id, b.id, c.id];
   };
 

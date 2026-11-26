@@ -21,6 +21,7 @@ function revealTarget(track: TrackMetrics, tab: TabSpan, starts: readonly number
   const needed = tab.end + track.inset - track.width;
   if (needed <= track.scrollLeft + TOLERANCE) return null;
   const snap = starts.map((start) => start - track.inset).find((left) => left >= needed);
+
   return Math.min(snap ?? track.maxScroll, own);
 }
 
@@ -32,6 +33,7 @@ export function revealLeft(
   starts: readonly number[],
 ): number | null {
   const left = revealTarget(track, tab, starts);
+
   return left === null ? null : Math.min(Math.max(left, 0), track.maxScroll);
 }
 

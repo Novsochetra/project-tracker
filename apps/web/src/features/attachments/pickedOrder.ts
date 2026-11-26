@@ -24,9 +24,11 @@ export function settleSlot<T>(
   if (!slots.some((slot) => slot.key === key)) {
     return { slots: [...slots], released: [{ key, settled: true, value }] };
   }
+
   const marked = slots.map((slot) => (slot.key === key ? { key, settled: true, value } : slot));
   const blocked = marked.findIndex((slot) => !slot.settled);
   const cut = blocked === -1 ? marked.length : blocked;
+
   return { slots: marked.slice(cut), released: marked.slice(0, cut) };
 }
 

@@ -50,5 +50,6 @@ export function renderWithApp(ui: ReactNode, options: HarnessOptions = {}) {
       </ToastProvider>
     </Wrapper>,
   );
+
   return { ...api, ...result, sheets };
 }

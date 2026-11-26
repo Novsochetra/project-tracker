@@ -32,6 +32,7 @@ export async function requireRunner(
 ): Promise<RunnerRow> {
   const row = await findRunnerRow(ctx.db, id);
   if (!row || !inScope(row.userId, scope)) throw notFound(RUNNER_NOT_FOUND);
+
   return row;
 }
 
@@ -45,11 +46,13 @@ export async function requireRunnerFor(
   if (!parseProjectIds(runner).includes(project.id)) {
     throw conflict(`${runner.name} doesn't run ${project.key}. Start tracker watch there.`);
   }
+
   return runner;
 }
 
 async function projectKeysById(ctx: ServiceContext, scope: UserScope) {
   const projects = await listProjectRows(ctx.db, scope);
+
   return new Map(projects.map(({ id, key }) => [id, key]));
 }
 
@@ -60,6 +63,7 @@ async function projectIdsOf(
 ): Promise<string[]> {
   const ids: string[] = [];
   for (const key of keys) ids.push((await requireProject(ctx.db, scope, key)).id);
+
   return [...new Set(ids)];
 }
 
@@ -98,6 +102,7 @@ export async function registerRunner(
   };
   await saveRunner(ctx, row);
   const saved = await requireRunner(ctx, scope, id);
+
   return toRunner(saved, await projectKeysById(ctx, scope), now);
 }
 
@@ -107,6 +112,7 @@ export async function listRunners(ctx: ServiceContext, scope: UserScope): Promis
     projectKeysById(ctx, scope),
   ]);
   const now = ctx.now();
+
   return rows.map((row) => toRunner(row, keys, now));
 }
 

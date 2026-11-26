@@ -45,6 +45,7 @@ async function openItemSheet(noun: string) {
   await user.click(screen.getByRole('button', { name }));
   // A person reads the sheet before tapping one of its rows.
   await advance(CLICK_SHIELD_MS);
+
   return { user, onDelete };
 }
 

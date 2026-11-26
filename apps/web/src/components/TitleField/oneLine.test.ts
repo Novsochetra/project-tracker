@@ -5,6 +5,7 @@ function textarea(value: string, caret: number): HTMLTextAreaElement {
   const field = document.createElement('textarea');
   field.value = value;
   field.setSelectionRange(caret, caret);
+
   return field;
 }
 

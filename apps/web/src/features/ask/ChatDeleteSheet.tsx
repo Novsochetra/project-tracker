@@ -27,6 +27,7 @@ export function ChatDeleteSheet({ projectKey, sheet, onClose }: ChatDeleteSheetP
   ) : (
     DELETE_CHAT_QUESTION
   );
+
   return (
     <ActionSheet
       open={open}

@@ -4,6 +4,7 @@ import { useInstantLayoutTransition } from 'motion/react';
 // empty labels list), so the update then runs as it is.
 export function useInPlace(): (update: () => void) => void {
   const instant = useInstantLayoutTransition();
+
   return (update) => {
     let ran = false;
     instant(() => {

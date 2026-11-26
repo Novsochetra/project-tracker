@@ -2,6 +2,7 @@ import type { TicketSearchHit } from '@tracker/shared';
 
 export function searchHit(key: string, overrides: Partial<TicketSearchHit> = {}): TicketSearchHit {
   const [projectKey = 'MOB', num = '1'] = key.split('-');
+
   return {
     key,
     projectId: `p-${projectKey.toLowerCase()}`,

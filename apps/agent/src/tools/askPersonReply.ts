@@ -15,5 +15,6 @@ export function replyText(end: PollEnd<TicketQuestion>): string {
   if (end.kind !== 'ended') return NO_ANSWER;
   const { status, answer } = end.value;
   if (status === 'answered' && answer !== null) return answeredText(answer);
+
   return status === 'skipped' ? SKIPPED : NO_ANSWER;
 }

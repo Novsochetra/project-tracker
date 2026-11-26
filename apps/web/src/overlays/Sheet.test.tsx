@@ -14,9 +14,11 @@ function Harness({ onClose = () => undefined }: { onClose?: () => void }) {
     onClose();
     setOpen(false);
   };
+
   const markEscapeHandled = (event: KeyboardEvent) => {
     if (event.key === 'Escape') event.preventDefault();
   };
+
   return (
     <>
       <button type="button" onClick={() => setOpen(true)}>
@@ -54,6 +56,7 @@ async function openSheet(onClose?: () => void) {
   const user = userEvent.setup();
   render(<Harness onClose={onClose} />);
   await user.click(screen.getByRole('button', { name: 'New ticket' }));
+
   return user;
 }
 

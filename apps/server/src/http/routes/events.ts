@@ -20,6 +20,7 @@ const alwaysAllowed: AccessCheck = () => Promise.resolve(true);
 // line, so events keep their order.
 function guardedWriter(stream: SSEStreamingApi, allowed: () => Promise<boolean>, end: () => void) {
   let queue = Promise.resolve();
+
   return (message: SSEMessage) => {
     queue = queue
       .then(async () => {
@@ -37,6 +38,7 @@ function ownListener<T extends { userId: UserScope }>(
   toMessage: (notice: T) => SSEMessage,
 ) {
   const scope = scopeOf(access);
+
   return (notice: T) => {
     if (scope !== undefined && notice.userId === scope) send(toMessage(notice));
   };
@@ -57,6 +59,7 @@ export const eventRoutes = (
 ) =>
   new Hono<AppEnv>().get('/events', (c) => {
     const access = c.get('access');
+
     return streamSSE(c, async (stream) => {
       let end = () => undefined as void;
       const ended = new Promise<void>((resolve) => {

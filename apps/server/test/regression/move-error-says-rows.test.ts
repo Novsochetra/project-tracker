@@ -32,6 +32,7 @@ function failingInsertInto(table: string): KyselyPlugin {
       if (InsertQueryNode.is(node) && node.into?.table.identifier.name === table) {
         throw new Error('connect ECONNREFUSED 10.0.0.1:5432');
       }
+
       return node;
     },
     transformResult: ({ result }: PluginTransformResultArgs) => Promise.resolve(result),

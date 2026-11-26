@@ -30,6 +30,7 @@ const errorOf = (run: () => unknown): string => {
   } catch (error) {
     return (error as Error).message;
   }
+
   return 'no error';
 };
 

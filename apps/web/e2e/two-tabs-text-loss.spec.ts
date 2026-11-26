@@ -150,6 +150,7 @@ test('a comment whose tab closes while it is sent comes back in the other tab', 
   const asks = await a.evaluate(() => {
     const event = new Event('beforeunload', { cancelable: true });
     window.dispatchEvent(event);
+
     return event.defaultPrevented;
   });
   expect(asks).toBe(true);

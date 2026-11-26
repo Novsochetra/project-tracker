@@ -14,5 +14,6 @@ export function memoryStore(initial: SavedConfig = NO_SAVED_CONFIG): MemoryStore
       store.saved = config;
     },
   };
+
   return store;
 }

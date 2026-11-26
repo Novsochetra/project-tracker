@@ -30,6 +30,7 @@ export function useMediaQuery(query: string): boolean {
       if (typeof window.matchMedia !== 'function') return () => undefined;
       const list = window.matchMedia(query);
       list.addEventListener('change', onChange);
+
       return () => list.removeEventListener('change', onChange);
     },
     () => matches(query),

@@ -18,6 +18,7 @@ const bottomBar = (page: Page) => page.locator('[data-stack-path="/p/MOB"] [data
 async function aboveTheBar(page: Page, target: Locator): Promise<number> {
   const barTop = (await bottomBar(page).boundingBox())!.y;
   const box = (await target.boundingBox())!;
+
   return barTop - box.y;
 }
 

@@ -29,6 +29,7 @@ interface HarnessProps {
 function Harness({ statusId, onClose = () => undefined }: HarnessProps) {
   const [open, setOpen] = useState(true);
   const [opening, setOpening] = useState(0);
+
   return (
     <>
       <button
@@ -69,6 +70,7 @@ function renderSheet(props: HarnessProps = {}, createTicket = vi.fn().mockResolv
       </ToastProvider>
     </Wrapper>,
   );
+
   return { ...api, createTicket, user: userEvent.setup() };
 }
 

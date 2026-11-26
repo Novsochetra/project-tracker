@@ -122,6 +122,7 @@ describe('npm run owner:set', () => {
       env: { ...process.env, DATABASE_URL: join(dir, 'tracker.db') },
     });
     child.child.stdin?.end(`${password}\nignored second line\n`);
+
     return child;
   };
 

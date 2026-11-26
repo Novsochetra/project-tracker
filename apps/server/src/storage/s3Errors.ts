@@ -21,6 +21,7 @@ export function safeS3Error(operation: string, error: unknown): unknown {
   const code = sdk.Code && sdk.Code !== name ? ` (${sdk.Code})` : '';
   const status = sdk.$metadata?.httpStatusCode ?? 'no status';
   const request = sdk.$metadata?.requestId ?? 'none';
+
   return new Error(`S3 ${operation} failed: ${name}${code}, HTTP ${status}, request ${request}`);
 }
 

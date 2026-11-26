@@ -13,6 +13,7 @@ export interface RequestCardsProps {
 export function RequestCards({ requests, now, ref }: RequestCardsProps) {
   useAnnounceRequests(requests, now);
   if (requests.length === 0) return null;
+
   return (
     <div ref={ref} className={styles.cards}>
       {requests.map((request) => (

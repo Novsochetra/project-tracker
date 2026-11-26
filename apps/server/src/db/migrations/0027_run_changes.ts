@@ -53,6 +53,7 @@ export async function down(db: SchemaDb): Promise<void> {
   for (const [column] of [...LINE_COLUMNS].reverse()) {
     await db.schema.alterTable('activities').dropColumn(column).execute();
   }
+
   await db.schema.dropTable('ticket_viewed_files').execute();
   await db.schema.dropIndex(TICKET_CREATED).execute();
   await db.schema.dropTable('run_changes').execute();

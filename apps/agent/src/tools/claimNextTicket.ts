@@ -20,6 +20,7 @@ export const claimNextTicket = defineTool({
         data: null,
       };
     }
+
     return claimedReply(client, detail);
   },
 });

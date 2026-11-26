@@ -15,6 +15,7 @@ function sumOf(
   key: 'turns' | 'durationMs' | 'tokens',
 ): number | undefined {
   const values = usages.flatMap((usage) => (usage[key] === undefined ? [] : [usage[key]]));
+
   return values.length === 0 ? undefined : values.reduce((total, value) => total + value, 0);
 }
 
@@ -45,5 +46,6 @@ export function runUsageOf(
     ...fitting('contextWindow', exit.context?.window),
     ...fitting('tokens', sumOf(usages, 'tokens')),
   };
+
   return Object.keys(usage).length > 0 ? usage : undefined;
 }

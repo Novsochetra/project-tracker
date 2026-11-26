@@ -31,6 +31,7 @@ const whereToRun = (local: boolean, repoRoot: string) =>
 
 export function SetupCommands({ info, repoRoot, authRequired, onCopy }: SetupCommandsProps) {
   const local = isLocalTracker(info.serverUrl);
+
   return (
     <Section title="Add the tracker to Claude Code">
       <p className={styles.help}>

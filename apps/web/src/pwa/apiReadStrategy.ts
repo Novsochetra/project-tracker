@@ -29,6 +29,7 @@ export function apiReadHandler(): RouteHandlerCallback {
     plugins: plugins(),
   });
   const patient = new NetworkFirst({ cacheName: API_CACHE, plugins: plugins() });
+
   return (options) =>
     (options.request.headers.has(LIVE_READ_HEADER) ? patient : quick).handle(options);
 }

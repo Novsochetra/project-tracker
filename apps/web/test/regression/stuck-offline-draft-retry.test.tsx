@@ -12,6 +12,7 @@ import { keepDraft, storedDrafts } from '../../src/lib/storedDrafts';
 
 function Drafts() {
   useTicketDrafts(true);
+
   return null;
 }
 
@@ -25,6 +26,7 @@ function renderDrafts(getTicket: () => Promise<unknown>) {
       </ToastProvider>
     </api.wrapper>,
   );
+
   return updateTicket;
 }
 

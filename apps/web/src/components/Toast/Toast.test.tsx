@@ -13,6 +13,7 @@ import { useToast, useToastRaise } from './useToast';
 
 function Trigger({ text, options }: { text: string; options?: ToastOptions }) {
   const toast = useToast();
+
   return (
     <button type="button" onClick={() => toast.show(text, options)}>
       Show {text}
@@ -22,6 +23,7 @@ function Trigger({ text, options }: { text: string; options?: ToastOptions }) {
 
 function RaisedScreen({ active }: { active: boolean }) {
   useToastRaise(active);
+
   return null;
 }
 
@@ -128,6 +130,7 @@ describe('Toast with Undo', () => {
       </ToastProvider>,
     );
     fireEvent.click(screen.getByRole('button', { name: 'Show MOB-3 moved to Done' }));
+
     return undo;
   }
 

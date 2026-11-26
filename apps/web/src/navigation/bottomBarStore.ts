@@ -12,6 +12,7 @@ function setShowing(token: symbol, value: boolean): void {
 
 function subscribe(listener: () => void): () => void {
   listeners.add(listener);
+
   return () => listeners.delete(listener);
 }
 
@@ -27,6 +28,7 @@ export function useRegisterBottomBar(visible: boolean): void {
     if (!visible) return;
     const token = Symbol('bottom-bar');
     setShowing(token, true);
+
     return () => setShowing(token, false);
   }, [visible]);
 }

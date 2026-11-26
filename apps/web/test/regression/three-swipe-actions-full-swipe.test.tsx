@@ -42,6 +42,7 @@ function renderRow(rowWidth: number) {
     </SwipeActions>,
   );
   const button = screen.getByRole('button', { name: 'MOB-1' });
+
   return { status, row: button.closest('div')!, root: button.parentElement!.parentElement! };
 }
 

@@ -94,6 +94,7 @@ test.describe('report cards', () => {
     for (const [name, body, type] of files) {
       await agent.uploadAttachment(new Blob([body], { type }), name, 'MOB-1');
     }
+
     await agent.applyReport({
       ticketKey: 'MOB-1',
       text: [
@@ -118,6 +119,7 @@ test.describe('report cards', () => {
     if (testInfo.project.name === 'phone') {
       await card.getByRole('button', { name: 'Show more' }).click();
     }
+
     await card.getByText('chart.png').evaluate((item) => item.scrollIntoView({ block: 'center' }));
     await settledScreenshot(page, testInfo.outputPath('output-report.png'));
   });

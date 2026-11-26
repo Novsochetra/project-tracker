@@ -22,6 +22,7 @@ afterEach(() => {
 const doubleClick = () => {
   const event = new MouseEvent('click', { bubbles: true, cancelable: true, detail: 2 });
   button.dispatchEvent(event);
+
   return event;
 };
 

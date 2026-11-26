@@ -16,6 +16,7 @@ export function configPath(env: Env, home: string = homedir()): string {
   const explicit = env.TRACKER_CONFIG?.trim();
   if (explicit) return explicit;
   const configHome = env.XDG_CONFIG_HOME?.trim() || join(home, '.config');
+
   return join(configHome, CONFIG_FOLDER, 'config.json');
 }
 
@@ -49,6 +50,7 @@ export const fileStore = (path: string): ConfigStore => ({
   path,
   read: () => {
     const text = readText(path);
+
     return text === null ? NO_SAVED_CONFIG : parseSavedConfig(text, path);
   },
   write: (config) => writeConfig(path, config),

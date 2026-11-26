@@ -12,6 +12,7 @@ function fileDrag(type: 'dragover' | 'drop', types = ['Files']): Event {
   Object.defineProperty(event, 'dataTransfer', {
     value: { types, files: [], items: [], dropEffect: 'copy' },
   });
+
   return event;
 }
 

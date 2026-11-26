@@ -34,6 +34,7 @@ function maskContent(text: string, state: FileState): string {
   if (state.inKey && KEY_END.test(text)) state.inKey = false;
   else if (state.inKey) return text.trim() ? MASK : text;
   if (KEY_BEGIN.test(text) && !KEY_END.test(text)) state.inKey = true;
+
   return maskSecrets(text);
 }
 
@@ -42,6 +43,7 @@ function maskContent(text: string, state: FileState): string {
 // Header lines, which name files and commits, stay as they are.
 export function maskDiff(text: string): string {
   let state: FileState | null = null;
+
   return text
     .split('\n')
     .map((line) => {
@@ -51,7 +53,9 @@ export function maskDiff(text: string): string {
         readHeader(state, line);
         return line;
       }
+
       const mark = line.slice(0, 1);
+
       return CONTENT_MARKS.has(mark) ? mark + maskContent(line.slice(1), state) : line;
     })
     .join('\n');

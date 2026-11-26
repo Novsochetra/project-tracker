@@ -5,6 +5,7 @@ const FOCUSABLE = 'button:not(:disabled), a[href], input:not(:disabled), [tabind
 
 const triggerOf = (anchorRef: RefObject<HTMLElement | null>): HTMLElement | null => {
   const trigger = anchorRef.current?.firstElementChild;
+
   return trigger instanceof HTMLElement ? trigger : null;
 };
 
@@ -21,7 +22,9 @@ export function useCloseOnEscape(
       triggerOf(anchorRef)?.focus();
       onClose();
     };
+
     document.addEventListener('keydown', onKeyDown);
+
     return () => document.removeEventListener('keydown', onKeyDown);
   }, [open, anchorRef, onClose]);
 }
@@ -70,7 +73,9 @@ export function useMenuTabOrder(
         if (!holds(anchor, panel, document.activeElement)) close.current();
       });
     };
+
     document.addEventListener('keydown', onKeyDown);
+
     return () => {
       clearTimeout(timer);
       document.removeEventListener('keydown', onKeyDown);

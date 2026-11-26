@@ -8,6 +8,7 @@ const bytesOf = (size: number) => new Uint8Array(size);
 function jpegOf(size: number) {
   const bytes = bytesOf(size);
   bytes.set([0xff, 0xd8, 0xff]);
+
   return bytes;
 }
 

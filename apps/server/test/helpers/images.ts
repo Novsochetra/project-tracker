@@ -44,6 +44,7 @@ export function twoColorPixels(width: number, height: number): Buffer {
       pixels.set(color, (y * width + x) * 3);
     }
   }
+
   return pixels;
 }
 
@@ -55,6 +56,7 @@ export function noisyPixels(width: number, height: number, seed = 1): Buffer {
     state = (state * 1_103_515_245 + 12_345) % 2 ** 31;
     pixels[index] = 96 + (state % 64) + (index % 97);
   }
+
   return pixels;
 }
 
@@ -69,6 +71,7 @@ export function screenPixels(width: number, height: number): Buffer {
       pixels.set([value, value, line ? 60 : 255], (y * width + x) * 3);
     }
   }
+
   return pixels;
 }
 
@@ -89,6 +92,7 @@ export async function jpegPhoto(options: PhotoOptions): Promise<Uint8Array> {
   let image = rawImage(options.pixels ?? twoColorPixels(width, height), width, height);
   if (options.camera) image = image.withExif(CAMERA_EXIF);
   if (options.orientation) image = image.withMetadata({ orientation: options.orientation });
+
   return new Uint8Array(await image.jpeg({ quality: options.quality ?? 90 }).toBuffer());
 }
 
@@ -98,6 +102,7 @@ export const pngImage = async (pixels: Buffer, width: number, height: number, le
 export async function pixelAt(bytes: Uint8Array, x: number, y: number): Promise<number[]> {
   const { data, info } = await sharp(bytes).raw().toBuffer({ resolveWithObject: true });
   const offset = (y * info.width + x) * info.channels;
+
   return [...data.subarray(offset, offset + 3)];
 }
 
@@ -116,6 +121,7 @@ export function withJpegSegment(jpeg: Uint8Array, marker: number, data: Buffer):
   const length = Buffer.alloc(2);
   length.writeUInt16BE(data.length + 2);
   const segment = Buffer.concat([Buffer.from([0xff, marker]), length, data]);
+
   return Buffer.concat([jpeg.subarray(0, 2), segment, jpeg.subarray(2)]);
 }
 
@@ -126,6 +132,7 @@ export function claimingJpegSize(jpeg: Uint8Array, width: number, height: number
   const start = Math.max(...frame);
   bytes.writeUInt16BE(height, start + 5);
   bytes.writeUInt16BE(width, start + 7);
+
   return bytes;
 }
 
@@ -138,6 +145,7 @@ function eobRuns(blocks: number): Buffer {
     bits += '00' + (run - 16384).toString(2).padStart(14, '0');
     left -= run;
   }
+
   if (left > 0) bits += '01' + (left - 8192).toString(2).padStart(13, '0');
   bits = bits.padEnd(Math.ceil(bits.length / 8) * 8, '1');
   const data: number[] = [];
@@ -145,6 +153,7 @@ function eobRuns(blocks: number): Buffer {
     const byte = parseInt(bits.slice(at, at + 8), 2);
     data.push(...(byte === 0xff ? [0xff, 0x00] : [byte]));
   }
+
   return Buffer.from(data);
 }
 
@@ -160,6 +169,7 @@ export async function scanFlood(scans: number, width = 2000, height = 1500): Pro
   const sos = Buffer.from([0xff, 0xda, 0, 8, 1, 1, 0x01, 1, 63, 0x00]);
   const scan = Buffer.concat([sos, eobRuns(Math.ceil(width / 8) * Math.ceil(height / 8))]);
   const flood = Buffer.concat(Array<Buffer>(scans).fill(scan));
+
   return Buffer.concat([base.subarray(0, eoi), dht, flood, Buffer.from([0xff, 0xd9])]);
 }
 
@@ -169,12 +179,14 @@ export function pngChunk(type: string, data: Buffer): Buffer {
   const body = Buffer.concat([Buffer.from(type, 'latin1'), data]);
   const checksum = Buffer.alloc(4);
   checksum.writeUInt32BE(crc32(body));
+
   return Buffer.concat([length, body, checksum]);
 }
 
 // A chunk put just before IEND, after the image data, where readers that stop early miss it.
 export function withPngChunkAtEnd(png: Uint8Array, chunk: Buffer): Uint8Array {
   const end = png.byteLength - 12;
+
   return Buffer.concat([png.subarray(0, end), chunk, png.subarray(end)]);
 }
 
@@ -187,5 +199,6 @@ export async function animatedWebp(camera: boolean): Promise<Uint8Array> {
     join: { animated: true },
   });
   if (camera) image = image.withExif(CAMERA_EXIF);
+
   return new Uint8Array(await image.webp({ loop: 0 }).toBuffer());
 }

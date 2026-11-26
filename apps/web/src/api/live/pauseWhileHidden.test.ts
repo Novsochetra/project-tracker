@@ -6,6 +6,7 @@ let stop: () => void = () => undefined;
 function watch() {
   const target = { pause: vi.fn(), resume: vi.fn() };
   stop = pauseWhileHidden(target);
+
   return target;
 }
 
@@ -68,6 +69,7 @@ describe('pauseWhileHidden', () => {
       vi.advanceTimersByTime(HIDDEN_GRACE_MS - 1);
       becomeVisible();
     }
+
     vi.advanceTimersByTime(HIDDEN_GRACE_MS * 2);
     expect(target.pause).not.toHaveBeenCalled();
     expect(target.resume).not.toHaveBeenCalled();

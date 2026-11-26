@@ -34,5 +34,6 @@ export function useAttachmentList(
       attachments.forEach((attachment) => forget(attachment.id));
     },
   };
+
   return list;
 }

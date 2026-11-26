@@ -25,6 +25,7 @@ async function readUntil(reader: Reader, pattern: RegExp): Promise<string> {
     if (chunk.done) throw new Error(`Stream ended before ${String(pattern)}: ${text}`);
     text += decoder.decode(chunk.value, { stream: true });
   }
+
   return text;
 }
 
@@ -46,6 +47,7 @@ describe.each(DIALECTS)('deleting a chat (%s)', (dialect) => {
     const reader = (await api.app.request('/api/events', { headers })).body!.getReader();
     readers.push(reader);
     await readUntil(reader, /: connected\n\n/);
+
     return reader;
   }
 
@@ -60,6 +62,7 @@ describe.each(DIALECTS)('deleting a chat (%s)', (dialect) => {
     const job = (await next()).body;
     clock.advance(1_000);
     await finish(job?.run.id ?? '', { status: 'done', answer });
+
     return started.body.chat.id;
   }
 

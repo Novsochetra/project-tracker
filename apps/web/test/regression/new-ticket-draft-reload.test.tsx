@@ -28,6 +28,7 @@ const {
 
 function Opener({ projectKey }: { projectKey: string }) {
   const sheets = useSheets();
+
   return (
     <button type="button" onClick={() => sheets.open({ type: 'newTicket', projectKey })}>
       New ticket in {projectKey}
@@ -54,11 +55,13 @@ function loadApp(createTicket = vi.fn().mockResolvedValue(created)) {
       </ToastProvider>
     </Wrapper>,
   );
+
   return { createTicket, user: userEvent.setup() };
 }
 
 function reload() {
   cleanup();
+
   return loadApp();
 }
 

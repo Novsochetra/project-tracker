@@ -17,6 +17,7 @@ const columnOffset = (page: Page, index: number) =>
   board(page).evaluate((element, at) => {
     const column = element.querySelectorAll('[data-drop-group]')[at];
     if (!column) return null;
+
     return Math.round(column.getBoundingClientRect().left - element.getBoundingClientRect().left);
   }, index);
 

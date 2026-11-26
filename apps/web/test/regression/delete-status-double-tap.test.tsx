@@ -40,6 +40,7 @@ async function openEditor() {
   restore.push(stillClock());
   await tap(user, status);
   await advance(CLICK_SHIELD_MS);
+
   return { user, server };
 }
 

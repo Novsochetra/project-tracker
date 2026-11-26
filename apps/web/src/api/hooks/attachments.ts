@@ -24,9 +24,11 @@ export interface DeleteAttachmentVariables {
 export function useUploadAttachment(): TrackerMutation<Attachment, UploadAttachmentVariables> {
   const client = useApi();
   const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: async ({ file, ticketKey, onProgress, signal }: UploadAttachmentVariables) => {
       const { blob, fileName } = await prepareUpload(file);
+
       return client.uploadAttachment(blob, fileName, ticketKey, {
         onProgress: (sent, total) => onProgress?.(total > 0 ? sent / total : 0),
         signal,
@@ -45,6 +47,7 @@ export function useUploadAttachment(): TrackerMutation<Attachment, UploadAttachm
 export function useDeleteAttachment(): TrackerMutation<void, DeleteAttachmentVariables> {
   const client = useApi();
   const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: ({ attachmentId }: DeleteAttachmentVariables) =>
       client.deleteAttachment(attachmentId),
@@ -62,6 +65,7 @@ export function useDeleteAttachment(): TrackerMutation<void, DeleteAttachmentVar
 
 export function useAttachmentText(attachmentId: string | null): TrackerQuery<string> {
   const client = useApi();
+
   return useQuery({
     queryKey: queryKeys.attachmentText(attachmentId ?? ''),
     queryFn: () => client.fetchAttachmentText(attachmentId ?? ''),

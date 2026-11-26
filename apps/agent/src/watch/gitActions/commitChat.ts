@@ -27,6 +27,7 @@ async function commitPicked(context: StepContext, job: CommitJob): Promise<GitAc
   if (job.branch) {
     await step(context, 'git', ['switch', '--create', job.branch], "Couldn't make the branch.");
   }
+
   await step(context, 'git', ['add', '--', ...job.paths], "Couldn't stage the files.");
   await step(
     context,
@@ -38,6 +39,7 @@ async function commitPicked(context: StepContext, job: CommitJob): Promise<GitAc
     await step(context, 'git', ['rev-parse', 'HEAD'], "Couldn't read the commit.")
   ).trim();
   const branch = (await step(context, 'git', ['branch', '--show-current'], '')).trim();
+
   return { sha, ...(branch ? { branch } : {}) };
 }
 

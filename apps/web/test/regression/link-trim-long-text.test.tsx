@@ -29,6 +29,7 @@ afterEach(() => {
 function timedParts(text: string) {
   const start = performance.now();
   const parts = linkParts(text);
+
   return { parts, ms: performance.now() - start };
 }
 

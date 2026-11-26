@@ -36,5 +36,6 @@ export function stepIcon({ kind, label }: Pick<StepRow, 'kind' | 'label'>): Luci
   if (kind === 'denied') return Ban;
   if (kind === 'agent') return Bot;
   if (kind === 'text') return MessageSquareText;
+
   return TOOL_ICONS.find(([start]) => begins(label, start))?.[1] ?? Wrench;
 }

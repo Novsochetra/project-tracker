@@ -33,12 +33,14 @@ async function sendThatFails() {
       sending.reject(new TypeError('Failed to fetch'));
       await sending.promise.catch(() => undefined);
     });
+
   return { box, fail };
 }
 
 // Tab B: the same modules with memory of their own.
 async function otherTab() {
   vi.resetModules();
+
   return {
     comments: await import('../../src/features/ticket/activity/sentComments'),
     records: await import('../../src/lib/tabRecords'),

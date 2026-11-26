@@ -25,6 +25,7 @@ async function start(): Promise<Running> {
   const liveStreams = trackLiveStreams(server);
   await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
   running = { server, liveStreams, port: (server.address() as AddressInfo).port };
+
   return running;
 }
 
@@ -102,6 +103,7 @@ describe('stopping the server', () => {
     const exited = new Promise<number | undefined>((resolve) => {
       vi.spyOn(process, 'exit').mockImplementation((code) => {
         resolve(code as number | undefined);
+
         return undefined as never;
       });
     });

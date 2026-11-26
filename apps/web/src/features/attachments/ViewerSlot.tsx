@@ -21,6 +21,7 @@ function ViewerFailed({ opens, open, message }: { opens: number; open: boolean; 
   useEffect(() => {
     if (open) toast.show(message, { kind: 'error' });
   }, [opens, open, message, toast]);
+
   return null;
 }
 
@@ -28,6 +29,7 @@ function ViewerFailed({ opens, open, message }: { opens: number; open: boolean; 
 // (OpeningMark).
 export function ViewerSlot({ name, settled, opens, open, failure, children }: ViewerSlotProps) {
   if (opens === 0 || !settled) return null;
+
   // A failed part suspends for a moment before it throws.
   return (
     <ErrorBoundary

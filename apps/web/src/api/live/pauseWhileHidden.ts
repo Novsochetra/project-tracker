@@ -20,6 +20,7 @@ export function pauseWhileHidden(target: Pausable): () => void {
     paused = true;
     target.pause();
   };
+
   // A phone runs no timers while it suspends a hidden page, so the time hidden decides: the stream it
   // kept may have died meanwhile, and the page reads once, after a new stream opens.
   const hiddenLong = () => hiddenSince !== undefined && Date.now() - hiddenSince >= HIDDEN_GRACE_MS;
@@ -28,6 +29,7 @@ export function pauseWhileHidden(target: Pausable): () => void {
     paused = false;
     target.resume();
   };
+
   const onVisibilityChange = () => {
     clearTimeout(timer);
     if (isHidden()) {
@@ -35,12 +37,14 @@ export function pauseWhileHidden(target: Pausable): () => void {
       timer = setTimeout(pause, HIDDEN_GRACE_MS);
       return;
     }
+
     if (paused || hiddenLong()) resume();
     hiddenSince = undefined;
   };
 
   onVisibilityChange();
   document.addEventListener('visibilitychange', onVisibilityChange);
+
   return () => {
     clearTimeout(timer);
     document.removeEventListener('visibilitychange', onVisibilityChange);

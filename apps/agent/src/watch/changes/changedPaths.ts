@@ -26,5 +26,6 @@ export async function changedPaths(
   const parts = text.split('\0');
   // The last part is empty after the last NUL, or a path cut short.
   parts.pop();
+
   return { paths: parts.filter(Boolean), cut };
 }

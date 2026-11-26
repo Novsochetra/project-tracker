@@ -41,6 +41,7 @@ export function PullToRefresh({
     if (reducedMotion) pull.set(target);
     else spring(pull, target, SETTLE);
   };
+
   const refresh = () => {
     setRefreshing(true);
     settle(PULL_HOLD);

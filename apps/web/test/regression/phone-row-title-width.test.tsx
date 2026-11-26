@@ -36,6 +36,7 @@ function renderRow() {
   );
   const main = screen.getByRole('button', { name: /^MOB-18/ });
   const part = (selector: string) => main.querySelector(selector)!;
+
   return {
     main,
     title: screen.getByText(ticket.title),
@@ -56,6 +57,7 @@ function padding(style: Map<string, string>, side: 'left' | 'right'): number {
   const longhand = style.get(`padding-${side}`);
   if (longhand) return pixels(longhand);
   const [top, right = top, , left = right] = (style.get('padding') ?? '0').split(/\s+/);
+
   return pixels(side === 'left' ? left : right);
 }
 

@@ -23,6 +23,8 @@ export function sniffImageType(bytes: Uint8Array): SniffedType | null {
   if (text(bytes, 4, 8) === 'ftyp') {
     return HEIC_BRANDS.has(text(bytes, 8, 12)) ? 'image/heic' : 'image/heif';
   }
+
   const tiff = text(bytes, 0, 4);
+
   return tiff === 'II*\0' || tiff === 'MM\0*' ? 'image/tiff' : null;
 }

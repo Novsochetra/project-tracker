@@ -13,6 +13,7 @@ export interface CommandRowProps {
 
 export function CommandRow(props: CommandRowProps) {
   const { command, description, copyLabel, onCopy, step, wraps = false } = props;
+
   return (
     <li className={styles.row}>
       {step !== undefined && (

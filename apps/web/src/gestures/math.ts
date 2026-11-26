@@ -19,6 +19,7 @@ export function rubberBand(overflow: number, dimension: number, constant = 0.55)
   if (dimension <= 0 || overflow === 0) return 0;
   const magnitude = Math.abs(overflow);
   const stretched = (1 - 1 / ((magnitude * constant) / dimension + 1)) * dimension;
+
   return Math.sign(overflow) * stretched;
 }
 
@@ -30,6 +31,7 @@ export function rubberBandClamp(
 ): number {
   if (value < min) return min + rubberBand(value - min, dimension);
   if (value > max) return max + rubberBand(value - max, dimension);
+
   return value;
 }
 
@@ -37,5 +39,6 @@ export function lockAxis(dx: number, dy: number, slop = 8): Axis | null {
   const ax = Math.abs(dx);
   const ay = Math.abs(dy);
   if (Math.max(ax, ay) < slop) return null;
+
   return ax > ay ? 'x' : 'y';
 }

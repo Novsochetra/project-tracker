@@ -10,6 +10,7 @@ export function derivePrefix(name: string): string {
     .filter(Boolean);
   if (words.length === 0) return FALLBACK_PREFIX;
   if (words.length === 1) return (words[0] ?? '').slice(0, 3);
+
   return words
     .map((word) => word[0])
     .join('')
@@ -22,6 +23,7 @@ export function resolvePrefix(typed: string, name: string): string {
     .toUpperCase()
     .replace(/[^A-Z0-9]/g, '')
     .slice(0, MAX_PREFIX_LENGTH);
+
   return cleaned || FALLBACK_PREFIX;
 }
 
@@ -30,5 +32,6 @@ export function uniquePrefix(prefix: string, taken: ReadonlySet<string>): string
   for (let suffix = 2; taken.has(candidate); suffix++) {
     candidate = prefix.slice(0, 4) + String(suffix);
   }
+
   return candidate;
 }

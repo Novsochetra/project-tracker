@@ -37,6 +37,7 @@ export async function insertLink(
     usedBy: null,
   };
   await insertInvite(db, row);
+
   return { row, secret };
 }
 
@@ -45,6 +46,7 @@ export async function insertLink(
 export function linkProblem(row: InviteRow, now: number, messages: LinkMessages): string | null {
   if (row.usedAt !== null) return messages.used;
   if (row.expiresAt <= now) return messages.expired;
+
   return null;
 }
 
@@ -63,5 +65,6 @@ export async function requireUsableLink(
   if (!row) throw notFound(messages.failed);
   const problem = linkProblem(row, now, messages);
   if (problem) throw notFound(problem);
+
   return row;
 }

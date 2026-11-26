@@ -9,6 +9,7 @@ export interface LargeTitleProps {
 
 export function LargeTitle({ children, aside }: LargeTitleProps) {
   const ref = useLargeTitle<HTMLHeadingElement>();
+
   return (
     <div className={styles.row}>
       <h1 ref={ref} className={styles.title}>

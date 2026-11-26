@@ -34,5 +34,6 @@ export function createQueryClient(): QueryClient {
     },
   });
   reportPendingWrites(queryClient);
+
   return queryClient;
 }

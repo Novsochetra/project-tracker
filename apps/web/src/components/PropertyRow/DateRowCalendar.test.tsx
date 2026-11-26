@@ -22,6 +22,7 @@ function mockCalendarScreen(): () => void {
       dispatchEvent: () => false,
     }),
   });
+
   return () => {
     if (previous) Object.defineProperty(window, 'matchMedia', previous);
     else Reflect.deleteProperty(window, 'matchMedia');
@@ -36,6 +37,7 @@ function Harness({
   onChange: (value: string) => void;
 }) {
   const [value, setValue] = useState(initial);
+
   return (
     <DateRow
       value={value}
@@ -70,6 +72,7 @@ function setup(initial = '') {
   const onChange = vi.fn();
   const user = userEvent.setup();
   render(<Harness initial={initial} onChange={onChange} />);
+
   return { onChange, user };
 }
 
@@ -152,6 +155,7 @@ describe('DateRow on desktop', () => {
       expect(inCalendar(name)).toHaveFocus();
       expect(inCalendar(name)).toHaveAttribute('tabindex', '0');
     }
+
     expect(within(calendar()).getByRole('heading', { name: 'October 2026' })).toBeInTheDocument();
     await user.keyboard('{Enter}');
     expect(onChange).toHaveBeenCalledWith('2026-10-13');
@@ -270,6 +274,7 @@ describe('DateRow on desktop', () => {
       await user.tab();
       expect(inCalendar(name)).toHaveFocus();
     }
+
     await user.tab({ shift: true });
     expect(inCalendar('Next month')).toHaveFocus();
     await user.tab({ shift: true });

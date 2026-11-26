@@ -30,5 +30,6 @@ export function resolveTransition(input: TransitionInput): Transition {
   if (ours && intent.toPath === routePath(input.next)) return intent.animate ? base : 'none';
   // iOS Safari already animated its own back swipe; a second slide would play twice.
   if (input.kind === 'POP' && input.browserAnimatesPop) return 'none';
+
   return base;
 }

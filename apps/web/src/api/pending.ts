@@ -14,6 +14,7 @@ export interface BusyKeys {
 function readKey(variables: unknown, field: 'projectKey' | 'ticketKey'): string | undefined {
   if (typeof variables !== 'object' || variables === null) return undefined;
   const value: unknown = (variables as Record<string, unknown>)[field];
+
   return typeof value === 'string' && value ? value.toUpperCase() : undefined;
 }
 
@@ -21,6 +22,7 @@ export function targetsOf(variables: unknown): MutationTargets {
   const ticketKey = readKey(variables, 'ticketKey');
   const projectKey =
     readKey(variables, 'projectKey') ?? (ticketKey ? projectOfTicket(ticketKey) : undefined);
+
   return { projectKey, ticketKey };
 }
 
@@ -39,6 +41,7 @@ export function busyKeys(queryClient: QueryClient, settling?: unknown): BusyKeys
     const index = targets.findIndex((item) => sameTargets(item, own));
     if (index >= 0) targets.splice(index, 1);
   }
+
   return {
     projectKeys: new Set(targets.flatMap(({ projectKey }) => (projectKey ? [projectKey] : []))),
     ticketKeys: new Set(targets.flatMap(({ ticketKey }) => (ticketKey ? [ticketKey] : []))),

@@ -8,6 +8,7 @@ import { useNotificationOpen } from './useNotificationOpen';
 
 function Probe() {
   useNotificationOpen();
+
   return <p>{useLocation().pathname}</p>;
 }
 

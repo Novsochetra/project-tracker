@@ -23,6 +23,7 @@ export function slideIn(
     values.y.set(reduced ? 0 : travel);
     values.opacity.set(1);
   }
+
   return tween(values.y, 0, reduced ? INSTANT : SLIDE_IN);
 }
 
@@ -37,5 +38,6 @@ export function slideOut(
   // A flick keeps its speed on the way out instead of restarting from a standstill.
   if (velocity > 0)
     return spring(values.y, travel, { velocity, visualDuration: 0.24, restDelta: 1 }, onDone);
+
   return tween(values.y, travel, SLIDE_OUT, onDone);
 }

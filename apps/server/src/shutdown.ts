@@ -19,6 +19,7 @@ export function trackLiveStreams(server: Server): Set<Socket> {
     sockets.add(socket);
     socket.once('close', () => sockets.delete(socket));
   });
+
   return sockets;
 }
 

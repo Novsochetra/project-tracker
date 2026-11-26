@@ -17,6 +17,7 @@ export function startHunk(file: DiffFile, line: string): HunkState | null {
   if (!match) return null;
   const hunk: DiffHunk = { header: line, lines: [] };
   file.hunks.push(hunk);
+
   return {
     hunk,
     oldNext: Number(match[1]),
@@ -34,13 +35,16 @@ function lineOf(state: HunkState, mark: string, text: string): DiffLine | null {
     state.newLeft -= 1;
     return { kind: 'add', text, oldLine: null, newLine: state.newNext++ };
   }
+
   if (mark === '-') {
     state.oldLeft -= 1;
     return { kind: 'del', text, oldLine: state.oldNext++, newLine: null };
   }
+
   if (mark !== ' ' && mark !== '') return null;
   state.oldLeft -= 1;
   state.newLeft -= 1;
+
   return { kind: 'context', text, oldLine: state.oldNext++, newLine: state.newNext++ };
 }
 
@@ -54,6 +58,7 @@ export function addHunkLine(file: DiffFile, state: HunkState, line: string): voi
     state.newLeft = 0;
     return;
   }
+
   state.hunk.lines.push(diffLine);
   if (diffLine.kind === 'add') file.additions += 1;
   if (diffLine.kind === 'del') file.deletions += 1;

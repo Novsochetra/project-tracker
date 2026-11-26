@@ -9,6 +9,7 @@ const pressed = vi.fn();
 const press = (type: 'mousedown' | 'click', detail: number) => {
   const event = new MouseEvent(type, { bubbles: true, cancelable: true, detail });
   button.dispatchEvent(event);
+
   return event;
 };
 
@@ -87,6 +88,7 @@ describe("holdPresses on a screen's bars", () => {
     const control = document.createElement('button');
     control.addEventListener('click', pressed);
     element.append(control);
+
     return { element, control, move: () => void (box = new DOMRect(0, y + 10, 375, 50)) };
   };
 
@@ -94,6 +96,7 @@ describe("holdPresses on a screen's bars", () => {
     target.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, pointerType: 'touch' }));
     const event = new MouseEvent('click', { bubbles: true, cancelable: true, detail: 1 });
     target.dispatchEvent(event);
+
     return event;
   };
 
@@ -182,6 +185,7 @@ describe('holdPresses beside the scroller the note is in', () => {
     const control = document.createElement('button');
     control.addEventListener('click', pressed);
     element.append(control);
+
     return { element, control, move: () => void (now = new DOMRect(box.x, box.y + 10, 10, 10)) };
   };
 
@@ -189,6 +193,7 @@ describe('holdPresses beside the scroller the note is in', () => {
     target.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, pointerType: 'touch' }));
     const event = new MouseEvent('click', { bubbles: true, cancelable: true, detail: 1 });
     target.dispatchEvent(event);
+
     return event;
   };
 
@@ -196,6 +201,7 @@ describe('holdPresses beside the scroller the note is in', () => {
   const showing = (top: Element, bottom: Element, left: Element) => {
     document.elementFromPoint = (x: number, y: number) => {
       if (y === 0) return top;
+
       return x === 0 ? left : bottom;
     };
   };
@@ -207,6 +213,7 @@ describe('holdPresses beside the scroller the note is in', () => {
     const column = document.createElement('div');
     column.append(header.element, scroller);
     screen.append(sidebar.element, column);
+
     return { sidebar, header };
   };
 

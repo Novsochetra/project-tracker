@@ -29,6 +29,7 @@ describe('useUploadAttachment', () => {
     const uploadAttachment = vi.fn(
       (_file: Blob, _name: string, _key?: string, options?: UploadOptions) => {
         options?.onProgress?.(3, 4);
+
         return Promise.resolve(attachment('clip', { ticketId: null, mimeType: 'video/mp4' }));
       },
     );

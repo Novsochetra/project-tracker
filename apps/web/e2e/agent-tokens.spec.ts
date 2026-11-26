@@ -16,6 +16,7 @@ function tracker(args: string[], configPath: string, input?: string) {
   for (const name of ['TRACKER_URL', 'TRACKER_API_TOKEN', 'TRACKER_TOKEN', 'XDG_CONFIG_HOME']) {
     delete env[name];
   }
+
   return spawnSync(process.execPath, [CLI, ...args], { env, input, encoding: 'utf8' });
 }
 

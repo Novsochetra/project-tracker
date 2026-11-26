@@ -21,6 +21,7 @@ export function CalendarDateRow({
     onChange('');
     triggerRef.current?.focus({ preventScroll: true });
   };
+
   return (
     <div className={clsx('ring-inside', styles.row, className)}>
       <DateFace

@@ -10,6 +10,7 @@ export interface Broadcaster<T = ChangeNotice> {
 
 export function createBroadcaster<T = ChangeNotice>(): Broadcaster<T> {
   const listeners = new Set<Listener<T>>();
+
   return {
     publish(event) {
       for (const listener of listeners) {
@@ -22,6 +23,7 @@ export function createBroadcaster<T = ChangeNotice>(): Broadcaster<T> {
     },
     subscribe(listener) {
       listeners.add(listener);
+
       return () => listeners.delete(listener);
     },
     listenerCount: () => listeners.size,

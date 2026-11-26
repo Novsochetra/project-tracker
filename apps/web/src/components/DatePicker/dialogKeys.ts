@@ -33,7 +33,9 @@ export function useDialogKeys(panelRef: RefObject<HTMLElement | null>, onEscape:
         keepTabInside(event, panel);
       }
     };
+
     panel.addEventListener('keydown', onKeyDown);
+
     return () => panel.removeEventListener('keydown', onKeyDown);
   }, [panelRef, escape]);
 }

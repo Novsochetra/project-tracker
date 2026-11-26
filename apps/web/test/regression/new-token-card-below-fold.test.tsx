@@ -30,6 +30,7 @@ function mockMedia(matching: readonly string[]): () => void {
       removeEventListener: () => undefined,
     }),
   });
+
   return () => {
     if (previous) Object.defineProperty(window, 'matchMedia', previous);
     else Reflect.deleteProperty(window, 'matchMedia');
@@ -54,6 +55,7 @@ async function createToken() {
   });
   const user = userEvent.setup();
   await user.type(await screen.findByRole('textbox', { name: 'Token name' }), 'Work Mac{Enter}');
+
   return screen.findByRole('group', { name: 'New token Work Mac' });
 }
 

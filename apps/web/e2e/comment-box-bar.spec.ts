@@ -64,6 +64,7 @@ const hitAtCenter = (target: Locator) =>
   target.evaluate((element) => {
     const box = element.getBoundingClientRect();
     const hit = document.elementFromPoint(box.left + box.width / 2, box.top + box.height / 2);
+
     return hit !== null && element.contains(hit);
   });
 
@@ -72,6 +73,7 @@ const scrollTop = (page: Page) => scroller(page).evaluate((element) => element.s
 const gapAboveBar = (page: Page) =>
   commentField(page).evaluate((field) => {
     const bar = document.querySelector('[data-bottom-bar]')!.getBoundingClientRect();
+
     return bar.top - field.closest('form')!.getBoundingClientRect().bottom;
   });
 
@@ -201,6 +203,7 @@ test.describe('phone bottom bar and the comment box', () => {
     // Mobile WebKit has no wheel, and Playwright no touch drag.
     const left = await scroller(page).evaluate((element) => {
       element.scrollBy({ top: -200 });
+
       return element.scrollTop;
     });
     await settle(page);

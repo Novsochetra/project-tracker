@@ -10,11 +10,13 @@ import { isSafeToReload } from '../../src/pwa/reloadPolicy';
 
 function Marker({ id }: { id: string }) {
   useDraftMark(id, true);
+
   return null;
 }
 
 function TwoMarkers() {
   const [first, setFirst] = useState(true);
+
   return (
     <>
       {first && <Marker id="comment:MOB-3" />}

@@ -8,8 +8,10 @@ export function fakeLockManager(): LockManager {
       held.add(name);
       return Promise.resolve();
     }
+
     return new Promise((resolve) => waiting.set(name, [...(waiting.get(name) ?? []), resolve]));
   };
+
   // The next request in line gets the lock directly, so no one can take it in between.
   const handOver = (name: string) => {
     const [next, ...rest] = waiting.get(name) ?? [];
@@ -43,6 +45,7 @@ export function fakeLockManager(): LockManager {
 
 export function installLockManager(locks: LockManager): () => void {
   Object.defineProperty(navigator, 'locks', { configurable: true, value: locks });
+
   return () => {
     Reflect.deleteProperty(navigator, 'locks');
   };

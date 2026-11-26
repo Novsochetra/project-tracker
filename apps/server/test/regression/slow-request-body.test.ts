@@ -36,6 +36,7 @@ interface Sent {
 // Sends the first byte of a three-byte body, waits, then the other two.
 function sendSlowly(method: string, path: string, pauseMs: number): Promise<Sent> {
   const started = Date.now();
+
   return new Promise((resolve, reject) => {
     const req = request({
       host: '127.0.0.1',

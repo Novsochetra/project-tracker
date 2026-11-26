@@ -5,6 +5,7 @@ export function lineEnds(element: HTMLElement): number[] {
   if (element instanceof HTMLTextAreaElement || typeof range.getClientRects !== 'function') {
     return [];
   }
+
   const top = element.getBoundingClientRect().top;
   const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT);
   const ends: number[] = [];
@@ -12,5 +13,6 @@ export function lineEnds(element: HTMLElement): number[] {
     range.selectNodeContents(node);
     for (const rect of range.getClientRects()) ends.push(rect.bottom - top);
   }
+
   return ends;
 }

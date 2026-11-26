@@ -9,6 +9,7 @@ export function hitTest(spot: Element, under: Element): Element {
   for (let node: Element | null = spot; node && node !== document.body; node = node.parentElement) {
     if (node.isConnected && !node.closest('[inert]')) return node;
   }
+
   return screen.queryByRole('button', { name: /^Close (menu|calendar)$/, hidden: true }) ?? under;
 }
 

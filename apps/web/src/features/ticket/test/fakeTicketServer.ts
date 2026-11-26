@@ -6,6 +6,7 @@ const REQUEST_MS = 5;
 
 function withFields(detail: TicketDetail, input: UpdateTicketInput): TicketDetail {
   const assignee = input.assignee?.trim();
+
   return {
     ...detail,
     ticket: { ...detail.ticket, ...input, ...(assignee === undefined ? {} : { assignee }) },
@@ -16,6 +17,7 @@ function withCommentText(detail: TicketDetail, activityId: string, text: string)
   const activity = detail.activity.map((item) =>
     item.id === activityId ? { ...item, text: text.trim(), editedAt: Date.now() } : item,
   );
+
   return { ...detail, activity };
 }
 
@@ -36,16 +38,19 @@ export function fakeTicketServer(initial: TicketDetail) {
     updateTicket: vi.fn((_key: string, input: UpdateTicketInput) =>
       answer(() => {
         detail = withFields(detail, input);
+
         return detail.ticket;
       }),
     ),
     updateComment: vi.fn((activityId: string, input: { text: string }) =>
       answer(() => {
         detail = withCommentText(detail, activityId, input.text);
+
         return detail.activity.find((item) => item.id === activityId) as Activity;
       }),
     ),
   };
+
   return {
     client,
     get detail() {

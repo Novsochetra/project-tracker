@@ -14,5 +14,6 @@ export function useRevealWaiting({ loaded, waiting }: Pick<RunRequests, 'loaded'
     const card = cardsRef.current?.querySelector<HTMLElement>('[data-open]');
     if (waiting && card) revealInSight(card);
   }, [loaded, waiting]);
+
   return cardsRef;
 }

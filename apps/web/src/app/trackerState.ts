@@ -18,6 +18,7 @@ export function nextState(
 ): TrackerState {
   if (signal === 'unreachable') return { ...state, answers: false };
   if (signal === 'reachable') return fromCheck ? { ...state, answers: true } : ANSWERING;
+
   // The first saved read leaves it to the next check to say the tracker answers, and that answer
   // reads the project list, which clears the banner when reads are quick again. Later ones say
   // nothing new: each would make the next check's answer read the list again, in a loop.

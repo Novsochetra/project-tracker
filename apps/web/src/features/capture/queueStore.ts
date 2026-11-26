@@ -24,6 +24,7 @@ function readRaw(): string | null {
 export function readQueue(): CaptureQueue {
   const raw = readRaw();
   if (raw !== cached.raw) cached = { raw, queue: parseQueue(raw) };
+
   return cached.queue;
 }
 
@@ -36,7 +37,9 @@ export function updateQueue(change: (queue: CaptureQueue) => CaptureQueue): bool
   } catch {
     return false;
   }
+
   listeners.forEach((listener) => listener());
+
   return true;
 }
 
@@ -47,8 +50,10 @@ export function subscribeQueue(listener: () => void): () => void {
   const onStorage = (event: StorageEvent) => {
     if (event.key === QUEUE_STORAGE_KEY || event.key === null) listener();
   };
+
   listeners.add(listener);
   window.addEventListener('storage', onStorage);
+
   return () => {
     listeners.delete(listener);
     window.removeEventListener('storage', onStorage);

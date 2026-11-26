@@ -56,6 +56,7 @@ async function readTicket(client: TrackerClient, queryClient: QueryClient, ticke
 export function useTicket(ticketKey: string): TrackerQuery<TicketDetail> {
   const client = useApi();
   const queryClient = useQueryClient();
+
   return useQuery({
     queryKey: queryKeys.ticket(ticketKey),
     queryFn: () => readTicket(client, queryClient, ticketKey),
@@ -65,6 +66,7 @@ export function useTicket(ticketKey: string): TrackerQuery<TicketDetail> {
 export function useCreateTicket(): TrackerMutation<CreatedTicket, CreateTicketVariables> {
   const client = useApi();
   const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: ({ projectKey, input }: CreateTicketVariables) =>
       client.createTicket(projectKey, input),
@@ -89,6 +91,7 @@ export function useCreateTicket(): TrackerMutation<CreatedTicket, CreateTicketVa
 export function useDeleteTicket(): TrackerMutation<void, DeleteTicketVariables> {
   const client = useApi();
   const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: ({ ticketKey }: DeleteTicketVariables) => client.deleteTicket(ticketKey),
     onMutate: ({ ticketKey }) =>
@@ -108,6 +111,7 @@ export function useDeleteTicket(): TrackerMutation<void, DeleteTicketVariables> 
 export function useMarkSent(): TrackerMutation<Ticket, MarkSentVariables> {
   const client = useApi();
   const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: ({ ticketKey, input }: MarkSentVariables) => client.markSent(ticketKey, input),
     onSuccess: (ticket, { ticketKey }) =>

@@ -52,12 +52,14 @@ export async function advanceBatchTicket(
       .execute();
     return [];
   }
+
   if (category === 'todo') return [];
   const ended = await ofTicket
     .set({ status: 'done', error: null, endedAt: at })
     .where('status', 'in', ACTIVE_RUN_STATUSES)
     .returning('id')
     .execute();
+
   return ended.map(({ id }) => id);
 }
 

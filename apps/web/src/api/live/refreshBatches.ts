@@ -6,6 +6,7 @@ import { queryKeys, rootOf } from '../queryKeys';
 const isOpenBatch = ({ queryKey, state }: Query): boolean => {
   if (rootOf(queryKey) !== 'runBatch') return false;
   const status = (state.data as RunBatch | undefined)?.status;
+
   return status === undefined || status === 'queued' || status === 'running';
 };
 

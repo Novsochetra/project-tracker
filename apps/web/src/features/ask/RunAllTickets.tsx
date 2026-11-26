@@ -22,6 +22,7 @@ export function RunAllHead() {
 
 export function RunAllTickets({ tickets }: { tickets: readonly RunAllTicket[] }) {
   if (tickets.length === 0) return null;
+
   return (
     <ul className={styles.tickets} aria-label="Tickets">
       {tickets.map(({ ticketKey, ticketTitle, state }) => (

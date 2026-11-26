@@ -33,6 +33,7 @@ describe.each(DIALECTS)('push when a chat answer ends (%s)', (dialect) => {
   const subscribe = async (as: Caller) => {
     const device = newDevice();
     expect((await as('PUT', '/api/push/subscription', device.subscription)).status).toBe(204);
+
     return device;
   };
 
@@ -43,6 +44,7 @@ describe.each(DIALECTS)('push when a chat answer ends (%s)', (dialect) => {
     });
     const job = await helper<RunJob>('POST', `/api/runners/${runner}/next?kind=ask`);
     await helper('POST', `/api/runs/${job.body.run.id}/finish`, finish);
+
     return started.body.chat;
   }
 

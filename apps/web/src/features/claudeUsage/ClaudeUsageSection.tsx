@@ -16,6 +16,7 @@ export function ClaudeUsageSection() {
   const headingId = useId();
   const failed = usage.isError && !usage.data;
   if (!failed && !usage.data?.length) return null;
+
   return (
     <section aria-labelledby={headingId} className={styles.section}>
       <h2 id={headingId} className={styles.heading}>

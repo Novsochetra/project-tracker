@@ -13,6 +13,7 @@ const MAX_VIEWERS = 10_000;
 
 export function createChatViewers(now: Clock): ChatViewers {
   const viewing = new Map<string, { chatId: string; until: number }>();
+
   return {
     view: (sessionId, chatId) => {
       viewing.delete(sessionId);
@@ -23,6 +24,7 @@ export function createChatViewers(now: Clock): ChatViewers {
     shows: (sessionId, chatId) => {
       if (sessionId === null || chatId === null) return false;
       const seen = viewing.get(sessionId);
+
       return seen !== undefined && seen.chatId === chatId && seen.until > now();
     },
   };

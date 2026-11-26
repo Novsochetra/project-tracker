@@ -10,6 +10,7 @@ function transfer(files: File[], types = ['Files']) {
 
 function Zone({ onFiles }: { onFiles: (files: File[]) => void }) {
   const drop = useFileDrop(onFiles);
+
   return (
     <div data-testid="zone" data-active={drop.active} {...drop.handlers}>
       <span data-testid="child">Description</span>
@@ -59,6 +60,7 @@ describe('pasteFiles', () => {
   function paste(target: HTMLElement, clipboardData: object) {
     const event = createEvent.paste(target, { clipboardData });
     fireEvent(target, event);
+
     return event;
   }
 

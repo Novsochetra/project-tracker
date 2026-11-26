@@ -17,15 +17,18 @@ export function ProjectOptionsMenu({ projectKey }: { projectKey: string }) {
     close();
     triggerRef.current?.focus();
   };
+
   const run = (action: () => void) => {
     dismiss();
     action();
   };
+
   const toggle = () => {
     setConfirming(false);
     options.resetDelete();
     setOpen(!open);
   };
+
   return (
     <Popover
       open={open}

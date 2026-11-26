@@ -19,6 +19,7 @@ function setup() {
   const api = setupApi();
   api.queryClient.setQueryData(queryKeys.ticket('MOB-1'), makeTicketDetail());
   api.queryClient.setQueryData(queryKeys.ticketQuestions('MOB-1'), []);
+
   return api.queryClient;
 }
 

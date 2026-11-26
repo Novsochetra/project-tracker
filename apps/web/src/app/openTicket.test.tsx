@@ -16,11 +16,13 @@ import { TrackerApp } from './TrackerApp';
 const gate = vi.hoisted(() => {
   let open = () => undefined as void;
   const arrived = new Promise<void>((resolve) => (open = resolve));
+
   return { arrived, open: () => open() };
 });
 
 vi.mock('../features/ticket/TicketScreen', async (importOriginal) => {
   await gate.arrived;
+
   return importOriginal();
 });
 

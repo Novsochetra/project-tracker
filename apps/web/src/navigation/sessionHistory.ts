@@ -19,15 +19,18 @@ export class SessionHistory {
       this.index += 1;
       return;
     }
+
     if (kind === 'REPLACE' && current) {
       this.entries[this.index] = { key, path };
       return;
     }
+
     const found = this.entries.findIndex((entry) => entry.key === key);
     if (found >= 0) {
       this.index = found;
       return;
     }
+
     this.entries = [{ key, path }];
     this.index = 0;
   }

@@ -89,6 +89,7 @@ export function snapTrack(values: ViewerValues, page: number, stride: number, mo
 
 function twoPointers(state: GestureState): [Point, Point] | null {
   const [a, b] = [...state.pointers.values()];
+
   return a && b ? [a, b] : null;
 }
 
@@ -98,6 +99,7 @@ export function beginPinch(state: GestureState, ctx: ViewerGestureContext): void
   if (state.mode === 'page') {
     snapTrack(ctx.values, ctx.index, pageStride(ctx.viewport), { reduced: ctx.reducedMotion });
   }
+
   if (state.mode === 'dismiss') resetDismiss(ctx.values, ctx.reducedMotion);
   stopZoom(ctx.values);
   const mid = fromCentre(ctx.viewport, midpoint(...pair));
@@ -128,6 +130,7 @@ function decideMode(state: GestureState, dx: number, dy: number): GestureMode {
   if (isZoomed(state.startZoom)) return Math.hypot(dx, dy) > TAP_SLOP ? 'pan' : 'pending';
   const axis = lockAxis(dx, dy, TAP_SLOP);
   if (axis === null) return 'pending';
+
   return axis === 'x' ? 'page' : 'dismiss';
 }
 
@@ -171,6 +174,7 @@ function releasePan(ctx: ViewerGestureContext, velocity: Point): void {
     animateZoom(values, settleZoom(readZoom(values), { x: 0, y: 0 }, base, viewport), true);
     return;
   }
+
   glide(values.x, { velocity: velocity.x, min: -limits.x, max: limits.x });
   glide(values.y, { velocity: velocity.y, min: -limits.y, max: limits.y });
 }

@@ -39,6 +39,7 @@ function useDismissal(onDismiss: () => void, focusTo: FileNoteProps['focusTo']) 
     flushSync(onDismiss);
     focusFirst([focusTo?.(), ...next]);
   };
+
   return {
     onPointerDown: (event: PointerEvent<HTMLButtonElement>) =>
       presses.current?.press(event, event.currentTarget),
@@ -50,6 +51,7 @@ function useDismissal(onDismiss: () => void, focusTo: FileNoteProps['focusTo']) 
         dismissFromFocus(event.currentTarget);
         return;
       }
+
       holdPresses(event.currentTarget);
       onDismiss();
     },
@@ -58,6 +60,7 @@ function useDismissal(onDismiss: () => void, focusTo: FileNoteProps['focusTo']) 
 
 export function FileNote({ notice, onDismiss, focusTo, className, ref }: FileNoteProps) {
   const dismissal = useDismissal(onDismiss, focusTo);
+
   return (
     <div ref={ref} role="alert" className={clsx(styles.note, 'fade-in', className)}>
       <Icon icon={CircleAlert} size={14} className={styles.icon} />
@@ -88,9 +91,11 @@ export interface FileNotesProps {
 export function FileNotes({ notices, onDismiss, className }: FileNotesProps) {
   const lateRef = useRef<HTMLDivElement>(null);
   useToastIfUnseen(lateRef, notices.failed);
+
   return NOTICE_PROBLEMS.map((problem) => {
     const notice = notices[problem];
     if (!notice) return null;
+
     return (
       <FileNote
         key={problem}

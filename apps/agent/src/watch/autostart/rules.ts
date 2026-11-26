@@ -41,5 +41,6 @@ export function privacyNote(
   );
   if (guarded.length === 0) return undefined;
   const where = guarded.join(' and ');
+
   return `This folder or the tracker CLI is in ${where}, which macOS guards. Started at login, node has to be allowed in System Settings → Privacy & Security → Files and Folders (or Full Disk Access), and again after a node upgrade. Keeping both outside ${where}, like in ~/code, avoids that.`;
 }

@@ -26,6 +26,7 @@ const capture = (id: string, title: string): QueuedCapture => ({
 
 const ticket = (title: string): Ticket => {
   const { commentCount: _c, attachmentCount: _a, ...rest } = listItem(1, STATUS.todo, 0, { title });
+
   return rest;
 };
 

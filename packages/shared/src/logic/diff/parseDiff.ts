@@ -21,6 +21,7 @@ function readLine(reading: Reading, line: string): void {
     reading.hunk = startHunk(reading.file, line) ?? reading.hunk;
     return;
   }
+
   if (!reading.hunk) readHeaderLine(reading.file, line);
 }
 
@@ -39,6 +40,8 @@ export function parseDiff(text: string): DiffFile[] {
       readLine(reading, line);
     }
   }
+
   if (reading) files.push(done(reading));
+
   return files;
 }

@@ -53,6 +53,7 @@ export async function takeTicketNumber(db: Db, projectId: string): Promise<numbe
     .where('id', '=', projectId)
     .returning('nextNum')
     .executeTakeFirstOrThrow();
+
   return Number(row.nextNum) - 1;
 }
 
@@ -93,6 +94,7 @@ export async function ticketStatsByProject(
     ])
     .groupBy('tickets.projectId')
     .execute();
+
   return rows.map((row) => ({
     projectId: row.projectId,
     total: Number(row.total),

@@ -12,9 +12,11 @@ let asked: number[];
 function watch(recheck: () => Promise<unknown> = () => Promise.resolve()) {
   const ask = vi.fn(() => {
     asked.push(Date.now() - started);
+
     return recheck();
   });
   stop = recheckWhileUnreachable(reachability, ask);
+
   return ask;
 }
 

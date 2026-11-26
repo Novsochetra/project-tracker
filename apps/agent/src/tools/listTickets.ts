@@ -35,6 +35,7 @@ export const listTickets = defineTool({
       label: label?.name,
       q: input.query,
     });
+
     return { text: formatTicketList(tickets, statuses, labels), data: tickets };
   },
 });

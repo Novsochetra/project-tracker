@@ -21,6 +21,7 @@ export function BottomBar({ children }: BottomBarProps) {
   useKeepFieldInSight(barRef, screen?.scrollRef, editing);
   useKeepSentFormInSight(barRef, screen?.scrollRef, isPhone && isTop);
   if (!isPhone) return null;
+
   return (
     <div
       ref={barRef}

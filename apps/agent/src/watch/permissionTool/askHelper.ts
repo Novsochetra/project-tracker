@@ -5,6 +5,7 @@ export const HELPER_GONE = "The tracker helper didn't answer, so this was not al
 
 const isDecision = (value: unknown): value is PromptDecision => {
   const behavior = (value as { behavior?: unknown } | null)?.behavior;
+
   return behavior === 'allow' || behavior === 'deny';
 };
 
@@ -21,6 +22,7 @@ export function askHelper(
       socket.destroy();
       resolve(decision);
     };
+
     signal?.addEventListener('abort', () => done(deny(HELPER_GONE)), { once: true });
     socket.setEncoding('utf8');
     socket.on('connect', () => socket.write(`${JSON.stringify(args)}\n`));

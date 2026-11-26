@@ -26,6 +26,7 @@ export function RunStepsSheet({ open, onClose, runId, ticketKey }: RunStepsSheet
   const listRef = useRef<HTMLDivElement>(null);
   const isPhone = useIsPhone();
   useFollowEnd(listRef, seq);
+
   return (
     <Sheet
       open={open}

@@ -97,6 +97,7 @@ function ActionSheetPanel(props: ActionSheetProps & { onExited: () => void }) {
 export function ActionSheet(props: ActionSheetProps) {
   const { mounted, onExited } = usePresence(props.open);
   if (!mounted) return null;
+
   return createPortal(
     <MotionScope>
       <ActionSheetPanel {...props} onExited={onExited} />

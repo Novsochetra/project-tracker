@@ -43,6 +43,7 @@ async function openProjectSheet(page: Page): Promise<Locator> {
   await expect(sheet).toBeVisible();
   await settled(sheet);
   await restingTop(sheet);
+
   return sheet;
 }
 
@@ -56,6 +57,7 @@ async function expectTopInSight(sheet: Locator, top: Locator): Promise<void> {
 const scrollToEnd = (sheet: Locator): Promise<number> =>
   cardOf(sheet).evaluate((card) => {
     card.scrollTop = card.scrollHeight;
+
     return card.scrollTop;
   });
 
@@ -70,6 +72,7 @@ const shareOfCutRow = (sheet: Locator): Promise<number> =>
         return (bottom - box.top) / box.height;
       }
     }
+
     return 0;
   });
 
@@ -95,6 +98,7 @@ async function touchDrag(cdp: CDPSession, from: Point, to: Point): Promise<void>
     };
     await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [point] });
   }
+
   await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
 }
 
@@ -287,6 +291,7 @@ test.describe('action sheets on a short phone screen', () => {
       const point = { x: start.x, y: start.y - step * 10 };
       await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [point] });
     }
+
     expect(await topOf(sheet)).toBeLessThan(rest);
     await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
     await expect(sheet).toBeVisible();

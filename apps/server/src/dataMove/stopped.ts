@@ -19,5 +19,6 @@ export const stoppedLine = (phase: MovePhase): string => STOPPED_LINES[phase];
 // The error's own message first, then what it means for the rows.
 export function stoppedError(error: unknown, phase: MovePhase): Error {
   const message = error instanceof Error ? error.message : String(error);
+
   return new Error(`${message}\n${stoppedLine(phase)}`, { cause: error });
 }

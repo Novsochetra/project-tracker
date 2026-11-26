@@ -14,6 +14,7 @@ export interface AnswerQuestionVariables {
 // Read again on the ticket's change events, a ticket run's end and a reconnect (api/live).
 export function useTicketQuestions(ticketKey: string): TrackerQuery<TicketQuestion[]> {
   const client = useApi();
+
   return useQuery({
     queryKey: queryKeys.ticketQuestions(ticketKey),
     queryFn: () => client.listQuestions(ticketKey),
@@ -28,6 +29,7 @@ export function useAnswerQuestion(
   const client = useApi();
   const queryClient = useQueryClient();
   const queryKey = queryKeys.ticketQuestions(ticketKey);
+
   return useMutation({
     mutationFn: ({ questionId, input }: AnswerQuestionVariables) =>
       client.answerQuestion(questionId, input),

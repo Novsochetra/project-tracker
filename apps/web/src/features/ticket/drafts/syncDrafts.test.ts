@@ -34,6 +34,7 @@ function deps(tickets: Record<string, TicketDetail | Error>): DraftSyncDeps {
   return {
     fetchTicket: vi.fn((key: string) => {
       const answer = tickets[key] ?? new Error(`No answer for ${key}`);
+
       return answer instanceof Error ? Promise.reject(answer) : Promise.resolve(answer);
     }),
     save: vi.fn(() => Promise.resolve()),

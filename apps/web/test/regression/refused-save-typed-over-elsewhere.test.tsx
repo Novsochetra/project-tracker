@@ -25,6 +25,7 @@ afterEach(() => {
 // Tab B: the same modules with memory of their own, as in another tab.
 async function otherTab() {
   vi.resetModules();
+
   return import('../../src/lib/storedDrafts');
 }
 
@@ -46,6 +47,7 @@ function trackerWithHangingSave() {
   };
   const rendered = renderTicket({ client });
   cleanups.push(rendered.restorePhone);
+
   return {
     client,
     saveElsewhere: (text: string) => (title = text),

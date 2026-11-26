@@ -17,6 +17,7 @@ export interface RowCallbackInput {
 
 export function useOpenTicket(projectKey: string): (ticket: TicketListItem) => void {
   const { push } = useNavigation();
+
   return useCallback(
     (ticket: TicketListItem) => {
       if (consumeClickGuard()) return;
@@ -29,6 +30,7 @@ export function useOpenTicket(projectKey: string): (ticket: TicketListItem) => v
 // The screen opens a ticket under its project's key, which the ticket's own key starts with.
 export function useIsOpeningTicket(ticket: TicketListItem): boolean {
   const projectKey = parseTicketKey(ticket.key)?.projectKey ?? '';
+
   return useIsOpening({ name: 'ticket', key: projectKey, num: ticket.num });
 }
 
@@ -40,6 +42,7 @@ export function useRowCallbacks({
 }: RowCallbackInput): RowCallbacks {
   const open = useOpenTicket(projectKey);
   const changeStatus = useStatusChange();
+
   return useMemo<RowCallbacks>(
     () => ({
       open,

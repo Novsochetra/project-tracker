@@ -20,6 +20,7 @@ export function viewerTarget(
       const images = attachments.filter(isImage);
       return { kind: 'image', images, index: images.indexOf(attachment) };
     }
+
     case 'video':
       return { kind: 'video', attachment };
     case 'text':

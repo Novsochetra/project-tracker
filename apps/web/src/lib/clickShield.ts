@@ -24,6 +24,7 @@ export function useClickShield(shown?: unknown): (event: MouseEvent) => void {
   useLayoutEffect(() => {
     shownAt.current = performance.now();
   }, [shown]);
+
   return useCallback((event: MouseEvent) => {
     if (!isShielded(event.detail, shownAt.current, performance.now())) return;
     event.preventDefault();
@@ -42,10 +43,12 @@ export const isAimedClick = (pointerType: string | null, detail: number): boolea
 export function useTapShield(shown?: unknown) {
   const shield = useClickShield(shown);
   const presses = usePresses();
+
   return useMemo(() => {
     const hold = (event: MouseEvent) => {
       if (!isAimedClick(presses.current?.pointer() ?? null, event.detail)) shield(event);
     };
+
     return {
       onPointerDownCapture: (event: PointerEvent) =>
         presses.current?.press(event, event.currentTarget),

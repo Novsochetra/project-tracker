@@ -29,6 +29,7 @@ const ticketIn = (projectKey: string, input: CreateTicketInput): Ticket => {
     description: input.description ?? '',
     priority: input.priority ?? 'medium',
   });
+
   return ticket;
 };
 
@@ -39,6 +40,7 @@ const creates = () =>
 
 function Opener() {
   const sheets = useSheets();
+
   return (
     <button type="button" onClick={() => sheets.open({ type: 'capture' })}>
       Capture
@@ -58,6 +60,7 @@ function loadApp(createTicket = creates()) {
       client: { listProjects: vi.fn().mockResolvedValue(PROJECTS), createTicket },
     },
   );
+
   return { createTicket, user: userEvent.setup() };
 }
 

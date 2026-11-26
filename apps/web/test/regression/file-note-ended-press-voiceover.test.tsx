@@ -30,6 +30,7 @@ async function refusedNote() {
   await userEvent
     .setup({ applyAccept: false })
     .upload(shown.input(), [new File(['<svg/>'], 'notes.svg', { type: 'image/svg+xml' })]);
+
   return waitFor(() => within(area().getByRole('alert')).getByRole('button', { name: 'Dismiss' }));
 }
 

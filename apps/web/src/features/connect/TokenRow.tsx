@@ -23,6 +23,7 @@ export function TokenRow({ token, now }: TokenRowProps) {
     if (event.detail !== 0) holdPresses(event.currentTarget);
     setConfirming(true);
   };
+
   const confirm = () =>
     revoke.mutate(token.id, { onSuccess: () => toast.show(`Revoked “${token.name}”`) });
   if (confirming) {
@@ -44,6 +45,7 @@ export function TokenRow({ token, now }: TokenRowProps) {
       </li>
     );
   }
+
   return (
     <li className={shared.row}>
       <span className={shared.rowText}>

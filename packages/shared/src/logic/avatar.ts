@@ -25,5 +25,6 @@ export function avatarColor(name: string): string {
   const trimmed = name.trim();
   let sum = 0;
   for (let index = 0; index < trimmed.length; index++) sum += trimmed.charCodeAt(index);
+
   return AVATAR_COLORS[sum % AVATAR_COLORS.length] ?? AVATAR_COLORS[0];
 }

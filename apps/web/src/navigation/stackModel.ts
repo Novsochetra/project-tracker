@@ -28,6 +28,7 @@ function stackLayers(route: Route, previous: StackLayer[]): StackLayer[] {
   return routeStack(route).map((level) => {
     const path = routePath(level);
     const kept = previous.find((layer) => layer.path === path && !layer.exiting);
+
     return kept ?? { path, route: level, exiting: false };
   });
 }
@@ -52,11 +53,13 @@ function settledModel(
 
 export function createStackModel(locationKey: string, route: Route, animate: boolean): StackModel {
   const model = settledModel(locationKey, route, stackLayers(route, []), 0);
+
   return animate ? { ...model, animation: 'initial', front: model.path } : model;
 }
 
 function exitingLayer(prev: StackModel): StackLayer {
   const current = prev.layers.find((layer) => layer.path === prev.path && !layer.exiting);
+
   return { path: prev.path, route: current?.route ?? prev.route, exiting: true };
 }
 
@@ -74,16 +77,19 @@ export function advanceStackModel(
     const layers = keepsPrevTop ? next.layers : [...below, exitingLayer(prev), ...top];
     return { ...next, layers, animation: 'push', front: next.path, back: prev.path };
   }
+
   if (transition === 'pop' && !keepsPrevTop) {
     const layers = [...next.layers, exitingLayer(prev)];
     return { ...next, layers, animation: 'pop', front: prev.path, back: next.path };
   }
+
   return next;
 }
 
 export function settleStackModel(model: StackModel): StackModel {
   if (model.animation === 'none') return model;
   const layers = model.layers.filter((layer) => !layer.exiting);
+
   return settledModel(model.locationKey, model.route, layers, model.id);
 }
 
@@ -92,5 +98,6 @@ export function layerRole(model: StackModel, swipe: SwipePair | null, path: stri
   if (pair === null) return path === model.path ? 'top' : 'hidden';
   if (path === pair.front) return 'front';
   if (path === pair.back) return 'back';
+
   return 'hidden';
 }

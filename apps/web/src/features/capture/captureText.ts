@@ -9,5 +9,6 @@ export function parseCaptureText(value: unknown): CaptureText | undefined {
   if (typeof title !== 'string' || typeof description !== 'string' || !isPriority(priority)) {
     return undefined;
   }
+
   return { title, description, priority };
 }

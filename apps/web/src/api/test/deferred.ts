@@ -11,5 +11,6 @@ export function deferred<T>(): Deferred<T> {
     resolve = onResolve;
     reject = onReject;
   });
+
   return { promise, resolve, reject };
 }

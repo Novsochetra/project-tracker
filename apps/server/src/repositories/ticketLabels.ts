@@ -19,6 +19,7 @@ function byTicket(rows: readonly { ticketId: string; labelId: string }[]): Label
   const map = new Map<string, string[]>();
   for (const { ticketId, labelId } of rows)
     map.set(ticketId, [...(map.get(ticketId) ?? []), labelId]);
+
   return map;
 }
 

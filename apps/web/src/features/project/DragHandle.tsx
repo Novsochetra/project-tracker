@@ -27,6 +27,7 @@ function useStopTouchStart(ref: RefObject<HTMLElement | null>): void {
     if (!handle) return;
     const stop = (event: TouchEvent) => event.stopPropagation();
     handle.addEventListener('touchstart', stop, { passive: true });
+
     return () => handle.removeEventListener('touchstart', stop);
   }, [ref]);
 }
@@ -41,6 +42,7 @@ export function DragHandle({ ticket, onPointerDown, onKeyDown, className }: Drag
       handle.focus();
     }
   });
+
   return (
     <button
       ref={ref}

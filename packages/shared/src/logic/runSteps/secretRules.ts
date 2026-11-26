@@ -98,6 +98,7 @@ export const SECRET_RULES: readonly SecretRule[] = [
     'g',
     (m, head = '', name = '', value = '') => {
       if (!secretName(name)) return m;
+
       return (head.endsWith('=') ? !reference(value) : looksSecret(value)) ? masked(head) : m;
     },
   ),

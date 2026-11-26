@@ -45,6 +45,7 @@ async function resolveBlock(
   if (!ref) return { block, scope: null, target: null };
   const scope = await loadTicketScope(db, ref);
   const next = block.category ? resolveStatus(scope.statuses, block.category) : null;
+
   return { block, scope, target: next && movesTo(scope.status, next) ? next : null };
 }
 
@@ -62,6 +63,7 @@ export async function previewReport(ctx: UserContext, input: ReportInput): Promi
   for (const block of parseReport(input.text)) {
     items.push(previewItem(await resolveBlock(ctx.db, ctx.scope, block, input.ticketKey)));
   }
+
   return { items, matchedCount: items.filter((item) => item.matched).length };
 }
 
@@ -85,11 +87,13 @@ async function applyBlock(
     changes,
     entries,
   });
+
   return { ref: { ticket: written.ticket, project: scope.project }, heldDone: written.heldDone };
 }
 
 function noMatch(ticketKey: string | undefined): AppError {
   const example = `${parseTicketKey(ticketKey ?? '')?.projectKey ?? 'KEY'}-1`;
+
   return new AppError(
     'no_match',
     `No matching ticket found. The report needs a line like “TICKET: ${example}”.`,
@@ -109,7 +113,9 @@ export async function applyReport(
       if (resolved.scope)
         blocks.push(await applyBlock(trx, ctx, actor, { ...resolved, scope: resolved.scope }));
     }
+
     if (blocks.length === 0) throw noMatch(input.ticketKey);
+
     return blocks;
   });
   const unique = new Map(applied.map(({ ref }) => [ref.ticket.id, ref]));
@@ -119,5 +125,6 @@ export async function applyReport(
     ctx.scope,
     applied.flatMap(({ heldDone }) => heldDone),
   );
+
   return { updatedTicketKeys: [...unique.values()].map(ticketKeyOf) };
 }

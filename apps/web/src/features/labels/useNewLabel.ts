@@ -15,7 +15,9 @@ export function useNewLabel(projectKey: string, labels: readonly Label[]): NewLa
   const create = (name: string) =>
     mutateAsync({ projectKey, input: newLabelInput(labels, name) }).catch((error: unknown) => {
       show(errorMessage(error), { kind: 'error' });
+
       return null;
     });
+
   return { create, creating: isPending };
 }

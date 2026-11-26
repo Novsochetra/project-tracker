@@ -12,6 +12,7 @@ function handleFor(ticketId: string): HTMLButtonElement {
   const handle = document.createElement('button');
   handle.setAttribute(HANDLE_ATTRIBUTE, ticketId);
   document.body.append(handle);
+
   return handle;
 }
 
@@ -79,6 +80,7 @@ describe('rowHasFocus', () => {
     const main = document.createElement('button');
     row.append(handle, main);
     document.body.append(row);
+
     return { handle, main };
   }
 

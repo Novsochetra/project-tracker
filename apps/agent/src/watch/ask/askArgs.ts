@@ -21,6 +21,7 @@ const resumeArgs = (sessionId: string | null): string[] =>
 export function askChoiceArgs(run: RunJob['run'], permissionMode?: string): string[] {
   // An older server sends no askOptions at all.
   const options = run.askOptions as Partial<Record<keyof AskOptions, unknown>> | null | undefined;
+
   return [
     ...askModeArgs(options?.mode, permissionMode),
     ...askModelArgs(options?.model),

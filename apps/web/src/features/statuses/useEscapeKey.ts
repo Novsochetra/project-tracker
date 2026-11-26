@@ -14,7 +14,9 @@ export function useEscapeKey(ref: RefObject<HTMLElement | null>, onEscape: () =>
       event.preventDefault();
       latest.current();
     };
+
     element.addEventListener('keydown', onKeyDown);
+
     return () => element.removeEventListener('keydown', onKeyDown);
   }, [ref]);
 }

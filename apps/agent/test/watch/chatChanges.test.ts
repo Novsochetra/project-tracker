@@ -31,6 +31,7 @@ afterEach(() => rmSync(folder, { recursive: true, force: true }));
 
 const editJob = (chatFiles: ChatChangedFile[] | undefined = [], mode: AskMode = 'edit'): RunJob => {
   const job = askJob('r-1', 'chat-1', null, { model: 'default', mode, effort: 'default' });
+
   return chatFiles ? { ...job, chatFiles } : job;
 };
 
@@ -47,6 +48,7 @@ async function turn(job: RunJob, change: () => void) {
   const send = await trackChatChanges(deps, job);
   change();
   await send({ status: 'done', answer: 'Done.' });
+
   return tracker.chatChanges;
 }
 

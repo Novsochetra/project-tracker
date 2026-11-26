@@ -55,6 +55,7 @@ export function projectOfQuery(queryKey: QueryKey): string | undefined {
   const scope = scopeOf(queryKey);
   if (!scope) return undefined;
   if (rootOf(queryKey) === 'project') return scope;
+
   return rootOf(queryKey) === 'ticket' ? projectOfTicket(scope) : undefined;
 }
 

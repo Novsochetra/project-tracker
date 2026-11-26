@@ -5,5 +5,6 @@ export function isEditable(element: Element | null): boolean {
   if (element instanceof HTMLTextAreaElement) return !element.readOnly;
   if (element instanceof HTMLInputElement)
     return TEXT_INPUT_TYPES.has(element.type) && !element.readOnly;
+
   return element.isContentEditable;
 }

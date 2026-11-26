@@ -84,6 +84,7 @@ function setup(statusId: string = STATUS.progress) {
   const updateTicket = vi.fn().mockReturnValue(new Promise(() => undefined));
   const rendered = renderTicket({ detail, phone: true, children: stack, client: { updateTicket } });
   cleanups.push(rendered.restorePhone);
+
   return rendered;
 }
 

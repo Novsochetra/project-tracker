@@ -12,5 +12,6 @@ export function App() {
       </Suspense>
     );
   }
+
   return <TrackerApp />;
 }

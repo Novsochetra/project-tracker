@@ -25,6 +25,7 @@ export function CreatedCard({ ticketKey, card, helper }: CreatedCardProps) {
     event.preventDefault();
     push(route);
   };
+
   return (
     <section className={styles.card} aria-label={`Ticket ${ticketKey}`}>
       <div className={styles.head}>

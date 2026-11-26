@@ -9,5 +9,6 @@ export interface CappedDiff {
 export function capDiff(text: string, max = RUN_DIFF_MAX): CappedDiff {
   if (text.length <= max) return { diff: text, cut: false };
   const end = text.lastIndexOf('\n', max - 1);
+
   return { diff: end === -1 ? '' : text.slice(0, end + 1), cut: true };
 }

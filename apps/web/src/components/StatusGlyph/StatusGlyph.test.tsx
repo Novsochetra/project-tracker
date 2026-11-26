@@ -9,6 +9,7 @@ function shape(category: StatusCategory) {
   if (!svg) throw new Error('no glyph');
   const circles = Array.from(svg.querySelectorAll('circle'));
   const paths = Array.from(svg.querySelectorAll('path'));
+
   return { svg, circles, paths };
 }
 
@@ -55,6 +56,7 @@ describe('StatusGlyph', () => {
       const { svg } = shape(category);
       expect(svg).toHaveStyle({ color: 'rgb(194, 106, 6)' });
       expect(svg).toHaveAttribute('aria-hidden', 'true');
+
       return svg.innerHTML;
     });
     expect(new Set(outlines).size).toBe(STATUS_CATEGORIES.length);

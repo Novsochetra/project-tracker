@@ -37,6 +37,7 @@ const ticket = (title: string, description = 'Steps'): Ticket => {
     description,
     createdAt: 2_000,
   });
+
   return rest;
 };
 

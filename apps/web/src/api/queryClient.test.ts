@@ -39,6 +39,7 @@ function watchStaleQuery(queryClient: QueryClient) {
     refetchOnMount: false,
   });
   const stop = observer.subscribe(() => undefined);
+
   return { queryFn, stop };
 }
 
@@ -122,6 +123,7 @@ function startWrite(queryClient = createQueryClient()) {
     reject = onReject;
   });
   const observer = new MutationObserver(queryClient, { mutationFn: () => response });
+
   return { resolve, reject, write: observer.mutate() };
 }
 

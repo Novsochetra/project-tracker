@@ -36,6 +36,7 @@ async function buildWebApp(signal: AbortSignal): Promise<string> {
       signal,
     },
   );
+
   return outDir;
 }
 

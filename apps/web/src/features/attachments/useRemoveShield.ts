@@ -15,6 +15,7 @@ export interface RemoveShield {
 export function useRemoveShield(): RemoveShield {
   const [removals, setRemovals] = useState(0);
   const shield = useClickShield(removals);
+
   return {
     guard: removals > 0 ? shield : undefined,
     removed: () => setRemovals((count) => count + 1),

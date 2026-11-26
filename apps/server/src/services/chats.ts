@@ -47,6 +47,7 @@ export async function requireChat(
 ): Promise<ChatWithKey> {
   const row = await findChatInScope(ctx.db, scope, id, ctx.now());
   if (!row) throw notFound('That chat was not found.');
+
   return row;
 }
 
@@ -60,6 +61,7 @@ export async function listChats(
     limit: CHATS_SHOWN,
     now: ctx.now(),
   });
+
   return rows.map(toChat);
 }
 
@@ -78,6 +80,7 @@ export async function getChat(
   const context = await chatContextOf(ctx.db, chat.id);
   const queued = await listQueuedRows(ctx.db, chat.id);
   const filesOf = (id: string) => files.get(id) ?? [];
+
   return {
     chat: toChat(chat),
     messages: messages.map((message) => toMessage(message, cards, filesOf(message.id))),
@@ -108,6 +111,7 @@ async function askRequestIn(trx: ServiceContext, scope: UserScope, at: AskIn, in
   const saved = { model: chat.askModel, mode: chat.askMode, effort: chat.askEffort };
   const options = chosenAskOptions(input, saved);
   const { text: question, attachmentIds, plan } = input;
+
   return { queued, project, chat, history, ticket, question, attachmentIds, options, plan };
 }
 
@@ -126,9 +130,11 @@ async function askIn(
     const request = await askRequestIn(trx, scope, at, input);
     // An approved plan goes ahead of messages sent while Claude planned: the queue keeps no plan.
     const goesNow = at.isNew || request.plan !== undefined;
+
     return goesNow ? [await queueAsk(db, request)] : sendOrQueue(trx, scope, request);
   });
   for (const run of runs) notifyRun(ctx, scope, run);
+
   return getChat(ctx, scope, at.chat.id);
 }
 
@@ -156,6 +162,7 @@ export async function startChat(
     createdAt: at,
     updatedAt: at,
   };
+
   return askIn(ctx, scope, { project, chat, isNew: true }, input);
 }
 
@@ -167,5 +174,6 @@ export async function askInChat(
 ): Promise<ChatDetail> {
   const chat = await requireChat(ctx, scope, chatId);
   const project = await requireProject(ctx.db, scope, chat.projectKey);
+
   return askIn(ctx, scope, { project, chat, isNew: false }, input);
 }

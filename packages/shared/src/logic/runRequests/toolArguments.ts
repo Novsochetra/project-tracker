@@ -40,6 +40,7 @@ const secretJson = (value: unknown): string =>
 
 function shownValue(key: string, value: unknown): string {
   if (!secretName(key)) return valueOf(value);
+
   return Array.isArray(value) ? secretJson(value) : masked(value, valueOf(value));
 }
 

@@ -13,10 +13,12 @@ const CLIENT_ID = '5f0e2c1a-8d3b-4c6e-a7f9-1b2d3e4f5a6b';
 // the lookup miss as it does on Postgres; the insert, the index and the rollback are real.
 function lookupBeforeTheFirstCommit(clientId: string): KyselyPlugin {
   const missed = new Set<string>();
+
   return {
     transformQuery: ({ node, queryId }) => {
       const isLookup = node.kind === 'SelectQueryNode' && JSON.stringify(node).includes(clientId);
       if (isLookup && missed.size === 0) missed.add(queryId.queryId);
+
       return node;
     },
     transformResult: ({ queryId, result }) =>

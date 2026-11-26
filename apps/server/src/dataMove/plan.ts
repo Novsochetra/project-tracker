@@ -13,14 +13,17 @@ export function targetProblems(state: TargetState, allowExisting: boolean): stri
         'before. Nothing needs to be moved again.',
     ];
   }
+
   if (state.sameKeys.length > 0) {
     return [
       `The target already has a project with the key ${state.sameKeys.join(', ')}, and keys are ` +
         'unique. Delete that project in the online tracker first.',
     ];
   }
+
   const { projects, tickets } = state.existing;
   if (allowExisting || projects + tickets === 0) return [];
+
   return [
     `The target already holds ${describeCounts(state.existing)}. Moving adds this data next to ` +
       `it; run again with ${ALLOW_EXISTING_FLAG} if that is what you want.`,

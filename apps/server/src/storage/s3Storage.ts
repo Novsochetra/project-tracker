@@ -42,6 +42,7 @@ const rangeHeader = (range: ByteRange | undefined) => range && `bytes=${range.st
 
 export function createS3Storage({ client, bucket }: S3StorageOptions): FileStorage {
   const target = (key: string) => ({ Bucket: bucket, Key: S3_KEY_PREFIX + checkedKey(key) });
+
   return {
     async write(key, body) {
       // A small file goes in one PUT, a bigger one in parts. When the body fails (too big, cut
@@ -53,11 +54,13 @@ export function createS3Storage({ client, bucket }: S3StorageOptions): FileStora
     async read(key, range) {
       const command = new GetObjectCommand({ ...target(key), Range: rangeHeader(range) });
       const output = await s3Call('GetObject', unlessMissing(client.send(command)));
+
       return (output?.Body?.transformToWebStream() as ReadableStream<Uint8Array>) ?? null;
     },
     async stat(key) {
       const request = unlessMissing(client.send(new HeadObjectCommand(target(key))));
       const output = await s3Call('HeadObject', request);
+
       return output && { size: output.ContentLength ?? 0 };
     },
     async remove(key) {

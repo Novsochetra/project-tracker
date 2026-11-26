@@ -46,6 +46,7 @@ function renderBar(reviewed: boolean) {
     </MemoryRouter>,
   );
   const [ask, paste, primary] = within(container).getAllByRole('button');
+
   return { ask: ask!, paste: paste!, primary: primary! };
 }
 
@@ -59,6 +60,7 @@ function visibleLabel(button: HTMLElement, width: number): string {
   for (let text = texts.nextNode(); text; text = texts.nextNode()) {
     if (!hidden.some((element) => element.contains(text))) label += text.textContent ?? '';
   }
+
   return label;
 }
 
@@ -71,6 +73,7 @@ function contentWidth(button: HTMLElement, width: number): number {
   const text = visibleLabel(button, width);
   const label = LABEL_WIDTH[text];
   if (label === undefined) throw new Error(`Measure "${text}" in WebKit`);
+
   return 2 * pixels(side) + BORDERS + ICON + pixels(style.get('gap')) + label;
 }
 
@@ -81,8 +84,10 @@ function primaryRoom(squares: HTMLElement[], width: number): number {
   const taken = squares.reduce((sum, square) => {
     const style = phoneStyle(square, SCREEN, width);
     expect(style.get('flex')).toBe('none');
+
     return sum + BAR_SQUARE + gap;
   }, 0);
+
   return width - 2 * GUTTER - taken;
 }
 

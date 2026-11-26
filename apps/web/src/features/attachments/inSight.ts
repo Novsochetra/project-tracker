@@ -4,5 +4,6 @@ export function inSight(element: Element): boolean {
   if (typeof document.elementFromPoint !== 'function') return true;
   const box = element.getBoundingClientRect();
   const hit = document.elementFromPoint(box.x + box.width / 2, box.y + box.height / 2);
+
   return hit !== null && element.contains(hit);
 }

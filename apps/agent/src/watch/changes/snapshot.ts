@@ -12,6 +12,7 @@ async function gitLine(
 ) {
   const { text, code } = await gitOutput(cwd, args, { maxChars: SMALL, ...options });
   const value = text.trim();
+
   return code === 0 && value ? value : null;
 }
 

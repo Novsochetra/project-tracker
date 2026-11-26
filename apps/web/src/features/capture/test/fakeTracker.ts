@@ -38,6 +38,7 @@ export function fakeTracker() {
       priority: input.priority ?? 'medium',
     });
     made.push({ projectKey, clientId: input.clientId, ticket });
+
     return ticket;
   };
 
@@ -45,11 +46,13 @@ export function fakeTracker() {
     const entry = made.find((item) => item.ticket.key === ticketKey);
     if (!entry) throw new Error(`${ticketKey} was not made.`);
     entry.ticket = { ...entry.ticket, ...input };
+
     return entry.ticket;
   };
 
   const search = (projectKey: string, query: ListTicketsQuery = {}): Ticket[] => {
     const text = (query.q ?? '').trim().toLowerCase();
+
     return made
       .filter((entry) => entry.projectKey === projectKey)
       .map((entry) => entry.ticket)

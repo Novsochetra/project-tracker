@@ -29,6 +29,7 @@ afterEach(() => {
 function open(server: FakeTicketServer) {
   const rendered = renderTicket({ detail: server.detail, client: server.client });
   cleanups.push(rendered.restorePhone);
+
   return rendered;
 }
 

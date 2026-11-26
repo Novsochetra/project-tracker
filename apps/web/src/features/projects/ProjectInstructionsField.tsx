@@ -9,6 +9,7 @@ import type { ProjectForm } from './useProjectForm';
 
 export function ProjectInstructionsField({ form: { values, setField } }: { form: ProjectForm }) {
   const id = useId();
+
   return (
     <>
       <GroupedCard>

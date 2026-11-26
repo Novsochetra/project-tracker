@@ -26,8 +26,10 @@ describe.each(DIALECTS)('approving a plan in a chat (%s)', (dialect) => {
     const body = { runnerId: runner, text: 'Plan the queue', mode };
     const started = await person<ChatDetail>('POST', '/api/projects/MOB/chats', body);
     const job = (await next(mode === 'plan' ? 'ask' : 'ticket')).body;
+
     return { chatId: started.body.chat.id, runId: job?.run.id ?? '' };
   };
+
   const plan = async (runId: string, as = helper) =>
     (
       await as<RunRequest>('POST', `/api/runs/${runId}/requests`, {

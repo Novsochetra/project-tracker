@@ -60,6 +60,7 @@ export async function requireRun(
 ): Promise<RunWithKey> {
   const row = await findRunInScope(ctx.db, scope, id);
   if (!row) throw notFound('That run was not found.');
+
   return row;
 }
 
@@ -96,6 +97,7 @@ export async function startRun(
   });
   await insertQueuedRun(ctx.db, row, `Claude is already working on ${ticketKeyOf(ref)}.`);
   notifyRun(ctx, scope, row);
+
   return toRun(await requireRun(ctx, scope, row.id));
 }
 
@@ -107,11 +109,13 @@ export async function listTicketRuns(
   const ref = await requireTicket(ctx.db, scope, ticketKey);
   await expireSilentRuns(ctx);
   const rows = await listTicketRunRows(ctx.db, scope, ref.ticket.id, TICKET_RUNS_SHOWN);
+
   return rows.map(toRun);
 }
 
 export async function getRun(ctx: ServiceContext, scope: UserScope, id: string): Promise<Run> {
   await expireSilentRuns(ctx);
+
   return toRun(await requireRun(ctx, scope, id));
 }
 
@@ -131,16 +135,19 @@ export async function endRun(
     const marked = await markRunEnded(trx, scope, before.id, changes);
     if (marked && answer) await saveAnswer(trx, scope, before, { ...answer, at: endedAt });
     const held = marked ? await endHeldTickets(trx, before, status, endedAt) : [];
+
     return { marked, held };
   });
   const after = await requireRun(ctx, scope, id);
   if (!ended.marked && after.status !== status) {
     throw conflict(`This run already ended (${after.status}).`);
   }
+
   if (keepsPlanLimits({ marked: ended.marked, before, after, input })) {
     const seen = { runnerId: before.runnerId, limits: input.planLimits, seenAt: endedAt };
     await notePlanLimits(ctx.db, scope, seen);
   }
+
   if (ended.marked) {
     // First, so the chat read on this event shows why an approved plan didn't start.
     await carryOutApprovedPlan(ctx, scope, after);
@@ -149,7 +156,9 @@ export async function endRun(
     if (!(await continueChain(ctx, after))) pushRunEnd(ctx, scope, after);
     if (after.chatId) await startNextQueued(ctx, scope, after.chatId).catch(logQueueError);
   }
+
   for (const row of ended.held) notifyRun(ctx, scope, row);
+
   return toRun(after);
 }
 
@@ -174,5 +183,6 @@ export async function cancelRun(ctx: ServiceContext, scope: UserScope, id: strin
   if (run.batchId) {
     throw conflict('This ticket runs in a batch. Stop the batch on the Activity screen.');
   }
+
   return endRun(ctx, scope, id, { status: 'cancelled' });
 }

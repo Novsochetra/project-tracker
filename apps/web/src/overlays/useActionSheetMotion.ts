@@ -25,6 +25,7 @@ export function useActionSheetMotion(input: ActionSheetMotionInput): BottomPanel
   // Measured from the resting position, so an exit that starts mid-drag still leaves the screen.
   const measureTravel = useCallback(() => {
     const panel = panelRef.current;
+
     return panel ? window.innerHeight - (panel.getBoundingClientRect().top - y.get()) : null;
   }, [panelRef, y]);
   useSlidePresence({
@@ -54,5 +55,6 @@ export function useActionSheetMotion(input: ActionSheetMotionInput): BottomPanel
     accept: (event) => event.pointerType === 'mouse' || !isWithin(cardRef.current, event.target),
   });
   useTopPull(cardRef, { ...drag, stretchWhenFits: true });
+
   return values;
 }

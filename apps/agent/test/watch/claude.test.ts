@@ -19,6 +19,7 @@ function run(prompt: string, signal = new AbortController().signal, permissionMo
       onEvent: (event) => events.push(event),
     },
   );
+
   return { exit, shown, events };
 }
 

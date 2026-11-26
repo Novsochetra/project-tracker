@@ -23,8 +23,10 @@ function spyAll() {
   const spy = (part: { preload: () => Promise<unknown> }, name: string) =>
     vi.spyOn(part, 'preload').mockImplementation(() => {
       order.push(name);
+
       return Promise.resolve();
     });
+
   return {
     order,
     project: spy(ProjectScreen, 'project'),

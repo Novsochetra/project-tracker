@@ -36,5 +36,6 @@ export function placeMenu({
     viewport,
     minHeight: itemHeight + CHROME,
   });
+
   return { top, left, width, maxHeight: height, up, originX };
 }

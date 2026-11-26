@@ -48,21 +48,25 @@ export function postWithProgress(
   { onProgress, signal }: UploadOptions,
 ): Promise<Answer> {
   const Xhr = requestClass();
+
   return new Promise((resolve, reject) => {
     if (!Xhr) {
       reject(new TypeError('This runtime cannot report upload progress.'));
       return;
     }
+
     if (signal?.aborted) {
       reject(stopped());
       return;
     }
+
     const xhr = new Xhr();
     xhr.open('POST', url);
     headers.forEach((value, name) => xhr.setRequestHeader(name, value));
     xhr.upload.onprogress = (event) => {
       if (event.lengthComputable) onProgress?.(event.loaded, event.total);
     };
+
     xhr.onload = () =>
       resolve({ status: xhr.status, statusText: xhr.statusText, text: xhr.responseText });
     // fetch rejects with a TypeError when the network fails, and callers check for that.

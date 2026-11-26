@@ -30,6 +30,7 @@ afterEach(() => {
 function open(server: FakeTicketServer) {
   const rendered = renderTicket({ detail: server.detail, client: server.client });
   cleanups.push(rendered.restorePhone);
+
   return rendered;
 }
 
@@ -45,6 +46,7 @@ function startHanging() {
       answer.reject(STALE);
       await answer.promise.catch(() => undefined);
     });
+
   return { server, refuse };
 }
 

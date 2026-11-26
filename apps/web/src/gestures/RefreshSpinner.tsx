@@ -18,8 +18,10 @@ export function RefreshSpinner({ progress, spinning }: RefreshSpinnerProps) {
   useLayoutEffect(() => {
     const apply = (value: number) => ref.current?.style.setProperty('--pull', String(value));
     apply(progress.get());
+
     return progress.on('change', apply);
   }, [progress]);
+
   return (
     <svg
       ref={ref}

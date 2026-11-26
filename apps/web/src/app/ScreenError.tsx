@@ -8,6 +8,7 @@ const reload = () => window.location.reload();
 // The stack around a failed screen is untouched, so Back and the edge swipe still leave it.
 export function ScreenError() {
   const { canGoBack, back } = useNavigation();
+
   return (
     <EmptyState
       icon={CircleAlert}

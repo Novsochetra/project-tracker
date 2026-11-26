@@ -61,6 +61,7 @@ test.describe('Claude usage', () => {
       expect(box!.x + box!.width).toBeLessThanOrEqual(page.viewportSize()!.width);
       await settledScreenshot(page, info.outputPath(`claude-usage-${name}.png`));
     };
+
     await fits(info.project.name);
     if (info.project.name !== 'phone') return;
     await page.setViewportSize({ width: 320, height: 640 });

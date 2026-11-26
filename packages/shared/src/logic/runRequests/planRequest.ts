@@ -23,6 +23,7 @@ export function planRequestOf(input: unknown): RunRequestInput {
   const plan = isJson(input) && typeof input.plan === 'string' ? input.plan.trim() : '';
   const text = plan || NO_PLAN_TEXT;
   const label = cutTo(text, RUN_PLAN_MAX);
+
   return { kind: 'plan', label, labelCut: label !== text, questions: null };
 }
 
@@ -38,5 +39,6 @@ const isPlanMode = (value: unknown): value is PlanMode => PLAN_MODES.some((mode)
 
 export function planModeOf(answers: readonly string[] | null | undefined): PlanMode | null {
   const [mode] = answers ?? [];
+
   return answers?.length === 1 && isPlanMode(mode) ? mode : null;
 }

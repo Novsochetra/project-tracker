@@ -25,6 +25,7 @@ afterEach(() => {
 function open(client: ReturnType<ReturnType<typeof slowReads>['page']>, seed: boolean) {
   const rendered = renderTicket({ detail: BEFORE, client, seed });
   cleanups.push(rendered.restorePhone);
+
   return rendered;
 }
 

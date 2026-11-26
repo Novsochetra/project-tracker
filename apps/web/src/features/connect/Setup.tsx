@@ -96,5 +96,6 @@ export function Setup({ meta, projectKey, intro }: SetupProps) {
       <VersionNote />
     </>
   );
+
   return <Columns aside={aside} main={main} />;
 }

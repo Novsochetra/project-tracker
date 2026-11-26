@@ -22,6 +22,7 @@ function targetOf({ status, statuses }: TicketScope, verdict: ReviewVerdict): St
   if (verdict === 'approved') {
     return status.category === 'in_review' ? resolveStatus(statuses, 'reviewed') : status;
   }
+
   return status.category === 'todo' ? status : resolveStatus(statuses, 'todo');
 }
 
@@ -42,11 +43,14 @@ export async function changesVerdict(
     if (latest?.runId !== input.runId) {
       throw conflict('Claude changed more since you looked. Look at the changes again.');
     }
+
     await setChangesVerdict(trx, latest.runId, input.verdict);
     const target = targetOf(scope, input.verdict);
     const plan = await transition(trx, actor, scope, { target, verb: VERBS[input.verdict] });
+
     return writeTicket(trx, ctx.now, { ticket: scope.ticket, actor, ...plan });
   });
   notify(ctx, written.ticket.projectId, written.ticket.id);
+
   return getTicketDetailById(ctx.db, ctx.scope, written.ticket.id);
 }

@@ -57,6 +57,7 @@ describe('a comment a killed page left on its way', () => {
     );
     const draft = storedDraft('comment-send:k1');
     if (!draft) throw new Error('not kept');
+
     return draft;
   };
 

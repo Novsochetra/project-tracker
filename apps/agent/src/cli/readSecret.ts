@@ -20,6 +20,7 @@ async function firstLineOf(input: SecretInput): Promise<string> {
     text += String(chunk);
     if (/\r?\n/.test(text)) break;
   }
+
   return text.split(/\r?\n/)[0] ?? '';
 }
 
@@ -35,6 +36,7 @@ function askHidden(prompt: string, input: SecretInput, output: SecretOutput) {
       if (error) reject(error);
       else resolve(typed);
     };
+
     const onData = (chunk: Buffer) => {
       for (const char of chunk.toString('utf8')) {
         if (char === CTRL_C || char === CTRL_D) return finish(new CancelledError('Cancelled.'));
@@ -42,6 +44,7 @@ function askHidden(prompt: string, input: SecretInput, output: SecretOutput) {
         typed = BACKSPACE.has(char) ? typed.slice(0, -1) : typed + char;
       }
     };
+
     output.write(prompt);
     input.setRawMode(true);
     input.resume();

@@ -36,5 +36,6 @@ const LIMITS = {
 export const limitBodies = createMiddleware<AppEnv>(async (c, next) => {
   if (c.req.method === 'POST' && c.req.path === UPLOAD_PATH) return next();
   const limit = SMALL_BODY_PATHS.has(c.req.path) ? LIMITS.login : LIMITS.json;
+
   return limit(c, next);
 });

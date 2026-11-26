@@ -202,6 +202,7 @@ describe('the saves of a field on their way in another tab', () => {
   // The same module with memory of its own, as in another tab.
   async function otherTab() {
     vi.resetModules();
+
     return import('./fieldSaves');
   }
 

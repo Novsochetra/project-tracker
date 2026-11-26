@@ -10,6 +10,7 @@ export interface ProjectUsageNoteProps {
 export function ProjectUsageNote({ projectKey, className }: ProjectUsageNoteProps) {
   const usage = useProjectUsage(projectKey).data;
   if (!usage || usage.runs === 0) return null;
+
   return (
     <span className={className}>
       Claude Code, last {usage.days} days: <UsageParts parts={projectUsageParts(usage)} />

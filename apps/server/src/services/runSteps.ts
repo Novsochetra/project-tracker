@@ -17,6 +17,7 @@ import { todosOfColumn } from './runTodos';
 
 function toStep(row: RunStepRow): RunStep {
   const todos = todosOfColumn(row.todos);
+
   return {
     seq: row.seq,
     kind: row.kind,
@@ -61,6 +62,7 @@ export async function addRunSteps(
   if (run.runnerId !== input.runnerId) {
     throw forbidden('Only the helper that took this run sends its steps.');
   }
+
   const steps = input.steps.map(asRunStep);
   const at = ctx.now();
   const added = await inTransaction(ctx, async (trx) => {
@@ -71,6 +73,7 @@ export async function addRunSteps(
     await keepLatestTodos(trx, rows);
     await dropOldSteps(trx, run.id, counted);
     const tickets = await addBatchTicketSteps(trx, run, steps, at);
+
     return { count: counted, tickets };
   });
   if (added === undefined) throw notRunning(await requireRun(ctx, scope, id));
@@ -86,5 +89,6 @@ export async function listRunSteps(
   after: number,
 ): Promise<RunStep[]> {
   const run = await requireRun(ctx, scope, id);
+
   return (await listRunStepRows(ctx.db, run.id, after)).map(toStep);
 }

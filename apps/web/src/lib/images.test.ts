@@ -12,6 +12,7 @@ const AVIF = [0, 0, 0, 0x1c, ...ascii('ftypavif')];
 function fileOf(name: string, type: string, size = 1000, head: number[] = []) {
   const bytes = new Uint8Array(size);
   bytes.set(head);
+
   return new File([bytes], name, { type });
 }
 
@@ -21,6 +22,7 @@ function mockDecode(width: number, height: number) {
   const close = vi.fn();
   const decode = vi.fn().mockResolvedValue({ width, height, close });
   vi.stubGlobal('createImageBitmap', decode);
+
   return { decode, close };
 }
 
@@ -39,6 +41,7 @@ function mockCanvas(...outputs: (Blob | null)[]) {
   const toBlob = vi
     .spyOn(HTMLCanvasElement.prototype, 'toBlob')
     .mockImplementation((callback) => callback(outputs[Math.min(call++, outputs.length - 1)]!));
+
   return { context, toBlob };
 }
 

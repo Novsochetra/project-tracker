@@ -16,11 +16,13 @@ const projectScope: PromptScope = { kind: 'project', projectKey: 'MOB' };
 
 function Harness({ scope }: { scope: PromptScope }) {
   const [open, setOpen] = useState(true);
+
   return <PromptSheet open={open} onClose={() => setOpen(false)} scope={scope} />;
 }
 
 function Opener({ scope }: { scope: PromptScope }) {
   const sheets = useSheets();
+
   return (
     <button type="button" onClick={() => sheets.open({ type: 'prompt', scope })}>
       Open sheet
@@ -30,6 +32,7 @@ function Opener({ scope }: { scope: PromptScope }) {
 
 function ticketClient(statusId: string = STATUS.todo) {
   const detail = makeTicketDetail(listItem(1, statusId, 0));
+
   return {
     getTicketPrompt: vi.fn().mockResolvedValue({ text: PROMPT, ticketCount: 1 }),
     getTicket: vi.fn().mockResolvedValue(detail),

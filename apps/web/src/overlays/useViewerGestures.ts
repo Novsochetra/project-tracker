@@ -19,10 +19,12 @@ export function useViewerGestures(
       if (typeof stage.setPointerCapture === 'function') stage.setPointerCapture(event.pointerId);
       gestures.down(event);
     };
+
     stage.addEventListener('pointerdown', onDown);
     stage.addEventListener('pointermove', gestures.move);
     stage.addEventListener('pointerup', gestures.up);
     stage.addEventListener('pointercancel', gestures.up);
+
     return () => {
       stage.removeEventListener('pointerdown', onDown);
       stage.removeEventListener('pointermove', gestures.move);

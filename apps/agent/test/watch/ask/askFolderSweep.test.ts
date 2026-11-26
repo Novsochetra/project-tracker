@@ -28,6 +28,7 @@ function folder(name: string, ageMs: number): string {
   writeFileSync(join(path, 'board.jpg'), 'x');
   const at = (NOW - ageMs) / 1000;
   utimesSync(path, at, at);
+
   return path;
 }
 

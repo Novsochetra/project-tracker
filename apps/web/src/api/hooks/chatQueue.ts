@@ -18,6 +18,7 @@ function useQueueMutation<V extends QueuedVariables>(
   call: (variables: V) => Promise<ChatDetail>,
 ): TrackerMutation<ChatDetail, V> {
   const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: call,
     onSuccess: (detail) => showChat(queryClient, detail),
@@ -27,6 +28,7 @@ function useQueueMutation<V extends QueuedVariables>(
 
 export function useEditQueued() {
   const client = useApi();
+
   return useQueueMutation(({ chatId, messageId, text }: EditQueuedVariables) =>
     client.editQueued(chatId, messageId, { text }),
   );
@@ -34,6 +36,7 @@ export function useEditQueued() {
 
 export function useRemoveQueued() {
   const client = useApi();
+
   return useQueueMutation(({ chatId, messageId }: QueuedVariables) =>
     client.removeQueued(chatId, messageId),
   );
@@ -41,6 +44,7 @@ export function useRemoveQueued() {
 
 export function useSendQueuedNow() {
   const client = useApi();
+
   return useQueueMutation(({ chatId, messageId }: QueuedVariables) =>
     client.sendQueuedNow(chatId, messageId),
   );

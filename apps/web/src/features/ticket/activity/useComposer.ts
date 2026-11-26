@@ -35,6 +35,7 @@ function useComposerText(ticketKey: string) {
   const kept = useSyncExternalStore(subscribeStoredDrafts, () => keptComment(ticketKey));
   const [box, setBox] = useState(() => ({ text: kept ?? '', backs: backIdsOf(ticketKey) }));
   if (keptForm(box.text) !== kept) setBox({ text: kept ?? '', backs: backIdsOf(ticketKey) });
+
   return {
     text: box.text,
     change: (next: string) => {
@@ -68,6 +69,7 @@ export function useComposer(ticketKey: string): ComposerState {
       show(tooLong, { kind: 'error' });
       return;
     }
+
     const detail = queryClient.getQueryData<TicketDetail>(queryKeys.ticket(ticketKey));
     const sending = startSend(
       ticketKey,

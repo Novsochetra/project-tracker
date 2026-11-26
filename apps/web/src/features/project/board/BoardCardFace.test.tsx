@@ -25,6 +25,7 @@ function renderCard(
       <BoardCardFace ticket={ticket} status={status} />
     </button>,
   );
+
   return screen.getByRole('button', { name: /^MOB-3\b/ });
 }
 

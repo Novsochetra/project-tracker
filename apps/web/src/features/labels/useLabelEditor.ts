@@ -52,11 +52,13 @@ export function useLabelEditor({
       );
       return;
     }
+
     const input = updateInput(label, draft);
     if (Object.keys(input).length === 0) {
       onDone(label.id);
       return;
     }
+
     update.mutate({ projectKey, labelId: label.id, input }, { onSuccess: () => onDone(label.id) });
   };
 

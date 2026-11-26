@@ -66,8 +66,10 @@ describe('stepSwipe', () => {
     const asked: string[] = [];
     const canTrack: CanTrack = (direction) => {
       asked.push(direction);
+
       return false;
     };
+
     const swipe = run(
       [
         { dx: -10, dy: 0, at: 0 },

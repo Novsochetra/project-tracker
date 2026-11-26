@@ -90,6 +90,7 @@ async function run(job: GitActionJob, deadlineMs?: number) {
     deadlineMs,
   };
   await createGitActions(deps)();
+
   return { ended: tracker.gitEnded, log };
 }
 

@@ -8,6 +8,7 @@ const APP14 = 0xee;
 
 function headersOf(bytes: Uint8Array): Buffer[] {
   const buffer = Buffer.from(bytes);
+
   return [...jpegSegments(buffer)]
     .filter(({ marker }) => marker === APP0 || marker === APP14)
     .map(({ start, end }) => buffer.subarray(start, end));

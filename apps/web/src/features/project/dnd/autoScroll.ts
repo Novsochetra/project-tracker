@@ -27,11 +27,13 @@ export function edgeScrollStep(
   if (intoStart > 0) return -stepFor(intoStart, zones.start, capped);
   const intoEnd = position - (end - zones.end);
   if (intoEnd > 0) return stepFor(intoEnd, zones.end, capped);
+
   return 0;
 }
 
 export function autoScrollStep(pointerY: number, viewportHeight: number, isPhone: boolean): number {
   const bottomZone = isPhone ? AUTO_SCROLL_BOTTOM_PHONE : AUTO_SCROLL_BOTTOM_DESKTOP;
+
   return edgeScrollStep(pointerY, 0, viewportHeight, { start: AUTO_SCROLL_TOP, end: bottomZone });
 }
 
@@ -40,5 +42,6 @@ export function scrollAlong(element: HTMLElement | null, axis: 'x' | 'y', step: 
   const property = axis === 'x' ? 'scrollLeft' : 'scrollTop';
   const before = element[property];
   element[property] = before + step;
+
   return element[property] !== before;
 }

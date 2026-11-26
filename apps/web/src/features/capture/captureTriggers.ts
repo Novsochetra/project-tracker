@@ -16,6 +16,7 @@ export function isTypingTarget(element: Element | null): boolean {
   if (!(element instanceof HTMLElement)) return false;
   if (element.isContentEditable) return true;
   if (element instanceof HTMLTextAreaElement || element instanceof HTMLSelectElement) return true;
+
   return element instanceof HTMLInputElement && !NON_TEXT_INPUTS.has(element.type);
 }
 
@@ -27,6 +28,7 @@ export type ShortcutKey = Pick<
 export function isCaptureShortcut(event: ShortcutKey, focused: Element | null): boolean {
   if (event.defaultPrevented || event.repeat || event.isComposing) return false;
   if (event.ctrlKey || event.metaKey || event.altKey) return false;
+
   return event.key.toLowerCase() === 'c' && !isTypingTarget(focused);
 }
 
@@ -37,5 +39,6 @@ export function withoutCaptureParam(search: string): string {
   const params = new URLSearchParams(search);
   params.delete(CAPTURE_PARAM);
   const rest = params.toString();
+
   return rest ? `?${rest}` : '';
 }

@@ -140,8 +140,10 @@ describe('web app files over the wire', () => {
         expect(head.headers.get('etag'), path).toBe(etag);
         expect(head.headers.get('content-length'), path).toBe(length);
       }
+
       expect(etags.size, path).toBe(3);
     }
+
     const shell = (await get('/', BROWSER)).headers.get('etag');
     expect((await get('/p/MA/3', BROWSER)).headers.get('etag')).toBe(shell);
   });
@@ -236,6 +238,7 @@ describe('web app files over the wire', () => {
       expect(part.headers.get('content-length'), url).toBe('4');
       expect((await bytesOf(part)).length, url).toBe(4);
     }
+
     expect(Buffer.from(await (await get(text.url, BROWSER)).arrayBuffer()).toString()).toBe(SCRIPT);
   });
 

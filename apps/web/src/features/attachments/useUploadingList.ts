@@ -27,6 +27,7 @@ export function useUploadingList() {
         : current,
     );
   };
+
   const add = (item: UploadingFile) => setTiles((current) => [...current, item]);
   const fail = (key: string) =>
     setTiles((current) =>
@@ -39,5 +40,6 @@ export function useUploadingList() {
     });
     setTiles((current) => current.filter((item) => !match(item)));
   };
+
   return { tiles, setProgress, add, fail, drop };
 }

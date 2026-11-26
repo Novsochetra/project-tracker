@@ -51,6 +51,7 @@ describe('bufferWheel', () => {
       buffer = next.buffer;
       scrolls.push(next.scroll);
     }
+
     expect(scrolls.filter((scroll) => scroll !== null)).toEqual([40]);
   });
 

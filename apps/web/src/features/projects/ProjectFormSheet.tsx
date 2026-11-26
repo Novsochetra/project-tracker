@@ -69,10 +69,12 @@ export function ProjectFormSheet({
     event.preventDefault();
     onSubmit();
   };
+
   const submit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     onSubmit();
   };
+
   return (
     <Sheet
       {...sheet}

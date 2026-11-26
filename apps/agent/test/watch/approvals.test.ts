@@ -21,6 +21,7 @@ describe('--approvals', () => {
       );
       expect(approvalsProblem({ permissionMode })).toBeUndefined();
     }
+
     expect(approvalsProblem({ approvals: true, permissionMode: 'acceptEdits' })).toBeUndefined();
     expect(approvalsProblem({ approvals: true })).toBeUndefined();
   });

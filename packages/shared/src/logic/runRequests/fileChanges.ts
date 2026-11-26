@@ -7,6 +7,7 @@ import { LABEL_ROOM, linesWithin } from './labelRoom';
 // Not trimmed: a file's spaces are what is written.
 const textOf = (input: ToolInput, name: string): string => {
   const value = input[name];
+
   return typeof value === 'string' ? value : '';
 };
 

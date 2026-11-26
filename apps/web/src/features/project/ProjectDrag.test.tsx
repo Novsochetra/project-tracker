@@ -39,10 +39,12 @@ function layout(): Map<Element, DOMRect> {
       row.querySelectorAll('*').forEach((child) => rects.set(child, box(y, ROW)));
       y += ROW;
     }
+
     if (rows.length === 0) y += ZONE;
     rects.set(section, box(top, y - top));
     y += GAP;
   }
+
   return rects;
 }
 

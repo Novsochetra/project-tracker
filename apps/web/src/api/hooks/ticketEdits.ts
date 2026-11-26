@@ -23,6 +23,7 @@ export interface MoveTicketVariables {
 export function useUpdateTicket(): TrackerMutation<Ticket, UpdateTicketVariables> {
   const client = useApi();
   const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: ({ ticketKey, input, expected }: UpdateTicketVariables) =>
       expected
@@ -45,6 +46,7 @@ export function useUpdateTicket(): TrackerMutation<Ticket, UpdateTicketVariables
 export function useMoveTicket(): TrackerMutation<Ticket, MoveTicketVariables> {
   const client = useApi();
   const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: ({ ticketKey, input }: MoveTicketVariables) => client.moveTicket(ticketKey, input),
     onMutate: ({ ticketKey, input }) =>

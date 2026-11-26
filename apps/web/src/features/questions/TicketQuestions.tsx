@@ -13,6 +13,7 @@ export function TicketQuestions({ ticketKey }: { ticketKey: string }) {
   const shown = useMemo(() => shownQuestions(data ?? [], now), [data, now]);
   useAnnounceRequests(shown, now);
   if (shown.length === 0) return null;
+
   return (
     <section
       aria-label="Claude's questions"

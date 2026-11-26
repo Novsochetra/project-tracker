@@ -29,9 +29,11 @@ const crashing = vi.hoisted(() => ({ projects: false }));
 
 vi.mock('../../src/features/projects/ProjectsScreen', async () => {
   const { createElement } = await import('react');
+
   return {
     ProjectsScreen: () => {
       if (crashing.projects) throw new Error('Projects screen crashed');
+
       return createElement('p', null, 'Projects screen');
     },
   };
@@ -39,6 +41,7 @@ vi.mock('../../src/features/projects/ProjectsScreen', async () => {
 
 vi.mock('../../src/features/project/ProjectScreen', async () => {
   const { createElement } = await import('react');
+
   return { ProjectScreen: () => createElement('p', null, 'Project screen') };
 });
 

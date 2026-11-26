@@ -10,6 +10,7 @@ function fakeTerminal() {
     isTTY: true,
     setRawMode: (mode: boolean) => {
       modes.push(mode);
+
       return terminal;
     },
     resume: () => terminal,
@@ -18,6 +19,7 @@ function fakeTerminal() {
       throw new Error('A terminal is read key by key.');
     },
   });
+
   return { terminal: terminal as unknown as SecretInput, emitter, modes };
 }
 

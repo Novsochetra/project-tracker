@@ -59,5 +59,6 @@ export function createMcpServer(client: TrackerApi): McpServer {
   );
   for (const tool of TOOLS) registerTool(server, tool, client);
   for (const prompt of PROMPTS) registerPrompt(server, prompt);
+
   return server;
 }

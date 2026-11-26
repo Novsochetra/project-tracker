@@ -29,6 +29,7 @@ export function TicketView({ detail }: { detail: TicketDetail }) {
   const toStatus = () => focusStatus(gridRef.current);
   const done = useMoveToDone(detail, toStatus);
   const changes = useChangesTab(ticket.key);
+
   return (
     <AttachmentViewerProvider>
       <NavBar

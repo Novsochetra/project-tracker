@@ -10,6 +10,7 @@ export async function openInApp(clients: ClientsLike, origin: string, path: stri
     await clients.openWindow(path);
     return;
   }
+
   await open.focus();
   open.postMessage({ type: OPEN_MESSAGE, path } satisfies OpenMessage);
 }

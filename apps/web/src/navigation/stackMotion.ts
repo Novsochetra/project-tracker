@@ -27,10 +27,12 @@ function phoneSlide(role: LayerRole, p: number): LayerVisual {
     const x = round((1 - p) * 100);
     return { ...AT_REST, transform: `translate3d(${x}%, 0, 0)`, shadow: round(p) };
   }
+
   if (role === 'back') {
     const x = round(-UNDERLAY_SHIFT * p);
     return { ...AT_REST, transform: `translate3d(${x}%, 0, 0)`, dim: round(UNDERLAY_DIM * p) };
   }
+
   return role === 'top' ? AT_REST : HIDDEN;
 }
 
@@ -38,12 +40,14 @@ function fadeShift(axis: 'x' | 'y', offset: number, p: number): LayerVisual {
   const shift = round(offset * (1 - p));
   const transform =
     axis === 'x' ? `translate3d(${shift}px, 0, 0)` : `translate3d(0, ${shift}px, 0)`;
+
   return { ...AT_REST, transform, opacity: round(p) };
 }
 
 function desktopVisual(animation: StackAnimation, role: LayerRole, p: number): LayerVisual {
   if (animation === 'push') return role === 'front' ? fadeShift('x', DESKTOP_SHIFT, p) : HIDDEN;
   if (animation === 'pop') return role === 'back' ? fadeShift('x', -DESKTOP_SHIFT, p) : HIDDEN;
+
   return phoneSlide(role, p);
 }
 
@@ -58,11 +62,13 @@ export function layerVisual(
   if (animation === 'none') return role === 'top' ? AT_REST : HIDDEN;
   if (animation === 'initial')
     return role === 'front' ? fadeShift('y', FIRST_LOAD_SHIFT, p) : HIDDEN;
+
   return platform === 'phone' ? phoneSlide(role, p) : desktopVisual(animation, role, p);
 }
 
 // On phones progress is how much of the screen the front layer covers, so a pop runs from 1 to 0.
 export function progressRange(platform: Platform, animation: StackAnimation): [number, number] {
   if (platform === 'phone' && animation === 'pop') return [1, 0];
+
   return [0, 1];
 }

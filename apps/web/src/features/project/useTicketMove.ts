@@ -24,6 +24,7 @@ export function useTicketMove(projectKey: string): MoveTicket {
   const { mutateAsync } = useMoveTicket();
   const { show } = useToast();
   const showMove = useMoveToast();
+
   return useCallback<MoveTicket>(
     (ticketId, target) => {
       const board = readBoard();
@@ -44,6 +45,7 @@ export function useTicketMove(projectKey: string): MoveTicket {
       // The toast is a polite status region too: announcing it twice would read the move twice.
       if (plan.statusChanged) showMove(ticket, status, wasSaved(request));
       else announce(moveMessage(ticket.key, null));
+
       return request.then(boardShown, boardShown);
     },
     [readBoard, mutateAsync, show, showMove],

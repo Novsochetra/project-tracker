@@ -18,6 +18,7 @@ async function silentPostgres(): Promise<string> {
     server.close();
     await once(server, 'close');
   });
+
   return `postgres://mover:s3cret-pw@127.0.0.1:${(server.address() as AddressInfo).port}/railway`;
 }
 
@@ -53,5 +54,6 @@ export async function stopMoveWith(signal: NodeJS.Signals): Promise<StoppedMove>
   await until(() => Promise.resolve(run.stdout().includes('To copy:')), 'the plan');
   run.child.kill(signal);
   const result = await run.done;
+
   return { result, copiesLeft: await copiesIn(temp) };
 }

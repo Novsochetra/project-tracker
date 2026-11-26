@@ -11,6 +11,7 @@ interface ControlledProps {
 
 function Controlled({ onEnter = () => undefined, maxLength }: ControlledProps) {
   const [value, setValue] = useState('');
+
   return (
     <TitleField
       aria-label="Ticket title"

@@ -20,5 +20,6 @@ export function useRowSheet() {
     () => setSheet((current) => current && { ...current, open: false }),
     [],
   );
+
   return { sheet, show, close };
 }

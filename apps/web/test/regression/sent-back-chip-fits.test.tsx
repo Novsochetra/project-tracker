@@ -58,6 +58,7 @@ function renderRow(shown = ticket, label = 'Oct 9') {
     <TicketRowContent ticket={shown} status={statuses[0]!} dragged={false} callbacks={callbacks} />,
   );
   const main = screen.getByRole('button', { name: new RegExp(`^${shown.key}`) });
+
   return {
     main,
     title: screen.getByText(shown.title),
@@ -78,6 +79,7 @@ function padding(style: Map<string, string>, side: 'left' | 'right'): number {
   const longhand = style.get(`padding-${side}`);
   if (longhand) return pixels(longhand);
   const [top = '0', right = top, , left = right] = (style.get('padding') ?? '0').split(/\s+/);
+
   return pixels(side === 'left' ? left : right);
 }
 
@@ -91,6 +93,7 @@ function secondLine(main: Element, width: number): number {
   const row = phoneStyle(main, ROW, width);
   const avatar = pixels(phoneRule(AVATAR, '.medium', width).get('width'));
   const inner = width - sides(phoneStyle(groups, SCREEN, width)) - 2 - sides(row);
+
   return inner - avatar - columnGap(row);
 }
 
@@ -100,6 +103,7 @@ function iconDropsAt(): Map<string, number> {
   const rules = css.matchAll(
     /@container due \(max-width: ([\d.]+)px\)\s*{\s*([^{}]+?)\s*{\s*display: none;\s*}\s*}/g,
   );
+
   return new Map([...rules].map((match) => [match[2]!, Number(match[1])]));
 }
 
@@ -166,6 +170,7 @@ describe('the Changes requested chip on a phone row', () => {
       expect(phoneRule(ROW, '.main .due', width).get('container')).toBe('due / inline-size');
       expect(phoneRule(GHOST, '.row .due', width).get('container')).toBe('due / inline-size');
     }
+
     // A flex item sized by its content would shrink to nothing as a size container.
     expect(phoneRule(ROW, '.main .due', 1280).get('container')).toBeUndefined();
     expect(phoneRule(GHOST, '.row .due', 1280).get('container')).toBeUndefined();

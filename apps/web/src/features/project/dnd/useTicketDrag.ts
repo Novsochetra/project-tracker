@@ -105,6 +105,7 @@ export function useTicketDrag({ environment, onDrop }: TicketDragOptions): Ticke
   });
   useEffect(() => {
     const sessions = sessionRef;
+
     return () => sessions.current?.cancel();
   }, []);
   // The ghost can mount after the first frame moved the pointer, so it starts where it should be.
@@ -127,6 +128,7 @@ export function useTicketDrag({ environment, onDrop }: TicketDragOptions): Ticke
       setDrag(null);
       if (target) optionsRef.current.onDrop(ticket, target);
     };
+
     const press = {
       element: event.currentTarget,
       pointerId: event.pointerId,

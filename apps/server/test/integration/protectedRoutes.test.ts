@@ -215,6 +215,7 @@ describe.each(DIALECTS)('protected routes (%s)', (dialect) => {
     for (const [method, path] of PROTECTED) {
       expect((await app.request(path, init(method))).status, `${method} ${path}`).toBe(401);
     }
+
     expect(await (await app.request('/api/session')).json()).toEqual({
       authRequired: true,
       authenticated: false,

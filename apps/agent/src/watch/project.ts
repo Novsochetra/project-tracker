@@ -28,6 +28,7 @@ export function pickProject(
     if (projects.some((project) => project.key === key)) return key;
     throw new WatchSetupError(`Project ${key} was not found on this tracker.`);
   }
+
   const here = folder.canonical(resolve(folder.cwd));
   const matches = projects.filter(
     (project) => project.repo.trim() && inFolder(project.repo.trim(), folder) === here,

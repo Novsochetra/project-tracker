@@ -23,6 +23,7 @@ export const COPIED_MS = 2000;
 export function promptHelp(hasPrompt: boolean, offersRun: boolean, role: RunRole): string {
   if (!hasPrompt) return NO_OPEN_TICKETS;
   if (role === 'review') return offersRun ? RUN_REVIEW_HELP : REVIEW_PROMPT_HELP;
+
   return offersRun ? RUN_PROMPT_HELP : PROMPT_HELP;
 }
 
@@ -47,6 +48,7 @@ export const joinSubtitle = (...parts: readonly (string | undefined)[]): string 
 export function sendTarget(detail: TicketDetail | undefined): Status | null {
   if (!detail || detail.status.category !== 'todo') return null;
   const target = resolveStatus(detail.statuses, 'in_progress');
+
   return target.category === 'in_progress' ? target : null;
 }
 
@@ -71,6 +73,7 @@ export async function copyPromptFlow({ copy, notify, markSent }: CopyFlow): Prom
   if (!(await copy())) return 'failed';
   notify(PROMPT_COPIED);
   markSent();
+
   return 'copied';
 }
 
@@ -82,5 +85,6 @@ export interface ShareFlow {
 export async function sharePromptFlow({ share, markSent }: ShareFlow): Promise<boolean> {
   const shared = await share();
   if (shared) markSent();
+
   return shared;
 }

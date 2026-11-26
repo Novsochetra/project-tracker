@@ -21,6 +21,7 @@ function PasswordForm({ onClose }: { onClose: () => void }) {
   useEffect(() => {
     formRef.current?.querySelector('input')?.focus();
   }, []);
+
   return (
     <form
       ref={formRef}
@@ -66,6 +67,7 @@ function PasswordForm({ onClose }: { onClose: () => void }) {
 
 export function ChangePassword() {
   const [open, setOpen] = useState(false);
+
   return (
     <section className={styles.section}>
       {open ? (

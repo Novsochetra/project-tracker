@@ -37,6 +37,7 @@ function usePlayWhileOpen(ref: RefObject<HTMLVideoElement | null>, open: boolean
       video.pause();
       return;
     }
+
     const playing = video.play() as Promise<void> | undefined;
     playing?.catch(() => undefined);
   }, [ref, open]);
@@ -70,6 +71,7 @@ function VideoPanel({
   });
   usePlayWhileOpen(videoRef, open);
   const trapKeys = useOverlayBehavior({ active: open, panelRef, onClose, focusInitial: false });
+
   return (
     <m.div
       ref={panelRef}
@@ -117,6 +119,7 @@ function VideoPanel({
 export function VideoViewer(props: VideoViewerProps) {
   const { mounted, onExited } = usePresence(props.open && props.video !== null);
   if (!mounted || !props.video) return null;
+
   return createPortal(
     <MotionScope>
       <VideoPanel {...props} video={props.video} onExited={onExited} />

@@ -76,6 +76,7 @@ ${Array.from({ length: 9 }, (_, i) => `<circle cx="${width / 2}" cy="${height / 
 </g>
 <text x="50%" y="50%" fill="white" font-family="system-ui" font-size="${width / 12}" font-weight="700" text-anchor="middle" dominant-baseline="middle">${label}</text>
 </svg>`;
+
   return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
 };
 

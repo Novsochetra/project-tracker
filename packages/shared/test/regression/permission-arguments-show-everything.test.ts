@@ -23,18 +23,22 @@ function keyAt(line: string): [string, string] {
     const end = line.indexOf(': ');
     return [line.slice(0, end), line.slice(end + 2)];
   }
+
   for (let end = line.indexOf('": '); end !== -1; end = line.indexOf('": ', end + 1)) {
     const key = readsAsJson(line.slice(0, end + 1));
     if (typeof key === 'string') return [key, line.slice(end + 3)];
   }
+
   throw new Error(`No key in ${line}`);
 }
 
 function readBack(label: string): Entry[] {
   const [head, ...lines] = label.split('\n');
   expect(head).toBe('Use github: merge_pull_request');
+
   return lines.map((line) => {
     const [key, value] = keyAt(line);
+
     return [key, readsAsJson(value)];
   });
 }

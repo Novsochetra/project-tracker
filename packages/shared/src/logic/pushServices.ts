@@ -14,6 +14,7 @@ const isPushHost = (host: string): boolean =>
 export function isPushServiceUrl(text: string): boolean {
   if (!URL.canParse(text)) return false;
   const url = new URL(text);
+
   return (
     url.protocol === 'https:' &&
     url.port === '' &&

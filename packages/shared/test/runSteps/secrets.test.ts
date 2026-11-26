@@ -210,6 +210,7 @@ describe('secretName', () => {
     ]) {
       expect(secretName(name), name).toBe(true);
     }
+
     for (const name of [
       'MONKEY',
       'KEYBOARD_LAYOUT',

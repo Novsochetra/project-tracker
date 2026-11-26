@@ -17,9 +17,11 @@ export async function addRunChanges(
   if (run.runnerId !== input.runnerId) {
     throw forbidden('Only the helper that took this run sends its changes.');
   }
+
   if (run.kind !== 'ticket' || run.ticketId === null) {
     throw conflict('Only a ticket run keeps its changes.');
   }
+
   if (run.status !== 'running') throw conflict(`This run is not running (${run.status}).`);
   await saveRunChanges(ctx.db, {
     runId: run.id,

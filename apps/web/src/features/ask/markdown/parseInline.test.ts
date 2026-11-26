@@ -100,6 +100,7 @@ describe('parseInline', () => {
       level = inner.kind === 'em' ? inner.children : [];
       levels += 1;
     }
+
     expect(levels).toBe(MAX_INLINE_DEPTH);
     expect(level).toEqual([text('a *a *a b c* c* c')]);
   });

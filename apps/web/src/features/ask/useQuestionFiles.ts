@@ -19,6 +19,7 @@ export function useQuestionFiles(): QuestionFiles {
     attached: attachments.length,
   });
   const drop = useFileDrop(files.add);
+
   return {
     attachments,
     files,

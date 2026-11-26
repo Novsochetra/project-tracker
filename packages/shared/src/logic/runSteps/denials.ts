@@ -11,7 +11,9 @@ export function deniedToolIds(event: Json): string[] {
   if (event.type === 'system' && event.subtype === 'permission_denied') {
     return typeof event.tool_use_id === 'string' ? [event.tool_use_id] : [];
   }
+
   if (event.type !== 'user') return [];
+
   return ids(event.tool_result_meta)
     .filter(rejected)
     .flatMap((meta) => (typeof meta.id === 'string' ? [meta.id] : []));
@@ -21,6 +23,7 @@ export function deniedToolIds(event: Json): string[] {
 export function answeredToolIds(event: Json): string[] {
   const content = isJson(event.message) ? event.message.content : undefined;
   if (event.type !== 'user' || !Array.isArray(content)) return [];
+
   return ids(content).flatMap((block) =>
     block.type === 'tool_result' && typeof block.tool_use_id === 'string'
       ? [block.tool_use_id]

@@ -29,6 +29,7 @@ function mockDesktopCalendar(): () => void {
       dispatchEvent: () => false,
     }),
   });
+
   return () => {
     if (previous) Object.defineProperty(window, 'matchMedia', previous);
     else Reflect.deleteProperty(window, 'matchMedia');
@@ -38,6 +39,7 @@ function mockDesktopCalendar(): () => void {
 function Fields() {
   const [priority, setPriority] = useState('medium');
   const [due, setDue] = useState('');
+
   return (
     <>
       <SelectRow

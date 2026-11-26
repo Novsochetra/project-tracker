@@ -38,6 +38,7 @@ function slowReads() {
       answers.push(tracker.ticket.description);
       return Response.json(tracker);
     }
+
     const saved = await savedAnswerPlugin.cachedResponseWillBeUsed({
       request,
       cachedResponse: Response.json(savedCopy),
@@ -49,16 +50,21 @@ function slowReads() {
         ? `saved: ${(await saved.clone().json()).ticket.description}`
         : fromTracker.ticket.description,
     );
+
     return saved ?? Response.json(fromTracker);
   };
+
   const fetch: typeof globalThis.fetch = async (input, init) => {
     const request = new Request(input, init);
     if (request.method === 'GET') return read(request);
     const changes = (await request.json()) as UpdateTicketInput;
     tracker = { ...tracker, ticket: { ...tracker.ticket, ...changes } };
+
     return Response.json(tracker.ticket);
   };
+
   const client = new TrackerClient({ baseUrl: ORIGIN, fetch });
+
   return {
     client: { getTicket: client.getTicket, updateTicket: client.updateTicket },
     answers,

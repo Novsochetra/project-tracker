@@ -45,6 +45,7 @@ export function patchBoardTicket(
   if (next.statusId !== current.statusId) {
     next.rank = groupTopRank(board.tickets, next.statusId, current.id);
   }
+
   return withTickets(
     board,
     board.tickets.map((ticket) => (ticket.id === current.id ? next : ticket)),
@@ -62,10 +63,12 @@ export function moveBoardTicket(
   const tickets = board.tickets.map((ticket) => {
     const rank = plan.ranks.get(ticket.id) ?? ticket.rank;
     const statusId = ticket.id === moved.id ? input.statusId : ticket.statusId;
+
     return rank === ticket.rank && statusId === ticket.statusId
       ? ticket
       : { ...ticket, rank, statusId };
   });
+
   return withTickets(board, tickets);
 }
 
@@ -87,5 +90,6 @@ export function upsertBoardTicket(
     waitingUntil: null,
   };
   const others = board.tickets.filter((item) => item.id !== ticket.id);
+
   return withTickets(withNextNum(board, ticket.num), [...others, { ...base, ...ticket }]);
 }

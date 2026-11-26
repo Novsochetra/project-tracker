@@ -19,6 +19,7 @@ export function useDialogValues(): DialogValues {
   const scale = useMotionValue(0.97);
   const opacity = useMotionValue(0);
   const scrim = useMotionValue(0);
+
   return useMemo(() => ({ y, scale, opacity, scrim }), [y, scale, opacity, scrim]);
 }
 
@@ -35,6 +36,7 @@ function animateDialog(
     tween(values.scale, open ? 1 : 0.98, timing),
     tween(values.scrim, open ? 1 : 0, timing),
   ];
+
   return () => stopAll(stops);
 }
 
@@ -50,6 +52,7 @@ export function useDialogPresence(input: DialogPresenceInput): void {
   const { enabled, open, reducedMotion, values, onExited } = input;
   useLayoutEffect(() => {
     if (!enabled) return;
+
     return animateDialog(values, open, reducedMotion, onExited);
   }, [enabled, open, reducedMotion, values, onExited]);
 }

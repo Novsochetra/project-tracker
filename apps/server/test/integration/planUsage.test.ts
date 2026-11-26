@@ -30,6 +30,7 @@ describe.each(DIALECTS)("each helper's Claude plan usage (%s)", (dialect) => {
 
   async function startRun(ticket: string) {
     await person('POST', `/api/tickets/${ticket}/runs`, { runnerId: runner, prompt: 'Go' });
+
     return (await helper<RunJob>('POST', `/api/runners/${runner}/next?kind=ticket`)).body;
   }
 
@@ -37,6 +38,7 @@ describe.each(DIALECTS)("each helper's Claude plan usage (%s)", (dialect) => {
     const job = await startRun(ticket);
     clock.advance(1_000);
     const body = { status: 'done', ...(planLimits === undefined ? {} : { planLimits }) };
+
     return helper('POST', `/api/runs/${job.run.id}/finish`, body);
   }
 
@@ -51,6 +53,7 @@ describe.each(DIALECTS)("each helper's Claude plan usage (%s)", (dialect) => {
     for (const title of ['Crash', 'Login', 'Rename']) {
       await person('POST', '/api/projects/MOB/tickets', { title });
     }
+
     await helper('PUT', `/api/runners/${runner}`, helperName('Dara’s MacBook'));
   });
 

@@ -28,6 +28,7 @@ function CreateSheet({
     setName('');
     onClose();
   };
+
   return (
     <Sheet
       open={open}
@@ -119,6 +120,7 @@ function ReportSheet({ open, onClose, notify }: SheetDemoProps) {
     notify('Report applied to 2 tickets');
     onClose();
   };
+
   return (
     <Sheet
       open={open}
@@ -153,6 +155,7 @@ export function DemoSheets({
   notify,
 }: { sheet: DemoSheet | null } & Omit<SheetDemoProps, 'open'>) {
   const shared = { onClose, notify };
+
   return (
     <>
       <CreateSheet kind="ticket" open={sheet === 'ticket'} {...shared} />

@@ -38,6 +38,7 @@ export interface FieldDraftState {
 const openDraft = (server: string, id: string): FieldDraft => {
   const stored = storedDraft(id);
   if (!stored) return startDraft(server);
+
   return restoreDraft(stored.text, carries(savesOf(id), stored.text) || isSavingElsewhere(id));
 };
 

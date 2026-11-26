@@ -52,11 +52,13 @@ export function useStatusEditor({
       );
       return;
     }
+
     const input = updateInput(status, draft);
     if (Object.keys(input).length === 0) {
       onDone(status.id);
       return;
     }
+
     update.mutate(
       { projectKey, statusId: status.id, input },
       { onSuccess: () => onDone(status.id) },

@@ -34,6 +34,7 @@ function setup(detail: ChatDetail | null, runners: Runner[] = [dara], options: S
     },
   });
   restore = rendered.restore;
+
   return rendered;
 }
 

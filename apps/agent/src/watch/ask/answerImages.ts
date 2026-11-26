@@ -35,6 +35,7 @@ async function pictureOf(file: LocalFile): Promise<Blob> {
   const bytes = await readLocalBytes(file);
   const type = sniffImageType(bytes);
   if (!type || !CHAT_ANSWER_IMAGE_TYPES.includes(type)) throw notAPicture(file.name);
+
   return new Blob([bytes], { type });
 }
 
@@ -70,7 +71,9 @@ export async function withAnswerImages(
       notes.push(`Couldn't show ${path}. ${deps.describe(error)}`);
     }
   }
+
   const answer =
     notes.length > 0 ? fittedAnswer(`${outcome.answer}\n\n${notes.join('\n')}`) : outcome.answer;
+
   return attachmentIds.length > 0 ? { ...outcome, answer, attachmentIds } : { ...outcome, answer };
 }

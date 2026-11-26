@@ -10,6 +10,7 @@ export function ImageFace({ src, alt = '' }: { src: string; alt?: string }) {
   const [failed, setFailed] = useState(false);
   // A photo this browser can't show (HEIC outside Safari) gets an icon, never a broken image.
   if (failed) return <Icon icon={FileImage} size={20} className={styles.fallback} />;
+
   return (
     <img
       src={src}
@@ -36,6 +37,7 @@ export interface VideoFaceProps {
 export function VideoFace({ src, playBadge = true, opening = false }: VideoFaceProps) {
   const [duration, setDuration] = useState<string | null>(null);
   const [framed, setFramed] = useState(false);
+
   return (
     <>
       {!framed && <Icon icon={Film} size={20} className={styles.fallback} />}
@@ -72,6 +74,7 @@ export interface FileFaceProps {
 // In two parts so a small tile can shorten the first; the title shows a shortened name whole.
 function FileName({ name }: { name: string }) {
   const { head, tail } = splitFileName(name);
+
   return (
     <span className={styles.fileName} title={name}>
       <span className={styles.nameText}>

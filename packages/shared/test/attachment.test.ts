@@ -243,6 +243,7 @@ describe('ATTACHMENT_ACCEPT', () => {
       expect(accepted, type).toContain(type);
       for (const extension of extensions) expect(accepted, type).toContain(`.${extension}`);
     }
+
     for (const type of ['image/png', 'image/gif', 'image/webp']) expect(accepted).toContain(type);
   });
 

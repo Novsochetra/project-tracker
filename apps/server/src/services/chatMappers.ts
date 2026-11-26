@@ -44,6 +44,7 @@ function shownStepCount(row: MessageWithSteps): number {
     label: row.lastStepLabel,
     subAgent: row.lastStepSubAgent === 1,
   };
+
   return isAnswerStep(last, row.text) ? count - 1 : count;
 }
 
@@ -54,6 +55,7 @@ export const toCardTicket = (row: CardTicketRow): CardTicketLink => ({
 
 const shownTodos = (row: MessageWithSteps) => {
   const todos = todosOfColumn(row.todos);
+
   return todos && todos.length > 0 ? { todos } : {};
 };
 
@@ -91,5 +93,6 @@ export const toQueuedMessage = (
 // The first question names the chat in the list, on one line.
 export function chatTitle(question: string): string {
   const line = question.replace(/\s+/g, ' ').trim();
+
   return line.length <= CHAT_TITLE_MAX ? line : `${line.slice(0, CHAT_TITLE_MAX - 1).trimEnd()}…`;
 }

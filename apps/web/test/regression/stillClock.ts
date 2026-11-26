@@ -22,10 +22,12 @@ export function stillClock(): () => void {
     // "500 ms later" read 499.99… and the shield still held the tap.
     vi.advanceTimersByTime(now);
   }
+
   vi.setTimerTickMode('manual');
   const due = realInterval(() => {
     if (!advancing) vi.advanceTimersByTime(0);
   }, 1);
+
   return () => {
     realClearInterval(due);
     if (installed) vi.useRealTimers();

@@ -15,6 +15,7 @@ import { mockPhone, skipAnimations } from '../../src/overlays/testing';
 
 vi.mock('../../src/features/project/ProjectScreen', async () => {
   const { createElement } = await import('react');
+
   return { ProjectScreen: () => createElement('p', null, 'Project screen') };
 });
 

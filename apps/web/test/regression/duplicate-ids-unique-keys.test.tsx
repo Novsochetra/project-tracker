@@ -17,6 +17,7 @@ const NOW = Date.now();
 
 function withoutId(text: string, createdAt: number): Activity {
   const { id: _id, ...rest } = comment('x', text, { type: 'event', createdAt });
+
   return rest as Activity;
 }
 

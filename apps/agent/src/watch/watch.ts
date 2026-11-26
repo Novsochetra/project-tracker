@@ -39,6 +39,7 @@ function promptTool({ api, folder, settings }: Setup, io: WatchIo): PromptTool {
     describe: (error) => describeError(error, { trackerUrl: settings.trackerUrl }),
   });
   const script = realpathSync(process.argv[1] ?? '');
+
   return { command: promptToolCommand(process.execPath, process.execArgv, script), ask };
 }
 
@@ -49,6 +50,7 @@ function answerImagesOf({ api, folder, settings }: Setup) {
     upload: (file: Blob, name: string, signal: AbortSignal) =>
       api.uploadAttachment(file, name, undefined, { signal }),
   };
+
   return (outcome: FinishRunInput, stop: AbortSignal, mode: unknown) =>
     withAnswerImages(deps, outcome, stop, mode);
 }

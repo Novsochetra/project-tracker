@@ -23,12 +23,14 @@ export function WorkingMessage({ runId, rows, requests }: WorkingMessageProps) {
   // A layout effect's cleanup runs while the message is still on the page, focus still inside it.
   useLayoutEffect(() => {
     const message = ref.current;
+
     return () => {
       if (message?.contains(document.activeElement)) handStepsFocus(runId);
     };
   }, [runId]);
   const todos = latestTodos(rows);
   const listed = todos ? withoutTodoSteps(rows) : rows;
+
   return (
     <li className={`${styles.item} rise`}>
       <article ref={ref} className={styles.claude} aria-label={WORKING_LABEL}>

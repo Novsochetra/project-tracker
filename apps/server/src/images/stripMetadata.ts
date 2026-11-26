@@ -16,5 +16,6 @@ export function stripMetadata(
   if (type === 'image/jpeg') return stripJpeg(bytes, orientation);
   if (type === 'image/png') return stripPng(bytes, orientation);
   if (type === 'image/webp') return stripWebp(bytes);
+
   return bytes;
 }

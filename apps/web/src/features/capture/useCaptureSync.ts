@@ -42,6 +42,7 @@ function useSyncCaptures(): () => Promise<void> {
   const client = useApi();
   const queryClient = useQueryClient();
   const { show } = useToast();
+
   return useCallback(async () => {
     await runCaptureSync(async () => {
       const report = await syncCaptures({
@@ -51,6 +52,7 @@ function useSyncCaptures(): () => Promise<void> {
       });
       refreshAfter(queryClient, report);
       announce(report, show);
+
       return report;
     });
   }, [client, queryClient, show]);
@@ -60,8 +62,10 @@ function onReturn(sync: () => void): () => void {
   const onVisible = () => {
     if (document.visibilityState === 'visible') sync();
   };
+
   window.addEventListener('online', sync);
   document.addEventListener('visibilitychange', onVisible);
+
   return () => {
     window.removeEventListener('online', sync);
     document.removeEventListener('visibilitychange', onVisible);
@@ -78,6 +82,7 @@ export function useCaptureSync(reachability: Reachability): void {
       if (!tracker.isUnreachable()) sync();
     });
     const stopWatching = onReturn(sync);
+
     return () => {
       stopListening();
       stopWatching();

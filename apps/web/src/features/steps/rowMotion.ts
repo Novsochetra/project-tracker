@@ -12,6 +12,7 @@ const FRAME_PX = 24;
 // base: the helper's longest text step (2000 characters, about 1,300px at 375) takes about 1.5 s.
 export function foldMotion(px: number): KeyframeAnimationOptions {
   const duration = Math.max((px * STEEPEST * FRAME_MS) / FRAME_PX, DURATION.base);
+
   return { duration, easing: EASE_IN };
 }
 

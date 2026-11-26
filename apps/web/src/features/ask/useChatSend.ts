@@ -26,6 +26,7 @@ export function useChatSend(projectKey: string, chatId: string | null, helper: R
       onSent();
       if (!chatId) replace(chatRoute(projectKey, detail.chat.id, ticketNum));
     };
+
     if (chatId) ask.mutate({ chatId, input }, { onSuccess });
     else
       start.mutate(
@@ -33,5 +34,6 @@ export function useChatSend(projectKey: string, chatId: string | null, helper: R
         { onSuccess },
       );
   };
+
   return { send, sending, error: start.error ?? ask.error } satisfies ChatSend;
 }

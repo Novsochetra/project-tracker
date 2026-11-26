@@ -10,13 +10,16 @@ function doneRefusal({ ticket, status }: TicketDetail, target: string): string {
   if (isDoneCategory(status.category)) {
     return `${ticket.key} is already in ${status.name}.`;
   }
+
   if (status.category === 'reviewed') {
     return `${ticket.key} is in ${status.name}, waiting for a person to move it to ${target}.`;
   }
+
   const next =
     status.category === 'in_review'
       ? 'To finish a review, use review_ticket.'
       : 'When the work is finished, use submit_for_review.';
+
   return `Only a person can move a ticket to ${target}. ${next}`;
 }
 
@@ -35,10 +38,13 @@ export const moveTicket = defineTool({
     if (isDoneCategory(target.category)) {
       throw new ToolError(doneRefusal(detail, target.name));
     }
+
     if (target.id === detail.ticket.statusId) {
       return { text: `${detail.ticket.key} is already in ${target.name}.`, data: detail.ticket };
     }
+
     const ticket = await client.updateTicket(detail.ticket.key, { statusId: target.id });
+
     return { text: `Moved ${ticket.key} to ${target.name}.`, data: ticket };
   },
 });

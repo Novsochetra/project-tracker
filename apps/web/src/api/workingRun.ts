@@ -8,6 +8,7 @@ export const isWorking = (run: Run): boolean =>
 
 export function workingRun(runs: readonly Run[] | undefined): Run | undefined {
   const latest = runs?.[0];
+
   return latest && isWorking(latest) ? latest : undefined;
 }
 

@@ -57,6 +57,7 @@ describe.each(DIALECTS)("deleting a chat with its runs' steps and requests (%s)"
 
   async function startEdit() {
     const chatId = (await ask('/api/projects/MOB/chats')).body.chat.id;
+
     return { chatId, run: await take('ticket') };
   }
 

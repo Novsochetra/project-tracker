@@ -28,6 +28,7 @@ function setup(detail: ChatDetail, client: Record<string, unknown> = {}) {
     },
   });
   restore = rendered.restore;
+
   return rendered;
 }
 

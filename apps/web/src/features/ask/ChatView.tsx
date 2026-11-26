@@ -32,6 +32,7 @@ export function ChatView({ projectKey, chatId, detail, ticketNum }: ChatViewProp
   useScrollToEnd(`${messages.length}:${detail?.queued?.length ?? 0}:${helper.footer.kind}`);
   const { threadRef, ...live } = useWorkingMessage(detail?.run);
   const stoppedRuns = useMemo(() => stoppedRunsOf(detail), [detail]);
+
   return (
     <div className={styles.screen}>
       <NavBar

@@ -48,6 +48,7 @@ export function resetListView(projectKey: string): void {
 
 const subscribe = (listener: () => void) => {
   listeners.add(listener);
+
   return () => listeners.delete(listener);
 };
 
@@ -78,5 +79,6 @@ export function hidesNewTicket(
   const filter = resolveFilter(statuses, view.filter);
   const otherStatus = filter !== ALL_TICKETS && filter !== ticket.statusId;
   const otherLabel = view.label !== null && !hasLabel(ticket, view.label);
+
   return otherStatus || otherLabel || isSearching(view);
 }

@@ -31,6 +31,7 @@ async function sparePort(): Promise<number> {
   await once(probe, 'listening');
   const { port } = probe.address() as AddressInfo;
   probe.close();
+
   return port;
 }
 
@@ -48,6 +49,7 @@ async function startServer(dataDir: string): Promise<{ child: ChildProcess; port
     },
     stdio: ['ignore', 'pipe', 'inherit'],
   });
+
   return new Promise((resolve, reject) => {
     child.on('error', reject);
     child.on('exit', () => reject(new Error('The server stopped before it listened.')));
@@ -59,6 +61,7 @@ async function startServer(dataDir: string): Promise<{ child: ChildProcess; port
 
 function upload(port: number, bytes: number): Promise<number> {
   const chunk = Buffer.alloc(MB, 7);
+
   return new Promise((resolve, reject) => {
     const req = request({
       host: '127.0.0.1',
@@ -83,8 +86,10 @@ function upload(port: number, bytes: number): Promise<number> {
         sent += part.byteLength;
         if (!req.write(part)) return void req.once('drain', pump);
       }
+
       req.end();
     };
+
     pump();
   });
 }
@@ -94,6 +99,7 @@ async function peakWhile<T>(pid: number, work: Promise<T>): Promise<{ peak: numb
   const sampler = setInterval(() => (peak = Math.max(peak, rssMb(pid))), 50);
   const result = await work;
   clearInterval(sampler);
+
   return { peak, result };
 }
 
@@ -117,6 +123,7 @@ async function main(): Promise<void> {
       );
       failed ||= result !== 201 || growth > ALLOWED_GROWTH_MB;
     }
+
     if (failed) {
       process.stdout.write(`Expected 201s and growth under ${ALLOWED_GROWTH_MB} MB.\n`);
       process.exitCode = 1;

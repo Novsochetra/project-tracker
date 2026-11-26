@@ -15,6 +15,7 @@ export function createSseParser(onMessage: (message: SseMessage) => void) {
       data = [];
       return;
     }
+
     if (line.startsWith(':')) return;
     const colon = line.indexOf(':');
     const field = colon === -1 ? line : line.slice(0, colon);

@@ -52,6 +52,7 @@ function renderProjects(ready: unknown) {
       queryClient={queryClient}
     />,
   );
+
   return {
     answer: async (next: unknown) => {
       current = next;

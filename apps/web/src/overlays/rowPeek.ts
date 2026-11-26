@@ -18,5 +18,6 @@ export function peekHeight(available: number, rows: readonly RowSpan[]): number 
   const shown = (available - row.top) / row.height;
   if (shown >= PEEK_LEAST && shown <= PEEK_MOST) return null;
   const target = shown > PEEK_MOST ? row : rows[end - 1];
+
   return target ? target.top + target.height / 2 : null;
 }

@@ -44,8 +44,10 @@ export function loadS3Config(env: NodeJS.ProcessEnv): S3Config | null {
     if (endpoint) throw new Error('S3_ENDPOINT is set but S3_BUCKET is not.');
     return null;
   }
+
   const region = valueOf(env, 'AWS_REGION');
   if (!region) throw new Error("S3_BUCKET is set but AWS_REGION is not (the bucket's region).");
   checkCredentials(env);
+
   return { bucket: checkBucket(bucket), region, endpoint: checkEndpoint(endpoint) };
 }

@@ -52,5 +52,6 @@ export function keptAsItCame(
   const turned = isTurned(shape.orientation);
   const width = (turned ? shape.height : shape.width) || null;
   const height = (turned ? shape.width : shape.height) || null;
+
   return { bytes, mimeType, width, height, refusal };
 }

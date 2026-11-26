@@ -14,6 +14,7 @@ const keep = (notices: FileNotices) => {
 function Probe() {
   const notices = useFileNotice();
   useEffect(() => keep(notices));
+
   return null;
 }
 

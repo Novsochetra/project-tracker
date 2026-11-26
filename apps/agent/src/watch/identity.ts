@@ -12,6 +12,7 @@ export function runnerIdFor(store: ConfigStore, trackerUrl: string, folder: stri
   if (known) return known;
   const id = randomUUID();
   store.write({ ...saved, runners: { ...saved.runners, [key]: id } });
+
   return id;
 }
 
@@ -28,5 +29,6 @@ function macName(): string | undefined {
 
 export function computerName(): string {
   const name = (process.platform === 'darwin' && macName()) || hostname().replace(/\.local$/, '');
+
   return name.slice(0, RUNNER_NAME_MAX);
 }

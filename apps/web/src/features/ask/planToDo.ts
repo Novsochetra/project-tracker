@@ -10,6 +10,7 @@ export function planToDo(
   const run = detail?.run;
   if (!run || run.status !== 'done' || run.askOptions?.mode !== 'plan') return null;
   const last = detail.messages.at(-1);
+
   return last?.role === 'claude' && last.runId === run.id ? run : null;
 }
 
@@ -26,6 +27,7 @@ export type HelperAway = 'offline' | 'elsewhere' | 'removed';
 export function helperAway(run: Pick<Run, 'runnerId'>, runners: readonly Runner[]): HelperAway {
   const runner = runners.find(({ id }) => id === run.runnerId);
   if (!runner) return 'removed';
+
   return runner.online ? 'elsewhere' : 'offline';
 }
 

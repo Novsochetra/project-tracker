@@ -20,5 +20,6 @@ export const DemoContext = createContext<DemoActions | null>(null);
 export function useDemo(): DemoActions {
   const demo = use(DemoContext);
   if (!demo) throw new Error('useDemo() needs the gestures demo provider.');
+
   return demo;
 }

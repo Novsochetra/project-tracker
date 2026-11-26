@@ -16,6 +16,7 @@ export interface EdgePageStep {
 
 export function edgeSide(x: number, width: number): EdgeSide {
   if (x <= EDGE_PAGE_ZONE) return -1;
+
   return x >= width - EDGE_PAGE_ZONE ? 1 : 0;
 }
 
@@ -36,6 +37,8 @@ export function stepEdgePaging(
   if (paging.hold?.side !== side) {
     return { paging: { quiet: 0, hold: { side, since: now } }, page: 0 };
   }
+
   if (now - paging.hold.since < EDGE_PAGE_HOLD_MS) return { paging, page: 0 };
+
   return { paging: { quiet: 0, hold: { side, since: now } }, page: side };
 }

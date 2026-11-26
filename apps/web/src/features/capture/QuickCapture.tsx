@@ -10,5 +10,6 @@ export function QuickCapture({ reachability }: { reachability: Reachability }) {
   useCaptureSync(reachability);
   useCaptureShortcut(openCapture, current === null);
   useCaptureLink(openCapture);
+
   return null;
 }

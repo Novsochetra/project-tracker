@@ -62,6 +62,7 @@ export function PromptView({
     );
   const share = () =>
     void sharePromptFlow({ share: () => sharePrompt(draft.text), markSent: onSent });
+
   return (
     <Sheet
       open={open}
@@ -145,7 +146,9 @@ function PromptBody({
       </div>
     );
   }
+
   const hasPrompt = draft.result.text.length > 0;
+
   return (
     <>
       <p className={styles.help}>{promptHelp(hasPrompt, offersRun, role)}</p>

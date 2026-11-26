@@ -19,6 +19,7 @@ export async function requireChatTicket(
       ? await findTicketByNum(db, project.id, parsed.num)
       : undefined;
   if (!ticket) throw notFound(`Ticket ${key} was not found.`);
+
   return ticket;
 }
 
@@ -30,6 +31,7 @@ export async function chatPromptTicket(
   const ticket = chat.ticketId ? await findTicketById(db, chat.ticketId) : undefined;
   if (!ticket) return null;
   const status = await findStatusById(db, ticket.statusId);
+
   return promptTicket(ticket, projectKey, {
     statusName: status?.name ?? '',
     activities: await listTicketActivities(db, ticket.id),

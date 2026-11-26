@@ -17,6 +17,7 @@ export function restorePoint(tickets: readonly Placeable[], ticket: Placeable): 
   const others = othersIn(tickets, ticket.statusId, ticket.id);
   const after = others.findIndex((other) => byRank(other, ticket) > 0);
   const below = after < 0 ? others.length : after;
+
   return {
     statusId: ticket.statusId,
     rank: ticket.rank,
@@ -41,5 +42,6 @@ export function undoTarget(
   const next = others.find((other) => byRank(other, { ...point, id: ticketId }) > 0);
   if (next) return { statusId, beforeId: next.id };
   const last = others.at(-1);
+
   return last ? { statusId, afterId: last.id } : { statusId };
 }

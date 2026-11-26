@@ -36,6 +36,7 @@ const sheet = () => screen.queryByRole('dialog', { name: 'Connect Claude Code' }
 
 function ClosableSheet() {
   const [open, setOpen] = useState(true);
+
   return <ConnectSheet open={open} onClose={() => setOpen(false)} />;
 }
 
@@ -57,6 +58,7 @@ async function createToken() {
   await user.type(await screen.findByRole('textbox', { name: 'Token name' }), 'Work Mac{Enter}');
   const card = await screen.findByRole('group', { name: 'New token Work Mac' });
   expect(heldSecrets(view.queryClient)).toHaveLength(1);
+
   return { ...view, user, card };
 }
 

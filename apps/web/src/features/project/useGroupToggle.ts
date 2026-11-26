@@ -22,6 +22,7 @@ export function useGroupToggle(
   toggle: () => void,
 ): () => void {
   const scrollRef = useOptionalScreen()?.scrollRef;
+
   return () => {
     if (!expanded) return toggle();
     const focused = document.activeElement;

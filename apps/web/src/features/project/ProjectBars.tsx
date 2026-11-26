@@ -12,6 +12,7 @@ const projectScope = (projectKey: string) => ({ kind: 'project', projectKey }) a
 
 export function ProjectNavBar({ project }: { project: Project }) {
   const sheets = useSheets();
+
   return (
     <NavBar
       title={projectDisplayName(project)}
@@ -34,6 +35,7 @@ export function ProjectNavBar({ project }: { project: Project }) {
 // Its own screen, so a chat survives the sheets and the back gesture like a ticket does.
 function useOpenAsk(projectKey: string): () => void {
   const { push } = useNavigation();
+
   return () => push({ name: 'chats', key: projectKey });
 }
 
@@ -41,6 +43,7 @@ export function ProjectBottomBar({ projectKey }: { projectKey: string }) {
   const sheets = useSheets();
   const openAsk = useOpenAsk(projectKey);
   const scope = projectScope(projectKey);
+
   return (
     <BottomBar>
       <Button
@@ -81,6 +84,7 @@ export function ProjectToolbar({ project }: { project: Project }) {
   const scope = projectScope(project.key);
   const repo = projectDisplayRepo(project);
   if (isPhone) return null;
+
   return (
     <div className={styles.toolbar}>
       {repo && (

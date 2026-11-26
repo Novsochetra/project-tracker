@@ -23,6 +23,7 @@ function mockRows() {
     const tile = [...(grid?.children ?? [])].find((child) => child.contains(this));
     if (!grid || !tile) return new DOMRect(0, 0, 0, 0);
     const row = Math.floor([...grid.children].indexOf(tile) / PER_ROW);
+
     return new DOMRect(0, 24 + row * ROW, THUMB, THUMB);
   });
 }

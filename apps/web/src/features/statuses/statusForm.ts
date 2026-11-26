@@ -36,6 +36,7 @@ export function firstUnusedColor(statuses: readonly Pick<Status, 'color'>[]): st
   const unused = PALETTE.find(
     (color) => !statuses.some((status) => sameColor(status.color, color)),
   );
+
   return unused ?? PALETTE[statuses.length % PALETTE.length] ?? STATUS_COLORS[0];
 }
 
@@ -65,6 +66,7 @@ export function nameIssue(
 ): NameIssue | null {
   if (!name.trim()) return { kind: 'blank' };
   const clash = findStatusByName(statuses, name);
+
   return clash && clash.id !== editingId ? { kind: 'taken', name: clash.name } : null;
 }
 
@@ -85,18 +87,21 @@ export function updateInput(status: Status, draft: StatusDraft): UpdateStatusInp
   if (name !== status.name) input.name = name;
   if (draft.category !== status.category) input.category = draft.category;
   if (!sameColor(draft.color, status.color)) input.color = draft.color;
+
   return input;
 }
 
 // Default statuses are named after their type, so the type only shows when it adds something.
 export const categoryHint = (status: Pick<Status, 'name' | 'category'>): string | null => {
   const label = STATUS_CATEGORY_LABELS[status.category];
+
   return label.toLowerCase() === status.name.trim().toLowerCase() ? null : label;
 };
 
 export function ticketCounts(tickets: readonly Pick<TicketListItem, 'statusId'>[]) {
   const counts = new Map<string, number>();
   for (const { statusId } of tickets) counts.set(statusId, (counts.get(statusId) ?? 0) + 1);
+
   return counts;
 }
 
@@ -109,6 +114,7 @@ export const canDeleteStatus = (statuses: readonly Status[]): boolean => statuse
 
 export function deleteMessage(name: string, count: number, target?: Pick<Status, 'name'>): string {
   if (count === 0 || !target) return `Delete “${name}”? This can't be undone.`;
+
   return `Delete “${name}” and move its ${ticketsLabel(count)} to ${target.name}?`;
 }
 
@@ -118,6 +124,7 @@ export function moveInOrder(ids: readonly string[], id: string, delta: number): 
   if (from < 0 || to < 0 || to >= ids.length) return null;
   const next = ids.filter((item) => item !== id);
   next.splice(to, 0, id);
+
   return next;
 }
 

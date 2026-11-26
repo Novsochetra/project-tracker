@@ -22,6 +22,7 @@ afterEach(() => {
 function renderDiscard() {
   const onDiscard = vi.fn();
   render(<DiscardChangesSheet open onKeep={vi.fn()} onDiscard={onDiscard} />);
+
   return { onDiscard, row: screen.getByRole('button', { name: 'Discard changes' }) };
 }
 

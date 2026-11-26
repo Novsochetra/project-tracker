@@ -39,6 +39,7 @@ function renderSection(tickets: TicketListItem[], projectStatuses = [...statuses
   const updateTicket = vi.fn(pending);
   const items = readyItems({ tickets, statuses: projectStatuses }, [project, otherProject]);
   const view = renderWithApp(<ReadySection items={items} />, { client: { updateTicket } });
+
   return { ...view, updateTicket };
 }
 

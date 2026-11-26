@@ -11,6 +11,7 @@ export function HelperList() {
   const now = useNow();
   if (!runners.data) return null;
   if (runners.data.length === 0) return <p className={shared.note}>No computers yet.</p>;
+
   return (
     <GroupedCard>
       <ul className={shared.rows} aria-label="Your computers">
@@ -30,5 +31,6 @@ export function HelperList() {
 
 function HelperTools({ text }: { text: string }) {
   if (!text) return null;
+
   return <span className={shared.rowDescription}>{text}</span>;
 }

@@ -13,6 +13,7 @@ const byName = (names: string[]) => names.sort((a, b) => a.localeCompare(b));
 
 export async function commandNames(folder: string): Promise<string[]> {
   const entries = await entriesOf(join(folder, '.claude', 'commands'));
+
   return byName(
     entries
       .filter((entry) => !entry.isDirectory() && entry.name.endsWith('.md'))
@@ -24,5 +25,6 @@ export async function skillNames(folder: string): Promise<string[]> {
   const skills = join(folder, '.claude', 'skills');
   const names = (await entriesOf(skills)).map((entry) => entry.name);
   const found = await Promise.all(names.map((name) => exists(join(skills, name, 'SKILL.md'))));
+
   return byName(names.filter((_, index) => found[index]));
 }

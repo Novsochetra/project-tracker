@@ -16,6 +16,7 @@ function fakeWindowScroll(): { setY: (y: number) => void; y: () => number; undo:
   const scrollTo = vi.spyOn(window, 'scrollTo').mockImplementation((_x?: unknown, top?: number) => {
     y = top ?? 0;
   });
+
   return {
     setY: (next) => {
       y = next;
@@ -40,6 +41,7 @@ function renderProject() {
   const below = scroller('/');
   top.scrollTo = vi.fn();
   below.scrollTo = vi.fn();
+
   return { top, below };
 }
 

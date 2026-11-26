@@ -16,6 +16,7 @@ export function useTicketPrompt(
   { enabled = true }: PromptOptions = {},
 ): TrackerQuery<PromptResult> {
   const client = useApi();
+
   return useQuery({
     queryKey: queryKeys.ticketPrompt(ticketKey),
     queryFn: () => client.getTicketPrompt(ticketKey),
@@ -29,6 +30,7 @@ export function useProjectPrompt(
   { enabled = true }: PromptOptions = {},
 ): TrackerQuery<PromptResult> {
   const client = useApi();
+
   return useQuery({
     queryKey: queryKeys.projectPrompt(projectKey),
     queryFn: () => client.getProjectPrompt(projectKey),

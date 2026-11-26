@@ -27,9 +27,12 @@ function setup(respond: () => Response = () => json({}), options: Partial<HttpOp
   const fetch: typeof globalThis.fetch = (input, init = {}) => {
     if (typeof input !== 'string') throw new Error('The client should pass URLs as strings.');
     calls.push({ url: input, init });
+
     return Promise.resolve(respond());
   };
+
   const client = new TrackerClient({ baseUrl: `${BASE}/`, fetch, ...options });
+
   return { client, calls, last: () => calls.at(-1)! };
 }
 
@@ -547,6 +550,7 @@ describe('fresh reads', () => {
       expect(headersOf(call).get(FRESH_READ_HEADER)).toBe('1');
       expect(call.init.cache).toBe('no-store');
     }
+
     expect(pathOf(calls[1]!)).toBe('/api/projects/MOB/tickets?q=login');
   });
 
@@ -697,6 +701,7 @@ describe('uploadAttachment with progress', () => {
     vi.stubGlobal('XMLHttpRequest', FakeXhr);
     const fetch = vi.fn();
     const client = new TrackerClient({ baseUrl: `${BASE}/`, fetch, ...options });
+
     return { client, fetch };
   }
 

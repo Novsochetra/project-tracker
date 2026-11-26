@@ -35,6 +35,7 @@ describe.each(DIALECTS)('stopping Claude from the chat (%s)', (dialect) => {
     clock.advance(1_000);
     await finish(job.run.id, { status: 'done', answer: 'Every minute.', sessionId: SESSION });
     clock.advance(1_000);
+
     return started.body.chat.id;
   }
 

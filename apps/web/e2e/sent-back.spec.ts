@@ -24,6 +24,7 @@ async function showView(page: Page, view: 'List' | 'Board'): Promise<void> {
 async function box(locator: Locator) {
   const found = await locator.boundingBox();
   if (!found) throw new Error('The element is not rendered.');
+
   return found;
 }
 

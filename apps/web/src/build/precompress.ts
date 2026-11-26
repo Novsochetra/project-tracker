@@ -49,6 +49,7 @@ export const SKIP_PRECOMPRESS = 'TRACKER_SKIP_PRECOMPRESS';
 // sw.js needs copies too.
 export function precompress(): Plugin {
   let outDir = '';
+
   return {
     name: 'tracker-precompress',
     apply: (_config, { command }) => command === 'build' && !process.env[SKIP_PRECOMPRESS],

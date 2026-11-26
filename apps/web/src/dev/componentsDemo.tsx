@@ -119,6 +119,7 @@ function GlyphsDemo() {
 function FieldsDemo() {
   const [filter, setFilter] = useState<(typeof FILTERS)[number]['value']>('active');
   const [move, setMove] = useState(true);
+
   return (
     <Section title="Segmented, search, switch">
       <div style={{ ...row, justifyContent: 'space-between', gap: '10px 16px' }}>
@@ -140,6 +141,7 @@ function DetailsDemo() {
   const [prio, setPrio] = useState<Priority>('high');
   const [assignee, setAssignee] = useState('Dara');
   const [due, setDue] = useState('2026-10-05');
+
   return (
     <Section title="Property rows and dropdown">
       <C.GroupedCard dense>
@@ -205,6 +207,7 @@ function OptionsMenu() {
     setOpen(false);
     setConfirming(false);
   };
+
   const toggle = () => setOpen(!open);
   const trigger = (
     <C.IconButton aria-label="Options" aria-expanded={open} icon={I.Ellipsis} onClick={toggle} />
@@ -212,6 +215,7 @@ function OptionsMenu() {
   const confirm = (
     <C.ConfirmCard variant="menu" message={DELETE_PROJECT} onCancel={close} onConfirm={close} />
   );
+
   return (
     <C.Popover open={open} onClose={close} aria-label="Project options" trigger={trigger}>
       {confirming ? (
@@ -235,6 +239,7 @@ function ConfirmDemo() {
   const done = () => setDeleting(false);
   const message = "Delete MOB-3? This can't be undone.";
   if (deleting) return <C.ConfirmCard message={message} onCancel={done} onConfirm={done} />;
+
   return (
     <C.Button variant="text" tone="danger" icon={I.Trash2} onClick={() => setDeleting(true)}>
       Delete ticket
@@ -244,6 +249,7 @@ function ConfirmDemo() {
 
 function StatesDemo() {
   const action = <C.Button variant="primary">New project</C.Button>;
+
   return (
     <Section title="Menu, confirm, empty states">
       <div style={{ ...row, justifyContent: 'space-between' }}>
@@ -278,6 +284,7 @@ function ToastDemo() {
   const toast = C.useToast();
   const [raised, setRaised] = useState(false);
   C.useToastRaise(raised);
+
   return (
     <Section title="Toast">
       <div style={row}>

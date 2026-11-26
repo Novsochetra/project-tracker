@@ -27,6 +27,7 @@ export const STARTED: EditState = { phase: 'editing', checkFirst: false };
 export function restoredEdit(kept: StoredDraft | undefined): EditState {
   if (!kept) return { phase: 'idle', checkFirst: false };
   if (kept.changed) return { phase: 'changed', checkFirst: true };
+
   return { phase: kept.submitted ? 'failed' : 'editing', checkFirst: true };
 }
 
@@ -42,6 +43,7 @@ export function saveStep(edit: EditState, text: string, comment: string): SaveSt
   if (edit.phase === 'saving') return 'ignore';
   if (text.trim() === comment) return 'close';
   if (edit.phase === 'changed') return 'replace';
+
   return edit.checkFirst ? 'check' : 'send';
 }
 
@@ -73,6 +75,7 @@ export function checkStep(result: CheckResult): CheckStep {
 export function afterCheck(edit: EditState, step: CheckStep): EditState {
   if (step === 'changed') return withPhase(edit, 'changed');
   if (step === 'drop') return withPhase(edit, 'closed');
+
   return step === 'wait' && edit.phase === 'saving' ? withPhase(edit, 'failed') : edit;
 }
 
@@ -84,6 +87,8 @@ export function afterSave(edit: EditState, result: SendResult): EditState {
   if (result === 'saved') {
     return { phase: edit.phase === 'saving' ? 'closed' : edit.phase, checkFirst: false };
   }
+
   if (result === 'stale') return { phase: 'changed', checkFirst: true };
+
   return { phase: edit.phase === 'editing' ? 'editing' : 'failed', checkFirst: true };
 }

@@ -6,6 +6,7 @@ const openedFromUrl = () => new URLSearchParams(window.location.search).has('ges
 
 export function GesturesDemo() {
   const [open, setOpen] = useState(openedFromUrl);
+
   return (
     <section aria-labelledby="gestures-demo-title" className={styles.launcher}>
       <h2 id="gestures-demo-title">Gestures and navigation</h2>

@@ -29,6 +29,7 @@ function decodeSegment(segment: string): string | null {
 function parseTicketNumber(segment: string): number | null {
   if (!/^\d+$/.test(segment)) return null;
   const num = Number(segment);
+
   return Number.isSafeInteger(num) && num > 0 ? num : null;
 }
 
@@ -42,6 +43,7 @@ function parseAskRoute(key: string, chatSegment: string | undefined, ticketNum: 
   if (decoded === null) return above;
   const chatId = decoded === NEW_CHAT ? null : decoded;
   const chat: Route = { name: 'chat', key, chatId };
+
   return ticketNum === null ? chat : { ...chat, ticketNum };
 }
 
@@ -49,6 +51,7 @@ function parseTicketPath(key: string, segments: string[]): Route {
   const num = parseTicketNumber(segments[2] ?? '');
   if (segments.length === 3)
     return num === null ? { name: 'project', key } : { name: 'ticket', key, num };
+
   return num !== null && segments[3] === ASK ? parseAskRoute(key, segments[4], num) : PROJECTS;
 }
 
@@ -60,12 +63,14 @@ export function parseRoute(pathname: string): Route {
   if (key === null) return PROJECTS;
   if (segments.length === 2) return { name: 'project', key };
   if (segments[2] !== ASK) return parseTicketPath(key, segments);
+
   return segments.length > 4 ? PROJECTS : parseAskRoute(key, segments[3], null);
 }
 
 function chatPath(route: Extract<Route, { name: 'chat' }>): string {
   const above = route.ticketNum === undefined ? '' : `/${route.ticketNum}`;
   const chat = encodeURIComponent(route.chatId ?? NEW_CHAT);
+
   return `/p/${encodeURIComponent(route.key)}${above}/${ASK}/${chat}`;
 }
 
@@ -91,6 +96,7 @@ export function canonicalPath(pathname: string): string | null {
   // The link pages stand outside the screens, so their addresses stay as they are.
   if (pathname === INVITE_PATH || pathname === RESET_PATH) return null;
   const canonical = routePath(parseRoute(pathname));
+
   return canonical === pathname ? null : canonical;
 }
 
@@ -113,6 +119,7 @@ export function parentRoute(route: Route): Route | null {
 
 export function routeStack(route: Route): Route[] {
   const parent = parentRoute(route);
+
   return parent === null ? [route] : [...routeStack(parent), route];
 }
 
@@ -135,5 +142,6 @@ export function transitionFor(
   if (delta < 0) return 'pop';
   if (navigationType === 'PUSH') return 'push';
   if (navigationType === 'POP') return 'pop';
+
   return 'replace';
 }

@@ -20,6 +20,7 @@ export function SheetsProvider({ children }: { children: ReactNode }) {
     () => ({ open, close, current: state.open ? state.request : null }),
     [open, close, state],
   );
+
   return (
     <SheetsContext.Provider value={api}>
       {children}

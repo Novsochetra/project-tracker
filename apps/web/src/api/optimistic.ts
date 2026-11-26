@@ -29,6 +29,7 @@ export async function applyOptimistic(
     data: queryClient.getQueryData(queryKey),
   }));
   for (const change of changes) change.apply(queryClient);
+
   return () => {
     for (const { queryKey, data } of previous) queryClient.setQueryData(queryKey, data);
   };

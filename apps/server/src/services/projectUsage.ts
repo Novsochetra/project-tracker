@@ -18,6 +18,7 @@ export async function getProjectUsage(
   const project = await requireProject(ctx.db, scope, projectKey);
   const since = ctx.now() - USAGE_DAYS * DAY_MS;
   const row = await projectUsageSince(ctx.db, scope, project.id, since);
+
   return {
     days: USAGE_DAYS,
     runs: Number(row.runs),

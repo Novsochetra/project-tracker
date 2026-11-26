@@ -46,6 +46,7 @@ function sourceFiles(dir: string): string[] {
   return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
     const path = join(dir, entry.name);
     if (entry.isDirectory()) return sourceFiles(path);
+
     return /\.tsx?$/.test(entry.name) && !/\.test\.tsx?$/.test(entry.name) ? [path] : [];
   });
 }
@@ -58,6 +59,7 @@ function showCalls(code: string): string[] {
       if (code[at] === ')') depth -= 1;
       if (depth === 0) return code.slice(index, at + 1);
     }
+
     return code.slice(index);
   });
 }

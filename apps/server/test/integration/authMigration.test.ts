@@ -25,6 +25,7 @@ const AUTH_TABLES = ['users', 'sessions', 'api_tokens'];
 
 async function tableNames(db: Db): Promise<string[]> {
   const tables = await db.introspection.getTables();
+
   return tables.map((table) => table.name).filter((name) => !name.startsWith('kysely_'));
 }
 

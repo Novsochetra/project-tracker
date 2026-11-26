@@ -28,6 +28,7 @@ const previewFor = (applied: boolean): ReportPreview => ({
 
 function Harness() {
   const [open, setOpen] = useState(true);
+
   return <ReportSheet open={open} onClose={() => setOpen(false)} scope={scope} />;
 }
 
@@ -37,6 +38,7 @@ function describeSheet(): string | null {
   const apply = [...overlay.querySelectorAll('button')].find((b) => b.textContent === 'Apply');
   const rows = [...overlay.querySelectorAll('li')].map((row) => row.textContent).join(' / ');
   const phase = overlay.hasAttribute('inert') ? 'closing' : 'open';
+
   return `${phase}: ${rows} · Apply ${apply?.disabled ? 'disabled' : 'enabled'}`;
 }
 
@@ -53,8 +55,10 @@ function recordSheet(): () => string[] {
     attributes: true,
     attributeFilter: ['disabled', 'inert'],
   });
+
   return () => {
     observer.disconnect();
+
     return [...seen];
   };
 }
@@ -78,6 +82,7 @@ it('keeps the closing report sheet as it was when Apply was pressed', async () =
     previewReport: vi.fn(() => Promise.resolve(previewFor(applied))),
     applyReport: vi.fn(() => {
       applied = true;
+
       return Promise.resolve({ updatedTicketKeys: ['MOB-1'] });
     }),
   };

@@ -26,18 +26,22 @@ export function useSavedOrder(serverIds: string[], save: OrderSave): SavedOrder 
       setLocal(null);
       return;
     }
+
     setLocal(next);
     save.mutate(next, () => setLocal(null));
   };
+
   const preview = (next: string[]) => {
     dragged.current = next;
     setLocal(next);
   };
+
   // Reads the ref, not render state: the drop can reorder once more right before it ends.
   const commitPreview = () => {
     const next = dragged.current;
     dragged.current = null;
     if (next) commit(next);
   };
+
   return { ids, preview, commitPreview, commit, error: save.error };
 }

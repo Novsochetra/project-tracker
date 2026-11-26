@@ -7,6 +7,7 @@ export function newDevice(path = randomBytes(8).toString('hex')) {
   const keys = createECDH('prime256v1');
   keys.generateKeys();
   const auth = randomBytes(16);
+
   return {
     keys,
     auth,
@@ -36,6 +37,7 @@ export function decryptPush(body: Uint8Array, device: Device): PushMessage {
   const decipher = createDecipheriv('aes-128-gcm', key, nonce);
   decipher.setAuthTag(sealed.subarray(-16));
   const plain = Buffer.concat([decipher.update(sealed.subarray(0, -16)), decipher.final()]);
+
   return JSON.parse(plain.subarray(0, -1).toString()) as PushMessage;
 }
 
@@ -48,8 +50,10 @@ export function fakePushService() {
   const sent: SentPush[] = [];
   const answer: SendRequest = (url, init) => {
     sent.push({ url, init });
+
     return Promise.resolve(new Response(null, { status: service.status }));
   };
+
   const service = {
     sent,
     status: 201,
@@ -64,11 +68,13 @@ export function fakePushService() {
       await vi.waitFor(() => {
         if (service.forDevice(device).length < count) throw new Error('No push yet.');
       });
+
       return service
         .forDevice(device)
         .map(({ init }) => decryptPush(init.body as Uint8Array, device));
     },
     forDevice: (device: Device) => sent.filter(({ url }) => url === device.subscription.endpoint),
   };
+
   return service;
 }

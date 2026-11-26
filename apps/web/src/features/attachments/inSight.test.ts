@@ -10,6 +10,7 @@ function note() {
   const element = document.createElement('div');
   element.innerHTML = '<span>late.png didn’t upload.</span>';
   document.body.append(element);
+
   return element;
 }
 

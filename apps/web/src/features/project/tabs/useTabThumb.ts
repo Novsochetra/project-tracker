@@ -30,6 +30,7 @@ export function useTabThumb(
     const observer = new ResizeObserver(() => placeThumb(track, thumb));
     observer.observe(track);
     tabButtons(track).forEach((tab) => observer.observe(tab));
+
     return () => observer.disconnect();
   }, [trackRef, thumbRef, tabsKey]);
 }

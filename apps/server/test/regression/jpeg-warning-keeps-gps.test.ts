@@ -9,6 +9,7 @@ import { containsText, jpegPhoto } from '../helpers/images';
 function withExtraneousBytes(jpeg: Uint8Array): Uint8Array {
   const bytes = Buffer.from(jpeg);
   const sos = bytes.indexOf(Buffer.from([0xff, 0xda]));
+
   return Buffer.concat([bytes.subarray(0, sos), Buffer.from([0x00, 0x01]), bytes.subarray(sos)]);
 }
 

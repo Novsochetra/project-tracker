@@ -18,6 +18,7 @@ function TokenList({ query }: { query: TrackerQuery<ApiToken[]> }) {
       </div>
     );
   }
+
   if (query.isError) {
     return (
       <>
@@ -30,7 +31,9 @@ function TokenList({ query }: { query: TrackerQuery<ApiToken[]> }) {
       </>
     );
   }
+
   if (query.data.length === 0) return <p className={shared.note}>No tokens yet.</p>;
+
   return (
     <GroupedCard>
       <ul className={shared.rows} aria-label="Tokens">
@@ -44,6 +47,7 @@ function TokenList({ query }: { query: TrackerQuery<ApiToken[]> }) {
 
 export function TokensSection() {
   const tokens = useApiTokens();
+
   return (
     <Section title="API tokens">
       <p className={shared.help}>

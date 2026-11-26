@@ -53,6 +53,7 @@ describe('stoppedRunsOf', () => {
     ]) {
       expect(stoppedRunsOf(makeChatDetail({ run, stoppedRuns: [old] }))).toEqual([old]);
     }
+
     expect(stoppedRunsOf(null)).toEqual([]);
   });
 });

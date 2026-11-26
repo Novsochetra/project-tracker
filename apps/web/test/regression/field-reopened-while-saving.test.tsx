@@ -42,6 +42,7 @@ function slowSaves(server: FakeTicketServer) {
     const save = { input, answer: deferred<void>() };
     saves.push(save);
     await save.answer.promise;
+
     return server.detail.ticket;
   });
   const settle = async (run: () => void) => {
@@ -51,7 +52,9 @@ function slowSaves(server: FakeTicketServer) {
     });
     await wait(50);
   };
+
   const reach = (index: number) => server.edit(saves[index]!.input);
+
   return {
     updateTicket,
     reach,
@@ -69,6 +72,7 @@ function slowSaves(server: FakeTicketServer) {
 // Tapping Back and opening the ticket again, in one app.
 function LeaveAndReopen() {
   const [open, setOpen] = useState(true);
+
   return (
     <>
       <button type="button" onClick={() => setOpen((value) => !value)}>
@@ -90,6 +94,7 @@ function openOnSlowConnection() {
     children: <LeaveAndReopen />,
   });
   cleanups.push(rendered.restorePhone);
+
   return { server, slow, user: userEvent.setup() };
 }
 

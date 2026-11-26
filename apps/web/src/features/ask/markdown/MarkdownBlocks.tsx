@@ -13,6 +13,7 @@ function List({ block }: { block: ListBlock }) {
       <Blocks blocks={item} />
     </li>
   ));
+
   return block.ordered ? (
     <ol className={styles.list} start={block.start}>
       {items}
@@ -24,6 +25,7 @@ function List({ block }: { block: ListBlock }) {
 
 function Heading({ block }: { block: HeadingBlock }) {
   const Tag = `h${block.level}` as const;
+
   return (
     <Tag className={`${styles.heading} ${styles[Tag] ?? ''}`}>
       <InlineContent content={block.content} />

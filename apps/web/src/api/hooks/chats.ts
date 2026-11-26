@@ -49,6 +49,7 @@ export const chatRefreshMs = (detail: ChatDetail | undefined): number | false =>
 
 export function useChats(projectKey: string): TrackerQuery<Chat[]> {
   const client = useApi();
+
   return useQuery({
     queryKey: queryKeys.chats(projectKey),
     queryFn: () => client.listChats(projectKey),
@@ -57,6 +58,7 @@ export function useChats(projectKey: string): TrackerQuery<Chat[]> {
 
 export function useChat(chatId: string | null): TrackerQuery<ChatDetail> {
   const client = useApi();
+
   return useQuery({
     queryKey: queryKeys.chat(chatId ?? ''),
     queryFn: () => client.getChat(chatId ?? ''),
@@ -76,6 +78,7 @@ export const refreshChat = (queryClient: QueryClient, chatId: string) =>
 export function useStartChat(): TrackerMutation<ChatDetail, StartChatVariables> {
   const client = useApi();
   const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: ({ projectKey, input }: StartChatVariables) => client.startChat(projectKey, input),
     onSuccess: (detail) => showChat(queryClient, detail),
@@ -85,6 +88,7 @@ export function useStartChat(): TrackerMutation<ChatDetail, StartChatVariables> 
 export function useAsk(): TrackerMutation<ChatDetail, AskVariables> {
   const client = useApi();
   const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: ({ chatId, input }: AskVariables) => client.ask(chatId, input),
     onSuccess: (detail) => showChat(queryClient, detail),
@@ -96,6 +100,7 @@ export function useAsk(): TrackerMutation<ChatDetail, AskVariables> {
 export function useCancelAsk(): TrackerMutation<Run, Run> {
   const client = useApi();
   const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: (run: Run) => client.cancelRun(run.id),
     onSuccess: (run) => {
@@ -111,6 +116,7 @@ export function useCancelAsk(): TrackerMutation<Run, Run> {
 export function useCreateCardTicket(): TrackerMutation<ChatDetail, CardTicketVariables> {
   const client = useApi();
   const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: ({ chatId, messageId, input }: CardTicketVariables) =>
       client.createCardTicket(chatId, messageId, input),
@@ -126,10 +132,12 @@ export function useCreateCardTicket(): TrackerMutation<ChatDetail, CardTicketVar
 export function useRunCardTicket(): TrackerMutation<Run, RunCardTicketVariables> {
   const client = useApi();
   const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: async ({ ticketKey, runnerId }: RunCardTicketVariables) => {
       const { text, role } = await client.getTicketPrompt(ticketKey);
       if (text.length > RUN_PROMPT_MAX) throw new PromptTooLongError(text.length);
+
       return client.startRun(ticketKey, { runnerId, prompt: text, role });
     },
     onSuccess: (run) => showRun(queryClient, run),
@@ -146,6 +154,7 @@ function goneAlready(error: unknown): void {
 export function useDeleteChat(): TrackerMutation<void, DeleteChatVariables> {
   const client = useApi();
   const queryClient = useQueryClient();
+
   return useMutation({
     mutationKey: queryKeys.deletingChat(),
     mutationFn: ({ chatId }: DeleteChatVariables) => client.deleteChat(chatId).catch(goneAlready),

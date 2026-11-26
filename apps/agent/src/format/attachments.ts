@@ -40,9 +40,11 @@ export function ticketFiles(detail: TicketDetail): Attachment[] {
     ...detail.attachments,
   ];
   const seen = new Set<string>();
+
   return candidates.filter((file) => {
     if (seen.has(file.id)) return false;
     seen.add(file.id);
+
     return true;
   });
 }
@@ -50,6 +52,7 @@ export function ticketFiles(detail: TicketDetail): Attachment[] {
 function describeImage(image: Attachment): string {
   const parts = [image.fileName, formatBytes(image.size)];
   if (image.width && image.height) parts.push(`${image.width}×${image.height}`);
+
   return parts.join(SEP);
 }
 
@@ -58,6 +61,7 @@ function fileNote(file: Attachment, view: FileView): string | null {
   if (text?.status === 'shown') return null;
   if (text?.status === 'failed') return `could not be loaded: ${text.error}`;
   const url = view.fileUrl(file);
+
   return text?.status === 'skipped' ? `${url} ${SKIPPED_NOTE}` : url;
 }
 
@@ -65,6 +69,7 @@ export function describeAttachment(file: Attachment, view: FileView): string {
   if (attachmentKind(file.mimeType) === 'image') return describeImage(file);
   const note = fileNote(file, view);
   const parts = [file.fileName, file.mimeType, formatBytes(file.size)];
+
   return (note ? [...parts, note] : parts).join(SEP);
 }
 
@@ -79,6 +84,7 @@ function contentsOf(file: Attachment, view: FileView): string | null {
   const block = `Contents of ${file.fileName}:\n${fence}\n${text.text.replace(/\r?\n$/, '')}\n${fence}`;
   if (text.text.length === text.fullLength) return block;
   const shown = `${NUMBER.format(text.text.length)} of ${NUMBER.format(text.fullLength)}`;
+
   return `${block}\n(Cut after ${shown} characters. The whole file: ${view.fileUrl(file)})`;
 }
 
@@ -86,7 +92,9 @@ export function formatAttachments(files: readonly Attachment[], view: FileView):
   const list = files.map((file) => `- ${describeAttachment(file, view)}`);
   const contents = files.flatMap((file) => {
     const block = contentsOf(file, view);
+
     return block ? ['', block] : [];
   });
+
   return [...list, ...contents];
 }

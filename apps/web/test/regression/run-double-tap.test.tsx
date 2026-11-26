@@ -36,6 +36,7 @@ function renderWithHelper(phone: boolean) {
     },
   });
   cleanups.push(rendered.restorePhone);
+
   return rendered;
 }
 

@@ -11,6 +11,7 @@ function layerOf(element: Element): Element {
   while (layer.parentElement && layer.parentElement !== element.ownerDocument.body) {
     layer = layer.parentElement;
   }
+
   return layer;
 }
 
@@ -24,6 +25,7 @@ function scrollerOf(note: Element, layer: Element): Element | null {
   for (let found = note.parentElement; found && found !== layer; found = found.parentElement) {
     if (scrolls(found)) return found;
   }
+
   return null;
 }
 
@@ -38,6 +40,7 @@ function stillPartAt(x: number, y: number, scroller: Element | null): Element | 
     if (scroller && found.contains(scroller)) return beside;
     beside = found;
   }
+
   return null;
 }
 
@@ -64,6 +67,7 @@ function stillBars(note: Element, layer: Element): Map<Element, DOMRect> {
       bars.set(bar, bar.getBoundingClientRect());
     }
   }
+
   return bars;
 }
 
@@ -92,6 +96,7 @@ export function holdPresses(within: Element): void {
   const see = (event: PointerEvent) => {
     if (inLayer(event)) presses.press(event, layer);
   };
+
   const drop = (event: MouseEvent) => {
     if (!inLayer(event)) return;
     const aimed = isAimedClick(presses.pointer(), event.detail);
@@ -100,6 +105,7 @@ export function holdPresses(within: Element): void {
     event.preventDefault();
     event.stopPropagation();
   };
+
   const end = () => {
     clearTimeout(timer);
     holds.delete(end);
@@ -107,6 +113,7 @@ export function holdPresses(within: Element): void {
     document.removeEventListener('pointerdown', see, true);
     PRESSES.forEach((type) => document.removeEventListener(type, drop, true));
   };
+
   document.addEventListener('pointerdown', see, true);
   PRESSES.forEach((type) => document.addEventListener(type, drop, true));
   const timer = setTimeout(end, CLICK_SHIELD_MS);

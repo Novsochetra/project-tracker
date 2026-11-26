@@ -29,6 +29,7 @@ export function storedMap<T>(
   isEntry: (value: unknown) => value is T,
 ): StoredMapAccess<T> {
   let cached: { raw: string | null; map: StoredMap<T> } = { raw: null, map: {} };
+
   return {
     read: () => {
       try {

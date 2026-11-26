@@ -36,6 +36,7 @@ function OpenButton({
   children: ReactNode;
 }) {
   const viewer = use(AttachmentViewerContext);
+
   return (
     <button
       type="button"
@@ -66,6 +67,7 @@ function MediaFace({ attachment, kind, label, onOpen, opening }: FaceProps) {
       </OpenButton>
     );
   }
+
   if (isVideo) {
     return (
       <div className={styles.frame} role="img" aria-label={capitalized(label)}>
@@ -73,6 +75,7 @@ function MediaFace({ attachment, kind, label, onOpen, opening }: FaceProps) {
       </div>
     );
   }
+
   return (
     <div className={styles.frame}>
       <ImageFace src={attachment.url} alt={capitalized(label)} />
@@ -90,6 +93,7 @@ function DocumentFace({ attachment, kind, label, onOpen }: FaceProps) {
       </OpenButton>
     );
   }
+
   // The browser shows PDFs best itself, in a tab of their own.
   return (
     <a
@@ -114,6 +118,7 @@ export function SavedThumbnail({
   const kind = attachmentKind(attachment.mimeType);
   const opening = use(ViewerOpeningContext) === attachment.id && onOpen !== undefined;
   const props: FaceProps = { attachment, kind, label, onOpen, opening };
+
   return (
     <div className={clsx(styles.tile, isWide(kind) && styles.wide, marked && styles.marked)}>
       {isWide(kind) ? <DocumentFace {...props} /> : <MediaFace {...props} />}

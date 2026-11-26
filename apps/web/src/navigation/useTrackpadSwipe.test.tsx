@@ -10,6 +10,7 @@ import { useNavigation } from './useNavigation';
 
 function Screen({ route }: { route: Route }) {
   const { push } = useNavigation();
+
   return (
     <div>
       <p>{routePath(route)}</p>
@@ -61,6 +62,7 @@ function swipe(target: Element, dx: number, { dy = 0, shiftKey = false, ctrlKey 
     });
     events.push(event);
   }
+
   return events;
 }
 

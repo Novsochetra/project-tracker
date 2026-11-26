@@ -51,8 +51,10 @@ function fakeNetwork() {
   const whileDown = (method: string, url: string) => {
     const body = method === 'GET' ? kept.get(url) : undefined;
     if (body === undefined) return Promise.reject(new TypeError('Failed to fetch'));
+
     return Promise.resolve(json(body, 200, { [SAVED_ANSWER_HEADER]: '1' }));
   };
+
   // The client always asks with a URL string.
   const fetch = vi.fn((url: string, init?: RequestInit) => {
     const method = init?.method ?? 'GET';
@@ -63,12 +65,15 @@ function fakeNetwork() {
         setTimeout(() => reject(new TypeError('Failed to fetch')), 30),
       );
     }
+
     if (!up) return whileDown(method, url);
     if (method !== 'GET' || !(url in ANSWERS)) return Promise.resolve(json(NOT_FOUND, 404));
     const body = JSON.stringify(ANSWERS[url]);
     kept.set(url, body);
+
     return Promise.resolve(json(body));
   });
+
   return {
     fetch,
     requests,
@@ -87,6 +92,7 @@ function renderApp(path: string, network: FakeNetwork) {
   window.history.replaceState(null, '', path);
   const queryClient = createTestQueryClient();
   render(<TrackerApp client={new TrackerClient({ baseUrl: '' })} queryClient={queryClient} />);
+
   return queryClient;
 }
 

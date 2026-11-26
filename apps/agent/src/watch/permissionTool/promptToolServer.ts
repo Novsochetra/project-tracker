@@ -29,5 +29,6 @@ export function createPromptToolServer(socketPath: string): McpServer {
       }
     },
   );
+
   return server;
 }

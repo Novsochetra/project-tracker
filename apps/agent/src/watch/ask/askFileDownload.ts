@@ -31,6 +31,7 @@ function stallGuard(ms: number): StallGuard {
     () => stalled.abort(new Error(`the tracker sent nothing for ${Math.round(ms / 1000)} s.`)),
     ms,
   );
+
   return { signal: stalled.signal, alive: () => timer.refresh(), end: () => clearTimeout(timer) };
 }
 

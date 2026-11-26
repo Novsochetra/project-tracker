@@ -35,6 +35,7 @@ export function TicketMain({ detail, done, onRunCancelled, className }: TicketMa
   // This runs outside the error boundaries, so a file entry this app can't read, such as null or
   // one without a type, is left out instead of failing the whole screen.
   const attachments = ticketFiles(detail.attachments);
+
   return (
     <div className={clsx(styles.main, className)} {...drop.handlers}>
       <div className={styles.inner}>

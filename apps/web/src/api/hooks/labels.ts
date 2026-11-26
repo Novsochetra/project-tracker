@@ -69,6 +69,7 @@ function patchTicketDetails(queryClient: QueryClient, projectKey: string, label:
 export function useCreateLabel(): TrackerMutation<Label, CreateLabelVariables> {
   const client = useApi();
   const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: ({ projectKey, input }: CreateLabelVariables) =>
       client.createLabel(projectKey, input),
@@ -86,6 +87,7 @@ export function useCreateLabel(): TrackerMutation<Label, CreateLabelVariables> {
 export function useUpdateLabel(): TrackerMutation<Label, UpdateLabelVariables> {
   const client = useApi();
   const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: ({ labelId, input }: UpdateLabelVariables) => client.updateLabel(labelId, input),
     onSuccess: (label, { projectKey }) =>
@@ -100,6 +102,7 @@ export function useUpdateLabel(): TrackerMutation<Label, UpdateLabelVariables> {
 export function useReorderLabels(): TrackerMutation<Label[], ReorderLabelsVariables> {
   const client = useApi();
   const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: ({ projectKey, ids }: ReorderLabelsVariables) =>
       client.reorderLabels(projectKey, ids),
@@ -116,6 +119,7 @@ export function useReorderLabels(): TrackerMutation<Label[], ReorderLabelsVariab
 export function useDeleteLabel(): TrackerMutation<void, DeleteLabelVariables> {
   const client = useApi();
   const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: ({ labelId }: DeleteLabelVariables) => client.deleteLabel(labelId),
     onSuccess: (_result, { projectKey, labelId }) =>

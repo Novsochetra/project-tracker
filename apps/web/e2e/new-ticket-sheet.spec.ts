@@ -139,6 +139,7 @@ test.describe('new ticket sheet', () => {
       await page.mouse.down({ clickCount: 2 });
       await page.mouse.up({ clickCount: 2 });
     }
+
     await page.waitForTimeout(600);
     await expect(discardRow).toBeVisible();
     await expect(title).toHaveValue('Crash on launch');
@@ -160,6 +161,7 @@ test.describe('new ticket sheet', () => {
     for (let tries = 1; !inTime && tries < 3; tries += 1) {
       inTime = await ctrlClickThenVoiceOver(page);
     }
+
     expect(inTime, `the click within ${CLICK_SHIELD_MS} ms of the question, in 3 tries`).toBe(true);
 
     await page.waitForTimeout(600);
@@ -189,7 +191,9 @@ async function ctrlClickThenVoiceOver(page: Page): Promise<boolean> {
   await page.waitForTimeout(50);
   const clickedAt = await discardChangesRow(page).evaluate((row) => {
     row.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, detail: 1 }));
+
     return performance.now();
   });
+
   return clickedAt - askedAt < CLICK_SHIELD_MS;
 }

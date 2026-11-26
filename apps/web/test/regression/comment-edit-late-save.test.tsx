@@ -34,6 +34,7 @@ function open() {
   );
   const rendered = renderTicket({ detail: server.detail, client: server.client });
   cleanups.push(rendered.restorePhone);
+
   return server;
 }
 

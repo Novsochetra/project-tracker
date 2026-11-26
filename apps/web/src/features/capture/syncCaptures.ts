@@ -55,6 +55,7 @@ function settle(capture: QueuedCapture, step: Step, deps: SyncDeps, report: Sync
   report[step.kind].push(capture);
   if (step.kind === 'added' && step.unsaved) report.unsaved.push(step.unsaved);
   const settled = step.kind === 'added' ? markCreated : dropCapture;
+
   return deps.queue.update((queue) => settled(queue, capture.id));
 }
 
@@ -82,5 +83,6 @@ export async function syncCaptures(deps: SyncDeps): Promise<SyncReport> {
     if (!(await syncClaimed(capture.id, deps, report))) return { ...report, stopped: true };
     capture = nextCapture(deps.queue.read(), seen);
   }
+
   return report;
 }

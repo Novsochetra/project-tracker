@@ -25,6 +25,7 @@ for (const [signal, code] of [
     process.exit(code);
   });
 }
+
 process.once('exit', removeSourceCopies);
 
 // Says where things go without DATABASE_URL's password or any AWS key.
@@ -54,10 +55,12 @@ async function run(): Promise<number> {
     say(MOVE_USAGE);
     return 0;
   }
+
   if ('error' in args) {
     console.error(`${args.error}\n\n${MOVE_USAGE}`);
     return 2;
   }
+
   return move(args);
 }
 

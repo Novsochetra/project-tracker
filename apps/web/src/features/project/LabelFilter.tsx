@@ -26,6 +26,7 @@ const labelOptions = (labels: readonly Label[]): DropdownOption[] => [
 export function LabelFilter({ labels, picked, onChange }: LabelFilterProps) {
   const [open, setOpen] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
+
   return (
     <>
       <button

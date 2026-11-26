@@ -16,6 +16,7 @@ async function holdSheet(page: Page): Promise<() => void> {
     await gate;
     await route.fulfill({ contentType: 'text/css', body: '' });
   });
+
   return release;
 }
 

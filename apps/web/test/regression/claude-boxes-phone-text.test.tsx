@@ -9,6 +9,7 @@ import { phoneStyle } from './phoneCss';
 function phoneFontSize(element: Element, cssModule: string): string | undefined {
   const style = phoneStyle(element, cssModule);
   const font = style.get('font');
+
   return style.get('font-size') ?? (font ? /(\d+(?:\.\d+)?px)/.exec(font)?.[1] : undefined);
 }
 

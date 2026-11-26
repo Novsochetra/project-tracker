@@ -7,6 +7,7 @@ import type { TrackerQuery } from '../types';
 
 export function useReadyForYou(): TrackerQuery<TicketsAcrossProjects> {
   const client = useApi();
+
   return useQuery({
     queryKey: queryKeys.ready(),
     queryFn: async () => withStatuses(await client.listAllTickets({ category: 'reviewed' })),

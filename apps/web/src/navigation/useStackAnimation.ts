@@ -36,6 +36,7 @@ export function useStackAnimation({
     if (animation === 'none' || animation === 'swipe') return;
     const [from, to] = progressRange(platform, animation);
     progress.set(from);
+
     return tween(progress, to, stackTiming(platform, animation), () => onSettled(id));
   }, [id, animation, platform, progress, onSettled]);
 }

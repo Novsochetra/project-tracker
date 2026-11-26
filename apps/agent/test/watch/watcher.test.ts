@@ -16,6 +16,7 @@ function watcherWith(
     { api, runClaude, runAsk: noAsks, log: (text) => log.push(text), retryDelay: () => 1 },
     { runnerId: RUNNER, name: 'Mac', projectKey: 'MOB', trackerUrl: 'http://tracker.test' },
   );
+
   return { watcher, log };
 }
 
@@ -30,6 +31,7 @@ describe('the watcher', () => {
     const prompts: string[] = [];
     const { watcher, log } = watcherWith(tracker.api, ({ prompt }) => {
       prompts.push(prompt);
+
       return Promise.resolve(
         prompt === 'FAIL'
           ? { code: 1, signal: null, output: 'boom', results: [] }
@@ -50,6 +52,7 @@ describe('the watcher', () => {
     const step = { kind: 'tool', label: 'Read a.ts', subAgent: false, toolId: 't-1' } as const;
     const { watcher } = watcherWith(tracker.api, (_prompt, _signal, onSteps) => {
       onSteps([step]);
+
       return exits(0)();
     });
     await watcher.lookForWork();
@@ -64,6 +67,7 @@ describe('the watcher', () => {
     vi.mocked(tracker.api.addRunSteps).mockRejectedValue(new Error('fetch failed'));
     const { watcher, log } = watcherWith(tracker.api, (_prompt, _signal, onSteps) => {
       onSteps([{ kind: 'text', label: 'Looking.', subAgent: false, toolId: null }]);
+
       return exits(0)();
     });
     await watcher.lookForWork();
@@ -163,6 +167,7 @@ describe('the watcher', () => {
         tracker.statuses.set('r-1', 'cancelled');
         await watcher.checkIn();
       }
+
       await working;
       expect(tracker.ended).toEqual([{ id: 'r-1', status: 'cancelled' }]);
     }

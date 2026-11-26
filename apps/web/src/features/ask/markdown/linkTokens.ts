@@ -10,6 +10,7 @@ type LinkToken = TextToken | AtomToken;
 // The address must be one linkify would link whole, so both kinds of link follow the same rules.
 const isWebLink = (href: string): boolean => {
   const [part, ...rest] = linkParts(href);
+
   return rest.length === 0 && part?.kind === 'link' && part.href === href;
 };
 
@@ -34,6 +35,8 @@ export function linkTokens(source: string, start: number, end: number): LinkToke
     tokens.push({ kind: 'atom', inline: { kind: 'link', text: label.trim() || href, href } });
     from = match.index + whole.length;
   }
+
   bareLinks(text.slice(from), start + from, tokens);
+
   return tokens;
 }

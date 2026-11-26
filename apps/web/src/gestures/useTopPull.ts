@@ -28,6 +28,7 @@ function attachTopPull(target: HTMLElement, read: () => TopPullOptions): () => v
   // A pixel of rounding is not something to scroll.
   const fits = () => {
     const container = scroller();
+
     return read().stretchWhenFits === true && container.scrollHeight - container.clientHeight <= 1;
   };
 
@@ -53,9 +54,11 @@ function attachTopPull(target: HTMLElement, read: () => TopPullOptions): () => v
         session = null;
         return;
       }
+
       session.engaged = true;
       read().onStart();
     }
+
     if (event.cancelable) event.preventDefault();
     session.tracker.add(event.timeStamp, touch.clientX, touch.clientY);
     read().onMove(dy);
@@ -65,6 +68,7 @@ function attachTopPull(target: HTMLElement, read: () => TopPullOptions): () => v
     if (session?.engaged) read().onEnd(velocityY(session));
     session = null;
   };
+
   const onEnd = (event: TouchEvent) => finish((s) => s.tracker.velocity(event.timeStamp).y);
   const onCancel = () => finish(() => 0);
 
@@ -72,6 +76,7 @@ function attachTopPull(target: HTMLElement, read: () => TopPullOptions): () => v
   target.addEventListener('touchmove', onMove, { passive: false });
   target.addEventListener('touchend', onEnd);
   target.addEventListener('touchcancel', onCancel);
+
   return () => {
     target.removeEventListener('touchstart', onStart);
     target.removeEventListener('touchmove', onMove);
@@ -91,6 +96,7 @@ export function useTopPull(
   useEffect(() => {
     const target = targetRef.current;
     if (!target) return;
+
     return attachTopPull(target, () => optionsRef.current);
   }, [targetRef]);
 }

@@ -20,6 +20,7 @@ function pagesTurned(paging: EdgePaging, ...moves: Move[]): number[] {
     state = step.paging;
     if (step.page !== 0) pages.push(step.page);
   }
+
   return pages;
 }
 

@@ -29,6 +29,7 @@ function setup(runs: Run[], { phone = false, client = {} } = {}) {
   const listTicketRuns = vi.fn().mockResolvedValue(runs);
   const rendered = renderTicket({ detail, phone, client: { listTicketRuns, ...client } });
   cleanups.push(rendered.restorePhone);
+
   return rendered;
 }
 

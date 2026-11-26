@@ -14,5 +14,6 @@ export function renamedFor(name: string, from: AttachmentMimeType, to: Attachmen
     named && attachmentKind(named) === 'image'
       ? trimmed.slice(0, trimmed.lastIndexOf('.'))
       : trimmed;
+
   return `${stem}.${storedExtension(to)}`;
 }

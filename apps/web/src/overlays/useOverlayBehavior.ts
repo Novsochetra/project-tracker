@@ -17,8 +17,10 @@ function listenForEscape(token: symbol, onClose: () => void): () => void {
     event.preventDefault();
     onClose();
   };
+
   // On window, so handlers on the dialog, its portals and the document all get Escape first.
   window.addEventListener('keydown', onKeyDown);
+
   return () => window.removeEventListener('keydown', onKeyDown);
 }
 
@@ -41,12 +43,14 @@ export function useOverlayBehavior(behavior: OverlayBehavior) {
     if (focused instanceof HTMLElement && !panelRef.current?.contains(focused)) {
       returnFocusRef.current = focused;
     }
+
     const initial = focusInitial ? initialFocusRef?.current : null;
     (initial ?? panelRef.current)?.focus({ preventScroll: true });
     const token = Symbol('overlay');
     const pop = pushOverlay(token);
     const unlock = lockBodyScroll();
     const stopEscape = listenForEscape(token, () => onCloseRef.current());
+
     return () => {
       stopEscape();
       unlock();

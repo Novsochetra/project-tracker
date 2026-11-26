@@ -28,12 +28,14 @@ function fieldsLine(detail: TicketDetail): string {
   ];
   const names = labelNames(ticketLabels(detail));
   if (names) fields.push(`Labels: ${names}`);
+
   return fields.join(SEP);
 }
 
 function projectLine({ project }: TicketDetail): string {
   const parts = [`Project: ${project.name} (${project.key})`];
   if (project.repo) parts.push(`Repository: ${project.repo}`);
+
   return parts.join(SEP);
 }
 
@@ -54,5 +56,6 @@ export function formatTicket(detail: TicketDetail, view: FileView = NO_FILE_CONT
   if (files.length > 0) sections.push(['## Attachments', ...formatAttachments(files, view)]);
   sections.push(['## Activity (oldest first)', formatActivity(detail.activity, view)]);
   const text = sections.map((lines) => lines.join('\n')).join('\n\n');
+
   return view.usesToken && showsLink(text, detail, view) ? `${text}\n\n${TOKEN_NOTE}` : text;
 }

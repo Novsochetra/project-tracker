@@ -16,8 +16,11 @@ export function SearchShortcut() {
       if (current?.type === 'search') close();
       else if (current === null && !hasOpenOverlay(document)) open({ type: 'search' });
     };
+
     window.addEventListener('keydown', onKeyDown);
+
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [open, close, current]);
+
   return null;
 }

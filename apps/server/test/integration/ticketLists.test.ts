@@ -21,10 +21,12 @@ function countingPlugin() {
   const plugin: KyselyPlugin = {
     transformQuery: (args) => {
       counter.queries += 1;
+
       return args.node;
     },
     transformResult: (args) => Promise.resolve(args.result),
   };
+
   return { plugin, counter };
 }
 
@@ -134,11 +136,13 @@ describe.each(DIALECTS)('ticket lists (%s)', (dialect) => {
     const reviewOf = (items: TicketListItem[], key: string): Review | null => {
       const ticket = items.find((item) => item.key === key);
       if (!ticket) throw new Error(`${key} is not in the list`);
+
       return ticket.lastReview;
     };
 
     const lastReviews = async (key: string): Promise<(Review | null)[]> => {
       const client = api.client();
+
       return [
         reviewOf((await client.getBoard('MOB')).tickets, key),
         reviewOf(await client.listTickets('MOB'), key),
@@ -198,8 +202,10 @@ describe.each(DIALECTS)('ticket lists (%s)', (dialect) => {
     const queriesFor = async (read: () => Promise<unknown>) => {
       counter.queries = 0;
       await read();
+
       return counter.queries;
     };
+
     const readAll = async () => [
       await queriesFor(() => client.getBoard('MOB')),
       await queriesFor(() => client.listTickets('MOB')),
@@ -214,6 +220,7 @@ describe.each(DIALECTS)('ticket lists (%s)', (dialect) => {
       await api.client().addComment(ticket.key, { text: 'Comment' });
       await approve(ticket.key, 3);
     }
+
     expect((await client.listAllTickets({ category: 'reviewed' })).tickets).toHaveLength(7);
     expect(await readAll()).toEqual(few);
   });

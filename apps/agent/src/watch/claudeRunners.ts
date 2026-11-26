@@ -48,8 +48,10 @@ export function claudeRunners(setup: ClaudeSetup) {
   const asking = (run: Run, start: (laneArgs: string[]) => Promise<ClaudeExit>) => {
     const { allowed, tool } = runPermissions(run, prompts);
     if (!tool) return start(allowed);
+
     return withPromptTool(tool, run, (promptArgs) => start([...allowed, ...promptArgs]));
   };
+
   const chats = createChatRunner({
     command,
     cwd,
@@ -60,6 +62,7 @@ export function claudeRunners(setup: ClaudeSetup) {
     pool: setup.chats,
     spawn: setup.spawnChat,
   });
+
   return {
     runClaude: (job: RunJob, stop: AbortSignal, onSteps: OnSteps) =>
       asking(job.run, (laneArgs) =>

@@ -15,6 +15,7 @@ export type HandleKeyDown = (event: KeyboardEvent<HTMLElement>, ticket: TicketLi
 
 const arrowDirection = (key: string): MoveDirection | null => {
   if (key === 'ArrowUp') return 'up';
+
   return key === 'ArrowDown' ? 'down' : null;
 };
 
@@ -24,6 +25,7 @@ export function useKeyboardMove(
   moveTicket: MoveTicket,
 ): HandleKeyDown {
   const readBoard = useBoardReader(projectKey);
+
   return useCallback<HandleKeyDown>(
     (event, ticket) => {
       const direction = arrowDirection(event.key);

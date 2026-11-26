@@ -31,11 +31,13 @@ function renameWhileSaving() {
     getTicket: vi.fn(() => (renamed ? Promise.resolve(theirs) : new Promise<never>(() => {}))),
     updateTicket: vi.fn(() => {
       renamed = true;
+
       return Promise.reject(STALE);
     }),
   };
   const rendered = renderTicket({ client });
   cleanups.push(rendered.restorePhone);
+
   return client;
 }
 

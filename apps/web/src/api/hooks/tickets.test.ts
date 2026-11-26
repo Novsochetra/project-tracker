@@ -20,6 +20,7 @@ import { useDeleteTicket, useMarkSent, useTicket, useCreateTicket } from './tick
 
 const ticketOf = (num: number, statusId: string, rank: number): Ticket => {
   const { commentCount: _c, attachmentCount: _a, ...ticket } = listItem(num, statusId, rank);
+
   return ticket;
 };
 

@@ -54,9 +54,11 @@ export async function createLabel(
     };
     await insertLabel(trx, row);
     await touchProject(ctx, trx, project.id);
+
     return row;
   });
   notify(ctx, label.projectId);
+
   return toLabel(label);
 }
 
@@ -72,11 +74,14 @@ export async function updateLabel(
     if (changes.name !== undefined) {
       assertUniqueName(await listLabelRows(trx, current.projectId), changes.name, id);
     }
+
     await updateLabelRow(trx, id, changes);
     await touchProject(ctx, trx, current.projectId);
+
     return { label: { ...current, ...changes }, changed: true };
   });
   if (outcome.changed) notify(ctx, outcome.label.projectId);
+
   return toLabel(outcome.label);
 }
 
@@ -92,11 +97,14 @@ export async function reorderLabels(
     if (!exact || !ids.every((id) => known.has(id))) {
       throw invalidInput('Send every label of this project exactly once.');
     }
+
     for (const [position, id] of ids.entries()) await updateLabelRow(trx, id, { position });
     await touchProject(ctx, trx, project.id);
+
     return { projectId: project.id, labels: await listLabelRows(trx, project.id) };
   });
   notify(ctx, result.projectId);
+
   return result.labels.map(toLabel);
 }
 
@@ -106,6 +114,7 @@ export async function deleteLabel(ctx: UserContext, id: string): Promise<void> {
     const current = await requireLabel(trx, ctx.scope, id);
     await deleteLabelRow(trx, id);
     await touchProject(ctx, trx, current.projectId);
+
     return current;
   });
   notify(ctx, label.projectId);

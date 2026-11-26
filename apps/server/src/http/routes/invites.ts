@@ -20,14 +20,17 @@ const ownerId = (c: Context<AppEnv>, deps: AuthDeps) =>
 // Anyone with the link may ask about it and accept it; the secret is what lets them in.
 const linkRoutes = (deps: AuthDeps) => {
   const limited = limitTries(deps, 'tries with invite links');
+
   return new Hono<AppEnv>()
     .post('/invites/check', jsonBodyAsSent(checkInviteInput), limited, async (c) => {
       const invite = await requireUsableInvite(deps.db, c.req.valid('json').secret, deps.now());
+
       return c.json({ expiresAt: invite.expiresAt });
     })
     .post('/invites/accept', jsonBodyAsSent(acceptInviteInput), limited, async (c) => {
       const user = await acceptInvite(deps.db, c.req.valid('json'), deps.now());
       await signInAs(c, deps, user.id);
+
       return c.json(signedInState(user), 201);
     });
 };
@@ -42,6 +45,7 @@ const ownerRoutes = (deps: AuthDeps) =>
     )
     .delete('/invites/:id', async (c) => {
       await revokeInvite(deps.db, await ownerId(c, deps), c.req.param('id'));
+
       return c.body(null, 204);
     });
 

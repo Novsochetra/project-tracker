@@ -2,6 +2,7 @@
 export function shownPath(path: string, folder: string): string {
   const root = folder.endsWith('/') ? folder : `${folder}/`;
   if (path === folder || `${path}/` === root) return '.';
+
   return path.startsWith(root) ? path.slice(root.length) : path;
 }
 

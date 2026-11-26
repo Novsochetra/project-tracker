@@ -17,6 +17,8 @@ export function textRuns(text: string): string[] {
     runs.push(text.slice(start, end));
     start = end;
   }
+
   if (start < text.length) runs.push(text.slice(start));
+
   return runs;
 }

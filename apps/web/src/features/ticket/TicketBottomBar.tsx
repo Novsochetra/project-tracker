@@ -32,6 +32,7 @@ export function TicketBottomBar({ ticketKey, projectKey, done, commentBox }: Tic
   const unlessSwapped = (action: () => void) => () => {
     if (!swapped) action();
   };
+
   return (
     <BottomBar>
       {commentBox && <CommentJump boxRef={commentBox} />}

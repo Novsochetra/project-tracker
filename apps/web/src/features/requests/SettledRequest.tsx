@@ -44,6 +44,7 @@ export function SettledRequest({ request, now, takeFocus }: SettledRequestProps)
   const outcome = requestOutcome(request, now);
   const subject = subjectOf(request);
   const icon = KIND_ICONS[request.kind] ?? stepIcon({ kind: 'tool', label: subject });
+
   return (
     <div className={`${styles.settledBody} fade-in`}>
       <p className={styles.subject}>

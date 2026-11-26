@@ -25,6 +25,7 @@ function observeTitle(
     },
   );
   observer.observe(title);
+
   return () => observer.disconnect();
 }
 
@@ -44,16 +45,19 @@ export function useLargeTitle<T extends HTMLElement>(): RefObject<T | null> {
         : observeTitle(title, screen.scrollRef.current, (visible) => {
             store.set({ present: true, visible });
           });
+
     return () => {
       stop();
       store.set(NO_LARGE_TITLE);
     };
   }, [screen, isPhone]);
+
   return ref;
 }
 
 export function useLargeTitleState(): LargeTitleSnapshot {
   const store = useOptionalScreen()?.largeTitle;
+
   return useSyncExternalStore(
     store?.subscribe ?? noop,
     store?.get ?? (() => NO_LARGE_TITLE),
@@ -63,5 +67,6 @@ export function useLargeTitleState(): LargeTitleSnapshot {
 
 export function useLargeTitleCollapsed(): boolean {
   const { present, visible } = useLargeTitleState();
+
   return present && !visible;
 }

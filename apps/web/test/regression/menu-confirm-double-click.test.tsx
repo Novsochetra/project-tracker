@@ -29,6 +29,7 @@ function renderCommentMenu() {
   const onDelete = vi.fn();
   renderWithApp(<ItemMenu noun="comment" onEdit={vi.fn()} onDelete={onDelete} />);
   restore.push(stillClock());
+
   return { user: userEvent.setup(), onDelete };
 }
 

@@ -16,6 +16,7 @@ function renderSection(overrides: Parameters<typeof renderWithApi>[1] = {}) {
     ...overrides,
   };
   renderWithApi(<NotificationsSection />, api);
+
   return api;
 }
 

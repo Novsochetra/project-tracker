@@ -17,17 +17,20 @@ export function currentPage(columns: readonly Span[], view: Span): number {
       best = distance;
     }
   }
+
   return page;
 }
 
 export function revealDistance(item: Span, view: Span): number {
   if (item.left < view.left) return item.left - view.left;
   if (item.right > view.right) return Math.min(item.right - view.right, item.left - view.left);
+
   return 0;
 }
 
 export const spanOf = (element: Element): Span => {
   const { left, right } = element.getBoundingClientRect();
+
   return { left, right };
 };
 

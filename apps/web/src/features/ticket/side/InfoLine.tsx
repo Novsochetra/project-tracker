@@ -10,6 +10,7 @@ import styles from './SidePanel.module.css';
 // ticket instead of a card between the description and the activity.
 export function InfoLine({ detail, now }: { detail: TicketDetail; now: number }) {
   const { ticket, project } = detail;
+
   return (
     <p className={styles.infoLine}>
       <span className={styles.project}>

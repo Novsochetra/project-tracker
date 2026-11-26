@@ -35,6 +35,7 @@ describe.each(DIALECTS)('run all todo (%s)', (dialect) => {
     for (const title of ['Crash', 'Login', 'Search', 'Share']) {
       await person('POST', '/api/projects/MOB/tickets', { title });
     }
+
     await register(runner);
   });
 
@@ -94,6 +95,7 @@ describe.each(DIALECTS)('run all todo (%s)', (dialect) => {
       for (let n = 5; n <= 33; n += 1) {
         await person('POST', '/api/projects/MOB/tickets', { title: `Ticket ${n}` });
       }
+
       const { body } = await runAll();
       expect(body).toMatchObject({ queued: 30, leftOver: 3 });
       expect((await runAll()).body).toMatchObject({ queued: 3, skippedActive: 30, leftOver: 0 });

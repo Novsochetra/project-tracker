@@ -46,6 +46,7 @@ export function nameIssue(
 ): NameIssue | null {
   if (!name.trim()) return { kind: 'blank' };
   const clash = findLabelByName(labels, name);
+
   return clash && clash.id !== editingId ? { kind: 'taken', name: clash.name } : null;
 }
 
@@ -69,6 +70,7 @@ export function updateInput(label: Label, draft: LabelDraft): UpdateLabelInput {
   if (draft.template !== label.template) input.template = draft.template;
   const instructions = draft.instructions.trim();
   if (instructions !== label.instructions) input.instructions = instructions;
+
   return input;
 }
 
@@ -77,11 +79,13 @@ export function labelCounts(tickets: readonly Pick<TicketListItem, 'labelIds'>[]
   for (const { labelIds = [] } of tickets) {
     for (const id of labelIds) counts.set(id, (counts.get(id) ?? 0) + 1);
   }
+
   return counts;
 }
 
 export function deleteMessage(name: string, count: number): string {
   if (count === 0) return `Delete “${name}”? This can't be undone.`;
   const tickets = `${count} ticket${count === 1 ? '' : 's'}`;
+
   return `Delete “${name}” and take it off ${tickets}?`;
 }

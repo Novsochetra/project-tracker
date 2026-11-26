@@ -12,6 +12,7 @@ export const uploadName = (file: File, type: AttachmentMimeType): string =>
 
 export function renamedAs(fileName: string, type: EncodedType): string {
   const base = fileName.replace(/\.[^./\\]*$/, '');
+
   return `${base || 'image'}.${storedExtension(type)}`;
 }
 
@@ -38,8 +39,10 @@ function encode(bitmap: ImageBitmap, { type, width, height }: Encoding): Promise
     context.fillStyle = 'white';
     context.fillRect(0, 0, width, height);
   }
+
   context.imageSmoothingQuality = 'high';
   context.drawImage(bitmap, 0, 0, width, height);
+
   return new Promise((resolve) => canvas.toBlob(resolve, type, JPEG_QUALITY));
 }
 
@@ -56,6 +59,7 @@ async function encodeToFit(bitmap: ImageBitmap, encodings: Encoding[]): Promise<
     encoded = { blob, type: encoding.type };
     if (blob.size <= ATTACHMENT_KINDS.image.maxBytes) return encoded;
   }
+
   return encoded;
 }
 
@@ -70,6 +74,7 @@ async function reencode(
   if (!plan) return null;
   const encoded = await encodeToFit(bitmap, plan.encodings);
   if (!encoded || (!plan.mustConvert && encoded.blob.size >= file.size)) return null;
+
   return encoded;
 }
 

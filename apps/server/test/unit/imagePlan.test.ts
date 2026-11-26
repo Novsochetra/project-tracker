@@ -101,6 +101,7 @@ describe('workBytes', () => {
   const MB = 1024 * 1024;
   const estimate = (mimeType: 'image/jpeg' | 'image/png', overrides: Partial<ImageFacts>) => {
     const image = facts(overrides);
+
     return workBytes(image, planImage(mimeType, image)!) / MB;
   };
 

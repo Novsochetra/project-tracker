@@ -12,6 +12,7 @@ function checkedSubject(subject: string): string {
   if (!mail && !web) {
     throw new Error('VAPID_SUBJECT must be mailto:you@example.com or an https:// address.');
   }
+
   return subject;
 }
 
@@ -23,7 +24,9 @@ export function loadPushSettings(env: NodeJS.ProcessEnv, publicUrl: string | nul
   if (Boolean(publicKey) !== Boolean(privateKey)) {
     throw new Error('Set both VAPID_PUBLIC_KEY and VAPID_PRIVATE_KEY, or neither.');
   }
+
   const keys = publicKey ? { publicKey, privateKey } : null;
   if (keys) signingKeyOf(keys);
+
   return { keys, subject: checkedSubject(env.VAPID_SUBJECT?.trim() || subjectOf(publicUrl)) };
 }

@@ -21,6 +21,7 @@ export function DemoTicketScreen({ projectKey, num }: { projectKey: string; num:
   const project = demo.projects.find((candidate) => candidate.key === projectKey);
   const ticket = project?.tickets.find((candidate) => candidate.num === num);
   const key = `${projectKey}-${num}`;
+
   return (
     <>
       <NavBar title={key} mono backLabel={project?.name ?? projectKey} />

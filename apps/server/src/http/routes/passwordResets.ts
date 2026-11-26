@@ -17,12 +17,14 @@ const ownerId = (c: Context<AppEnv>, deps: AuthDeps) =>
 // manager save it.
 const linkRoutes = (deps: AuthDeps) => {
   const limited = limitTries(deps, 'tries with reset links');
+
   return new Hono<AppEnv>()
     .post('/password-resets/check', jsonBodyAsSent(checkResetLinkInput), limited, async (c) =>
       c.json(await checkResetLink(deps.db, c.req.valid('json').secret, deps.now())),
     )
     .post('/password-resets/use', jsonBodyAsSent(resetPasswordInput), limited, async (c) => {
       await resetPassword(deps.db, c.req.valid('json'), deps.now());
+
       return c.body(null, 204);
     });
 };
@@ -31,15 +33,18 @@ const ownerRoutes = (deps: AuthDeps) =>
   new Hono<AppEnv>()
     .get('/users', async (c) => {
       await ownerId(c, deps);
+
       return c.json(await listInvitedUsers(deps.db, deps.now()));
     })
     .post('/users/:id/reset-link', async (c) => {
       const owner = await ownerId(c, deps);
+
       return c.json(await createResetLink(deps.db, owner, c.req.param('id'), deps.now()), 201);
     })
     .delete('/users/:id/reset-link', async (c) => {
       await ownerId(c, deps);
       await cancelResetLink(deps.db, c.req.param('id'));
+
       return c.body(null, 204);
     });
 

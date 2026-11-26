@@ -35,6 +35,7 @@ export interface DueLabelProps {
 
 export function DueLabel({ due, overdue, className, children }: DueLabelProps) {
   const label = due ? formatShortDay(due) : '';
+
   return (
     <span
       className={clsx(styles.due, className)}
@@ -54,6 +55,7 @@ export function TicketRowContent({ ticket, status, dragged, callbacks }: TicketR
   const opening = useIsOpeningTicket(ticket);
   const waiting = useStillWaiting(ticket.waitingUntil);
   const labels = useTicketLabels(ticket);
+
   return (
     <div className={styles.inner}>
       <DragHandle

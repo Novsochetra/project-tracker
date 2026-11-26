@@ -22,7 +22,9 @@ function reach(manifest: Manifest, starts: string[], next: (chunk: ManifestChunk
     seen.add(key);
     next(chunk).forEach(visit);
   };
+
   starts.forEach(visit);
+
   return seen;
 }
 
@@ -38,6 +40,7 @@ export function readFirstLoad(manifest: Manifest): FirstLoad {
   const all = reach(manifest, entries, (chunk) => [...imports(chunk), ...dynamicImports(chunk)]);
   const lazyParts = [...new Set([...all].flatMap((key) => dynamicImports(manifest[key]!)))];
   const fileOf = (key: string) => manifest[key]!.file;
+
   return {
     files: [...first].map(fileOf),
     lazyParts,
@@ -89,5 +92,6 @@ export function firstLoadProblems(
         'the first load imports that re-exports a module only a lazy part uses; import that ' +
         'module directly instead.',
     );
+
   return [...problems, ...taken.map(takenProblem)];
 }

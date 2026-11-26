@@ -47,6 +47,7 @@ function cachedProject(queryClient: QueryClient, ticketKey: string) {
     queryClient.getQueryData<ProjectDetail>(queryKeys.project(projectKey))?.statuses ??
     queryClient.getQueryData<TicketDetail>(queryKeys.ticket(ticketKey))?.statuses ??
     readyStatuses(queryClient.getQueryData<TicketsAcrossProjects>(queryKeys.ready()));
+
   return { tickets: board?.tickets ?? [], statuses };
 }
 
@@ -58,6 +59,7 @@ function cachedProject(queryClient: QueryClient, ticketKey: string) {
 function keepHandleFocus(ticketId: string): () => void {
   if (!rowHasFocus(ticketId)) return () => undefined;
   const release = requestHandleFocus(ticketId);
+
   return () => notifyManager.schedule(release);
 }
 
@@ -76,6 +78,7 @@ function useUndoMove() {
   const client = useApi();
   const { mutateAsync } = useMoveTicket();
   const { show } = useToast();
+
   return useCallback(
     (ticket: Ticket, from: MoveOrigin, saved: Promise<boolean>) => {
       show(moveMessage(ticket.key, from.statusName));
@@ -97,6 +100,7 @@ export function useMoveToast(): ShowMove {
   const queryClient = useQueryClient();
   const { show } = useToast();
   const undo = useUndoMove();
+
   return useCallback<ShowMove>(
     (ticket, to, saved) => {
       const cached = cachedProject(queryClient, ticket.key);

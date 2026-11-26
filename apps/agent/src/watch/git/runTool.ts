@@ -77,11 +77,13 @@ export function runTool(command: string, args: readonly string[], options: ToolO
       killedAt = Date.now();
       signalGroup(child.pid, 'SIGKILL');
     };
+
     const stop = () => {
       stopped = true;
       signalGroup(child.pid, 'SIGTERM');
       force = setTimeout(kill, options.killGraceMs ?? KILL_GRACE_MS);
     };
+
     options.signal.addEventListener('abort', stop, { once: true });
     let out = '';
     let err = '';

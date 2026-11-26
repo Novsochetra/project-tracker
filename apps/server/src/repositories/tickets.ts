@@ -112,6 +112,7 @@ export async function listTicketItemRows(
   const rows = await selectTicketItems(db, reader)
     .where('tickets.projectId', '=', projectId)
     .execute();
+
   return rows.map(toItemRow);
 }
 
@@ -126,6 +127,7 @@ export async function listTicketItemRowsInStatuses(
     .orderBy('tickets.updatedAt', 'desc')
     .orderBy('tickets.id')
     .execute();
+
   return rows.map(toItemRow);
 }
 
@@ -159,7 +161,9 @@ export async function updateTicketMatching(
   for (const [column, value] of Object.entries(match)) {
     update = update.where(column as keyof TicketMatch, '=', value);
   }
+
   const result = await update.executeTakeFirst();
+
   return Number(result.numUpdatedRows) > 0;
 }
 
@@ -188,5 +192,6 @@ export async function listAssignees(db: Db, scope: UserScope): Promise<string[]>
     .where('tickets.assignee', '<>', '')
     .where(ownedBy(scope))
     .execute();
+
   return rows.map((row) => row.assignee);
 }

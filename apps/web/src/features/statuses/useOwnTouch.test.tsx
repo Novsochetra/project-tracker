@@ -9,8 +9,10 @@ function Body({ onBodyTouch }: { onBodyTouch: () => void }) {
   useEffect(() => {
     const body = bodyRef.current;
     body?.addEventListener('touchstart', onBodyTouch);
+
     return () => body?.removeEventListener('touchstart', onBodyTouch);
   }, [onBodyTouch]);
+
   return (
     <div ref={bodyRef}>
       <button ref={handleRef} type="button">

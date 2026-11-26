@@ -32,6 +32,7 @@ export function useFoldLeaving(
         onLeft(seq);
         return;
       }
+
       const { height, paddingTop, paddingBottom } = getComputedStyle(row);
       const frames = [
         { height, paddingTop, paddingBottom, opacity: 1 },

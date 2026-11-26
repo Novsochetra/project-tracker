@@ -7,6 +7,7 @@ const FILE = '/api/attachments/f1/file';
 
 function route(path: string, headers: Record<string, string> = {}, sameOrigin = true) {
   const request = new Request(`${ORIGIN}${path}`, { headers });
+
   return { url: new URL(request.url), request, sameOrigin };
 }
 

@@ -24,6 +24,7 @@ type ChoicesProps = Pick<
 
 function SingleChoices({ question, pick, disabled, onChoose }: ChoicesProps) {
   const group = useId();
+
   return (
     <div role="radiogroup" aria-label={choicesLabel(question.question)} className={styles.choices}>
       {question.options.map((option) => (
@@ -44,6 +45,7 @@ function Choices(props: ChoicesProps) {
   const { question, pick, atOnce, disabled, onChoose } = props;
   if (question.options.length === 0) return null;
   if (!atOnce && !question.multiSelect) return <SingleChoices {...props} />;
+
   return (
     <div role="group" aria-label={choicesLabel(question.question)} className={styles.choices}>
       {question.options.map((option) => (
@@ -67,6 +69,7 @@ export function QuestionBlock(props: QuestionBlockProps) {
     event.preventDefault();
     onEnter();
   };
+
   return (
     <div className={styles.question}>
       {question.header && <span className={styles.header}>{question.header}</span>}

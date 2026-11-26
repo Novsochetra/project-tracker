@@ -35,6 +35,7 @@ const CLOSERS = new Set([')', ']', '}']);
 
 const fieldOf = (label: string): Field => {
   const name = label.toLowerCase();
+
   return name === 'file' ? 'files' : (name as Field);
 };
 
@@ -42,6 +43,7 @@ function labelOf(line: string): Label | null {
   const match = LABEL.exec(line);
   if (!match) return null;
   const word = match[1] ?? '';
+
   return { field: fieldOf(word), value: match[2] ?? '', capital: word === word.toUpperCase() };
 }
 
@@ -53,6 +55,7 @@ function readLines(text: string): Line[] {
     .split('\n')
     .map((line) => ({ text: line, label: labelOf(line) }));
   const capital = new Set(lines.flatMap(({ label }) => (label?.capital ? [label.field] : [])));
+
   return lines.map((line) =>
     line.label && !line.label.capital && capital.has(line.label.field)
       ? { ...line, label: null }
@@ -76,6 +79,7 @@ function readFields(text: string): Map<Field, string> | null {
       return null;
     }
   }
+
   return fields;
 }
 
@@ -99,6 +103,7 @@ function splitOnCommas(line: string): string[] {
       start = index + 1;
     }
   }
+
   return [...parts, line.slice(start)];
 }
 
@@ -106,16 +111,19 @@ function fileList(value: string): string[] {
   const lines = value.split('\n').filter((line) => line.trim());
   const items = lines.length > 1 ? lines : lines.flatMap(splitOnCommas);
   const files = items.map(fileName).filter(Boolean);
+
   return files.length === 1 && saysNone(files[0] ?? '') ? [] : files;
 }
 
 function nextStep(value: string): string | null {
   const next = value.trim();
+
   return next && !saysNone(next) ? next : null;
 }
 
 function statusOf(value: string | undefined): ReportSections['status'] {
   const text = value?.replace(MARKS, '').trim();
+
   return text ? { category: normalizeReportStatus(text), text } : null;
 }
 
@@ -123,6 +131,7 @@ export function reportSections(text: string): ReportSections | null {
   const fields = readFields(text);
   const summary = fields?.get('summary')?.trim();
   if (!fields || !summary) return null;
+
   return {
     status: statusOf(fields.get('status')),
     summary,

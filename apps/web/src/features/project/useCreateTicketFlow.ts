@@ -32,6 +32,7 @@ export function useCreateTicketFlow({
           if (hidesNewTicket(getListView(projectKey), statuses, ticket)) {
             resetListView(projectKey);
           }
+
           flashRows([ticket.key]);
           show(`${ticket.key} created`);
           onCreated();
@@ -43,5 +44,6 @@ export function useCreateTicketFlow({
       },
     );
   };
+
   return { submit, pending: isPending };
 }

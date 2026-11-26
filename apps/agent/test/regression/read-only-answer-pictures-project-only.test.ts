@@ -25,6 +25,7 @@ const done: FinishRunInput = { status: 'done', answer, sessionId: 's' };
 async function shownIn(mode: unknown) {
   const upload = vi.fn((_file: Blob, name: string) => Promise.resolve({ id: name }));
   const deps = { cwd: project, upload, describe: (error: unknown) => String(error) };
+
   return (await withAnswerImages(deps, done, new AbortController().signal, mode)).attachmentIds;
 }
 

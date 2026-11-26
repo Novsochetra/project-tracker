@@ -34,6 +34,7 @@ function renderReviewedTicket() {
     client: { updateTicket: vi.fn().mockReturnValue(new Promise(() => undefined)) },
   });
   cleanups.push(rendered.restorePhone);
+
   return rendered;
 }
 

@@ -27,6 +27,7 @@ export function trapTab(event: KeyboardEvent, root: HTMLElement): void {
     root.focus();
     return;
   }
+
   if (event.shiftKey && (active === first || active === root)) {
     event.preventDefault();
     last.focus();

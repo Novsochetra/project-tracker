@@ -31,6 +31,7 @@ function ChatRowMain({ chat, projectKey, now }: Pick<ChatRowProps, 'chat' | 'pro
   const { push } = useNavigation();
   const route = { name: 'chat', key: projectKey, chatId: chat.id } as const;
   const opening = useIsOpening(route);
+
   return (
     <ListRow className={styles.row} data-opening={opening || undefined} onClick={() => push(route)}>
       <span className={styles.chatTitle}>{chat.title}</span>{' '}
@@ -47,6 +48,7 @@ function ChatRowMain({ chat, projectKey, now }: Pick<ChatRowProps, 'chat' | 'pro
 export function ChatRow({ chat, projectKey, index, now, onSwipeDelete }: ChatRowProps) {
   const isPhone = useIsPhone();
   const main = <ChatRowMain chat={chat} projectKey={projectKey} now={now} />;
+
   return (
     <div
       className={clsx(styles.item, 'rise')}

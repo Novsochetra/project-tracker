@@ -6,6 +6,7 @@ import type { TrackerQuery } from '../types';
 
 export function useMeta(): TrackerQuery<ServerMeta> {
   const client = useApi();
+
   return useQuery({
     queryKey: queryKeys.meta(),
     queryFn: () => client.getMeta(),

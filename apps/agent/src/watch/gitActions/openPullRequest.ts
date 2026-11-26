@@ -27,11 +27,13 @@ async function branchToPush(context: StepContext): Promise<{ branch: string; bas
   if (isProtectedBranch(branch, base)) throw new GitActionError(PROTECTED_BRANCH);
   const problem = branchNameProblem(branch);
   if (problem) throw new GitActionError(problem);
+
   return { branch, base };
 }
 
 const urlOf = (out: string): string | undefined => {
   const last = out.trim().split('\n').at(-1)?.trim() ?? '';
+
   return URL.test(last) && last.length <= PR_URL_MAX ? last : undefined;
 };
 
@@ -57,5 +59,6 @@ export async function openPullRequest(
     "Couldn't open the pull request.",
   );
   const url = urlOf(out);
+
   return { branch, ...(url ? { url } : {}) };
 }

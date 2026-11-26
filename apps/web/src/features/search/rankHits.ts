@@ -9,6 +9,7 @@ export function rankTicketHits(
 ): TicketSearchHit[] {
   const current = currentProjectKey?.toUpperCase() ?? null;
   const here = (hit: TicketSearchHit) => (hit.projectKey.toUpperCase() === current ? 0 : 1);
+
   return hits
     .map((hit, index) => ({ hit, index }))
     .sort(

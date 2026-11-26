@@ -19,10 +19,12 @@ function setup() {
   const listRunSteps = vi.fn(() => {
     const read = deferred<RunStep[]>();
     reads.push(read);
+
     return read.promise;
   });
   const api = setupApi({ listRunSteps });
   const hook = renderHook(() => useRunSteps('r-1'), { wrapper: api.wrapper });
+
   return { ...api, ...hook, reads, listRunSteps };
 }
 

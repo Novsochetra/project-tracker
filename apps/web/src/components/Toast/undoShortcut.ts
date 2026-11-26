@@ -18,5 +18,6 @@ export const UNDO_KEYS = 'Meta+Z Control+Z';
 export function isUndoShortcut(event: ShortcutKey, focused: Element | null): boolean {
   if (event.defaultPrevented || event.repeat || event.isComposing) return false;
   if (!(event.metaKey || event.ctrlKey) || event.altKey || event.shiftKey) return false;
+
   return event.key.toLowerCase() === 'z' && !isEditable(focused);
 }

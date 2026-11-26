@@ -35,6 +35,7 @@ const ticketFor = (projectKey: string, input: { title: string }): Ticket => {
     key: `${projectKey}-1`,
     title: input.title,
   });
+
   return ticket;
 };
 
@@ -67,6 +68,7 @@ function renderQuickCapture(client: HarnessOptions['client'] = {}, path = '/') {
       },
     },
   );
+
   return { ...app, reachability, createTicket, user: userEvent.setup() };
 }
 

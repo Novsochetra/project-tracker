@@ -45,5 +45,6 @@ export async function createCardTicket(
     clientId: cardClientId(message.id, index),
   });
   await linkCardTicket(ctx.db, { messageId: message.id, cardIndex: index, ticketId: ticket.id });
+
   return getChat(ctx, scope, chat.id);
 }

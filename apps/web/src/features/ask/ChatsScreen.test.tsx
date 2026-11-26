@@ -16,6 +16,7 @@ function setup(chats = [makeChat()], phone = false) {
     client: { listChats: vi.fn().mockResolvedValue(chats) },
   });
   restore = rendered.restore;
+
   return rendered;
 }
 

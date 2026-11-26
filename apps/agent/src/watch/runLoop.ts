@@ -85,12 +85,14 @@ async function ticketEnding(
   // A reviewer's words are a review, not a report of the work; review_ticket records it.
   if (job.run.role === 'review') return deps.checkReview(job, outcome);
   await deps.handBack(job, reportTexts(exit));
+
   return outcome;
 }
 
 const runTicket: Runner = async (deps, job, stop, onSteps) => {
   const exit = await deps.runClaude(job, stop, onSteps);
   const outcome = await ticketEnding(deps, job, exit, ticketOutcomeOf(exit, stop.aborted));
+
   return withUsage(outcome, deps.usageOf(job, exit), exit);
 };
 
@@ -99,6 +101,7 @@ const runAsk: Runner = async (deps, job, stop, onSteps) => {
   const outcome = askOutcomeOf(exit, stop.aborted);
   const mode = job.run.askOptions?.mode;
   const shown = deps.answerImages ? await deps.answerImages(outcome, stop, mode) : outcome;
+
   return withUsage(shown, deps.usageOf(job, exit), exit);
 };
 
@@ -135,6 +138,7 @@ export function createRunLoop(deps: RunLoopDeps, settings: RunLoopSettings) {
       if (stopped) stillReporting();
       else log(`Couldn't tell the tracker how ${label} ended yet. Trying again.`);
     };
+
     const body = outcome.planLimits ? { ...outcome, runnerId: settings.runnerId } : outcome;
     try {
       await retryUntilAnswered(() => api.finishRun(run.id, body), {
@@ -160,6 +164,7 @@ export function createRunLoop(deps: RunLoopDeps, settings: RunLoopSettings) {
       log(`Refused ${label}: ${refusal}`);
       return report(job, { status: 'failed', error: refusal });
     }
+
     if (stopped) return end(job, { status: 'cancelled' });
     // An Edit question runs in the ticket lane but is still a question: its answer goes to the chat.
     const asking = job.run.kind === 'ask';
@@ -190,6 +195,7 @@ export function createRunLoop(deps: RunLoopDeps, settings: RunLoopSettings) {
         if (!job) break;
         await work(job);
       }
+
       deps.onProblem(settings.kind, undefined);
     } catch (error) {
       deps.onProblem(settings.kind, error);
@@ -200,6 +206,7 @@ export function createRunLoop(deps: RunLoopDeps, settings: RunLoopSettings) {
     looking ??= takeRuns().finally(() => {
       looking = undefined;
     });
+
     return looking;
   }
 

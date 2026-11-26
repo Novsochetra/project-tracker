@@ -13,8 +13,10 @@ function tracker() {
     most = Math.max(most, running);
     await tick();
     running -= 1;
+
     return name;
   };
+
   return { task, started, most: () => most };
 }
 

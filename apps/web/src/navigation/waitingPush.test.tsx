@@ -24,6 +24,7 @@ const MOB_1: Route = { name: 'ticket', key: 'MOB', num: 1 };
 function OpenButton({ name, route }: { name: string; route: Route }) {
   const { push } = useNavigation();
   const opening = useIsOpening(route);
+
   return (
     <button type="button" data-opening={opening || undefined} onClick={() => push(route)}>
       {name}
@@ -43,6 +44,7 @@ function Projects() {
 
 function Project() {
   const { route, back } = useNavigation();
+
   return (
     <>
       <p>Project {route.name === 'project' ? route.key : ''}</p>
@@ -56,12 +58,14 @@ function Project() {
 
 function Ticket() {
   const { route } = useNavigation();
+
   return <p>Ticket {route.name === 'ticket' ? `${route.key}-${route.num}` : ''}</p>;
 }
 
 function Probe() {
   const navigate = useNavigate();
   const navigation = use(NavigationContext);
+
   return (
     <>
       <output aria-label="Location">{useLocation().pathname}</output>
@@ -87,6 +91,7 @@ function heldCode(Screen: ComponentType) {
   });
   const Lazy = lazy(async () => {
     await code;
+
     return { default: Screen };
   });
   const arrive = () =>
@@ -94,6 +99,7 @@ function heldCode(Screen: ComponentType) {
       open();
       await code;
     });
+
   return { Lazy, waiting: () => (arrived ? null : code), arrive };
 }
 
@@ -107,13 +113,17 @@ function renderStack(path = '/', behind: string[] = []) {
       .filter((level) => level.name !== 'projects')
       .map((level) => codeFor(level).waiting())
       .filter((code) => code !== null);
+
     return waiting.length > 0 ? Promise.all(waiting) : null;
   };
+
   const renderScreen = (route: Route) => {
     if (route.name === 'projects') return <Projects />;
     const { Lazy } = codeFor(route);
+
     return <Lazy />;
   };
+
   const view = () => (
     <MemoryRouter initialEntries={[...behind, path]} initialIndex={behind.length}>
       <NavigationProvider prepare={prepare}>
@@ -124,6 +134,7 @@ function renderStack(path = '/', behind: string[] = []) {
       </NavigationProvider>
     </MemoryRouter>
   );
+
   return { project, ticket, show: () => render(view()) };
 }
 
@@ -147,6 +158,7 @@ async function openProject(user: ReturnType<typeof userEvent.setup>) {
   stack.show();
   await user.click(button('Open MOB'));
   expect(await screen.findByText('Project MOB')).toBeInTheDocument();
+
   return stack;
 }
 
@@ -401,6 +413,7 @@ describe('the browser’s Back or Forward to a screen whose code is on its way',
     await user.click(button('Browser back'));
     expect(location()).toBe('/');
     await waitFor(() => expect(layer('/p/MOB')).toBeNull());
+
     return stack;
   }
 

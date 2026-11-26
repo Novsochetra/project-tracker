@@ -21,6 +21,7 @@ export interface BoardCardFaceProps {
 
 export function BoardCardFace({ ticket, status, decorative = false }: BoardCardFaceProps) {
   const isDone = isDoneCategory(status.category);
+
   return (
     <>
       <PriorityBars priority={ticket.priority} className={styles.bars} />
@@ -41,6 +42,7 @@ function CardMeta({ ticket, status }: Omit<BoardCardFaceProps, 'decorative'>) {
   const labels = useTicketLabels(ticket);
   if (!waiting && !sentBack && !ticket.due && labels.length === 0) return null;
   const overdue = isOverdue(ticket.due, isDoneCategory(status.category));
+
   return (
     <span className={styles.meta}>
       {waiting && <WaitingMark size="caption" />}{' '}

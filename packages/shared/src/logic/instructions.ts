@@ -9,6 +9,7 @@ export interface PromptLabel {
 
 const block = (heading: string, text: string | undefined): string[] => {
   const trimmed = text?.trim();
+
   return trimmed ? [heading, trimmed] : [];
 };
 
@@ -23,6 +24,7 @@ export function instructionsBlock(
       block(`${heading} Instructions for "${label.name}" tickets`, label.instructions),
     ),
   ].filter((lines) => lines.length > 0);
+
   return blocks.flatMap((lines, index) => (index === 0 ? lines : ['', ...lines]));
 }
 
@@ -33,5 +35,6 @@ export function distinctLabels(
   for (const label of tickets.flatMap((ticket) => ticket.labels ?? [])) {
     if (!seen.has(label.name)) seen.set(label.name, label);
   }
+
   return [...seen.values()];
 }

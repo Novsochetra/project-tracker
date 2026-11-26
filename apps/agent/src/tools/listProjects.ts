@@ -12,6 +12,7 @@ export const listProjects = defineTool({
   readOnly: true,
   async handler(client) {
     const projects = await client.listProjects();
+
     return { text: formatProjects(projects), data: projects };
   },
 });

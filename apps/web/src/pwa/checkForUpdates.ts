@@ -11,11 +11,14 @@ export function checkForUpdates(registration: Updatable): () => void {
   const check = () => {
     registration.update().catch(() => undefined);
   };
+
   const checkWhenVisible = () => {
     if (document.visibilityState === 'visible') check();
   };
+
   const timer = window.setInterval(check, UPDATE_CHECK_MS);
   document.addEventListener('visibilitychange', checkWhenVisible);
+
   return () => {
     window.clearInterval(timer);
     document.removeEventListener('visibilitychange', checkWhenVisible);

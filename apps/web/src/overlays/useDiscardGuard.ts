@@ -12,6 +12,7 @@ export function useDiscardGuard(open: boolean, dirty: boolean, onClose: () => vo
   // The owner can close the sheet while the question is up (a save landed); reopening must not
   // show the question again.
   if (asking && !open) setAsking(false);
+
   return {
     asking,
     requestClose: () => {

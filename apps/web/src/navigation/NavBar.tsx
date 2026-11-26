@@ -28,6 +28,7 @@ export function NavBar({ title, mono = false, backLabel, onBack, left, right }: 
 
   const handleBack = onBack ?? navigation?.back;
   const expanded = largeTitle.present && largeTitle.visible;
+
   return (
     <header
       ref={tapToTopRef}

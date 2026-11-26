@@ -11,6 +11,7 @@ function roomFor(field: HTMLTextAreaElement, text: string): string {
   const { selectionStart, selectionEnd, maxLength, value } = field;
   const room =
     maxLength < 0 ? text.length : maxLength - value.length + selectionEnd - selectionStart;
+
   return text.slice(0, Math.max(room, 0));
 }
 
@@ -20,10 +21,12 @@ function step(field: HTMLTextAreaElement, inputType: string, data: string | null
   if (!field.dispatchEvent(new InputEvent('beforeinput', { ...init, cancelable: true }))) {
     return true;
   }
+
   const { selectionStart, selectionEnd } = field;
   field.setRangeText(roomFor(field, data ?? '\n'), selectionStart, selectionEnd, 'end');
   const inserted = field.value;
   field.dispatchEvent(new InputEvent('input', init));
+
   return field.value === inserted;
 }
 
@@ -42,8 +45,11 @@ export function installExecCommand(): () => void {
     const field = document.activeElement;
     if (command !== 'insertText' || !(field instanceof HTMLTextAreaElement)) return false;
     step(field, 'insertText', text);
+
     return true;
   };
+
   Object.defineProperty(document, 'execCommand', { configurable: true, value: execCommand });
+
   return () => Reflect.deleteProperty(document, 'execCommand');
 }

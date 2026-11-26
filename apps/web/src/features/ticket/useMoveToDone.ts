@@ -11,6 +11,7 @@ export function useMoveToDone(detail: TicketDetail, onMoved: () => void): MoveTo
   const moveTo = useStatusMove(detail);
   const done = findStatusByCategory(detail.statuses, 'done');
   if (detail.status.category !== 'reviewed' || !done) return null;
+
   return {
     status: done,
     move: () => {

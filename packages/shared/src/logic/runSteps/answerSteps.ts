@@ -10,10 +10,12 @@ const CUT = /…$/;
 export function isAnswerStep(step: Shown, answer: string): boolean {
   if (step.kind !== 'text' || step.subAgent) return false;
   const words = step.label.replace(CUT, '').trim();
+
   return words !== '' && answer.trim().startsWith(words);
 }
 
 export function withoutAnswer<T extends Shown>(steps: readonly T[], answer: string): T[] {
   const last = steps.at(-1);
+
   return last && isAnswerStep(last, answer) ? steps.slice(0, -1) : [...steps];
 }

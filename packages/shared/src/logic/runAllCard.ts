@@ -28,6 +28,7 @@ function lastFence(lines: readonly string[]): Fence | null {
     found = { start: i, end };
     i = end;
   }
+
   return found;
 }
 
@@ -37,6 +38,7 @@ function limitOf(body: readonly string[]): number | null {
     const value = LIMIT.exec(line.trim())?.[1];
     if (value) return Math.min(MAX_PARALLEL_RUNS_MAX, Math.max(1, Number(value)));
   }
+
   return null;
 }
 
@@ -45,6 +47,7 @@ export function splitRunAllCard(text: string): RunAllCardSplit | null {
   const lines = text.replace(/\r/g, '').split('\n');
   const fence = lastFence(lines);
   if (!fence) return null;
+
   return {
     before: lines.slice(0, fence.start).join('\n').trim(),
     limit: limitOf(lines.slice(fence.start + 1, fence.end)),
@@ -58,5 +61,6 @@ export function splitRunAllCard(text: string): RunAllCardSplit | null {
 // A priority edit may reorder the list; the set is what the person agreed to run.
 export function sameTicketKeys(shown: readonly string[], picked: readonly string[]): boolean {
   const seen = new Set(shown);
+
   return seen.size === picked.length && picked.every((key) => seen.has(key));
 }

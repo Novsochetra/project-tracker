@@ -21,6 +21,7 @@ async function shot(page: Page, name: string): Promise<void> {
 
 async function height(locator: Locator): Promise<number> {
   await settled(locator);
+
   return (await locator.boundingBox())!.height;
 }
 
@@ -135,6 +136,7 @@ test.describe('labels', () => {
       await tagged.click();
       await page.getByRole('button', { name: /^Labels None/ }).click();
     }
+
     const picker = page.getByRole('dialog', { name: 'Pick labels' });
     await expect(picker).toBeVisible();
     await expect(picker).toContainText('No labels yet');
@@ -151,6 +153,7 @@ test.describe('labels', () => {
       await expect(page.getByRole('button', { name: /^Labels v1\.4/ })).toBeVisible();
       await page.goBack();
     }
+
     await expect(picker).toBeHidden();
 
     await expect(tagged).toHaveAccessibleName(/v1\.4/);

@@ -40,6 +40,7 @@ function boxOf(element: Element): DOMRect {
   if (!columnEl) {
     return element.matches('[data-board]') ? rect(0, 100, layout.board, 600) : rect(0, 0, 0, 0);
   }
+
   const columns: Element[] = dropGroupsIn(document);
   const scrolled = boardElement()?.scrollLeft ?? 0;
   const left = layout.start + columns.indexOf(columnEl) * layout.step - scrolled;
@@ -48,7 +49,9 @@ function boxOf(element: Element): DOMRect {
     const body = element.matches('[data-column-body]');
     return body ? rect(left, 140, layout.width, 560) : rect(left, 100, layout.width, 600);
   }
+
   const index = dropRowsIn(columnEl).indexOf(card);
+
   return rect(left, 150 + index * 68, layout.width, 60);
 }
 

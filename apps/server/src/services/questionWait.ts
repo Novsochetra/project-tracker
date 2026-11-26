@@ -12,8 +12,10 @@ export async function waitForQuestion(
 ): Promise<TicketQuestion> {
   const read = async () => {
     await settleQuestions(ctx);
+
     return requireQuestion(ctx, ctx.scope, id);
   };
+
   const row = await longPoll(ctx, {
     read,
     isOpen: (seen) => seen.status === 'open',
@@ -24,5 +26,6 @@ export async function waitForQuestion(
     waitMs: (seen) => nextWaitMs(seen.expiresAt, ctx.now()),
     signal,
   });
+
   return toQuestion(row);
 }

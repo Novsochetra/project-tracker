@@ -30,6 +30,7 @@ export function secretName(name: string): boolean {
     .split(/[\s_-]+/)
     .filter(Boolean);
   const last = words.at(-1) ?? '';
+
   return (
     LAST.has(last) ||
     words.some((word) => ANYWHERE.has(word) || /(?:password|token|secret)$/.test(word))

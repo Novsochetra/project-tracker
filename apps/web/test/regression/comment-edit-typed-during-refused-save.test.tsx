@@ -38,6 +38,7 @@ function openWithHangingEditSave() {
       answer.reject(STALE);
       await answer.promise.catch(() => undefined);
     });
+
   return { server, refuse };
 }
 

@@ -30,6 +30,7 @@ interface DayButtonProps extends MonthCalendarProps {
 
 function DayButton({ day, focusDay, value, today, onPick }: DayButtonProps) {
   const chosen = day === value;
+
   return (
     <button
       type="button"
@@ -74,6 +75,7 @@ export function MonthCalendar(props: MonthCalendarProps) {
     focusPending.current = true;
     setFocusDay(next);
   };
+
   const turn = (months: number) => setFocusDay((day) => addMonths(day, months));
 
   return (

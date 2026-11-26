@@ -7,4 +7,5 @@ if (!socketPath) {
   console.error('tracker prompt tool: start it from tracker watch.');
   process.exit(1);
 }
+
 await createPromptToolServer(socketPath).connect(new StdioServerTransport());

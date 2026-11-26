@@ -6,6 +6,7 @@ const LIMIT = 1_000;
 function tracked(promise: Promise<void>) {
   let done = false;
   void promise.then(() => (done = true));
+
   return () => done;
 }
 

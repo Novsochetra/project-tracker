@@ -24,6 +24,7 @@ const stored = storedMap(FRESH_READS_STORAGE_KEY, isTime);
 
 function readStoredMarks(): StoredMap<number> {
   const since = Date.now() - FRESH_READ_MARK_MS;
+
   return Object.fromEntries(Object.entries(stored.read()).filter(([, time]) => time > since));
 }
 
@@ -36,6 +37,7 @@ function marksOf(queryClient: QueryClient): Map<string, number> {
     tickets = new Map(Object.keys(readStoredMarks()).map((key) => [key, 0]));
     changesSinceRead.set(queryClient, tickets);
   }
+
   return tickets;
 }
 
@@ -52,6 +54,7 @@ export function changesBefore(queryClient: QueryClient, ticketKey: string): numb
   const key = canonical(ticketKey);
   const changes = marksOf(queryClient).get(key);
   if (changes !== undefined) storedAtRead.set(key, readStoredMarks()[key]);
+
   return changes;
 }
 

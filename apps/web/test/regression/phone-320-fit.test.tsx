@@ -23,6 +23,7 @@ function renderFilters() {
   render(<FilterRow board={makeBoard()} />);
   const search = screen.getByRole('searchbox', { name: 'Search tickets' }).closest('label')!;
   const tools = search.parentElement!;
+
   return { search, tools, filters: tools.parentElement! };
 }
 
@@ -38,6 +39,7 @@ function renderSendButton() {
     </MemoryRouter>,
   );
   const send = screen.getByRole('button', { name: 'Send open tickets' });
+
   return {
     send,
     full: within(send).getByText('Send open tickets'),
@@ -118,6 +120,7 @@ describe('regression: 320px phones keep the filter row and bottom bar inside the
       const square = phoneStyle(screen.getByRole('button', { name }), MODULE, 375);
       expect([square.get('flex'), pixels(square.get('width'))]).toEqual(['none', BAR_SQUARE]);
     }
+
     expect(32 + 2 * BAR_SQUARE + 2 * BAR_GAP + SEND_TICKETS_WIDTH).toBeLessThanOrEqual(375);
   });
 });

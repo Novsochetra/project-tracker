@@ -18,6 +18,7 @@ function formatCard(label: string, item: Activity, view: FileView): string {
   if (item.attachments.length > 0) {
     lines.push('Attachments:', ...formatAttachments(item.attachments, view));
   }
+
   return lines.join('\n');
 }
 
@@ -41,11 +42,13 @@ export function formatActivity(
 ): string {
   if (activity.length === 0) return '(No activity yet.)';
   const sorted = [...activity].sort((a, b) => a.createdAt - b.createdAt);
+
   return sorted
     .map((item, index) => {
       const previous = sorted[index - 1];
       if (!previous) return formatItem(item, view);
       const gap = item.type === 'event' && previous.type === 'event' ? '\n' : '\n\n';
+
       return gap + formatItem(item, view);
     })
     .join('');

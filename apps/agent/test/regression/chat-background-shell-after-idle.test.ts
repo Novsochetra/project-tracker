@@ -11,6 +11,7 @@ function setUp() {
   const { spawn, children } = fakeSpawn();
   const chats = createChatRunner({ command: 'claude', cwd: '/repo', limit: [], spawn });
   running.push(chats);
+
   return { chats, children };
 }
 
@@ -38,9 +39,11 @@ async function askWithShell(setup: ReturnType<typeof setUp>, mode: AskMode, shel
       status: 'completed',
     });
   }
+
   child.result('Started the dev server.');
   child.state('idle');
   await exit;
+
   return child;
 }
 

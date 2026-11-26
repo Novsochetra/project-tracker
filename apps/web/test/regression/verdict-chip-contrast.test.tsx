@@ -12,6 +12,7 @@ const TEAL = '#12A594';
 function chipText(label: string): string {
   const chip = screen.getByText(label).closest<HTMLElement>('[style]')!;
   const own = chip.style.getPropertyValue('--verdict-text');
+
   return own || chip.style.getPropertyValue('--verdict');
 }
 

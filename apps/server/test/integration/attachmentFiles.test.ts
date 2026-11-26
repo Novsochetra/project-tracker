@@ -121,6 +121,7 @@ describe.each(DIALECTS)('attachment files (%s)', (dialect) => {
       expect(res.headers.has('content-range')).toBe(false);
       expect(await res.text()).toBe('');
     }
+
     expect((await fetchFile('/api/attachments/missing/file', {}, 'HEAD')).status).toBe(404);
   });
 

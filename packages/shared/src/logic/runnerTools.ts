@@ -4,6 +4,7 @@ import type { Runner, RunnerTools } from '../domain/run';
 export function toolNames(tools: RunnerTools | null): string[] {
   if (!tools) return [];
   const slashed = [...tools.commands, ...tools.skills].map((name) => `/${name}`);
+
   return [...new Set([...tools.servers, ...slashed])];
 }
 

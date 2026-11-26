@@ -19,6 +19,7 @@ export interface ShellBoundaryProps {
 // read the projects answer, so they are tried again once it changes.
 export function ShellBoundary({ name, fallback, children }: ShellBoundaryProps) {
   const projects = useProjects().data;
+
   return (
     <ErrorBoundary name={name} retryKey={projects} fallback={fallback}>
       {children}
@@ -30,6 +31,7 @@ export function ShellBoundary({ name, fallback, children }: ShellBoundaryProps) 
 export function SidebarError() {
   const { route, push } = useNavigation();
   const home = route.name === 'projects';
+
   return (
     <aside aria-label="Projects" className={sidebarStyles.sidebar}>
       <div className={sidebarStyles.brand}>

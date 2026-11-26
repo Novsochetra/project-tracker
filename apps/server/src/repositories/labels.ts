@@ -10,6 +10,7 @@ export async function listLabelRows(db: Db, projectId: string): Promise<LabelRow
     .selectAll()
     .where('projectId', '=', projectId)
     .execute();
+
   return sortLabels(rows);
 }
 
@@ -20,6 +21,7 @@ export async function listLabelRowsOfProjects(db: Db, scope: UserScope): Promise
     .selectAll('labels')
     .where(ownedBy(scope))
     .execute();
+
   return sortLabels(rows);
 }
 

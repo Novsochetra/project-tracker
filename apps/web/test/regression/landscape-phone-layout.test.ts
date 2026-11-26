@@ -28,6 +28,7 @@ const POINTER = /^\(pointer: (coarse|fine|none)\)$/;
 
 function sizeOf(device: Device, screen: boolean, side: string): number {
   if (!screen) return side === 'width' ? device.width : device.height;
+
   return side === 'width' ? device.screen[0] : device.screen[1];
 }
 
@@ -39,6 +40,7 @@ function holds(feature: string, device: Device): boolean {
     const size = sizeOf(device, screen !== undefined, side!);
     return operator === '<' ? size < Number(value) : size >= Number(value);
   }
+
   const pointer = POINTER.exec(feature);
   if (pointer) return device.pointer === pointer[1];
   throw new Error(`Unknown media feature: ${feature}`);
@@ -54,6 +56,7 @@ const layoutOf = (device: Device): string => {
   const desktop = matches(DESKTOP_QUERY, device);
   if (phone === desktop) return `both or neither (phone ${phone}, desktop ${desktop})`;
   if (!phone) return matches(SIDEWAYS_QUERY, device) ? 'sideways desktop?' : 'desktop';
+
   return matches(SIDEWAYS_QUERY, device) ? 'phone, sideways' : 'phone';
 };
 
@@ -148,12 +151,14 @@ function cssFiles(dir: string): string[] {
   return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
     const path = join(dir, entry.name);
     if (entry.isDirectory()) return cssFiles(path);
+
     return entry.name.endsWith('.css') ? [path] : [];
   });
 }
 
 function mediaQueries(path: string): string[] {
   const css = readFileSync(path, 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
+
   return [...css.matchAll(/@media([^{]+)\{/g)].map((match) =>
     match[1]!.replace(/\s+/g, ' ').trim(),
   );

@@ -19,11 +19,13 @@ const swap = vi.hoisted(() => ({ run: (): void => undefined }));
 
 vi.mock('../../src/files/allowedPath', async (importOriginal) => {
   const actual = await importOriginal<typeof AllowedPath>();
+
   return {
     ...actual,
     allowedRealPath: async (...args: Parameters<typeof actual.allowedRealPath>) => {
       const real = await actual.allowedRealPath(...args);
       swap.run();
+
       return real;
     },
   };
@@ -48,6 +50,7 @@ describe('a file swapped between the check and the open', () => {
       unlinkSync(path);
       symlinkSync(join(secrets, 'notes.md'), path);
     };
+
     await expect(checkLocalFile(path, [work])).rejects.toThrow(changed(path));
   });
 
@@ -58,6 +61,7 @@ describe('a file swapped between the check and the open', () => {
       renameSync(join(work, 'out'), join(work, 'old'));
       symlinkSync(secrets, join(work, 'out'));
     };
+
     await expect(checkLocalFile(path, [work])).rejects.toThrow(changed(path));
   });
 });

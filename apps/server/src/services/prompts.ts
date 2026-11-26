@@ -32,6 +32,7 @@ const promptProject = (project: ProjectRow): PromptProject => ({
 function lastReview(activities: readonly ActivityRow[]): PromptReview | null {
   const review = activities.filter((row) => row.type === 'review').at(-1);
   if (!review?.reviewVerdict) return null;
+
   return { verdict: review.reviewVerdict, rating: review.reviewRating ?? 0, text: review.text };
 }
 
@@ -48,6 +49,7 @@ const promptLabels = (labels: readonly LabelRow[], ids: readonly string[]): Prom
 
 export async function ticketLabels(db: Db, ticket: TicketRow): Promise<PromptLabel[]> {
   const ids = await labelIdsOfTicket(db, ticket.id);
+
   return ids.length > 0 ? promptLabels(await listLabelRows(db, ticket.projectId), ids) : [];
 }
 
@@ -86,6 +88,7 @@ export async function ticketPrompt(ctx: UserContext, key: string): Promise<Promp
   });
   const role = roleForCategory(scope.status.category);
   const build = role === 'review' ? buildReviewPrompt : buildTicketPrompt;
+
   return { text: build(promptProject(scope.project), ticket), ticketCount: 1, role };
 }
 
@@ -108,6 +111,7 @@ export async function projectPrompt(ctx: UserContext, key: string): Promise<Prom
       labels: promptLabels(labels, labelIds.get(ticket.id) ?? []),
     }),
   );
+
   return {
     text: buildProjectPrompt(promptProject(project), prompts),
     ticketCount: tickets.length,

@@ -31,5 +31,6 @@ export function nextRise(plan: RisePlan, items: readonly ActivityItem[]): RisePl
     const replacesDraft = draftSaved && item.kind === 'comment' && !item.draft;
     delays.set(item.key, known !== undefined ? known : replacesDraft ? null : 0);
   }
+
   return { delays, drafts: draftKeys(items) };
 }

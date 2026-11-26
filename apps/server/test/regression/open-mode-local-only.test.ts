@@ -25,6 +25,7 @@ describe('regression: a tracker without an owner is open only to this machine', 
     for (const origin of ['http://localhost:4100', 'http://127.0.0.1:4100', 'http://[::1]:4100']) {
       expect(await status(`${origin}/api/projects`), origin).toBe(200);
     }
+
     for (const address of ['127.0.0.1', '::1', '::ffff:127.0.0.1']) {
       const forwarded = { 'x-forwarded-for': address, 'x-forwarded-host': 'localhost:5173' };
       expect(await status('http://localhost:4100/api/projects', forwarded), address).toBe(200);

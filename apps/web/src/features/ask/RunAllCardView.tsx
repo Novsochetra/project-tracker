@@ -27,6 +27,7 @@ function ReplacedRunAll() {
 export function RunAllCardView({ chatId, projectKey, message, card, helper }: RunAllCardViewProps) {
   if (message.batchRunId) return <RunAllProgress runId={message.batchRunId} />;
   if (card.replaced) return <ReplacedRunAll />;
+
   return (
     <RunAllConfirm
       chatId={chatId}

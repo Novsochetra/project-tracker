@@ -24,6 +24,7 @@ function folderWith(files: Record<string, string>): string {
     mkdirSync(join(folder, path, '..'), { recursive: true });
     writeFileSync(join(folder, path), text);
   }
+
   return folder;
 }
 
