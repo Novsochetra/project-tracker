@@ -11,11 +11,12 @@ import {
   appendProjectSummary,
   patchProjectSummary,
   removeProjectSummary,
+  reorderProjectSummaries,
   withProject,
 } from '../cache/projects';
 import { useApi } from '../context';
 import { forgetDeleted, markDeleted } from '../deleted';
-import { cacheChange, patchCaches } from '../optimistic';
+import { applyOptimistic, cacheChange, patchCaches, rollbackOnError } from '../optimistic';
 import { refreshProjectList } from '../projectListRefresh';
 import { belongsToProject, queryKeys } from '../queryKeys';
 import { settleMutation } from '../refresh';
@@ -89,6 +90,22 @@ export function useDeleteProject(): TrackerMutation<void, DeleteProjectVariables
         ),
       ]);
     },
+    onSettled: () => refreshProjectList(queryClient),
+  });
+}
+
+export function useReorderProjects(): TrackerMutation<ProjectSummary[], string[]> {
+  const client = useApi();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (ids: string[]) => client.reorderProjects(ids),
+    onMutate: (ids) =>
+      applyOptimistic(queryClient, [
+        cacheChange<ProjectSummary[]>(queryKeys.projects(), (list) =>
+          reorderProjectSummaries(list, ids),
+        ),
+      ]),
+    onError: rollbackOnError,
     onSettled: () => refreshProjectList(queryClient),
   });
 }

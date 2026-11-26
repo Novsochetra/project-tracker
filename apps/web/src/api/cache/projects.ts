@@ -31,3 +31,16 @@ export const withProject = <T extends WithProject>(data: T, project: Project): T
 
 export const withNextNum = <T extends WithProject>(data: T, num: number): T =>
   num >= data.project.nextNum ? { ...data, project: { ...data.project, nextNum: num + 1 } } : data;
+
+// A project the order doesn't name, such as one made in another tab meanwhile, stays after it.
+export function reorderProjectSummaries(
+  list: readonly ProjectSummary[],
+  ids: readonly string[],
+): ProjectSummary[] {
+  const order = new Map(ids.map((id, index) => [id, index]));
+  const place = (item: ProjectSummary, index: number) => order.get(item.id) ?? ids.length + index;
+  return list
+    .map((item, index) => ({ item, at: place(item, index) }))
+    .sort((a, b) => a.at - b.at)
+    .map(({ item }) => item);
+}

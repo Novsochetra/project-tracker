@@ -78,6 +78,9 @@ export class TrackerClient extends SearchClient {
   createProject = (input: CreateProjectInput) =>
     this.http.request<ProjectDetail>('POST', '/api/projects', { body: input });
 
+  reorderProjects = (ids: string[]) =>
+    this.http.request<ProjectSummary[]>('PUT', '/api/projects/order', { body: { ids } });
+
   getProject = (key: string) =>
     this.http.request<ProjectDetail>('GET', `/api/projects/${segment(key)}`);
 
