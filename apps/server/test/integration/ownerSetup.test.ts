@@ -13,7 +13,7 @@ import { REPO_ROOT } from '../../src/config';
 import { findOwner } from '../../src/repositories/users';
 import { addOwner, CHEAP_SCRYPT, JSON_HEADERS, OWNER, signIn } from '../helpers/auth';
 import { newDevice } from '../helpers/push';
-import { addUser } from '../helpers/runs';
+import { addUser } from '../helpers/callers';
 import { DIALECTS, useTestServer } from '../helpers/server';
 
 describe.each(DIALECTS)('owner setup (%s)', (dialect) => {

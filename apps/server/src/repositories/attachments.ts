@@ -57,12 +57,11 @@ export const listActivityAttachments = (db: Db, activityId: string) =>
     .orderBy('id')
     .execute();
 
-export const pendingOf =
-  (uploader: UserScope) => (eb: ExpressionBuilder<Database, 'attachments'>) =>
-    eb.and([
-      eb('ticketId', 'is', null),
-      uploader === null ? eb('userId', 'is', null) : eb('userId', '=', uploader),
-    ]);
+const pendingOf = (uploader: UserScope) => (eb: ExpressionBuilder<Database, 'attachments'>) =>
+  eb.and([
+    eb('ticketId', 'is', null),
+    uploader === null ? eb('userId', 'is', null) : eb('userId', '=', uploader),
+  ]);
 
 // Another user's file counts as missing, so the answer never tells that its id exists.
 export async function reachableAttachmentIds(

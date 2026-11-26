@@ -5,7 +5,6 @@ export const ERROR_STATUS = {
   not_found: 404,
   conflict: 409,
   stale: 409,
-  no_match: 422,
   too_large: 413,
   rate_limited: 429,
 } as const;

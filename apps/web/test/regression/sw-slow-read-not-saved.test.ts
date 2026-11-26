@@ -10,7 +10,7 @@ import { isSavedAnswer } from '../../src/pwa/savedAnswers';
 // The expiration plugin keeps its dates in IndexedDB, which the test environment lacks.
 vi.mock('workbox-expiration', () => ({ ExpirationPlugin: class {} }));
 
-const URL_READ = 'http://localhost:5173/api/chats/c-1';
+const URL_READ = 'http://localhost:5173/api/tickets/MOB-1';
 
 class ExtendableEvent {
   readonly work: Array<Promise<unknown>> = [];

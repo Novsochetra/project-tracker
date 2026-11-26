@@ -4,8 +4,7 @@ import { Hono } from 'hono';
 import { createClock, type Clock } from './clock';
 import { REPO_ROOT } from './config';
 import type { Db } from './db/schema';
-import { createBroadcaster, type Broadcaster } from './events/broadcaster';
-import type { RunBroadcaster } from './events/runNotice';
+import type { Broadcaster } from './events/broadcaster';
 import { actorMiddleware } from './http/actor';
 import { authMiddleware, stillHasAccess, type AuthDeps } from './http/auth';
 import { DEFAULT_AUTH_OPTIONS, type AuthOptions } from './http/authOptions';
@@ -23,18 +22,8 @@ import { passwordRoutes } from './http/routes/password';
 import { passwordResetRoutes } from './http/routes/passwordResets';
 import { miscRoutes, testResetRoutes } from './http/routes/misc';
 import { projectRoutes } from './http/routes/projects';
-import { promptRoutes } from './http/routes/prompts';
 import { pushRoutes } from './http/routes/push';
 import { questionRoutes } from './http/routes/questions';
-import { reportRoutes } from './http/routes/reports';
-import { batchRunRoutes } from './http/routes/batchRuns';
-import { runRoutes } from './http/routes/runs';
-import { runRequestRoutes } from './http/routes/runRequests';
-import { runStepRoutes } from './http/routes/runSteps';
-import { changesRoutes } from './http/routes/changes';
-import { chatChangesRoutes } from './http/routes/chatChanges';
-import { runUsageRoutes } from './http/routes/runUsage';
-import { chatRoutes } from './http/routes/chats';
 import { sessionRoutes } from './http/routes/session';
 import { statusRoutes } from './http/routes/statuses';
 import { searchRoutes } from './http/routes/search';
@@ -50,7 +39,6 @@ export interface AppDeps {
   db: Db;
   storage: FileStorage;
   events: Broadcaster;
-  runEvents?: RunBroadcaster;
   now?: Clock;
   auth?: Partial<AuthOptions>;
   webDist?: string | null;
@@ -96,26 +84,11 @@ function createApi(ctx: ServiceContext, deps: AppDeps): Hono<AppEnv> {
     .route('/', workflowRoutes(ctx))
     .route('/', activityRoutes(ctx))
     .route('/', attachmentRoutes(ctx))
-    .route('/', promptRoutes(ctx))
-    .route('/', reportRoutes(ctx))
-    .route('/', runRoutes(ctx))
-    .route('/', batchRunRoutes(ctx))
-    .route('/', runStepRoutes(ctx))
-    .route('/', changesRoutes(ctx))
-    .route('/', chatChangesRoutes(ctx))
-    .route('/', runUsageRoutes(ctx))
-    .route('/', runRequestRoutes(ctx))
     .route('/', questionRoutes(ctx))
-    .route('/', chatRoutes(ctx))
     .route('/', pushRoutes(ctx))
     .route(
       '/',
-      eventRoutes(
-        deps.events,
-        deps.heartbeatMs,
-        (access) => stillHasAccess(auth, access),
-        ctx.runEvents,
-      ),
+      eventRoutes(deps.events, deps.heartbeatMs, (access) => stillHasAccess(auth, access)),
     );
   if (deps.testReset) api.route('/', testResetRoutes(ctx));
 
@@ -130,7 +103,6 @@ export function createApp(deps: AppDeps): Hono<AppEnv> {
     db: deps.db,
     storage: deps.storage,
     events: deps.events,
-    runEvents: deps.runEvents ?? createBroadcaster(),
     now,
     push: createPusher(deps.db, now, { ...DEFAULT_PUSH, ...deps.push }),
   };

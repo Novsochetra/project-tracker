@@ -13,7 +13,7 @@ import { createClock } from '../../src/clock';
 import type { UserContext } from '../../src/services/context';
 import { moveToDone as moveTicketsToDone } from '../../src/services/doneMoves';
 import { agent, eventTexts, statusOf } from '../helpers/fixtures';
-import { addUser, caller, type Caller } from '../helpers/runs';
+import { addUser, caller, type Caller } from '../helpers/callers';
 import { DIALECTS, useTestServer, type RequestOptions } from '../helpers/server';
 
 const MOVE_REFUSED = { code: 'forbidden', message: 'Only a person can move tickets to Done.' };
@@ -294,7 +294,7 @@ describe.each(DIALECTS)('moving tickets to Done in one step (%s)', (dialect) => 
 
 describe.each(DIALECTS)('whose tickets move to Done (%s)', (dialect) => {
   const api = useTestServer(dialect);
-  let owner: { person: Caller; helper: Caller };
+  let owner: { person: Caller; agent: Caller };
   let invited: Caller;
 
   const category = async (who: Caller, key: string) =>
@@ -305,7 +305,7 @@ describe.each(DIALECTS)('whose tickets move to Done (%s)', (dialect) => {
     const second = await addUser(api.db, 'b@example.com', Date.now() + 1);
     owner = {
       person: caller(() => api.app, first.person),
-      helper: caller(() => api.app, first.helper),
+      agent: caller(() => api.app, first.agent),
     };
     invited = caller(() => api.app, second.person);
     for (const [who, name, key] of [
@@ -337,10 +337,10 @@ describe.each(DIALECTS)('whose tickets move to Done (%s)', (dialect) => {
   });
 
   it("refuses the owner's agent token both ways", async () => {
-    const move = await owner.helper<ErrorBody>('POST', '/api/tickets/done', { keys: ['MOB-1'] });
+    const move = await owner.agent<ErrorBody>('POST', '/api/tickets/done', { keys: ['MOB-1'] });
     expect(move).toEqual({ status: 403, body: { error: MOVE_REFUSED } });
     const moves = await owner.person<TicketMoves>('POST', '/api/tickets/done', { keys: ['MOB-1'] });
-    const undo = await owner.helper<ErrorBody>('POST', '/api/tickets/done/undo', {
+    const undo = await owner.agent<ErrorBody>('POST', '/api/tickets/done/undo', {
       tickets: undoOf(moves.body),
     });
     expect(undo).toEqual({ status: 403, body: { error: UNDO_REFUSED } });

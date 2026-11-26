@@ -1,4 +1,4 @@
-import type { ErrorBody } from '@tracker/shared';
+import { TICKET_DESCRIPTION_MAX, type ErrorBody } from '@tracker/shared';
 import { describe, expect, it } from 'vitest';
 import { addOwner, JSON_HEADERS, signIn } from '../helpers/auth';
 import { useTestServer } from '../helpers/server';
@@ -90,11 +90,22 @@ describe('regression: sign-in reads only a small body', () => {
       body: JSON.stringify({ name: 'Mobile', key: 'MOB', description: '\u0001'.repeat(5000) }),
     });
     expect(created.status).toBe(201);
-    const report = await api.app.request('/api/reports/preview', {
-      method: 'POST',
-      headers: { ...JSON_HEADERS, cookie },
-      body: JSON.stringify({ text: '\u0001'.repeat(100_000) }),
+    const typedOver = '\u0001'.repeat(TICKET_DESCRIPTION_MAX);
+    const send = (method: string, path: string, edit: object) =>
+      api.app.request(path, {
+        method,
+        headers: { ...JSON_HEADERS, cookie },
+        body: JSON.stringify(edit),
+      });
+    const ticket = await send('POST', '/api/projects/MOB/tickets', {
+      title: 'Crash',
+      description: typedOver,
     });
-    expect(report.status).not.toBe(413);
+    expect(ticket.status).toBe(201);
+    const edit = await send('PATCH', '/api/tickets/MOB-1', {
+      description: '\u0002'.repeat(TICKET_DESCRIPTION_MAX),
+      expected: { description: typedOver },
+    });
+    expect(edit.status).toBe(200);
   });
 });

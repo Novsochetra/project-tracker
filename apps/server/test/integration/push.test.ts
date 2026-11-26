@@ -1,33 +1,53 @@
-import { randomUUID } from 'node:crypto';
-import type { PushKey, Run, RunJob } from '@tracker/shared';
+import type { PushKey } from '@tracker/shared';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { testClock } from '../helpers/auth';
 import { newDevice, fakePushService } from '../helpers/push';
-import { addUser, caller, helperName, type Caller } from '../helpers/runs';
+import { addUser, caller, type Caller } from '../helpers/callers';
 import { DIALECTS, useTestServer } from '../helpers/server';
 
 const SUBSCRIPTION = '/api/push/subscription';
-// A failed run's error is the end of the helper's stderr, which can hold a secret.
-const TOKEN = 'ghp_8Zq3RkT0wXy7LmNp2VbC4dEfGhIjKlMnOpQr';
+
+const READY = {
+  title: 'MOB-1 is ready for you · 4/5',
+  body: 'Fix the login button',
+  url: '/p/MOB/1',
+  tag: 'ticket:MOB-1',
+};
 
 describe.each(DIALECTS)('push notifications (%s)', (dialect) => {
   const clock = testClock();
   const service = fakePushService();
   const api = useTestServer(dialect, { now: clock.now, push: { send: service.send } });
-  const runner = randomUUID();
   let person: Caller;
-  let helper: Caller;
+  let agent: Caller;
   let other: Caller;
 
   const subscribe = (as: Caller, device = newDevice()) =>
     as('PUT', SUBSCRIPTION, device.subscription).then((answer) => ({ answer, device }));
   const rows = () => api.db.selectFrom('pushSubscriptions').selectAll().execute();
 
-  async function runEnds(body: object): Promise<void> {
-    await person('POST', '/api/tickets/MOB-1/runs', { runnerId: runner, prompt: 'Fix it' });
-    const job = await helper<RunJob>('POST', `/api/runners/${runner}/next?kind=ticket`);
-    const ended = await helper<Run>('POST', `/api/runs/${job.body.run.id}/finish`, body);
-    expect(ended.status).toBe(200);
+  async function statusId(category: string): Promise<string> {
+    const row = await api.db
+      .selectFrom('statuses')
+      .select('id')
+      .where('category', '=', category as 'in_review')
+      .executeTakeFirstOrThrow();
+
+    return row.id;
+  }
+
+  // An agent's approval of a ticket in review sends the person a push.
+  async function agentApproves(): Promise<void> {
+    await api.db
+      .updateTable('tickets')
+      .set({ statusId: await statusId('in_review') })
+      .execute();
+    const approved = await agent('POST', '/api/tickets/MOB-1/review', {
+      verdict: 'approved',
+      rating: 4,
+      summary: 'Good',
+    });
+    expect(approved.status).toBe(200);
   }
 
   beforeEach(async () => {
@@ -35,11 +55,10 @@ describe.each(DIALECTS)('push notifications (%s)', (dialect) => {
     clock.set(1_000_000);
     const owner = await addUser(api.db, 'owner@example.com', clock.now());
     person = caller(() => api.app, owner.person);
-    helper = caller(() => api.app, owner.helper);
+    agent = caller(() => api.app, owner.agent);
     other = caller(() => api.app, (await addUser(api.db, 'sam@example.com', clock.now())).person);
     await person('POST', '/api/projects', { name: 'Mobile', key: 'MOB' });
     await person('POST', '/api/projects/MOB/tickets', { title: 'Fix the login button' });
-    await helper('PUT', `/api/runners/${runner}`, helperName('Mac'));
   });
 
   describe('keys and subscriptions', () => {
@@ -54,7 +73,7 @@ describe.each(DIALECTS)('push notifications (%s)', (dialect) => {
     it('saves a person’s device, and refuses agents and addresses of no push service', async () => {
       const { answer } = await subscribe(person);
       expect(answer.status).toBe(204);
-      expect((await subscribe(helper)).answer.status).toBe(403);
+      expect((await subscribe(agent)).answer.status).toBe(403);
       const elsewhere = newDevice();
       elsewhere.subscription.endpoint = 'https://postgres.railway.internal/x';
       expect((await subscribe(person, elsewhere)).answer.status).toBe(400);
@@ -84,20 +103,14 @@ describe.each(DIALECTS)('push notifications (%s)', (dialect) => {
     });
   });
 
-  describe('when Claude is done', () => {
-    it('tells every device of the run’s user that a ticket run finished, and nobody else', async () => {
+  describe('when an agent approves a ticket', () => {
+    it('tells every device of the ticket’s user that it is ready, and nobody else', async () => {
       const { device: phone } = await subscribe(person);
       const { device: laptop } = await subscribe(person);
       const { device: sams } = await subscribe(other);
-      await runEnds({ status: 'done' });
-      const message = {
-        title: 'MOB-1: Claude finished',
-        body: 'Fix the login button',
-        url: '/p/MOB/1',
-        tag: 'ticket:MOB-1',
-      };
-      expect(await service.messagesFor(phone)).toEqual([message]);
-      expect(await service.messagesFor(laptop)).toEqual([message]);
+      await agentApproves();
+      expect(await service.messagesFor(phone)).toEqual([READY]);
+      expect(await service.messagesFor(laptop)).toEqual([READY]);
       expect(service.forDevice(sams)).toEqual([]);
       const headers = new Headers(service.sent[0]?.init.headers);
       expect(headers.get('content-encoding')).toBe('aes128gcm');
@@ -106,66 +119,23 @@ describe.each(DIALECTS)('push notifications (%s)', (dialect) => {
       expect(service.sent[0]?.init.redirect).toBe('error');
     });
 
-    it('says a run stopped without its error, and nothing for a run the person cancelled', async () => {
-      const { device } = await subscribe(person);
-      await runEnds({ status: 'failed', error: `remote: token ${TOKEN} has expired` });
-      expect(await service.messagesFor(device)).toEqual([
-        {
-          title: 'MOB-1: Claude stopped',
-          body: 'Fix the login button · Open the ticket to see why.',
-          url: '/p/MOB/1',
-          tag: 'ticket:MOB-1',
-        },
-      ]);
-      await person('POST', '/api/tickets/MOB-1/runs', { runnerId: runner, prompt: 'Again' });
-      const runs = await person<Run[]>('GET', '/api/tickets/MOB-1/runs');
-      await person('POST', `/api/runs/${runs.body[0]?.id}/cancel`);
-      await new Promise((resolve) => setTimeout(resolve, 50));
-      expect(service.forDevice(device)).toHaveLength(1);
-    });
-
-    it('says a ticket an agent approved is ready, but not after changes asked or a person’s review', async () => {
+    it('says nothing after changes asked or a person’s review', async () => {
       const { device } = await subscribe(person);
       const review = async (as: Caller, verdict: string) => {
-        await helper('POST', '/api/tickets/MOB-1/claim');
-        await helper('POST', '/api/tickets/MOB-1/submit', { summary: 'Done.' });
+        await agent('POST', '/api/tickets/MOB-1/claim');
+        await agent('POST', '/api/tickets/MOB-1/submit', { summary: 'Done.' });
 
         return as('POST', '/api/tickets/MOB-1/review', { verdict, rating: 4, summary: 'Ok' });
       };
 
-      expect((await review(helper, 'changes_requested')).status).toBe(200);
+      expect((await review(agent, 'changes_requested')).status).toBe(200);
       expect((await review(person, 'approved')).status).toBe(200);
       await new Promise((resolve) => setTimeout(resolve, 50));
       expect(service.forDevice(device)).toEqual([]);
-      await api.db
-        .updateTable('tickets')
-        .set({ statusId: await statusId('in_review') })
-        .execute();
-      await helper('POST', '/api/tickets/MOB-1/review', {
-        verdict: 'approved',
-        rating: 4,
-        summary: 'Good',
-      });
-      expect(await service.messagesFor(device)).toEqual([
-        {
-          title: 'MOB-1 is ready for you · 4/5',
-          body: 'Fix the login button',
-          url: '/p/MOB/1',
-          tag: 'ticket:MOB-1',
-        },
-      ]);
+      await agentApproves();
+      expect(await service.messagesFor(device)).toEqual([READY]);
     });
   });
-
-  async function statusId(category: string): Promise<string> {
-    const row = await api.db
-      .selectFrom('statuses')
-      .select('id')
-      .where('category', '=', category as 'in_review')
-      .executeTakeFirstOrThrow();
-
-    return row.id;
-  }
 
   describe('when a push service answers', () => {
     it('drops a device the push service says is gone', async () => {
@@ -173,7 +143,7 @@ describe.each(DIALECTS)('push notifications (%s)', (dialect) => {
         service.reset();
         service.status = status;
         const { device } = await subscribe(person);
-        await runEnds({ status: 'done' });
+        await agentApproves();
         await vi.waitFor(async () => expect(await rows()).toHaveLength(0));
         expect(service.forDevice(device)).toHaveLength(1);
       }
@@ -183,7 +153,7 @@ describe.each(DIALECTS)('push notifications (%s)', (dialect) => {
       const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
       service.status = 500;
       await subscribe(person);
-      await runEnds({ status: 'done' });
+      await agentApproves();
       await vi.waitFor(() => expect(warn).toHaveBeenCalledWith(expect.stringMatching(/500/)));
       expect(String(warn.mock.calls[0]?.[0])).toContain('web.push.apple.com');
       expect(String(warn.mock.calls[0]?.[0])).not.toContain('/');
@@ -194,10 +164,10 @@ describe.each(DIALECTS)('push notifications (%s)', (dialect) => {
     it('never holds up or fails the request that set it off', async () => {
       service.send.mockImplementation(() => new Promise(() => undefined));
       await subscribe(person);
-      await runEnds({ status: 'done' });
+      await agentApproves();
       service.send.mockImplementation(() => Promise.reject(new Error('offline')));
       const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
-      await runEnds({ status: 'done' });
+      await agentApproves();
       await vi.waitFor(() => expect(warn).toHaveBeenCalled());
       warn.mockRestore();
     });

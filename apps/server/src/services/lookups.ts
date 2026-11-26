@@ -46,11 +46,7 @@ export async function requireProject(db: Db, scope: UserScope, key: string): Pro
   return project;
 }
 
-export async function findTicketRef(
-  db: Db,
-  scope: UserScope,
-  key: string,
-): Promise<TicketRef | null> {
+async function findTicketRef(db: Db, scope: UserScope, key: string): Promise<TicketRef | null> {
   const parsed = parseTicketKey(key);
   if (!parsed) return null;
   const project = reachable(await findProjectByKey(db, parsed.projectKey), scope);

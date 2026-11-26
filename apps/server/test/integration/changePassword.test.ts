@@ -11,7 +11,7 @@ import {
   PERSON,
   sender,
 } from '../helpers/accounts';
-import { addUser } from '../helpers/runs';
+import { addUser } from '../helpers/callers';
 import { DIALECTS, useTestServer } from '../helpers/server';
 
 const NEW_PASSWORD = 'a brand new password';
@@ -72,7 +72,7 @@ describe.each(DIALECTS)('changing the password (%s)', (dialect) => {
     const user = await addUser(api.db, 'user@example.com', 1_000);
     const byToken = await api.app.request('/api/password', {
       method: 'POST',
-      headers: { authorization: `Bearer ${user.helper.token}`, 'content-type': 'application/json' },
+      headers: { authorization: `Bearer ${user.agent.token}`, 'content-type': 'application/json' },
       body: JSON.stringify({ currentPassword: 'x', newPassword: NEW_PASSWORD }),
     });
     expect(byToken.status).toBe(403);

@@ -1,8 +1,8 @@
-import type { CoreTables } from '../db/schema';
+import type { Database } from '../db/schema';
 
 export interface CopiedTable {
-  name: keyof CoreTables;
-  references: readonly (keyof CoreTables)[];
+  name: keyof Database;
+  references: readonly (keyof Database)[];
   // Tables the move leaves behind (SKIPPED_TABLES) that some of its rows point at; those rows are
   // left out too.
   leftBehind?: readonly string[];

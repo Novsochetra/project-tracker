@@ -132,7 +132,6 @@ describe.each(DIALECTS)('projects (%s)', (dialect) => {
       ['PATCH', '/api/projects/NOPE'],
       ['DELETE', '/api/projects/NOPE'],
       ['GET', '/api/projects/NOPE/board'],
-      ['GET', '/api/projects/NOPE/prompt'],
       ['GET', '/api/projects/NOPE/tickets'],
     ] as const) {
       const res = await api.request<ErrorBody>(method, path, {

@@ -1,7 +1,7 @@
 import { QUESTION_DEADLINE_MS, type TicketDetail, type TicketQuestion } from '@tracker/shared';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { testClock } from '../helpers/auth';
-import { addUser, caller, type Caller } from '../helpers/runs';
+import { addUser, caller, type Caller } from '../helpers/callers';
 import { DIALECTS, useTestServer } from '../helpers/server';
 
 const ASKED = { question: 'Which name should the setting have?', choices: ['Dark', 'Night'] };
@@ -30,10 +30,10 @@ describe.each(DIALECTS)('questions on a ticket (%s)', (dialect) => {
     const userA = await addUser(api.db, 'a@example.com', clock.now());
     const userB = await addUser(api.db, 'b@example.com', clock.now() + 1);
     person = caller(() => api.app, userA.person);
-    agent = caller(() => api.app, userA.helper);
+    agent = caller(() => api.app, userA.agent);
     other = {
       person: caller(() => api.app, userB.person),
-      agent: caller(() => api.app, userB.helper),
+      agent: caller(() => api.app, userB.agent),
     };
     await person('POST', '/api/projects', { name: 'Mobile', key: 'MOB' });
     await person('POST', '/api/projects/MOB/tickets', { title: 'Dark mode' });

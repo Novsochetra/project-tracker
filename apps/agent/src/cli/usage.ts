@@ -1,6 +1,5 @@
 import { DEFAULT_AGENT_NAME, DEFAULT_URL } from '../config';
 import { COMMANDS } from './commands';
-import { WATCH_USAGE } from './watchCommand';
 
 const GLOBAL_HELP: readonly (readonly [string, string])[] = [
   [
@@ -37,22 +36,6 @@ export const USAGE = [
   ...SETUP_HELP.flatMap(([usage, summary]) => [`  ${usage}`, `      ${summary}`]),
   '  Tokens are saved in ~/.config/project-tracker/config.json, which only you can read',
   '  (TRACKER_CONFIG moves it). The MCP server reads it too.',
-  '',
-  'Run Claude Code from your phone:',
-  `  ${WATCH_USAGE}`,
-  '      Run this in your code folder and leave it open. "Run in Claude Code" in the app',
-  '      starts claude -p here. PROJECT defaults to the project whose repo is this folder.',
-  "      --name names this computer in the app (default: this computer's name). --permission-mode",
-  '      is passed to claude for ticket runs and Edit questions. Without it, your own Claude',
-  '      Code settings decide for a ticket run, and an Edit question asks on the phone before',
-  '      each step (default). Ask and Plan questions are always read-only.',
-  '      --max-turns N passes the same to claude for every run and question, so none goes on',
-  '      past N turns; one that reaches it stops, and the app says so.',
-  '      --approvals makes ticket runs ask on the phone before each step too; use it with',
-  '      --permission-mode acceptEdits; auto, bypassPermissions and dontAsk are refused with it.',
-  '      It keeps the Mac from idle sleep while it runs (--no-keep-awake turns that off).',
-  '      --install makes it start by itself (at login on macOS, at boot on Linux), --uninstall',
-  '      stops that, and --check says whether it is installed, running and online.',
   '',
   'Global options:',
   ...GLOBAL_HELP.map(([flag, text]) => `  ${flag.padEnd(16)}${text}`),

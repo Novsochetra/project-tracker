@@ -52,7 +52,6 @@ describe('parseCliArgs', () => {
         version: false,
       },
       options: { status: 'To do' },
-      flags: {},
     });
   });
 

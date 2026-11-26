@@ -7,7 +7,7 @@ import {
 } from '@tracker/shared';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { agent, fileUpload } from '../helpers/fixtures';
-import { addUser, caller, type Auth, type Caller } from '../helpers/runs';
+import { addUser, caller, type Auth, type Caller } from '../helpers/callers';
 import { DIALECTS, useTestServer } from '../helpers/server';
 
 const REFUSED: ErrorBody = {
@@ -25,7 +25,7 @@ interface Files {
 describe.each(DIALECTS)('regression: an agent deletes a file (%s)', (dialect) => {
   const api = useTestServer(dialect);
   let person: Caller;
-  let helper: Caller;
+  let tokenAgent: Caller;
   let files: Files;
 
   const upload = async (auth: Auth, ticketKey?: string): Promise<string> => {
@@ -53,7 +53,7 @@ describe.each(DIALECTS)('regression: an agent deletes a file (%s)', (dialect) =>
   beforeEach(async () => {
     const owner = await addUser(api.db, 'owner@example.com', Date.now(), 'owner');
     person = caller(() => api.app, owner.person);
-    helper = caller(() => api.app, owner.helper);
+    tokenAgent = caller(() => api.app, owner.agent);
     await person('POST', '/api/projects', { name: 'Mobile', key: 'MOB' });
     await person('POST', '/api/projects/MOB/tickets', { title: 'Crash' });
     const ticketFile = await upload(owner.person, 'MOB-1');
@@ -70,7 +70,7 @@ describe.each(DIALECTS)('regression: an agent deletes a file (%s)', (dialect) =>
     expect(before).toEqual([files.ticketFile, files.commentFile]);
 
     for (const id of [files.ticketFile, files.commentFile, files.pendingFile, 'missing']) {
-      expect(await helper('DELETE', `/api/attachments/${id}`), id).toEqual({
+      expect(await tokenAgent('DELETE', `/api/attachments/${id}`), id).toEqual({
         status: 403,
         body: REFUSED,
       });

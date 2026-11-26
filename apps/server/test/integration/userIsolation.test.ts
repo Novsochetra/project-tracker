@@ -1,18 +1,15 @@
-import { randomUUID } from 'node:crypto';
 import {
   FILE_NAME_HEADER,
   type Activity,
   type Attachment,
-  type ChatDetail,
   type Label,
   type ProjectDetail,
   type ProjectSummary,
-  type Run,
   type TicketsAcrossProjects,
   type TicketSearchResults,
 } from '@tracker/shared';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { addUser, caller, helperName, type Auth, type Caller } from '../helpers/runs';
+import { addUser, caller, type Auth, type Caller } from '../helpers/callers';
 import { DIALECTS, useTestServer } from '../helpers/server';
 
 type Reader = ReadableStreamDefaultReader<Uint8Array>;
@@ -37,8 +34,6 @@ interface AWorld {
   ticketFile: string;
   commentFile: string;
   pendingFile: string;
-  chatId: string;
-  runId: string;
 }
 
 const authHeaders = (auth: Auth): Record<string, string> =>
@@ -50,19 +45,13 @@ const readsOf = (world: AWorld): [string, string][] => [
   ['GET', '/api/projects/MOB'],
   ['GET', '/api/projects/mob'],
   ['GET', '/api/projects/MOB/board'],
-  ['GET', '/api/projects/MOB/prompt'],
   ['GET', '/api/projects/MOB/tickets'],
-  ['GET', '/api/projects/MOB/chats'],
   ['GET', '/api/tickets/MOB-1'],
   ['GET', '/api/tickets/mob-1'],
-  ['GET', '/api/tickets/MOB-1/prompt'],
-  ['GET', '/api/tickets/MOB-1/runs'],
   ['GET', `/api/attachments/${world.ticketFile}/file`],
   ['GET', `/api/attachments/${world.commentFile}/file`],
   ['GET', `/api/attachments/${world.pendingFile}/file`],
   ['HEAD', `/api/attachments/${world.ticketFile}/file`],
-  ['GET', `/api/chats/${world.chatId}`],
-  ['GET', `/api/runs/${world.runId}`],
 ];
 
 const writesOf = (world: AWorld): [string, string, unknown?][] => [
@@ -78,13 +67,11 @@ const writesOf = (world: AWorld): [string, string, unknown?][] => [
   ['DELETE', `/api/labels/${world.labelId}`],
   ['PATCH', '/api/tickets/MOB-1', { title: 'Mine now' }],
   ['POST', '/api/tickets/MOB-1/move', { statusId: world.statusIds[1] }],
-  ['POST', '/api/tickets/MOB-1/sent', { moveToInProgress: true }],
   ['POST', '/api/tickets/MOB-1/comments', { text: 'Hello' }],
   ['POST', '/api/tickets/MOB-1/claim'],
   ['POST', '/api/tickets/MOB-1/submit', { summary: 'Done' }],
   ['POST', '/api/tickets/MOB-1/review', { verdict: 'approved', rating: 5, summary: 'Fine' }],
   ['PATCH', `/api/activity/${world.commentId}`, { text: 'Mine now' }],
-  ['POST', `/api/runs/${world.runId}/cancel`],
   ['DELETE', `/api/statuses/${world.statusIds[0]}?moveTo=${world.statusIds[1]}`],
   ['DELETE', `/api/activity/${world.commentId}`],
   ['DELETE', `/api/attachments/${world.ticketFile}`],
@@ -116,9 +103,8 @@ const writeStatus = (world: AWorld, auth: Auth, method: string, path: string): n
 
 describe.each(DIALECTS)("one user's projects stay theirs (%s)", (dialect) => {
   const api = useTestServer(dialect);
-  const aRunner = randomUUID();
-  let userA: { person: Caller; helper: Caller; auth: Auth };
-  let userB: { person: Caller; helper: Caller; auths: Auth[] };
+  let userA: { person: Caller; auth: Auth };
+  let userB: { person: Caller; agent: Caller; auths: Auth[] };
   let world: AWorld;
   const readers: Reader[] = [];
 
@@ -168,15 +154,6 @@ describe.each(DIALECTS)("one user's projects stay theirs (%s)", (dialect) => {
       text: 'Secret note',
       attachmentIds: [commentFile],
     });
-    await userA.helper('PUT', `/api/runners/${aRunner}`, helperName('A Mac'));
-    const chat = await userA.person<ChatDetail>('POST', '/api/projects/MOB/chats', {
-      runnerId: aRunner,
-      text: 'Why?',
-    });
-    const run = await userA.person<Run>('POST', '/api/tickets/MOB-1/runs', {
-      runnerId: aRunner,
-      prompt: 'Go',
-    });
 
     return {
       projectId: project.body.project.id,
@@ -186,8 +163,6 @@ describe.each(DIALECTS)("one user's projects stay theirs (%s)", (dialect) => {
       ticketFile,
       commentFile,
       pendingFile: await uploaded(userA.auth),
-      chatId: chat.body.chat.id,
-      runId: run.body.id,
     };
   }
 
@@ -196,13 +171,12 @@ describe.each(DIALECTS)("one user's projects stay theirs (%s)", (dialect) => {
     const user = await addUser(api.db, 'b@example.com', Date.now() + 1);
     userA = {
       person: caller(() => api.app, owner.person),
-      helper: caller(() => api.app, owner.helper),
       auth: owner.person,
     };
     userB = {
       person: caller(() => api.app, user.person),
-      helper: caller(() => api.app, user.helper),
-      auths: [user.person, user.helper],
+      agent: caller(() => api.app, user.agent),
+      auths: [user.person, user.agent],
     };
     world = await buildA();
   });
@@ -229,11 +203,10 @@ describe.each(DIALECTS)("one user's projects stay theirs (%s)", (dialect) => {
     expect(
       (await request(userA.auth, 'GET', `/api/attachments/${world.ticketFile}/file`)).status,
     ).toBe(200);
-    expect((await request(userA.auth, 'GET', `/api/chats/${world.chatId}`)).status).toBe(200);
   });
 
   it("leaves A's projects, tickets and people out of B's lists and search", async () => {
-    for (const as of [userB.person, userB.helper]) {
+    for (const as of [userB.person, userB.agent]) {
       expect((await as<ProjectSummary[]>('GET', '/api/projects')).body).toEqual([]);
       const all = await as<TicketsAcrossProjects>('GET', '/api/tickets?q=Crash');
       expect(all.body).toEqual({ tickets: [], statuses: [], labels: [] });
@@ -253,15 +226,6 @@ describe.each(DIALECTS)("one user's projects stay theirs (%s)", (dialect) => {
     expect(own.body.tickets.map((ticket) => ticket.key)).toEqual(['MOB-1']);
   });
 
-  it("matches no ticket of A's in B's pasted report", async () => {
-    const text = 'TICKET: MOB-1\nSTATUS: done\nSUMMARY: Mine';
-    const preview = await userB.person<{ matchedCount: number }>('POST', '/api/reports/preview', {
-      text,
-    });
-    expect(preview.body.matchedCount).toBe(0);
-    expect((await userB.person('POST', '/api/reports/apply', { text })).status).toBe(422);
-  });
-
   it("won't let B upload to A's ticket or attach A's file to B's own ticket", async () => {
     expect((await upload(userB.auths[0]!, 'MOB-1')).status).toBe(404);
     await userB.person('POST', '/api/projects', { name: 'Web', key: 'WEB' });
@@ -273,20 +237,6 @@ describe.each(DIALECTS)("one user's projects stay theirs (%s)", (dialect) => {
     expect(
       (await request(userA.auth, 'GET', `/api/attachments/${world.pendingFile}/file`)).status,
     ).toBe(200);
-  });
-
-  it("won't let B's session, token or helper start a run on A's project", async () => {
-    const bRunner = randomUUID();
-    const serve = await userB.helper('PUT', `/api/runners/${bRunner}`, helperName('B Mac'));
-    expect(serve.status).toBe(404);
-    const start = { runnerId: aRunner, prompt: 'Go' };
-    expect((await userB.person('POST', '/api/tickets/MOB-1/runs', start)).status).toBe(404);
-    // A token is an agent, and agents never start runs, whose ticket it is or not.
-    expect((await userB.helper('POST', '/api/tickets/MOB-1/runs', start)).status).toBe(403);
-    const chat = { runnerId: aRunner, text: 'Mine?' };
-    expect((await userB.person('POST', '/api/projects/MOB/chats', chat)).status).toBe(404);
-    const ask = await userB.person('POST', `/api/chats/${world.chatId}/messages`, chat);
-    expect(ask.status).toBe(404);
   });
 
   it('gives B a project of its own under a free key, without telling it whose MOB is', async () => {

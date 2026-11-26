@@ -2,9 +2,9 @@ import { HEARTBEAT_MS } from '@tracker/shared';
 import { Hono } from 'hono';
 import { streamSSE, type SSEMessage, type SSEStreamingApi } from 'hono/streaming';
 import type { Access } from '../../auth/access';
-import { scopeOf, type UserScope } from '../../auth/scope';
+import { scopeOf } from '../../auth/scope';
 import type { Broadcaster } from '../../events/broadcaster';
-import type { RunBroadcaster, RunNotice } from '../../events/runNotice';
+import type { ChangeNotice } from '../../events/changeNotice';
 import type { AppEnv } from '../env';
 
 // Browsers never hand SSE comments to the page, so the heartbeat is a named event: the web app
@@ -31,31 +31,19 @@ function guardedWriter(stream: SSEStreamingApi, allowed: () => Promise<boolean>,
   };
 }
 
-// A stream hears only of its own user's projects, runs and chats.
-function ownListener<T extends { userId: UserScope }>(
-  access: Access | null | undefined,
-  send: (message: SSEMessage) => void,
-  toMessage: (notice: T) => SSEMessage,
-) {
+// A stream hears only of its own user's projects.
+function ownListener(access: Access | null | undefined, send: (message: SSEMessage) => void) {
   const scope = scopeOf(access);
 
-  return (notice: T) => {
-    if (scope !== undefined && notice.userId === scope) send(toMessage(notice));
+  return ({ userId, event }: ChangeNotice) => {
+    if (scope !== undefined && userId === scope) send({ data: JSON.stringify(event) });
   };
 }
-
-// Run notices are named after their type (`run`, `run-step`, `run-request`, `chat-deleted`), so
-// the web app's change handling never sees them.
-const runMessage = ({ event }: RunNotice): SSEMessage => ({
-  event: event.type,
-  data: JSON.stringify(event),
-});
 
 export const eventRoutes = (
   events: Broadcaster,
   heartbeatMs = HEARTBEAT_MS,
   stillAllowed: AccessCheck = alwaysAllowed,
-  runs?: RunBroadcaster,
 ) =>
   new Hono<AppEnv>().get('/events', (context) => {
     const access = context.get('access');
@@ -67,10 +55,7 @@ export const eventRoutes = (
         stream.onAbort(resolve);
       });
       const send = guardedWriter(stream, () => stillAllowed(access), end);
-      const unsubscribe = events.subscribe(
-        ownListener(access, send, ({ event }) => ({ data: JSON.stringify(event) })),
-      );
-      const unsubscribeRuns = runs?.subscribe(ownListener(access, send, runMessage));
+      const unsubscribe = events.subscribe(ownListener(access, send));
       const heartbeat = setInterval(() => send(PING), heartbeatMs);
       try {
         // A comment line flushes the headers so proxies and clients see the stream open.
@@ -79,7 +64,6 @@ export const eventRoutes = (
       } finally {
         clearInterval(heartbeat);
         unsubscribe();
-        unsubscribeRuns?.();
       }
     });
   });

@@ -7,8 +7,8 @@ const KB = 1024;
 
 // An email, a password and a name at their longest, every character escaped (\u0001 is 6 bytes).
 export const LOGIN_BODY_MAX = 16 * KB;
-// The longest real edit, escaped the same way: a 100,000-character report, or a 50,000-character
-// description with the text it was typed over.
+// The longest real edit, escaped the same way: a 50,000-character description with the text it
+// was typed over.
 export const JSON_BODY_MAX = 1024 * KB;
 
 const SMALL_BODY_PATHS = new Set([

@@ -23,7 +23,6 @@ function renderSheet(
   const view = renderWithApi(<AccountSheet open onClose={onClose} />, {
     listInvites: vi.fn().mockResolvedValue([]),
     listInvitedUsers: vi.fn().mockResolvedValue([]),
-    listPlanUsage: vi.fn().mockResolvedValue([]),
     ...overrides,
   });
   act(() => {

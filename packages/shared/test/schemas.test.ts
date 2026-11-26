@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { askInput } from '../src/api/chats';
 import {
   createCommentInput,
   createStatusInput,
   createTicketInput,
   reviewInput,
   updateProjectInput,
+  updateTicketInput,
 } from '../src/api/schemas';
 
 const messages = (result: { success: boolean; error?: { issues: { message: string }[] } }) =>
@@ -19,7 +19,6 @@ describe('createTicketInput', () => {
       priority: 'medium',
       assignee: '',
       due: '',
-      needsDevice: false,
       attachmentIds: [],
       labelIds: [],
     });
@@ -78,6 +77,13 @@ describe('createTicketInput', () => {
       false,
     );
   });
+
+  it('drops the device mark older clients send', () => {
+    expect(createTicketInput.parse({ title: 'T', needsDevice: true })).not.toHaveProperty(
+      'needsDevice',
+    );
+    expect(updateTicketInput.parse({ title: 'T', needsDevice: true })).toEqual({ title: 'T' });
+  });
 });
 
 describe('createCommentInput', () => {
@@ -99,25 +105,6 @@ describe('createCommentInput', () => {
     expect(messages(createCommentInput.safeParse({}))).toEqual(['Write a comment or add a file.']);
     expect(messages(createCommentInput.safeParse({ text: '  \n ', attachmentIds: [] }))).toEqual([
       'Write a comment or add a file.',
-    ]);
-  });
-});
-
-describe('askInput', () => {
-  const question = {
-    runnerId: '0b6c1d52-3c1f-4a55-9a1e-2f4c8c7d9e10',
-    text: 'Turn this into tickets',
-  };
-
-  it('takes the files sent with a question, and none by default', () => {
-    expect(askInput.parse(question).attachmentIds).toEqual([]);
-    expect(askInput.parse({ ...question, attachmentIds: ['a1'] }).attachmentIds).toEqual(['a1']);
-  });
-
-  it('takes up to 20 files', () => {
-    const attachmentIds = Array.from({ length: 21 }, (_, index) => `a${index}`);
-    expect(messages(askInput.safeParse({ ...question, attachmentIds }))).toEqual([
-      'A question can have up to 20 files.',
     ]);
   });
 });
@@ -184,14 +171,9 @@ describe('createStatusInput', () => {
 });
 
 describe('updateProjectInput', () => {
-  it('accepts the old limit fields from older clients and drops them', () => {
-    expect(
-      updateProjectInput.parse({ name: 'Mobile', maxParallelRuns: 9, maxSubAgents: 0 }),
-    ).toEqual({ name: 'Mobile' });
-  });
-
-  it('leaves the sub agents out of an edit that does not change them', () => {
-    expect(updateProjectInput.parse({ name: 'Mobile' })).toEqual({ name: 'Mobile' });
+  it('accepts the fields older clients send and drops them', () => {
+    const older = { name: 'Mobile', maxParallelRuns: 9, maxSubAgents: 0, autoReview: true };
+    expect(updateProjectInput.parse(older)).toEqual({ name: 'Mobile' });
   });
 
   it.each([true, false])('takes hide name %j', (hideName) => {

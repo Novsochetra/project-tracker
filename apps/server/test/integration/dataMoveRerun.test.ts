@@ -105,7 +105,6 @@ async function addOtherProject(db: Db, key: string): Promise<void> {
       priority: 'medium',
       assignee: '',
       due: '',
-      needsDevice: 0,
       createdAt: 1,
       updatedAt: 1,
       clientId: null,

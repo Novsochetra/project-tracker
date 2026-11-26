@@ -7,7 +7,7 @@ import {
 } from '@tracker/shared';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { testClock } from '../helpers/auth';
-import { addUser, caller, type Caller } from '../helpers/runs';
+import { addUser, caller, type Caller } from '../helpers/callers';
 import { DIALECTS, useTestServer } from '../helpers/server';
 
 const waitingKeys = (tickets: TicketListItem[]) =>
@@ -40,7 +40,7 @@ describe.each(DIALECTS)('a ticket waiting for the person (%s)', (dialect) => {
     const owner = await addUser(api.db, 'owner@example.com', clock.now());
     const second = await addUser(api.db, 'second@example.com', clock.now());
     person = caller(() => api.app, owner.person);
-    agent = caller(() => api.app, owner.helper);
+    agent = caller(() => api.app, owner.agent);
     other = caller(() => api.app, second.person);
     await person('POST', '/api/projects', { name: 'Mobile', key: 'MOB' });
     await person('POST', '/api/projects/MOB/tickets', { title: 'Crash' });

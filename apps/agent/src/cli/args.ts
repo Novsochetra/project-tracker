@@ -5,12 +5,9 @@ import { findCommand, type Command, type Plan } from './commands';
 import {
   COMMAND_OPTIONS,
   GLOBAL_OPTIONS,
-  WATCH_FLAGS,
   type CommandOption,
   type CommandValues,
   type GlobalValues,
-  type WatchFlag,
-  type WatchFlags,
 } from './options';
 
 export class UsageError extends Error {
@@ -29,7 +26,6 @@ export interface ParsedArgs {
   args: string[];
   global: GlobalValues;
   options: CommandValues;
-  flags: WatchFlags;
 }
 
 export function parseCliArgs(argv: readonly string[]): ParsedArgs {
@@ -37,7 +33,7 @@ export function parseCliArgs(argv: readonly string[]): ParsedArgs {
   try {
     parsed = parseArgs({
       args: [...argv],
-      options: { ...GLOBAL_OPTIONS, ...COMMAND_OPTIONS, ...WATCH_FLAGS },
+      options: { ...GLOBAL_OPTIONS, ...COMMAND_OPTIONS },
       allowPositionals: true,
       strict: true,
     });
@@ -45,16 +41,11 @@ export function parseCliArgs(argv: readonly string[]): ParsedArgs {
     throw new UsageError(error instanceof Error ? error.message : String(error));
   }
 
-  const { url, as, token, json = false, help = false, version = false, ...rest } = parsed.values;
-  const { install, uninstall, check, 'no-keep-awake': noKeepAwake, approvals, ...options } = rest;
-  const flags = { install, uninstall, check, 'no-keep-awake': noKeepAwake, approvals };
+  const { url, as, token, json = false, help = false, version = false, ...options } = parsed.values;
   const [command, ...args] = parsed.positionals;
 
-  return { command, args, global: { url, as, token, json, help, version }, options, flags };
+  return { command, args, global: { url, as, token, json, help, version }, options };
 }
-
-export const setFlagOf = (parsed: ParsedArgs): WatchFlag | undefined =>
-  (Object.keys(parsed.flags) as WatchFlag[]).find((name) => parsed.flags[name]);
 
 function checkArgs(command: Command, parsed: ParsedArgs): void {
   const fail = (message: string) => {
@@ -62,7 +53,7 @@ function checkArgs(command: Command, parsed: ParsedArgs): void {
   };
 
   const names = Object.keys(parsed.options) as CommandOption[];
-  const unknown = names.find((name) => !command.options.includes(name)) ?? setFlagOf(parsed);
+  const unknown = names.find((name) => !command.options.includes(name));
   if (unknown) fail(`"${command.name}" has no --${unknown} option.`);
   const missingArg = command.args[parsed.args.length];
   if (missingArg) fail(`Missing <${missingArg}>.`);

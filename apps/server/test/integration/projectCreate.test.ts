@@ -2,7 +2,7 @@ import type { ErrorBody, ProjectDetail, ProjectSummary } from '@tracker/shared';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { testClock } from '../helpers/auth';
 import { agent } from '../helpers/fixtures';
-import { addUser, caller, type Caller } from '../helpers/runs';
+import { addUser, caller, type Caller } from '../helpers/callers';
 import { DIALECTS, useTestServer } from '../helpers/server';
 
 const REFUSED = { error: { code: 'forbidden', message: 'Only a person creates a project.' } };
@@ -11,22 +11,22 @@ describe.each(DIALECTS)('who creates a project (%s)', (dialect) => {
   const clock = testClock();
   const api = useTestServer(dialect, { now: clock.now });
   let person: Caller;
-  let helper: Caller;
+  let tokenAgent: Caller;
 
   beforeEach(async () => {
     clock.set(1_000_000);
     const owner = await addUser(api.db, 'owner@example.com', clock.now());
     person = caller(() => api.app, owner.person);
-    helper = caller(() => api.app, owner.helper);
+    tokenAgent = caller(() => api.app, owner.agent);
   });
 
   it('refuses an agent token, before its body is read', async () => {
-    const created = await helper<ErrorBody>('POST', '/api/projects', {
+    const created = await tokenAgent<ErrorBody>('POST', '/api/projects', {
       name: 'Blog',
       instructions: 'Do what the ticket says.',
     });
     expect(created).toEqual({ status: 403, body: REFUSED });
-    const malformed = await helper<ErrorBody>('POST', '/api/projects', { name: 7 });
+    const malformed = await tokenAgent<ErrorBody>('POST', '/api/projects', { name: 7 });
     expect(malformed.status).toBe(403);
     expect((await person<ProjectSummary[]>('GET', '/api/projects')).body).toEqual([]);
   });

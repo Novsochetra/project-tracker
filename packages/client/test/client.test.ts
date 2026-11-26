@@ -105,18 +105,6 @@ const routes: Route[] = [
     call: (client) => client.getBoard('MOB'),
   },
   {
-    name: 'getProjectPrompt',
-    method: 'GET',
-    path: '/api/projects/MOB/prompt',
-    call: (client) => client.getProjectPrompt('MOB'),
-  },
-  {
-    name: 'getProjectUsage',
-    method: 'GET',
-    path: '/api/projects/MOB/usage',
-    call: (client) => client.getProjectUsage('MOB'),
-  },
-  {
     name: 'createStatus',
     method: 'POST',
     path: '/api/projects/MOB/statuses',
@@ -213,19 +201,6 @@ const routes: Route[] = [
     call: (client) => client.deleteTicket('MOB-3'),
   },
   {
-    name: 'getTicketPrompt',
-    method: 'GET',
-    path: '/api/tickets/MOB-3/prompt',
-    call: (client) => client.getTicketPrompt('MOB-3'),
-  },
-  {
-    name: 'markSent',
-    method: 'POST',
-    path: '/api/tickets/MOB-3/sent',
-    body: { moveToInProgress: true },
-    call: (client) => client.markSent('MOB-3', { moveToInProgress: true }),
-  },
-  {
     name: 'addComment',
     method: 'POST',
     path: '/api/tickets/MOB-3/comments',
@@ -257,20 +232,6 @@ const routes: Route[] = [
     method: 'DELETE',
     path: '/api/attachments/f1',
     call: (client) => client.deleteAttachment('f1'),
-  },
-  {
-    name: 'previewReport',
-    method: 'POST',
-    path: '/api/reports/preview',
-    body: { text: 'TICKET: MOB-3', ticketKey: 'MOB-3' },
-    call: (client) => client.previewReport({ text: 'TICKET: MOB-3', ticketKey: 'MOB-3' }),
-  },
-  {
-    name: 'applyReport',
-    method: 'POST',
-    path: '/api/reports/apply',
-    body: { text: 'TICKET: MOB-3' },
-    call: (client) => client.applyReport({ text: 'TICKET: MOB-3' }),
   },
   {
     name: 'claimNext',
@@ -355,73 +316,37 @@ const routes: Route[] = [
     call: (client) => client.revokeApiToken('t/1'),
   },
   {
-    name: 'addRunSteps',
+    name: 'askQuestion',
     method: 'POST',
-    path: '/api/runs/r%201/steps',
-    body: { runnerId: 'r-1', steps: [{ kind: 'tool', label: 'Read a.ts', subAgent: false }] },
+    path: '/api/tickets/MOB-3/questions',
+    body: { question: 'Dark or night?', choices: ['Dark', 'Night'] },
     call: (client) =>
-      client.addRunSteps('r 1', {
-        runnerId: 'r-1',
-        steps: [{ kind: 'tool', label: 'Read a.ts', subAgent: false }],
-      }),
+      client.askQuestion('MOB-3', { question: 'Dark or night?', choices: ['Dark', 'Night'] }),
   },
   {
-    name: 'listRunSteps',
+    name: 'listQuestions',
     method: 'GET',
-    path: '/api/runs/r-1/steps',
-    call: (client) => client.listRunSteps('r-1'),
+    path: '/api/tickets/MOB-3/questions',
+    call: (client) => client.listQuestions('MOB-3'),
   },
   {
-    name: 'listRunSteps after a step',
-    method: 'GET',
-    path: '/api/runs/r-1/steps?after=12',
-    call: (client) => client.listRunSteps('r-1', { after: 12 }),
-  },
-  {
-    name: 'addRunRequest',
+    name: 'answerQuestion',
     method: 'POST',
-    path: '/api/runs/r-1/requests',
-    body: {
-      runnerId: 'r',
-      kind: 'permission',
-      label: 'Run npm test',
-      labelCut: false,
-      questions: null,
-    },
-    call: (client) =>
-      client.addRunRequest('r-1', {
-        runnerId: 'r',
-        kind: 'permission',
-        label: 'Run npm test',
-        labelCut: false,
-        questions: null,
-      }),
+    path: '/api/questions/q%201/answer',
+    body: { answer: 'Night' },
+    call: (client) => client.answerQuestion('q 1', { answer: 'Night' }),
   },
   {
-    name: 'listRunRequests',
+    name: 'waitForQuestion',
     method: 'GET',
-    path: '/api/runs/r-1/requests',
-    call: (client) => client.listRunRequests('r-1'),
+    path: '/api/questions/q-1/wait',
+    call: (client) => client.waitForQuestion('q-1'),
   },
   {
-    name: 'answerRunRequest',
+    name: 'cancelQuestion',
     method: 'POST',
-    path: '/api/requests/q%201/answer',
-    body: { decision: 'allow', answers: ['Green'] },
-    call: (client) => client.answerRunRequest('q 1', { decision: 'allow', answers: ['Green'] }),
-  },
-  {
-    name: 'waitForRunRequest',
-    method: 'GET',
-    path: '/api/requests/q-1/wait?runnerId=r',
-    call: (client) => client.waitForRunRequest('q-1', { runnerId: 'r' }),
-  },
-  {
-    name: 'cancelRunRequest',
-    method: 'POST',
-    path: '/api/requests/q-1/cancel',
-    body: { runnerId: 'r' },
-    call: (client) => client.cancelRunRequest('q-1', { runnerId: 'r' }),
+    path: '/api/questions/q-1/cancel',
+    call: (client) => client.cancelQuestion('q-1'),
   },
 ];
 
@@ -618,20 +543,11 @@ describe('fresh reads', () => {
     expect(last().init.signal).toBe(controller.signal);
   });
 
-  it("can stop sending a run's steps that waits too long", async () => {
-    const { client, last } = setup(noContent);
-    const controller = new AbortController();
-
-    await client.addRunSteps('r-1', { runnerId: 'r', steps: [] }, { signal: controller.signal });
-
-    expect(last().init.signal).toBe(controller.signal);
-  });
-
-  it('can stop waiting for an answer when the run ends', async () => {
+  it('can stop waiting for the answer to a question', async () => {
     const { client, last } = setup();
     const controller = new AbortController();
 
-    await client.waitForRunRequest('q-1', { runnerId: 'r' }, { signal: controller.signal });
+    await client.waitForQuestion('q-1', { signal: controller.signal });
 
     expect(last().init.signal).toBe(controller.signal);
   });

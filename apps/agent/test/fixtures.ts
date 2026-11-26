@@ -56,7 +56,6 @@ export const ticket = (overrides: Partial<TicketListItem> = {}): TicketListItem 
   priority: 'high',
   assignee: '',
   due: '',
-  needsDevice: false,
   createdAt: T0,
   updatedAt: T0,
   commentCount: 0,

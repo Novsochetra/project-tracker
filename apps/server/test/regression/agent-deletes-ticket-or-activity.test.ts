@@ -1,7 +1,7 @@
 import type { ErrorBody, TicketDetail } from '@tracker/shared';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { agent } from '../helpers/fixtures';
-import { addUser, caller, type Caller } from '../helpers/runs';
+import { addUser, caller, type Caller } from '../helpers/callers';
 import { DIALECTS, useTestServer } from '../helpers/server';
 
 type Attempt = [method: string, path: string, body: unknown, refusal: ErrorBody];
@@ -15,7 +15,7 @@ const ACTIVITY_REFUSED = refused('Only a person edits or deletes comments, repor
 describe.each(DIALECTS)('regression: an agent deletes a ticket or its activity (%s)', (dialect) => {
   const api = useTestServer(dialect);
   let person: Caller;
-  let helper: Caller;
+  let tokenAgent: Caller;
 
   const entries = async () =>
     (await person<TicketDetail>('GET', '/api/tickets/MOB-1')).body.activity.filter(
@@ -25,12 +25,12 @@ describe.each(DIALECTS)('regression: an agent deletes a ticket or its activity (
   beforeEach(async () => {
     const owner = await addUser(api.db, 'owner@example.com', Date.now());
     person = caller(() => api.app, owner.person);
-    helper = caller(() => api.app, owner.helper);
+    tokenAgent = caller(() => api.app, owner.agent);
     await person('POST', '/api/projects', { name: 'Mobile', key: 'MOB' });
     await person('POST', '/api/projects/MOB/tickets', { title: 'Crash' });
     await person('POST', '/api/tickets/MOB-1/comments', { text: 'Add a test first' });
-    await helper('POST', '/api/tickets/MOB-1/submit', { summary: 'Fixed' });
-    await helper('POST', '/api/tickets/MOB-1/review', {
+    await tokenAgent('POST', '/api/tickets/MOB-1/submit', { summary: 'Fixed' });
+    await tokenAgent('POST', '/api/tickets/MOB-1/review', {
       verdict: 'changes_requested',
       rating: 2,
       summary: 'No test',
@@ -57,7 +57,7 @@ describe.each(DIALECTS)('regression: an agent deletes a ticket or its activity (
       ]),
     ];
     for (const [method, path, body, refusal] of attempts) {
-      expect(await helper(method, path, body), `${method} ${path}`).toEqual({
+      expect(await tokenAgent(method, path, body), `${method} ${path}`).toEqual({
         status: 403,
         body: refusal,
       });

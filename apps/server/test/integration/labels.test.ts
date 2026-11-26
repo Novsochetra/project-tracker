@@ -1,4 +1,4 @@
-import type { ErrorBody, Label, ProjectDetail, Ticket } from '@tracker/shared';
+import type { ErrorBody, Label, ProjectDetail, Ticket, TicketDetail } from '@tracker/shared';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { agent, eventTexts } from '../helpers/fixtures';
 import { DIALECTS, useTestServer } from '../helpers/server';
@@ -177,39 +177,23 @@ describe.each(DIALECTS)('labels (%s)', (dialect) => {
     const client = api.client();
     const bug = await makeLabel('Bug');
     await client.createTicket('MA', { title: 'Crash', labelIds: [bug.id] });
-    const claimed = await api.post<Ticket>(
-      '/api/tickets/MA-1/sent',
-      { moveToInProgress: true },
-      {
-        actor: agent(),
-      },
-    );
-    expect(claimed.body.labelIds).toEqual([bug.id]);
+    const claimed = await api.post<TicketDetail>('/api/tickets/MA-1/claim', undefined, {
+      actor: agent(),
+    });
+    expect(claimed.body.ticket.labelIds).toEqual([bug.id]);
     const moved = await client.moveTicket('MA-1', { statusId: project.statuses[0]!.id });
     expect(moved.labelIds).toEqual([bug.id]);
   });
 
-  it('puts a label’s instructions into the prompts after the project’s', async () => {
+  it('gives an agent the instructions of the ticket’s labels with the ticket', async () => {
     const client = api.client();
-    await client.updateProject('MA', { instructions: 'Keep it simple.' });
     const bug = await makeLabel('Bug', { instructions: 'Write a failing test first.' });
     await client.createTicket('MA', { title: 'Crash', labelIds: [bug.id] });
-    await client.createTicket('MA', { title: 'Docs' });
-    const block = [
-      '## Project instructions',
-      'Keep it simple.',
-      '',
-      '## Instructions for "Bug" tickets',
-      'Write a failing test first.',
-    ].join('\n');
-    const ticket = await api.get<{ text: string }>('/api/tickets/MA-1/prompt');
-    expect(ticket.body.text).toContain(block);
-    expect(ticket.body.text).toContain('Labels: Bug');
-    expect((await api.get<{ text: string }>('/api/tickets/MA-2/prompt')).body.text).not.toContain(
-      'Bug',
-    );
-    const all = await api.get<{ text: string }>('/api/projects/MA/prompt');
-    expect(all.body.text).toContain(block);
+    const detail = await api.get<TicketDetail>('/api/tickets/MA-1', { actor: agent() });
+    expect(detail.body.ticket.labelIds).toEqual([bug.id]);
+    expect(detail.body.labels).toEqual([
+      expect.objectContaining({ name: 'Bug', instructions: 'Write a failing test first.' }),
+    ]);
   });
 
   it('lets only a person change labels, while agents still put them on tickets', async () => {
