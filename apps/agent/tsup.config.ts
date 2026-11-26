@@ -2,7 +2,7 @@ import { defineConfig } from 'tsup';
 import { rootVersionOnly } from '../../scripts/build/rootVersionOnly';
 
 export default defineConfig({
-  entry: ['src/mcp.ts', 'src/cli.ts', 'src/promptTool.ts'],
+  entry: ['src/mcp.ts', 'src/cli.ts'],
   format: ['esm'],
   platform: 'node',
   target: 'node22',

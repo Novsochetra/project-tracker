@@ -3,18 +3,10 @@ import { createTrackerClient, type TrackerApi } from '../client';
 import { loadConfig, type Config, type Env } from '../config';
 import type { ConfigStore } from '../configFile';
 import { describeError } from '../errors';
-import {
-  parseCliArgs,
-  prepareCommand,
-  setFlagOf,
-  UsageError,
-  type ParsedArgs,
-  type Prepared,
-} from './args';
+import { parseCliArgs, prepareCommand, UsageError, type ParsedArgs, type Prepared } from './args';
 import { EXIT_ERROR, EXIT_OK, EXIT_USAGE } from './exitCodes';
 import { login, logout } from './login';
 import { USAGE } from './usage';
-import { checkWatchArgs, watchCommand } from './watchCommand';
 
 export { EXIT_ERROR, EXIT_OK, EXIT_USAGE } from './exitCodes';
 
@@ -25,9 +17,6 @@ export interface CliIo {
   stderr(text: string): void;
   readSecret?: (prompt: string) => Promise<string>;
   connect?: (config: Config) => TrackerApi;
-  cwd?: string;
-  write?: (text: string) => void;
-  untilStopped?: () => Promise<void>;
 }
 
 const SETUP_COMMANDS = new Set(['login', 'logout']);
@@ -58,8 +47,6 @@ function checkSetupArgs(parsed: ParsedArgs): void {
     throw new UsageError(`Unexpected argument "${parsed.args[0]}".`, usage);
   }
 
-  const flag = setFlagOf(parsed);
-  if (flag) throw new UsageError(`"${parsed.command}" has no --${flag} option.`, usage);
   if (parsed.global.token !== undefined) {
     throw new UsageError(
       'Paste the token when asked, or pipe it in: a --token flag stays in your shell history.',
@@ -95,7 +82,6 @@ export async function runCli(argv: readonly string[], io: CliIo): Promise<number
     }
 
     if (SETUP_COMMANDS.has(parsed.command ?? '')) checkSetupArgs(parsed);
-    else if (parsed.command === 'watch') checkWatchArgs(parsed);
     else prepared = prepareCommand(parsed);
   } catch (error) {
     if (!(error instanceof UsageError)) throw error;
@@ -105,5 +91,5 @@ export async function runCli(argv: readonly string[], io: CliIo): Promise<number
 
   if (prepared) return execute(prepared, parsed, io);
 
-  return parsed.command === 'watch' ? watchCommand(parsed, io) : setup(parsed, io);
+  return setup(parsed, io);
 }

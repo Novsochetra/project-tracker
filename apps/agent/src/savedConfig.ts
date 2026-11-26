@@ -5,8 +5,6 @@ export interface SavedConfig {
   url?: string;
   // API tokens by tracker, so a token only ever goes to the tracker it was made for.
   tokens: Record<string, string>;
-  // tracker watch's id per tracker and folder, so runs queued while it restarts still find it.
-  runners?: Record<string, string>;
 }
 
 export const NO_SAVED_CONFIG: SavedConfig = { tokens: {} };
@@ -14,7 +12,6 @@ export const NO_SAVED_CONFIG: SavedConfig = { tokens: {} };
 const savedConfigSchema = z.object({
   url: z.string().optional(),
   tokens: z.record(z.string(), z.string()).default({}),
-  runners: z.record(z.string(), z.string()).optional(),
 });
 
 export class ConfigFileError extends Error {
@@ -36,9 +33,9 @@ export function parseSavedConfig(text: string, path: string): SavedConfig {
     );
   }
 
-  const { url, tokens, runners } = result.data;
+  const { url, tokens } = result.data;
 
-  return { ...(url === undefined ? {} : { url }), tokens, ...(runners ? { runners } : {}) };
+  return { ...(url === undefined ? {} : { url }), tokens };
 }
 
 // "https://Tracker.example.com/" and "https://tracker.example.com" are the same tracker.
