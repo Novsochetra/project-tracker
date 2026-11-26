@@ -118,3 +118,33 @@
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
+
+.projects {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+/* Only transforms move while a project is dragged: the rows it passes glide aside, the dragged
+   row rides on its own layer above them. */
+.projects .item {
+  position: relative;
+  transition:
+    background-color var(--duration-fast) ease-out,
+    transform var(--duration-base) var(--ease-out),
+    box-shadow var(--duration-fast) ease-out;
+}
+
+.projects .item[data-dragging] {
+  z-index: 1;
+  background: var(--surface);
+  box-shadow: var(--shadow-lifted);
+  will-change: transform;
+}
+
+:global(html[data-row-drag]),
+:global(html[data-row-drag] *) {
+  cursor: grabbing !important;
+  user-select: none !important;
+  -webkit-user-select: none !important;
+}

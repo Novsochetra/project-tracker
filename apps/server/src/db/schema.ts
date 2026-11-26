@@ -34,6 +34,9 @@ export interface ProjectRow {
   // 1 when on; 0 or null (projects from before it) when off. No booleans (§2).
   autoReview: number | null;
   hideName: number;
+  // The person's order of their projects (PT-260); ties, such as every project before it, go by
+  // created_at.
+  position: number;
 }
 
 export interface StatusRow {

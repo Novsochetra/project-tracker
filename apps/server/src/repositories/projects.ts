@@ -17,6 +17,7 @@ export const listProjectRows = (db: Db, scope: UserScope) =>
     .selectFrom('projects')
     .selectAll()
     .where(ownedBy(scope))
+    .orderBy('position')
     .orderBy('createdAt')
     .orderBy('id')
     .execute();

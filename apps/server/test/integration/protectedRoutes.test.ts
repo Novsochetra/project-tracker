@@ -9,6 +9,7 @@ import { DIALECTS, useTestServer } from '../helpers/server';
 const PROTECTED: readonly (readonly [string, string])[] = [
   ['GET', '/api/projects'],
   ['POST', '/api/projects'],
+  ['PUT', '/api/projects/order'],
   ['GET', '/api/projects/MOB'],
   ['PATCH', '/api/projects/MOB'],
   ['DELETE', '/api/projects/MOB'],

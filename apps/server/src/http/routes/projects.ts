@@ -1,4 +1,4 @@
-import { createProjectInput, updateProjectInput } from '@tracker/shared';
+import { createProjectInput, reorderProjectsInput, updateProjectInput } from '@tracker/shared';
 import { Hono } from 'hono';
 import type { ServiceContext } from '../../services/context';
 import {
@@ -8,10 +8,11 @@ import {
   listProjectSummaries,
   updateProject,
 } from '../../services/projects';
+import { reorderProjects } from '../../services/projectOrder';
 import { projectPrompt } from '../../services/prompts';
 import { getBoard } from '../../services/ticketQueries';
 import type { AppEnv } from '../env';
-import { personCreatesProjects, personEditsProjects } from '../personOnly';
+import { personCreatesProjects, personEditsProjects, personOrdersProjects } from '../personOnly';
 import { userContext } from '../userContext';
 import { jsonBody } from '../validation';
 
@@ -20,6 +21,9 @@ export const projectRoutes = (ctx: ServiceContext) =>
     .get('/projects', async (c) => c.json(await listProjectSummaries(userContext(ctx, c))))
     .post('/projects', personCreatesProjects, jsonBody(createProjectInput), async (c) =>
       c.json(await createProject(userContext(ctx, c), c.req.valid('json')), 201),
+    )
+    .put('/projects/order', personOrdersProjects, jsonBody(reorderProjectsInput), async (c) =>
+      c.json(await reorderProjects(userContext(ctx, c), c.req.valid('json').ids)),
     )
     .get('/projects/:key', async (c) =>
       c.json(await getProjectDetail(userContext(ctx, c), c.req.param('key'))),
