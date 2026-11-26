@@ -79,6 +79,24 @@ describe.each(DIALECTS)('regression: an agent moves a ticket out of Done (%s)', 
     expect(await detail()).toEqual(before);
   });
 
+  it('takes only the boolean true as reopen', async () => {
+    const before = await detail();
+    for (const reopen of ['true', 1, null, {}]) {
+      for (const [method, path] of [
+        ['PATCH', '/api/tickets/MOB-1'],
+        ['POST', '/api/tickets/MOB-1/move'],
+      ] as const) {
+        const answer = await helper<ErrorBody>(method, path, { statusId: ids.todo, reopen });
+        expect(answer, `${method} ${JSON.stringify(reopen)}`).toMatchObject({
+          status: 400,
+          body: { error: { code: 'invalid_input' } },
+        });
+      }
+    }
+
+    expect(await detail()).toEqual(before);
+  });
+
   it('moves it out when the agent says the person told it to, under its own name', async () => {
     const reopened = await helper<Ticket>('PATCH', '/api/tickets/MOB-1', {
       statusId: ids.todo,

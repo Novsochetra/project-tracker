@@ -37,7 +37,7 @@ import {
   type TicketScope,
 } from './lookups';
 import { toTicket } from './mappers';
-import { replacedTextEvents } from './replacedText';
+import { replacedText } from './replacedText';
 import { statusChangedText } from './statusEvents';
 import { ticketOut } from './ticketOut';
 import { fieldChanges, mergeChanges, type PlannedChange } from './ticketChanges';
@@ -175,6 +175,7 @@ async function statusChange(
   { statusId, reopen }: Pick<UpdateTicketValues, 'statusId' | 'reopen'>,
 ): Promise<PlannedChange> {
   if (statusId === undefined || statusId === scope.ticket.statusId) return mergeChanges([]);
+
   const status = requireStatusIn(scope.statuses, statusId);
   assertMayLeave(actor, scope, reopen);
 
@@ -198,10 +199,11 @@ export async function updateTicket(ctx: UserContext, update: TicketUpdate): Prom
     const match = expectedMatch(scope.ticket, input, expected);
     const labels = await labelChange(trx, scope.ticket, input.labelIds);
     const fields = fieldChanges(scope.ticket, input, new Date());
+    const replaced = replacedText(actor, scope.ticket, fields.changes);
     const plan = mergeChanges([
       await statusChange(trx, actor, scope, input),
       fields,
-      { changes: {}, entries: replacedTextEvents(actor, scope.ticket, fields.changes) },
+      { changes: {}, entries: replaced.events },
       { changes: {}, entries: labels ? [labels.entry] : [] },
     ]);
     if (isEmpty(plan.changes) && !labels) {
@@ -212,7 +214,7 @@ export async function updateTicket(ctx: UserContext, update: TicketUpdate): Prom
       ticket: scope.ticket,
       actor,
       ...plan,
-      match,
+      match: { ...match, ...replaced.match },
     });
     if (labels)
       await setTicketLabels(trx, scope.ticket.id, labels.labelIds, written.ticket.updatedAt);

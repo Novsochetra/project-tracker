@@ -1,4 +1,4 @@
-import type { ErrorBody, TicketQuestion } from '@tracker/shared';
+import type { ApiToken, ErrorBody, TicketQuestion } from '@tracker/shared';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { createApiToken } from '../../src/auth/apiTokens';
 import { agent } from '../helpers/fixtures';
@@ -45,6 +45,16 @@ describe.each(DIALECTS)('regression: an agent cancels another agent’s question
     expect(await statuses()).toEqual(['open']);
 
     expect((await cancel(question.id, asker)).body).toMatchObject({ status: 'cancelled' });
+  });
+
+  it('still refuses another token once the asking token is revoked', async () => {
+    const question = await ask(asker);
+    const tokens = (await person<ApiToken[]>('GET', '/api/tokens')).body;
+    const asking = tokens.find((token) => token.name === 'owner@example.com laptop');
+    expect((await person('DELETE', `/api/tokens/${asking?.id}`)).status).toBe(204);
+
+    expect(await cancel(question.id, otherAgent)).toEqual({ status: 403, body: REFUSED });
+    expect((await cancel(question.id, person)).body).toMatchObject({ status: 'cancelled' });
   });
 
   it('lets the person cancel any of their questions', async () => {

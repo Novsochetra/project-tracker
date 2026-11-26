@@ -66,7 +66,7 @@
   gap: var(--space-2);
 }
 
-/* The look of a quote in an answer (Markdown.module.css). */
+/* Quoted, so it reads as text the ticket had before rather than its own. */
 .oldText {
   padding-left: var(--space-3);
   border-left: 3px solid var(--control-line);

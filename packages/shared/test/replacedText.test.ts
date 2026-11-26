@@ -22,6 +22,8 @@ describe('descriptionReplacedText', () => {
   it('has nothing to keep when there was no description', () => {
     expect(descriptionReplacedText('', 'Open it')).toBe('added a description');
     expect(descriptionReplacedText(' \n', 'Open it')).toBe('added a description');
+    expect(descriptionReplacedText(' \n', '')).toBe('removed the description');
+    expect(replacedDescription(descriptionReplacedText(' \n', ''))).toBeNull();
   });
 });
 

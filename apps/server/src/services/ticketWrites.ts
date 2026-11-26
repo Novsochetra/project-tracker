@@ -12,12 +12,12 @@ import { conflict, forbidden, staleEdit } from '../errors';
 import { insertActivity } from '../repositories/activities';
 import {
   listGroupRanks,
-  updateTicketInStatus,
   updateTicketMatching,
   updateTicketRow,
   type TicketChanges,
   type TicketMatch,
 } from '../repositories/tickets';
+import { isEmpty } from '../util';
 
 export interface ActivityEntry {
   type: ActivityType;
@@ -70,20 +70,24 @@ export interface TicketWrite {
   actor: Actor;
   changes?: TicketChanges;
   entries?: readonly ActivityEntry[];
+  // Holds the write to the status it was read in also when it sets none, as a claim's assignee.
   guardStatus?: boolean;
   // Field values the edit was typed over (expectedMatch).
   match?: TicketMatch;
 }
 
+// On Postgres another commit can land between this transaction's read and its write (§2). So a
+// write that sets the status must still find the status it was read in, which the rules about
+// Done and claims were checked against, and an edit the text it was typed over.
 async function saveChanges(db: Db, write: TicketWrite, changes: TicketChanges): Promise<void> {
-  if (write.match) {
-    if (!(await updateTicketMatching(db, write.ticket.id, write.match, changes))) throw staleEdit();
-    return;
-  }
+  const inStatus = write.guardStatus === true || changes.statusId !== undefined;
+  const match = inStatus ? { ...write.match, statusId: write.ticket.statusId } : write.match;
+  if (!match) return updateTicketRow(db, write.ticket.id, changes);
+  if (await updateTicketMatching(db, write.ticket.id, match, changes)) return;
 
-  if (!write.guardStatus) return updateTicketRow(db, write.ticket.id, changes);
-  const saved = await updateTicketInStatus(db, write.ticket.id, write.ticket.statusId, changes);
-  if (!saved) throw conflict('Someone else changed this ticket at the same time. Try again.');
+  throw inStatus && isEmpty(write.match ?? {})
+    ? conflict('Someone else changed this ticket at the same time. Try again.')
+    : staleEdit();
 }
 
 export interface WrittenTicket {

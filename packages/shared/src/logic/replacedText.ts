@@ -7,11 +7,12 @@ const REMOVED = 'removed the description';
 export const titleReplacedText = (oldTitle: string): string =>
   `changed the title from “${oldTitle}”`;
 
-// Untrimmed, so the person gets back exactly what they wrote.
+// Untrimmed, so the person gets back exactly what they wrote. A blank one has nothing to keep.
 export function descriptionReplacedText(oldText: string, newText: string): string {
-  if (!oldText.trim()) return 'added a description';
+  const added = newText.trim() !== '';
+  if (!oldText.trim()) return added ? 'added a description' : REMOVED;
 
-  return `${newText.trim() ? CHANGED : REMOVED}\n${oldText}`;
+  return `${added ? CHANGED : REMOVED}\n${oldText}`;
 }
 
 export interface ReplacedDescription {
