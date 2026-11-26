@@ -5,7 +5,8 @@ import type { Database, Db } from '../db/schema';
 import { ownedBy } from './projects';
 
 export interface TicketSearch {
-  terms: readonly string[];
+  // As typed: the database lowercases them, as it does the columns.
+  words: readonly string[];
   key: KeyQuery | null;
   limit: number;
 }
@@ -27,17 +28,19 @@ export interface TicketSearchRow {
 type SearchBuilder = ExpressionBuilder<Database, 'tickets' | 'projects' | 'statuses'>;
 type Column = 'tickets.title' | 'tickets.description';
 
-// lower() on both sides: Postgres LIKE is case-sensitive, SQLite's only for non-ASCII letters.
-const contains = (eb: SearchBuilder, column: Column, term: string): Expression<SqlBool> =>
-  sql<SqlBool>`lower(${eb.ref(column)}) like ${containsPattern(term)} escape ${LIKE_ESCAPE}`;
+// Postgres LIKE is case-sensitive, so both sides go through lower(). The database's own lower()
+// does the pattern too: SQLite's changes only ASCII letters, so a word lowercased in JavaScript
+// would miss "Été" even typed exactly.
+const contains = (eb: SearchBuilder, column: Column, word: string): Expression<SqlBool> =>
+  sql<SqlBool>`lower(${eb.ref(column)}) like lower(${containsPattern(word)}) escape ${LIKE_ESCAPE}`;
 
-const inTitle = (eb: SearchBuilder, terms: readonly string[]) =>
-  eb.and(terms.map((term) => contains(eb, 'tickets.title', term)));
+const inTitle = (eb: SearchBuilder, words: readonly string[]) =>
+  eb.and(words.map((word) => contains(eb, 'tickets.title', word)));
 
-const inText = (eb: SearchBuilder, terms: readonly string[]) =>
+const inText = (eb: SearchBuilder, words: readonly string[]) =>
   eb.and(
-    terms.map((term) =>
-      eb.or([contains(eb, 'tickets.title', term), contains(eb, 'tickets.description', term)]),
+    words.map((word) =>
+      eb.or([contains(eb, 'tickets.title', word), contains(eb, 'tickets.description', word)]),
     ),
   );
 
@@ -49,8 +52,8 @@ function keyHit(eb: SearchBuilder, key: KeyQuery | null): Expression<SqlBool> {
 }
 
 function matches(eb: SearchBuilder, search: TicketSearch): Expression<SqlBool> {
-  if (search.terms.length === 0 && search.key === null) return eb.lit(true);
-  const text = search.terms.length === 0 ? [] : [inText(eb, search.terms)];
+  if (search.words.length === 0 && search.key === null) return eb.lit(true);
+  const text = search.words.length === 0 ? [] : [inText(eb, search.words)];
   return eb.or([keyHit(eb, search.key), ...text]);
 }
 
@@ -60,7 +63,7 @@ const rankOf = (eb: SearchBuilder, search: TicketSearch) =>
     .case()
     .when(keyHit(eb, search.key))
     .then(0)
-    .when(search.terms.length === 0 ? eb.lit(false) : inTitle(eb, search.terms))
+    .when(search.words.length === 0 ? eb.lit(false) : inTitle(eb, search.words))
     .then(1)
     .else(2)
     .end();
@@ -82,13 +85,18 @@ export async function searchTicketRows(
       'projects.key as projectKey',
       'tickets.num',
       'tickets.title',
-      'tickets.description',
       'tickets.statusId',
       'statuses.name as statusName',
       'statuses.category as statusCategory',
       'statuses.color as statusColor',
       'tickets.updatedAt',
     ])
+    // Only a match needs a snippet; a list of recent tickets leaves the long text unread.
+    .select((eb) =>
+      search.words.length > 0
+        ? eb.ref('tickets.description').as('description')
+        : sql<string>`''`.as('description'),
+    )
     .orderBy((eb) => rankOf(eb, search))
     .orderBy('tickets.updatedAt', 'desc')
     .orderBy('tickets.id')

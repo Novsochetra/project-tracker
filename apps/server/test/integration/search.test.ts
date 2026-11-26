@@ -39,7 +39,7 @@ describe.each(DIALECTS)('GET /api/search (%s)', (dialect) => {
   it('needs every word, each in the title or the description', async () => {
     expect(keys(await search('phone crash'))).toEqual(['MOB-1']);
     const [hit] = (await search('phone crash')).tickets;
-    expect(hit?.snippet).toBe('Open the camera. Turn the phone and the app closes.');
+    expect(hit?.snippet).toBe('…Turn the phone and the app closes.');
     expect(keys(await search('phone pricing'))).toEqual([]);
   });
 
@@ -49,6 +49,17 @@ describe.each(DIALECTS)('GET /api/search (%s)', (dialect) => {
       expect(res.tickets[0], q).toMatchObject({ key: 'WEB-2', match: 'key' });
     }
     expect(keys(await search('2'))).toEqual(['WEB-2', 'MOB-2']);
+  });
+
+  it('finds words with accented letters, capitals included, typed as written', async () => {
+    await api.client().createTicket('WEB', { title: 'Été en mer', description: 'Le Café ouvre.' });
+    const summer = await search('Été');
+    expect(summer.tickets).toEqual([expect.objectContaining({ key: 'WEB-3', match: 'title' })]);
+    const cafe = await search('Café');
+    expect(cafe.tickets).toEqual([
+      expect.objectContaining({ key: 'WEB-3', match: 'description', snippet: 'Le Café ouvre.' }),
+    ]);
+    expect(keys(await search('Été MER'))).toEqual(['WEB-3']);
   });
 
   it('matches LIKE wildcards as plain text', async () => {

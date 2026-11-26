@@ -4,6 +4,7 @@ import {
   searchMatchOf,
   searchSnippet,
   searchTerms,
+  searchWords,
   type KeyQuery,
   type SearchParams,
   type TicketSearchHit,
@@ -34,6 +35,7 @@ export async function searchTickets(
 ): Promise<TicketSearchResults> {
   const terms = searchTerms(query.q);
   const key = parseKeyQuery(query.q);
-  const rows = await searchTicketRows(ctx.db, ctx.scope, { terms, key, limit: query.limit });
+  const words = searchWords(query.q);
+  const rows = await searchTicketRows(ctx.db, ctx.scope, { words, key, limit: query.limit });
   return { tickets: rows.map((row) => toHit(row, terms, key)) };
 }

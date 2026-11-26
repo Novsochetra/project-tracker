@@ -67,8 +67,7 @@
 
 .glyph {
   flex: none;
-  align-self: flex-start;
-  margin-top: 2px;
+  align-self: center;
 }
 
 .text {
@@ -101,7 +100,9 @@
   white-space: nowrap;
 }
 
+/* Under the key, past the glyph and its gap. */
 .snippet {
+  padding-left: calc(16px + var(--space-2));
   overflow: hidden;
   color: var(--muted);
   font-size: var(--size-caption);
@@ -136,6 +137,10 @@
   color: var(--muted);
   font-size: var(--size-secondary);
   text-align: center;
+}
+
+.status:empty {
+  padding: 0;
 }
 
 .hints {
@@ -177,5 +182,14 @@
 
   .option {
     min-height: var(--touch-target);
+  }
+
+  /* About 40 characters fit a line at 375px, so a snippet gets two. */
+  .snippet {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    white-space: normal;
   }
 }

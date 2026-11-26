@@ -5,6 +5,7 @@ import { projectKeyOf } from '../../app/crumbs';
 import { routePath, useNavigation, type Route } from '../../navigation';
 import { keyRoute, paletteItems, paletteSections, type PaletteItem } from './paletteItems';
 import { paletteAction, stepIndex } from './paletteKeys';
+import { isApplePlatform } from './paletteShortcut';
 import { useTicketSearch } from './useTicketSearch';
 
 function useOpenRoute(onClose: () => void) {
@@ -39,7 +40,8 @@ function usePaletteList(text: string) {
   );
   // Results still for older text, or on their way for this text.
   const pending = searched !== text.trim() || query.isPlaceholderData || query.isPending;
-  return { sections, items: paletteItems(sections), query, pending };
+  const direct = pending ? keyRoute(text, projects ?? []) : null;
+  return { sections, items: paletteItems(sections), query, pending, direct };
 }
 
 // The options take no Tab stop, so Tab from the field would leave the sheet: it goes round to the
@@ -53,39 +55,46 @@ function tabToStart(event: KeyboardEvent<HTMLInputElement>): boolean {
   return true;
 }
 
+// The highlight follows its item, not its place: a live refresh reorders recent tickets, and late
+// results can land after the arrows moved, and Enter must open what is highlighted.
+function useHighlight(items: readonly PaletteItem[]) {
+  const [highlightId, setHighlightId] = useState<string | null>(null);
+  const kept = items.findIndex((item) => item.id === highlightId);
+  const activeIndex = items.length === 0 ? -1 : Math.max(kept, 0);
+  const step = (by: 1 | -1) =>
+    setHighlightId(items[stepIndex(activeIndex, items.length, by)]?.id ?? null);
+  return { activeIndex, activeItem: items[activeIndex], setHighlightId, step };
+}
+
 export function useSearchPalette(onClose: () => void) {
   const [text, setText] = useState('');
-  const [highlight, setHighlight] = useState(0);
   const list = usePaletteList(text);
+  const highlight = useHighlight(list.items);
   const openRoute = useOpenRoute(onClose);
-  const count = list.items.length;
-  const activeIndex = count === 0 ? -1 : Math.min(highlight, count - 1);
-  const activeItem: PaletteItem | undefined = list.items[activeIndex];
 
   const onChange = (event: ChangeEvent<HTMLInputElement>) => {
     setText(event.target.value);
-    setHighlight(0);
+    highlight.setHighlightId(null);
   };
   const openActive = () => {
-    const direct = list.pending ? keyRoute(text) : null;
-    const target = direct ?? activeItem?.route;
+    const target = list.direct ?? highlight.activeItem?.route;
     if (target) openRoute(target);
   };
   const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
     if (tabToStart(event)) return;
-    const action = paletteAction(event.nativeEvent);
+    const action = paletteAction(event.nativeEvent, isApplePlatform());
     if (action === null) return;
     event.preventDefault();
     if (action === 'open') openActive();
-    else setHighlight(stepIndex(activeIndex, count, action === 'next' ? 1 : -1));
+    else highlight.step(action === 'next' ? 1 : -1);
   };
   return {
     text,
     terms: searchTerms(text),
     ...list,
-    activeIndex,
-    activeId: activeItem?.id,
-    setHighlight,
+    activeIndex: highlight.activeIndex,
+    activeId: highlight.activeItem?.id,
+    highlightItem: (item: PaletteItem) => highlight.setHighlightId(item.id),
     open: (item: PaletteItem) => openRoute(item.route),
     onChange,
     onKeyDown,

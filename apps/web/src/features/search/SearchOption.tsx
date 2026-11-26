@@ -32,14 +32,15 @@ function ProjectContent({ project, terms }: { project: ProjectSummary; terms: re
 function TicketContent({ hit, terms }: { hit: TicketSearchHit; terms: readonly string[] }) {
   return (
     <>
-      <StatusGlyph
-        category={hit.statusCategory}
-        color={hit.statusColor}
-        animated={false}
-        className={styles.glyph}
-      />
       <span className={styles.text}>
+        {/* In the first line, so it stays level with the title when a snippet follows. */}
         <span className={styles.line}>
+          <StatusGlyph
+            category={hit.statusCategory}
+            color={hit.statusColor}
+            animated={false}
+            className={styles.glyph}
+          />
           <span className={styles.key}>{hit.key}</span>
           <span className={styles.title}>
             <Highlighted text={hit.title} terms={terms} />

@@ -52,9 +52,15 @@ export function paletteSections(input: PaletteInput): PaletteSection[] {
 export const paletteItems = (sections: readonly PaletteSection[]): PaletteItem[] =>
   sections.flatMap((section) => section.items);
 
-// Enter on a full key before its results arrive opens that ticket; an unknown one shows its
-// project, as its link would.
-export function keyRoute(text: string): Route | null {
+// Enter on a full key before its results arrive opens that ticket, but only in one of the
+// person's projects: "iphone 15" or "step 3" is a search, not a key.
+export function keyRoute(
+  text: string,
+  projects: readonly Pick<ProjectSummary, 'key'>[],
+): Route | null {
   const key = parseKeyQuery(text);
-  return key?.projectKey ? { name: 'ticket', key: key.projectKey, num: key.num } : null;
+  const projectKey = key?.projectKey;
+  if (!key || !projectKey) return null;
+  const known = projects.some((project) => project.key.toUpperCase() === projectKey);
+  return known ? { name: 'ticket', key: projectKey, num: key.num } : null;
 }

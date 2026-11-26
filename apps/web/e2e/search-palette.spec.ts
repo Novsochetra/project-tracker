@@ -51,11 +51,14 @@ test('phone: the search button opens a sheet whose rows open tickets', async ({ 
   await page.goto('/');
   await page.getByRole('button', { name: 'Search', exact: true }).click();
   await expect(palette(page)).toBeVisible();
+  await field(page).fill('rotate');
+  await expect(palette(page).getByRole('option', { name: /Rotate the keys/ })).toBeVisible();
+  expect(await fitsWidth(page)).toBe(true);
+  await page.screenshot({ path: info.outputPath('search-phone.png') });
+
   await field(page).fill('crash');
   const row = palette(page).getByRole('option', { name: /MOB-1/ });
   await expect(row).toBeVisible();
-  expect(await fitsWidth(page)).toBe(true);
-  await page.screenshot({ path: info.outputPath('search-phone.png') });
 
   await row.click();
   await expect(page).toHaveURL(/\/p\/MOB\/1$/);

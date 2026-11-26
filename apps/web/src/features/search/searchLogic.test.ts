@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { otherProject, project, summaryOf } from '../../api/test/fixtures';
 import { highlightParts } from './highlight';
-import { paletteItems, paletteSections, PROJECTS_SHOWN } from './paletteItems';
+import { keyRoute, paletteItems, paletteSections, PROJECTS_SHOWN } from './paletteItems';
 import { paletteAction, stepIndex } from './paletteKeys';
 import { isPaletteShortcut, shortcutHint, type PaletteKey } from './paletteShortcut';
 import { matchProjects } from './projectMatches';
@@ -50,8 +50,8 @@ describe('isPaletteShortcut', () => {
 });
 
 describe('paletteAction and stepIndex', () => {
-  const key = (k: string, ctrlKey = false) =>
-    paletteAction({ key: k, ctrlKey, metaKey: false, altKey: false, isComposing: false });
+  const key = (k: string, ctrlKey = false, apple = true) =>
+    paletteAction({ key: k, ctrlKey, metaKey: false, altKey: false, isComposing: false }, apple);
 
   it('moves with the arrows and Control-N/P, opens with Enter', () => {
     expect(key('ArrowDown')).toBe('next');
@@ -60,6 +60,12 @@ describe('paletteAction and stepIndex', () => {
     expect(key('p', true)).toBe('previous');
     expect(key('Enter')).toBe('open');
     expect(key('n')).toBeNull();
+  });
+
+  it('leaves Control-N/P to the browser off Apple platforms', () => {
+    expect(key('n', true, false)).toBeNull();
+    expect(key('p', true, false)).toBeNull();
+    expect(key('ArrowDown', false, false)).toBe('next');
   });
 
   it('wraps around the list', () => {
@@ -172,5 +178,21 @@ describe('paletteSections', () => {
       currentProjectKey: null,
     });
     expect(first?.items).toHaveLength(PROJECTS_SHOWN);
+  });
+});
+
+describe('keyRoute', () => {
+  const projects = [{ key: 'MOB' }, { key: 'WEB' }];
+
+  it("opens a key in one of the person's projects", () => {
+    expect(keyRoute('web 7', projects)).toEqual({ name: 'ticket', key: 'WEB', num: 7 });
+    expect(keyRoute('MOB-2', projects)).toEqual({ name: 'ticket', key: 'MOB', num: 2 });
+  });
+
+  it('leaves a word and a number that name no project to the search', () => {
+    expect(keyRoute('iphone 15', projects)).toBeNull();
+    expect(keyRoute('step 3', projects)).toBeNull();
+    expect(keyRoute('v2', projects)).toBeNull();
+    expect(keyRoute('12', projects)).toBeNull();
   });
 });

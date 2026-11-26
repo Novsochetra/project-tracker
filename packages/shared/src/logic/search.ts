@@ -3,12 +3,26 @@ import { MAX_TICKET_NUMBER } from './ticketKey';
 
 // More words than this narrow a search no further in practice, and each adds LIKEs to the query.
 export const SEARCH_TERMS_MAX = 5;
-const SNIPPET_RADIUS = 48;
+// A phone row fits about 40 characters, so the match starts near the front.
+const SNIPPET_LEAD = 16;
+const SNIPPET_LENGTH = 140;
 
-export function searchTerms(query: string): string[] {
-  const words = query.toLowerCase().split(/\s+/).filter(Boolean);
-  return [...new Set(words)].slice(0, SEARCH_TERMS_MAX);
+// As typed, for the database to lowercase: SQLite's lower() leaves non-ASCII letters alone, so a
+// word lowercased here could never match them there.
+export function searchWords(query: string): string[] {
+  const seen = new Set<string>();
+  const words: string[] = [];
+  for (const word of query.split(/\s+/)) {
+    const lower = word.toLowerCase();
+    if (!word || seen.has(lower)) continue;
+    seen.add(lower);
+    words.push(word);
+  }
+  return words.slice(0, SEARCH_TERMS_MAX);
 }
+
+export const searchTerms = (query: string): string[] =>
+  searchWords(query).map((word) => word.toLowerCase());
 
 export interface KeyQuery {
   projectKey: string | null;
@@ -60,13 +74,23 @@ function firstHit(lower: string, terms: readonly string[]): { index: number; len
   return best;
 }
 
-// A line of the description around its first matching word, so the row shows why it matched.
+// From a word a little before the match; within one long word, from the match itself.
+function snippetStart(flat: string, index: number): number {
+  if (index <= SNIPPET_LEAD) return 0;
+  const space = flat.indexOf(' ', index - SNIPPET_LEAD - 1);
+  return space >= 0 && space < index ? space + 1 : index;
+}
+
+// A line of the description near its first matching word, so the row shows why it matched.
 export function searchSnippet(text: string, terms: readonly string[]): string | null {
   const flat = text.replace(/\s+/g, ' ').trim();
-  const hit = firstHit(flat.toLowerCase(), terms);
+  const lower = flat.toLowerCase();
+  // A few letters lowercase to two characters, which would shift every index after them: the
+  // snippet then starts at the beginning.
+  const hit = firstHit(lower, terms);
   if (hit.index < 0) return null;
-  const start = Math.max(0, hit.index - SNIPPET_RADIUS);
-  const end = Math.min(flat.length, hit.index + hit.length + SNIPPET_RADIUS * 2);
+  const start = lower.length === flat.length ? snippetStart(flat, hit.index) : 0;
+  const end = Math.min(flat.length, start + SNIPPET_LENGTH);
   const head = start > 0 ? '…' : '';
   const tail = end < flat.length ? '…' : '';
   return `${head}${flat.slice(start, end).trim()}${tail}`;

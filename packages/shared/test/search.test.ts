@@ -8,6 +8,7 @@ import {
   searchMatchOf,
   searchSnippet,
   searchTerms,
+  searchWords,
 } from '../src/logic/search';
 
 describe('searchTerms', () => {
@@ -62,21 +63,38 @@ describe('searchMatchOf', () => {
 });
 
 describe('searchSnippet', () => {
-  it('shows the text around the first matching word, on one line', () => {
+  it('starts at a word a little before the first match, on one line', () => {
     const text = `${'word '.repeat(40)}the app\ncrashes on rotate ${'tail '.repeat(40)}`;
     const snippet = searchSnippet(text, ['rotate', 'crashes'])!;
-    expect(snippet.startsWith('…')).toBe(true);
+    expect(snippet).toMatch(/^…word the app crashes on rotate tail/);
     expect(snippet.endsWith('…')).toBe(true);
-    expect(snippet).toContain('the app crashes on rotate');
-    expect(snippet.length).toBeLessThan(170);
+    expect(snippet.indexOf('crashes')).toBeLessThanOrEqual(17);
+    expect(snippet.length).toBeLessThanOrEqual(142);
+  });
+
+  it('starts at the match inside a long word', () => {
+    const snippet = searchSnippet(`${'x'.repeat(30)}needle and more`, ['needle']);
+    expect(snippet).toBe('…needle and more');
   });
 
   it('keeps a short text whole', () => {
     expect(searchSnippet('Steps: open, rotate.', ['rotate'])).toBe('Steps: open, rotate.');
   });
 
+  it('starts at the beginning when lowercasing changes the length', () => {
+    const text = `İ ${'word '.repeat(10)}rotate`;
+    expect(searchSnippet(text, ['rotate'])).toBe(text);
+  });
+
   it('is null when no word is in the text', () => {
     expect(searchSnippet('Nothing here', ['rotate'])).toBeNull();
+  });
+});
+
+describe('searchWords', () => {
+  it('keeps the words as typed, once each whatever their case', () => {
+    expect(searchWords('Été  été CRASH')).toEqual(['Été', 'CRASH']);
+    expect(searchTerms('Été  été CRASH')).toEqual(['été', 'crash']);
   });
 });
 

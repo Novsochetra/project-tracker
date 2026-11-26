@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, type KeyboardEvent, type RefObject } from 'react';
 import { errorMessage } from '../../api';
 import type { SheetProps } from '../../app/sheets/types';
 import { SearchField } from '../../components/SearchField';
@@ -12,18 +12,28 @@ const LIST_ID = 'search-results';
 
 type Palette = ReturnType<typeof useSearchPalette>;
 
+function statusText({ items, pending, text }: Palette): string {
+  if (items.length > 0) return '';
+  if (pending) return 'Searching…';
+  return text.trim() ? `No matches for “${text.trim()}”` : '';
+}
+
+// Outside the listbox, which may hold only options. Always there, so a screen reader hears it
+// change.
 function StatusLine({ palette }: { palette: Palette }) {
-  const { items, query, pending, text } = palette;
-  if (items.length > 0) return null;
-  if (query.isError && !query.data) {
+  const { query } = palette;
+  if (palette.items.length === 0 && query.isError && !query.data) {
     return (
       <p role="alert" className={styles.status}>
         {errorMessage(query.error)}
       </p>
     );
   }
-  const label = pending ? 'Searching…' : text.trim() ? `No matches for “${text.trim()}”` : '';
-  return label ? <p className={styles.status}>{label}</p> : null;
+  return (
+    <p role="status" className={styles.status}>
+      {statusText(palette)}
+    </p>
+  );
 }
 
 function Results({ palette }: { palette: Palette }) {
@@ -33,26 +43,28 @@ function Results({ palette }: { palette: Palette }) {
     if (activeId) document.getElementById(activeId)?.scrollIntoView?.({ block: 'nearest' });
   }, [activeId]);
   return (
-    <div id={LIST_ID} role="listbox" aria-label="Results" className={styles.results}>
-      {palette.sections.map((section) => (
-        <div key={section.label} role="group" aria-label={section.label}>
-          <div className={styles.sectionLabel} aria-hidden="true">
-            {section.label}
+    <div className={styles.results}>
+      <div id={LIST_ID} role="listbox" aria-label="Results">
+        {palette.sections.map((section) => (
+          <div key={section.label} role="group" aria-label={section.label}>
+            <div className={styles.sectionLabel} aria-hidden="true">
+              {section.label}
+            </div>
+            <div className={styles.options}>
+              {section.items.map((item) => (
+                <SearchOption
+                  key={item.id}
+                  item={item}
+                  active={item.id === activeId}
+                  terms={palette.terms}
+                  onHover={() => palette.highlightItem(item)}
+                  onOpen={() => palette.open(item)}
+                />
+              ))}
+            </div>
           </div>
-          <div className={styles.options}>
-            {section.items.map((item) => (
-              <SearchOption
-                key={item.id}
-                item={item}
-                active={item.id === activeId}
-                terms={palette.terms}
-                onHover={() => palette.setHighlight(palette.items.indexOf(item))}
-                onOpen={() => palette.open(item)}
-              />
-            ))}
-          </div>
-        </div>
-      ))}
+        ))}
+      </div>
       <StatusLine palette={palette} />
     </div>
   );
@@ -75,6 +87,13 @@ function KeyHints() {
   );
 }
 
+// Shift-Tab from Close would land on the last result, which takes no Tab stop of its own.
+function backToField(event: KeyboardEvent, field: RefObject<HTMLInputElement | null>) {
+  if (event.key !== 'Tab' || !event.shiftKey || !field.current) return;
+  event.preventDefault();
+  field.current.focus();
+}
+
 export function SearchSheet({ open, onClose }: SheetProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const palette = useSearchPalette(onClose);
@@ -85,7 +104,11 @@ export function SearchSheet({ open, onClose }: SheetProps) {
       onClose={onClose}
       label="Search"
       title="Search"
-      left={<SheetTextButton onClick={onClose}>Close</SheetTextButton>}
+      left={
+        <SheetTextButton onClick={onClose} onKeyDown={(event) => backToField(event, inputRef)}>
+          Close
+        </SheetTextButton>
+      }
       initialFocusRef={inputRef}
     >
       <div className={styles.palette}>
