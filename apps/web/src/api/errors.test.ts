@@ -44,7 +44,7 @@ describe('error checks', () => {
     expect(isUnauthorized(new ApiError(401, 'unauthorized', 'x'))).toBe(true);
     expect(isUnauthorized(new Error('x'))).toBe(false);
     expect(isNotFound(new ApiError(404, 'not_found', 'x'))).toBe(true);
-    expect(isClientError(new ApiError(422, 'no_match', 'x'))).toBe(true);
+    expect(isClientError(new ApiError(409, 'conflict', 'x'))).toBe(true);
     expect(isClientError(new ApiError(503, 'http_error', 'x'))).toBe(false);
   });
 });

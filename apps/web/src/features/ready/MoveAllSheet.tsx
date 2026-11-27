@@ -1,16 +1,13 @@
-import clsx from 'clsx';
-import { CheckCheck } from 'lucide-react';
 import { useRef, useState } from 'react';
-import { Icon } from '../../components';
 import { ActionSheet } from '../../overlays';
 import { moveAllLabel, moveAllQuestion, type DoneBatch } from './doneBatch';
 import type { MoveAllProps } from './MoveAllToDone';
+import { MoveAllTrigger } from './MoveAllTrigger';
 import { useMoveAllToDone } from './useMoveAllToDone';
-import styles from './MoveAllToDone.module.css';
 
 // Asked in an action sheet. The tickets leave once the sheet has, as the card holding the sheet
 // may leave with them.
-export function MoveAllSheet({ batch, onMove, className }: MoveAllProps) {
+export function MoveAllSheet({ batch, compact, onMove, className }: MoveAllProps) {
   const moveAll = useMoveAllToDone();
   const [open, setOpen] = useState(false);
   const chosen = useRef<DoneBatch | null>(null);
@@ -32,15 +29,13 @@ export function MoveAllSheet({ batch, onMove, className }: MoveAllProps) {
 
   return (
     <>
-      <button
-        type="button"
-        className={clsx('ring-inside', styles.row, className)}
-        aria-expanded={open}
+      <MoveAllTrigger
+        batch={batch}
+        look={compact ? 'icon' : 'row'}
+        expanded={open}
+        className={className}
         onClick={() => setOpen(true)}
-      >
-        <Icon icon={CheckCheck} />
-        {moveAllLabel(batch)}
-      </button>
+      />
       <ActionSheet
         open={open}
         onClose={close}

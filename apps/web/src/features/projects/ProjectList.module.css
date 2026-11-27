@@ -13,9 +13,38 @@
 }
 
 .row {
+  position: relative;
   gap: var(--space-4);
   min-height: 60px;
   padding: 10px var(--space-4);
+  /* A finger resting on a row lifts it (PT-266), so it selects no text and opens no callout. */
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+  transition:
+    background-color var(--duration-fast) ease-out,
+    transform var(--duration-base) var(--ease-out),
+    box-shadow var(--duration-fast) var(--ease-out),
+    scale var(--duration-fast) var(--ease-out);
+}
+
+/* As the sidebar's (Sidebar.module.css): the rows a lifted row passes glide aside; the lifted row
+   follows the finger and a settling row starts from where it was shown, so only their lift
+   animates. */
+.row[data-dragging],
+.row[data-still] {
+  transition:
+    background-color var(--duration-fast) ease-out,
+    box-shadow var(--duration-fast) var(--ease-out),
+    scale var(--duration-fast) var(--ease-out);
+}
+
+.row[data-dragging] {
+  z-index: 1;
+  background: var(--surface);
+  box-shadow: var(--shadow-lifted);
+  scale: 1.02;
+  will-change: transform;
 }
 
 .main {

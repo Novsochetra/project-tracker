@@ -133,7 +133,10 @@ Agents never move tickets to **Done**. See `apps/agent/README.md` for the tools 
 ```bash
 npm run verify     # format, lint, typecheck, unit + integration tests
 npm run test:e2e   # Playwright: iPhone-sized WebKit, desktop Chromium, and an iPad (WebKit) for the tap shields
+npm run test:e2e:clean  # the same on a clean copy of HEAD in $TMPDIR, deleted when it ends (E2E_KEEP=1 keeps it)
 ```
+
+A plain run deletes the data folder it makes (`tracker-e2e-*` in the temp folder) when it ends, also on failure and Ctrl-C, but not when killed with SIGTERM; the clean run keeps it inside its copy (`e2e-data`), so it goes with the copy, also on SIGTERM. `E2E_KEEP=1` keeps either and prints its path, and a folder given in `E2E_DATA_DIR` always stays. Node, tsx and Playwright keep their caches in the temp folder too, reused by every run.
 
 - Architecture and product decisions: `docs/architecture.md`
 - Code rules: `CLAUDE.md`

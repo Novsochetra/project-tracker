@@ -3,6 +3,7 @@ import { Fragment, useMemo, useRef } from 'react';
 import { useSheets } from '../../../app/sheets/context';
 import { isPhoneNow, useIsPhone } from '../../../lib/media';
 import { useScreen } from '../../../navigation';
+import { groupBatch } from '../../ready/doneBatch';
 import { buildColumns } from '../buildGroups';
 import { DragGhost } from '../dnd/DragGhost';
 import { useTicketDrag } from '../dnd/useTicketDrag';
@@ -72,6 +73,7 @@ export function TicketBoard({ board }: { board: ProjectBoard }) {
                 column={column}
                 index={index}
                 searching={isSearching(view)}
+                doneBatch={groupBatch(column.status, column.tickets, statuses)}
                 drag={drag}
                 callbacks={callbacks}
                 onAdd={addTicket}
