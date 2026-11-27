@@ -1,5 +1,5 @@
 /* The frame draws the track, which stays put while the tabs scroll inside it. On phones it is
-   drawn shorter than the tabs, as iOS draws a 32pt control with a 44pt tap area. */
+   drawn shorter than the tabs (--control-drawn), as iOS draws controls inside 44pt tap areas. */
 .frame {
   position: relative;
   display: flex;
@@ -116,12 +116,12 @@
   }
 
   .frame::before {
-    inset: 6px 0;
+    inset: var(--control-track-inset) 0;
   }
 
   .thumb {
-    top: 8px;
-    bottom: 8px;
+    top: calc(var(--control-track-inset) + 2px);
+    bottom: calc(var(--control-track-inset) + 2px);
   }
 
   .tab {

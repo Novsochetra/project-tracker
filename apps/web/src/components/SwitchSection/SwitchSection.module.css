@@ -45,8 +45,12 @@
 @media (width < 768px),
   (pointer: coarse) and (device-width < 600px),
   (pointer: coarse) and (device-height < 600px) {
+  /* As tall as the buttons around it, its 26px switch as far from the round end as from the top,
+     so the switch sits concentric in the pill. */
   .row {
-    min-height: 50px;
+    /* The card's 1px border goes around the row. */
+    min-height: calc(var(--control-drawn) - 2px);
+    padding-right: calc((var(--control-drawn) - 2px - 26px) / 2);
     font-size: var(--size-input);
   }
 }

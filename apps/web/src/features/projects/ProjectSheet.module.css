@@ -117,7 +117,9 @@
   }
 
   .switchRow {
-    min-height: 50px;
+    /* The card's 1px border goes around the row. */
+    min-height: calc(var(--control-drawn) - 2px);
+    padding-right: calc((var(--control-drawn) - 2px - 26px) / 2);
     font-size: var(--size-input);
   }
 }

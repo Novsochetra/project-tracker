@@ -175,6 +175,14 @@
     --nav-bar-height: calc(var(--nav-height) + var(--safe-top) + 1px);
     --sticky-header-height: 45px;
     --radius-sheet: 28px;
+    /* One drawn height for every phone control: tabs, segmented switches, search fields and
+       buttons, the bottom bar's too. Each keeps a 44px tap area: a control reaches out by
+       --control-reach on both sides, a track is drawn --control-track-inset inside its 44px
+       segments. test/regression/slim-phone-controls.test.ts checks the three add up. */
+    --control-drawn: 40px;
+    --control-reach: -2px;
+    --control-track-inset: 2px;
+    --bar-button: var(--control-drawn);
     --text-bar-title: 600 17px/1.3 var(--font-sans);
   }
 }

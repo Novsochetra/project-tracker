@@ -24,8 +24,9 @@ UI change keeps them. Values live in `apps/web/src/design/tokens.css`: use a tok
 
 ## Layout and touch
 
-- Every tap target is at least 44×44px (`--touch-target`), but draw controls at iOS sizes inside it:
-  32px segmented controls and search fields, 30px or 36px buttons; a `::before` takes the rest.
+- Every tap target is at least 44×44px (`--touch-target`). On phones every control (tabs,
+  segmented, search, buttons, switch rows) is drawn at one height, `--control-drawn`, inside it; a
+  `::before` takes the rest. Never give one control its own height.
 - Phone first at 375px, then check 1280px. Respect the safe areas (`--safe-*`).
 - One primary action per screen, at the bottom within thumb reach on phones.
 - Use the system patterns already in the app: navigation stack with large titles, inset grouped

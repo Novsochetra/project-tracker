@@ -103,12 +103,12 @@
     padding-left: var(--space-4);
   }
 
-  /* The tabs, search and switch are drawn 32px tall in 44px tap areas, so the rows keep their
-     drawn spacing with no gap between those areas. */
+  /* The tabs, search and switch are drawn shorter than their 44px tap areas, so the rows keep
+     their drawn spacing with no gap between those areas. */
   .filters {
     row-gap: 0;
-    padding-top: 8px;
-    padding-bottom: 10px;
+    padding-top: calc(14px - var(--control-track-inset));
+    padding-bottom: calc(16px - var(--control-track-inset));
   }
 
   .statusFilters {

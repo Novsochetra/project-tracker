@@ -50,7 +50,7 @@
     position: relative;
     flex: 1 1 100%;
     width: 100%;
-    min-height: 32px;
+    min-height: var(--control-drawn);
     border-color: transparent;
     background: var(--fill-2);
   }
@@ -58,7 +58,7 @@
   .field::before {
     content: '';
     position: absolute;
-    inset: -6px 0;
+    inset: var(--control-reach) 0;
   }
 
   .input {
