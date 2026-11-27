@@ -26,6 +26,28 @@ async function height(locator: Locator): Promise<number> {
   return (await locator.boundingBox())!.height;
 }
 
+// The row's spring moves it from script, which `settled` doesn't see, so its place is compared
+// across two frames.
+const standsStill = (row: Locator): Promise<boolean> =>
+  row.evaluate(
+    (element) =>
+      new Promise<boolean>((resolve) => {
+        const left = element.getBoundingClientRect().left;
+        requestAnimationFrame(() =>
+          requestAnimationFrame(() => resolve(element.getBoundingClientRect().left === left)),
+        );
+      }),
+  );
+
+// A tap where a person's finger lands: on the part of the open row still on screen, once it has
+// opened. A click on the row's button first scrolled it into view, half of it being off the left
+// edge, and a scroll closes an open row, so the click then opened the ticket (PT-288).
+async function tapOpenRow(page: Page, row: Locator): Promise<void> {
+  await expect.poll(() => standsStill(row)).toBe(true);
+  const box = (await row.locator('xpath=ancestor::*[@data-swipe-row][1]').boundingBox())!;
+  await page.touchscreen.tap(box.x + 16, box.y + box.height / 2);
+}
+
 async function makeBugLabel(page: Page): Promise<void> {
   await page.getByRole('button', { name: 'Project options' }).first().click();
   await readActionSheet(page);
@@ -202,7 +224,7 @@ test.describe('labels', () => {
       await expect(page.getByRole('button', { name: 'Labels', exact: true })).toBeVisible();
       await expect(status).toBeHidden();
       // A tap on the open row only closes it.
-      await row.click();
+      await tapOpenRow(page, row);
       await expect(page.getByRole('button', { name: 'Labels', exact: true })).toBeHidden();
       await swipeLeft(row, width === 375 ? 290 : 280);
       await expect(status).toBeVisible();

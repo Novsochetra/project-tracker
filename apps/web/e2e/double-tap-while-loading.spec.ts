@@ -38,11 +38,13 @@ const pressedColor = (page: Page) =>
 test.describe('a project opened while its screen’s code is on its way', () => {
   test('stays pressed, and a second tap adds nothing for Back', async ({ page, api }, info) => {
     await seedProject(api, 'Mobile app', 'MOB', [{ title: 'Login screen' }]);
+    // Held from the start: the app fetches the screen on the first hover, and Chromium on Linux
+    // sends one as the page loads, under a mouse that hasn't moved (PT-291).
+    const release = await holdProjectScreen(page);
     await page.goto('/');
     const row = projectRow(page);
     await expect(row).toBeVisible();
     const rest = await background(row);
-    const release = await holdProjectScreen(page);
 
     const phone = isPhone(info.project.name);
     await (phone ? row.tap() : row.click());

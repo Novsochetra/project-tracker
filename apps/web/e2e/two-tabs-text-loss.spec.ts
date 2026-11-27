@@ -1,7 +1,7 @@
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
 import { activity, readActionSheet, seedProject } from './helpers';
-import { hold, holdSaves, note, open, titleOf, typeAtEnd } from './twoTabs';
+import { hold, holdSaves, note, open, stall, titleOf, typeAtEnd } from './twoTabs';
 
 const box = (page: Page) => page.getByLabel('Comment', { exact: true });
 const trackerTitle = async (api: {
@@ -135,7 +135,7 @@ test('a comment whose tab closes while it is sent comes back in the other tab', 
   await seedProject(api, 'Mobile app', 'MOB', [{ title: 'Ticket 1' }]);
   const tabA = await open(context, page);
   const tabB = await open(context);
-  await hold(tabA, 'POST', (url) => url.pathname === '/api/tickets/MOB-1/comments');
+  await stall(tabA, 'POST', (url) => url.pathname === '/api/tickets/MOB-1/comments');
 
   await box(tabA).fill('Looks good');
   await tabA.getByRole('button', { name: 'Comment', exact: true }).click();
@@ -175,7 +175,7 @@ test('a comment whose tab closes comes back though that tab’s last writes are 
   await seedProject(api, 'Mobile app', 'MOB', [{ title: 'Ticket 1' }]);
   const tabA = await open(context, page);
   const tabB = await open(context);
-  await hold(tabA, 'POST', (url) => url.pathname === '/api/tickets/MOB-1/comments');
+  await stall(tabA, 'POST', (url) => url.pathname === '/api/tickets/MOB-1/comments');
 
   await box(tabA).fill('Looks good');
   await tabA.getByRole('button', { name: 'Comment', exact: true }).click();

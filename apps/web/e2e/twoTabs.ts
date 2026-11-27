@@ -1,3 +1,4 @@
+import { createServer, type AddressInfo } from 'node:net';
 import type { BrowserContext, Page } from '@playwright/test';
 import { expect } from './fixtures';
 
@@ -45,4 +46,30 @@ export async function holdSaves(page: Page): Promise<() => void> {
   const release = await hold(page, 'PATCH', (url) => url.pathname === '/api/tickets/MOB-1');
 
   return () => release('go');
+}
+
+let silentPort: Promise<number> | undefined;
+
+// A server on this machine that takes connections and never answers. Unref'd, so it doesn't keep
+// the test worker alive.
+function silentServer(): Promise<number> {
+  silentPort ??= new Promise((resolve) => {
+    const server = createServer((socket) => socket.unref());
+    server.unref();
+    server.listen(0, '127.0.0.1', () => resolve((server.address() as AddressInfo).port));
+  });
+
+  return silentPort;
+}
+
+// Sends the page's requests of one method to a path to a server that never answers, for a page
+// that closes while they are on their way. A request `hold` keeps paused can't be used there:
+// Chromium on Linux lets a paused request go on to the tracker as its page closes (PT-291).
+export async function stall(page: Page, method: string, path: (url: URL) => boolean) {
+  const port = await silentServer();
+  await page.route(path, async (route) => {
+    if (route.request().method() !== method) return route.fallback();
+    const url = new URL(route.request().url());
+    await route.continue({ url: `http://127.0.0.1:${port}${url.pathname}` }).catch(() => undefined);
+  });
 }
