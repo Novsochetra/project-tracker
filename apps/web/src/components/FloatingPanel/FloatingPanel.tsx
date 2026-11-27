@@ -53,7 +53,7 @@ export function FloatingPanel({
 }: FloatingPanelProps) {
   const frameRef = useRef<HTMLDivElement>(null);
   useFloatingPlacement(frameRef, panelRef, anchorRef, place);
-  useCloseOnScroll(panelRef, open, onClose);
+  useCloseOnScroll(anchorRef, open, onClose);
   const { hold, ...layer } = useCloseLayer(onClose);
   const leaving = !open;
   const onWheel = (event: WheelEvent<HTMLButtonElement>) => {
