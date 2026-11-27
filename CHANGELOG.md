@@ -2,6 +2,13 @@
 
 `npm run release` adds an entry for each release, newest first (docs/releasing.md).
 
+## v2.1.0 (2026-11-27)
+
+- Touch and hold a project on the phone Projects list to lift it, then drag it to a new place; the order saves to the server like the desktop sidebar's, and a swipe still scrolls and a pull still refreshes (PT-266)
+- Move a board column's reviewed tickets to Done from a compact icon in the Reviewed column's header, with the same confirm and Undo as Ready for you (PT-277)
+- Delete the clean E2E run's temp copy and Playwright's data folder when a run ends, also on failure, Ctrl-C, SIGTERM and a closed terminal; E2E_KEEP=1 keeps them (PT-284)
+- Tidy the Claude-run removal's leftovers: stale comments and docs, a removed error code in a test, and rows in every dropped table in the migration test (PT-282)
+
 ## v2.0.0 (2026-11-27)
 
 - Drop the Claude-run tables and the columns only they read, in a deploy after the one that stops reading them (PT-275)
