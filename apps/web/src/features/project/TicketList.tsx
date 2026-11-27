@@ -5,9 +5,8 @@ import { useScreen } from '../../navigation';
 import { groupBatch } from '../ready/doneBatch';
 import { buildGroups, nextStatus } from './buildGroups';
 import { DragGhost } from './dnd/DragGhost';
-import { listEnvironment } from './dnd/listEnvironment';
 import { useKeyboardMove } from './dnd/useKeyboardMove';
-import { useTicketDrag } from './dnd/useTicketDrag';
+import { useListDrag } from './dnd/useListDrag';
 import { NoMatches, NoTickets } from './ListEmptyStates';
 import { isSearching, pickedLabel, pickedStatus, useListView } from './listViewStore';
 import styles from './ProjectScreen.module.css';
@@ -26,10 +25,11 @@ export function TicketList({ board }: { board: ProjectBoard }) {
   const sheets = useSheets();
   const containerRef = useRef<HTMLDivElement>(null);
   const moveTicket = useTicketMove(project.key);
-  const { drag, ghostRef, startDrag } = useTicketDrag({
-    environment: (ticket) =>
-      listEnvironment({ groups: containerRef, scroller: scrollRef }, ticket.id),
-    onDrop: (ticket, target) => void moveTicket(ticket.id, target),
+  const { drag, shown, ghostRef, startDrag } = useListDrag({
+    groups: containerRef,
+    scroller: scrollRef,
+    tickets,
+    move: moveTicket,
   });
   const handleKeyDown = useKeyboardMove(project.key, view.filter, moveTicket);
   const rowSheet = useRowSheet();
@@ -42,7 +42,7 @@ export function TicketList({ board }: { board: ProjectBoard }) {
   const addTicket = (statusId?: string) =>
     sheets.open({ type: 'newTicket', projectKey: project.key, statusId });
   const label = pickedLabel(view, board.labels)?.id;
-  const groups = buildGroups({ ...view, label, statuses, tickets, dragging: drag !== null });
+  const groups = buildGroups({ ...view, label, statuses, tickets, dragging: shown !== null });
   const rise = useRisePhase(resolveFilter(statuses, view.filter));
 
   const renderGroups = () => (
@@ -57,7 +57,7 @@ export function TicketList({ board }: { board: ProjectBoard }) {
           searching={isSearching(view)}
           next={nextStatus(statuses, group.status.id)}
           doneBatch={groupBatch(group.status, group.tickets, statuses)}
-          drag={drag}
+          drag={shown}
           callbacks={callbacks}
           onAdd={addTicket}
         />

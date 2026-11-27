@@ -31,7 +31,7 @@
 }
 
 /* An expanded group's header stays in view with its Show less, so collapsing needs no scroll to
-   the footer (PT-180). Above the rows' handles and drop lines. */
+   the footer (PT-180). Above the rows' handles. */
 .group[data-expanded] .header {
   position: sticky;
   top: var(--sticky-top);
@@ -42,6 +42,15 @@
 .group[data-expanded] > :not(.header),
 .group[data-expanded] > :not(.header) * {
   scroll-margin-top: calc(var(--sticky-top) + var(--sticky-header-height));
+}
+
+/* The group a dragged ticket enters grows by a slot here, under its rows (dnd/listRows.ts). */
+.end {
+  transition: padding-top var(--duration-base) var(--ease-out);
+}
+
+.end[data-still] {
+  transition: none;
 }
 
 .header[data-tint] {

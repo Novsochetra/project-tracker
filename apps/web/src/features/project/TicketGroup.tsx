@@ -4,7 +4,7 @@ import type { DoneBatch } from '../ready/doneBatch';
 import { MoveAllToDone } from '../ready/MoveAllToDone';
 import { groupRiseDelay, revealedRowDelay, type TicketGroupData } from './buildGroups';
 import { DROP_GROUP_ATTRIBUTE } from './dnd/dropGroup';
-import { dropEdgeFor } from './dnd/dropTarget';
+import { GROUP_END_ATTRIBUTE } from './dnd/listRows';
 import type { DragState } from './dnd/useTicketDrag';
 import { toggleExpanded, useIsExpanded } from './expandedStore';
 import { followMovedTickets } from './movedFocus';
@@ -78,20 +78,21 @@ export function TicketGroup(props: TicketGroupProps) {
           status={status}
           next={next}
           dragged={drag?.ticket.id === ticket.id}
-          dropEdge={dropEdgeFor(target, ticket.id)}
           riseDelay={revealedRowDelay(row, tickets.length)}
           callbacks={callbacks}
         />
       ))}
-      {collapsed.hasToggle && (
-        <ShowMoreButton
-          ref={footerRef}
-          expanded={expanded}
-          hiddenCount={collapsed.hiddenCount}
-          onToggle={toggle}
-        />
-      )}
-      <MoveAllToDone batch={doneBatch} place="footer" onMove={movedAll} />
+      <div {...{ [GROUP_END_ATTRIBUTE]: status.id }} className={styles.end}>
+        {collapsed.hasToggle && (
+          <ShowMoreButton
+            ref={footerRef}
+            expanded={expanded}
+            hiddenCount={collapsed.hiddenCount}
+            onToggle={toggle}
+          />
+        )}
+        <MoveAllToDone batch={doneBatch} place="footer" onMove={movedAll} />
+      </div>
     </section>
   );
 }
