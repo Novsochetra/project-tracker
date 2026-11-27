@@ -42,6 +42,7 @@ export function listDrag(
 
   const follow = (target: DropTarget | null): void => {
     if (!measured || sameTarget(target, shownTarget)) return;
+
     shownTarget = target;
     placement = listPlacement(measured.shiftGroups, ticketId, target, measured.step);
     showPlacement(measured, ticketId, placement);
@@ -54,8 +55,10 @@ export function listDrag(
   const targetAt = (y: number): DropTarget | null => {
     const container = groups.current;
     if (!measured || !container) return null;
+
     const offset = container.getBoundingClientRect().top;
     if (y === asked.y && offset === asked.offset) return asked.target;
+
     const placed = placedGroups(measured.groups, ticketId, placement, measured.step);
     asked = { y, offset, target: dropTargetAt(groupsAt(placed, offset), y, ticketId) };
 
@@ -73,6 +76,7 @@ export function listDrag(
   const measure = (): void => {
     const container = groups.current;
     if (measured || !container) return;
+
     measured = measureList(container, ticketId);
     holdSource(measured, ticketId);
   };

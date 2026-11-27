@@ -50,6 +50,7 @@ export function useListDrag({ groups, scroller, tickets, move }: ListDragInput):
   const finish = useCallback(
     (waiting: Pending | null) => {
       if (!waiting || waiting !== pending.current) return;
+
       pending.current = null;
       settle(groups.current, waiting);
       setHolding(false);

@@ -137,6 +137,9 @@ describe('dragging tickets', () => {
         within(screen.getByRole('region', { name: 'Done' })).getByText('Ticket 1'),
       ).toBeTruthy(),
     );
+    expect(endOf(STATUS.done)?.style.paddingTop).toBe('');
+    expect(rowOf('t-1')?.style.height).toBe('');
+    expect(rowOf('t-1')).not.toHaveAttribute('data-drag-away');
 
     fireEvent.click(rowButton('MOB-1'));
     await waitFor(() => expect(location()).toBe('/p/MOB/1'));
@@ -180,6 +183,29 @@ describe('dragging tickets', () => {
     expect(rowOf('t-1')?.style.transform).toBe('');
     expect(rowOf('t-2')).not.toHaveAttribute('data-drag-source');
     expect(rowOf('t-2')?.style.height).toBe('');
+  });
+
+  it('drops where the gap shows, though the group it entered moved under a still pointer', async () => {
+    const moveTicket = vi.fn(() => new Promise(() => undefined));
+    renderProject({ client: { moveTicket } });
+    await screen.findByRole('region', { name: 'To do' });
+
+    // MOB-4 sits at 629–673: above its middle the gap opens before it. MOB-1 folding away then
+    // moves Done up 44px, which would put a fresh read below MOB-4's middle.
+    press(rowButton('MOB-1'), 160);
+    pointer('pointermove', 170);
+    pointer('pointermove', 639);
+    await nextFrame();
+    expect(rowOf('t-4')?.style.transform).toBe('translate3d(0, 44px, 0)');
+
+    pointer('pointerup', 639);
+    await waitFor(() =>
+      expect(moveTicket).toHaveBeenCalledWith('MOB-1', {
+        statusId: STATUS.done,
+        beforeId: 't-4',
+        afterId: null,
+      }),
+    );
   });
 
   it('marks the empty group a ticket would drop into', async () => {

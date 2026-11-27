@@ -28,7 +28,6 @@ export function topInGroup(element: Element): number {
   return group ? top - group.getBoundingClientRect().top : top;
 }
 
-// Each shown row by ticket id.
 export function listRows(container: HTMLElement | null): RowElements {
   return new Map(container ? dropRowsIn(container).map((row) => [dropRowId(row), row]) : []);
 }
