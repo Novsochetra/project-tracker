@@ -78,13 +78,24 @@
   line-height: 1.5;
 }
 
+.switchCard {
+  overflow: visible;
+  border-radius: var(--radius-full);
+}
+
+/* A one-row switch is a pill like the setting switches (SwitchSection), unclipped so the switch
+   keeps its 44px tap area in a 40px phone row. */
 .switchRow {
   display: flex;
   align-items: center;
   gap: var(--space-3);
   min-height: 48px;
-  padding: 0 12px 0 14px;
+  padding: 0 10px 0 20px;
   font-size: var(--size-body);
+}
+
+.switchCard .switchRow::after {
+  border-radius: var(--radius-full);
 }
 
 .switchLabel {
@@ -107,8 +118,18 @@
     font-size: var(--size-input);
   }
 
+  /* On the gray phone sheet the name and description sit in a white card, as a new reminder's do. */
+  .fields {
+    margin: var(--space-4) var(--space-4) 0;
+    padding: var(--space-3) var(--space-4) var(--space-2);
+    border-radius: var(--radius-group);
+    background: var(--surface);
+  }
+
   .switchRow {
-    min-height: 50px;
+    /* The card's 1px border goes around the row. */
+    min-height: calc(var(--control-drawn) - 2px);
+    padding-right: calc((var(--control-drawn) - 2px - 26px) / 2);
     font-size: var(--size-input);
   }
 }

@@ -6,7 +6,7 @@
   min-height: var(--control-height);
   padding: 0 12px;
   border: 1px solid transparent;
-  border-radius: var(--radius-control);
+  border-radius: var(--radius-full);
   font-family: var(--font-sans);
   font-size: var(--size-secondary);
   font-weight: var(--weight-medium);
@@ -16,11 +16,13 @@
   transition:
     transform var(--duration-press) ease-out,
     background-color var(--duration-fast) ease-out,
-    color var(--duration-fast) ease-out;
+    color var(--duration-fast) ease-out,
+    filter var(--duration-press) ease-out;
 }
 
 .button:active:not(:disabled) {
-  transform: scale(0.97);
+  transform: scale(0.96);
+  filter: brightness(var(--dim-pressed));
 }
 
 .button:disabled {
@@ -33,8 +35,9 @@
   color: var(--text-inverse);
 }
 
+/* On a grouped (gray) sheet a white button needs no outline, like the cards beside it. */
 .secondary {
-  border-color: var(--control-line);
+  border-color: var(--card-line, var(--control-line));
   background: var(--surface);
   color: var(--ink);
 }
@@ -87,7 +90,6 @@
   gap: 8px;
   min-height: var(--bar-button);
   padding: 0 16px;
-  border-radius: var(--radius-group);
   font-size: var(--size-headline);
 }
 
@@ -104,10 +106,31 @@
 @media (width < 768px),
   (pointer: coarse) and (device-width < 600px),
   (pointer: coarse) and (device-height < 600px) {
+  /* Every size is drawn as tall as the other phone controls; the tap area still reaches 44px. */
   .sm,
   .md,
   .lg {
-    min-height: var(--touch-target);
+    min-height: var(--control-drawn);
+  }
+
+  .sm,
+  .md,
+  .lg,
+  .bar {
+    position: relative;
+  }
+
+  .sm::before,
+  .md::before,
+  .lg::before,
+  .bar::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    right: 0;
+    left: 0;
+    height: var(--touch-target);
+    translate: 0 -50%;
   }
 
   .header {

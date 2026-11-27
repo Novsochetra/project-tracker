@@ -506,12 +506,14 @@ test.describe('attachments', () => {
     await expect(removes).toHaveCount(1);
   });
 
-  // Each where the bug shows: what lay under the note slides under the finger as it goes. Two
+  // Each where the bug shows: what lay under the note slides under the finger as it goes. Some
   // can't show it. The comment box ends the ticket screen, which at 375×812 is scrolled to its end
   // with the note in view, so the files above slide down instead, and no file's x reaches the
-  // Dismiss spot at 375; nor does one at 320 on the ticket screen, three tiles to a row.
+  // Dismiss spot at 375; nor does one at 320 on the ticket screen, three tiles to a row. Since the
+  // phone sheets float with their typed fields in a card (PT-264), the spot falls between two rows
+  // of files at 375 in New ticket and quick capture; at 320 something still slides under it.
   const cantShow = (area: string, viewport: typeof PHONE) =>
-    (area === 'the comment box' && viewport === PHONE) ||
+    (viewport === PHONE && ['the comment box', 'New ticket', 'quick capture'].includes(area)) ||
     (area === 'the ticket screen' && viewport === SMALL_PHONE);
   for (const [surface, size] of FILE_AREAS.flatMap((area) =>
     [PHONE, SMALL_PHONE]

@@ -69,6 +69,7 @@ export function TextPreviewSheet({ attachment, open, onClose }: TextPreviewSheet
       title={attachment.fileName}
       subtitle={formatBytes(attachment.size)}
       size="report"
+      plain
       left={<SheetTextButton onClick={onClose}>Close</SheetTextButton>}
     >
       <div className={styles.body}>

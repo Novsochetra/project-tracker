@@ -4,6 +4,10 @@ A phone-first project tracker. People capture tickets on their phone; Claude Cod
 
 Read `docs/architecture.md` before changing anything. The approved visual design lives in `init-design/` (`SPEC.md` + `design/*.dc.html`); match its sizes, colors, copy and motion unless `docs/architecture.md` says the product changed.
 
+Every UI change follows Apple's Human Interface Guidelines as `docs/ui-guidelines.md` sums them up (§1.17 of the architecture records the look):
+
+@docs/ui-guidelines.md
+
 ## Layout
 
 | Path              | What                                                                                            |

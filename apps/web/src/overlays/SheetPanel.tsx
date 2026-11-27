@@ -14,6 +14,7 @@ import { useAxisDrag } from '../gestures/useAxisDrag';
 import { useEditingText } from '../navigation/useEditingText';
 import { usePrefersReducedMotion } from '../lib/media';
 import { MotionScope } from '../lib/MotionScope';
+import { useSheetSound } from '../sound';
 import { DiscardChangesSheet } from './DiscardChangesSheet';
 import styles from './Sheet.module.css';
 import { SheetCancelContext } from './sheetCancel';
@@ -23,6 +24,8 @@ import { useDialogPresence, useDialogValues } from './useDialogPresence';
 import { useDiscardGuard } from './useDiscardGuard';
 import { useDismissDrag } from './useDismissDrag';
 import { useOverlayBehavior } from './useOverlayBehavior';
+import { useScrollEdge } from './useScrollEdge';
+import { useSheetStretch } from './useSheetStretch';
 import { useBottomPanelValues, useSlidePresence } from './useSlidePresence';
 
 export interface SheetPanelProps extends SheetProps {
@@ -109,8 +112,9 @@ function useSheetMotion(
     releaseVelocityRef,
     onClose: onDismiss,
   });
+  const stretch = useSheetStretch(bottom.y);
   const panelStyle = isPhone
-    ? { y: bottom.y, opacity: bottom.opacity }
+    ? { ...stretch, opacity: bottom.opacity }
     : { y: dialog.y, scale: dialog.scale, opacity: dialog.opacity };
 
   return { drag, panelStyle, scrim: isPhone ? bottom.scrim : dialog.scrim };
@@ -121,6 +125,7 @@ const keepFocus = (event: MouseEvent) => event.preventDefault();
 
 export function SheetPanel(props: SheetPanelProps) {
   const { open, onClose, label, size = 'form', isPhone, initialFocusRef, onSubmit } = props;
+  useSheetSound(open);
   const panelRef = useRef<HTMLDivElement>(null);
   const handleRef = useRef<HTMLDivElement>(null);
   const bodyRef = useRef<HTMLDivElement>(null);
@@ -129,6 +134,7 @@ export function SheetPanel(props: SheetPanelProps) {
   const { drag, panelStyle, scrim } = useSheetMotion(props, panelRef, guard.requestClose);
   useAxisDrag(handleRef, { ...drag, axis: 'y' });
   useTopPull(bodyRef, drag);
+  useScrollEdge(bodyRef, panelRef);
   // A wide desktop sheet scrolls in its body, not the panel, so the body takes first focus for
   // Page Down and the arrow keys to scroll it.
   const bodyScrolls = !isPhone && size === 'wide';
@@ -151,7 +157,12 @@ export function SheetPanel(props: SheetPanelProps) {
     <MotionScope>
       <SheetCancelContext.Provider value={cancel}>
         <div
-          className={clsx(styles.overlay, styles[size], isPhone ? styles.phone : styles.desktop)}
+          className={clsx(
+            styles.overlay,
+            styles[size],
+            isPhone ? styles.phone : styles.desktop,
+            props.plain && styles.plain,
+          )}
           style={keyboardVars}
           inert={!open}
           data-sheet=""

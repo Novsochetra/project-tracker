@@ -1,36 +1,36 @@
 :root {
-  --ink: #1b1b1f;
-  --ink-2: #2a2a30;
-  --ink-hover: #33333a;
+  --ink: #1c1c1e;
+  --ink-2: #2c2c2e;
+  --ink-hover: #3a3a3c;
   /* Placeholder sits at the 4.5:1 limit on --fill-2 (the phone search field). The grays above it
      step darker by at least the design's smallest step, 4.5 L*, so they stay apart
      (docs/architecture.md §1.7). */
-  --muted: #555560;
-  --muted-2: #4a4a54;
-  --subtle: #60606b;
-  --placeholder: #6c6c77;
+  --muted: #545458;
+  --muted-2: #48484c;
+  --subtle: #5f5f64;
+  --placeholder: #6c6c70;
   /* Phones always show drag handles, so they keep 3:1 (WCAG 1.4.11) on every row background, the
      row flash included: it multiplies the hovered row under it to #DDDDF3. */
-  --handle: #7d7d88;
-  --faint: #b4b4bc;
-  --dashed: #c4c4cc;
-  --bar-off: #d9d9de;
-  --control-line: #dedee3;
-  --line: #ebebee;
-  --fill-2: #efeff1;
-  --fill: #f7f7f8;
-  --row-hover: #fafafb;
-  --panel: #fbfbfc;
+  --handle: #78787c;
+  --faint: #aeaeb2;
+  --dashed: #c7c7cc;
+  --bar-off: #d1d1d6;
+  --control-line: #d8d8dc;
+  --line: #e5e5ea;
+  --fill-2: #eeeef0;
+  --fill: #f2f2f7;
+  --row-hover: #f8f8fa;
+  --panel: #f9f9fb;
   --surface: #ffffff;
 
-  --accent: #5b5bd6;
+  --accent: #5856d6;
   /* Accent is 3.2:1 on Ink, too faint for the toast's Undo, so it takes a lighter tint of it. */
   --accent-inverse: #a3a3f2;
   --link: #4a4ac4;
   --link-hover: #3a3aa8;
   --doing: #c26a06;
-  --reviewed: #18794e;
-  --danger: #b42318;
+  --reviewed: #248a3d;
+  --danger: #c90014;
   --danger-line: #f4cfca;
   /* Danger is 2.6:1 on Ink, so the error toast's icon takes a lighter red that keeps 3:1
      (WCAG 1.4.11) on the toast. */
@@ -39,20 +39,25 @@
   --report-line: #e3e3f8;
   --flash: #e4e4fa;
   --drop-tint: #eeeefc;
-  --scrim: rgba(20, 20, 26, 0.36);
-  --bar-bg: rgba(255, 255, 255, 0.92);
-  --nav-bg: rgba(255, 255, 255, 0.9);
-  --glass-filter: saturate(180%) blur(16px);
+  --scrim: rgba(0, 0, 0, 0.3);
+  --bar-bg: rgba(255, 255, 255, 0.78);
+  --nav-bg: rgba(255, 255, 255, 0.78);
+  --glass-filter: saturate(180%) blur(24px);
   /* A rating carries meaning, so its stars keep 3:1 (WCAG 1.4.11) on the cards and rows they sit on. */
   --star: #b57d00;
   --text-inverse: #ffffff;
 
-  --font-sans: 'Geist Variable', 'Geist', 'Helvetica Neue', system-ui, sans-serif;
-  --font-mono: 'Geist Mono Variable', 'Geist Mono', ui-monospace, monospace;
-  --text-large-title: 700 30px/1.15 var(--font-sans);
+  /* Apple's own San Francisco wherever the system has it (docs/ui-guidelines.md); Geist, which
+     the app ships, stands in on Windows, Android and Linux. */
+  --font-sans:
+    -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Geist Variable', 'Geist', 'Helvetica Neue',
+    system-ui, sans-serif;
+  --font-mono: ui-monospace, 'SF Mono', 'Geist Mono Variable', 'Geist Mono', monospace;
+  --text-large-title: 700 34px/1.2 var(--font-sans);
   --text-title: 600 22px/1.3 var(--font-sans);
   --text-heading: 600 20px/1.3 var(--font-sans);
   --text-headline: 600 15px/1.25 var(--font-sans);
+  --text-bar-title: 600 15px/1.25 var(--font-sans);
   --text-body: 400 14px/1.5 var(--font-sans);
   --text-secondary: 400 13px/1.5 var(--font-sans);
   --text-caption: 500 12px/1.35 var(--font-sans);
@@ -85,19 +90,25 @@
 
   --radius-square: 3px;
   --radius-tile: 6px;
-  --radius-control: 8px;
-  --radius-container: 10px;
-  --radius-group: 12px;
-  --radius-sheet: 14px;
+  --radius-control: 10px;
+  --radius-container: 12px;
+  --radius-group: 14px;
+  --radius-sheet: 18px;
+  /* A phone sheet's gap to the screen's sides and bottom, as an action sheet's. */
+  --sheet-inset: 8px;
+  /* Content inside a floating phone sheet: 20px from the screen's edge, as before it floated. */
+  --sheet-content-inset: calc(20px - var(--sheet-inset));
   --radius-full: 999px;
 
-  --shadow-raised: 0 1px 2px rgba(20, 20, 26, 0.12), 0 0 0 0.5px rgba(20, 20, 26, 0.06);
+  --shadow-raised: 0 3px 8px rgba(0, 0, 0, 0.12), 0 3px 1px rgba(0, 0, 0, 0.04);
   --shadow-floating: 0 8px 24px rgba(20, 20, 26, 0.12);
   --shadow-lifted: 0 12px 32px rgba(20, 20, 26, 0.18);
-  --shadow-overlay: 0 24px 64px rgba(20, 20, 26, 0.2);
+  --shadow-overlay: 0 30px 80px rgba(0, 0, 0, 0.22);
   --shadow-toast: 0 8px 24px rgba(20, 20, 26, 0.18);
   --shadow-knob: 0 1px 3px rgba(20, 20, 26, 0.25);
 
+  /* A pressed control darkens a little as it shrinks, as UIKit's buttons do. */
+  --dim-pressed: 0.88;
   --duration-press: 100ms;
   --duration-handle: 120ms;
   --duration-fast: 160ms;
@@ -124,6 +135,7 @@
   --property-row: 44px;
   --nav-height: 52px;
   --bar-button: 48px;
+  --floating-button: 56px;
   --dropdown-item: 36px;
   --dropdown-width: 220px;
   --handle-width: 24px;
@@ -167,6 +179,15 @@
     --sticky-top: calc(var(--nav-height) + var(--safe-top));
     --nav-bar-height: calc(var(--nav-height) + var(--safe-top) + 1px);
     --sticky-header-height: 45px;
+    --radius-sheet: 28px;
+    /* One drawn height for every phone control: tabs, segmented switches, search fields, chips
+       and buttons, the bottom bar's too. Each keeps a 44px tap area: a 44px ::before centred on
+       it (centred, so a border can't shrink it), or a track drawn --control-track-inset inside
+       its 44px segments. test/regression/slim-phone-controls.test.ts checks both. */
+    --control-drawn: 40px;
+    --control-track-inset: 2px;
+    --bar-button: var(--control-drawn);
+    --text-bar-title: 600 17px/1.3 var(--font-sans);
   }
 }
 

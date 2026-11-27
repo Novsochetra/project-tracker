@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { Plus } from 'lucide-react';
 import { MemoryRouter, useLocation } from 'react-router';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { FloatingButton } from '../components/FloatingButton';
 import { mockPhone } from '../overlays/testing';
 import { BottomBar } from './BottomBar';
 import { useBottomBarVisible } from './bottomBarStore';
@@ -74,6 +75,21 @@ describe('NavBar', () => {
 });
 
 describe('BottomBar', () => {
+  it('floats one round button over the bottom right corner instead of a bar', () => {
+    restore = mockPhone(true);
+    const onClick = vi.fn();
+    render(
+      <BottomBar floating>
+        <FloatingButton icon={Plus} aria-label="New ticket" onClick={onClick} />
+      </BottomBar>,
+    );
+    const button = screen.getByRole('button', { name: 'New ticket' });
+    expect(button.closest('[data-bottom-bar]')).toHaveAttribute('data-floating');
+    expect(button).toHaveTextContent('');
+    button.click();
+    expect(onClick).toHaveBeenCalledOnce();
+  });
+
   it('raises toasts while it shows on phones', () => {
     restore = mockPhone(true);
     const { unmount } = render(

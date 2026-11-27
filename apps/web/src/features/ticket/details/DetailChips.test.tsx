@@ -130,9 +130,8 @@ describe('the phone details chips', () => {
 
 describe('the chips’ size at 320px', () => {
   it('give each chip a 44px target', () => {
-    const height = pixels(phoneRule(CHIPS, '.chip', 320).get('height'));
-    const reach = phoneRule(CHIPS, '.chip::before', 320).get('inset')!.split(' ').map(pixels);
-    expect(height - 2 * reach[0]!).toBeGreaterThanOrEqual(44);
+    // Centred on the chip, so its border can't take from it (PT-264 review).
+    expect(pixels(phoneRule(CHIPS, '.chip::before', 320).get('height'))).toBe(44);
     const clear = phoneRule(CHIPS, '.clear::before', 320).get('inset');
     expect(20 - 2 * pixels(clear)).toBeGreaterThanOrEqual(44);
   });

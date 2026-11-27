@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, type RefObject } from 'react';
 import { haptic } from '../../../gestures/haptics';
 import { swallowTapClick } from '../../../gestures/pointerClaims';
+import { playSound } from '../../../sound';
 import type { DragPress } from '../../project/dnd/DragSession';
 import { holdToLift } from './touchHold';
 import { useLiftGuards, type TouchLift } from './useLiftGuards';
@@ -26,6 +27,7 @@ export function useHoldToLift({ list, liftRef, enabled, drag }: HoldToLiftOption
           stopHold.current = null;
           liftRef.current = 'lifted';
           haptic('selection');
+          playSound('tick');
           swallowTapClick(press.pointerId);
           drag({ ...press, ...point, immediate: true }, id);
         },

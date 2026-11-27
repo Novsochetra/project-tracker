@@ -72,7 +72,10 @@ const scrollTop = (page: Page) => scroller(page).evaluate((element) => element.s
 
 const gapAboveBar = (page: Page) =>
   commentField(page).evaluate((field) => {
-    const bar = document.querySelector('[data-bottom-bar]')!.getBoundingClientRect();
+    // The ticket screen's own bar: the Project screen under it keeps its floating New ticket,
+    // inert and covered (PT-264).
+    const bars = [...document.querySelectorAll('[data-bottom-bar]')];
+    const bar = bars.find((element) => !element.closest('[inert]'))!.getBoundingClientRect();
 
     return bar.top - field.closest('form')!.getBoundingClientRect().bottom;
   });

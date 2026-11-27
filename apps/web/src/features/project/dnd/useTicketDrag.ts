@@ -9,6 +9,7 @@ import {
   type RefObject,
 } from 'react';
 import { haptic } from '../../../gestures';
+import { playSound } from '../../../sound';
 import { armClickGuard } from './clickGuard';
 import {
   DragSession,
@@ -87,7 +88,11 @@ function dragListener(
     onStart: (origin) => {
       delta.current = { dx: 0, dy: 0 };
       setDocumentDragging(true);
-      if (touch) haptic('selection');
+      if (touch) {
+        haptic('selection');
+        playSound('tick');
+      }
+
       setDrag(() => ({ ticket, status, origin, target: null }));
     },
     onFrame: ({ dx, dy, target }) => {

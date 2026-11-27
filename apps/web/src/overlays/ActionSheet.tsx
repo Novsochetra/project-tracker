@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom';
 import { useTapShield } from '../lib/clickShield';
 import { MotionScope } from '../lib/MotionScope';
 import { useLatest } from '../lib/useLatest';
+import { useSheetSound } from '../sound';
 import styles from './ActionSheet.module.css';
 import { actionSheetContent } from './actionSheetContent';
 import { useActionSheetMotion } from './useActionSheetMotion';
@@ -34,6 +35,7 @@ export interface ActionSheetProps {
 
 function ActionSheetPanel(props: ActionSheetProps & { onExited: () => void }) {
   const { open, onClose, label, caption, actions, cancelLabel = 'Cancel', onExited } = props;
+  useSheetSound(open, { onClose: false });
   const panelRef = useRef<HTMLDivElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
   const content = actionSheetContent(caption, actions);

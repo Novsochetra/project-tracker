@@ -188,3 +188,21 @@
   position: absolute;
   inset: -12px;
 }
+
+/* As tall as the other phone controls (--control-drawn), with the 44px tap area centred on it. */
+@media (width < 768px),
+  (pointer: coarse) and (device-width < 600px),
+  (pointer: coarse) and (device-height < 600px) {
+  .chip {
+    height: var(--control-drawn);
+  }
+
+  .chip::before {
+    top: 50%;
+    right: 0;
+    bottom: auto;
+    left: 0;
+    height: var(--touch-target);
+    translate: 0 -50%;
+  }
+}

@@ -62,7 +62,7 @@
 .title {
   min-width: 0;
   overflow: hidden;
-  font: var(--text-headline);
+  font: var(--text-bar-title);
   text-align: center;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -71,6 +71,8 @@
 
 .mono {
   font-family: var(--font-mono);
+  /* Mono runs wider than San Francisco, so a key stays as wide as a 17px title would. */
+  font-size: var(--size-headline);
 }
 
 .back {

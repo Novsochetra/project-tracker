@@ -21,7 +21,7 @@ export function ProjectSwitchField({
 
   return (
     <>
-      <GroupedCard>
+      <GroupedCard className={styles.switchCard}>
         <div className={clsx('ring-inside', styles.switchRow)}>
           <span className={styles.switchLabel}>{label}</span>
           <Switch

@@ -69,12 +69,28 @@
 @media (width < 768px),
   (pointer: coarse) and (device-width < 600px),
   (pointer: coarse) and (device-height < 600px) {
+  /* Drawn at --control-drawn inside a 44px tap area, as iOS draws its segmented control. */
   .track {
     max-width: none;
+    padding: 0 2px;
+    background: none;
+  }
+
+  .track::before {
+    content: '';
+    position: absolute;
+    inset: var(--control-track-inset) 0;
+    border-radius: var(--radius-container);
+    background: var(--fill-2);
+  }
+
+  .thumb {
+    top: calc(var(--control-track-inset) + 2px);
+    bottom: calc(var(--control-track-inset) + 2px);
   }
 
   .segment {
-    min-height: 34px;
+    min-height: var(--touch-target);
     font-size: var(--size-body);
   }
 }

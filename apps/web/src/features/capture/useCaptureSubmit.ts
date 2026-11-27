@@ -8,6 +8,7 @@ import {
 } from '../../api';
 import { flashRows } from '../../app/flash';
 import { useToast, type ToastApi } from '../../components';
+import { playSound } from '../../sound';
 import {
   addedToast,
   CAPTURE_TIMEOUT_MS,
@@ -96,6 +97,7 @@ export function useCaptureSubmit(input: CaptureSubmitInput): CaptureSubmit {
     }
 
     rememberProject(chosen);
+    playSound('sent');
     if (outcome.kind === 'created') {
       flashRows([outcome.ticket.key]);
       showCreated(show, outcome.ticket);

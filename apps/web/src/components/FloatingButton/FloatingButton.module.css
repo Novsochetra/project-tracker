@@ -1,0 +1,27 @@
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--floating-button);
+  height: var(--floating-button);
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-full);
+  background: var(--ink);
+  color: var(--text-inverse);
+  box-shadow: var(--shadow-lifted);
+  cursor: pointer;
+  pointer-events: auto;
+  transition:
+    transform var(--duration-press) ease-out,
+    filter var(--duration-press) ease-out;
+}
+
+.button:active {
+  transform: scale(0.94);
+  filter: brightness(var(--dim-pressed));
+}
+
+.button:focus-visible {
+  outline-offset: 3px;
+}

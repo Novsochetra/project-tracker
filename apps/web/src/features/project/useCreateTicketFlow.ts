@@ -3,6 +3,7 @@ import { useRef } from 'react';
 import { errorMessage, useCreateTicket } from '../../api';
 import { flashRows } from '../../app/flash';
 import { useToast } from '../../components';
+import { playSound } from '../../sound';
 import { getListView, hidesNewTicket, resetListView } from './listViewStore';
 
 export interface CreateTicketFlow {
@@ -34,6 +35,7 @@ export function useCreateTicketFlow({
           }
 
           flashRows([ticket.key]);
+          playSound('sent');
           show(`${ticket.key} created`);
           onCreated();
         },

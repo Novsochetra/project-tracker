@@ -108,6 +108,7 @@ export function SearchSheet({ open, onClose }: SheetProps) {
       onClose={onClose}
       label="Search"
       title="Search"
+      plain
       left={
         <SheetTextButton onClick={onClose} onKeyDown={(event) => backToField(event, inputRef)}>
           Close

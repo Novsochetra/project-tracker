@@ -33,9 +33,10 @@ async function emptyContent(page: Page, title: string): Promise<Box> {
 }
 
 async function freeBottom(page: Page, path: string): Promise<number> {
-  if (await usesPhoneLayout(page)) {
-    return (await boxOf(layer(page, path).locator('[data-bottom-bar]'))).top;
-  }
+  // A floating New ticket (PT-264) sits in a corner, not across the bottom, so the page reaches
+  // the screen's bottom edge beside it.
+  const bar = layer(page, path).locator('[data-bottom-bar]:not([data-floating])');
+  if ((await usesPhoneLayout(page)) && (await bar.count()) > 0) return (await boxOf(bar)).top;
 
   return (await boxOf(layer(page, path))).bottom;
 }
@@ -133,6 +134,9 @@ for (const size of [
       test.skip(!isPhone(info.project.name), 'A phone');
       const project = await openEmptyProject(page);
       expectBetweenBars(project, await freeArea(page, '/p/WEB', filterRow(page)));
+      // Nor does the floating New ticket cover it.
+      const fab = await boxOf(layer(page, '/p/WEB').locator('[data-floating] button'));
+      expect(fab.left >= project.right || fab.top >= project.bottom).toBe(true);
       await shot(page, info, `empty-project-${size.name}`);
     });
   });

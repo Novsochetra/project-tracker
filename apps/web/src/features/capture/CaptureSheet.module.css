@@ -57,4 +57,25 @@
   .text .description {
     font-size: var(--size-input);
   }
+
+  /* On the gray phone sheet the title and details sit in a white card, as a new reminder's do. */
+  .text {
+    margin: var(--space-4) var(--sheet-content-inset) 0;
+    padding: var(--space-3) var(--space-4) var(--space-2);
+    border-radius: var(--radius-group);
+    background: var(--surface);
+  }
+
+  /* The floating sheet is 2 × --sheet-inset narrower than the screen, so its content keeps the
+     same distance from the screen's edges as before: files and cards line up 20px in, and the
+     files keep their row (four tiles across at 375px). */
+  .attachments,
+  .details {
+    padding-right: var(--sheet-content-inset);
+    padding-left: var(--sheet-content-inset);
+  }
+
+  .attachments {
+    padding-top: var(--space-3);
+  }
 }

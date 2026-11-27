@@ -2,7 +2,7 @@
   min-height: 40px;
   padding: 0 10px;
   border: 0;
-  border-radius: var(--radius-control);
+  border-radius: var(--radius-full);
   background: transparent;
   color: var(--ink);
   font-size: 14px;
@@ -18,7 +18,7 @@
   min-height: 32px;
   padding: 0 14px;
   border: 0;
-  border-radius: var(--radius-control);
+  border-radius: var(--radius-full);
   background: var(--ink);
   color: var(--surface);
   font-size: 14px;
@@ -38,20 +38,26 @@
 @media (width < 768px),
   (pointer: coarse) and (device-width < 600px),
   (pointer: coarse) and (device-height < 600px) {
+  /* UIKit tints a sheet's bar buttons. */
   .text {
     min-height: var(--touch-target);
-    font-size: 16px;
+    color: var(--accent);
+    font-size: 17px;
   }
 
   .action {
-    min-height: 34px;
+    min-height: var(--control-drawn);
     font-size: 15px;
   }
 
-  /* Keeps the 34px look with a 44px touch target. */
+  /* Drawn as tall as the other phone controls, with a 44px touch target. */
   .action::before {
     content: '';
     position: absolute;
-    inset: -5px 0;
+    top: 50%;
+    right: 0;
+    left: 0;
+    height: var(--touch-target);
+    translate: 0 -50%;
   }
 }
