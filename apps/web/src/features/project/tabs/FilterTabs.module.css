@@ -1,15 +1,32 @@
+/* The frame draws the track, which stays put while the tabs scroll inside it. On phones it is
+   drawn shorter than the tabs, as iOS draws a 32pt control with a 44pt tap area. */
+.frame {
+  position: relative;
+  display: flex;
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.frame::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius-container);
+  background: var(--fill-2);
+  pointer-events: none;
+}
+
 /* Tabs that don't fit scroll inside the track instead of wrapping, so the row stays one line
    however many statuses a project has. */
 .track {
   position: relative;
   display: flex;
-  flex: 0 1 auto;
+  flex: 1 1 auto;
   gap: 2px;
   min-width: 0;
-  max-width: 100%;
   padding: 0 2px;
   border-radius: var(--radius-container);
-  background: var(--fill-2);
   overflow-x: auto;
   overflow-y: hidden;
   overscroll-behavior-x: contain;
@@ -94,12 +111,21 @@
 @media (width < 768px),
   (pointer: coarse) and (device-width < 600px),
   (pointer: coarse) and (device-height < 600px) {
-  .track {
+  .frame {
     flex: 1 1 100%;
   }
 
+  .frame::before {
+    inset: 6px 0;
+  }
+
+  .thumb {
+    top: 8px;
+    bottom: 8px;
+  }
+
   .tab {
-    min-height: 44px;
+    min-height: var(--touch-target);
     font-size: var(--size-body);
   }
 }
@@ -107,7 +133,7 @@
 /* Sideways they share the row with the search (ProjectScreen) and scroll inside their track. */
 @media (pointer: coarse) and (device-width < 600px) and (width >= 600px),
   (pointer: coarse) and (device-height < 600px) and (width >= 600px) {
-  .track {
+  .frame {
     flex: 1 1 auto;
   }
 }

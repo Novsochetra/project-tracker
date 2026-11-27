@@ -106,7 +106,33 @@
   (pointer: coarse) and (device-width < 600px),
   (pointer: coarse) and (device-height < 600px) {
   .sm,
-  .md,
+  .md {
+    position: relative;
+  }
+
+  /* Drawn at iOS's small and regular sizes; the tap area still reaches 44px. */
+  .sm {
+    min-height: 30px;
+  }
+
+  .md {
+    min-height: 36px;
+  }
+
+  .sm::before,
+  .md::before {
+    content: '';
+    position: absolute;
+  }
+
+  .sm::before {
+    inset: -7px 0;
+  }
+
+  .md::before {
+    inset: -4px 0;
+  }
+
   .lg {
     min-height: var(--touch-target);
   }

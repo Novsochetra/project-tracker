@@ -74,25 +74,22 @@ export function FilterTabs({ tabs, value, onChange, className }: FilterTabsProps
   };
 
   return (
-    <div
-      ref={trackRef}
-      role="toolbar"
-      aria-label="Filter tickets"
-      className={clsx(styles.track, className)}
-    >
-      <span ref={thumbRef} className={styles.thumb} data-thumb="" aria-hidden="true" />
-      {tabs.map((tab, index) => (
-        <TabButton
-          key={tab.value}
-          tab={tab}
-          pressed={tab.value === value}
-          tabbable={tab.value === stop}
-          onPick={() => onChange(tab.value)}
-          onKeyDown={(event) => moveFocus(event, index)}
-          onFocus={() => setFocused(tab.value)}
-          onBlur={leaveRow}
-        />
-      ))}
+    <div className={clsx(styles.frame, className)}>
+      <div ref={trackRef} role="toolbar" aria-label="Filter tickets" className={styles.track}>
+        <span ref={thumbRef} className={styles.thumb} data-thumb="" aria-hidden="true" />
+        {tabs.map((tab, index) => (
+          <TabButton
+            key={tab.value}
+            tab={tab}
+            pressed={tab.value === value}
+            tabbable={tab.value === stop}
+            onPick={() => onChange(tab.value)}
+            onKeyDown={(event) => moveFocus(event, index)}
+            onFocus={() => setFocused(tab.value)}
+            onBlur={leaveRow}
+          />
+        ))}
+      </div>
     </div>
   );
 }

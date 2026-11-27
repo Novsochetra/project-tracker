@@ -286,7 +286,8 @@ describe('FilterTabs on phones', () => {
 
   it('take the whole row and never more, so the page never scrolls sideways', () => {
     render(<Harness />);
-    const track = phoneStyle(toolbar(), MODULE, 320);
+    // The frame around the scrolling row draws the track and takes the row's width.
+    const track = phoneStyle(toolbar().parentElement!, MODULE, 320);
     expect(track.get('flex')).toBe('1 1 100%');
     expect(track.get('min-width')).toBe('0');
     expect(track.get('max-width')).toBe('100%');
