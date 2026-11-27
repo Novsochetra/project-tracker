@@ -133,7 +133,10 @@ Agents never move tickets to **Done**. See `apps/agent/README.md` for the tools 
 ```bash
 npm run verify     # format, lint, typecheck, unit + integration tests
 npm run test:e2e   # Playwright: iPhone-sized WebKit, desktop Chromium, and an iPad (WebKit) for the tap shields
+npm run test:e2e:clean  # the same on a clean copy of HEAD in $TMPDIR, deleted when it ends (E2E_KEEP=1 keeps it)
 ```
+
+Both delete the data folder Playwright makes for the run (`tracker-e2e-*` in the temp folder) when it ends; `E2E_KEEP=1` keeps it and prints its path, and a folder given in `E2E_DATA_DIR` always stays.
 
 - Architecture and product decisions: `docs/architecture.md`
 - Code rules: `CLAUDE.md`
