@@ -1,6 +1,7 @@
 import clsx from 'clsx';
 import { CloudUpload, Plus } from 'lucide-react';
 import { Button, Icon } from '../../components';
+import { FloatingButton } from '../../components/FloatingButton';
 import { BottomBar } from '../../navigation';
 import styles from './CaptureEntry.module.css';
 import { useWaitingCount } from './queueStore';
@@ -18,10 +19,8 @@ export function CaptureButton({ onClick }: { onClick: () => void }) {
 
 export function CaptureBar({ onClick }: { onClick: () => void }) {
   return (
-    <BottomBar>
-      <Button variant="primary" size="bar" icon={Plus} fullWidth onClick={onClick}>
-        New ticket
-      </Button>
+    <BottomBar floating>
+      <FloatingButton icon={Plus} aria-label="New ticket" onClick={onClick} />
     </BottomBar>
   );
 }

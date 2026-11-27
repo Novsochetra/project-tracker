@@ -23,6 +23,24 @@
   transition: translate var(--duration-sheet-out) var(--ease-in);
 }
 
+/* A screen whose one action is a floating button: no bar, just the button over the bottom right
+   corner, clear of the home indicator and a phone's camera side. */
+.bar.floating {
+  right: calc(var(--space-4) + var(--safe-right));
+  bottom: calc(var(--space-4) + var(--safe-bottom));
+  left: auto;
+  padding: 0;
+  border-top: 0;
+  background: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  pointer-events: none;
+}
+
+.bar.floating[data-hidden] {
+  translate: 0 calc(100% + var(--space-4) + var(--safe-bottom));
+}
+
 /* Sideways a phone has about 300px of height under Safari's bars: less room around the buttons,
    which end where the home indicator's area starts. */
 @media (pointer: coarse) and (device-width < 600px) and (width >= 600px),

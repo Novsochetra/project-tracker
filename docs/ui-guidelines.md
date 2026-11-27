@@ -28,7 +28,8 @@ UI change keeps them. Values live in `apps/web/src/design/tokens.css`: use a tok
   segmented, search, buttons, switch rows) is drawn at one height, `--control-drawn`, inside it; a
   `::before` takes the rest. Never give one control its own height.
 - Phone first at 375px, then check 1280px. Respect the safe areas (`--safe-*`).
-- One primary action per screen, at the bottom within thumb reach on phones.
+- One primary action per screen, within thumb reach on phones: a screen's New ticket is a round
+  floating button at the bottom right (`BottomBar floating`).
 - Phone sheets float 8px clear of the screen's edges, gray with white borderless cards, tinted
   Close/Cancel, and a bar line only once content scrolls under it; put typed fields in a white card.
 - Use the system patterns already in the app: navigation stack with large titles, inset grouped
