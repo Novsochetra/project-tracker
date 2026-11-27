@@ -506,14 +506,13 @@ test.describe('attachments', () => {
     await expect(removes).toHaveCount(1);
   });
 
-  // Each where the bug shows: what lay under the note slides under the finger as it goes. Three
+  // Each where the bug shows: what lay under the note slides under the finger as it goes. Two
   // can't show it. The comment box ends the ticket screen, which at 375×812 is scrolled to its end
   // with the note in view, so the files above slide down instead, and no file's x reaches the
-  // Dismiss spot at 375; nor does one at 320 on the ticket screen, three tiles to a row. At 320
-  // Comment rose under the spot until PT-264 drew it 30px tall, as iOS does, so the comment box
-  // shows it only on a touch tablet (the @tablet test below).
+  // Dismiss spot at 375; nor does one at 320 on the ticket screen, three tiles to a row.
   const cantShow = (area: string, viewport: typeof PHONE) =>
-    area === 'the comment box' || (area === 'the ticket screen' && viewport === SMALL_PHONE);
+    (area === 'the comment box' && viewport === PHONE) ||
+    (area === 'the ticket screen' && viewport === SMALL_PHONE);
   for (const [surface, size] of FILE_AREAS.flatMap((area) =>
     [PHONE, SMALL_PHONE]
       .filter((viewport) => !cantShow(area.name, viewport))
