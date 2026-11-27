@@ -1,8 +1,8 @@
 import type { Locator, Page } from '@playwright/test';
 import type { TrackerClient } from '@tracker/client';
 import { byRank } from '@tracker/shared';
-import { expect, isPhone, test } from './fixtures';
-import { group, readActionSheet, readMenuConfirm, seedProject, toast } from './helpers';
+import { expect, isPhone, isTablet, test } from './fixtures';
+import { group, readActionSheet, readMenuConfirm, seedProject, settled, toast } from './helpers';
 
 const readySection = (page: Page) => page.getByRole('region', { name: 'Ready for you' });
 
@@ -109,6 +109,67 @@ test.describe('move all to Done', () => {
       .toEqual(['MOB-3', 'MOB-2', 'MOB-1']);
     await expect.poll(() => places(api, 'MOB')).toEqual(before);
   });
+});
+
+const showBoard = async (page: Page): Promise<void> => {
+  await page
+    .getByRole('group', { name: 'Show tickets as' })
+    .getByRole('button', { name: 'Board' })
+    .click();
+  await expect(group(page, 'Need review')).toBeVisible();
+};
+
+const top = async (locator: Locator) => (await locator.boundingBox())!.y;
+
+// PT-277: a 260px column header has no room for the words, so it holds the double check alone,
+// the size of the + beside it, and the columns' first cards stay in line.
+test("the board's Reviewed column moves to Done from its header, and back @tablet", async ({
+  page,
+  api,
+}, info) => {
+  const phone = isPhone(info.project.name);
+  const press = (target: Locator) => (isTablet(info.project.name) ? target.tap() : target.click());
+  await seedReviewed(api);
+  const before = await places(api, 'MOB');
+  await page.goto('/p/MOB');
+  await showBoard(page);
+  const reviewed = group(page, 'Reviewed');
+  await expect.poll(() => shownKeys(reviewed)).toEqual(['MOB-3', 'MOB-2', 'MOB-1']);
+
+  const moveAll = reviewed.getByRole('button', { name: 'Move 3 to Done' });
+  const add = (name: string) =>
+    group(page, name).getByRole('button', { name: `New ticket in ${name}` });
+  await expect(moveAll).toHaveText('');
+  await moveAll.scrollIntoViewIfNeeded();
+  await settled(page.locator('[data-board]'));
+  expect((await moveAll.boundingBox())!.height).toBe((await add('Reviewed').boundingBox())!.height);
+  expect(await top(add('Reviewed').locator('..'))).toBe(await top(add('To do').locator('..')));
+  const firstCard = (name: string) => group(page, name).locator('[data-drop-row]').first();
+  if (!phone) expect(await top(firstCard('Reviewed'))).toBe(await top(firstCard('To do')));
+
+  await press(moveAll);
+  if (phone) {
+    const sheet = page.getByRole('dialog', { name: 'Move to Done' });
+    await readActionSheet(page);
+    await press(sheet.getByRole('button', { name: 'Move 3 to Done' }));
+  } else {
+    const menu = page.getByRole('group', { name: 'Move to Done' });
+    await expect(menu).toContainText('Move all 3 tickets to Done?');
+    await readMenuConfirm(page);
+    await press(menu.getByRole('button', { name: 'Move to Done' }));
+  }
+
+  await expect(toast(page, '3 tickets moved to Done')).toBeVisible();
+  await expect.poll(() => shownKeys(group(page, 'Done'))).toEqual(['MOB-3', 'MOB-2', 'MOB-1']);
+  await expect(reviewed).toContainText('No tickets');
+  await expect(moveAll).toHaveCount(0);
+  // The confirm holds a double tap's second tap for 500 ms (holdPresses), Undo's too.
+  await page.waitForTimeout(500);
+  await press(page.getByRole('button', { name: 'Undo' }));
+
+  await expect(toast(page, '3 tickets moved back')).toBeVisible();
+  await expect.poll(() => shownKeys(reviewed)).toEqual(['MOB-3', 'MOB-2', 'MOB-1']);
+  await expect.poll(() => places(api, 'MOB')).toEqual(before);
 });
 
 const middle = async (locator: Locator) => {

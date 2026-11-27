@@ -36,7 +36,6 @@ describe.each(DIALECTS)('push notifications (%s)', (dialect) => {
     return row.id;
   }
 
-  // An agent's approval of a ticket in review sends the person a push.
   async function agentApproves(): Promise<void> {
     await api.db
       .updateTable('tickets')

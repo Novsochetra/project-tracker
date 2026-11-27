@@ -21,9 +21,9 @@ interface Line {
   label: Label | null;
 }
 
-// Tolerates the Markdown that parseReport tolerates around TICKET and STATUS: quotes, bullets,
-// bold and code marks, and a full-width colon. Only marks right after the colon close the label;
-// after a space they belong to the value ("SUMMARY: `useAuth` retries").
+// Reports carry Markdown around their labels: quotes, bullets, bold and code marks, and a
+// full-width colon. Only marks right after the colon close the label; after a space they belong to
+// the value ("SUMMARY: `useAuth` retries").
 const LABEL =
   /^[\s>*_`#-]*(TICKET|STATUS|SUMMARY|FILES?|OUTPUT|NEXT)[\s*_`]*[:：](?:[*_]+|`)?\s*(.*)$/i;
 const NONE = /^(none|n\/a|nothing)\.?$/i;

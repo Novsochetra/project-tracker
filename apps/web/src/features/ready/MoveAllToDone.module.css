@@ -58,3 +58,45 @@
 .row:active {
   background: var(--fill);
 }
+
+/* A board column's header: the double check alone, the size of the + beside it so the header
+   keeps its height and the columns' cards stay in line, in the link color as above. */
+.icon {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-control);
+  background: transparent;
+  color: var(--link);
+  cursor: pointer;
+  transition:
+    transform var(--duration-press) ease-out,
+    background-color var(--duration-fast) ease-out,
+    color var(--duration-fast) ease-out;
+}
+
+.icon:active {
+  transform: scale(0.97);
+  background: var(--fill-2);
+}
+
+@media (hover: hover) {
+  .icon:hover {
+    background: var(--fill-2);
+    color: var(--link-hover);
+  }
+}
+
+@media (width < 768px),
+  (pointer: coarse) and (device-width < 600px),
+  (pointer: coarse) and (device-height < 600px) {
+  .icon {
+    width: var(--touch-target);
+    height: var(--touch-target);
+  }
+}

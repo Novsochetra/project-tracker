@@ -2,6 +2,7 @@ import { openNotReviewed, projectDisplayName, type ProjectSummary } from '@track
 import { useId, useRef, type KeyboardEvent, type RefObject } from 'react';
 import { consumeClickGuard } from '../features/project/dnd/clickGuard';
 import { sameProjectKey } from '../features/projects/projectLookup';
+import { movedMessage, reorderHint } from '../features/projects/reorder/reorderHint';
 import { REORDER_ROW_ATTRIBUTE } from '../features/projects/reorder/reorderRows';
 import { useProjectOrder } from '../features/projects/reorder/useProjectOrder';
 import { useRowReorder } from '../features/projects/reorder/useRowReorder';
@@ -19,9 +20,6 @@ export interface SidebarProjectsProps {
   scroller: RefObject<HTMLElement | null>;
 }
 
-const reorderHint = (apple: boolean): string =>
-  `Drag to change the order, or press ${apple ? 'Option' : 'Alt'} with the up or down arrow.`;
-
 export function SidebarProjects({ projects, ready, scroller }: SidebarProjectsProps) {
   const { route } = useNavigation();
   const openProject = useOpenProject();
@@ -35,14 +33,13 @@ export function SidebarProjects({ projects, ready, scroller }: SidebarProjectsPr
   const moveByKey = (event: KeyboardEvent<HTMLElement>, project: ProjectSummary) => {
     const next = reorder.moveByKey(event, project.id);
     if (!next) return;
-    const name = projectDisplayName(project);
-    announce(`${name} moved to position ${next.indexOf(project.id) + 1} of ${next.length}`);
+    announce(movedMessage(projectDisplayName(project), next, project.id));
   };
 
   return (
     <div ref={list} className={styles.projects}>
       <span id={hintId} className="visually-hidden">
-        {reorderHint(isApplePlatform())}
+        {reorderHint(isApplePlatform(), false)}
       </span>
       {shown.map((project) => (
         <SidebarItem

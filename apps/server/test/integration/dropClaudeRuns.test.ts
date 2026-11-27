@@ -70,6 +70,18 @@ async function leaveRunRows(db: Db, projectId: string, ticketId: string): Promis
   return runId;
 }
 
+async function leaveChatWork(db: Db, chatId: string, messageId: string): Promise<void> {
+  await sql`insert into chat_queue (message_id, chat_id, runner_id, ask_model, ask_mode,
+    ask_effort, position) values (${messageId}, ${chatId}, 'runner', 'default', 'default',
+    'default', 0)`.execute(db);
+  await sql`insert into chat_changes (chat_id, version, runner_id, tree, diff, cut, files,
+    gh_ready, created_at) values (${chatId}, 'v1', 'runner', 't', '', 0, '[]', 0, ${NOW})`.execute(
+    db,
+  );
+  await sql`insert into chat_git_actions (id, chat_id, runner_id, kind, input, status, created_at)
+    values (${randomUUID()}, ${chatId}, 'runner', 'commit', '{}', 'done', ${NOW})`.execute(db);
+}
+
 async function leaveChat(db: Db, projectId: string, ticketId: string): Promise<string> {
   const chatId = randomUUID();
   const messageId = randomUUID();
@@ -79,6 +91,7 @@ async function leaveChat(db: Db, projectId: string, ticketId: string): Promise<s
     values (${messageId}, ${chatId}, 'person', 'Look', ${NOW})`.execute(db);
   await sql`insert into chat_card_tickets (message_id, card_index, ticket_id)
     values (${messageId}, 0, ${ticketId})`.execute(db);
+  await leaveChatWork(db, chatId, messageId);
 
   return messageId;
 }
@@ -124,6 +137,19 @@ async function oldTracker(db: Db, storage: MemoryStorage): Promise<OldTracker> {
   return { app, questionId, ticketFile, chatFile };
 }
 
+async function emptyRunTables(db: Db): Promise<string[]> {
+  const counts = await Promise.all(
+    CLAUDE_RUN_TABLES.map(async (table) => {
+      const { rows } = await sql<{ count: number | string }>`select count(*) as count
+        from ${sql.table(table)}`.execute(db);
+
+      return Number(rows[0]?.count ?? 0) === 0 ? [table] : [];
+    }),
+  );
+
+  return counts.flat();
+}
+
 const attachmentRows = (db: Db) =>
   db.selectFrom('attachments').select(['id', 'ticketId', 'activityId']).orderBy('id').execute();
 
@@ -134,6 +160,7 @@ describe.each(DIALECTS)('the drop of the Claude-run tables and columns (%s)', (d
     try {
       const { app, ticketFile, chatFile } = await oldTracker(db, storage);
       const before = await attachmentRows(db);
+      expect(await emptyRunTables(db)).toEqual([]);
 
       await migrateToLatest(db);
       const tables = Object.keys(await portableSchema(db, dialect));
