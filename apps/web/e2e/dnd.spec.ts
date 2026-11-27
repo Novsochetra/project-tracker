@@ -71,6 +71,7 @@ test.describe('drag and drop', () => {
     ]);
     await page.goto('/p/MOB');
     const todo = group(page, 'To do');
+    await expect(todo.locator('[data-drop-row]')).toHaveCount(3);
     const [first, second, third] = await keysIn(todo);
     if (!first || !second || !third) throw new Error('Missing rows');
 
