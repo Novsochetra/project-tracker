@@ -26,7 +26,7 @@ export function SwitchSection({
 
   return (
     <section className={styles.section}>
-      <GroupedCard>
+      <GroupedCard className={styles.card}>
         <div className={clsx('ring-inside', styles.row)}>
           <span className={styles.label}>{label}</span>
           <Switch

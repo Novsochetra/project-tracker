@@ -4,13 +4,23 @@
   gap: var(--space-2);
 }
 
+.card {
+  border-radius: var(--radius-full);
+}
+
+/* A one-row setting is a pill like the buttons around it; its label keeps clear of the round
+   end and its focus ring follows it. */
 .row {
   display: flex;
   align-items: center;
   gap: var(--space-3);
   min-height: 48px;
-  padding: 0 12px 0 14px;
+  padding: 0 10px 0 20px;
   font-size: var(--size-body);
+}
+
+.card .row::after {
+  border-radius: var(--radius-full);
 }
 
 .label {
