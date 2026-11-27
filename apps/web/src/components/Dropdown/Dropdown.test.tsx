@@ -126,13 +126,23 @@ describe('Dropdown', () => {
     await waitFor(() => expect(document.querySelector('[role="listbox"]')).toBeNull());
   });
 
-  it('closes when the page scrolls, but not in the first 300ms', async () => {
+  it('closes when a scroll moves its row, but not in the first 300ms', async () => {
     const now = vi.spyOn(performance, 'now').mockReturnValue(1000);
     await openMenu();
+    vi.spyOn(Element.prototype, 'getBoundingClientRect').mockReturnValue({
+      top: -40,
+      left: 0,
+    } as DOMRect);
     const scroll = () => act(() => void window.dispatchEvent(new Event('scroll')));
     scroll();
     expect(screen.getByRole('listbox')).toBeInTheDocument();
     now.mockReturnValue(1301);
+    scroll();
+    expect(screen.queryByRole('listbox')).toBeInTheDocument();
+    vi.mocked(Element.prototype.getBoundingClientRect).mockReturnValue({
+      top: -80,
+      left: 0,
+    } as DOMRect);
     scroll();
     expect(screen.queryByRole('listbox')).not.toBeInTheDocument();
   });

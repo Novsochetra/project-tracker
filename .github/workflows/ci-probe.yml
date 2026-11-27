@@ -15,7 +15,7 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npx playwright install --with-deps chromium webkit
-      - run: npx playwright test --retries=0 --repeat-each=10 --project=tablet comments-statuses
+      - run: npx playwright test --retries=0 --repeat-each=5 --project=tablet
 
   e2e:
     runs-on: ubuntu-latest

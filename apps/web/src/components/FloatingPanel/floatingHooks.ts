@@ -73,14 +73,17 @@ export function useFloatingPlacement(
 
 const SCROLL_GRACE_MS = 300;
 
-// Only the page, or an element that holds the anchor, moves the anchor as it scrolls. A row of
-// tabs scrolling itself as its screen loads leaves the anchor in place (PT-292), and the panel
-// scrolling its own list doesn't move it either.
-const movesAnchor = (target: EventTarget | null, anchor: HTMLElement | null): boolean =>
-  !(target instanceof Node) || target === document || (anchor !== null && target.contains(anchor));
+const placeOf = (anchor: HTMLElement | null): string => {
+  const rect = anchor?.getBoundingClientRect();
 
-// SPEC §5.5: the page moving under the panel would leave it off its row. Scrolls in the first
-// 300ms come from opening it, like focus bringing its row into view.
+  return rect ? `${rect.top},${rect.left}` : '';
+};
+
+// SPEC §5.5: the page moving under the panel would leave it off its row, so it closes once a
+// scroll has moved its anchor. Scrolls that leave the anchor in place don't count (PT-292): a row
+// of tabs revealing its tab as the screen loads, the panel's own list, and on iOS the page resting
+// 1px down for status-bar taps under the sticky app. Scrolls in the first 300ms come from opening
+// it, like focus bringing its row into view, so the anchor's place is taken again then.
 export function useCloseOnScroll(
   anchorRef: RefObject<HTMLElement | null>,
   active: boolean,
@@ -90,9 +93,15 @@ export function useCloseOnScroll(
   useEffect(() => {
     if (!active) return;
     const openedAt = performance.now();
-    const onScroll = (event: Event) => {
-      if (performance.now() - openedAt < SCROLL_GRACE_MS) return;
-      if (movesAnchor(event.target, anchorRef.current)) close.current();
+    let placed = placeOf(anchorRef.current);
+    const onScroll = () => {
+      const place = placeOf(anchorRef.current);
+      if (performance.now() - openedAt < SCROLL_GRACE_MS) {
+        placed = place;
+        return;
+      }
+
+      if (place !== placed || !place) close.current();
     };
 
     window.addEventListener('scroll', onScroll, true);
