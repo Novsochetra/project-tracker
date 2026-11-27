@@ -120,6 +120,7 @@ export function useRowReorder(options: RowReorderOptions): RowReorder {
   const startDrag = useCallback(
     (event: PointerEvent<HTMLElement>, id: string) => {
       if (event.button !== 0 || session.current || lift.current) return;
+
       // A mouse drags at once. Touch and pen scroll, unless this list lifts a row they rest on.
       if (event.pointerType === 'mouse') drag(pressOf(event), id);
       else if (latest.current.holdToLift && event.isPrimary) hold(pressOf(event), id);

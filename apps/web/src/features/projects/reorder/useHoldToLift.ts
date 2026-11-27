@@ -29,6 +29,7 @@ export function useHoldToLift({ list, liftRef, enabled, drag }: HoldToLiftOption
           swallowTapClick(press.pointerId);
           drag({ ...press, ...point, immediate: true }, id);
         },
+
         onGiveUp: () => {
           stopHold.current = null;
           liftRef.current = null;
