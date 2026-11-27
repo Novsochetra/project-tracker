@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { descriptionText, riseDelay } from './projectRows';
+import { descriptionText, riseDelay } from './projectDisplay';
 
 describe('riseDelay', () => {
   it('staggers rows by 24ms and stops after 12 rows', () => {

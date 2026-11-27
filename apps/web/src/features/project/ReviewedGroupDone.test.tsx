@@ -131,7 +131,7 @@ describe("Move all to Done in a project's Reviewed group", () => {
       renderProject({ client: server.client });
       const reviewed = await screen.findByRole('region', { name: 'Reviewed' });
       const row = within(reviewed).getByRole('button', { name: 'Move 3 to Done' });
-      expect(reviewed.lastElementChild).toBe(row);
+      expect(reviewed.lastElementChild?.lastElementChild).toBe(row);
 
       await user.click(row);
       const sheet = screen.getByRole('dialog', { name: 'Move to Done' });

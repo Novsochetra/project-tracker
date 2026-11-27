@@ -5,7 +5,6 @@ import { useIsFlashing } from '../../app/flash';
 import { SwipeActions } from '../../gestures';
 import { useIsPhone } from '../../lib/media';
 import { DROP_ROW_ATTRIBUTE } from './dnd/dropRow';
-import type { DropEdge } from './dnd/dropTarget';
 import { rowSwipeActions } from './rowSwipeActions';
 import type { RowCallbacks } from './rowTypes';
 import styles from './TicketRow.module.css';
@@ -16,13 +15,12 @@ export interface TicketRowProps {
   status: Status;
   next: Status | null;
   dragged: boolean;
-  dropEdge: DropEdge | null;
   riseDelay: number | null;
   callbacks: RowCallbacks;
 }
 
 export function TicketRow(props: TicketRowProps) {
-  const { ticket, status, next, dragged, dropEdge, riseDelay, callbacks } = props;
+  const { ticket, status, next, dragged, riseDelay, callbacks } = props;
   const isPhone = useIsPhone();
   const flashing = useIsFlashing(ticket.key);
   // Fixed at mount, so a row rises once when "Show more" reveals it and never again.
@@ -43,7 +41,6 @@ export function TicketRow(props: TicketRowProps) {
         content
       )}
       {flashing && <span className={styles.flash} aria-hidden="true" />}
-      {dropEdge && <span className={styles.dropLine} data-edge={dropEdge} aria-hidden="true" />}
     </div>
   );
 }

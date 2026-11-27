@@ -32,8 +32,14 @@ export type StartDrag = (
   fromHandle: boolean,
 ) => void;
 
+export interface TicketDragEnvironment extends DragEnvironment {
+  // Hear each frame's target, and the drop's (null when cancelled) before onDrop.
+  follow?: (target: DropTarget | null) => void;
+  end?: (target: DropTarget | null) => void;
+}
+
 export interface TicketDragOptions {
-  environment: (ticket: TicketListItem, press: Point) => DragEnvironment;
+  environment: (ticket: TicketListItem, press: Point) => TicketDragEnvironment;
   onDrop: (ticket: TicketListItem, target: DropTarget) => void;
 }
 
@@ -66,14 +72,15 @@ interface ListenerInput {
   setDrag: (update: (current: DragState | null) => DragState | null) => void;
 }
 
-interface GhostPosition {
+interface DragOutputs {
   ghost: RefObject<HTMLDivElement | null>;
   delta: RefObject<Delta>;
+  env: TicketDragEnvironment;
 }
 
 function dragListener(
   { ticket, status, touch, setDrag }: ListenerInput,
-  { ghost, delta }: GhostPosition,
+  { ghost, delta, env }: DragOutputs,
   onEnd: (target: DropTarget | null, started: boolean) => void,
 ): DragListener {
   return {
@@ -89,6 +96,7 @@ function dragListener(
       setDrag((current) =>
         current && !sameTarget(current.target, target) ? { ...current, target } : current,
       );
+      env.follow?.(target);
     },
     onEnd: ({ started, target }) => onEnd(target, started),
   };
@@ -120,15 +128,6 @@ export function useTicketDrag({ environment, onDrop }: TicketDragOptions): Ticke
     // Touch and pen drag only from the handle, so rows still scroll and tap (SPEC §7.4).
     if (touch && !fromHandle) return;
     if (fromHandle) event.preventDefault();
-    const finish = (target: DropTarget | null, started: boolean) => {
-      sessionRef.current = null;
-      if (!started) return;
-      setDocumentDragging(false);
-      armClickGuard();
-      setDrag(null);
-      if (target) optionsRef.current.onDrop(ticket, target);
-    };
-
     const press = {
       element: event.currentTarget,
       pointerId: event.pointerId,
@@ -137,7 +136,19 @@ export function useTicketDrag({ environment, onDrop }: TicketDragOptions): Ticke
       immediate: touch,
     };
     const env = optionsRef.current.environment(ticket, { x: press.x, y: press.y });
-    const listener = dragListener({ ticket, status, touch, setDrag }, { ghost, delta }, finish);
+
+    const finish = (target: DropTarget | null, started: boolean) => {
+      sessionRef.current = null;
+      if (!started) return;
+      setDocumentDragging(false);
+      armClickGuard();
+      setDrag(null);
+      env.end?.(target);
+      if (target) optionsRef.current.onDrop(ticket, target);
+    };
+
+    const position = { ghost, delta, env };
+    const listener = dragListener({ ticket, status, touch, setDrag }, position, finish);
     sessionRef.current = new DragSession(press, env, listener);
   }, []);
 
