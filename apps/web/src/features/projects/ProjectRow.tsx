@@ -1,26 +1,33 @@
 import { openNotReviewed, projectDisplayName, type ProjectSummary } from '@tracker/shared';
 import clsx from 'clsx';
 import { ChevronRight } from 'lucide-react';
+import { useState, type ComponentProps } from 'react';
 import { Icon, ListRow } from '../../components';
 import { useIsOpening } from '../../navigation';
 import styles from './ProjectList.module.css';
 import { descriptionText, riseDelay } from './projectRows';
 
-interface ProjectRowProps {
+interface ProjectRowProps extends Omit<ComponentProps<'button'>, 'onClick'> {
   project: ProjectSummary;
   readyCount: number;
   index: number;
   onOpen: () => void;
 }
 
-export function ProjectRow({ project, readyCount, index, onOpen }: ProjectRowProps) {
+export function ProjectRow({ project, readyCount, index, onOpen, ...rest }: ProjectRowProps) {
   const opening = useIsOpening({ name: 'project', key: project.key });
+  // A reorder moves rows in the page, which plays their rise again, over the glide.
+  const [risen, setRisen] = useState(false);
 
   return (
     <ListRow
-      className={clsx(styles.row, 'rise')}
+      {...rest}
+      className={clsx(styles.row, !risen && 'rise')}
       style={{ animationDelay: `${riseDelay(index)}ms` }}
       data-opening={opening || undefined}
+      onAnimationEnd={(event) => {
+        if (event.target === event.currentTarget) setRisen(true);
+      }}
       onClick={onOpen}
     >
       <span className={styles.main}>

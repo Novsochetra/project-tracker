@@ -1,5 +1,5 @@
 import type { DropTarget } from '@tracker/shared';
-import { edgeScrollStep, scrollAlong } from '../../project/dnd/autoScroll';
+import { edgeScrollStep, scrollAlong, type EdgeZones } from '../../project/dnd/autoScroll';
 import { armClickGuard } from '../../project/dnd/clickGuard';
 import type { DragEnvironment, DragListener } from '../../project/dnd/DragSession';
 import { sameTarget, targetInGroup, type RowBox } from '../../project/dnd/dropTarget';
@@ -11,6 +11,8 @@ export interface RowDragInput {
   ids: readonly string[];
   list: HTMLElement;
   scroller: HTMLElement | null;
+  // How near the scroller's top and bottom the pointer scrolls it; the sidebar's by default.
+  edges?: EdgeZones | undefined;
   onDrop: (next: string[] | null, shown: Map<string, number>) => void;
 }
 
@@ -22,7 +24,7 @@ interface Measured {
   listTop: number;
 }
 
-const EDGE_ZONE = 32;
+const SIDEBAR_EDGES: EdgeZones = { start: 32, end: 32, capped: true };
 const DRAG_ATTRIBUTE = 'data-row-drag';
 
 // Grabbing cursor and no text selection anywhere while a row is dragged.
@@ -74,9 +76,9 @@ export function rowDrag(input: RowDragInput): {
     autoScroll: (point) => {
       const box = input.scroller?.getBoundingClientRect();
       if (!box) return false;
-      const zones = { start: EDGE_ZONE, end: EDGE_ZONE, capped: true };
+      const step = edgeScrollStep(point.y, box.top, box.bottom, input.edges ?? SIDEBAR_EDGES);
 
-      return scrollAlong(input.scroller, 'y', edgeScrollStep(point.y, box.top, box.bottom, zones));
+      return scrollAlong(input.scroller, 'y', step);
     },
   };
 
