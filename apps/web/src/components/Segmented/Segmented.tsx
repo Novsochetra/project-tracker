@@ -1,5 +1,6 @@
 import clsx from 'clsx';
 import type { CSSProperties } from 'react';
+import { playSound } from '../../sound';
 import styles from './Segmented.module.css';
 
 export interface SegmentedOption<T extends string> {
@@ -35,7 +36,10 @@ export function Segmented<T extends string>({
           type="button"
           aria-pressed={option.value === value}
           className={styles.segment}
-          onClick={() => onChange(option.value)}
+          onClick={() => {
+            if (option.value !== value) playSound('tick');
+            onChange(option.value);
+          }}
         >
           {option.label}{' '}
           {option.count !== undefined && <span className={styles.count}>{option.count}</span>}

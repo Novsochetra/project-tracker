@@ -173,7 +173,7 @@
 }
 
 .title {
-  font: var(--text-headline);
+  font: var(--text-bar-title);
 }
 
 .subtitle {

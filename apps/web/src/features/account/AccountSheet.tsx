@@ -9,6 +9,7 @@ import styles from './AccountSheet.module.css';
 import { ChangePassword } from './ChangePassword';
 import { InviteSection } from './InviteSection';
 import { PeopleSection } from './PeopleSection';
+import { SoundSection } from './SoundSection';
 
 export function AccountSheet({ open, onClose }: SheetProps) {
   const session = useKnownSession();
@@ -34,6 +35,7 @@ export function AccountSheet({ open, onClose }: SheetProps) {
         </p>
         <ChangePassword />
         <NotificationsSection />
+        <SoundSection />
         <section className={styles.section}>
           <Button size="lg" fullWidth disabled={pending} onClick={() => signOut(logout)}>
             Sign out

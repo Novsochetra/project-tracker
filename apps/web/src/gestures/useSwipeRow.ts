@@ -1,5 +1,6 @@
 import type { MotionValue } from 'motion/react';
 import { useCallback, useEffect, useRef, useState, type MouseEvent, type RefObject } from 'react';
+import { playSound } from '../sound';
 import { haptic } from './haptics';
 import { isNoSwipeTarget, isPointerClaimed, swallowTapClick } from './pointerClaims';
 import {
@@ -129,6 +130,7 @@ export function useSwipeRow({
       const past = isFullSwipe(offset, geometryRef.current);
       if (past === fullRef.current) return;
       haptic('selection');
+      if (past) playSound('tick');
       setFull(past);
     },
     onEnd: (velocity) => settle(swipeOutcome(x.get(), velocity, geometryRef.current), velocity),

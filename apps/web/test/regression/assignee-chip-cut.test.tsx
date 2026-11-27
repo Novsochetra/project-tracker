@@ -48,7 +48,7 @@ it('shows the whole name from a copy of it after an edit, not from the field', a
   expect(name).toHaveAttribute('aria-hidden', 'true');
   expect(phoneRule(CHIPS, '.name').get('text-overflow')).toBe('ellipsis');
   expect(phoneRule(CHIPS, '.input').get('color')).toBe('transparent');
-  expect(phoneRule(CHIPS, '.field:focus-within .input').get('color')).toBe('#1b1b1f');
+  expect(phoneRule(CHIPS, '.field:focus-within .input').get('color')).toBe('#1c1c1e');
   expect(phoneRule(CHIPS, '.field:focus-within .name').get('visibility')).toBe('hidden');
 });
 

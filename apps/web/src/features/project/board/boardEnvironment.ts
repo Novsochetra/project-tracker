@@ -1,6 +1,7 @@
 import type { RefObject } from 'react';
 import { haptic } from '../../../gestures';
 import { prefersReducedMotionNow } from '../../../lib/media';
+import { playSound } from '../../../sound';
 import { AUTO_SCROLL_BOTTOM_PHONE, edgeScrollStep, scrollAlong } from '../dnd/autoScroll';
 import type { DragEnvironment } from '../dnd/DragSession';
 import { columnAt, columnDropTarget, targetInGroup, type Point } from '../dnd/dropTarget';
@@ -40,6 +41,7 @@ function pageBoard(board: HTMLElement, side: -1 | 1): void {
   const left = to.getBoundingClientRect().left - from.getBoundingClientRect().left;
   board.scrollBy({ left, behavior: prefersReducedMotionNow() ? 'auto' : 'smooth' });
   haptic('selection');
+  playSound('tick');
 }
 
 export function desktopBoardEnvironment(

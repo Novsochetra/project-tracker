@@ -14,6 +14,7 @@ import { useAxisDrag } from '../gestures/useAxisDrag';
 import { useEditingText } from '../navigation/useEditingText';
 import { usePrefersReducedMotion } from '../lib/media';
 import { MotionScope } from '../lib/MotionScope';
+import { useSheetSound } from '../sound';
 import { DiscardChangesSheet } from './DiscardChangesSheet';
 import styles from './Sheet.module.css';
 import { SheetCancelContext } from './sheetCancel';
@@ -121,6 +122,7 @@ const keepFocus = (event: MouseEvent) => event.preventDefault();
 
 export function SheetPanel(props: SheetPanelProps) {
   const { open, onClose, label, size = 'form', isPhone, initialFocusRef, onSubmit } = props;
+  useSheetSound(open);
   const panelRef = useRef<HTMLDivElement>(null);
   const handleRef = useRef<HTMLDivElement>(null);
   const bodyRef = useRef<HTMLDivElement>(null);

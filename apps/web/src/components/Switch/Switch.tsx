@@ -1,5 +1,6 @@
 import clsx from 'clsx';
 import type { ComponentProps } from 'react';
+import { playSound } from '../../sound';
 import styles from './Switch.module.css';
 
 export interface SwitchProps extends Omit<
@@ -19,7 +20,10 @@ export function Switch({ checked, onChange, className, ...rest }: SwitchProps) {
       role="switch"
       aria-checked={checked}
       className={clsx(styles.track, className)}
-      onClick={() => onChange(!checked)}
+      onClick={() => {
+        playSound(checked ? 'switchOff' : 'switchOn');
+        onChange(!checked);
+      }}
     >
       <span className={styles.knob} aria-hidden="true" />
     </button>

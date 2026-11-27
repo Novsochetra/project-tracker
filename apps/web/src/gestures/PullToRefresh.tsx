@@ -2,6 +2,7 @@ import { m, useMotionValue, useTransform } from 'motion/react';
 import { useLayoutEffect, useRef, useState, type ReactNode, type RefObject } from 'react';
 import { usePrefersReducedMotion } from '../lib/media';
 import { MotionScope } from '../lib/MotionScope';
+import { playSound } from '../sound';
 import { spring } from './animation';
 import { haptic } from './haptics';
 import styles from './PullToRefresh.module.css';
@@ -63,7 +64,11 @@ export function PullToRefresh({
     },
     onMove: (dy) => {
       const distance = pullDistance(dy);
-      if (crossedThreshold(lastRef.current, distance) && shouldRefresh(distance)) haptic('light');
+      if (crossedThreshold(lastRef.current, distance) && shouldRefresh(distance)) {
+        haptic('light');
+        playSound('tick');
+      }
+
       lastRef.current = distance;
       pull.set(distance);
     },

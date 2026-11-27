@@ -4,6 +4,7 @@ import { useCallback } from 'react';
 import { errorMessage, useMoveToDone, useUndoMoveToDone } from '../../api';
 import { flashRows } from '../../app/flash';
 import { useToast } from '../../components';
+import { playSound } from '../../sound';
 import { keepMovedRowFocus } from '../project/movedFocus';
 import { movedBackMessage, movedMessage, type DoneBatch } from './doneBatch';
 
@@ -43,6 +44,7 @@ export function useMoveAllToDone(): (batch: DoneBatch) => Promise<unknown> {
       const request = mutateAsync({ ticketKeys: batch.keys });
       const moved = (moves: TicketMoves) => {
         const count = moves.moved.length;
+        if (count > 0) playSound('done');
         const undo = () => void putBack(moves).catch(failed);
         show(movedMessage(count, batch.doneName), count > 0 ? { undo } : {});
       };

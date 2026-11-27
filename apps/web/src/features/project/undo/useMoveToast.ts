@@ -13,12 +13,18 @@ import { useCallback } from 'react';
 import { errorMessage, queryKeys, readyStatuses, useApi, useMoveTicket } from '../../../api';
 import { flashRows } from '../../../app/flash';
 import { useToast } from '../../../components';
+import { playMoveSound } from '../../../sound';
 import { requestHandleFocus, rowHasFocus } from '../dnd/handleFocus';
 import { moveMessage } from '../moveMessage';
 import { restorePoint, undoTarget, type RestorePoint } from './restorePoint';
 
-// `ticket` is the ticket as it was before the move.
-export type ShowMove = (ticket: Ticket, to: Pick<Status, 'name'>, saved: Promise<boolean>) => void;
+// `ticket` is the ticket as it was before the move. Every status change a person makes passes here,
+// so this is where it sounds.
+export type ShowMove = (
+  ticket: Ticket,
+  to: Pick<Status, 'name' | 'category'>,
+  saved: Promise<boolean>,
+) => void;
 
 export const wasSaved = (request: Promise<unknown>): Promise<boolean> =>
   request.then(
@@ -108,6 +114,7 @@ export function useMoveToast(): ShowMove {
         ...restorePoint(cached.tickets, ticket),
         statusName: cached.statuses.find((status) => status.id === ticket.statusId)?.name ?? null,
       };
+      playMoveSound(to);
       show(moveMessage(ticket.key, to.name), { undo: () => undo(ticket, from, saved) });
     },
     [queryClient, show, undo],

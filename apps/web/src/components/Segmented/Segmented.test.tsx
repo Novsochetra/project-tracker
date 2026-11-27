@@ -1,7 +1,14 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { playSound } from '../../sound';
 import { Segmented } from './Segmented';
+
+vi.mock('../../sound', () => ({ playSound: vi.fn() }));
+
+beforeEach(() => {
+  vi.mocked(playSound).mockClear();
+});
 
 const OPTIONS = [
   { value: 'all', label: 'All', count: 7 },
@@ -39,5 +46,13 @@ describe('Segmented', () => {
     expect(group.style.getPropertyValue('--count')).toBe('3');
     rerender(<Segmented aria-label="Filter" options={OPTIONS} value="done" onChange={vi.fn()} />);
     expect(group.style.getPropertyValue('--index')).toBe('2');
+  });
+
+  it('clicks when the choice changes, and stays quiet on the segment already chosen', async () => {
+    render(<Segmented aria-label="Filter" options={OPTIONS} value="all" onChange={vi.fn()} />);
+    await userEvent.click(screen.getByRole('button', { name: 'All 7' }));
+    expect(playSound).not.toHaveBeenCalled();
+    await userEvent.click(screen.getByRole('button', { name: 'Done 2' }));
+    expect(playSound).toHaveBeenCalledWith('tick');
   });
 });

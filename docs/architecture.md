@@ -288,6 +288,17 @@ The SPEC was written for Claude Code alone. The tracker's MCP server and CLI wor
 - The page description and the web manifest say "Capture tickets on your phone and hand them to any AI agent."; the token name example is "Work laptop".
 - Data stays as it was: activity keeps the actor names it was written with (an agent named "Claude" stays "Claude"), and old events keep their text (§1.3).
 
+### 1.17 Apple look and sounds (PT-264)
+
+Since 27 Nov 2026 the app follows Apple's Human Interface Guidelines more closely than the SPEC's Linear-like look, after the owner's arcade (khmerarcade.games). `docs/ui-guidelines.md` holds the short rules every UI change keeps; the values below replace the SPEC's (§7 tokens, the Components board):
+
+- **Type:** San Francisco (`-apple-system`, `BlinkMacSystemFont`) wherever the system has it; Geist, which the app ships, only stands in on Windows, Android and Linux (the browser downloads it only there). Mono is `ui-monospace` / SF Mono, Geist Mono elsewhere. Phones: the large title is 34px bold (was 30px), and bar and sheet titles are 17px semibold (`--text-bar-title`, was 15px; desktop keeps 15px). A key as the nav title stays 15px, since mono runs wider.
+- **Colors:** Apple's system palette, light appearance: Ink `#1C1C1E`, Fill `#F2F2F7` (systemGray6), Line `#E5E5EA` (systemGray5), Accent systemIndigo `#5856D6`, the grays on Apple's hue. Danger (`#C90014`), Reviewed (`#248A3D`) and the drag handle (`#78787C`) are Apple's red, green and gray darkened just enough to keep the contrast §1.7 records (4.5:1 text, 3:1 marks). Status and label colors are data and are unchanged.
+- **Shapes:** every Button is a pill (`--radius-full`), the New ticket / Comment bar button too, and icon buttons are round. Controls 10px, containers 12px, groups 14px; sheets 18px on desktop and 28px on phones.
+- **Materials:** the nav and bottom bars are thinner glass (78% white, `blur(24px)`), so content shows through as it does under UIKit's bars. The segmented thumb and raised cards take UIKit's soft shadow; the sheet scrim is 30% black.
+- **Press:** a pressed Button shrinks to 0.96 and darkens (`--dim-pressed`); a pressed icon button to 0.94.
+- **Sounds** (`apps/web/src/sound/`): short synthesized cues, no audio files, made with Web Audio on the first cue (browsers start audio only after a tap): `tick` when a segment changes, a row lifts to drag (lists, board, project rows), a swipe passes its full-swipe point, the board pages and pull to refresh arms; `switchOn` / `switchOff` for every Switch; `sheetOpen` / `sheetClose` for every sheet and action sheet, however it closes; `sent` when a ticket is created (New ticket and quick capture, also when capture keeps it on the phone to send later); `done` when a ticket moves to a Done-category status (drag, status picker, swipe, Move all to Done) and `tick` for a move to any other status. A hidden page plays nothing. **Account → Sounds** turns them off for this browser (`localStorage` `tracker.sounds`, on by default); the iPhone's silent switch mutes them as it mutes the keyboard's clicks.
+
 ## 2. Data model
 
 TypeScript types live in `packages/shared/src/domain`. Database tables (snake_case, mapped to camelCase with Kysely's `CamelCasePlugin`):
@@ -467,6 +478,7 @@ Status changes made by the dropdown, claiming, submitting or reviewing put the t
 | `components/` | Base components from the Components board, one folder each with a CSS module and tests                                                                                                          |
 | `navigation/` | Route parsing, stack navigator, transitions, edge swipe back, trackpad swipe back and forward                                                                                                   |
 | `gestures/`   | Swipe actions, pull to refresh, axis drags, haptics, keyboard inset                                                                                                                             |
+| `sound/`      | Synthesized UI sounds (§1.17): cues, the Web Audio player, the Sounds setting, `useSheetSound`                                                                                                  |
 | `overlays/`   | Sheet (dialog / bottom sheet with drag to dismiss), action sheet, image and video viewers                                                                                                       |
 | `api/`        | Client instance, query keys, TanStack Query hooks, live events                                                                                                                                  |
 | `features/`   | Screens and sheets: `projects`, `ready`, `project`, `ticket`, `attachments`, `questions` (ask_person cards), `statuses`, `labels`, `search`, `connect`, `capture`, `account`, `push`, `version` |
