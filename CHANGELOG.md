@@ -2,6 +2,16 @@
 
 `npm run release` adds an entry for each release, newest first (docs/releasing.md).
 
+## v2.2.0 (2026-11-27)
+
+- The app looks like an Apple app: San Francisco type, Apple's palette, pill buttons, glass bars and rounder corners; docs/ui-guidelines.md sums up the rules (PT-264)
+- Soft clicks and a chime as you switch, drag, move and finish tickets, made in code with no sound files; Account → Sounds turns them off (PT-264)
+- Every phone control is drawn at one 40px height, as iOS draws its controls, and keeps a 44px tap area (PT-264)
+- Phone sheets float clear of the screen's edges as iOS sheets do: gray with white cards, tinted Close and Cancel, a bar line only once you scroll, and a pull up stretches them; action sheets are frosted with tinted choices (PT-264)
+- New ticket on phones is a round button floating over the bottom right corner (PT-264)
+- Drag a ticket in the list and the other rows slide aside to show where it lands (PT-289)
+- The local dev app no longer goes blank on a Mac when two files differ only by case (PT-264)
+
 ## v2.1.0 (2026-11-27)
 
 - Touch and hold a project on the phone Projects list to lift it, then drag it to a new place; the order saves to the server like the desktop sidebar's, and a swipe still scrolls and a pull still refreshes (PT-266)
