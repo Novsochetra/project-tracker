@@ -25,6 +25,17 @@ export function followMovedTickets(
   if (ticketId) holdHandleFocus(ticketId, moving);
 }
 
+// A board column stays when its cards leave, so focus waits on its + without scrolling the board or
+// another column's cards, then goes to the first card's handle in Done like a group's.
+export function followMovedCards(
+  add: HTMLElement | null,
+  ticketId: string | undefined,
+  moving: Promise<unknown>,
+): void {
+  add?.focus({ preventScroll: true });
+  if (ticketId) holdHandleFocus(ticketId, moving);
+}
+
 const boardTicketId = (queryClient: QueryClient, ticketKey: string): string | undefined => {
   const projectKey = projectOfTicket(ticketKey);
   const board = projectKey
