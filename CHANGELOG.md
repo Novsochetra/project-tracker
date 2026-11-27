@@ -2,6 +2,11 @@
 
 `npm run release` adds an entry for each release, newest first (docs/releasing.md).
 
+## v2.2.1 (2026-11-27)
+
+- On an iPad, the ••• menu, dropdowns and the calendar no longer close by themselves just after they open while a screen loads; they close on a scroll only when it moves their button (PT-292)
+- The end-to-end tests pass on Linux, so CI passes on `main` again and deploys go out (PT-291, PT-288)
+
 ## v2.2.0 (2026-11-27)
 
 - The app looks like an Apple app: San Francisco type, Apple's palette, pill buttons, glass bars and rounder corners; docs/ui-guidelines.md sums up the rules (PT-264)
