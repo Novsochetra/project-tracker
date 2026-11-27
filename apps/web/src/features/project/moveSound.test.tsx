@@ -34,7 +34,7 @@ afterEach(() => {
 });
 
 describe('moving a ticket sounds', () => {
-  it('chimes when a person picks Done, after the sheet came up and went', async () => {
+  it('chimes alone when a person picks Done in the Status sheet', async () => {
     const user = userEvent.setup();
     const server = fakeBoardServer(makeBoard([listItem(1, STATUS.todo, 0)]));
     renderProject({ client: server.client });
@@ -47,7 +47,8 @@ describe('moving a ticket sounds', () => {
     await user.click(within(sheet).getByRole('button', { name: 'Done' }));
 
     expect(playMoveSound).toHaveBeenCalledWith(expect.objectContaining({ category: 'done' }));
-    await waitFor(() => expect(playSound).toHaveBeenCalledWith('sheetClose'));
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Status' })).toBeNull());
+    expect(playSound).not.toHaveBeenCalledWith('sheetClose');
   });
 
   it('passes the status of a swipe that moves a ticket on', async () => {

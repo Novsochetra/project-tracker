@@ -31,6 +31,7 @@ export function fakeAudioContext(state: AudioContextState = 'running') {
     sampleRate: 100,
     destination: fakeNode(),
     resume: vi.fn().mockResolvedValue(undefined),
+    suspend: vi.fn().mockResolvedValue(undefined),
     createGain: vi.fn(() => fakeNode({ gain: fakeParam() })),
     createDynamicsCompressor: vi.fn(() => fakeNode()),
     createOscillator: vi.fn(() => source('tone')),

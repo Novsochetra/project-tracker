@@ -35,7 +35,7 @@ export interface ActionSheetProps {
 
 function ActionSheetPanel(props: ActionSheetProps & { onExited: () => void }) {
   const { open, onClose, label, caption, actions, cancelLabel = 'Cancel', onExited } = props;
-  useSheetSound(open);
+  useSheetSound(open, { onClose: false });
   const panelRef = useRef<HTMLDivElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
   const content = actionSheetContent(caption, actions);

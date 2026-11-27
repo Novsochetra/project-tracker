@@ -39,8 +39,9 @@ UI change keeps them. Values live in `apps/web/src/design/tokens.css`: use a tok
 
 ## Sound and haptics
 
-- Sound marks a change of state, never every tap: a segment or switch flips, a row lifts or
-  commits a swipe, a sheet opens or closes, a ticket is sent or finished (`apps/web/src/sound`).
+- Sound marks a change of state, never every tap: a segment or switch flips, a row lifts, a sheet
+  opens or closes, a ticket moves, is sent or is finished (`apps/web/src/sound`).
+- One action, one sound: when a choice closes a sheet, only the choice sounds.
 - Cues are synthesized, under half a second and quiet. Account → Sounds turns them off, and the
   phone's silent switch mutes them.
 - A haptic goes with the same moments where the device has one.

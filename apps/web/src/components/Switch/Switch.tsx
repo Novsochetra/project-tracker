@@ -21,8 +21,9 @@ export function Switch({ checked, onChange, className, ...rest }: SwitchProps) {
       aria-checked={checked}
       className={clsx(styles.track, className)}
       onClick={() => {
-        playSound(checked ? 'switchOff' : 'switchOn');
+        // The change goes first: turning Sounds on is heard, turning them off is not.
         onChange(!checked);
+        playSound(checked ? 'switchOff' : 'switchOn');
       }}
     >
       <span className={styles.knob} aria-hidden="true" />

@@ -1,4 +1,5 @@
 import { CUES, type Cue } from './cues';
+import { createIdleSuspend, cueSeconds } from './idleSuspend';
 import { createNoiseBuffer, scheduleVoice, type SoundGraph } from './synth';
 
 export const MASTER_VOLUME = 0.7;
@@ -23,7 +24,12 @@ function buildGraph(context: AudioContext): SoundGraph {
   master.connect(limiter);
   limiter.connect(context.destination);
 
-  return { context, destination: master, noiseBuffer: createNoiseBuffer(context) };
+  return {
+    context,
+    destination: master,
+    noiseBuffer: createNoiseBuffer(context),
+    rest: createIdleSuspend(context),
+  };
 }
 
 function wake(context: AudioContext): void {
@@ -64,6 +70,8 @@ export function createSoundPlayer({
     for (const voice of CUES[cue]) {
       scheduleVoice(ready, voice, startTime);
     }
+
+    ready.rest(cueSeconds(CUES[cue]));
 
     return true;
   }

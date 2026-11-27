@@ -16,6 +16,7 @@ export interface SoundGraph {
   context: AudioContext;
   destination: AudioNode;
   noiseBuffer: AudioBuffer;
+  rest: (busySeconds: number) => void;
 }
 
 export function envelopeSteps(voice: Voice, at: number): RampStep[] {

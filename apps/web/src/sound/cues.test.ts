@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { CUES, type Cue } from './cues';
+import { cueSeconds } from './idleSuspend';
 
 const cues = Object.entries(CUES) as [Cue, (typeof CUES)[Cue]][];
-const end = (cue: Cue) => Math.max(...CUES[cue].map((voice) => voice.start + voice.duration));
+const end = (cue: Cue) => cueSeconds(CUES[cue]);
 
 describe('sound cues', () => {
   it.each(cues)('%s is short, quiet and audible', (_name, voices) => {

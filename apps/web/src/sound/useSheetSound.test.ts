@@ -27,4 +27,13 @@ describe('useSheetSound', () => {
     rerender({ open: false });
     expect(playSound).not.toHaveBeenCalled();
   });
+
+  it('lets an action sheet sound only as it comes up', () => {
+    const { rerender } = renderHook(({ open }) => useSheetSound(open, { onClose: false }), {
+      initialProps: { open: true },
+    });
+    rerender({ open: false });
+    expect(playSound).toHaveBeenCalledTimes(1);
+    expect(playSound).toHaveBeenCalledWith('sheetOpen');
+  });
 });

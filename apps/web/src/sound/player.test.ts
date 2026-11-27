@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { CUES } from './cues';
 import { createSoundPlayer, type SoundPlayerPorts } from './player';
 import { fakeAudioContext } from './test/fakeAudio';
@@ -60,5 +60,26 @@ describe('createSoundPlayer', () => {
     expect(player.play('tick')).toBe(false);
     expect(player.play('tick')).toBe(false);
     expect(createContext).toHaveBeenCalledTimes(1);
+  });
+
+  describe('between cues', () => {
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it('lets the context sleep a second after the last cue ends, and wakes it for the next', () => {
+      vi.useFakeTimers();
+      const { player, audio } = setup();
+      player.play('tick');
+      player.play('done');
+      vi.advanceTimersByTime(1000);
+      expect(audio.raw.suspend).not.toHaveBeenCalled();
+      vi.advanceTimersByTime(600);
+      expect(audio.raw.suspend).toHaveBeenCalledTimes(1);
+
+      audio.raw.state = 'suspended';
+      player.play('tick');
+      expect(audio.raw.resume).toHaveBeenCalled();
+    });
   });
 });
