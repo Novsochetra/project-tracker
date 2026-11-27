@@ -11,6 +11,8 @@ import { openNewTicketIn, readActionSheet, resting, seedProject, toast } from '.
 // typing, and the release landed on the screen behind (the PT-205 review). WebKit and Chromium.
 
 const KEYBOARD = 335;
+// A phone sheet floats this far above the screen's bottom edge, or the keyboard (PT-264).
+const SHEET_INSET = 8;
 
 async function staleViewport(page: Page): Promise<void> {
   await page.addInitScript((keyboard) => {
@@ -63,13 +65,13 @@ test('with no field in focus, a long sheet reaches the bottom and shows its end'
 }) => {
   const sheet = await openConnect(page);
   const height = page.viewportSize()?.height ?? 0;
-  expect(await resting(() => bottomOf(sheet))).toBe(height);
+  expect(await resting(() => bottomOf(sheet))).toBe(height - SHEET_INSET);
 
   await scrollToEnd(sheet);
   const copy = sheet.getByRole('button', { name: 'Copy CLI command' });
   await expect(copy).toBeInViewport({ ratio: 1 });
   expect(await bottomOf(copy)).toBeLessThan(height - 16);
-  expect(await sheetAt(page, height - 4)).toBe(true);
+  expect(await sheetAt(page, height - SHEET_INSET - 4)).toBe(true);
 });
 
 test('a focused field still lifts the sheet above the keyboard, and it drops back', async ({
@@ -79,14 +81,14 @@ test('a focused field still lifts the sheet above the keyboard, and it drops bac
   await openNewTicketIn(page, 'To do');
   const sheet = page.getByRole('dialog', { name: 'New ticket' });
   const height = page.viewportSize()?.height ?? 0;
-  expect(await resting(() => bottomOf(sheet))).toBe(height);
+  expect(await resting(() => bottomOf(sheet))).toBe(height - SHEET_INSET);
 
   const title = sheet.getByLabel('Ticket title');
   await title.click();
-  await expect.poll(() => bottomOf(sheet)).toBe(height - KEYBOARD);
+  await expect.poll(() => bottomOf(sheet)).toBe(height - KEYBOARD - SHEET_INSET);
 
   await title.evaluate((field) => field.blur());
-  await expect.poll(() => bottomOf(sheet)).toBe(height);
+  await expect.poll(() => bottomOf(sheet)).toBe(height - SHEET_INSET);
 });
 
 for (const press of ['click', 'tap'] as const) {
@@ -98,7 +100,9 @@ for (const press of ['click', 'tap'] as const) {
     const title = sheet.getByLabel('Ticket title');
     await title.click();
     await page.keyboard.type('Fix the login');
-    await expect.poll(() => bottomOf(sheet)).toBe((page.viewportSize()?.height ?? 0) - KEYBOARD);
+    await expect
+      .poll(() => bottomOf(sheet))
+      .toBe((page.viewportSize()?.height ?? 0) - KEYBOARD - SHEET_INSET);
 
     await sheet.getByRole('button', { name: 'Create' })[press]();
     await expect(toast(page, 'MOB-2 created')).toBeVisible();

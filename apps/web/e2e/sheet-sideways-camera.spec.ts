@@ -9,6 +9,8 @@ import { readActionSheet, seedProject, settled } from './helpers';
 
 const WIDTH = 844;
 const INSET = 47;
+// A phone sheet floats this far from the screen's sides (PT-264).
+const SHEET_INSET = 8;
 
 test.use({ viewport: { width: WIDTH, height: 390 }, hasTouch: true, isMobile: true });
 
@@ -78,9 +80,9 @@ test.describe('bottom sheets on a phone turned sideways', () => {
       const sides = await sidesOf(sheet);
       expect(sides.controls[0]).toBeGreaterThanOrEqual(INSET);
       expect(sides.controls[1]).toBeLessThanOrEqual(WIDTH - INSET);
-      // The sheet and the line under its header still run to the screen's edges.
-      expect(sides.sheet).toEqual([0, WIDTH]);
-      expect(sides.header).toEqual([0, WIDTH]);
+      // The sheet floats clear of the screen's sides, and the line under its header spans it.
+      expect(sides.sheet).toEqual([SHEET_INSET, WIDTH - SHEET_INSET]);
+      expect(sides.header).toEqual([SHEET_INSET, WIDTH - SHEET_INSET]);
     });
   }
 });
