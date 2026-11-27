@@ -57,10 +57,28 @@
   cursor: grabbing;
 }
 
+/* The handle takes the row's whole height, but its hover is drawn as a pill clear of the row's
+   edges; on the hovered row's gray it takes the darker --line. */
+.handle::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  right: 0;
+  left: 0;
+  z-index: -1;
+  height: min(28px, 100% - 8px);
+  border-radius: var(--radius-full);
+  translate: 0 -50%;
+  transition: background-color var(--duration-handle) ease-out;
+}
+
 @media (hover: hover) {
   .handle:hover {
-    background: var(--fill-2);
     color: var(--muted);
+  }
+
+  .handle:hover::before {
+    background: var(--line);
   }
 }
 
