@@ -5,7 +5,7 @@ import { useState, type ComponentProps } from 'react';
 import { Icon, ListRow } from '../../components';
 import { useIsOpening } from '../../navigation';
 import styles from './ProjectList.module.css';
-import { descriptionText, riseDelay } from './projectRows';
+import { descriptionText, riseDelay } from './projectDisplay';
 
 interface ProjectRowProps extends Omit<ComponentProps<'button'>, 'onClick'> {
   project: ProjectSummary;

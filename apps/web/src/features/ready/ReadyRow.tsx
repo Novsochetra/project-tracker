@@ -5,7 +5,7 @@ import { Button, Icon, StarRating, VerdictChip } from '../../components';
 import { SwipeActions, type SwipeAction } from '../../gestures';
 import { useIsPhone } from '../../lib/media';
 import { useIsOpening } from '../../navigation';
-import { riseDelay } from '../projects/projectRows';
+import { riseDelay } from '../projects/projectDisplay';
 import type { ReadyItem } from './readyItems';
 import styles from './ReadySection.module.css';
 
