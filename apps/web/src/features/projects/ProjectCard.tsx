@@ -4,7 +4,7 @@ import { useIsOpening } from '../../navigation';
 import styles from './ProjectCard.module.css';
 import { ProjectProgressBar, ProjectProgressParts } from './ProjectProgressBar';
 import { projectProgress } from './projectProgress';
-import { descriptionText, riseDelay } from './projectRows';
+import { descriptionText, riseDelay } from './projectDisplay';
 
 interface ProjectCardProps {
   project: ProjectSummary;
