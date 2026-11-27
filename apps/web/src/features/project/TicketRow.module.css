@@ -7,6 +7,30 @@
   border-top: 1px solid var(--line);
 }
 
+/* The rows a dragged ticket passes glide aside to open the gap where it lands
+   (dnd/listEnvironment.ts); a settling row starts from where it was shown, so it moves at once. */
+.row {
+  transition: transform var(--duration-base) var(--ease-out);
+}
+
+/* The ghost is the dragged ticket; its own row keeps its place in its group and folds away while
+   the ticket is over another one (dnd/listRows.ts). */
+.row[data-drag-source] {
+  overflow: hidden;
+  opacity: 0;
+  transition:
+    transform var(--duration-base) var(--ease-out),
+    height var(--duration-base) var(--ease-out);
+}
+
+.row[data-drag-away] {
+  border-top-width: 0;
+}
+
+.row[data-still] {
+  transition: none;
+}
+
 .rise {
   animation: rise var(--duration-rise) var(--ease-out) backwards;
 }
@@ -186,37 +210,6 @@
   pointer-events: none;
   mix-blend-mode: multiply;
   animation: flash var(--duration-flash) var(--ease-out) backwards;
-}
-
-.dropLine {
-  position: absolute;
-  right: 12px;
-  left: 12px;
-  z-index: 4;
-  height: 2px;
-  border-radius: 1px;
-  background: var(--accent);
-  pointer-events: none;
-}
-
-.dropLine[data-edge='before'] {
-  top: 0;
-}
-
-.dropLine[data-edge='after'] {
-  bottom: 0;
-}
-
-.dropLine::before {
-  content: '';
-  position: absolute;
-  top: -3px;
-  left: -5px;
-  width: 8px;
-  height: 8px;
-  border: 2px solid var(--accent);
-  border-radius: 50%;
-  background: var(--surface);
 }
 
 @media (width < 768px),

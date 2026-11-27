@@ -56,7 +56,6 @@ describe('regression: the drop row attribute is named in one place', () => {
           status={statuses[0]!}
           next={null}
           dragged={false}
-          dropEdge={null}
           riseDelay={null}
           callbacks={callbacks}
         />
