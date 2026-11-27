@@ -13,11 +13,12 @@ export interface GroupHeaderProps {
   // Only while the group is expanded, so it can be collapsed without scrolling to its footer.
   onCollapse?: (() => void) | undefined;
   action?: ReactNode;
+  addRef?: Ref<HTMLButtonElement> | undefined;
   className?: string | undefined;
 }
 
 export function GroupHeader(props: GroupHeaderProps) {
-  const { status, count, tint, onAdd, onCollapse, action, className } = props;
+  const { status, count, tint, onAdd, onCollapse, action, addRef, className } = props;
 
   return (
     <div className={clsx(styles.header, className)} data-tint={tint || undefined}>
@@ -27,6 +28,7 @@ export function GroupHeader(props: GroupHeaderProps) {
       {onCollapse && <HeaderShowLess name={status.name} onClick={onCollapse} />}
       {action}
       <IconButton
+        ref={addRef}
         size="sm"
         icon={Plus}
         aria-label={`New ticket in ${status.name}`}
