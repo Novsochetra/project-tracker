@@ -25,6 +25,7 @@ import { useDiscardGuard } from './useDiscardGuard';
 import { useDismissDrag } from './useDismissDrag';
 import { useOverlayBehavior } from './useOverlayBehavior';
 import { useScrollEdge } from './useScrollEdge';
+import { useSheetStretch } from './useSheetStretch';
 import { useBottomPanelValues, useSlidePresence } from './useSlidePresence';
 
 export interface SheetPanelProps extends SheetProps {
@@ -111,8 +112,9 @@ function useSheetMotion(
     releaseVelocityRef,
     onClose: onDismiss,
   });
+  const stretch = useSheetStretch(bottom.y);
   const panelStyle = isPhone
-    ? { y: bottom.y, opacity: bottom.opacity }
+    ? { ...stretch, opacity: bottom.opacity }
     : { y: dialog.y, scale: dialog.scale, opacity: dialog.opacity };
 
   return { drag, panelStyle, scrim: isPhone ? bottom.scrim : dialog.scrim };

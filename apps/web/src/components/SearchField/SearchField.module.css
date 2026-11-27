@@ -23,6 +23,8 @@
 .input {
   flex: 1;
   min-width: 0;
+  /* A long placeholder, Search's on a narrow phone, ends in an ellipsis instead of mid-word. */
+  text-overflow: ellipsis;
   margin: 0;
   padding: 6px 0;
   border: 0;

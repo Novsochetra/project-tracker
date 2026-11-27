@@ -82,7 +82,9 @@
   max-height: calc(var(--sheet-viewport, 100vh) - 32px);
   max-height: calc(var(--sheet-viewport, 100dvh) - 32px);
   margin-bottom: var(--sheet-keyboard, 0px);
-  padding-bottom: max(0px, var(--safe-bottom) - var(--sheet-inset));
+  padding-bottom: calc(
+    max(0px, var(--safe-bottom) - var(--sheet-inset)) + var(--sheet-stretch, 0px)
+  );
   overflow: hidden;
   border-radius: var(--radius-sheet);
 }
