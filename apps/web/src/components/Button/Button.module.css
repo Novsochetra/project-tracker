@@ -125,7 +125,11 @@
   .bar::before {
     content: '';
     position: absolute;
-    inset: var(--control-reach) 0;
+    top: 50%;
+    right: 0;
+    left: 0;
+    height: var(--touch-target);
+    translate: 0 -50%;
   }
 
   .header {

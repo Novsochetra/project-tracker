@@ -79,10 +79,12 @@
 }
 
 .switchCard {
+  overflow: visible;
   border-radius: var(--radius-full);
 }
 
-/* A one-row switch is a pill like the setting switches (SwitchSection). */
+/* A one-row switch is a pill like the setting switches (SwitchSection), unclipped so the switch
+   keeps its 44px tap area in a 40px phone row. */
 .switchRow {
   display: flex;
   align-items: center;

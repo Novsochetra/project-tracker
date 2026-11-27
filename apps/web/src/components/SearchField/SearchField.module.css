@@ -58,10 +58,16 @@
   .field::before {
     content: '';
     position: absolute;
-    inset: var(--control-reach) 0;
+    top: 50%;
+    right: 0;
+    left: 0;
+    height: var(--touch-target);
+    translate: 0 -50%;
   }
 
+  /* Above the label's tap area, so a tap or a long press in the text reaches the field itself. */
   .input {
+    position: relative;
     padding: 4px 0;
     font-size: var(--size-input);
   }

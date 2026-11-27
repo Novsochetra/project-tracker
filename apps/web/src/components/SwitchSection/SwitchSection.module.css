@@ -5,11 +5,13 @@
 }
 
 .card {
+  overflow: visible;
   border-radius: var(--radius-full);
 }
 
 /* A one-row setting is a pill like the buttons around it; its label keeps clear of the round
-   end and its focus ring follows it. */
+   end and its focus ring follows it. The card doesn't clip, so the switch keeps its 44px tap area
+   in a 40px phone row. */
 .row {
   display: flex;
   align-items: center;

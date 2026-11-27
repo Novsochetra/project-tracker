@@ -44,14 +44,18 @@
   }
 
   .action {
-    min-height: 34px;
+    min-height: var(--control-drawn);
     font-size: 15px;
   }
 
-  /* Keeps the 34px look with a 44px touch target. */
+  /* Drawn as tall as the other phone controls, with a 44px touch target. */
   .action::before {
     content: '';
     position: absolute;
-    inset: -5px 0;
+    top: 50%;
+    right: 0;
+    left: 0;
+    height: var(--touch-target);
+    translate: 0 -50%;
   }
 }
