@@ -73,10 +73,16 @@ export function useFloatingPlacement(
 
 const SCROLL_GRACE_MS = 300;
 
+// Only the page, or an element that holds the anchor, moves the anchor as it scrolls. A row of
+// tabs scrolling itself as its screen loads leaves the anchor in place (PT-292), and the panel
+// scrolling its own list doesn't move it either.
+const movesAnchor = (target: EventTarget | null, anchor: HTMLElement | null): boolean =>
+  !(target instanceof Node) || target === document || (anchor !== null && target.contains(anchor));
+
 // SPEC §5.5: the page moving under the panel would leave it off its row. Scrolls in the first
 // 300ms come from opening it, like focus bringing its row into view.
 export function useCloseOnScroll(
-  panelRef: RefObject<HTMLElement | null>,
+  anchorRef: RefObject<HTMLElement | null>,
   active: boolean,
   onClose: () => void,
 ) {
@@ -86,12 +92,11 @@ export function useCloseOnScroll(
     const openedAt = performance.now();
     const onScroll = (event: Event) => {
       if (performance.now() - openedAt < SCROLL_GRACE_MS) return;
-      if (event.target instanceof Node && panelRef.current?.contains(event.target)) return;
-      close.current();
+      if (movesAnchor(event.target, anchorRef.current)) close.current();
     };
 
     window.addEventListener('scroll', onScroll, true);
 
     return () => window.removeEventListener('scroll', onScroll, true);
-  }, [panelRef, active, close]);
+  }, [anchorRef, active, close]);
 }
