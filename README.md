@@ -136,7 +136,7 @@ npm run test:e2e   # Playwright: iPhone-sized WebKit, desktop Chromium, and an i
 npm run test:e2e:clean  # the same on a clean copy of HEAD in $TMPDIR, deleted when it ends (E2E_KEEP=1 keeps it)
 ```
 
-Both delete the data folder Playwright makes for the run (`tracker-e2e-*` in the temp folder) when it ends; `E2E_KEEP=1` keeps it and prints its path, and a folder given in `E2E_DATA_DIR` always stays.
+A plain run deletes the data folder it makes (`tracker-e2e-*` in the temp folder) when it ends, also on failure and Ctrl-C, but not when killed with SIGTERM; the clean run keeps it inside its copy (`e2e-data`), so it goes with the copy, also on SIGTERM. `E2E_KEEP=1` keeps either and prints its path, and a folder given in `E2E_DATA_DIR` always stays. Node, tsx and Playwright keep their caches in the temp folder too, reused by every run.
 
 - Architecture and product decisions: `docs/architecture.md`
 - Code rules: `CLAUDE.md`

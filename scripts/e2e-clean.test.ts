@@ -59,7 +59,9 @@ function makeSandbox(): Sandbox {
   const git = (...args: string[]) => spawnSync('git', args, { cwd: repo, stdio: 'ignore' });
   git('init', '-q');
   git('add', '.');
-  git('-c', 'user.name=Test', '-c', 'user.email=test@example.com', 'commit', '-qm', 'init');
+  const identity = ['-c', 'user.name=Test', '-c', 'user.email=test@example.com'];
+  const commit = git(...identity, '-c', 'commit.gpgsign=false', 'commit', '-qm', 'init');
+  expect(commit.status).toBe(0);
 
   const marker = join(root, 'marker');
   const { E2E_DATA_DIR: _data, E2E_KEEP: _keep, ...outer } = process.env;
@@ -109,6 +111,9 @@ describe('e2e-clean.sh', { timeout: 20_000 }, () => {
   });
 
   afterEach(() => {
+    // A signal test that failed before its kill leaves the waiting Playwright running.
+    const waiting = existsSync(box.marker) ? Number(readFileSync(box.marker, 'utf8')) : 0;
+    if (waiting && isRunning(waiting)) process.kill(waiting, 'SIGKILL');
     rmSync(box.root, { recursive: true, force: true });
   });
 
@@ -119,6 +124,7 @@ describe('e2e-clean.sh', { timeout: 20_000 }, () => {
     const result = await runScript(box, { FAKE_PLAYWRIGHT: outcome }).exit;
 
     expect(result.code).toBe(code);
+    expect(result.stderr.includes('E2E_KEEP=1 keeps them')).toBe(code !== 0);
     const [where, data] = readFileSync(`${box.marker}.where`, 'utf8').trim().split(' ');
     expect(where?.startsWith(join(box.temp, 'tracker-e2e-'))).toBe(true);
     expect(data).toBe(join(where ?? '', 'e2e-data'));
@@ -128,6 +134,7 @@ describe('e2e-clean.sh', { timeout: 20_000 }, () => {
   it.each([
     ['SIGTERM', 143, false],
     ['SIGINT', 130, true],
+    ['SIGHUP', 129, false],
   ] as const)('stops Playwright and cleans up on %s', async (signal, code, toGroup) => {
     const { child, exit } = runScript(box, { FAKE_PLAYWRIGHT: 'wait' });
     await waitFor(() => existsSync(box.marker) && readFileSync(box.marker, 'utf8').trim() !== '');

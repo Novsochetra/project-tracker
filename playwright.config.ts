@@ -1,15 +1,9 @@
-import { mkdtempSync } from 'node:fs';
-import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { defineConfig, devices } from '@playwright/test';
 import { API_PORT, WEB_PORT } from './apps/web/e2e/ports';
-import { removeOnExit } from './apps/web/e2e/removeOnExit';
+import { e2eDataDir } from './scripts/e2eDataDir';
 
-const givenDataDir = process.env.E2E_DATA_DIR;
-const dataDir = givenDataDir ?? mkdtempSync(join(tmpdir(), 'tracker-e2e-'));
-process.env.E2E_DATA_DIR = dataDir;
-// Workers get the folder in E2E_DATA_DIR, so only the run that made it removes it.
-if (!givenDataDir) removeOnExit(dataDir, process.env.E2E_KEEP === '1');
+const dataDir = e2eDataDir();
 
 export default defineConfig({
   testDir: './apps/web/e2e',
