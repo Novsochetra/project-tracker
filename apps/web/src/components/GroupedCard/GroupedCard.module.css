@@ -2,7 +2,7 @@
   --row-gap: 12px;
   --row-pad: 14px;
   overflow: hidden;
-  border: 1px solid var(--line);
+  border: 1px solid var(--card-line, var(--line));
   border-radius: var(--radius-group);
   background: var(--surface);
 }

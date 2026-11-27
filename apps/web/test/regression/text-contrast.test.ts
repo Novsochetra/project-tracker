@@ -49,8 +49,9 @@ const TEXT_ON: Record<string, Record<string, string>> = {
     '--fill': 'the weekday of a hovered quick pick in the desktop calendar',
   },
   '--accent': {
-    '--surface': 'today in the desktop calendar',
+    '--surface': 'today in the desktop calendar, action sheet choices',
     '--fill-2': 'a hovered today in the desktop calendar',
+    '--fill': 'Close and Cancel on a grouped phone sheet',
   },
   '--danger': {
     '--surface': 'errors, overdue dates, delete actions',

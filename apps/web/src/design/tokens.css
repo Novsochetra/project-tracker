@@ -94,6 +94,8 @@
   --radius-container: 12px;
   --radius-group: 14px;
   --radius-sheet: 18px;
+  /* A phone sheet's gap to the screen's sides and bottom, as an action sheet's. */
+  --sheet-inset: 8px;
   --radius-full: 999px;
 
   --shadow-raised: 0 3px 8px rgba(0, 0, 0, 0.12), 0 3px 1px rgba(0, 0, 0, 0.04);

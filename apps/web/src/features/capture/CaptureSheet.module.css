@@ -57,4 +57,16 @@
   .text .description {
     font-size: var(--size-input);
   }
+
+  /* On the gray phone sheet the title and details sit in a white card, as a new reminder's do. */
+  .text {
+    margin: var(--space-4) var(--space-4) 0;
+    padding: var(--space-3) var(--space-4) var(--space-2);
+    border-radius: var(--radius-group);
+    background: var(--surface);
+  }
+
+  .attachments {
+    padding-top: var(--space-3);
+  }
 }

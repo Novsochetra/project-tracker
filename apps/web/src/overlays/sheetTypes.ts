@@ -11,6 +11,8 @@ export interface SheetProps {
   left?: ReactNode;
   right?: ReactNode;
   size?: SheetSize;
+  // A plain white sheet, as iOS shows a search list or a document; others are grouped (gray).
+  plain?: boolean;
   children: ReactNode;
   footer?: ReactNode;
   initialFocusRef?: RefObject<HTMLElement | null>;

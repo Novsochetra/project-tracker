@@ -35,8 +35,9 @@
   color: var(--text-inverse);
 }
 
+/* On a grouped (gray) sheet a white button needs no outline, like the cards beside it. */
 .secondary {
-  border-color: var(--control-line);
+  border-color: var(--card-line, var(--control-line));
   background: var(--surface);
   color: var(--ink);
 }

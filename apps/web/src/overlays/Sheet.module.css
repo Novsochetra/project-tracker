@@ -20,8 +20,11 @@
   padding-top: 8vh;
 }
 
+/* iOS 26 floats a phone sheet clear of the screen's edges, rounded all round; the safe areas
+   still pad what is inside it. */
 .phone {
   align-items: flex-end;
+  padding: 0 var(--sheet-inset) var(--sheet-inset);
 }
 
 .scrim {
@@ -79,20 +82,32 @@
   max-height: calc(var(--sheet-viewport, 100vh) - 32px);
   max-height: calc(var(--sheet-viewport, 100dvh) - 32px);
   margin-bottom: var(--sheet-keyboard, 0px);
-  padding-bottom: var(--safe-bottom);
-  border-radius: var(--radius-sheet) var(--radius-sheet) 0 0;
+  padding-bottom: max(0px, var(--safe-bottom) - var(--sheet-inset));
+  overflow: hidden;
+  border-radius: var(--radius-sheet);
 }
 
-/* Fills the gap under the sheet when it is stretched upward. */
-.phone .panel::after {
-  content: '';
-  position: absolute;
-  top: calc(100% - 1px);
-  right: 0;
-  left: 0;
-  height: 160px;
+/* iOS's grouped page sheet: gray, with white cards that need no border (--card-line), and a bar
+   that blends into it until content scrolls under it (useScrollEdge). */
+.phone .panel {
+  --card-line: transparent;
+
+  background: var(--fill);
+}
+
+.phone .header {
+  border-bottom-color: transparent;
+  transition: border-color var(--duration-fast) var(--ease-out);
+}
+
+.phone .panel[data-scrolled] .header {
+  border-bottom-color: var(--line);
+}
+
+.phone.plain .panel {
+  --card-line: var(--line);
+
   background: var(--surface);
-  pointer-events: none;
 }
 
 .sheetForm {

@@ -118,6 +118,14 @@
     font-size: var(--size-input);
   }
 
+  /* On the gray phone sheet the name and description sit in a white card, as a new reminder's do. */
+  .fields {
+    margin: var(--space-4) var(--space-4) 0;
+    padding: var(--space-3) var(--space-4) var(--space-2);
+    border-radius: var(--radius-group);
+    background: var(--surface);
+  }
+
   .switchRow {
     /* The card's 1px border goes around the row. */
     min-height: calc(var(--control-drawn) - 2px);

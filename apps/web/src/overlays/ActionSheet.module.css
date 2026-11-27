@@ -54,7 +54,9 @@
   overflow-y: auto;
   overscroll-behavior: contain;
   border-radius: var(--radius-sheet);
-  background: var(--surface);
+  background: var(--bar-bg);
+  -webkit-backdrop-filter: var(--glass-filter);
+  backdrop-filter: var(--glass-filter);
   touch-action: pan-y;
 }
 
@@ -67,13 +69,14 @@
   animation: global(fade-up) var(--duration-fade) var(--ease-out) backwards;
 }
 
+/* UIKit's action sheet: frosted cards whose choices are tinted, a destructive one red. */
 .row,
 .cancel {
   min-height: 56px;
   padding: 0 var(--space-4);
   border: 0;
-  background: var(--surface);
-  color: var(--ink);
+  background: transparent;
+  color: var(--accent);
   font-size: 17px;
   cursor: pointer;
   transition: background-color var(--duration-fast) var(--ease-out);
@@ -101,4 +104,5 @@
 .cancel {
   flex: none;
   border-radius: var(--radius-sheet);
+  background: var(--surface);
 }

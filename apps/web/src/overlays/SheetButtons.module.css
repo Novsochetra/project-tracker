@@ -38,9 +38,11 @@
 @media (width < 768px),
   (pointer: coarse) and (device-width < 600px),
   (pointer: coarse) and (device-height < 600px) {
+  /* UIKit tints a sheet's bar buttons. */
   .text {
     min-height: var(--touch-target);
-    font-size: 16px;
+    color: var(--accent);
+    font-size: 17px;
   }
 
   .action {
