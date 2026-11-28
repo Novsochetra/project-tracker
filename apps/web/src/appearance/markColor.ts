@@ -15,4 +15,10 @@ export function markColor(color: string, appearance: Appearance): string {
   return nearestReadable(color, WHITE, parseHex(DARK_MARK_BACKGROUND)!, AA_MARK);
 }
 
-export const useMarkColor = (color: string): string => markColor(color, useAppearance());
+export function useMarkColor(color: string): string;
+export function useMarkColor(color: string | undefined): string | undefined;
+export function useMarkColor(color: string | undefined): string | undefined {
+  const appearance = useAppearance();
+
+  return color === undefined ? undefined : markColor(color, appearance);
+}

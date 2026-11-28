@@ -180,17 +180,21 @@ describe('regression: text colors reach WCAG AA (4.5:1) on the backgrounds they 
     },
   );
 
+  // A chip's tint is mixed over the --surface it sits on: a card on the page, or a grouped
+  // area's raised card.
   it.each(
     APPEARANCES.flatMap((appearance) =>
-      [
-        ['--accent', '--accent-text'],
-        ['--danger', '--danger'],
-      ].map(([verdict, text]) => ({ appearance, verdict: verdict!, text: text! })),
+      ['--surface', '--grouped-surface'].flatMap((surface) =>
+        [
+          ['--accent', '--accent-text'],
+          ['--danger', '--danger'],
+        ].map(([verdict, text]) => ({ appearance, surface, verdict: verdict!, text: text! })),
+      ),
     ),
   )(
-    '$appearance: $verdict verdict chips on their own 10% tint',
-    ({ appearance, verdict, text }) => {
-      const chip = mix(color(verdict, appearance), color('--surface', appearance), 0.1);
+    '$appearance: $verdict verdict chips on their own 10% tint over $surface',
+    ({ appearance, surface, verdict, text }) => {
+      const chip = mix(color(verdict, appearance), color(surface, appearance), 0.1);
       expect(contrast(color(text, appearance), chip)).toBeGreaterThanOrEqual(AA_TEXT);
     },
   );

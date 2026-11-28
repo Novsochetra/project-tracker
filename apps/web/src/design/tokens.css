@@ -45,6 +45,8 @@
   /* Tinted text (Close, Cancel, action sheet choices, today); the dark accent is too dim for it. */
   --accent-text: var(--accent);
   --focus-ring: var(--accent);
+  /* A project's done share on its progress bar: a mark, so 3:1 on the track (--fill-2). */
+  --progress-done: var(--accent);
   /* Accent is 3.2:1 on Ink, too faint for the toast's Undo, so it takes a lighter tint of it. */
   --accent-inverse: #a3a3f2;
   --link: #4a4ac4;
@@ -240,6 +242,7 @@
   --accent-text: #9c9aff;
   --accent-inverse: #a5a4ff;
   --focus-ring: #7d7aff;
+  --progress-done: #7d7aff;
   --link: #9c9aff;
   --link-hover: #b8b7ff;
   --doing: #ff9f0a;

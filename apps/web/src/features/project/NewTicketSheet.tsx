@@ -2,6 +2,7 @@ import { projectDisplayName, type Label, type Project, type Status } from '@trac
 import { useRef, useState } from 'react';
 import { useBoard } from '../../api';
 import type { SheetProps } from '../../app/sheets/types';
+import { ColorMark } from '../../components/ColorMark';
 import { Sheet, SheetActionButton, SheetCancelButton } from '../../overlays';
 import { AttachmentPicker, DropOverlay, useFileDrop } from '../attachments';
 import { forgetKeptForm, keptForm, useKeepForm } from './keptForm';
@@ -32,7 +33,7 @@ const NO_LABELS: readonly Label[] = [];
 function ProjectSubtitle({ project }: { project: Project }) {
   return (
     <>
-      <span className={styles.square} style={{ background: project.color }} aria-hidden="true" />
+      <ColorMark className={styles.square} color={project.color} />
       <span className={styles.projectName}>{projectDisplayName(project)}</span>
     </>
   );

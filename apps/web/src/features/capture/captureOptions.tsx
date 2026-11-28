@@ -1,5 +1,5 @@
 import { PRIORITIES, PRIORITY_LABELS, type Priority } from '@tracker/shared';
-import { PriorityBars, type DropdownOption } from '../../components';
+import { ColorMark, PriorityBars, type DropdownOption } from '../../components';
 import type { ProjectChoice } from './captureProjects';
 import styles from './CaptureSheet.module.css';
 
@@ -13,5 +13,5 @@ export const projectOptions = (choices: readonly ProjectChoice[]): DropdownOptio
   choices.map((choice) => ({
     value: choice.key,
     label: choice.name,
-    icon: <span className={styles.square} style={{ background: choice.color }} />,
+    icon: <ColorMark className={styles.square} color={choice.color} />,
   }));

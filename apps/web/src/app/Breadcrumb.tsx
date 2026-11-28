@@ -1,7 +1,7 @@
 import clsx from 'clsx';
 import { ChevronRight } from 'lucide-react';
 import { Fragment } from 'react';
-import { Icon } from '../components';
+import { ColorMark, Icon } from '../components';
 import { parentRoute, routePath, useNavigation, type Route } from '../navigation';
 import type { Crumb } from './crumbs';
 import styles from './DesktopHeader.module.css';
@@ -9,12 +9,7 @@ import styles from './DesktopHeader.module.css';
 function CrumbContent({ crumb }: { crumb: Crumb }) {
   return (
     <>
-      {crumb.level === 'project' && (
-        <span
-          className={styles.square}
-          style={crumb.color ? { background: crumb.color } : undefined}
-        />
-      )}
+      {crumb.level === 'project' && <ColorMark className={styles.square} color={crumb.color} />}
       <span className={styles.crumbLabel}>{crumb.label}</span>
     </>
   );

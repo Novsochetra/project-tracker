@@ -27,8 +27,8 @@ UI change keeps them. Values live in `apps/web/src/design/tokens.css`: use a tok
   everything on it raised a step (#1C1C1E cards, #2C2C2E fills); a gray area holding white cards
   (a phone sheet, a board column) raises its cards with the `--grouped-*` tokens. White on a
   color is `--text-on-tint`, tinted text `--accent-text`, focus rings `--focus-ring`. Status and
-  label colors are data: draw them through `markColor` / `chipTextColor`, which keep them
-  readable on dark. Shadows vanish on black, so raised things there also take a hairline.
+  label and project colors are data: draw them through `markColor` (`ColorMark` for a square) /
+  `chipTextColor`, which keep them readable on dark, never as a raw inline style. Shadows vanish on black, so raised things there also take a hairline.
 
 ## Layout and touch
 

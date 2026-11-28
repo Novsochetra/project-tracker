@@ -1,5 +1,6 @@
 import { formatRelative, projectDisplayName, type ProjectSummary } from '@tracker/shared';
 import clsx from 'clsx';
+import { ColorMark } from '../../components/ColorMark';
 import { useIsOpening } from '../../navigation';
 import styles from './ProjectCard.module.css';
 import { ProjectProgressBar, ProjectProgressParts } from './ProjectProgressBar';
@@ -29,7 +30,7 @@ export function ProjectCard(props: ProjectCardProps) {
       onClick={onOpen}
     >
       <span className={styles.head}>
-        <span className={styles.square} style={{ background: project.color }} aria-hidden="true" />
+        <ColorMark className={styles.square} color={project.color} />
         <span className={styles.name}>{projectDisplayName(project)}</span>{' '}
         {!project.hideName && <span className={styles.key}>{project.key}</span>}{' '}
         <span className={styles.updated}>

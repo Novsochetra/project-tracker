@@ -1,5 +1,6 @@
 import clsx from 'clsx';
 import { Fragment } from 'react';
+import { useMarkColor } from '../../appearance';
 import styles from './ProjectCard.module.css';
 import { progressParts, type ProjectProgress } from './projectProgress';
 
@@ -9,6 +10,10 @@ interface ProgressProps {
 }
 
 export function ProjectProgressBar({ progress, readyColor }: ProgressProps) {
+  // The Reviewed status color is data: in the dark appearance it takes markColor's lighter tint,
+  // which keeps 3:1 on the track as the done share's token does.
+  const ready = useMarkColor(readyColor);
+
   return (
     <span className={styles.progress}>
       <span className={styles.track} aria-hidden="true">
@@ -16,7 +21,7 @@ export function ProjectProgressBar({ progress, readyColor }: ProgressProps) {
           <span className={styles.doneFill} style={{ width: `${progress.doneShare}%` }} />
           <span
             className={styles.readyFill}
-            style={{ width: `${progress.readyShare}%`, background: readyColor }}
+            style={{ width: `${progress.readyShare}%`, background: ready }}
           />
         </span>
       </span>{' '}
@@ -28,6 +33,7 @@ export function ProjectProgressBar({ progress, readyColor }: ProgressProps) {
 const DOT_CLASSES = { done: styles.doneDot, ready: styles.readyDot, open: undefined };
 
 export function ProjectProgressParts({ progress, readyColor }: ProgressProps) {
+  const ready = useMarkColor(readyColor);
   const parts = progressParts(progress);
   if (parts.length === 0) return <span className={styles.parts}>No tickets</span>;
 
@@ -40,7 +46,7 @@ export function ProjectProgressParts({ progress, readyColor }: ProgressProps) {
             {DOT_CLASSES[kind] && (
               <span
                 className={clsx(styles.dot, DOT_CLASSES[kind])}
-                style={kind === 'ready' ? { background: readyColor } : undefined}
+                style={kind === 'ready' ? { background: ready } : undefined}
                 aria-hidden="true"
               />
             )}

@@ -2,7 +2,7 @@ import { openNotReviewed, projectDisplayName, type ProjectSummary } from '@track
 import clsx from 'clsx';
 import { ChevronRight } from 'lucide-react';
 import { useState, type ComponentProps } from 'react';
-import { Icon, ListRow } from '../../components';
+import { ColorMark, Icon, ListRow } from '../../components';
 import { useIsOpening } from '../../navigation';
 import styles from './ProjectList.module.css';
 import { descriptionText, riseDelay } from './projectDisplay';
@@ -31,7 +31,7 @@ export function ProjectRow({ project, readyCount, index, onOpen, ...rest }: Proj
       onClick={onOpen}
     >
       <span className={styles.main}>
-        <span className={styles.square} style={{ background: project.color }} aria-hidden="true" />
+        <ColorMark className={styles.square} color={project.color} />
         <span className={styles.text}>
           <span className={styles.titleLine}>
             <span className={styles.name}>{projectDisplayName(project)}</span>{' '}

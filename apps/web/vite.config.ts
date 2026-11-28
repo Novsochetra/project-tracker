@@ -2,6 +2,7 @@ import react from '@vitejs/plugin-react';
 import { defineConfig, type Plugin } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 import { precompress } from './src/build/precompress.ts';
+import { systemDarkFallback } from './src/build/systemDarkFallback.ts';
 
 const apiTarget = process.env.TRACKER_API_URL ?? 'http://localhost:4100';
 
@@ -21,6 +22,7 @@ const devUploadTimeout: Plugin = {
 export default defineConfig({
   plugins: [
     devUploadTimeout,
+    systemDarkFallback(),
     react(),
     VitePWA({
       registerType: 'autoUpdate',

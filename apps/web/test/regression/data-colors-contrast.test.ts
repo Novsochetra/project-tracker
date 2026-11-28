@@ -1,7 +1,11 @@
 import { PROJECT_COLORS, STATUS_COLORS } from '@tracker/shared';
 import { describe, expect, it } from 'vitest';
 import { markColor } from '../../src/appearance';
-import { DARK_MARK_BACKGROUND, DARK_SURFACE } from '../../src/appearance/darkColors';
+import {
+  DARK_CHIP_SURFACE,
+  DARK_MARK_BACKGROUND,
+  DARK_SURFACES,
+} from '../../src/appearance/darkColors';
 import { color, contrast, luminance, rgb, tokenValue } from './contrast';
 
 // WCAG 1.4.11: status glyphs and label dots carry meaning, so they keep 3:1 where they are drawn.
@@ -30,7 +34,12 @@ const ODD_COLORS = ['#000000', '#3A0A0A', '#0B1F4A', '#FFFFFF', '#FFD700'];
 
 describe('regression: status and label colors read in the dark appearance', () => {
   it('computes against the dark tokens it names', () => {
-    expect(DARK_SURFACE).toBe(tokenValue('--surface', 'dark'));
+    expect(DARK_SURFACES).toEqual([
+      tokenValue('--surface', 'dark'),
+      tokenValue('--grouped-surface', 'dark'),
+    ]);
+    const lightest = Math.max(...DARK_SURFACES.map((surface) => luminance(rgb(surface))));
+    expect(luminance(rgb(DARK_CHIP_SURFACE))).toBe(lightest);
     expect(DARK_MARK_BACKGROUND).toBe(tokenValue('--fill-2', 'dark'));
   });
 
