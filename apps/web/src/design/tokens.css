@@ -148,6 +148,7 @@
   /* Menus and popovers (PT-286): a hairline drawn from the text color, so it reads on any
      appearance, under a soft, wide shadow rather than a dark edge. */
   --shadow-menu: 0 12px 40px -8px rgba(0, 0, 0, 0.2), 0 3px 10px rgba(0, 0, 0, 0.06);
+  --menu-bg: var(--surface);
   --menu-line: color-mix(in srgb, var(--ink) 10%, transparent);
   --menu-highlight: var(--fill);
   --menu-pressed: var(--line);
@@ -292,6 +293,14 @@
   --shadow-overlay: 0 0 0 0.5px rgba(255, 255, 255, 0.1), 0 30px 80px rgba(0, 0, 0, 0.6);
   --shadow-toast: 0 0 0 0.5px rgba(255, 255, 255, 0.1), 0 8px 24px rgba(0, 0, 0, 0.5);
   --shadow-knob: 0 1px 3px rgba(0, 0, 0, 0.4);
+
+  /* A menu is raised over its window, as macOS and iOS draw dark menus: a step lighter than the
+     sheet or page it opens on, with its rows' highlight a step lighter again. */
+  --menu-bg: #2c2c2e;
+  --menu-highlight: #3a3a3c;
+  --menu-pressed: #48484a;
+  --shadow-menu: 0 12px 40px -8px rgba(0, 0, 0, 0.6), 0 3px 10px rgba(0, 0, 0, 0.32);
+  --focus-halo: 0 0 0 3px color-mix(in srgb, var(--focus-ring) 40%, transparent);
 }
 
 @media (width < 768px),

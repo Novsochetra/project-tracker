@@ -101,6 +101,9 @@ const RAISED_TEXT_ON: Record<string, Record<string, string>> = {
     '--grouped-fill-2': 'the selected sidebar item',
     '--grouped-thumb': 'the selected segment in a sheet',
     '--grouped-panel': 'a status being edited in a phone sheet',
+    '--menu-bg': 'menu and popover rows',
+    '--menu-highlight': 'the highlighted menu row',
+    '--menu-pressed': 'a pressed menu row',
   },
   '--ink-2': {
     '--page': 'the ticket description',
@@ -112,6 +115,7 @@ const RAISED_TEXT_ON: Record<string, Record<string, string>> = {
     '--grouped-surface': 'property values in a phone sheet',
     '--grouped-control-fill': 'unselected segments in a sheet',
     '--grouped-panel': 'the Color label of a status being edited in a phone sheet',
+    '--menu-bg': "the label picker's empty state",
   },
   '--muted-2': {
     '--page': 'the repository path',
@@ -129,6 +133,8 @@ const RAISED_TEXT_ON: Record<string, Record<string, string>> = {
     '--grouped-control-fill': 'a search field in a sheet',
   },
   '--accent-text': {
+    '--menu-bg': 'menu checks',
+    '--menu-highlight': 'the check on a highlighted menu row',
     '--grouped-bg': 'Close and Cancel on a grouped phone sheet',
     '--grouped-surface': 'tinted choices in a phone sheet’s cards',
   },
@@ -140,6 +146,7 @@ const RAISED_TEXT_ON: Record<string, Record<string, string>> = {
   },
   '--link': {
     '--page': 'links in a description or comment',
+    '--menu-highlight': 'Create “name” highlighted in the label picker',
   },
 };
 
