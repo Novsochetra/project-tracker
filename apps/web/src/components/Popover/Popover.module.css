@@ -6,7 +6,7 @@
 .panel {
   width: 260px;
   max-width: calc(100vw - 16px);
-  padding: 4px;
+  padding: var(--menu-padding);
 }
 
 .item {
@@ -25,6 +25,12 @@
   font-size: var(--size-secondary);
   text-align: left;
   cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background-color var(--duration-press) ease-out;
+}
+
+.item:active {
+  background: var(--menu-pressed);
 }
 
 .danger {
@@ -32,8 +38,8 @@
 }
 
 @media (hover: hover) {
-  .item:hover {
-    background: var(--fill);
+  .item:hover:not(:active) {
+    background: var(--menu-highlight);
   }
 }
 

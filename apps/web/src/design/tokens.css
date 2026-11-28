@@ -99,6 +99,10 @@
   /* Content inside a floating phone sheet: 20px from the screen's edge, as before it floated. */
   --sheet-content-inset: calc(20px - var(--sheet-inset));
   --radius-full: 999px;
+  /* A menu's rows sit --menu-padding inside it with --radius-control, so the corners are
+     concentric: 14 - 4 = 10. */
+  --radius-menu: var(--radius-group);
+  --menu-padding: var(--space-1);
 
   --shadow-raised: 0 3px 8px rgba(0, 0, 0, 0.12), 0 3px 1px rgba(0, 0, 0, 0.04);
   --shadow-floating: 0 8px 24px rgba(20, 20, 26, 0.12);
@@ -106,6 +110,14 @@
   --shadow-overlay: 0 30px 80px rgba(0, 0, 0, 0.22);
   --shadow-toast: 0 8px 24px rgba(20, 20, 26, 0.18);
   --shadow-knob: 0 1px 3px rgba(20, 20, 26, 0.25);
+  /* Menus and popovers (PT-286): a hairline drawn from the text color, so it reads on any
+     appearance, under a soft, wide shadow rather than a dark edge. */
+  --shadow-menu: 0 12px 40px -8px rgba(0, 0, 0, 0.2), 0 3px 10px rgba(0, 0, 0, 0.06);
+  --menu-line: color-mix(in srgb, var(--ink) 10%, transparent);
+  --menu-highlight: var(--fill);
+  --menu-pressed: var(--line);
+  /* A field's focus: a soft halo of the accent, as macOS draws it, not a hard ring. */
+  --focus-halo: 0 0 0 3px color-mix(in srgb, var(--accent) 24%, transparent);
 
   /* A pressed control darkens a little as it shrinks, as UIKit's buttons do. */
   --dim-pressed: 0.88;
@@ -118,6 +130,9 @@
   --duration-rise: 300ms;
   --duration-sheet-in: 340ms;
   --duration-sheet-out: 220ms;
+  /* A menu springs open from its row and leaves faster than it came. */
+  --duration-menu-in: 320ms;
+  --duration-menu-out: 130ms;
   --duration-grow: 700ms;
   --duration-flash: 1400ms;
   --delay-check: 90ms;
@@ -138,6 +153,7 @@
   --floating-button: 56px;
   --dropdown-item: 36px;
   --dropdown-width: 220px;
+  --label-menu-width: 264px;
   --handle-width: 24px;
   --sidebar-width: 240px;
   --panel-width: 300px;

@@ -1,9 +1,12 @@
-import { useCallback, useRef, type KeyboardEvent, type RefObject } from 'react';
-import { placeMenu } from '../../components';
-import dropdown from '../../components/Dropdown/Dropdown.module.css';
-import { FloatingPanel, FloatingPortal, type PlaceFloating } from '../../components/FloatingPanel';
-import { isPhoneNow } from '../../lib/media';
+import { useRef, type KeyboardEvent, type MouseEvent, type RefObject } from 'react';
+import {
+  FloatingPanel,
+  FloatingPortal,
+  placeFloating,
+  type PlaceFloating,
+} from '../../components/FloatingPanel';
 import { LabelPicker } from './LabelPicker';
+import styles from './LabelMenu.module.css';
 import type { LabelPickerInput } from './useLabelPicker';
 
 export interface LabelMenuProps extends LabelPickerInput {
@@ -15,8 +18,6 @@ export interface LabelMenuProps extends LabelPickerInput {
 
 export const PICKER_LABEL = 'Pick labels';
 
-// The dropdown's look, but a ticket has several labels: a pick toggles one and the menu stays
-// open for the next.
 export function LabelMenu(props: LabelMenuProps) {
   return (
     <FloatingPortal open={props.open}>
@@ -25,25 +26,39 @@ export function LabelMenu(props: LabelMenuProps) {
   );
 }
 
-// The field and a Create row sit above and below the labels.
-const EXTRA_ROWS = 2;
+// The field and about three labels: less room than this and the menu covers part of its row.
+const MIN_HEIGHT = 160;
 
-function placeLabelMenu(menu: HTMLElement, anchor: DOMRect, itemCount: number) {
-  const viewport = { width: window.innerWidth, height: window.innerHeight };
-  const spot = placeMenu({ triggerRect: anchor, viewport, itemCount, isPhone: isPhoneNow() });
-  menu.style.width = `${spot.width}px`;
-  menu.style.maxHeight = `${spot.maxHeight}px`;
+// Sized by what it holds, measured, not guessed from a count of rows: a guess left the empty
+// state's two lines cut under the field (PT-286). It may then grow into all the room on its side
+// as typing changes the rows, and the ResizeObserver places it again.
+const placeLabelMenu: PlaceFloating = (anchor, menu, context) => {
+  menu.style.maxHeight = 'none';
+  const size = { width: menu.offsetWidth, height: menu.offsetHeight };
+  const viewport = {
+    width: document.documentElement.clientWidth,
+    height: document.documentElement.clientHeight,
+  };
+  const spot = placeFloating({
+    ...context,
+    anchor,
+    size,
+    viewport,
+    minHeight: Math.min(size.height, MIN_HEIGHT),
+  });
+  menu.style.maxHeight = `${spot.room}px`;
 
   return spot;
-}
+};
 
+// Clicks on the menu's padding or a note leave focus in the field, so typing goes on.
+const keepFieldFocus = (event: MouseEvent) => {
+  if (!(event.target instanceof HTMLInputElement)) event.preventDefault();
+};
+
+// A ticket has several labels: a pick toggles one and the menu stays open for the next.
 function Menu({ open, anchorRef, onClose, ...picker }: LabelMenuProps) {
   const menuRef = useRef<HTMLDivElement>(null);
-  const count = picker.labels.length + EXTRA_ROWS;
-  const place = useCallback<PlaceFloating>(
-    (anchor, menu) => placeLabelMenu(menu, anchor, count),
-    [count],
-  );
   const close = () => {
     anchorRef.current?.focus({ preventScroll: true });
     onClose();
@@ -51,6 +66,7 @@ function Menu({ open, anchorRef, onClose, ...picker }: LabelMenuProps) {
 
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     if (event.key !== 'Escape' && event.key !== 'Tab') return;
+
     // Marked as handled so a parent sheet listening for Escape stays open.
     if (event.key === 'Escape') event.preventDefault();
     event.stopPropagation();
@@ -63,13 +79,14 @@ function Menu({ open, anchorRef, onClose, ...picker }: LabelMenuProps) {
       anchorRef={anchorRef}
       panelRef={menuRef}
       closeLabel="Close menu"
-      place={place}
+      place={placeLabelMenu}
       onClose={close}
       role="dialog"
       aria-label={PICKER_LABEL}
       data-dropdown=""
-      className={dropdown.menu}
+      className={styles.menu}
       onKeyDown={onKeyDown}
+      onMouseDown={keepFieldFocus}
     >
       <LabelPicker layout="list" focusField {...picker} />
     </FloatingPanel>

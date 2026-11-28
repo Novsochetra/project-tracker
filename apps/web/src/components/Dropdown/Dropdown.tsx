@@ -5,11 +5,17 @@ import {
   useLayoutEffect,
   useRef,
   type KeyboardEvent,
+  type PointerEvent,
   type ReactNode,
   type RefObject,
 } from 'react';
 import { isPhoneNow } from '../../lib/media';
-import { FloatingPanel, FloatingPortal, type PlaceFloating } from '../FloatingPanel';
+import {
+  FloatingPanel,
+  FloatingPortal,
+  type PlaceContext,
+  type PlaceFloating,
+} from '../FloatingPanel';
 import { Icon } from '../Icon';
 import styles from './Dropdown.module.css';
 import { placeMenu } from './placeMenu';
@@ -52,7 +58,7 @@ function Menu<T extends string>({
   const menuRef = useRef<HTMLDivElement>(null);
   const itemCount = options.length;
   const place = useCallback<PlaceFloating>(
-    (anchor, menu) => position(menu, anchor, itemCount),
+    (anchor, menu, context) => position(menu, anchor, itemCount, context),
     [itemCount],
   );
 
@@ -119,6 +125,7 @@ function Menu<T extends string>({
           tabIndex={-1}
           title={option.title}
           className={clsx('ring-inside', styles.option)}
+          onPointerMove={focusUnderMouse}
           onClick={() => choose(option.value)}
         >
           {option.icon !== undefined && <span className={styles.optionIcon}>{option.icon}</span>}
@@ -130,17 +137,26 @@ function Menu<T extends string>({
   );
 }
 
-function position(menu: HTMLElement, anchor: DOMRect, itemCount: number) {
+function position(menu: HTMLElement, anchor: DOMRect, itemCount: number, context: PlaceContext) {
   const place = placeMenu({
     triggerRect: anchor,
     viewport: { width: window.innerWidth, height: window.innerHeight },
     itemCount,
     isPhone: isPhoneNow(),
+    ...context,
   });
   menu.style.width = `${place.width}px`;
   menu.style.maxHeight = `${place.maxHeight}px`;
 
   return place;
+}
+
+// A mouse moving over a row takes the highlight with it, as only the focused row is highlighted.
+function focusUnderMouse(event: PointerEvent<HTMLElement>) {
+  const row = event.currentTarget;
+  if (event.pointerType === 'mouse' && row !== document.activeElement) {
+    row.focus({ preventScroll: true });
+  }
 }
 
 function optionButtons(menu: HTMLElement): HTMLElement[] {

@@ -14,8 +14,9 @@ export interface PopoverProps {
 }
 
 // SPEC §5.4: right-aligned with its button and 6px below it.
-const placeMenu: PlaceFloating = (anchor, panel) =>
+const placeMenu: PlaceFloating = (anchor, panel, context) =>
   placeFloating({
+    ...context,
     anchor,
     size: { width: panel.offsetWidth, height: panel.offsetHeight },
     viewport: {

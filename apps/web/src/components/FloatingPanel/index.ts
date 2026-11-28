@@ -1,4 +1,9 @@
 export { useHoldCloseOnShow } from './closeHold';
-export { type PlaceFloating } from './floatingHooks';
+export { type PlaceContext, type PlaceFloating } from './floatingHooks';
 export { FloatingPanel, FloatingPortal, type FloatingPanelProps } from './FloatingPanel';
-export { placeFloating, type AnchorRect, type FloatingPlacement } from './placeFloating';
+export {
+  placeFloating,
+  type AnchorRect,
+  type FloatingPlacement,
+  type FloatingSide,
+} from './placeFloating';

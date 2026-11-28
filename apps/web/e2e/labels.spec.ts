@@ -162,8 +162,8 @@ test.describe('labels', () => {
     const picker = page.getByRole('dialog', { name: 'Pick labels' });
     await expect(picker).toBeVisible();
     await expect(picker).toContainText('No labels yet');
-    await picker.getByRole('searchbox', { name: 'Find or create a label' }).fill('v1.4');
-    if (phone) await picker.getByRole('button', { name: 'Create “v1.4”' }).click();
+    await picker.getByRole('combobox', { name: 'Find or create a label' }).fill('v1.4');
+    if (phone) await picker.getByRole('option', { name: 'Create “v1.4”' }).click();
     else await page.keyboard.press('Enter');
     const release = picker.getByRole('option', { name: 'v1.4' });
     await expect(release).toHaveAttribute('aria-selected', 'true');

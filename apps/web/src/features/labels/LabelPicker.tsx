@@ -1,11 +1,12 @@
-import { LABEL_NAME_MAX, type Label } from '@tracker/shared';
+import { LABEL_NAME_MAX } from '@tracker/shared';
 import clsx from 'clsx';
-import { Check, Pencil, Plus } from 'lucide-react';
-import { useLayoutEffect, useRef, type KeyboardEvent } from 'react';
+import { Tag } from 'lucide-react';
+import { useId, useLayoutEffect, useRef } from 'react';
 import { Icon } from '../../components';
 import { SearchField } from '../../components/SearchField';
-import { LabelDot } from './LabelDot';
-import { canAdd, LIMIT_MESSAGE } from './pickerLogic';
+import { LabelPickerList } from './LabelPickerList';
+import { optionId } from './pickerItems';
+import { LIMIT_MESSAGE } from './pickerLogic';
 import styles from './LabelPicker.module.css';
 import { useLabelPicker, type LabelPickerInput } from './useLabelPicker';
 
@@ -21,108 +22,67 @@ export interface LabelPickerProps extends LabelPickerInput {
 export const PICKER_FIELD_LABEL = 'Find or create a label';
 
 // One picker for the desktop menu (a list) and the phone sheet (chips a thumb can hit): type to
-// narrow the labels, or to make a new one, like a release's "v1.4", and put it on the ticket.
+// narrow the labels, or to make a new one, like a release's "v1.4", and put it on the ticket. The
+// field is a combobox that keeps focus while the arrows move through the rows below it.
 export function LabelPicker({ layout, focusField = false, onManage, ...input }: LabelPickerProps) {
-  const rootRef = useRef<HTMLDivElement>(null);
   const fieldRef = useRef<HTMLInputElement>(null);
-  const picker = useLabelPicker(input, rootRef);
+  const listId = useId();
+  const picker = useLabelPicker(input, onManage);
   useLayoutEffect(() => {
     if (focusField) fieldRef.current?.focus({ preventScroll: true });
   }, [focusField]);
+
   const empty = input.labels.length === 0 && !picker.query.trim();
+  const listed = picker.items.length > 0;
+  const matched = picker.items.some((item) => item.kind !== 'manage');
+  const activeId = picker.active ? optionId(listId, picker.active.key) : undefined;
 
   return (
-    <div ref={rootRef} className={clsx(styles.picker, styles[layout])}>
-      <div className={styles.fieldRow}>
-        <SearchField
-          ref={fieldRef}
-          aria-label={PICKER_FIELD_LABEL}
-          placeholder={empty ? 'New label, like v1.4' : 'Find or create…'}
-          enterKeyHint="done"
-          maxLength={LABEL_NAME_MAX}
-          className={styles.field}
-          value={picker.query}
-          data-picker-item=""
-          onKeyDown={picker.onKeyDown}
-          onChange={(event) => picker.setQuery(event.currentTarget.value)}
-        />
-      </div>
-      {picker.matches.length > 0 && (
-        <div
-          role="listbox"
-          aria-label="Labels"
-          aria-multiselectable="true"
-          className={styles.options}
-        >
-          {picker.matches.map((label) => (
-            <LabelOption
-              key={label.id}
-              label={label}
-              selected={input.value.includes(label.id)}
-              disabled={!canAdd(input.value, label.id)}
-              onToggle={() => picker.toggle(label.id)}
-              onKeyDown={picker.onKeyDown}
-            />
-          ))}
-        </div>
-      )}
-      {picker.newName && (
-        <button
-          type="button"
-          tabIndex={-1}
-          data-picker-item=""
-          className={clsx('ring-inside', styles.create)}
-          disabled={picker.creating}
-          onKeyDown={picker.onKeyDown}
-          onClick={() => void picker.addNew(picker.newName ?? '')}
-        >
-          <Icon icon={Plus} size={16} />
-          <span className={styles.createName}>Create “{picker.newName}”</span>
-        </button>
-      )}
-      {empty && <p className={styles.note}>No labels yet. Type a name to make the first one.</p>}
+    <div className={clsx(styles.picker, styles[layout])}>
+      <SearchField
+        ref={fieldRef}
+        role="combobox"
+        aria-label={PICKER_FIELD_LABEL}
+        aria-autocomplete="list"
+        aria-expanded={listed}
+        aria-controls={listed ? listId : undefined}
+        aria-activedescendant={activeId}
+        placeholder={empty ? 'New label, like v1.4' : 'Find or create…'}
+        enterKeyHint="done"
+        maxLength={LABEL_NAME_MAX}
+        filled
+        className={styles.field}
+        value={picker.query}
+        onKeyDown={picker.onKeyDown}
+        onChange={(event) => picker.setQuery(event.currentTarget.value)}
+        onClear={() => picker.setQuery('')}
+      />
       {picker.full && <p className={styles.note}>{LIMIT_MESSAGE}</p>}
-      {onManage && input.labels.length > 0 && (
-        <button
-          type="button"
-          tabIndex={-1}
-          data-picker-item=""
-          className={clsx('ring-inside', styles.manage)}
-          onKeyDown={picker.onKeyDown}
-          onClick={onManage}
-        >
-          <Icon icon={Pencil} size={14} />
-          Edit labels
-        </button>
+      {!empty && !matched && <p className={styles.note}>No labels match.</p>}
+      {listed && (
+        <LabelPickerList
+          id={listId}
+          items={picker.items}
+          value={input.value}
+          active={picker.active}
+          creating={picker.creating}
+          onActivate={picker.activate}
+          onPoint={picker.point}
+        />
       )}
+      {empty && <NoLabels />}
     </div>
   );
 }
 
-interface LabelOptionProps {
-  label: Label;
-  selected: boolean;
-  disabled: boolean;
-  onToggle: () => void;
-  onKeyDown: (event: KeyboardEvent<HTMLElement>) => void;
-}
-
-function LabelOption({ label, selected, disabled, onToggle, onKeyDown }: LabelOptionProps) {
+// Laid out like iOS's empty states: a symbol, a title and a line of help. In the flow under the
+// field, never in a scroller under it, so it can't be cut (PT-286).
+function NoLabels() {
   return (
-    <button
-      type="button"
-      role="option"
-      aria-selected={selected}
-      aria-disabled={disabled || undefined}
-      tabIndex={-1}
-      data-picker-item=""
-      className={clsx('ring-inside', styles.option)}
-      onClick={onToggle}
-      onKeyDown={onKeyDown}
-    >
-      <LabelDot color={label.color} />
-      <span className={styles.name}>{label.name}</span>
-      {selected && <Icon icon={Check} size={16} className={styles.check} />}
-    </button>
+    <div className={styles.empty}>
+      <Icon icon={Tag} size={20} className={styles.emptyIcon} />
+      <p className={styles.emptyTitle}>No labels yet</p>
+      <p className={styles.emptyText}>Type a name to make the first one.</p>
+    </div>
   );
 }

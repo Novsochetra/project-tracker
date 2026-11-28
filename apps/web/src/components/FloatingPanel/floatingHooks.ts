@@ -1,7 +1,7 @@
-import { useEffect, useLayoutEffect, useState, type RefObject } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, type RefObject } from 'react';
 import { CLICK_SHIELD_MS } from '../../lib/clickShield';
 import { useLatest } from '../../lib/useLatest';
-import type { FloatingPlacement } from './placeFloating';
+import type { FloatingPlacement, FloatingSide, VerticalBounds } from './placeFloating';
 
 export interface FloatingPresence {
   mounted: boolean;
@@ -36,7 +36,20 @@ export function useFloatingPresence(open: boolean): FloatingPresence {
 
 export type PanelPosition = Pick<FloatingPlacement, 'top' | 'left' | 'up' | 'originX'>;
 
-export type PlaceFloating = (anchor: DOMRect, panel: HTMLElement) => PanelPosition;
+export interface PlaceContext {
+  container: VerticalBounds | undefined;
+  side: FloatingSide | undefined;
+}
+
+export type PlaceFloating = (
+  anchor: DOMRect,
+  panel: HTMLElement,
+  context: PlaceContext,
+) => PanelPosition;
+
+// The sheet a row sits in, which its panel stays inside where it fits.
+const containerOf = (anchor: HTMLElement): DOMRect | undefined =>
+  anchor.closest('[role="dialog"]')?.getBoundingClientRect();
 
 export function useFloatingPlacement(
   frameRef: RefObject<HTMLElement | null>,
@@ -44,13 +57,17 @@ export function useFloatingPlacement(
   anchorRef: RefObject<HTMLElement | null>,
   place: PlaceFloating,
 ) {
+  const sideRef = useRef<FloatingSide | undefined>(undefined);
   useLayoutEffect(() => {
     const apply = () => {
       const frame = frameRef.current;
       const panel = panelRef.current;
       const anchor = anchorRef.current;
       if (!frame || !panel || !anchor) return;
-      const placement = place(anchor.getBoundingClientRect(), panel);
+
+      const context = { container: containerOf(anchor), side: sideRef.current };
+      const placement = place(anchor.getBoundingClientRect(), panel, context);
+      sideRef.current = placement.up ? 'up' : 'down';
       frame.style.top = `${placement.top}px`;
       frame.style.left = `${placement.left}px`;
       panel.style.transformOrigin = `${placement.originX}px ${placement.up ? '100%' : '0'}`;
