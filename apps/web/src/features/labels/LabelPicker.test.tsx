@@ -164,4 +164,11 @@ describe('the label picker menu', () => {
     await user.keyboard('{ArrowUp}{Enter}');
     expect(onManage).toHaveBeenCalledTimes(1);
   });
+
+  it('offers Edit labels only once the project has a label', () => {
+    setup([], vi.fn());
+    expect(screen.queryByRole('option', { name: 'Edit labels' })).toBeNull();
+    expect(screen.queryByRole('listbox')).toBeNull();
+    expect(screen.getByText('No labels yet')).toBeInTheDocument();
+  });
 });

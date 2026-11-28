@@ -162,17 +162,35 @@
    less, so its corners stay concentric with the menu's. */
 .list .field {
   width: calc(100% - 4px);
-  margin: 2px 2px 0;
+  margin: 2px;
   border-radius: calc(var(--radius-control) - 2px);
 }
 
-/* Above its row the field comes last, next to the row (LabelMenu). */
+/* Above its row the field comes last, next to the row (LabelMenu). Only the picker's own parts
+   swap: inside the rows the labels still come first and Create and Edit labels after them, under
+   their hairline, so the actions are the menu's foot below the row and sit by the field above it. */
 .fieldLast {
   flex-direction: column-reverse;
 }
 
-.list.fieldLast .field {
-  margin: 0 2px 2px;
+/* A menu's separator between the field and the rows, on the field's side, so a row cut by the
+   scroll ends at a line rather than against the field. */
+.list .rows::before,
+.list.fieldLast .rows::after {
+  content: '';
+  flex: none;
+  height: 1px;
+  /* 2px more on the field's side, so the field's focus halo clears it. */
+  margin: 2px 10px var(--menu-padding);
+  background: var(--menu-line);
+}
+
+.list.fieldLast .rows::before {
+  content: none;
+}
+
+.list.fieldLast .rows::after {
+  margin: var(--menu-padding) 10px 2px;
 }
 
 .list .option {

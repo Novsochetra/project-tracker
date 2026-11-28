@@ -39,8 +39,9 @@ export function LabelMenu(props: LabelMenuProps) {
 const MIN_HEIGHT = 160;
 
 // Sized by what it holds, measured, not guessed from a count of rows: a guess left the empty
-// state's two lines cut under the field (PT-286). It may then grow into all the room on its side
-// as typing changes the rows, and the ResizeObserver places it again.
+// state's two lines cut under the field (PT-286). Its max-height is the room placement gives it
+// on its side (inside the sheet where it fits), so typing may grow it up to that, and the
+// ResizeObserver places it again; the list itself shows 7.5 labels at most.
 function placeLabelMenu(anchor: DOMRect, menu: HTMLElement, context: PlaceContext) {
   menu.style.maxHeight = 'none';
   const exactHeight = parseFloat(getComputedStyle(menu).height);

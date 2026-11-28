@@ -69,7 +69,9 @@ export function useLabelPicker(input: LabelPickerInput, onManage: (() => void) |
 
   const full = isFull(value);
   const newName = full ? null : creatableName(labels, query);
-  const items = pickerItems(matchingLabels(labels, query), newName, onManage !== undefined);
+  // Edit labels only once there is a label to edit; before, the empty state says what to do.
+  const manageable = onManage !== undefined && labels.length > 0;
+  const items = pickerItems(matchingLabels(labels, query), newName, manageable);
   const active = shownActive(items, picked, enterKey(labels, query, items));
 
   const setQuery = (next: string) => {
