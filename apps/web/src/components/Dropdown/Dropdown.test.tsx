@@ -1,4 +1,4 @@
-import { act, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useState } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -153,5 +153,24 @@ describe('Dropdown', () => {
     now.mockReturnValue(5000);
     act(() => void screen.getByRole('listbox').dispatchEvent(new Event('scroll')));
     expect(screen.getByRole('listbox')).toBeInTheDocument();
+  });
+
+  it('highlights the row under the mouse, and lets go of it as the mouse leaves', async () => {
+    await openMenu();
+    const menu = screen.getByRole('listbox', { name: 'Status' });
+    const done = screen.getByRole('option', { name: 'Done' });
+    fireEvent.pointerMove(done, { pointerType: 'mouse' });
+    expect(done).toHaveFocus();
+    fireEvent.pointerLeave(menu, { pointerType: 'mouse' });
+    expect(menu).toHaveFocus();
+  });
+
+  it('keeps the row the keys reached after the mouse leaves', async () => {
+    const { user } = await openMenu();
+    const menu = screen.getByRole('listbox', { name: 'Status' });
+    fireEvent.pointerMove(screen.getByRole('option', { name: 'To do' }), { pointerType: 'mouse' });
+    await user.keyboard('{ArrowDown}');
+    fireEvent.pointerLeave(menu, { pointerType: 'mouse' });
+    expect(screen.getByRole('option', { name: 'In progress' })).toHaveFocus();
   });
 });

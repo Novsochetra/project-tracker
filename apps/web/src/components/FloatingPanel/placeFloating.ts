@@ -56,36 +56,90 @@ function roomIn(bounds: VerticalBounds, anchor: AnchorRect, gap: number, edge: n
   };
 }
 
-// Only the part of the sheet on screen counts.
-const visiblePart = (container: VerticalBounds, screenHeight: number): VerticalBounds => ({
-  top: Math.max(container.top, 0),
-  bottom: Math.min(container.bottom, screenHeight),
-});
+const along = (room: Room, side: FloatingSide): number => (side === 'up' ? room.above : room.below);
+
+// Where it can, a panel keeps this far inside the sheet its row sits in.
+const SHEET_INSET = 6;
+
+export interface Rooms {
+  screen: Room;
+  // In the sheet, up to its edge and up to SHEET_INSET from it; the screen's when there is none.
+  flush: Room;
+  inset: Room;
+  sheet: VerticalBounds | undefined;
+}
+
+function roomsFor(
+  anchor: AnchorRect,
+  screenHeight: number,
+  gap: number,
+  container: VerticalBounds | undefined,
+): Rooms {
+  const screen = roomIn({ top: 0, bottom: screenHeight }, anchor, gap, EDGE);
+  if (!container) return { screen, flush: screen, inset: screen, sheet: undefined };
+
+  // Only the part of the sheet on screen counts.
+  const sheet = {
+    top: Math.max(container.top, 0),
+    bottom: Math.min(container.bottom, screenHeight),
+  };
+
+  return {
+    screen,
+    flush: roomIn(sheet, anchor, gap, 0),
+    inset: roomIn(sheet, anchor, gap, SHEET_INSET),
+    sheet,
+  };
+}
 
 export interface SideInput {
   height: number;
   minHeight: number;
-  screen: Room;
-  sheet: Room;
+  rooms: Rooms;
   side: FloatingSide | undefined;
 }
 
-// Below when it fits in the sheet, else above in the sheet, else the same on screen; when neither
-// side fits even on screen, the roomier side wins and the panel scrolls.
-export function pickSide({ height, minHeight, screen, sheet, side }: SideInput): boolean {
-  if (side !== undefined && minHeight <= (side === 'up' ? screen.above : screen.below)) {
-    return side === 'up';
+// Whole in the sheet, below then above; else shrunk to the sheet on its roomier side, where it may
+// scroll; else whole on screen, below then above; else the screen's roomier side. Measured to the
+// sheet's own edge, as an inset there sent a status menu that fits below up over the sheet's title.
+export function pickSide({ height, minHeight, rooms, side }: SideInput): FloatingSide {
+  const { screen, flush, inset } = rooms;
+  if (side !== undefined && minHeight <= along(screen, side)) return side;
+
+  if (height <= flush.below) return 'down';
+
+  if (height <= flush.above) return 'up';
+
+  const roomier = inset.above > inset.below ? 'up' : 'down';
+  if (rooms.sheet && minHeight <= along(inset, roomier)) return roomier;
+
+  if (height <= screen.below) return 'down';
+
+  if (height <= screen.above) return 'up';
+
+  return screen.above > screen.below ? 'up' : 'down';
+}
+
+function roomOn(side: FloatingSide, rooms: Rooms, height: number, minHeight: number): number {
+  if (rooms.sheet && height <= along(rooms.flush, side)) return along(rooms.flush, side);
+
+  if (rooms.sheet && minHeight <= along(rooms.inset, side)) return along(rooms.inset, side);
+
+  return Math.max(minHeight, along(rooms.screen, side));
+}
+
+// A panel that fits its sheet only flush with the edge moves toward its row to keep SHEET_INSET
+// from the edge: by the row's 4px gap and 2px over the row at most.
+const NUDGE = 6;
+
+function nudgedInto(sheet: VerticalBounds, top: number, height: number, up: boolean): number {
+  if (up) {
+    return top >= sheet.top ? Math.min(top + NUDGE, Math.max(top, sheet.top + SHEET_INSET)) : top;
   }
 
-  if (height <= sheet.below) return false;
+  const limit = sheet.bottom - SHEET_INSET - height;
 
-  if (height <= sheet.above) return true;
-
-  if (height <= screen.below) return false;
-
-  if (height <= screen.above) return true;
-
-  return screen.above > screen.below;
+  return top + height <= sheet.bottom ? Math.max(top - NUDGE, Math.min(top, limit)) : top;
 }
 
 export function placeFloating({
@@ -100,19 +154,16 @@ export function placeFloating({
 }: PlaceFloatingInput): FloatingPlacement {
   const left = clamp(anchor.right - inset - size.width, EDGE, viewport.width - EDGE - size.width);
 
-  const screen = roomIn({ top: 0, bottom: viewport.height }, anchor, gap, EDGE);
-  // Up to the sheet's own edge: an inset there too sent a status menu that fits below up over the
-  // sheet's title.
-  const sheet = container
-    ? roomIn(visiblePart(container, viewport.height), anchor, gap, 0)
-    : screen;
-  const up = pickSide({ height: size.height, minHeight, screen, sheet, side });
-  const room = Math.max(minHeight, up ? screen.above : screen.below);
+  const rooms = roomsFor(anchor, viewport.height, gap, container);
+  const taken = pickSide({ height: size.height, minHeight, rooms, side });
+  const room = roomOn(taken, rooms, size.height, minHeight);
   const height = Math.min(size.height, room);
+  const up = taken === 'up';
 
   const wanted = up ? anchor.top - gap - height : anchor.bottom + gap;
+  const nudged = rooms.sheet ? nudgedInto(rooms.sheet, wanted, height, up) : wanted;
   // A panel that can't shrink enough covers part of its row rather than leave the screen.
-  const top = clamp(wanted, EDGE, viewport.height - EDGE - height);
+  const top = clamp(nudged, EDGE, viewport.height - EDGE - height);
 
   return {
     top: Math.round(top),

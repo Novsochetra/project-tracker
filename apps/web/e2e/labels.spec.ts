@@ -207,6 +207,34 @@ test.describe('labels', () => {
     await shot(page, 'release-filtered');
   });
 
+  test('the label picker’s field stays put while typing above New ticket’s last row', async ({
+    page,
+    api,
+  }, info) => {
+    test.skip(isPhone(info.project.name), 'Phones pick labels in a sheet');
+    await seedProject(api, 'Mobile app', 'MOB');
+    await page.goto('/p/MOB');
+    await page
+      .getByRole('button', { name: /^New ticket/ })
+      .first()
+      .click();
+    const sheet = page.getByRole('dialog', { name: 'New ticket' });
+    await sheet.getByRole('button', { name: /^Labels/ }).click();
+    const picker = page.getByRole('dialog', { name: 'Pick labels' });
+    const field = picker.getByRole('combobox', { name: 'Find or create a label' });
+    await expect(picker).toContainText('No labels yet');
+    await settled(picker);
+    const opened = (await field.boundingBox())!;
+    const sheetBox = (await sheet.boundingBox())!;
+    const pickerBox = (await picker.boundingBox())!;
+    expect(pickerBox.y).toBeGreaterThanOrEqual(sheetBox.y);
+    expect(pickerBox.y + pickerBox.height).toBeLessThanOrEqual(sheetBox.y + sheetBox.height);
+    await page.keyboard.type('v1.4');
+    await expect(picker.getByRole('option', { name: 'Create “v1.4”' })).toBeVisible();
+    await settled(picker);
+    expect((await field.boundingBox())!.y).toBe(opened.y);
+  });
+
   test('three swipe actions open past their width, and only a longer drag picks Status', async ({
     page,
     api,

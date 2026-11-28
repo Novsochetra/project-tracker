@@ -15,6 +15,8 @@ export type LabelPickerLayout = 'list' | 'chips';
 export interface LabelPickerProps extends LabelPickerInput {
   layout: LabelPickerLayout;
   focusField?: boolean;
+  // A menu above its row puts the field last, next to the row (LabelMenu).
+  fieldLast?: boolean;
   // Renaming, recoloring and deleting stay in the Labels sheet; the picker only links to it.
   onManage?: (() => void) | undefined;
 }
@@ -24,7 +26,13 @@ export const PICKER_FIELD_LABEL = 'Find or create a label';
 // One picker for the desktop menu (a list) and the phone sheet (chips a thumb can hit): type to
 // narrow the labels, or to make a new one, like a release's "v1.4", and put it on the ticket. The
 // field is a combobox that keeps focus while the arrows move through the rows below it.
-export function LabelPicker({ layout, focusField = false, onManage, ...input }: LabelPickerProps) {
+export function LabelPicker({
+  layout,
+  focusField = false,
+  fieldLast = false,
+  onManage,
+  ...input
+}: LabelPickerProps) {
   const fieldRef = useRef<HTMLInputElement>(null);
   const listId = useId();
   const picker = useLabelPicker(input, onManage);
@@ -38,7 +46,11 @@ export function LabelPicker({ layout, focusField = false, onManage, ...input }: 
   const activeId = picker.active ? optionId(listId, picker.active.key) : undefined;
 
   return (
-    <div className={clsx(styles.picker, styles[layout])}>
+    // Reversed by CSS, not in the DOM: moving the focused field in the DOM would blur it.
+    <div
+      className={clsx(styles.picker, styles[layout], fieldLast && styles.fieldLast)}
+      data-field={fieldLast ? 'last' : 'first'}
+    >
       <SearchField
         ref={fieldRef}
         role="combobox"

@@ -136,6 +136,9 @@
   flex-direction: column;
   flex: 0 1 auto;
   min-height: 0;
+  /* Seven and a half rows at most: the half row shows that more scroll, and a long list stays a
+     menu, clear of New ticket's title bar above its last row, not a page over it. */
+  max-height: calc(var(--dropdown-item) * 7.5);
   overflow-y: auto;
   overscroll-behavior: contain;
 }
@@ -161,6 +164,15 @@
   width: calc(100% - 4px);
   margin: 2px 2px 0;
   border-radius: calc(var(--radius-control) - 2px);
+}
+
+/* Above its row the field comes last, next to the row (LabelMenu). */
+.fieldLast {
+  flex-direction: column-reverse;
+}
+
+.list.fieldLast .field {
+  margin: 0 2px 2px;
 }
 
 .list .option {

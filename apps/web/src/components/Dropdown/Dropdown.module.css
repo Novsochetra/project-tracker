@@ -25,10 +25,16 @@
   transition: background-color var(--duration-press) ease-out;
 }
 
-/* As in Apple's menus one row is highlighted, the one the pointer or the arrows are on (a hover
-   moves focus), and the accent check alone marks the value. */
-.option:focus {
+/* As in Apple's menus one row is highlighted, the one under the pointer or the one the keys
+   reached, and the accent check alone marks the value (hoverFocus.ts). */
+.option:focus-visible {
   background: var(--menu-highlight);
+}
+
+@media (hover: hover) {
+  .option:hover {
+    background: var(--menu-highlight);
+  }
 }
 
 .option:active {

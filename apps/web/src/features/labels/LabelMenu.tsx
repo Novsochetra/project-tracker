@@ -1,12 +1,21 @@
-import { useRef, type KeyboardEvent, type MouseEvent, type RefObject } from 'react';
+import {
+  useCallback,
+  useRef,
+  useState,
+  type KeyboardEvent,
+  type MouseEvent,
+  type RefObject,
+} from 'react';
 import {
   FloatingPanel,
   FloatingPortal,
   placeFloating,
+  type PlaceContext,
   type PlaceFloating,
 } from '../../components/FloatingPanel';
 import { LabelPicker } from './LabelPicker';
 import styles from './LabelMenu.module.css';
+import { steadyPlacement, type OpenedAt } from './steadyPlacement';
 import type { LabelPickerInput } from './useLabelPicker';
 
 export interface LabelMenuProps extends LabelPickerInput {
@@ -32,8 +41,9 @@ const MIN_HEIGHT = 160;
 // Sized by what it holds, measured, not guessed from a count of rows: a guess left the empty
 // state's two lines cut under the field (PT-286). It may then grow into all the room on its side
 // as typing changes the rows, and the ResizeObserver places it again.
-const placeLabelMenu: PlaceFloating = (anchor, menu, context) => {
+function placeLabelMenu(anchor: DOMRect, menu: HTMLElement, context: PlaceContext) {
   menu.style.maxHeight = 'none';
+  const exactHeight = parseFloat(getComputedStyle(menu).height);
   const size = { width: menu.offsetWidth, height: menu.offsetHeight };
   const viewport = {
     width: document.documentElement.clientWidth,
@@ -48,8 +58,30 @@ const placeLabelMenu: PlaceFloating = (anchor, menu, context) => {
   });
   menu.style.maxHeight = `${spot.room}px`;
 
-  return spot;
-};
+  // Its exact height, not the rounded one, so the field's edge stays on the same fraction of a
+  // pixel as the rows change (steadyPlacement).
+  return { ...spot, height: Math.min(exactHeight || size.height, spot.room) };
+}
+
+// Above its row the field comes last, next to the row, so the menu grows and shrinks upward as
+// typing changes its rows while the field stays put.
+function useSteadyPlace() {
+  const [up, setUp] = useState(false);
+  const openedRef = useRef<OpenedAt | null>(null);
+  const place = useCallback<PlaceFloating>((anchor, menu, context) => {
+    const steady = steadyPlacement(
+      placeLabelMenu(anchor, menu, context),
+      anchor.top,
+      openedRef.current,
+    );
+    openedRef.current = steady.opened;
+    setUp(steady.placement.up);
+
+    return steady.placement;
+  }, []);
+
+  return { up, place };
+}
 
 // Clicks on the menu's padding or a note leave focus in the field, so typing goes on.
 const keepFieldFocus = (event: MouseEvent) => {
@@ -59,6 +91,7 @@ const keepFieldFocus = (event: MouseEvent) => {
 // A ticket has several labels: a pick toggles one and the menu stays open for the next.
 function Menu({ open, anchorRef, onClose, ...picker }: LabelMenuProps) {
   const menuRef = useRef<HTMLDivElement>(null);
+  const { up, place } = useSteadyPlace();
   const close = () => {
     anchorRef.current?.focus({ preventScroll: true });
     onClose();
@@ -79,7 +112,7 @@ function Menu({ open, anchorRef, onClose, ...picker }: LabelMenuProps) {
       anchorRef={anchorRef}
       panelRef={menuRef}
       closeLabel="Close menu"
-      place={placeLabelMenu}
+      place={place}
       onClose={close}
       role="dialog"
       aria-label={PICKER_LABEL}
@@ -88,7 +121,7 @@ function Menu({ open, anchorRef, onClose, ...picker }: LabelMenuProps) {
       onKeyDown={onKeyDown}
       onMouseDown={keepFieldFocus}
     >
-      <LabelPicker layout="list" focusField {...picker} />
+      <LabelPicker layout="list" focusField fieldLast={up} {...picker} />
     </FloatingPanel>
   );
 }

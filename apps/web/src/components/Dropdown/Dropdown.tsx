@@ -5,7 +5,6 @@ import {
   useLayoutEffect,
   useRef,
   type KeyboardEvent,
-  type PointerEvent,
   type ReactNode,
   type RefObject,
 } from 'react';
@@ -18,6 +17,7 @@ import {
 } from '../FloatingPanel';
 import { Icon } from '../Icon';
 import styles from './Dropdown.module.css';
+import { useHoverFocus } from './hoverFocus';
 import { placeMenu } from './placeMenu';
 
 export interface DropdownOption<T extends string = string> {
@@ -56,6 +56,7 @@ function Menu<T extends string>({
   onClose,
 }: DropdownProps<T>) {
   const menuRef = useRef<HTMLDivElement>(null);
+  const hover = useHoverFocus(menuRef);
   const itemCount = options.length;
   const place = useCallback<PlaceFloating>(
     (anchor, menu, context) => position(menu, anchor, itemCount, context),
@@ -79,6 +80,7 @@ function Menu<T extends string>({
   };
 
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    hover.onKey();
     const buttons = menuRef.current ? optionButtons(menuRef.current) : [];
     const index = buttons.findIndex((button) => button === document.activeElement);
     if (event.key === 'Escape' || event.key === 'Tab') {
@@ -115,6 +117,7 @@ function Menu<T extends string>({
       data-dropdown=""
       className={styles.menu}
       onKeyDown={onKeyDown}
+      onPointerLeave={hover.onMenuPointerLeave}
     >
       {options.map((option) => (
         <button
@@ -125,7 +128,7 @@ function Menu<T extends string>({
           tabIndex={-1}
           title={option.title}
           className={clsx('ring-inside', styles.option)}
-          onPointerMove={focusUnderMouse}
+          onPointerMove={hover.onRowPointerMove}
           onClick={() => choose(option.value)}
         >
           {option.icon !== undefined && <span className={styles.optionIcon}>{option.icon}</span>}
@@ -149,14 +152,6 @@ function position(menu: HTMLElement, anchor: DOMRect, itemCount: number, context
   menu.style.maxHeight = `${place.maxHeight}px`;
 
   return place;
-}
-
-// A mouse moving over a row takes the highlight with it, as only the focused row is highlighted.
-function focusUnderMouse(event: PointerEvent<HTMLElement>) {
-  const row = event.currentTarget;
-  if (event.pointerType === 'mouse' && row !== document.activeElement) {
-    row.focus({ preventScroll: true });
-  }
 }
 
 function optionButtons(menu: HTMLElement): HTMLElement[] {

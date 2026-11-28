@@ -105,12 +105,32 @@ describe('placeFloating in a sheet', () => {
     expect(place).toMatchObject({ up: false, top: 313 + 44 + 4 });
   });
 
-  it('may reach the sheet’s edge, so a status menu that fits below stays there', () => {
+  it('keeps a status menu that fits below there, moved up to stay 6px inside the sheet', () => {
     const statuses = { width: 220, height: 5 * 36 + 10 };
     const statusRow = row(313);
     const place = placeFloating({ anchor: statusRow, size: statuses, viewport, container: sheet });
-    expect(place).toMatchObject({ up: false, top: 361 });
-    expect(place.top + place.height).toBeLessThanOrEqual(sheet.bottom);
+    expect(place).toMatchObject({ up: false, top: sheet.bottom - 6 - statuses.height });
+    // It may cover 2px of its row, never more.
+    expect(place.top).toBeGreaterThanOrEqual(statusRow.bottom - 2);
+  });
+
+  it('stays 4px off its row when it hangs past the sheet anyway', () => {
+    const calendar = { width: 392, height: 420 };
+    const place = placeFloating({ anchor: row(300), size: calendar, viewport, container: sheet });
+    expect(place).toMatchObject({ up: false, top: 348 });
+  });
+
+  it('shrinks into the sheet on its roomier side rather than cover the sheet’s title', () => {
+    const manyLabels = { width: 264, height: 600 };
+    const place = placeFloating({
+      anchor: labelsRow,
+      size: manyLabels,
+      viewport,
+      container: sheet,
+      minHeight: 160,
+    });
+    expect(place).toMatchObject({ up: true, top: sheet.top + 6, height: 490 - 4 - 86 });
+    expect(place.room).toBe(place.height);
   });
 
   it('lets the screen decide when it fits in the sheet on neither side', () => {
