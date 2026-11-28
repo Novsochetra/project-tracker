@@ -2,6 +2,12 @@
 
 `npm run release` adds an entry for each release, newest first (docs/releasing.md).
 
+## v2.3.0 (2026-11-28)
+
+- Dark mode in Apple's dark colors: it follows the system, and Account → Appearance picks System, Light or Dark, remembered on this device. The page is dark from the first frame with no white flash, switching cross-fades, and status, label, project and verdict colors are lightened just enough to stay readable (PT-287)
+- A premium label picker: an iOS search field, checkmarks, a clear "Create" row, arrow keys and Enter, and an empty state that is never cut off. It stays inside the New ticket sheet, opening above its row when there is no room below, and the field stays still while you type (PT-286)
+- Every menu (Status, Priority, the calendar, labels, •••) shares one Apple material: rounder corners, a hairline edge, a soft shadow, a spring from its button and a quicker close; a hover highlight leaves with the pointer, and in dark a menu is raised a step over its window (PT-286, PT-287)
+
 ## v2.2.1 (2026-11-27)
 
 - On an iPad, the ••• menu, dropdowns and the calendar no longer close by themselves just after they open while a screen loads; they close on a scroll only when it moves their button (PT-292)
