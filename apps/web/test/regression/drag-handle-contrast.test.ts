@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { color, contrast, rgb, type Rgb } from './contrast';
+import { blendFlash, color, contrast, rgb, tokenValue, type Rgb } from './contrast';
 import { phoneRule } from './phoneCss';
 
 // WCAG 1.4.11: a control needs 3:1 against what is next to it. Phones show every handle all the time.
@@ -47,5 +47,32 @@ describe('regression: drag handles reach 3:1 against their rows', () => {
     expect(ratio, `${handle} on ${row} is ${ratio.toFixed(2)}:1`).toBeGreaterThanOrEqual(
       AA_CONTROL,
     );
+  });
+});
+
+// The dark appearance: rows are raised on the black page, a board card or a sheet's row a step
+// more (tokens.css), and the flash lightens them.
+const DARK_ROWS = [
+  '--surface',
+  '--row-hover',
+  '--fill',
+  '--grouped-surface',
+  '--grouped-row-hover',
+  '--grouped-fill',
+];
+
+describe('regression: drag handles reach 3:1 against their rows in the dark appearance', () => {
+  it('draw every handle in the handle token', () => {
+    for (const { module } of HANDLES) {
+      expect(phoneRule(module, '.handle').get('color')).toBe(tokenValue('--handle'));
+    }
+  });
+
+  it.each(DARK_ROWS)('on %s, and under the flash of a row that just moved', (row) => {
+    const handle = color('--handle', 'dark');
+    for (const background of [color(row, 'dark'), blendFlash(color(row, 'dark'), 'dark')]) {
+      const ratio = contrast(handle, background);
+      expect(ratio, `${ratio.toFixed(2)}:1 on ${row}`).toBeGreaterThanOrEqual(AA_CONTROL);
+    }
   });
 });

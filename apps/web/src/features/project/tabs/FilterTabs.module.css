@@ -13,7 +13,7 @@
   position: absolute;
   inset: 0;
   border-radius: var(--radius-container);
-  background: var(--fill-2);
+  background: var(--control-fill);
   pointer-events: none;
 }
 
@@ -47,7 +47,7 @@
   left: 0;
   width: var(--thumb-width, 0);
   border-radius: var(--radius-control);
-  background: var(--surface);
+  background: var(--thumb);
   box-shadow: var(--shadow-raised);
   transform: translateX(var(--thumb-x, 0));
 }

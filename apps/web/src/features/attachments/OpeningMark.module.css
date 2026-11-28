@@ -19,7 +19,7 @@
 }
 
 .badge .spinner {
-  color: var(--text-inverse);
+  color: var(--text-on-tint);
 }
 
 /* On a file's tile it takes the icon's place, as an upload's ring does, in the tile's own colours.

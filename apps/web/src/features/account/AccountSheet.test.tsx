@@ -55,6 +55,13 @@ describe('AccountSheet', () => {
     expect(logout).toHaveBeenCalledTimes(1);
   });
 
+  it('offers the appearance among the settings, before the sounds', async () => {
+    renderSheet(vi.fn(), {});
+    const appearance = await within(sheet()).findByRole('group', { name: 'Appearance' });
+    const sounds = within(sheet()).getByRole('switch', { name: 'Sounds' });
+    expect(appearance.compareDocumentPosition(sounds)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+  });
+
   it('stays open with the reason when signing out fails', async () => {
     const user = userEvent.setup();
     const onClose = vi.fn();

@@ -85,7 +85,7 @@
 
 /* A dot rather than a ring, so today never looks like the keyboard focus ring. */
 .today {
-  color: var(--accent);
+  color: var(--accent-text);
   font-weight: var(--weight-semibold);
 }
 
@@ -102,7 +102,7 @@
 
 .chosen {
   background: var(--accent);
-  color: var(--text-inverse);
+  color: var(--text-on-tint);
   font-weight: var(--weight-semibold);
 }
 

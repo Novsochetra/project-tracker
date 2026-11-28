@@ -16,6 +16,7 @@
 
 .approved {
   --verdict: var(--accent);
+  --verdict-text: var(--accent-text);
 }
 
 .changes {

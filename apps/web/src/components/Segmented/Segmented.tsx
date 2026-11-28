@@ -11,6 +11,7 @@ export interface SegmentedOption<T extends string> {
 
 export interface SegmentedProps<T extends string> {
   'aria-label': string;
+  'aria-describedby'?: string | undefined;
   options: readonly SegmentedOption<T>[];
   value: T;
   onChange: (value: T) => void;
@@ -19,6 +20,7 @@ export interface SegmentedProps<T extends string> {
 
 export function Segmented<T extends string>({
   'aria-label': label,
+  'aria-describedby': describedBy,
   options,
   value,
   onChange,
@@ -28,7 +30,13 @@ export function Segmented<T extends string>({
   const layout = { '--count': options.length, '--index': Math.max(index, 0) } as CSSProperties;
 
   return (
-    <div role="group" aria-label={label} className={clsx(styles.track, className)} style={layout}>
+    <div
+      role="group"
+      aria-label={label}
+      aria-describedby={describedBy}
+      className={clsx(styles.track, className)}
+      style={layout}
+    >
       {index >= 0 && <span className={styles.thumb} aria-hidden="true" />}
       {options.map((option) => (
         <button

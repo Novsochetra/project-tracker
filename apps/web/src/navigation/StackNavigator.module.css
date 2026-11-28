@@ -11,7 +11,7 @@
 .layer {
   position: absolute;
   inset: 0;
-  background: var(--surface);
+  background: var(--page);
 }
 
 .scroller {

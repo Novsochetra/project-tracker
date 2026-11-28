@@ -43,8 +43,8 @@
 }
 
 .danger {
-  background: var(--danger);
-  color: var(--text-inverse);
+  background: var(--danger-fill);
+  color: var(--text-on-tint);
 }
 
 .text {

@@ -27,7 +27,7 @@
   width: 20px;
   height: 20px;
   border-radius: var(--radius-full);
-  background: var(--surface);
+  background: var(--knob);
   box-shadow: var(--shadow-knob);
   transition: transform var(--duration-base) var(--ease-spring);
 }

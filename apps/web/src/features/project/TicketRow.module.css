@@ -73,7 +73,7 @@
 }
 
 .handle:focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--focus-ring);
   outline-offset: -2px;
 }
 
@@ -208,7 +208,7 @@
   position: absolute;
   inset: 0;
   pointer-events: none;
-  mix-blend-mode: multiply;
+  mix-blend-mode: var(--flash-blend);
   animation: flash var(--duration-flash) var(--ease-out) backwards;
 }
 

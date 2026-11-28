@@ -37,6 +37,6 @@
 
 .inline:focus,
 .inline:focus-visible {
-  border-color: var(--accent);
+  border-color: var(--focus-ring);
   outline: none;
 }

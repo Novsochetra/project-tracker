@@ -4,7 +4,7 @@
   align-items: center;
   justify-content: center;
   border-radius: var(--radius-full);
-  color: var(--text-inverse);
+  color: var(--text-on-tint);
   font-family: var(--font-sans);
   font-weight: var(--weight-semibold);
   line-height: 1;
@@ -31,8 +31,10 @@
 .agent {
   border-radius: var(--radius-tile);
   background: var(--ink);
+  color: var(--text-inverse);
 }
 
 .you {
   background: var(--ink);
+  color: var(--text-inverse);
 }

@@ -36,3 +36,26 @@ export function contrast(first: Rgb, second: Rgb): number {
 
 export const mix = (color: Rgb, base: Rgb, amount: number): Rgb =>
   color.map((channel, index) => channel * amount + base[index]! * (1 - amount)) as Rgb;
+
+const STEPS = Array.from({ length: 21 }, (_, step) => 1 - step / 20);
+
+// Checked as the browser paints them, in whole 8-bit steps.
+const painted = (color: Rgb): Rgb => parseHex(toHex(color)) ?? color;
+
+// A color is data, so it may not read where it is drawn. This keeps it when it reaches `minimum`
+// against `background`, else takes the nearest 5% step of it toward `toward` that does, which
+// keeps its hue.
+export function nearestReadable(
+  color: string,
+  toward: Rgb,
+  background: Rgb,
+  minimum: number,
+): string {
+  const base = parseHex(color);
+  if (!base) return color;
+
+  const step = (amount: number) => painted(mix(base, toward, amount));
+  const amount = STEPS.find((each) => contrast(step(each), painted(background)) >= minimum) ?? 0;
+
+  return amount === 1 ? color : toHex(step(amount));
+}

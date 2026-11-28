@@ -2,6 +2,7 @@ import { VERDICT_LABELS, type ReviewVerdict } from '@tracker/shared';
 import clsx from 'clsx';
 import { Check, RotateCcw } from 'lucide-react';
 import type { CSSProperties } from 'react';
+import { useAppearance, type Appearance } from '../../appearance';
 import { NO_HOVER_QUERY, useMediaQuery } from '../../lib/media';
 import { Icon } from '../Icon';
 import { chipTextColor } from './chipText';
@@ -19,8 +20,8 @@ export interface VerdictChipProps {
 // Where VerdictChip.module.css hides a compact chip's label.
 export const ICON_ONLY_QUERY = '(max-width: 1023px)';
 
-const statusColors = (color: string) =>
-  ({ '--verdict': color, '--verdict-text': chipTextColor(color) }) as CSSProperties;
+const statusColors = (color: string, appearance: Appearance) =>
+  ({ '--verdict': color, '--verdict-text': chipTextColor(color, appearance) }) as CSSProperties;
 
 export function VerdictChip({
   verdict,
@@ -35,6 +36,7 @@ export function VerdictChip({
   const iconOnly = useMediaQuery(ICON_ONLY_QUERY) && compact;
   const touch = useMediaQuery(NO_HOVER_QUERY);
   const tooltip = iconOnly && !touch;
+  const appearance = useAppearance();
 
   return (
     <span
@@ -46,7 +48,7 @@ export function VerdictChip({
         compact && styles.compact,
         className,
       )}
-      style={approved && approvedColor ? statusColors(approvedColor) : undefined}
+      style={approved && approvedColor ? statusColors(approvedColor, appearance) : undefined}
     >
       <Icon icon={approved ? Check : RotateCcw} size={14} />
       <span className={styles.label}>{VERDICT_LABELS[verdict]}</span>

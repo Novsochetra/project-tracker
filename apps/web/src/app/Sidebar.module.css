@@ -1,6 +1,13 @@
 /* Positioned, so the projects' visually hidden counts (absolute) stay inside its scroller: past
    its end they made the whole page taller than the window and let it scroll. */
 .sidebar {
+  --surface: var(--grouped-surface);
+  --row-hover: var(--grouped-row-hover);
+  --panel: var(--grouped-panel);
+  --fill: var(--grouped-fill);
+  --fill-2: var(--grouped-fill-2);
+  --control-fill: var(--grouped-control-fill);
+
   position: relative;
   flex: none;
   display: flex;
@@ -10,7 +17,7 @@
   padding: var(--space-3) var(--space-2);
   overflow-y: auto;
   border-right: 1px solid var(--line);
-  background: var(--fill);
+  background: var(--grouped-bg);
 }
 
 .brand {

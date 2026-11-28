@@ -5,6 +5,7 @@ import './design/base.css';
 import './design/motion.css';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
+import { startAppearance } from './appearance';
 import { App } from './app/App';
 import { preloadParts, preloadRoute } from './app/lazyParts';
 import { onFirstPress } from './lib/onFirstPress';
@@ -14,6 +15,7 @@ import './pwa/register';
 const root = document.getElementById('root');
 if (!root) throw new Error('Missing #root element');
 
+startAppearance(window);
 preloadRoute(parseRoute(window.location.pathname));
 onFirstPress(() => void preloadParts());
 

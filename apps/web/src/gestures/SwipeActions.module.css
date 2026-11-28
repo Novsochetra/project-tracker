@@ -25,7 +25,7 @@
   overflow: hidden;
   padding: 0;
   border: 0;
-  color: var(--surface);
+  color: var(--text-on-tint);
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
@@ -40,7 +40,7 @@
 }
 
 .action:focus-visible {
-  outline: 2px solid var(--surface);
+  outline: 2px solid var(--text-on-tint);
   outline-offset: -4px;
 }
 
@@ -70,14 +70,14 @@
 }
 
 .neutral {
-  background: var(--muted);
+  background: var(--swipe-neutral);
 }
 
 /* Beside a neutral action, so the two read apart at a glance. */
 .dark {
-  background: var(--ink-2);
+  background: var(--swipe-dark);
 }
 
 .danger {
-  background: var(--danger);
+  background: var(--danger-fill);
 }

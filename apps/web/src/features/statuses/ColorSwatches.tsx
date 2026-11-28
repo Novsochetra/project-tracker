@@ -1,5 +1,6 @@
 import { Check } from 'lucide-react';
 import { useId } from 'react';
+import { markColor, useAppearance } from '../../appearance';
 import { Icon } from '../../components';
 import styles from './StatusEditor.module.css';
 import { colorChoices, colorName, sameColor } from './statusForm';
@@ -12,6 +13,7 @@ export interface ColorSwatchesProps {
 export function ColorSwatches({ value, onChange }: ColorSwatchesProps) {
   const labelId = useId();
   const name = useId();
+  const appearance = useAppearance();
 
   return (
     <div className={styles.colors}>
@@ -20,7 +22,11 @@ export function ColorSwatches({ value, onChange }: ColorSwatchesProps) {
       </span>
       <div role="radiogroup" aria-labelledby={labelId} className={styles.swatches}>
         {colorChoices(value).map((color) => (
-          <label key={color} className={styles.swatch} style={{ color }}>
+          <label
+            key={color}
+            className={styles.swatch}
+            style={{ color: markColor(color, appearance) }}
+          >
             <input
               type="radio"
               name={name}

@@ -11,7 +11,7 @@ html {
 
 body {
   margin: 0;
-  background: var(--surface);
+  background: var(--page);
   color: var(--ink);
   font: var(--text-body);
   -webkit-font-smoothing: antialiased;
@@ -88,7 +88,7 @@ input:focus-visible,
 select:focus-visible,
 textarea:focus-visible,
 a:focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--focus-ring);
   outline-offset: 2px;
 }
 
@@ -101,7 +101,7 @@ a:focus-visible {
   position: absolute;
   inset: 3px;
   border-radius: var(--radius-control);
-  box-shadow: 0 0 0 2px var(--accent);
+  box-shadow: 0 0 0 2px var(--focus-ring);
   opacity: 0;
   pointer-events: none;
   z-index: 3;

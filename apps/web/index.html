@@ -6,12 +6,33 @@
       name="viewport"
       content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content"
     />
-    <meta name="theme-color" content="#FFFFFF" />
+    <meta name="theme-color" content="#ffffff" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="mobile-web-app-capable" content="yes" />
     <!-- Not black-translucent: it forces white status-bar text, invisible over the white nav bar. -->
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="Tracker" />
+    <!-- The appearance (src/appearance), set before the first paint so a dark page never flashes
+         white. Inline, because the server sends the app's page without a Content-Security-Policy;
+         adding one means allowing this script by its hash. -->
+    <script>
+      (function () {
+        var choice = null;
+        try {
+          choice = window.localStorage.getItem('tracker.appearance');
+        } catch (error) {}
+        var system =
+          !!window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        var dark = choice === 'dark' || (choice !== 'light' && system);
+        document.documentElement.setAttribute('data-appearance', dark ? 'dark' : 'light');
+        if (dark) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#000000');
+          document
+            .querySelector('meta[name="apple-mobile-web-app-status-bar-style"]')
+            .setAttribute('content', 'black');
+        }
+      })();
+    </script>
     <meta name="format-detection" content="telephone=no" />
     <meta
       name="description"

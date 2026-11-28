@@ -153,3 +153,10 @@
     transition-duration: 1ms !important;
   }
 }
+
+/* A change of appearance cross-fades the whole screen (appearance/crossFade.ts). */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: var(--duration-rise);
+  animation-timing-function: var(--ease-out);
+}

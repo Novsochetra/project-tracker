@@ -14,7 +14,15 @@
   overscroll-behavior-x: contain;
 }
 
+/* A gray column of white cards: the dark appearance raises the cards a step (tokens.css). */
 .column {
+  --surface: var(--grouped-surface);
+  --row-hover: var(--grouped-row-hover);
+  --panel: var(--grouped-panel);
+  --fill: var(--grouped-fill);
+  --fill-2: var(--grouped-fill-2);
+  --control-fill: var(--grouped-control-fill);
+
   display: flex;
   flex: 1 0 260px;
   flex-direction: column;
@@ -22,7 +30,7 @@
   max-width: 340px;
   min-height: 0;
   border-radius: var(--radius-group);
-  background: var(--fill);
+  background: var(--grouped-bg);
   transition: background-color var(--duration-fast) var(--ease-out);
   animation: global(rise) var(--duration-rise) var(--ease-out) backwards;
 }

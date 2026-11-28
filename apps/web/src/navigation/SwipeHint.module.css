@@ -28,5 +28,5 @@
 
 .ready {
   background: var(--accent);
-  color: var(--text-inverse);
+  color: var(--text-on-tint);
 }

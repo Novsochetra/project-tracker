@@ -21,6 +21,14 @@ UI change keeps them. Values live in `apps/web/src/design/tokens.css`: use a tok
   28px phone sheets with a grabber. An inner radius is the outer one minus the padding.
 - Glass (`--bar-bg`, `--glass-filter`) only for bars that float over content.
 - Shadows are soft and large, never a hard dark edge.
+- Light and dark: the app follows the system's appearance, and Account → Appearance (System /
+  Light / Dark) overrides it. Every color token has a dark value (`:root[data-appearance='dark']`),
+  so use a token and never a color that only works on white. Dark is Apple's: a black page with
+  everything on it raised a step (#1C1C1E cards, #2C2C2E fills); a gray area holding white cards
+  (a phone sheet, a board column) raises its cards with the `--grouped-*` tokens. White on a
+  color is `--text-on-tint`, tinted text `--accent-text`, focus rings `--focus-ring`. Status and
+  label colors are data: draw them through `markColor` / `chipTextColor`, which keep them
+  readable on dark. Shadows vanish on black, so raised things there also take a hairline.
 
 ## Layout and touch
 
@@ -41,6 +49,7 @@ UI change keeps them. Values live in `apps/web/src/design/tokens.css`: use a tok
 - A press answers at once: scale to about 0.96 and dim (`--dim-pressed`).
 - Everything a finger drags follows the finger, then settles with its velocity.
 - `prefers-reduced-motion` swaps slides and springs for fades.
+- A change of appearance cross-fades the whole screen; with reduced motion it changes at once.
 
 ## Sound and haptics
 

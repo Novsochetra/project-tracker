@@ -11,7 +11,7 @@
   padding: 0 10px;
   border: 0;
   border-radius: var(--radius-container);
-  background: var(--fill-2);
+  background: var(--control-fill);
   color: var(--muted);
   font-family: var(--font-sans);
   font-size: var(--size-secondary);

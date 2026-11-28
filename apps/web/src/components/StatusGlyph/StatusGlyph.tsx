@@ -1,5 +1,6 @@
 import type { StatusCategory } from '@tracker/shared';
 import clsx from 'clsx';
+import { useMarkColor } from '../../appearance';
 import styles from './StatusGlyph.module.css';
 
 const HALF_PIE = 'M8 4.5a3.5 3.5 0 0 1 0 7z';
@@ -29,7 +30,7 @@ export function StatusGlyph({
       focusable="false"
       data-category={category}
       className={clsx(styles.glyph, animated && styles.animated, className)}
-      style={{ color }}
+      style={{ color: useMarkColor(color) }}
     >
       <Shape category={category} />
     </svg>
