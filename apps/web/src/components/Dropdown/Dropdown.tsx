@@ -9,9 +9,15 @@ import {
   type RefObject,
 } from 'react';
 import { isPhoneNow } from '../../lib/media';
-import { FloatingPanel, FloatingPortal, type PlaceFloating } from '../FloatingPanel';
+import {
+  FloatingPanel,
+  FloatingPortal,
+  type PlaceContext,
+  type PlaceFloating,
+} from '../FloatingPanel';
 import { Icon } from '../Icon';
 import styles from './Dropdown.module.css';
+import { useHoverFocus } from './hoverFocus';
 import { placeMenu } from './placeMenu';
 
 export interface DropdownOption<T extends string = string> {
@@ -50,9 +56,10 @@ function Menu<T extends string>({
   onClose,
 }: DropdownProps<T>) {
   const menuRef = useRef<HTMLDivElement>(null);
+  const hover = useHoverFocus(menuRef);
   const itemCount = options.length;
   const place = useCallback<PlaceFloating>(
-    (anchor, menu) => position(menu, anchor, itemCount),
+    (anchor, menu, context) => position(menu, anchor, itemCount, context),
     [itemCount],
   );
 
@@ -73,6 +80,7 @@ function Menu<T extends string>({
   };
 
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    hover.onKey();
     const buttons = menuRef.current ? optionButtons(menuRef.current) : [];
     const index = buttons.findIndex((button) => button === document.activeElement);
     if (event.key === 'Escape' || event.key === 'Tab') {
@@ -109,6 +117,7 @@ function Menu<T extends string>({
       data-dropdown=""
       className={styles.menu}
       onKeyDown={onKeyDown}
+      onPointerLeave={hover.onMenuPointerLeave}
     >
       {options.map((option) => (
         <button
@@ -119,6 +128,7 @@ function Menu<T extends string>({
           tabIndex={-1}
           title={option.title}
           className={clsx('ring-inside', styles.option)}
+          onPointerMove={hover.onRowPointerMove}
           onClick={() => choose(option.value)}
         >
           {option.icon !== undefined && <span className={styles.optionIcon}>{option.icon}</span>}
@@ -130,12 +140,13 @@ function Menu<T extends string>({
   );
 }
 
-function position(menu: HTMLElement, anchor: DOMRect, itemCount: number) {
+function position(menu: HTMLElement, anchor: DOMRect, itemCount: number, context: PlaceContext) {
   const place = placeMenu({
     triggerRect: anchor,
     viewport: { width: window.innerWidth, height: window.innerHeight },
     itemCount,
     isPhone: isPhoneNow(),
+    ...context,
   });
   menu.style.width = `${place.width}px`;
   menu.style.maxHeight = `${place.maxHeight}px`;

@@ -11,6 +11,7 @@ describe('placeFloating', () => {
       top: 348,
       left: 862,
       height: 290,
+      room: 800 - 8 - 348,
       up: false,
       originX: 392,
     });
@@ -70,11 +71,105 @@ describe('placeFloating', () => {
       top: 58,
       left: 1248 - 260,
       height: 146,
+      room: 800 - 8 - 58,
       up: false,
       originX: 260,
     });
     const low = { top: 700, right: 900, bottom: 724 };
     const above = placeFloating({ anchor: low, size: menu, viewport, gap: 6, inset: 0 });
     expect(above).toMatchObject({ up: true, top: 700 - 6 - 146 });
+  });
+
+  it('gives a growing panel all the room on its side', () => {
+    const place = placeFloating({ anchor: row(600), size, viewport, minHeight: 46 });
+    expect(place).toMatchObject({ up: true, height: 290, room: 600 - 4 - 8 });
+  });
+});
+
+// PT-286: the label picker hung off the bottom of the New ticket sheet, over the dimmed page.
+describe('placeFloating in a sheet', () => {
+  const sheet = { top: 80, bottom: 552 };
+  const labelsRow = row(490);
+
+  it('opens above its row when it would hang off the bottom of the sheet', () => {
+    const picker = { width: 264, height: 140 };
+    const place = placeFloating({ anchor: labelsRow, size: picker, viewport, container: sheet });
+    expect(place).toMatchObject({ up: true, top: 490 - 4 - 140 });
+    // Without the sheet it fits below on screen, as before.
+    expect(placeFloating({ anchor: labelsRow, size: picker, viewport }).up).toBe(false);
+  });
+
+  it('stays below when it fits in the sheet there', () => {
+    const status = { width: 220, height: 118 };
+    const place = placeFloating({ anchor: row(313), size: status, viewport, container: sheet });
+    expect(place).toMatchObject({ up: false, top: 313 + 44 + 4 });
+  });
+
+  it('keeps a status menu that fits below there, moved up to stay 6px inside the sheet', () => {
+    const statuses = { width: 220, height: 5 * 36 + 10 };
+    const statusRow = row(313);
+    const place = placeFloating({ anchor: statusRow, size: statuses, viewport, container: sheet });
+    expect(place).toMatchObject({ up: false, top: sheet.bottom - 6 - statuses.height });
+    // It may cover 2px of its row, never more.
+    expect(place.top).toBeGreaterThanOrEqual(statusRow.bottom - 2);
+  });
+
+  it('stays 4px off its row when it hangs past the sheet anyway', () => {
+    const calendar = { width: 392, height: 420 };
+    const place = placeFloating({ anchor: row(300), size: calendar, viewport, container: sheet });
+    expect(place).toMatchObject({ up: false, top: 348 });
+  });
+
+  it('shrinks into the sheet on its roomier side rather than cover the sheet’s title', () => {
+    const manyLabels = { width: 264, height: 600 };
+    const place = placeFloating({
+      anchor: labelsRow,
+      size: manyLabels,
+      viewport,
+      container: sheet,
+      minHeight: 160,
+    });
+    expect(place).toMatchObject({ up: true, top: sheet.top + 6, height: 490 - 4 - 86 });
+    expect(place.room).toBe(place.height);
+  });
+
+  it('lets the screen decide when it fits in the sheet on neither side', () => {
+    const tall = { width: 264, height: 490 - 4 - 80 + 1 };
+    const place = placeFloating({ anchor: labelsRow, size: tall, viewport, container: sheet });
+    expect(place).toMatchObject({ up: true, top: 490 - 4 - tall.height });
+    const below = placeFloating({ anchor: row(100), size: tall, viewport, container: sheet });
+    expect(below).toMatchObject({ up: false, top: 148 });
+  });
+
+  it('counts only the part of the sheet on screen', () => {
+    const tallSheet = { top: -200, bottom: 1400 };
+    const place = placeFloating({ anchor: row(700), size, viewport, container: tallSheet });
+    expect(place.up).toBe(true);
+  });
+});
+
+describe('placeFloating once open', () => {
+  it('keeps the side it took while its content changes', () => {
+    const small = { width: 264, height: 80 };
+    const place = placeFloating({ anchor: row(600), size: small, viewport, side: 'up' });
+    expect(place).toMatchObject({ up: true, top: 600 - 4 - 80 });
+  });
+
+  it('shrinks on its side rather than flip, while its smallest height fits there', () => {
+    const grown = { width: 264, height: 500 };
+    const place = placeFloating({
+      anchor: row(300),
+      size: grown,
+      viewport,
+      minHeight: 120,
+      side: 'down',
+    });
+    expect(place).toMatchObject({ up: false, top: 348, height: 800 - 8 - 348 });
+  });
+
+  it('flips when even its smallest height no longer fits on its side', () => {
+    const confirm = { width: 260, height: 300 };
+    const place = placeFloating({ anchor: row(600), size: confirm, viewport, side: 'down' });
+    expect(place.up).toBe(true);
   });
 });

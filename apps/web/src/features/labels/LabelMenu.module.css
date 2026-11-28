@@ -1,0 +1,10 @@
+/* The border, radius, shadow and motion come from the FloatingPanel. The panel doesn't scroll: the
+   picker's labels do, under a field that stays. */
+.menu {
+  display: flex;
+  flex-direction: column;
+  width: var(--label-menu-width);
+  max-width: calc(100vw - 16px);
+  overflow: hidden;
+  padding: var(--menu-padding);
+}

@@ -1,8 +1,8 @@
-import { placeFloating, type AnchorRect } from '../FloatingPanel';
+import { placeFloating, type AnchorRect, type PlaceContext } from '../FloatingPanel';
 
 export type MenuRect = AnchorRect;
 
-export interface PlaceMenuInput {
+export interface PlaceMenuInput extends Partial<PlaceContext> {
   triggerRect: MenuRect;
   viewport: { width: number; height: number };
   itemCount: number;
@@ -27,6 +27,8 @@ export function placeMenu({
   viewport,
   itemCount,
   isPhone,
+  container,
+  side,
 }: PlaceMenuInput): MenuPlacement {
   const width = isPhone ? 240 : 220;
   const itemHeight = isPhone ? 44 : 36;
@@ -35,6 +37,8 @@ export function placeMenu({
     size: { width, height: itemCount * itemHeight + CHROME },
     viewport,
     minHeight: itemHeight + CHROME,
+    container,
+    side,
   });
 
   return { top, left, width, maxHeight: height, up, originX };

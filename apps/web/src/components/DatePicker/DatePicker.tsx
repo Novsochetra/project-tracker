@@ -23,8 +23,9 @@ export function DatePicker(props: DatePickerProps) {
   );
 }
 
-const placeCalendar: PlaceFloating = (anchor, panel) =>
+const placeCalendar: PlaceFloating = (anchor, panel, context) =>
   placeFloating({
+    ...context,
     anchor,
     size: { width: panel.offsetWidth, height: panel.offsetHeight },
     viewport: {

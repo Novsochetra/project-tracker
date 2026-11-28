@@ -82,8 +82,8 @@ describe('a ticket’s labels', () => {
     await user.click(chip);
     const sheet = screen.getByRole('dialog', { name: 'Pick labels' });
     expect(sheet).toHaveTextContent('No labels yet');
-    await user.type(within(sheet).getByRole('searchbox', { name: PICKER_FIELD_LABEL }), ' v1.4 ');
-    await user.click(within(sheet).getByRole('button', { name: 'Create “v1.4”' }));
+    await user.type(within(sheet).getByRole('combobox', { name: PICKER_FIELD_LABEL }), ' v1.4 ');
+    await user.click(within(sheet).getByRole('option', { name: 'Create “v1.4”' }));
     expect(createLabel).toHaveBeenCalledWith('MOB', { name: 'v1.4', color: expect.any(String) });
     await waitFor(() =>
       expect(updateTicket).toHaveBeenLastCalledWith('MOB-3', { labelIds: ['l-new'] }),
@@ -98,7 +98,7 @@ describe('a ticket’s labels', () => {
   it('narrow to what is typed on desktop, and Enter picks the label named or makes it', async () => {
     const { updateTicket, createLabel, user } = setup(false, LABELS, []);
     await user.click(screen.getByRole('button', { name: /^Labels/ }));
-    const field = screen.getByRole('searchbox', { name: PICKER_FIELD_LABEL });
+    const field = screen.getByRole('combobox', { name: PICKER_FIELD_LABEL });
     expect(field).toHaveFocus();
     await user.keyboard('bu');
     const list = screen.getByRole('listbox', { name: 'Labels' });
@@ -106,7 +106,7 @@ describe('a ticket’s labels', () => {
       within(list)
         .getAllByRole('option')
         .map((option) => option.textContent),
-    ).toEqual(['Bug']);
+    ).toEqual(['Bug', 'Create “bu”', 'Edit labels']);
     await user.keyboard('g{Enter}');
     expect(updateTicket).toHaveBeenLastCalledWith('MOB-3', { labelIds: ['l-bug'] });
     expect(field).toHaveValue('');
@@ -120,7 +120,7 @@ describe('a ticket’s labels', () => {
     let finish: (label: Label) => void = () => undefined;
     createLabel.mockReturnValue(new Promise<Label>((resolve) => (finish = resolve)));
     await user.click(screen.getByRole('button', { name: /^Labels/ }));
-    const field = screen.getByRole('searchbox', { name: PICKER_FIELD_LABEL });
+    const field = screen.getByRole('combobox', { name: PICKER_FIELD_LABEL });
     await user.keyboard('v1.4{Enter}{Enter}');
     expect(createLabel).toHaveBeenCalledTimes(1);
     await user.clear(field);
@@ -132,23 +132,26 @@ describe('a ticket’s labels', () => {
     expect(field).toHaveValue('v1.5');
   });
 
-  it('move between the field and the labels with the arrows', async () => {
+  it('move through the labels with the arrows while focus stays in the field', async () => {
     const { user } = setup(false, LABELS, []);
     await user.click(screen.getByRole('button', { name: /^Labels/ }));
+    const field = screen.getByRole('combobox', { name: PICKER_FIELD_LABEL });
+    const active = () => document.getElementById(field.getAttribute('aria-activedescendant')!);
     await user.keyboard('{ArrowDown}');
-    expect(screen.getByRole('option', { name: 'Bug' })).toHaveFocus();
+    expect(active()).toBe(screen.getByRole('option', { name: 'Bug' }));
     await user.keyboard('{ArrowDown}{Enter}');
     expect(screen.getByRole('option', { name: 'UI' })).toHaveAttribute('aria-selected', 'true');
     await user.keyboard('{ArrowDown}');
-    expect(screen.getByRole('button', { name: 'Edit labels' })).toHaveFocus();
+    expect(active()).toBe(screen.getByRole('option', { name: 'Edit labels' }));
     await user.keyboard('{ArrowDown}');
-    expect(screen.getByRole('searchbox', { name: PICKER_FIELD_LABEL })).toHaveFocus();
+    expect(active()).toBe(screen.getByRole('option', { name: 'Bug' }));
+    expect(field).toHaveFocus();
   });
 
   it('link to the Labels sheet to rename, recolor or delete them', async () => {
     const { user } = setup(false, LABELS, []);
     await user.click(screen.getByRole('button', { name: /^Labels/ }));
-    await user.click(screen.getByRole('button', { name: 'Edit labels' }));
+    await user.click(screen.getByRole('option', { name: 'Edit labels' }));
     expect(screen.queryByRole('dialog', { name: 'Pick labels' })).toBeNull();
     expect(await screen.findByRole('dialog', { name: 'Labels' })).toBeInTheDocument();
   });
@@ -167,6 +170,7 @@ describe('a ticket’s labels', () => {
     expect(updateTicket).not.toHaveBeenCalled();
     expect(screen.getByText('A ticket can have up to 10 labels.')).toBeInTheDocument();
     await user.keyboard('v2');
-    expect(screen.queryByRole('button', { name: /^Create/ })).toBeNull();
+    expect(screen.queryByRole('option', { name: /^Create/ })).toBeNull();
+    expect(screen.getByText('No labels match.')).toBeInTheDocument();
   });
 });

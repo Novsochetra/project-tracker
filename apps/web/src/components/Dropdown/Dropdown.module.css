@@ -2,7 +2,7 @@
   width: var(--dropdown-width);
   overflow-y: auto;
   overscroll-behavior: contain;
-  padding: 4px;
+  padding: var(--menu-padding);
 }
 
 .option {
@@ -21,16 +21,24 @@
   font-size: var(--size-body);
   text-align: left;
   cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background-color var(--duration-press) ease-out;
 }
 
-.option[aria-selected='true'] {
-  background: var(--fill);
+/* As in Apple's menus one row is highlighted, the one under the pointer or the one the keys
+   reached, and the accent check alone marks the value (hoverFocus.ts). */
+.option:focus-visible {
+  background: var(--menu-highlight);
 }
 
 @media (hover: hover) {
   .option:hover {
-    background: var(--fill);
+    background: var(--menu-highlight);
   }
+}
+
+.option:active {
+  background: var(--menu-pressed);
 }
 
 .optionIcon {
@@ -48,6 +56,7 @@
 }
 
 .check {
+  flex: none;
   color: var(--accent-text);
 }
 

@@ -21,52 +21,62 @@
   z-index: var(--z-dropdown);
 }
 
-/* Menu motion (SPEC §10): in from scale .96 at the corner nearest the row, out the same way. */
+/* Menu motion (SPEC §10, springier since PT-286): it grows from the corner nearest its row with a
+   spring while it fades in quickly, and leaves faster, the way it came. */
 .panel {
-  border: 1px solid var(--line);
-  border-radius: var(--radius-container);
+  border: 0.5px solid var(--menu-line);
+  border-radius: var(--radius-menu);
   background: var(--surface);
-  box-shadow: var(--shadow-floating);
+  box-shadow: var(--shadow-menu);
   color: var(--ink);
   transform-origin: top right;
-  animation: floating-in var(--duration-fast) var(--ease-out) backwards;
+  animation:
+    floating-grow-in var(--duration-menu-in) var(--ease-spring) backwards,
+    floating-fade-in var(--duration-fast) var(--ease-out) backwards;
 }
 
 .panel[data-up='true'] {
-  animation: floating-up-in var(--duration-fast) var(--ease-out) backwards;
+  animation:
+    floating-up-grow-in var(--duration-menu-in) var(--ease-spring) backwards,
+    floating-fade-in var(--duration-fast) var(--ease-out) backwards;
 }
 
 .panel[data-leaving] {
-  animation: floating-out var(--duration-fast) var(--ease-in) forwards;
+  animation: floating-out var(--duration-menu-out) var(--ease-in) forwards;
 }
 
 .panel[data-up='true'][data-leaving] {
-  animation: floating-up-out var(--duration-fast) var(--ease-in) forwards;
+  animation: floating-up-out var(--duration-menu-out) var(--ease-in) forwards;
 }
 
 .panel:focus-visible {
   outline: none;
 }
 
-@keyframes floating-in {
+@keyframes floating-grow-in {
   from {
-    opacity: 0;
-    transform: translateY(-4px) scale(0.96);
+    transform: translateY(-6px) scale(0.9);
   }
   to {
-    opacity: 1;
     transform: none;
   }
 }
 
-@keyframes floating-up-in {
+@keyframes floating-up-grow-in {
+  from {
+    transform: translateY(6px) scale(0.9);
+  }
+  to {
+    transform: none;
+  }
+}
+
+@keyframes floating-fade-in {
   from {
     opacity: 0;
-    transform: translateY(4px) scale(0.96);
   }
   to {
     opacity: 1;
-    transform: none;
   }
 }
 
@@ -89,5 +99,30 @@
   to {
     opacity: 0;
     transform: translateY(4px) scale(0.96);
+  }
+}
+
+@keyframes floating-fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+/* Reduced motion fades instead of growing. The durations outrank the global rule that cuts every
+   animation to 1ms, which would make the menu blink in. */
+@media (prefers-reduced-motion: reduce) {
+  .panel,
+  .panel[data-up='true'] {
+    animation: floating-fade-in var(--duration-fast) linear backwards;
+    animation-duration: var(--duration-fast) !important;
+  }
+
+  .panel[data-leaving],
+  .panel[data-up='true'][data-leaving] {
+    animation: floating-fade-out var(--duration-menu-out) linear forwards;
+    animation-duration: var(--duration-menu-out) !important;
   }
 }

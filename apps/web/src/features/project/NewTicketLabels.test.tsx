@@ -102,7 +102,7 @@ describe('labels in New ticket', () => {
     const { createTicket, createLabel, user } = renderSheet();
     await user.click(screen.getByRole('button', { name: /^Labels/ }));
     const picker = screen.getByRole('dialog', { name: 'Pick labels' });
-    await user.type(within(picker).getByRole('searchbox'), 'v1.4{Enter}');
+    await user.type(within(picker).getByRole('combobox'), 'v1.4{Enter}');
     expect(createLabel).toHaveBeenCalledWith('MOB', { name: 'v1.4', color: expect.any(String) });
     expect(await within(picker).findByRole('option', { name: 'v1.4' })).toHaveAttribute(
       'aria-selected',

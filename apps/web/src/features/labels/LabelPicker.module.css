@@ -2,12 +2,19 @@
   display: flex;
   flex-direction: column;
   min-width: 0;
+  min-height: 0;
 }
 
 .picker .field {
   flex: none;
   width: 100%;
   min-width: 0;
+}
+
+.rows {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
 
 .option {
@@ -17,6 +24,7 @@
   min-width: 0;
   margin: 0;
   border: 0;
+  background: transparent;
   color: var(--ink);
   font-family: var(--font-sans);
   text-align: left;
@@ -27,6 +35,20 @@
 .option[aria-disabled='true'] {
   color: var(--subtle);
   cursor: not-allowed;
+}
+
+/* The arrows' row shows the focus ring the row would draw if it had focus itself. */
+.option[data-active='keyboard']::after {
+  opacity: 1;
+}
+
+/* One column for the dots and the action icons, so every name starts on one line. */
+.lead {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--icon-md);
 }
 
 .name {
@@ -40,33 +62,20 @@
 .check {
   flex: none;
   color: var(--accent-text);
+  animation: check-pop-in var(--duration-spring) var(--ease-spring) backwards;
 }
 
 .create {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  min-width: 0;
-  margin: 0;
-  border: 0;
-  background: transparent;
   color: var(--link);
-  font-family: var(--font-sans);
   font-weight: var(--weight-medium);
-  text-align: left;
-  cursor: pointer;
 }
 
-.create:disabled {
-  color: var(--subtle);
+.create[aria-disabled='true'] {
   cursor: progress;
 }
 
-.createName {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+.manage {
+  color: var(--muted);
 }
 
 .note {
@@ -76,70 +85,157 @@
   line-height: 1.35;
 }
 
-.manage {
+.empty {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: 2px;
+  text-align: center;
+}
+
+.emptyIcon {
+  margin-bottom: 6px;
+  color: var(--subtle);
+}
+
+.emptyTitle {
   margin: 0;
-  border: 0;
-  background: transparent;
+  color: var(--ink);
+  font-size: var(--size-body);
+  font-weight: var(--weight-semibold);
+  line-height: 1.3;
+}
+
+.emptyText {
+  max-width: 200px;
+  margin: 0;
   color: var(--muted);
-  font-family: var(--font-sans);
-  text-align: left;
-  cursor: pointer;
+  font-size: var(--size-caption);
+  line-height: 1.35;
 }
 
-/* The desktop menu: the dropdown's rows, under a field that stays while they scroll. */
-.list .fieldRow {
-  position: sticky;
-  top: -4px;
-  z-index: 1;
-  margin-top: -4px;
-  padding: 4px 0;
-  background: var(--surface);
+@keyframes check-pop-in {
+  from {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 
-.list .option,
-.list .create,
-.list .manage {
+/* The desktop menu: Apple's menu rows under the field. Only the labels scroll, so the field above
+   and the actions below always show. */
+.list {
+  gap: var(--menu-padding);
+}
+
+.list .options {
+  display: flex;
+  flex-direction: column;
+  flex: 0 1 auto;
+  min-height: 0;
+  /* Seven and a half rows at most: the half row shows that more scroll, and a long list stays a
+     menu, clear of New ticket's title bar above its last row, not a page over it. */
+  max-height: calc(var(--dropdown-item) * 7.5);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.list .actions {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+}
+
+/* A menu's separator: a hairline inset from the rows' ends, with room on either side. */
+.list .options + .actions::before {
+  content: '';
+  display: block;
+  height: 1px;
+  margin: var(--menu-padding) 10px;
+  background: var(--menu-line);
+}
+
+/* 2px in from the menu's padding, so its focus halo clears the menu's edge, and its radius 2px
+   less, so its corners stay concentric with the menu's. */
+.list .field {
+  width: calc(100% - 4px);
+  margin: 2px;
+  border-radius: calc(var(--radius-control) - 2px);
+}
+
+/* Above its row the field comes last, next to the row (LabelMenu). Only the picker's own parts
+   swap: inside the rows the labels still come first and Create and Edit labels after them, under
+   their hairline, so the actions are the menu's foot below the row and sit by the field above it. */
+.fieldLast {
+  flex-direction: column-reverse;
+}
+
+/* A menu's separator between the field and the rows, on the field's side, so a row cut by the
+   scroll ends at a line rather than against the field. */
+.list .rows::before,
+.list.fieldLast .rows::after {
+  content: '';
+  flex: none;
+  height: 1px;
+  /* 2px more on the field's side, so the field's focus halo clears it. */
+  margin: 2px 10px var(--menu-padding);
+  background: var(--menu-line);
+}
+
+.list.fieldLast .rows::before {
+  content: none;
+}
+
+.list.fieldLast .rows::after {
+  margin: var(--menu-padding) 10px 2px;
+}
+
+.list .option {
+  flex: none;
   width: 100%;
   min-height: var(--dropdown-item);
   padding: 0 10px;
   border-radius: var(--radius-control);
-  background: transparent;
   font-size: var(--size-body);
+  transition: background-color var(--duration-press) ease-out;
 }
 
-.list .option[aria-selected='true'] {
-  background: var(--fill);
+.list .option[data-active]:not([aria-disabled='true']) {
+  background: var(--menu-highlight);
 }
 
-@media (hover: hover) {
-  .list .option:hover,
-  .list .create:hover:not(:disabled),
-  .list .manage:hover {
-    background: var(--fill);
-  }
+.list .option:active:not([aria-disabled='true']) {
+  background: var(--menu-pressed);
 }
 
 .list .note {
-  padding: 8px 10px;
+  padding: 2px 10px;
 }
 
-.list .manage {
-  margin-top: 4px;
-  border-top: 1px solid var(--line);
-  border-radius: 0 0 var(--radius-control) var(--radius-control);
-  font-size: var(--size-secondary);
+.list .empty {
+  padding: 14px 12px 12px;
 }
 
-/* The phone sheet: chips that wrap, each a full touch target. */
+/* The phone sheet: white chips on the sheet's gray, each a full touch target, and the field a white
+   card as every typed field in a phone sheet is. */
 .chips {
   gap: var(--space-4);
   padding: var(--space-4);
 }
 
-.chips .options {
+.chips .field {
+  background: var(--surface);
+}
+
+.chips .rows {
+  gap: var(--space-3);
+}
+
+.chips .options,
+.chips .actions {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-2);
@@ -148,50 +244,83 @@
 .chips .option {
   flex: 0 1 auto;
   max-width: 100%;
-  min-height: var(--touch-target);
+  min-height: var(--control-drawn);
+  gap: 8px;
   padding: 0 14px 0 12px;
-  border: 1px solid var(--control-line);
   border-radius: var(--radius-full);
   background: var(--surface);
   font-size: var(--size-headline);
   font-weight: var(--weight-medium);
   transition:
     background-color var(--duration-fast) ease-out,
-    border-color var(--duration-fast) ease-out,
-    transform var(--duration-press) ease-out;
+    box-shadow var(--duration-fast) ease-out,
+    transform var(--duration-press) ease-out,
+    filter var(--duration-press) ease-out;
 }
 
-.chips .option:active {
-  transform: scale(0.96);
+/* Drawn at the phones' one control height, tapped across 44px. */
+.chips .option::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  right: 0;
+  left: 0;
+  height: var(--touch-target);
+  translate: 0 -50%;
+}
+
+.chips .option::after {
+  border-radius: var(--radius-full);
+}
+
+.chips .lead {
+  width: auto;
 }
 
 .chips .option[aria-selected='true'] {
-  border-color: var(--accent);
   background: var(--drop-tint);
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+
+.chips .option:active:not([aria-disabled='true']) {
+  transform: scale(0.96);
+  filter: brightness(var(--dim-pressed));
 }
 
 .chips .manage {
-  align-self: flex-start;
-  min-height: var(--touch-target);
+  padding: 0 8px;
+  background: transparent;
+  color: var(--link);
   font-size: var(--size-body);
+  font-weight: var(--weight-regular);
 }
 
-.chips .create {
-  align-self: flex-start;
-  max-width: 100%;
-  min-height: var(--touch-target);
-  padding: 0 14px 0 10px;
-  border: 1px dashed var(--dashed);
-  border-radius: var(--radius-full);
+.chips .note {
+  padding: 0 4px;
+  font-size: var(--size-secondary);
+}
+
+.chips .empty {
+  gap: 4px;
+  padding: var(--space-5) var(--space-4) var(--space-3);
+}
+
+.chips .emptyIcon {
+  width: 28px;
+  height: 28px;
+}
+
+.chips .emptyTitle {
   font-size: var(--size-headline);
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .chips .option {
-    transition: none;
-  }
+.chips .emptyText {
+  max-width: 260px;
+  font-size: var(--size-secondary);
+}
 
-  .chips .option:active {
+@media (prefers-reduced-motion: reduce) {
+  .chips .option:active:not([aria-disabled='true']) {
     transform: none;
   }
 }
