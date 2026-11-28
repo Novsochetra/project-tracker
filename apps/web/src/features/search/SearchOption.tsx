@@ -1,6 +1,6 @@
 import { projectDisplayName, type ProjectSummary, type TicketSearchHit } from '@tracker/shared';
 import clsx from 'clsx';
-import { StatusGlyph } from '../../components';
+import { ColorMark, StatusGlyph } from '../../components';
 import { highlightParts } from './highlight';
 import type { PaletteItem } from './paletteItems';
 import styles from './SearchPalette.module.css';
@@ -20,7 +20,7 @@ function Highlighted({ text, terms }: { text: string; terms: readonly string[] }
 function ProjectContent({ project, terms }: { project: ProjectSummary; terms: readonly string[] }) {
   return (
     <>
-      <span className={styles.square} style={{ background: project.color }} />
+      <ColorMark className={styles.square} color={project.color} />
       <span className={styles.title}>
         <Highlighted text={projectDisplayName(project)} terms={terms} />
       </span>

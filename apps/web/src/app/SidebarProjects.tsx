@@ -1,5 +1,6 @@
 import { openNotReviewed, projectDisplayName, type ProjectSummary } from '@tracker/shared';
 import { useId, useRef, type KeyboardEvent, type RefObject } from 'react';
+import { ColorMark } from '../components/ColorMark';
 import { consumeClickGuard } from '../features/project/dnd/clickGuard';
 import { sameProjectKey } from '../features/projects/projectLookup';
 import { movedMessage, reorderHint } from '../features/projects/reorder/reorderHint';
@@ -55,7 +56,7 @@ export function SidebarProjects({ projects, ready, scroller }: SidebarProjectsPr
             if (!consumeClickGuard()) openProject(project.key);
           }}
         >
-          <span className={styles.square} style={{ background: project.color }} />
+          <ColorMark className={styles.square} color={project.color} />
           <span className={styles.name}>{projectDisplayName(project)}</span>{' '}
           {ready.has(project.id) && (
             <>

@@ -4,7 +4,7 @@ import {
   projectDisplayName,
   type TicketDetail,
 } from '@tracker/shared';
-import { GroupedCard, InfoRow } from '../../../components';
+import { ColorMark, GroupedCard, InfoRow } from '../../../components';
 import styles from './SidePanel.module.css';
 
 export function InfoCard({ detail, now }: { detail: TicketDetail; now: number }) {
@@ -14,7 +14,7 @@ export function InfoCard({ detail, now }: { detail: TicketDetail; now: number })
     <GroupedCard>
       <InfoRow label="Project">
         <span className={styles.project}>
-          <span className={styles.square} style={{ background: project.color }} />
+          <ColorMark className={styles.square} color={project.color} />
           <span className={styles.projectName}>{projectDisplayName(project)}</span>
         </span>
       </InfoRow>

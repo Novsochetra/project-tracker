@@ -1,7 +1,7 @@
 import { projectDisplayName, type Status } from '@tracker/shared';
 import clsx from 'clsx';
 import { ArrowRight, Check, ChevronRight } from 'lucide-react';
-import { Button, Icon, StarRating, VerdictChip } from '../../components';
+import { Button, ColorMark, Icon, StarRating, VerdictChip } from '../../components';
 import { SwipeActions, type SwipeAction } from '../../gestures';
 import { useIsPhone } from '../../lib/media';
 import { useIsOpening } from '../../navigation';
@@ -97,7 +97,7 @@ function ReadyRowMain({
       <span className={styles.key}>{ticket.key}</span>{' '}
       <span className={styles.title}>{ticket.title || 'Untitled'}</span>{' '}
       <span className={styles.project}>
-        <span className={styles.square} style={{ background: project.color }} aria-hidden="true" />
+        <ColorMark className={styles.square} color={project.color} />
         <span className={styles.projectName}>{projectDisplayName(project)}</span>
       </span>{' '}
       {ticket.lastReview && (

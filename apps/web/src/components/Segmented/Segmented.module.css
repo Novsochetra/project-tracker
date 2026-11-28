@@ -8,7 +8,7 @@
   min-width: 0;
   padding: 2px;
   border-radius: var(--radius-container);
-  background: var(--fill-2);
+  background: var(--control-fill);
 }
 
 .thumb {
@@ -18,7 +18,7 @@
   left: 2px;
   width: calc((100% - 4px - (var(--count) - 1) * 2px) / var(--count));
   border-radius: var(--radius-control);
-  background: var(--surface);
+  background: var(--thumb);
   box-shadow: var(--shadow-raised);
   transform: translateX(calc(var(--index) * (100% + 2px)));
   transition: transform var(--duration-spring) var(--ease-spring);
@@ -81,7 +81,7 @@
     position: absolute;
     inset: var(--control-track-inset) 0;
     border-radius: var(--radius-container);
-    background: var(--fill-2);
+    background: var(--control-fill);
   }
 
   .thumb {

@@ -22,7 +22,7 @@
   display: flex;
   flex: 1 0 auto;
   flex-direction: column;
-  background: var(--surface);
+  background: var(--page);
 }
 
 .content > * {

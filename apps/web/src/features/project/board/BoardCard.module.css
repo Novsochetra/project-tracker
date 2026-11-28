@@ -115,7 +115,7 @@
   inset: 0;
   border-radius: inherit;
   pointer-events: none;
-  mix-blend-mode: multiply;
+  mix-blend-mode: var(--flash-blend);
   animation: global(flash) var(--duration-flash) var(--ease-out) backwards;
 }
 

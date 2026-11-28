@@ -22,8 +22,31 @@
   --row-hover: #f8f8fa;
   --panel: #f9f9fb;
   --surface: #ffffff;
+  /* The screen under everything: the same white as a surface here, black in the dark appearance,
+     where cards, rows and fields (--surface) are raised a step above it. */
+  --page: #ffffff;
+  /* Segmented tracks and search fields drawn on a screen. */
+  --control-fill: #eeeef0;
+  --thumb: #ffffff;
+  --knob: #ffffff;
+  /* A gray area holding white cards (a phone sheet, a board column, the sidebar). The dark
+     appearance raises its cards and their fills a step, as iOS's grouped colors do; the light
+     values are the plain ones, so the light look stays as it was. */
+  --grouped-bg: var(--fill);
+  --grouped-surface: var(--surface);
+  --grouped-row-hover: var(--row-hover);
+  --grouped-panel: var(--panel);
+  --grouped-fill: var(--fill);
+  --grouped-fill-2: var(--fill-2);
+  --grouped-control-fill: var(--control-fill);
+  --grouped-thumb: var(--thumb);
 
   --accent: #5856d6;
+  /* Tinted text (Close, Cancel, action sheet choices, today); the dark accent is too dim for it. */
+  --accent-text: var(--accent);
+  --focus-ring: var(--accent);
+  /* A project's done share on its progress bar: a mark, so 3:1 on the track (--fill-2). */
+  --progress-done: var(--accent);
   /* Accent is 3.2:1 on Ink, too faint for the toast's Undo, so it takes a lighter tint of it. */
   --accent-inverse: #a3a3f2;
   --link: #4a4ac4;
@@ -31,6 +54,8 @@
   --doing: #c26a06;
   --reviewed: #248a3d;
   --danger: #c90014;
+  /* Behind white text: danger buttons and the Delete swipe action. */
+  --danger-fill: var(--danger);
   --danger-line: #f4cfca;
   /* Danger is 2.6:1 on Ink, so the error toast's icon takes a lighter red that keeps 3:1
      (WCAG 1.4.11) on the toast. */
@@ -39,6 +64,7 @@
   --report-line: #e3e3f8;
   --flash: #e4e4fa;
   --drop-tint: #eeeefc;
+  --flash-blend: multiply;
   --scrim: rgba(0, 0, 0, 0.3);
   --bar-bg: rgba(255, 255, 255, 0.78);
   --nav-bg: rgba(255, 255, 255, 0.78);
@@ -46,6 +72,15 @@
   /* A rating carries meaning, so its stars keep 3:1 (WCAG 1.4.11) on the cards and rows they sit on. */
   --star: #b57d00;
   --text-inverse: #ffffff;
+  /* White on a color in either appearance: swipe actions, the chosen day, a check in a status
+     color, a palette avatar's initials, marks over a photo. */
+  --text-on-tint: #ffffff;
+  --swipe-neutral: var(--muted);
+  --swipe-dark: var(--ink-2);
+  /* The toast stays dark in both appearances, as iOS's banners do. */
+  --toast-bg: var(--ink);
+  --toast-text: var(--text-inverse);
+  --toast-hover: var(--ink-hover);
 
   /* Apple's own San Francisco wherever the system has it (docs/ui-guidelines.md); Geist, which
      the app ships, stands in on Windows, Android and Linux. */
@@ -163,6 +198,84 @@
   --z-toast: 90;
   --z-ghost: 95;
   --z-viewer: 100;
+}
+
+/* Apple's dark system colors (docs/ui-guidelines.md, docs/architecture.md §1.17). The page is
+   black and everything on it is raised a step: cards and rows #1C1C1E, their fills #2C2C2E and
+   #3A3A3C, a grouped area's cards one step more. Grays and tints are lightened only as far as
+   every pair test/regression/text-contrast.test.ts checks keeps 4.5:1 (3:1 for marks). index.html
+   sets data-appearance before the first paint, so the page never flashes white. */
+:root[data-appearance='dark'] {
+  color-scheme: dark;
+
+  --ink: #ffffff;
+  --ink-2: #e5e5ea;
+  --ink-hover: #d1d1d6;
+  --muted: #b2b2b7;
+  --muted-2: #bfbfc4;
+  --subtle: #a5a5aa;
+  --placeholder: #98989d;
+  --handle: #8e8e93;
+  --faint: #636366;
+  --dashed: #545458;
+  --bar-off: #48484a;
+  --control-line: #48484a;
+  --line: #38383a;
+  --fill-2: #3a3a3c;
+  --fill: #2c2c2e;
+  --row-hover: #232325;
+  --panel: #141416;
+  --surface: #1c1c1e;
+  --page: #000000;
+  --control-fill: #1c1c1e;
+  --thumb: #3a3a3c;
+  --grouped-bg: #1c1c1e;
+  --grouped-surface: #2c2c2e;
+  --grouped-row-hover: #313133;
+  --grouped-panel: #1c1c1e;
+  --grouped-fill: #363638;
+  --grouped-fill-2: #3a3a3c;
+  --grouped-control-fill: #2c2c2e;
+  --grouped-thumb: #5a5a5e;
+
+  --accent: #5e5ce6;
+  --accent-text: #9c9aff;
+  --accent-inverse: #a5a4ff;
+  --focus-ring: #7d7aff;
+  --progress-done: #7d7aff;
+  --link: #9c9aff;
+  --link-hover: #b8b7ff;
+  --doing: #ff9f0a;
+  --reviewed: #30d158;
+  --danger: #ff7d75;
+  --danger-fill: #d70015;
+  --danger-line: #6b2b27;
+  --danger-inverse: #ff6961;
+  --report-bg: #1b1b29;
+  --report-line: #34345a;
+  --flash: #2a2a5a;
+  /* Lighten keeps the row's text as it is and tints only what is darker than the flash. */
+  --flash-blend: lighten;
+  --drop-tint: #23233f;
+  --scrim: rgba(0, 0, 0, 0.48);
+  --bar-bg: rgba(22, 22, 24, 0.78);
+  --nav-bg: rgba(22, 22, 24, 0.78);
+  --star: #ffd60a;
+  --text-inverse: #000000;
+  --swipe-neutral: #636366;
+  --swipe-dark: #48484a;
+  --toast-bg: #2c2c2e;
+  --toast-text: #ffffff;
+  --toast-hover: #3a3a3c;
+
+  /* Black swallows a shadow, so raised things also take a hairline of light, as macOS draws
+     around dark windows and menus. */
+  --shadow-raised: 0 3px 8px rgba(0, 0, 0, 0.36), 0 3px 1px rgba(0, 0, 0, 0.16);
+  --shadow-floating: 0 0 0 0.5px rgba(255, 255, 255, 0.1), 0 8px 24px rgba(0, 0, 0, 0.5);
+  --shadow-lifted: 0 0 0 0.5px rgba(255, 255, 255, 0.1), 0 12px 32px rgba(0, 0, 0, 0.6);
+  --shadow-overlay: 0 0 0 0.5px rgba(255, 255, 255, 0.1), 0 30px 80px rgba(0, 0, 0, 0.6);
+  --shadow-toast: 0 0 0 0.5px rgba(255, 255, 255, 0.1), 0 8px 24px rgba(0, 0, 0, 0.5);
+  --shadow-knob: 0 1px 3px rgba(0, 0, 0, 0.4);
 }
 
 @media (width < 768px),

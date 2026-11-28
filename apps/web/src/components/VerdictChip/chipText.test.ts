@@ -1,6 +1,7 @@
 import { STATUS_COLORS } from '@tracker/shared';
 import { describe, expect, it } from 'vitest';
 import { contrast, mix, parseHex, WHITE } from '../../lib/contrast';
+import { DARK_SURFACES } from '../../appearance/darkColors';
 import { chipTextColor } from './chipText';
 
 const AA_TEXT = 4.5;
@@ -36,5 +37,33 @@ describe('chipTextColor', () => {
 
   it('leaves a color it can’t read as it is', () => {
     expect(chipTextColor('teal')).toBe('teal');
+  });
+});
+
+describe.each(DARK_SURFACES)('chipTextColor in the dark appearance, on %s', (surface) => {
+  const darkTint = (color: string) => mix(parseHex(color)!, parseHex(surface)!, 0.1);
+  const onDarkTint = (text: string, color: string) => contrast(parseHex(text)!, darkTint(color));
+
+  // The default Reviewed green reads on white, but is too dark on its tint over a dark surface.
+  it('lightens a dark color toward white until it reaches 4.5:1, keeping its hue', () => {
+    expect(onDarkTint('#18794E', '#18794E')).toBeLessThan(AA_TEXT);
+    const text = chipTextColor('#18794E', 'dark');
+    expect(onDarkTint(text, '#18794E')).toBeGreaterThanOrEqual(AA_TEXT);
+    const [red, green, blue] = parseHex(text)!;
+    expect(green).toBeGreaterThan(blue);
+    expect(blue).toBeGreaterThan(red);
+  });
+
+  it.each([...STATUS_COLORS, '#FFD700', '#FFFFFF', '#7FDBFF', '#000000', '#12A594'])(
+    'reads at 4.5:1 or more on the dark tint of %s',
+    (color) => {
+      expect(onDarkTint(chipTextColor(color, 'dark'), color)).toBeGreaterThanOrEqual(AA_TEXT);
+    },
+  );
+});
+
+describe('chipTextColor over the lightest dark surface', () => {
+  it('keeps a color that already reads there', () => {
+    expect(chipTextColor('#7FDBFF', 'dark')).toBe('#7FDBFF');
   });
 });

@@ -6,7 +6,7 @@
   min-height: var(--nav-height);
   padding: 6px var(--space-4) 6px var(--space-5);
   border-bottom: 1px solid var(--line);
-  background: var(--surface);
+  background: var(--page);
 }
 
 .breadcrumb {

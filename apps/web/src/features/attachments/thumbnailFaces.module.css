@@ -22,7 +22,7 @@
   height: 20px;
   border-radius: var(--radius-full);
   background: var(--media-badge);
-  color: var(--text-inverse);
+  color: var(--text-on-tint);
 }
 
 /* The triangle's weight sits left of its box, so it moves right to look centred. */
@@ -50,7 +50,7 @@
   padding: 1px var(--space-1);
   border-radius: var(--radius-square);
   background: var(--media-badge);
-  color: var(--text-inverse);
+  color: var(--text-on-tint);
   font-size: var(--size-badge);
   font-weight: var(--weight-medium);
   line-height: 12px;
@@ -118,7 +118,7 @@
   flex: none;
   align-items: center;
   justify-content: center;
-  color: var(--accent);
+  color: var(--accent-text);
 }
 
 .progress svg {
@@ -153,7 +153,7 @@
   position: absolute;
   inset: 0;
   background: var(--scrim);
-  color: var(--text-inverse);
+  color: var(--text-on-tint);
 }
 
 .overMedia .track {

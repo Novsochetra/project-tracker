@@ -6,6 +6,7 @@ import { Sheet, SheetTextButton } from '../../overlays';
 import { NotificationsSection } from '../push/NotificationsSection';
 import { VersionNote } from '../version/VersionNote';
 import styles from './AccountSheet.module.css';
+import { AppearanceSection } from './AppearanceSection';
 import { ChangePassword } from './ChangePassword';
 import { InviteSection } from './InviteSection';
 import { PeopleSection } from './PeopleSection';
@@ -35,6 +36,7 @@ export function AccountSheet({ open, onClose }: SheetProps) {
         </p>
         <ChangePassword />
         <NotificationsSection />
+        <AppearanceSection />
         <SoundSection />
         <section className={styles.section}>
           <Button size="lg" fullWidth disabled={pending} onClick={() => signOut(logout)}>

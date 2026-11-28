@@ -8,7 +8,7 @@ import { listItem, project, STATUS, statuses } from '../../src/api/test/fixtures
 import { renderWithApp } from '../../src/app/test/harness';
 import { readyItems } from '../../src/features/ready/readyItems';
 import { ReadySection } from '../../src/features/ready/ReadySection';
-import { color, contrast } from './contrast';
+import { APPEARANCES, color, contrast } from './contrast';
 
 const toastWith = (text: string) => screen.getByText(text, { exact: true }).parentElement;
 
@@ -33,9 +33,13 @@ describe('regression: a failure toast looks like a failure, not a success', () =
     expect(failed?.querySelector('svg')).not.toHaveClass('lucide-circle-check');
   });
 
-  it('draws the error icon in a red that keeps 3:1 (WCAG 1.4.11) on the toast', () => {
-    expect(contrast(color('--danger-inverse'), color('--ink'))).toBeGreaterThanOrEqual(3);
-  });
+  it.each(APPEARANCES)(
+    'draws the error icon in a red that keeps 3:1 (WCAG 1.4.11) on the %s toast',
+    (appearance) => {
+      const toast = color('--toast-bg', appearance);
+      expect(contrast(color('--danger-inverse', appearance), toast)).toBeGreaterThanOrEqual(3);
+    },
+  );
 });
 
 const SOURCE = join(import.meta.dirname, '../../src');

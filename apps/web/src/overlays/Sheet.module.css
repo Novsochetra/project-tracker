@@ -42,7 +42,12 @@
   outline: none;
 }
 
+/* A sheet is raised over the screen: in the dark appearance its segmented tracks and search
+   fields take the raised fill, as on a grouped area (tokens.css). */
 .panel {
+  --control-fill: var(--grouped-control-fill);
+  --thumb: var(--grouped-thumb);
+
   position: relative;
   display: flex;
   flex-direction: column;
@@ -90,11 +95,18 @@
 }
 
 /* iOS's grouped page sheet: gray, with white cards that need no border (--card-line), and a bar
-   that blends into it until content scrolls under it (useScrollEdge). */
-.phone .panel {
+   that blends into it until content scrolls under it (useScrollEdge). The dark appearance raises
+   its cards a step (tokens.css). */
+.phone:not(.plain) .panel {
   --card-line: transparent;
+  --surface: var(--grouped-surface);
+  --row-hover: var(--grouped-row-hover);
+  --panel: var(--grouped-panel);
+  --fill: var(--grouped-fill);
+  --fill-2: var(--grouped-fill-2);
+  --control-fill: var(--grouped-control-fill);
 
-  background: var(--fill);
+  background: var(--grouped-bg);
 }
 
 .phone .header {
@@ -108,8 +120,6 @@
 
 .phone.plain .panel {
   --card-line: var(--line);
-
-  background: var(--surface);
 }
 
 .sheetForm {

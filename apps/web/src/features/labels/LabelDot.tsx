@@ -1,4 +1,5 @@
 import clsx from 'clsx';
+import { useMarkColor } from '../../appearance';
 import styles from './Labels.module.css';
 
 export interface LabelDotProps {
@@ -11,7 +12,7 @@ export function LabelDot({ color, large = false, className }: LabelDotProps) {
   return (
     <span
       className={clsx(styles.dot, large && styles.dotLarge, className)}
-      style={{ color }}
+      style={{ color: useMarkColor(color) }}
       aria-hidden="true"
     />
   );

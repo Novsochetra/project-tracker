@@ -38,6 +38,18 @@ describe('regression: star ratings read at a glance', () => {
     expectContrast(cssColor('.score'), color(background), AA_TEXT);
   });
 
+  // The stylesheet draws them in tokens, so the dark set's values stand in for them there; review
+  // cards and rows are raised on the black page, and a sheet's cards a step more.
+  it.each(['--surface', '--fill', '--grouped-surface'])(
+    'dark: filled stars reach 3:1 and the score 4.5:1 on %s',
+    (background) => {
+      expect(cssColor('.on')).toEqual(color('--star'));
+      expect(cssColor('.score')).toEqual(color('--muted'));
+      expectContrast(color('--star', 'dark'), color(background, 'dark'), AA_GRAPHIC);
+      expectContrast(color('--muted', 'dark'), color(background, 'dark'), AA_TEXT);
+    },
+  );
+
   it('shows the score as a number, which screen readers get from the label', () => {
     render(<StarRating value={4} />);
     expect(screen.getByRole('img', { name: 'Rated 4 out of 5' })).toHaveTextContent('4/5');

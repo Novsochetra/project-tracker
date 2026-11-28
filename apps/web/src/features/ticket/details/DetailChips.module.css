@@ -48,7 +48,7 @@
 /* The assignee field shows its focus with its accent border instead, as text fields do; both
    showed two rings. */
 .chip:not(.field):has(:focus-visible) {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--focus-ring);
   outline-offset: 2px;
 }
 
@@ -80,8 +80,8 @@
 /* Room to type while editing, as a text field has. */
 .field:focus-within {
   flex: 1 0 100%;
-  border-color: var(--accent);
-  box-shadow: 0 0 0 1px var(--accent);
+  border-color: var(--focus-ring);
+  box-shadow: 0 0 0 1px var(--focus-ring);
 }
 
 .field:focus-within .sizer {

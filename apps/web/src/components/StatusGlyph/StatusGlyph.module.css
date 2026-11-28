@@ -3,7 +3,7 @@
 }
 
 .check {
-  stroke: var(--text-inverse);
+  stroke: var(--text-on-tint);
 }
 
 .animated .disc {

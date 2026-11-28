@@ -16,8 +16,8 @@
 }
 
 .field:focus-within {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 1px var(--accent);
+  border-color: var(--focus-ring);
+  box-shadow: 0 0 0 1px var(--focus-ring);
 }
 
 .input {
@@ -54,7 +54,7 @@
     width: 100%;
     min-height: var(--control-drawn);
     border-color: transparent;
-    background: var(--fill-2);
+    background: var(--control-fill);
   }
 
   .field::before {

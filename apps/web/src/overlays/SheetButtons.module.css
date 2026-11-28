@@ -20,7 +20,7 @@
   border: 0;
   border-radius: var(--radius-full);
   background: var(--ink);
-  color: var(--surface);
+  color: var(--text-inverse);
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
@@ -41,7 +41,7 @@
   /* UIKit tints a sheet's bar buttons. */
   .text {
     min-height: var(--touch-target);
-    color: var(--accent);
+    color: var(--accent-text);
     font-size: 17px;
   }
 

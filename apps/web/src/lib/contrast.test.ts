@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { contrast, mix, parseHex, toHex, WHITE } from './contrast';
+import { contrast, mix, nearestReadable, parseHex, toHex, WHITE } from './contrast';
 
 const hex = (value: string) => parseHex(value)!;
 
@@ -33,5 +33,21 @@ describe('mix', () => {
   it('mixes encoded channels like color-mix(in srgb)', () => {
     expect(toHex(mix(hex('#12A594'), WHITE, 0.1))).toBe('#e7f6f4');
     expect(mix(hex('#12A594'), WHITE, 1)).toEqual(hex('#12A594'));
+  });
+});
+
+describe('nearestReadable', () => {
+  it('keeps a color that already reads, as it was written', () => {
+    expect(nearestReadable('#5B5BD6', WHITE, hex('#000000'), 3)).toBe('#5B5BD6');
+  });
+
+  it('takes the nearest step toward the given color that reads, and goes no further', () => {
+    const lighter = hex(nearestReadable('#5B5BD6', WHITE, hex('#3a3a3c'), 3));
+    expect(contrast(lighter, hex('#3a3a3c'))).toBeGreaterThanOrEqual(3);
+    expect(contrast(lighter, hex('#3a3a3c'))).toBeLessThan(3.6);
+  });
+
+  it('ends at the color it moves toward when no step reads', () => {
+    expect(nearestReadable('#777777', WHITE, hex('#ffffff'), 4.5)).toBe('#ffffff');
   });
 });

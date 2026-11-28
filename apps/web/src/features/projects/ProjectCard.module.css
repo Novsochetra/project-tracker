@@ -110,7 +110,7 @@
 }
 
 .doneFill {
-  background: var(--accent);
+  background: var(--progress-done);
 }
 
 .readyFill {
@@ -147,7 +147,7 @@
 }
 
 .doneDot {
-  background: var(--accent);
+  background: var(--progress-done);
 }
 
 .readyDot {

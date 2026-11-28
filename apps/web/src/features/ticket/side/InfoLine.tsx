@@ -4,6 +4,7 @@ import {
   projectDisplayName,
   type TicketDetail,
 } from '@tracker/shared';
+import { ColorMark } from '../../../components/ColorMark';
 import styles from './SidePanel.module.css';
 
 // The phone's stand-in for the Info card: rarely needed, so one quiet line at the end of the
@@ -14,7 +15,7 @@ export function InfoLine({ detail, now }: { detail: TicketDetail; now: number })
   return (
     <p className={styles.infoLine}>
       <span className={styles.project}>
-        <span className={styles.square} style={{ background: project.color }} />
+        <ColorMark className={styles.square} color={project.color} />
         {!project.hideName && <span className="visually-hidden">Project </span>}
         <span className={styles.projectName}>{projectDisplayName(project)}</span>
       </span>{' '}
